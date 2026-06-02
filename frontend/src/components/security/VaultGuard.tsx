@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle } from 'lucide-react';
+import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle, Key } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,9 +14,11 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { vaultConfigService } from '@/services/security-vault-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -151,7 +153,7 @@ function useVaultCountdown(expiresAt: string | null) {
   return secondsLeft;
 }
 
-function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
+export function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
   const { t } = useTranslation();
   const secondsLeft = useVaultCountdown(expiresAt);
 
@@ -252,6 +254,11 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
+            <div className="flex items-start gap-sm rounded-lg bg-warning/10 p-sm text-xs text-warning">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
+            </div>
+
             <div className="space-y-xs">
               <Label htmlFor="master-password">
                 {t('pages.vaultGuard.setup.passwordLabel')}
@@ -329,20 +336,31 @@ interface VaultUnlockScreenProps {
   onSuccess: () => Promise<void>;
 }
 
+const MAX_ATTEMPTS = 5;
+
 function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
   const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const { toast } = useToast();
+
+  const remaining = MAX_ATTEMPTS - failedAttempts;
+  const isLocked = remaining <= 0;
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) return;
     setIsSubmitting(true);
     try {
       await vaultConfigService.unlock({ master_password: masterPassword });
       await onSuccess();
     } catch (err) {
+      const next = failedAttempts + 1;
+      setFailedAttempts(next);
+      setMasterPassword('');
       toast({
         title: t('pages.vaultGuard.locked.failTitle'),
         description: getErrorMessage(err),
@@ -395,12 +413,118 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {failedAttempts > 0 && !isLocked && (
+              <div className="flex items-center gap-sm rounded-lg bg-warning/10 px-sm py-xs text-xs text-warning">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                {t('pages.vaultGuard.locked.attemptsRemaining', { count: remaining })}
+              </div>
+            )}
+            {isLocked && (
+              <div className="flex items-center gap-sm rounded-lg bg-destructive/10 px-sm py-xs text-xs text-destructive">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                {t('pages.vaultGuard.locked.tooManyAttempts')}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || isLocked}
+            >
               {isSubmitting
                 ? t('pages.vaultGuard.locked.unlocking')
                 : t('pages.vaultGuard.locked.unlockBtn')}
             </Button>
+
+            <button
+              type="button"
+              onClick={() => setShowRecovery(true)}
+              className="flex w-full items-center justify-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Key className="h-3 w-3" />
+              {t('pages.vaultGuard.locked.useRecoveryKey')}
+            </button>
           </form>
+        </CardContent>
+      </Card>
+
+      {showRecovery && (
+        <VaultRecoveryKeyModalInline
+          onClose={() => setShowRecovery(false)}
+          onSuccess={onSuccess}
+        />
+      )}
+    </div>
+  );
+}
+
+function VaultRecoveryKeyModalInline({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [recoveryKey, setRecoveryKey] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleUnlock = async () => {
+    if (!recoveryKey.trim()) return;
+    setLoading(true);
+    try {
+      await apiClient.post(API_CONFIG.ENDPOINTS.SECURITY_VAULT_RECOVERY_UNLOCK, {
+        recovery_key: recoveryKey.trim(),
+      });
+      toast({ title: t('pages.security.recoveryKey.unlockSuccess') });
+      await onSuccess();
+      onClose();
+    } catch (err) {
+      toast({
+        title: t('pages.security.recoveryKey.unlockError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <Card className="mx-md w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-sm text-base">
+            <Key className="h-4 w-4" />
+            {t('pages.security.recoveryKey.useTitle')}
+          </CardTitle>
+          <CardDescription>{t('pages.security.recoveryKey.useDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-md">
+          <Input
+            value={recoveryKey}
+            onChange={(e) => setRecoveryKey(e.target.value)}
+            placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
+            className="font-mono text-sm"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleUnlock();
+            }}
+          />
+          <div className="flex gap-sm">
+            <Button variant="outline" className="flex-1" onClick={onClose}>
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={loading || !recoveryKey.trim()}
+              onClick={() => void handleUnlock()}
+            >
+              {loading
+                ? t('common.actions.loading')
+                : t('pages.security.recoveryKey.unlockBtn')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

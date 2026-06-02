@@ -172,7 +172,8 @@
         "paymentConfig": "Configuração",
         "configuration": "Configuração"
       }
-    }
+    },
+    "noResults": "Nenhum resultado encontrado"
   },
   "nav": {
     "home": "Início",
@@ -188,7 +189,9 @@
       "registrations": "Cadastros",
       "records": "Registros",
       "books": "Acervo",
-      "intellect": "Aprendizado"
+      "intellect": "Aprendizado",
+      "daily": "Rotina Diária",
+      "health": "Saúde & Corpo"
     },
     "items": {
       "accounts": "Contas",
@@ -241,7 +244,12 @@
       "mealLog": "Diário Alimentar",
       "courses": "Cursos",
       "skills": "Habilidades",
-      "knowledgeGraph": "Grafo de Conhecimento"
+      "knowledgeGraph": "Grafo de Conhecimento",
+      "financialCalendar": "Calendário Financeiro",
+      "netWorth": "Patrimônio Líquido",
+      "subscriptions": "Assinaturas",
+      "reflections": "Reflexões Diárias",
+      "tags": "Tags"
     },
     "agents": "Agentes IA"
   },
@@ -467,6 +475,12 @@
           "Mapa de Habilidades"
         ]
       },
+      "knowledgeGraph": {
+        "title": "Grafo de Conhecimento",
+        "nodes": "nós",
+        "links": "conexões",
+        "desc": "Ver grafo completo"
+      },
       "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
       "modules": {
@@ -628,6 +642,20 @@
         "relatedPayableHint": "Vincule esta despesa a um valor a pagar",
         "none": "Nenhum",
         "balanceInfo": "Saldo: R$ {{value}}"
+      },
+      "splits": {
+        "title": "Divisões da Despesa",
+        "manage": "Gerenciar divisões",
+        "add": "Adicionar divisão",
+        "empty": "Nenhuma divisão registrada.",
+        "description": "Descrição",
+        "descriptionPlaceholder": "Ex: Parte do João",
+        "markPaid": "Marcar como pago",
+        "total": "Total dividido",
+        "created": "Divisão criada",
+        "deleted": "Divisão excluída",
+        "deleteTitle": "Excluir divisão",
+        "deleteDesc": "Tem certeza que deseja excluir esta divisão?"
       }
     },
     "revenues": {
@@ -987,6 +1015,10 @@
       "deleted": "Despesa fixa excluída",
       "deletedDesc": "A despesa fixa foi excluída com sucesso.",
       "emptyState": "Nenhuma despesa fixa encontrada.",
+      "historyBtn": "Ver lançamentos gerados",
+      "historyTitle": "Histórico de Lançamentos",
+      "historyDesc": "Despesas geradas a partir deste template de despesa fixa.",
+      "historyEmpty": "Nenhum lançamento gerado ainda.",
       "launchSection": "Lançar Despesas do Mês",
       "launchDesc": "Gere todas as despesas fixas para o mês selecionado",
       "launchBtn": "Lançar Despesas",
@@ -1174,6 +1206,7 @@
         "duePrefix": "Vence"
       },
       "form": {
+        "sectionBasic": "Dados da Fatura",
         "creditCardLabel": "Cartão de Crédito *",
         "creditCardPlaceholder": "Selecione",
         "yearLabel": "Ano *",
@@ -1830,6 +1863,8 @@
       "monthExpenses": "Despesas do Mês",
       "monthRevenues": "Receitas do Mês",
       "creditLimit": "Limite de Crédito",
+      "viewExpenses": "Ver despesas detalhadas",
+      "viewRevenues": "Ver receitas detalhadas",
       "expensesByCategory": "Despesas por Categoria (Top 5)",
       "expensesByCategoryDesc": "Distribuição das maiores categorias de gastos",
       "noExpenses": "Nenhuma despesa cadastrada",
@@ -1870,6 +1905,8 @@
       "loadForecastError": "Erro ao carregar projeção de fluxo de caixa",
       "financialAlerts": {
         "title": "Alertas Financeiros",
+        "proactiveTitle": "{{count}} alerta(s) crítico(s) detectado(s)",
+        "proactiveDesc": "Você tem alertas financeiros urgentes. Verifique a seção de alertas.",
         "dismiss": "Dispensar",
         "loadError": "Erro ao carregar alertas financeiros",
         "types": {
@@ -2025,7 +2062,11 @@
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
       },
-      "monthComposition": "Composição do mês"
+      "monthComposition": "Composição do mês",
+      "monthCompositionShort": "Este mês",
+      "monthOverMonth": "Comparativo mês a mês",
+      "vsPrevMonth": "vs mês anterior:",
+      "installmentSimulator": "Simulador de Parcelas"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -2087,7 +2128,17 @@
       "exportVaultDesc": "Baixar senhas, cartões e contas em arquivo ZIP",
       "exportVaultSuccess": "Exportação iniciada",
       "exportVaultSuccessDesc": "O download do arquivo ZIP foi iniciado.",
-      "exportVaultError": "Erro ao exportar cofre"
+      "exportVaultError": "Erro ao exportar cofre",
+      "vaultSearch": {
+        "placeholder": "Buscar no cofre (senhas, cartões, contas, arquivos)...",
+        "title": "Busca Global no Cofre",
+        "noResults": "Nenhum resultado encontrado",
+        "noResultsDesc": "Tente um termo diferente de busca.",
+        "groupPasswords": "Senhas",
+        "groupCards": "Cartões",
+        "groupAccounts": "Contas",
+        "groupArchives": "Arquivos"
+      }
     },
     "passwords": {
       "title": "Senhas",
@@ -2131,6 +2182,28 @@
         "streaming": "Streaming",
         "gaming": "Games",
         "other": "Outro"
+      },
+      "hibp": {
+        "check": "Verificar Vazamento",
+        "safe": "Senha Segura",
+        "breached": "Exposta {{count}}x",
+        "errorTitle": "Erro na verificação",
+        "errorDesc": "Não foi possível verificar a senha. Tente novamente."
+      },
+      "copyWithoutReveal": "Copiar sem revelar",
+      "copied": "Copiada!",
+      "copiedClipboard": "Senha copiada para a área de transferência",
+      "autoHideIn": "Oculta em {{seconds}}s",
+      "favoritesFilter": "Favoritos",
+      "addFavorite": "Adicionar aos favoritos",
+      "removeFavorite": "Remover dos favoritos",
+      "passwordRequired": "Senha obrigatória",
+      "passwordStrength": {
+        "veryWeak": "Muito fraca",
+        "weak": "Fraca",
+        "fair": "Razoável",
+        "good": "Boa",
+        "strong": "Forte"
       }
     },
     "sharePassword": {
@@ -2158,7 +2231,31 @@
       "revoked": "Link revogado",
       "revokedDesc": "O link de compartilhamento foi revogado.",
       "revokeError": "Erro ao revogar link",
-      "loadError": "Erro ao carregar links"
+      "loadError": "Erro ao carregar links",
+      "step1Title": "Destinatário",
+      "step2Title": "Configuração",
+      "step3Title": "Confirmação",
+      "step1Desc": "Selecione para quem você deseja compartilhar",
+      "step2Desc": "Configure as opções de compartilhamento",
+      "step3Desc": "Confirme e gere o link",
+      "searchMembers": "Buscar membros...",
+      "noMembers": "Nenhum membro encontrado.",
+      "loadMembersError": "Erro ao carregar membros",
+      "selectMemberFirst": "Selecione um destinatário antes de continuar.",
+      "expiresIn1h": "1 hora",
+      "expiresIn6h": "6 horas",
+      "expiresIn24h": "24 horas",
+      "expiresIn7d": "7 dias",
+      "expiryLabel": "Validade do link",
+      "previewLabel": "Pré-visualização",
+      "confirmTitle": "Resumo do Compartilhamento",
+      "confirmRecipient": "Destinatário",
+      "confirmExpiry": "Validade",
+      "confirmMaxUses": "Usos máximos",
+      "confirmPassword": "Credencial",
+      "nextBtn": "Próximo",
+      "backBtn": "Voltar",
+      "confirmBtn": "Gerar Link"
     },
     "shareCredential": {
       "title": "Credencial Compartilhada",
@@ -2343,7 +2440,8 @@
         "sectionAccountData": "Dados da Conta",
         "sectionPasswords": "Senhas",
         "sectionLink": "Vínculo Financeiro",
-        "sectionNotes": "Notas"
+        "sectionNotes": "Notas",
+        "bankSearchPlaceholder": "Buscar banco por nome ou código ISPB..."
       }
     },
     "archives": {
@@ -2428,6 +2526,16 @@
     },
     "libraryDashboard": {
       "title": "Dashboard Intelecto",
+      "monthAnalysis": {
+        "title": "Análise do Mês",
+        "totalPages": "Total de páginas lidas",
+        "pagesUnit": "páginas este mês",
+        "dailyAverage": "Média diária",
+        "pagesPerDay": "páginas por dia",
+        "bestDay": "Melhor dia da semana",
+        "pagesOnBestDay_one": "{{count}} página neste dia",
+        "pagesOnBestDay_other": "{{count}} páginas neste dia"
+      },
       "overview": "Visão Geral",
       "books": "Obras",
       "authors": "Autores",
@@ -2601,7 +2709,15 @@
       "courseStatusCompleted": "Concluídos",
       "courseStatusInProgress": "Em andamento",
       "courseStatusPaused": "Pausados",
-      "courseStatusNotStarted": "Não iniciados"
+      "courseStatusNotStarted": "Não iniciados",
+      "badges": {
+        "title": "Conquistas"
+      },
+      "streakDays": "dias seguidos",
+      "bestStreak": "melhor",
+      "studyTimer": "Timer de estudo",
+      "studyMode": "Modo estudo",
+      "breakMode": "Modo pausa"
     },
     "books": {
       "title": "Obras",
@@ -2650,6 +2766,16 @@
       "priorityHigh": "Alta",
       "priorityMedium": "Média",
       "priorityLow": "Baixa",
+      "askIntellect": "Perguntar ao Intelecto",
+      "quickCapture": {
+        "title": "Registrar Progresso",
+        "desc": "Registre rapidamente as páginas lidas hoje",
+        "selectBook": "Livro em leitura",
+        "selectBookPlaceholder": "Selecione um livro",
+        "pagesRead": "Páginas lidas",
+        "pagesPlaceholder": "Ex: 30",
+        "saved": "Progresso registrado com sucesso"
+      },
       "form": {
         "coverLabel": "Capa do Livro",
         "coverAlt": "Capa",
@@ -3061,6 +3187,12 @@
       "updated": "Curso atualizado",
       "saved": "Curso salvo",
       "deleteConfirm": "Deseja excluir o curso \"{{title}}\"? Esta ação não pode ser desfeita.",
+      "askIntellect": "Perguntar ao Intelecto",
+      "studyHours": {
+        "title": "Horas de Estudo esta semana",
+        "subtitle": "Sessões registradas de segunda a domingo",
+        "hours": "horas"
+      },
       "tabs": {
         "overview": "Visão Geral",
         "modules": "Módulos",
@@ -3152,7 +3284,11 @@
         "orderLabel": "Ordem",
         "completed": "Concluída",
         "pending": "Pendente",
-        "toggleError": "Erro ao atualizar aula"
+        "toggleError": "Erro ao atualizar aula",
+        "selectAll": "Selecionar todas",
+        "selected": "selecionada(s)",
+        "markDone": "Concluir",
+        "markPending": "Desfazer"
       },
       "sessions": {
         "title": "Sessões de Estudo",
@@ -3234,6 +3370,27 @@
         "emptyState": "Adicione habilidades para visualizar o radar"
       }
     },
+    "planningOnboarding": {
+      "skip": "Pular",
+      "next": "Próximo",
+      "start": "Começar agora",
+      "step0": {
+        "title": "Bem-vindo ao Planejamento Pessoal",
+        "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
+      },
+      "step1": {
+        "title": "Checklist Diário",
+        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
+      },
+      "step2": {
+        "title": "Objetivos e Metas",
+        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
+      },
+      "step3": {
+        "title": "Treino e Nutrição",
+        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
+      }
+    },
     "planningDashboard": {
       "title": "Dashboard de Planejamento Pessoal",
       "todayTasks": "Tarefas de Hoje",
@@ -3259,6 +3416,14 @@
       "noData": "Nenhum dado disponível",
       "weekdayAnalytics": "Desempenho por Dia da Semana",
       "analyticsPeriod": "Baseado nos últimos {{days}} dias",
+      "level": "Nível",
+      "tasksCompleted": "tarefas concluídas",
+      "toNextLevel": "para o próximo nível",
+      "ctaChecklist": "▶ Abrir Checklist de Hoje",
+      "ctaTasks": "Ver Tarefas e Objetivos",
+      "ctaReflect": "Escrever Reflexão",
+      "ctaLogWorkout": "+ Registrar Treino",
+      "ctaLogMeal": "+ Registrar Refeição",
       "insights": "Insights de Hábitos",
       "taskCount_one": "{{count}} tarefa",
       "taskCount_other": "{{count}} tarefas",
@@ -3318,7 +3483,13 @@
       "workoutsByDayTitle": "Treinos por dia da semana — últimos 30 dias",
       "noWorkoutsRegistered": "Nenhum treino registrado",
       "sessionCount_one": "{{count}} sessão",
-      "sessionCount_other": "{{count}} sessões"
+      "sessionCount_other": "{{count}} sessões",
+      "weeklyXP": "Progresso Semanal — XP",
+      "xpLabel": "XP esta semana",
+      "xpProgress": "Nível {{level}}",
+      "insightCTAWorstDay": "Ajustar rotina",
+      "insightCTAWorkout": "Registrar treino",
+      "insightCTAGoals": "Ver metas"
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -3336,7 +3507,7 @@
       "deleted": "Tarefa excluída",
       "deletedDesc": "A tarefa foi excluída com sucesso.",
       "emptyState": "Nenhuma tarefa encontrada",
-      "emptyStateDesc": "Comece criando sua primeira tarefa rotineira.",
+      "emptyStateDesc": "Tarefas rotineiras geram consistência. Crie sua primeira rotina e acompanhe seu progresso diário com gráficos de consistência.",
       "viewHeatmap": "Ver heatmap",
       "viewConsistency": "Ver consistência",
       "heatmapTitle": "Consistência",
@@ -3368,7 +3539,16 @@
         "importSuccess": "Template importado",
         "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
         "alreadyImported": "Nada a importar",
-        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista.",
+        "saveAsTemplate": "Salvar como Template",
+        "saveAsTemplateTitle": "Salvar como Template",
+        "saveAsTemplateDesc": "Dê um nome ao template para poder reutilizá-lo no futuro.",
+        "templateNameLabel": "Nome do Template",
+        "templateNamePlaceholder": "Ex: Rotina Matinal",
+        "saveBtn": "Salvar Template",
+        "saveSuccess": "Template salvo!",
+        "saveSuccessDesc": "O template \"{{name}}\" foi salvo com sucesso.",
+        "saved": "Template salvo localmente"
       },
       "export": {
         "btn": "Exportar Rotina",
@@ -3467,7 +3647,16 @@
         "sectionIdentification": "Identificação",
         "sectionPeriodicity": "Periodicidade",
         "sectionGoalUnit": "Meta & Unidade",
-        "sectionBehavior": "Comportamento"
+        "sectionBehavior": "Comportamento",
+        "periodicityTooltip": "Define com que frequência a tarefa aparece no seu checklist diário. Use 'Personalizado' para dias específicos da semana.",
+        "targetQuantityTooltip": "Quantidade que você precisa realizar para contar a tarefa como concluída. Ex: 30 minutos de leitura, 8 copos de água.",
+        "frequencyPreview": {
+          "daily": "Todos os dias",
+          "weekdays": "Segunda a Sexta-feira",
+          "weekly": "Toda {{day}}",
+          "monthly": "Todo dia {{day}} do mês",
+          "custom": "Dias personalizados"
+        }
       }
     },
     "goals": {
@@ -3488,7 +3677,8 @@
       "recalculated": "Progresso recalculado",
       "recalculateError": "Erro ao recalcular",
       "emptyState": "Nenhum objetivo encontrado",
-      "emptyStateDesc": "Comece criando seu primeiro objetivo.",
+      "emptyStateDesc": "Defina metas claras para acompanhar seu progresso e manter o foco no que importa.",
+      "emptyStateAction": "Criar primeira meta",
       "recalculateBtn": "Recalcular progresso",
       "columns": {
         "title": "Título",
@@ -3586,12 +3776,18 @@
       "savedDesc": "Seu checklist e reflexão foram salvos com sucesso!",
       "saveError": "Erro ao salvar",
       "loadUserError": "Erro ao carregar usuário",
-      "loadError": "Erro ao carregar dados"
+      "loadError": "Erro ao carregar dados",
+      "viewAllReflections": "Ver todas as reflexões →",
+      "overdueBanner": "{{count}} tarefa(s) atrasada(s). Verifique o sino de notificações para detalhes.",
+      "allDone": "Todas as tarefas concluídas! 🎉",
+      "reflectionPrompt": "Que tal registrar uma reflexão sobre o seu dia?"
     },
     "activityLogs": {
       "title": "Logs de Atividade",
       "emptyState": "Nenhum log de atividade encontrado.",
       "dateGroupFormat": "EEEE, dd 'de' MMMM 'de' yyyy",
+      "exportBtn": "Exportar CSV",
+      "exportSuccess": "Log exportado com sucesso",
       "columns": {
         "dateTime": "Data/Hora",
         "action": "Ação",
@@ -3728,6 +3924,19 @@
         "household": "Casa",
         "personal_care": "Cuidado Pessoal",
         "other": "Outros"
+      },
+      "pomodoroTitle": "Modo Foco",
+      "pomodoroStart": "Iniciar",
+      "pomodoroPause": "Pausar",
+      "pomodoroReset": "Reiniciar",
+      "pomodoroFocusDone": "Foco concluído! Faça uma pausa.",
+      "pomodoroBreakDone": "Pausa encerrada! Hora de focar.",
+      "pomodoroCycles_one": "{{count}} ciclo concluído",
+      "pomodoroCycles_other": "{{count}} ciclos concluídos",
+      "pomodoroMode": {
+        "focus": "Foco",
+        "shortBreak": "Pausa Curta",
+        "longBreak": "Pausa Longa"
       }
     },
     "categorizationRules": {
@@ -3783,6 +3992,11 @@
       "lastImport": "Última Importação",
       "emptyTitle": "Nenhum extrato importado",
       "emptyMessage": "Clique em 'Importar Extrato' para começar.",
+      "flowTitle": "Como funciona a conciliação bancária:",
+      "flowStep1": "Importar Extrato",
+      "flowStep2": "Revisar Transações",
+      "flowStep3": "Confirmar Conciliação",
+      "emptyGuide": "Comece importando o extrato bancário no formato OFX ou CSV. Em seguida, revise as transações identificadas e confirme a conciliação.",
       "columns": {
         "file": "Arquivo",
         "format": "Formato",
@@ -3824,6 +4038,8 @@
         "pending": "Pendentes",
         "linkManually": "Vincular manualmente",
         "linkBtn": "Vincular",
+        "unmatchBtn": "Desvincular",
+        "ignoreBtn": "Ignorar",
         "createExpenseTitle": "Criar despesa a partir desta entrada",
         "createRevenueTitle": "Criar receita a partir desta entrada",
         "createExpenseBtn": "Despesa",
@@ -3933,7 +4149,9 @@
         "typing": "digitando",
         "sources": "Fontes",
         "error": "Erro ao receber resposta do agente"
-      }
+      },
+      "stop": "Parar geração",
+      "sessions": "Histórico de sessões"
     },
     "twoFactor": {
       "title": "Autenticação de dois fatores (2FA)",
@@ -4010,7 +4228,10 @@
         "passwordPlaceholder": "Digite sua senha mestre",
         "unlocking": "Desbloqueando...",
         "unlockBtn": "Desbloquear Cofre",
-        "failTitle": "Cofre não desbloqueado"
+        "failTitle": "Cofre não desbloqueado",
+        "useRecoveryKey": "Esqueceu a senha? Use a chave de recuperação",
+        "attemptsRemaining": "{{count}} tentativas restantes",
+        "tooManyAttempts": "Muitas tentativas. Use a chave de recuperação."
       },
       "setup": {
         "title": "Proteja seu Cofre",
@@ -4033,7 +4254,8 @@
           "fair": "Razoável",
           "good": "Boa",
           "strong": "Forte"
-        }
+        },
+        "irreversibleWarning": "Atenção: a senha mestre não é armazenada. Se perdida, não há recuperação automática — use a chave de recuperação."
       },
       "expiry": {
         "hours": "Cofre expira em {{hours}}h {{minutes}}min",
@@ -4547,7 +4769,8 @@
       "planDeleted": "Plano excluído",
       "planDeletedDesc": "O plano de treino foi excluído com sucesso.",
       "emptyPlans": "Nenhum plano cadastrado",
-      "emptyPlansDesc": "Crie seu primeiro plano de treino para organizar suas divisões.",
+      "emptyPlansDesc": "Crie seu primeiro plano de treino para organizar suas divisões e acompanhar sua evolução.",
+      "emptyPlansAction": "Criar plano de treino",
       "planName": "Nome do Plano",
       "planNamePlaceholder": "Ex: Meu Plano ABC",
       "planDescription": "Descrição",
@@ -4649,6 +4872,7 @@
       "saveError": "Erro ao salvar exercício",
       "empty": "Nenhum exercício cadastrado",
       "emptyDesc": "Cadastre exercícios para usar nos seus planos de treino.",
+      "emptyAction": "Cadastrar exercício",
       "fieldName": "Nome",
       "fieldNamePlaceholder": "Ex: Supino Reto",
       "fieldMuscles": "Grupos Musculares",
@@ -4657,6 +4881,7 @@
       "fieldDescriptionPlaceholder": "Técnica, variações, dicas..."
     },
     "workoutSessions": {
+      "sectionSession": "Dados da Sessão",
       "newSessionBtn": "Registrar Sessão",
       "newSessionTitle": "Registrar Sessão de Treino",
       "editSessionTitle": "Editar Sessão",
@@ -4671,7 +4896,20 @@
       "sessionDeleted": "Sessão excluída",
       "sessionDeletedDesc": "A sessão foi excluída com sucesso.",
       "emptySessions": "Nenhuma sessão registrada",
-      "emptySessionsDesc": "Registre sua primeira sessão de treino.",
+      "emptySessionsDesc": "Registre seus treinos para acompanhar sua frequência e evolução ao longo do tempo.",
+      "emptyAction": "Registrar primeiro treino",
+      "quickLogBtn": "Registrar Treino Rápido",
+      "quickLogTitle": "Registrar Treino Rápido",
+      "quickLogDesc": "Registre um treino em 2 passos sem preencher todos os detalhes.",
+      "quickLogStep1": "Selecionar Plano",
+      "quickLogStep2": "Confirmar Duração",
+      "quickLogPlanLabel": "Plano de treino",
+      "quickLogNoPlan": "Sem plano (sessão avulsa)",
+      "quickLogDuration": "Duração do treino",
+      "quickLogMin": "min",
+      "quickLogNext": "Próximo",
+      "quickLogConfirm": "Registrar Treino",
+      "quickLogSuccess": "Treino registrado!",
       "date": "Data",
       "startTime": "Início",
       "endTime": "Término",
@@ -4840,10 +5078,14 @@
       "nodeTypesFilter": "Tipos de nó",
       "includeHighlights": "Incluir destaques",
       "loading": "Carregando grafo...",
-      "empty": "Nenhum dado para exibir",
+      "empty": "Grafo ainda vazio",
+      "emptyHint": "Adicione livros, cursos ou habilidades à sua biblioteca para que eles apareçam aqui. Depois você poderá criar conexões entre os nós.",
       "emptySearch": "Nenhum nó encontrado para esta busca",
       "explicitConnections": "Conexões explícitas",
       "createLink": "Criar conexão",
+      "createLinkTooltip": "Ativa o modo de linking: clique neste nó, depois clique em outro nó para criar uma conexão entre eles.",
+      "cancelLink": "Cancelar conexão",
+      "cancelLinkTooltip": "Cancela o modo de linking. Você também pode pressionar Esc.",
       "clickToConnect": "Clique em outro nó para conectar",
       "clickToConnectWith": "Clique em outro nó para conectar com",
       "nodeTypes": {
@@ -4900,7 +5142,8 @@
       "legend": {
         "explicit": "Conexão explícita",
         "implicit": "Conexão implícita"
-      }
+      },
+      "exportPNG": "Exportar como PNG"
     }
   },
   "userProfile": {
@@ -4942,7 +5185,25 @@
       "twoFactorActive": "Ativa",
       "twoFactorInactive": "Inativa",
       "twoFactorManage": "Gerenciar 2FA",
-      "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta"
+      "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta",
+      "recoveryKey": {
+        "menuBtn": "Chave de Recuperação",
+        "generateTitle": "Gerar Chave de Recuperação",
+        "generateDesc": "Esta chave permite desbloquear o cofre sem a senha mestre em caso de emergência. Guarde-a em local seguro.",
+        "generateWarning": "Ao gerar uma nova chave, a chave anterior será invalidada.",
+        "generateBtn": "Gerar Chave de Recuperação",
+        "generateError": "Erro ao gerar chave de recuperação",
+        "oneTimeWarning": "Esta chave será exibida apenas uma vez. Copie e guarde em local seguro.",
+        "yourKey": "Sua Chave de Recuperação",
+        "saveHint": "Salve em um gerenciador de senhas ou local seguro offline.",
+        "savedConfirm": "Confirmei que salvei a chave",
+        "useTitle": "Desbloquear com Chave de Recuperação",
+        "useDesc": "Use sua chave de recuperação para desbloquear o cofre sem a senha mestre.",
+        "inputLabel": "Chave de Recuperação",
+        "unlockBtn": "Desbloquear",
+        "unlockSuccess": "Cofre desbloqueado via chave de recuperação",
+        "unlockError": "Chave de recuperação inválida"
+      }
     },
     "avatar": {
       "change": "Alterar foto de perfil",
@@ -5178,5 +5439,70 @@
     "capsule": "cápsula",
     "mcg": "mcg",
     "ui": "UI"
+  },
+  "financialCalendar": {
+    "title": "Calendário Financeiro",
+    "subtitle": "Visão temporal unificada de todos os vencimentos",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "summaryDue": "{{count}} vencimento(s) este mês",
+    "noEvents": "Nenhum vencimento neste dia",
+    "eventTypes": {
+      "payable": "A Pagar",
+      "receivable": "A Receber",
+      "creditCard": "Fatura Cartão",
+      "loan": "Parcela Empréstimo"
+    },
+    "dayDetail": "Vencimentos em {{date}}",
+    "loading": "Carregando calendário..."
+  },
+  "netWorth": {
+    "title": "Patrimônio Líquido",
+    "subtitle": "Ativos menos passivos — sua riqueza real",
+    "netWorthLabel": "Patrimônio Líquido",
+    "assetsLabel": "Ativos",
+    "liabilitiesLabel": "Passivos",
+    "assetsSection": "Detalhamento dos Ativos",
+    "liabilitiesSection": "Detalhamento dos Passivos",
+    "bankAccounts": "Contas Bancárias",
+    "vaults": "Cofres / Investimentos",
+    "loans": "Empréstimos",
+    "creditCards": "Cartões de Crédito",
+    "noAssets": "Nenhum ativo encontrado",
+    "noLiabilities": "Nenhum passivo encontrado",
+    "loading": "Calculando patrimônio..."
+  },
+  "subscriptions": {
+    "title": "Assinaturas",
+    "subtitle": "Controle de gastos recorrentes mensais",
+    "monthlyTotal": "Total Mensal",
+    "activeCount": "{{count}} assinatura(s) ativa(s)",
+    "dueSoon": "Vence em breve",
+    "dueSoonDesc": "Renovação nos próximos 7 dias",
+    "noSubscriptions": "Nenhuma assinatura encontrada",
+    "noSubscriptionsDesc": "Assinaturas são despesas fixas com frequência mensal ou categoria de assinatura.",
+    "groups": {
+      "streaming": "Streaming",
+      "software": "Software",
+      "services": "Serviços",
+      "other": "Outros"
+    },
+    "renewalOn": "Renova dia {{day}}",
+    "loading": "Carregando assinaturas..."
+  },
+  "components": {
+    "installmentSimulator": {
+      "title": "Simulador de Parcelamento",
+      "purchaseValue": "Valor da Compra",
+      "annualRate": "Taxa de Juros Anual",
+      "rateHint": "Deixe 0 para sem juros",
+      "installments": "Parcelas",
+      "monthly": "Parcela mensal",
+      "total": "Total pago",
+      "interest": "Juros",
+      "cash": "À vista",
+      "noInterest": "Sem juros",
+      "enterValue": "Informe o valor da compra para calcular as parcelas"
+    }
   }
 }

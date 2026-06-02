@@ -708,6 +708,28 @@ class ArchiveDownloadView(APIView):
 # ============================================================================
 
 
+class PasswordFavoriteToggleView(VaultLockedMixin, APIView):
+    """
+    PATCH /api/v1/security/passwords/<pk>/favorite/
+    Alterna o campo is_favorite da senha.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def patch(self, request, pk):
+        password = get_object_or_404(
+            Password,
+            pk=pk,
+            owner__user=request.user,
+            is_deleted=False,
+        )
+        password.is_favorite = not password.is_favorite
+        password.save(update_fields=["is_favorite"])
+        from security.serializers import PasswordSerializer as PS
+
+        return Response(PS(password).data)
+
+
 class ActivityLogListView(generics.ListAPIView):
     """Lista logs de atividades (somente leitura)."""
 
@@ -719,6 +741,49 @@ class ActivityLogListView(generics.ListAPIView):
         return ActivityLog.objects.filter(user=self.request.user).order_by(
             "-created_at"
         )
+
+
+class ActivityLogExportCSVView(APIView):
+    """
+    GET /api/v1/security/activity-logs/export/
+    Exporta o log de atividades do usuário em CSV.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request):
+        from django.utils import timezone as tz
+
+        from app.export_utils import build_csv_response
+
+        qs = ActivityLog.objects.filter(user=request.user).order_by(
+            "-created_at"
+        )
+
+        headers = [
+            "Data/Hora",
+            "Ação",
+            "Descrição",
+            "Modelo",
+            "IP",
+            "User Agent",
+        ]
+
+        def _rows():
+            for log in qs.iterator(chunk_size=500):
+                yield [
+                    log.created_at.astimezone(
+                        tz.get_current_timezone()
+                    ).strftime("%d/%m/%Y %H:%M:%S"),
+                    log.get_action_display(),
+                    log.description,
+                    log.model_name or "",
+                    log.ip_address or "",
+                    log.user_agent or "",
+                ]
+
+        filename = f"axiom_activity_log_{tz.now().strftime('%Y%m%d_%H%M%S')}"
+        return build_csv_response(_rows(), headers, filename)
 
 
 # ============================================================================
@@ -1887,6 +1952,31 @@ class RedeemShareTokenView(APIView):
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
 
+        # #203 — notificar o criador do token in-app
+        if token_obj.created_by:
+            try:
+                from members.models import Member
+                from notifications.models import Notification
+
+                creator_member = Member.objects.get(user=token_obj.created_by)
+                accessed_at = timezone.now().strftime("%d/%m/%Y às %H:%M")
+                Notification.objects.get_or_create(
+                    owner=creator_member,
+                    notification_type="credential_share_accessed",
+                    content_type="CredentialShareToken",
+                    object_id=token_obj.id,
+                    defaults={
+                        "title": "Credencial acessada via link compartilhado",
+                        "message": (
+                            f'Sua senha "{token_obj.password.title}" foi '
+                            f"acessada via link em {accessed_at}."
+                        ),
+                        "is_read": False,
+                    },
+                )
+            except Exception:
+                logger.exception("Falha ao criar notificação de share_token")
+
         pw = token_obj.password
         return Response(
             {
@@ -2159,3 +2249,164 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         response = HttpResponse(buffer.read(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+
+# ============================================================================
+# HIBP (HaveIBeenPwned) CHECK VIEW
+# ============================================================================
+
+
+class HibpCheckView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request):
+        import urllib.request
+
+        prefix = request.data.get("prefix", "").upper()
+        if not prefix or len(prefix) != 5:
+            return Response(
+                {"detail": "Informe os 5 primeiros caracteres do hash SHA-1."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not re.match(r"^[0-9A-F]{5}$", prefix):
+            return Response(
+                {"detail": "Prefixo inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            url = f"https://api.pwnedpasswords.com/range/{prefix}"
+            req = urllib.request.Request(
+                url,
+                headers={"Add-Padding": "true", "User-Agent": "Axiom-App/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310
+                body = resp.read().decode("utf-8")
+            return Response({"suffixes": body})
+        except Exception:
+            return Response(
+                {"detail": "Serviço HIBP indisponível no momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+
+# ============================================================================
+# PASSWORD HISTORY VIEWS
+# ============================================================================
+
+
+class PasswordHistoryListView(VaultLockedMixin, generics.ListAPIView):
+    """GET /api/v1/security/passwords/<pk>/history/."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get_serializer_class(self):
+        from security.serializers import PasswordHistorySerializer
+
+        return PasswordHistorySerializer
+
+    def get_queryset(self):
+        from members.models import Member
+        from security.models import PasswordHistory
+
+        pk = self.kwargs["pk"]
+        try:
+            member = Member.objects.get(user=self.request.user)
+        except Member.DoesNotExist:
+            return PasswordHistory.objects.none()
+        return PasswordHistory.objects.filter(
+            password__pk=pk, password__owner=member
+        )[:10]
+
+
+# ============================================================================
+# TOTP VERIFY VIEW
+# ============================================================================
+
+
+class TOTPVerifyView(VaultLockedMixin, APIView):
+    """POST /api/v1/security/passwords/<pk>/totp/verify/."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        import pyotp
+
+        from members.models import Member
+
+        code = request.data.get("code", "")
+        try:
+            member = Member.objects.get(user=request.user)
+            pw = Password.objects.get(pk=pk, owner=member)
+        except (Member.DoesNotExist, Password.DoesNotExist):
+            return Response({"detail": "Não encontrado."}, status=404)
+
+        if not pw.totp_enabled or not pw._totp_secret:
+            return Response({"valid": False, "error": "TOTP não habilitado."})
+
+        secret = pw.totp_secret
+        totp = pyotp.TOTP(secret)
+        valid = totp.verify(code)
+        return Response({"valid": valid})
+
+
+# ============================================================================
+# VAULT HEALTH SNAPSHOT / HISTORY VIEWS
+# ============================================================================
+
+
+class VaultHealthHistoryView(VaultLockedMixin, generics.ListAPIView):
+    """GET /api/v1/security/vault-health-history/ — histórico de scores."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get_serializer_class(self):
+        from security.serializers import VaultHealthSnapshotSerializer
+
+        return VaultHealthSnapshotSerializer
+
+    def get_queryset(self):
+        from members.models import Member
+        from security.models import VaultHealthSnapshot
+
+        try:
+            member = Member.objects.get(user=self.request.user)
+        except Member.DoesNotExist:
+            return VaultHealthSnapshot.objects.none()
+        return VaultHealthSnapshot.objects.filter(owner=member)[:30]
+
+
+# ============================================================================
+# VAULT ALERT CONFIG VIEW
+# ============================================================================
+
+
+class VaultAlertConfigView(APIView):
+    """GET/PUT /api/v1/security/alert-config/."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_member(self, request):
+        from members.models import Member
+
+        return Member.objects.get(user=request.user)
+
+    def get(self, request):
+        from security.models import VaultAlertConfig
+        from security.serializers import VaultAlertConfigSerializer
+
+        member = self._get_member(request)
+        config, _ = VaultAlertConfig.objects.get_or_create(owner=member)
+        return Response(VaultAlertConfigSerializer(config).data)
+
+    def put(self, request):
+        from security.models import VaultAlertConfig
+        from security.serializers import VaultAlertConfigSerializer
+
+        member = self._get_member(request)
+        config, _ = VaultAlertConfig.objects.get_or_create(owner=member)
+        s = VaultAlertConfigSerializer(config, data=request.data, partial=True)
+        s.is_valid(raise_exception=True)
+        s.save()
+        return Response(s.data)

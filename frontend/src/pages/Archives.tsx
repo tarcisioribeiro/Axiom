@@ -59,6 +59,10 @@ export default function Archives() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  // #197 — inline preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<'image' | 'pdf' | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -148,6 +152,29 @@ export default function Archives() {
         description: getErrorMessage(error),
         variant: 'destructive',
       });
+    }
+  };
+
+  // #197 — inline preview for images and PDFs
+  const handlePreview = async (archive: Archive) => {
+    const { archive_type: type } = archive;
+    if (type !== 'image' && type !== 'pdf') return;
+    try {
+      setIsPreviewLoading(true);
+      const { url } = await archivesService.getDownloadUrl(archive.id);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setPreviewUrl(objectUrl);
+      setPreviewType(type);
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.archives.downloadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPreviewLoading(false);
     }
   };
 
@@ -379,6 +406,24 @@ export default function Archives() {
                             <Download className="h-4 w-4" aria-hidden="true" />
                           )}
                         </Button>
+                        {(arc.archive_type === 'image' ||
+                          arc.archive_type === 'pdf') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => void handlePreview(arc)}
+                            disabled={isPreviewLoading}
+                            aria-label={t('pages.archives.preview', {
+                              defaultValue: 'Pré-visualizar',
+                            })}
+                            title={t('pages.archives.preview', {
+                              defaultValue: 'Pré-visualizar',
+                            })}
+                          >
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -498,6 +543,57 @@ export default function Archives() {
                   {t('common.actions.close')}
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* #197 — Inline preview dialog for images and PDFs */}
+        <Dialog
+          open={!!previewUrl}
+          onOpenChange={(open) => {
+            if (!open) {
+              if (previewUrl) URL.revokeObjectURL(previewUrl);
+              setPreviewUrl(null);
+              setPreviewType(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>
+                {t('pages.archives.preview', { defaultValue: 'Pré-visualização' })}
+              </DialogTitle>
+            </DialogHeader>
+            {isPreviewLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <span className="text-sm text-muted-foreground">
+                  {t('common.loading', { defaultValue: 'Carregando...' })}
+                </span>
+              </div>
+            ) : previewType === 'image' && previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-h-[70vh] w-full rounded-md object-contain"
+              />
+            ) : previewType === 'pdf' && previewUrl ? (
+              <iframe
+                src={previewUrl}
+                className="h-[70vh] w-full rounded-md border"
+                title="PDF Preview"
+              />
+            ) : null}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                  setPreviewType(null);
+                }}
+              >
+                {t('common.actions.close')}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

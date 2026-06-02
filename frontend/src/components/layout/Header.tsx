@@ -5,14 +5,17 @@ import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { VaultExpiryBadge } from '@/components/security/VaultGuard';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { useVaultStatus } from '@/hooks/use-vault-status';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';
 
 export const Header = () => {
   const { toggle: toggleSidebar } = useSidebar();
   const { t } = useTranslation();
   const openCommandPalette = useCommandPaletteStore((s) => s.open);
+  const { status: vaultStatus } = useVaultStatus();
 
   return (
     <header className="sticky top-0 z-header border-b border-border/60 bg-card/80 px-md py-md backdrop-blur-md md:px-lg">
@@ -58,6 +61,10 @@ export const Header = () => {
           >
             <Search className="h-4 w-4" aria-hidden="true" />
           </Button>
+
+          {vaultStatus?.is_unlocked && vaultStatus.expires_at && (
+            <VaultExpiryBadge expiresAt={vaultStatus.expires_at} />
+          )}
 
           <ThemeToggle />
 

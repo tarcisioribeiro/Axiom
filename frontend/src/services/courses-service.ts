@@ -36,6 +36,16 @@ class CourseLessonsService extends BaseService<CourseLesson, CourseLessonFormDat
   constructor() {
     super(API_CONFIG.ENDPOINTS.COURSE_LESSONS);
   }
+
+  async bulkComplete(
+    lesson_ids: number[],
+    is_completed: boolean
+  ): Promise<{ updated: number[]; count: number }> {
+    return apiClient.post<{ updated: number[]; count: number }>(
+      API_CONFIG.ENDPOINTS.COURSE_LESSONS_BULK_COMPLETE,
+      { lesson_ids, is_completed }
+    );
+  }
 }
 
 class CourseSessionsService extends BaseService<CourseSession, CourseSessionFormData> {

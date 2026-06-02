@@ -41,6 +41,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
+
 interface BreadcrumbItem {
   label: string;
   href?: string;
@@ -344,6 +346,7 @@ const routePatterns: RoutePattern[] = [
 export function useBreadcrumb() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
+  const extraLabel = useBreadcrumbExtraStore((s) => s.extraLabel);
 
   const breadcrumbs = useMemo((): BreadcrumbItem[] => {
     const pathname = location.pathname;
@@ -383,9 +386,14 @@ export function useBreadcrumb() {
       });
     }
 
+    // Adiciona label extra dinâmico (ex.: tab ativa de cartões)
+    if (extraLabel) {
+      items.push({ label: extraLabel });
+    }
+
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, i18n.language, t]);
+  }, [location.pathname, i18n.language, t, extraLabel]);
 
   const currentPage = useMemo(() => {
     const pathname = location.pathname;

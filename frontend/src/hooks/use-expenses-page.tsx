@@ -31,6 +31,7 @@ export interface UseExpensesPageReturn {
   loans: Loan[];
   payables: Payable[];
   isLoading: boolean;
+  isFetching: boolean;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
   selectedExpense: Expense | undefined;
@@ -153,7 +154,11 @@ export function useExpensesPage(): UseExpensesPageReturn {
     selectedAccounts,
   ]);
 
-  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
+  const {
+    data: expenses = [],
+    isLoading: expensesLoading,
+    isFetching: expensesFetching,
+  } = useQuery({
     queryKey: ['expenses', params],
     queryFn: () => expensesService.getAll(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
@@ -236,6 +241,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
     });
 
   const isLoading = expensesLoading || accountsLoading;
+  const isFetching = expensesFetching;
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const clearFilters = resetFilters;
@@ -393,6 +399,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
     loans,
     payables,
     isLoading,
+    isFetching,
     isDialogOpen,
     setIsDialogOpen,
     selectedExpense,
