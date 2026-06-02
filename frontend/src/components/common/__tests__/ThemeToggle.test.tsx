@@ -58,7 +58,7 @@ describe('ThemeToggle', () => {
     expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
     expect(screen.getByText('Gruvbox Dark')).toBeInTheDocument();
     expect(screen.getByText('Cyberpunk')).toBeInTheDocument();
-    expect(screen.getByText('Flat Remix')).toBeInTheDocument();
+    expect(screen.getByText('Flat Remix Blue Darkest')).toBeInTheDocument();
   });
 
   it('calls setLightVariant("alucard") when Alucard option is clicked', async () => {
