@@ -7,6 +7,8 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -158,6 +160,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           <SelectTrigger
             className="w-40"
             aria-label={t('pages.expenses.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
           >
             <SelectValue placeholder={t('pages.expenses.allCategories')} />
           </SelectTrigger>
@@ -178,7 +181,11 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.expenses.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder={t('pages.expenses.allStatus')} />
           </SelectTrigger>
           <SelectContent>

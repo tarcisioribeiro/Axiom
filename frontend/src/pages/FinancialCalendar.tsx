@@ -71,25 +71,25 @@ export default function FinancialCalendar() {
 
   const payablesQuery = useQuery({
     queryKey: ['payables', 'calendar'],
-    queryFn: () => payablesService.getAll(),
+    queryFn: () => payablesService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const receivablesQuery = useQuery({
     queryKey: ['receivables', 'calendar'],
-    queryFn: () => receivablesService.getAll(),
+    queryFn: () => receivablesService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const loansQuery = useQuery({
     queryKey: ['loans', 'calendar'],
-    queryFn: () => loansService.getAll(),
+    queryFn: () => loansService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const billsQuery = useQuery({
     queryKey: ['creditCardBills', 'calendar'],
-    queryFn: () => creditCardBillsService.getAll(),
+    queryFn: () => creditCardBillsService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
