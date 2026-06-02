@@ -2,19 +2,26 @@ from django.urls import path
 
 from security.vault_config import (
     VaultChangePasswordView,
+    VaultGenerateRecoveryKeyView,
     VaultLockView,
+    VaultPreferencesView,
+    VaultRecoveryUnlockView,
     VaultSetupView,
     VaultStatusView,
     VaultUnlockView,
 )
 from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAccount/Archive/ActivityLog/Dashboard views
+    ActivityLogExportCSVView,
     ActivityLogListView,
     ArchiveDetailView,
     ArchiveDownloadView,
     ArchiveListCreateView,
     ArchiveRevealView,
+    HibpCheckView,
     PasswordDetailView,
+    PasswordFavoriteToggleView,
     PasswordGenerateView,
+    PasswordHistoryListView,
     PasswordImportConfirmView,
     PasswordImportPreviewView,
     PasswordListCreateView,
@@ -29,7 +36,10 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
+    TOTPVerifyView,
+    VaultAlertConfigView,
     VaultExportZipView,
+    VaultHealthHistoryView,
     VaultHealthReportView,
 )
 
@@ -46,6 +56,21 @@ urlpatterns = [
         "vault/change-master-password/",
         VaultChangePasswordView.as_view(),
         name="vault-change-password",
+    ),
+    path(
+        "vault/preferences/",
+        VaultPreferencesView.as_view(),
+        name="vault-preferences",
+    ),
+    path(
+        "vault/recovery-key/generate/",
+        VaultGenerateRecoveryKeyView.as_view(),
+        name="vault-recovery-key-generate",
+    ),
+    path(
+        "vault/recovery-unlock/",
+        VaultRecoveryUnlockView.as_view(),
+        name="vault-recovery-unlock",
     ),
     # Dashboard
     path(
@@ -88,6 +113,11 @@ urlpatterns = [
         "passwords/<int:pk>/reveal/",
         PasswordRevealView.as_view(),
         name="password-reveal",
+    ),
+    path(
+        "passwords/<int:pk>/favorite/",
+        PasswordFavoriteToggleView.as_view(),
+        name="password-favorite-toggle",
     ),
     # Stored Credit Cards
     path(
@@ -148,6 +178,11 @@ urlpatterns = [
         ActivityLogListView.as_view(),
         name="activity-log-list",
     ),
+    path(
+        "activity-logs/export/",
+        ActivityLogExportCSVView.as_view(),
+        name="activity-log-export",
+    ),
     # Credential Share Tokens
     path(
         "passwords/<int:pk>/share-tokens/",
@@ -164,5 +199,35 @@ urlpatterns = [
         "share/<uuid:token>/",
         RedeemShareTokenView.as_view(),
         name="share-token-redeem",
+    ),
+    # HIBP (HaveIBeenPwned) check — k-anonymity proxy
+    path(
+        "hibp-check/",
+        HibpCheckView.as_view(),
+        name="hibp-check",
+    ),
+    # Password History
+    path(
+        "passwords/<int:pk>/history/",
+        PasswordHistoryListView.as_view(),
+        name="password-history",
+    ),
+    # TOTP verify
+    path(
+        "passwords/<int:pk>/totp/verify/",
+        TOTPVerifyView.as_view(),
+        name="password-totp-verify",
+    ),
+    # Vault Health History (score evolution)
+    path(
+        "vault-health-history/",
+        VaultHealthHistoryView.as_view(),
+        name="vault-health-history",
+    ),
+    # Vault Alert Config
+    path(
+        "alert-config/",
+        VaultAlertConfigView.as_view(),
+        name="vault-alert-config",
     ),
 ]

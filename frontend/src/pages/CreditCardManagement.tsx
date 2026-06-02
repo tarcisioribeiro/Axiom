@@ -1,8 +1,10 @@
 import { CreditCard, Receipt, ShoppingCart } from 'lucide-react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 
 import CreditCardBills from './CreditCardBills';
 import CreditCardExpenses from './CreditCardExpenses';
@@ -10,13 +12,27 @@ import CreditCards from './CreditCards';
 
 const TAB_KEY = 'creditCardManagement.activeTab';
 
+const TAB_LABEL_KEYS: Record<string, string> = {
+  cards: 'pages.creditCards.title',
+  bills: 'pages.creditCardBills.title',
+  expenses: 'pages.creditCardExpenses.title',
+};
+
 export default function CreditCardManagement() {
   const { t } = useTranslation();
+  const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
 
   const defaultTab = localStorage.getItem(TAB_KEY) ?? 'cards';
 
+  useEffect(() => {
+    setExtraLabel(t(TAB_LABEL_KEYS[defaultTab] ?? 'pages.creditCards.title'));
+    return () => setExtraLabel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleTabChange = (value: string) => {
     localStorage.setItem(TAB_KEY, value);
+    setExtraLabel(t(TAB_LABEL_KEYS[value] ?? 'pages.creditCards.title'));
   };
 
   return (

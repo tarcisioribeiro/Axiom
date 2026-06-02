@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Clock,
   FileText,
+  Loader2,
   Wallet,
   Zap,
 } from 'lucide-react';
@@ -456,11 +457,16 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             (!!futureBalanceInfo && !futureBalanceInfo.canPay)
           }
         >
-          {isLoading
-            ? t('common.actions.saving')
-            : transfer
-              ? t('common.actions.update')
-              : t('common.actions.create')}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
+            </>
+          ) : transfer ? (
+            t('common.actions.update')
+          ) : (
+            t('common.actions.create')
+          )}
         </Button>
       </div>
     </form>
