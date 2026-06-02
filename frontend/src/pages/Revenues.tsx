@@ -171,8 +171,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             ? [
                 {
                   key: 'startDate',
-                  label: `${t('common.fields.from')}: ${startDate}`,
-                  onRemove: () => setStartDate(''),
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
                 },
               ]
             : []),
@@ -180,8 +180,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             ? [
                 {
                   key: 'endDate',
-                  label: `${t('common.fields.to')}: ${endDate}`,
-                  onRemove: () => setEndDate(''),
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
                 },
               ]
             : []),

@@ -19,11 +19,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
+import { useSearchParams } from 'react-router-dom';
+import remarkGfm from 'remark-gfm';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { useAgentStream } from '@/hooks/use-agent-stream';
@@ -42,7 +42,7 @@ function CitationLink({
   href?: string;
   children?: React.ReactNode;
 }) {
-  const text = typeof children === 'string' ? children : String(children ?? '');
+  const text = typeof children === 'string' ? children : '';
   const match = SOURCE_PATTERN.exec(text);
   if (match) {
     const label = match[1];
@@ -266,7 +266,10 @@ function MessageBubble({
             <p className="whitespace-pre-wrap">{message.content}</p>
           ) : (
             <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
                 {message.content}
               </ReactMarkdown>
             </div>
@@ -332,7 +335,12 @@ function StreamingBubble({
             </span>
           ) : (
             <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{text}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={markdownComponents}
+              >
+                {text}
+              </ReactMarkdown>
               {isStreaming && (
                 <span
                   aria-hidden="true"

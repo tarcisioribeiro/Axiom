@@ -33,8 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +40,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
@@ -233,7 +233,10 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         },
       ],
     };
-    localStorage.setItem('axiom.userTemplates', JSON.stringify([...templates, newTemplate]));
+    localStorage.setItem(
+      'axiom.userTemplates',
+      JSON.stringify([...templates, newTemplate])
+    );
     setIsSavingTemplate(false);
     setSaveTemplateTask(null);
     setTemplateName('');
@@ -564,7 +567,9 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t('pages.routineTasks.templates.saveAsTemplateTitle')}</DialogTitle>
+            <DialogTitle>
+              {t('pages.routineTasks.templates.saveAsTemplateTitle')}
+            </DialogTitle>
             <DialogDescription>
               {t('pages.routineTasks.templates.saveAsTemplateDesc')}
             </DialogDescription>

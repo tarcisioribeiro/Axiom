@@ -157,11 +157,7 @@ function GoalCard({
               <motion.div
                 className={cn(
                   'h-full rounded-full',
-                  pct >= 80
-                    ? 'bg-success'
-                    : pct < 30
-                      ? 'bg-destructive'
-                      : 'bg-primary'
+                  pct >= 80 ? 'bg-success' : pct < 30 ? 'bg-destructive' : 'bg-primary'
                 )}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(pct, 100)}%` }}

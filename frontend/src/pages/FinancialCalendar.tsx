@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import {
   format,
   startOfMonth,
@@ -10,27 +11,26 @@ import {
   subMonths,
   isSameDay,
 } from 'date-fns';
-import { ptBR, enUS } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import { receivablesService } from '@/services/receivables-service';
-import { loansService } from '@/services/loans-service';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import type { Payable, Receivable, Loan, CreditCardBill } from '@/types';
 
 type EventType = 'payable' | 'receivable' | 'creditCard' | 'loan';
@@ -169,7 +169,14 @@ export default function FinancialCalendar() {
     });
 
     return result;
-  }, [payablesQuery.data, receivablesQuery.data, loansQuery.data, billsQuery.data, startStr, endStr]);
+  }, [
+    payablesQuery.data,
+    receivablesQuery.data,
+    loansQuery.data,
+    billsQuery.data,
+    startStr,
+    endStr,
+  ]);
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
@@ -303,8 +310,13 @@ export default function FinancialCalendar() {
 
             <div className="mt-md flex flex-wrap gap-md">
               {(Object.keys(EVENT_COLORS) as EventType[]).map((type) => (
-                <div key={type} className="flex items-center gap-xs text-xs text-muted-foreground">
-                  <span className={cn('h-2.5 w-2.5 rounded-full', EVENT_DOT_COLORS[type])} />
+                <div
+                  key={type}
+                  className="flex items-center gap-xs text-xs text-muted-foreground"
+                >
+                  <span
+                    className={cn('h-2.5 w-2.5 rounded-full', EVENT_DOT_COLORS[type])}
+                  />
                   {t(`financialCalendar.eventTypes.${type}`)}
                 </div>
               ))}
@@ -318,7 +330,9 @@ export default function FinancialCalendar() {
               <div className="flex items-center justify-between">
                 <CardTitle as="h3">
                   {t('financialCalendar.dayDetail', {
-                    date: format(selectedDay, "dd 'de' MMMM", { locale: dateFnsLocale }),
+                    date: format(selectedDay, "dd 'de' MMMM", {
+                      locale: dateFnsLocale,
+                    }),
                   })}
                 </CardTitle>
                 <Button
@@ -354,7 +368,9 @@ export default function FinancialCalendar() {
                         </Badge>
                         <span className="text-sm font-medium">{ev.description}</span>
                       </div>
-                      <span className="text-sm font-bold">{formatCurrency(ev.value)}</span>
+                      <span className="text-sm font-bold">
+                        {formatCurrency(ev.value)}
+                      </span>
                     </div>
                   ))}
                 </div>

@@ -61,7 +61,10 @@ export function KanbanCard({ card }: KanbanCardProps) {
       animate={{ opacity: isDragging ? 0.4 : 1, y: 0, scale: isDragging ? 1.03 : 1 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
-      whileHover={{ scale: isDragging ? 1.03 : 1.01, boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}
+      whileHover={{
+        scale: isDragging ? 1.03 : 1.01,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+      }}
       className="cursor-grab rounded-lg border-2 border-border bg-card p-md shadow-sm active:cursor-grabbing"
     >
       <div className="flex items-start gap-3">

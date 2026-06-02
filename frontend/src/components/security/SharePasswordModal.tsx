@@ -375,7 +375,9 @@ export function SharePasswordModal({
                         {t('pages.sharePassword.previewLabel')}
                       </p>
                       <p className="text-sm font-medium">{password?.title}</p>
-                      <p className="text-xs text-muted-foreground">{password?.username}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {password?.username}
+                      </p>
                       <p className="mt-xs font-mono text-sm text-muted-foreground">
                         ••••••••
                       </p>
@@ -432,7 +434,11 @@ export function SharePasswordModal({
                           <code className="min-w-0 flex-1 break-all rounded bg-muted px-sm py-xs text-xs">
                             {newShareUrl}
                           </code>
-                          <Button size="sm" variant="outline" onClick={handleCopyNewLink}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCopyNewLink}
+                          >
                             <Copy className="h-3 w-3" />
                           </Button>
                         </div>
@@ -453,11 +459,12 @@ export function SharePasswordModal({
               <div />
             )}
             {step < 2 ? (
-              <Button onClick={goNext}>
-                {t('pages.sharePassword.nextBtn')}
-              </Button>
+              <Button onClick={goNext}>{t('pages.sharePassword.nextBtn')}</Button>
             ) : (
-              <Button onClick={() => void handleCreate()} disabled={isCreating || !!newShareUrl}>
+              <Button
+                onClick={() => void handleCreate()}
+                disabled={isCreating || !!newShareUrl}
+              >
                 {isCreating ? (
                   <>
                     <Loader2 className="mr-sm h-4 w-4 animate-spin" />
@@ -475,7 +482,9 @@ export function SharePasswordModal({
         </div>
 
         <div className="space-y-sm border-t pt-md">
-          <p className="text-sm font-medium">{t('pages.sharePassword.existingLinks')}</p>
+          <p className="text-sm font-medium">
+            {t('pages.sharePassword.existingLinks')}
+          </p>
 
           {isLoadingTokens ? (
             <div className="flex justify-center py-md">

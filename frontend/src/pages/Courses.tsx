@@ -15,8 +15,8 @@ import {
   Brain,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart,
   Bar,
@@ -37,7 +37,6 @@ import { CourseForm } from '@/components/library/CourseForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useChartColors } from '@/lib/chart-colors';
 import {
   Dialog,
   DialogContent,
@@ -51,6 +50,7 @@ import { PLATFORM_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
+import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { coursesService, courseSessionsService } from '@/services/courses-service';
@@ -247,7 +247,9 @@ export default function Courses() {
     queryFn: () =>
       courseSessionsService
         .getAll({ page_size: 200, session_date__gte: weekStart })
-        .then((r) => (Array.isArray(r) ? r : (r as { results: typeof r }).results ?? r)),
+        .then((r) =>
+          Array.isArray(r) ? r : ((r as { results: typeof r }).results ?? r)
+        ),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -262,7 +264,10 @@ export default function Courses() {
       const dow = (d.getDay() + 6) % 7;
       totals[dow] = (totals[dow] ?? 0) + (s.duration_hours ?? s.duration_minutes / 60);
     });
-    return dayNames.map((name, i) => ({ name, hours: Number((totals[i] ?? 0).toFixed(1)) }));
+    return dayNames.map((name, i) => ({
+      name,
+      hours: Number((totals[i] ?? 0).toFixed(1)),
+    }));
   }, [weekSessions]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['courses'] });
@@ -398,13 +403,17 @@ export default function Courses() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={weeklyHoursData} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
+              <BarChart
+                data={weeklyHoursData}
+                margin={{ top: 4, right: 8, bottom: 0, left: -24 }}
+              >
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip
-                  formatter={(value: number) =>
-                    [`${value}h`, t('pages.courses.studyHours.hours')]
-                  }
+                  formatter={(value: number) => [
+                    `${value}h`,
+                    t('pages.courses.studyHours.hours'),
+                  ]}
                 />
                 <Bar dataKey="hours" radius={[4, 4, 0, 0]} maxBarSize={40}>
                   {weeklyHoursData.map((_, index) => (

@@ -1,5 +1,22 @@
-import { CheckCircle2, Moon, Sun, Sunset, Timer, Play, Pause, RotateCcw } from 'lucide-react';
-import { useMemo, useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+/* eslint-disable max-lines */
+import {
+  CheckCircle2,
+  Moon,
+  Sun,
+  Sunset,
+  Timer,
+  Play,
+  Pause,
+  RotateCcw,
+} from 'lucide-react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -9,8 +26,8 @@ import { TodayKanbanView } from '@/components/today-tasks/TodayKanbanView';
 import { TodayListView } from '@/components/today-tasks/TodayListView';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
-import { useTodayTasks } from '@/hooks/use-today-tasks';
 import { useToast } from '@/hooks/use-toast';
+import { useTodayTasks } from '@/hooks/use-today-tasks';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'list' | 'kanban';
@@ -127,7 +144,11 @@ function PomodoroTimer() {
           size="icon"
           className="h-8 w-8"
           onClick={() => setRunning((r) => !r)}
-          aria-label={running ? t('pages.todayTasks.pomodoroPause') : t('pages.todayTasks.pomodoroStart')}
+          aria-label={
+            running
+              ? t('pages.todayTasks.pomodoroPause')
+              : t('pages.todayTasks.pomodoroStart')
+          }
         >
           {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
