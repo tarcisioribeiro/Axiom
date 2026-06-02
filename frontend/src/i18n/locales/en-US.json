@@ -245,10 +245,10 @@
       "courses": "Courses",
       "skills": "Skills",
       "knowledgeGraph": "Knowledge Graph",
-"financialCalendar": "Financial Calendar",
+      "financialCalendar": "Financial Calendar",
       "netWorth": "Net Worth",
       "subscriptions": "Subscriptions",
-"reflections": "Daily Reflections",
+      "reflections": "Daily Reflections",
       "tags": "Tags"
     },
     "agents": "AI Agents"
@@ -2007,8 +2007,8 @@
         "errorDesc": "Could not generate the IR report."
       },
       "monthComposition": "Month overview",
-"monthCompositionShort": "This month",
-"monthOverMonth": "Month over month",
+      "monthCompositionShort": "This month",
+      "monthOverMonth": "Month over month",
       "vsPrevMonth": "vs prev. month:",
       "installmentSimulator": "Installment Simulator"
     },
@@ -2122,7 +2122,7 @@
         "gaming": "Gaming",
         "other": "Other"
       },
-"hibp": {
+      "hibp": {
         "check": "Check for Breaches",
         "safe": "Password Safe",
         "breached": "Exposed {{count}}x",
@@ -2130,7 +2130,7 @@
         "errorDesc": "Could not check password. Please try again."
       },
       "keepCurrentPassword": "Leave blank to keep current",
-"keepCurrentPassword": "Leave blank to keep current",
+      "keepCurrentPassword": "Leave blank to keep current",
       "copyWithoutReveal": "Copy without revealing",
       "copied": "Copied!",
       "copiedClipboard": "Password copied to clipboard",
@@ -2649,10 +2649,10 @@
       "courseStatusInProgress": "In progress",
       "courseStatusPaused": "Paused",
       "courseStatusNotStarted": "Not started",
-"badges": {
+      "badges": {
         "title": "Achievements"
       },
-"streakDays": "days in a row",
+      "streakDays": "days in a row",
       "bestStreak": "best",
       "studyTimer": "Study timer",
       "studyMode": "Study mode",
@@ -3422,14 +3422,14 @@
       "workoutsByDayTitle": "Workouts by day of week — last 30 days",
       "noWorkoutsRegistered": "No workouts registered",
       "sessionCount_one": "{{count}} session",
-"sessionCount_other": "{{count}} sessions",
+      "sessionCount_other": "{{count}} sessions",
       "weeklyXP": "Weekly Progress — XP",
       "xpLabel": "XP this week",
       "xpProgress": "Level {{level}}",
       "insightCTAWorstDay": "Adjust routine",
       "insightCTAWorkout": "Log workout",
       "insightCTAGoals": "See goals",
-"sessionCount_other": "{{count}} sessions"
+      "sessionCount_other": "{{count}} sessions"
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -3481,14 +3481,14 @@
         "alreadyImported": "Nothing to import",
         "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list.",
         "saveAsTemplate": "Save as Template",
-"saveAsTemplateTitle": "Save as Template",
+        "saveAsTemplateTitle": "Save as Template",
         "saveAsTemplateDesc": "Give this template a name so you can reuse it in the future.",
         "templateNameLabel": "Template Name",
         "templateNamePlaceholder": "e.g. Morning Routine",
         "saveBtn": "Save Template",
         "saveSuccess": "Template saved!",
         "saveSuccessDesc": "The template \"{{name}}\" was saved successfully.",
-"saved": "Template saved locally"
+        "saved": "Template saved locally"
       },
       "export": {
         "btn": "Export Routine",
@@ -5380,7 +5380,7 @@
     "mcg": "mcg",
     "ui": "IU"
   },
-"financialCalendar": {
+  "financialCalendar": {
     "title": "Financial Calendar",
     "subtitle": "Unified temporal view of all due dates",
     "prevMonth": "Previous month",

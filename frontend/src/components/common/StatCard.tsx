@@ -54,8 +54,7 @@ const accentIconClasses: Record<NonNullable<StatCardProps['accentColor']>, strin
   red: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   blue: 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20',
   orange: 'bg-warning/12 text-warning ring-1 ring-inset ring-warning/25',
-  purple:
-    'bg-purple-500/12 text-purple-500 ring-1 ring-inset ring-purple-500/25',
+  purple: 'bg-purple-500/12 text-purple-500 ring-1 ring-inset ring-purple-500/25',
 };
 
 const accentValueClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
@@ -97,7 +96,9 @@ export const StatCard: React.FC<StatCardProps> = ({
     ? accentCardClasses[accentColor]
     : variantClasses[variant];
 
-  const iconClass = accentColor ? accentIconClasses[accentColor] : iconBadgeClasses[variant];
+  const iconClass = accentColor
+    ? accentIconClasses[accentColor]
+    : iconBadgeClasses[variant];
 
   const { isRatio, isPercentage, isCurrency, numericValue, isNumeric } = useMemo(() => {
     const ratio = typeof value === 'string' && value.includes('/');

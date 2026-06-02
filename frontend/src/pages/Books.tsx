@@ -22,8 +22,8 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const BookReader = lazy(() => import('./BookReader'));
 
@@ -47,14 +47,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -1059,7 +1059,9 @@ export default function Books() {
           </DialogHeader>
           <div className="flex flex-col gap-md py-sm">
             <div className="flex flex-col gap-xs">
-              <Label htmlFor="qc-book">{t('pages.books.quickCapture.selectBook')}</Label>
+              <Label htmlFor="qc-book">
+                {t('pages.books.quickCapture.selectBook')}
+              </Label>
               <Select
                 value={quickCaptureBookId === '' ? 'none' : String(quickCaptureBookId)}
                 onValueChange={(v) =>
@@ -1083,7 +1085,9 @@ export default function Books() {
               </Select>
             </div>
             <div className="flex flex-col gap-xs">
-              <Label htmlFor="qc-pages">{t('pages.books.quickCapture.pagesRead')}</Label>
+              <Label htmlFor="qc-pages">
+                {t('pages.books.quickCapture.pagesRead')}
+              </Label>
               <Input
                 id="qc-pages"
                 type="number"

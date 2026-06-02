@@ -7,7 +7,10 @@ async function sha1(text: string): Promise<string> {
   const data = encoder.encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-1', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  return hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
 }
 
 export interface HibpCheckResult {
@@ -26,7 +29,7 @@ class HibpService {
       { prefix }
     );
 
-    const lines = response.data.suffixes.split('\n');
+    const lines = response.suffixes.split('\n');
     for (const line of lines) {
       const [hashSuffix, countStr] = line.trim().split(':');
       if (hashSuffix && hashSuffix.toUpperCase() === suffix) {

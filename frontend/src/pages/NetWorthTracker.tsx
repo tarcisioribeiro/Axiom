@@ -1,6 +1,13 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, TrendingDown, Wallet, Vault as VaultIcon, CreditCard, HandCoins } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Vault as VaultIcon,
+  CreditCard,
+  HandCoins,
+} from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -12,12 +19,12 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
-import { vaultsService } from '@/services/vaults-service';
-import { loansService } from '@/services/loans-service';
 import { creditCardsService } from '@/services/credit-cards-service';
+import { loansService } from '@/services/loans-service';
+import { vaultsService } from '@/services/vaults-service';
 import type { Account, Vault, Loan, CreditCard as CreditCardType } from '@/types';
 
 export default function NetWorthTracker() {
@@ -111,7 +118,13 @@ export default function NetWorthTracker() {
       data.push({ name: t('netWorth.creditCards'), value: totalCreditCardLiabilities });
     }
     return data;
-  }, [totalBankAssets, totalVaultAssets, totalLoanLiabilities, totalCreditCardLiabilities, t]);
+  }, [
+    totalBankAssets,
+    totalVaultAssets,
+    totalLoanLiabilities,
+    totalCreditCardLiabilities,
+    t,
+  ]);
 
   const PIE_COLORS = ['#22c55e', '#3b82f6', '#ef4444', '#f97316'];
 
@@ -151,7 +164,9 @@ export default function NetWorthTracker() {
         <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
           <Card>
             <CardHeader className="pb-sm">
-              <CardTitle as="h2">{t('netWorth.assetsLabel')} vs {t('netWorth.liabilitiesLabel')}</CardTitle>
+              <CardTitle as="h2">
+                {t('netWorth.assetsLabel')} vs {t('netWorth.liabilitiesLabel')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {pieData.length > 0 ? (
@@ -165,12 +180,15 @@ export default function NetWorthTracker() {
                       cy="50%"
                       outerRadius={100}
                       label={({ name, percent }) =>
-                        `${name}: ${(percent * 100).toFixed(0)}%`
+                        `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
                       }
                       labelLine={false}
                     >
                       {pieData.map((_, index) => (
-                        <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        <Cell
+                          key={index}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip formatter={(v: number) => formatCurrency(v)} />
@@ -190,7 +208,9 @@ export default function NetWorthTracker() {
               <CardHeader className="pb-sm">
                 <div className="flex items-center gap-sm">
                   <TrendingUp className="h-4 w-4 text-success" />
-                  <CardTitle as="h3" className="text-base">{t('netWorth.assetsSection')}</CardTitle>
+                  <CardTitle as="h3" className="text-base">
+                    {t('netWorth.assetsSection')}
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-sm">
@@ -237,7 +257,9 @@ export default function NetWorthTracker() {
               <CardHeader className="pb-sm">
                 <div className="flex items-center gap-sm">
                   <TrendingDown className="h-4 w-4 text-destructive" />
-                  <CardTitle as="h3" className="text-base">{t('netWorth.liabilitiesSection')}</CardTitle>
+                  <CardTitle as="h3" className="text-base">
+                    {t('netWorth.liabilitiesSection')}
+                  </CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-sm">

@@ -24,8 +24,8 @@ import {
   Star,
 } from 'lucide-react';
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -365,7 +365,9 @@ export default function PersonalPlanningDashboard() {
             </div>
             <div className="flex-1 space-y-xs">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t('pages.planningDashboard.xpProgress', { level: weeklyXP.level })}</span>
+                <span>
+                  {t('pages.planningDashboard.xpProgress', { level: weeklyXP.level })}
+                </span>
                 <span>{weeklyXP.xpInLevel}/100 XP</span>
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-muted">
@@ -797,7 +799,10 @@ export default function PersonalPlanningDashboard() {
                             : null;
 
                     return (
-                      <li key={i} className="flex items-start justify-between gap-sm text-sm leading-relaxed">
+                      <li
+                        key={i}
+                        className="flex items-start justify-between gap-sm text-sm leading-relaxed"
+                      >
                         <div className="flex gap-sm">
                           <span className="mt-0.5 shrink-0 text-primary">•</span>
                           <span>{renderInsight(insight, t)}</span>

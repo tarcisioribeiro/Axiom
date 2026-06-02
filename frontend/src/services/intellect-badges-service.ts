@@ -17,7 +17,7 @@ class IntellectBadgesService {
     const response = await apiClient.get<{ results: IntellectBadge[]; count: number }>(
       API_CONFIG.ENDPOINTS.INTELLECT_BADGES
     );
-    return response.data.results ?? [];
+    return response.results ?? [];
   }
 }
 

@@ -1,10 +1,5 @@
-/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import {
-  RefreshCcw,
-  AlertTriangle,
-  CalendarClock,
-} from 'lucide-react';
+import { RefreshCcw, AlertTriangle, CalendarClock } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,10 +11,10 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { translateCategory } from '@/lib/helpers';
 import { formatCurrency } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
+import { translateCategory } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense } from '@/types';
 
@@ -68,8 +63,7 @@ export default function SubscriptionTracker() {
     return all.filter(
       (e) =>
         e.is_active &&
-        (SUBSCRIPTION_CATEGORIES.has(e.category) ||
-          e.payment_method === 'credit_card')
+        (SUBSCRIPTION_CATEGORIES.has(e.category) || e.payment_method === 'credit_card')
     );
   }, [fixedExpensesQuery.data]);
 
@@ -114,7 +108,9 @@ export default function SubscriptionTracker() {
             icon={<CalendarClock className="h-5 w-5" />}
             accentColor="blue"
             prominent
-            description={t('subscriptions.activeCount', { count: subscriptions.length })}
+            description={t('subscriptions.activeCount', {
+              count: subscriptions.length,
+            })}
           />
           {dueSoon.length > 0 && (
             <StatCard
@@ -155,9 +151,7 @@ export default function SubscriptionTracker() {
                             key={sub.id}
                             className={cn(
                               'flex items-center justify-between rounded-lg border p-sm transition-colors',
-                              soon
-                                ? 'border-warning/40 bg-warning/5'
-                                : 'bg-muted/20'
+                              soon ? 'border-warning/40 bg-warning/5' : 'bg-muted/20'
                             )}
                           >
                             <div className="min-w-0 flex-1">
@@ -168,7 +162,7 @@ export default function SubscriptionTracker() {
                                 {soon && (
                                   <Badge
                                     variant="outline"
-                                    className="border-warning/40 text-warning text-xs"
+                                    className="border-warning/40 text-xs text-warning"
                                   >
                                     <AlertTriangle className="mr-xs h-3 w-3" />
                                     {t('subscriptions.dueSoon')}

@@ -222,7 +222,7 @@ export function RoutineTaskForm({
         return t('pages.routineTasks.form.frequencyPreview.weekdays');
       case 'weekly': {
         const wd = watch('weekday');
-        return wd !== undefined
+        return wd != null
           ? t('pages.routineTasks.form.frequencyPreview.weekly', {
               day: weekdayNames[wd],
             })
@@ -379,9 +379,7 @@ export function RoutineTaskForm({
               ))}
             </div>
             {frequencyPreview() && (
-              <p className="text-xs font-medium text-primary">
-                {frequencyPreview()}
-              </p>
+              <p className="text-xs font-medium text-primary">{frequencyPreview()}</p>
             )}
             {errors.periodicity && (
               <p className="mt-xs text-sm text-destructive">

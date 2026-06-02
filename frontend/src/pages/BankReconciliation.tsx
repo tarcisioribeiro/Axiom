@@ -1,5 +1,12 @@
 /* eslint-disable max-lines */
-import { ArrowLeftRight, FileUp, RefreshCw, Upload, Search, CheckCircle2 } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  FileUp,
+  RefreshCw,
+  Upload,
+  Search,
+  CheckCircle2,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

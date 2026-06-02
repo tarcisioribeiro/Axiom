@@ -1116,7 +1116,14 @@ interface QuickLogFormProps {
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function QuickLogForm({ plans, days, ownerId, onSuccess, onCancel, t }: QuickLogFormProps) {
+function QuickLogForm({
+  plans,
+  days,
+  ownerId,
+  onSuccess,
+  onCancel,
+  t,
+}: QuickLogFormProps) {
   const { toast } = useToast();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedDayId, setSelectedDayId] = useState<string>('none');
@@ -1124,9 +1131,10 @@ function QuickLogForm({ plans, days, ownerId, onSuccess, onCancel, t }: QuickLog
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activePlans = plans.filter((p) => p.is_active);
-  const relevantDays = activePlans.length > 0
-    ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
-    : days;
+  const relevantDays =
+    activePlans.length > 0
+      ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
+      : days;
 
   const handleConfirm = async () => {
     try {
@@ -1141,9 +1149,7 @@ function QuickLogForm({ plans, days, ownerId, onSuccess, onCancel, t }: QuickLog
         finished_at: toTimeStr(finished),
         owner: ownerId,
         workout_day:
-          selectedDayId && selectedDayId !== 'none'
-            ? Number(selectedDayId)
-            : undefined,
+          selectedDayId && selectedDayId !== 'none' ? Number(selectedDayId) : undefined,
       });
       toast({ title: t('pages.workoutSessions.quickLogSuccess') });
       onSuccess();
@@ -1161,7 +1167,10 @@ function QuickLogForm({ plans, days, ownerId, onSuccess, onCancel, t }: QuickLog
     <div className="space-y-lg">
       {step === 1 && (
         <div className="space-y-md">
-          <FormSection title={t('pages.workoutSessions.quickLogStep1')} icon={ClipboardList}>
+          <FormSection
+            title={t('pages.workoutSessions.quickLogStep1')}
+            icon={ClipboardList}
+          >
             <div className="space-y-sm">
               <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
               <select
