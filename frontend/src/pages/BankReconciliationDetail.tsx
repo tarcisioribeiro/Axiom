@@ -6,6 +6,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Unlink,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -346,13 +347,28 @@ export default function BankReconciliationDetail() {
       key: 'actions',
       label: t('common.table.actions'),
       render: (entry) => {
-        if (entry.status === 'matched' || entry.status === 'ignored') return null;
+        if (entry.status === 'ignored') return null;
         const isUpdating = updatingId === entry.id;
         const hasMatch = !!(entry.matched_expense ?? entry.matched_revenue);
         const isDebit = entry.transaction_type === 'debit';
 
         return (
           <div className="flex flex-wrap gap-xs">
+            {/* Matched entries: show unmatch button */}
+            {entry.status === 'matched' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-xs border-warning/50 text-warning hover:bg-warning/10"
+                disabled={isUpdating}
+                title={t('pages.bankReconciliation.detail.unmatchBtn')}
+                onClick={() => handleUpdateEntry(entry, 'pending', null, null)}
+              >
+                <Unlink className="h-3 w-3" />
+                {t('pages.bankReconciliation.detail.unmatchBtn')}
+              </Button>
+            )}
+
             {/* Auto-match confirmation buttons (pending entries with a suggestion) */}
             {entry.status === 'pending' && hasMatch && (
               <Button
@@ -372,21 +388,24 @@ export default function BankReconciliationDetail() {
                 ✓
               </Button>
             )}
-            {entry.status === 'pending' && (
+            {(entry.status === 'pending' || entry.status === 'unmatched') && (
               <>
+                {entry.status === 'pending' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                    disabled={isUpdating}
+                    onClick={() => handleUpdateEntry(entry, 'unmatched')}
+                  >
+                    ✗
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
                   disabled={isUpdating}
-                  onClick={() => handleUpdateEntry(entry, 'unmatched')}
-                >
-                  ✗
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isUpdating}
+                  title={t('pages.bankReconciliation.detail.ignoreBtn')}
                   onClick={() => handleUpdateEntry(entry, 'ignored')}
                 >
                   —

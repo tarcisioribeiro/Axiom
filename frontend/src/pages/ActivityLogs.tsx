@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
@@ -10,6 +11,7 @@ import {
   Eye,
   Key,
   Download,
+  FileDown,
   LogIn,
   LogOut,
   ShieldAlert,
@@ -25,6 +27,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { activityLogsService } from '@/services/activity-logs-service';
@@ -122,6 +125,7 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
 export default function ActivityLogs() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
@@ -166,13 +170,44 @@ export default function ActivityLogs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logs, dateFnsLocale]);
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      await activityLogsService.exportCSV();
+      toast({ title: t('pages.activityLogs.exportSuccess') });
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.exportError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingState />;
   }
 
   return (
     <PageContainer>
-      <PageHeader title={t('pages.activityLogs.title')} icon={<ScrollText />} />
+      <PageHeader title={t('pages.activityLogs.title')} icon={<ScrollText />}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void handleExport()}
+          disabled={isExporting || logs.length === 0}
+          className="gap-xs"
+        >
+          {isExporting ? (
+            <Activity className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4" />
+          )}
+          {t('pages.activityLogs.exportBtn')}
+        </Button>
+      </PageHeader>
 
       {logs.length === 0 ? (
         <EmptyState

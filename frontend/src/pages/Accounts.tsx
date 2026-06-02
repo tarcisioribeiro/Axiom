@@ -501,7 +501,7 @@ export default function Accounts() {
                         title="Conciliação Bancária"
                         aria-label="Conciliação Bancária"
                       >
-                        <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -511,7 +511,7 @@ export default function Accounts() {
                         title={t('common.actions.edit')}
                         aria-label={t('common.actions.edit')}
                       >
-                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -522,7 +522,7 @@ export default function Accounts() {
                         aria-label={t('common.actions.delete')}
                       >
                         <Trash2
-                          className="h-3.5 w-3.5 text-destructive"
+                          className="h-4 w-4 text-destructive"
                           aria-hidden="true"
                         />
                       </Button>

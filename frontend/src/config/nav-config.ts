@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
@@ -33,6 +34,12 @@ import {
   Library,
   BookMarked,
   Scale,
+  CalendarDays,
+  TrendingUp,
+  RefreshCcw,
+  NotebookPen,
+  ListTodo,
+  HeartPulse,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -75,18 +82,44 @@ export const navModules: NavModule[] = [
     id: 'planning',
     titleKey: 'nav.modules.planning',
     icon: Calendar,
-    items: [
+    topItems: [
       { titleKey: 'nav.dashboard', href: '/planning/dashboard', icon: LayoutDashboard },
+    ],
+    subModules: [
       {
-        titleKey: 'nav.items.tasksGoals',
-        href: '/planning/tasks-goals',
-        icon: CheckCircle2,
+        id: 'planning-daily',
+        titleKey: 'nav.submodules.daily',
+        icon: ListTodo,
+        items: [
+          {
+            titleKey: 'nav.items.dailyChecklist',
+            href: '/planning/daily-checklist',
+            icon: CheckCircle2,
+          },
+          {
+            titleKey: 'nav.items.tasksGoals',
+            href: '/planning/tasks-goals',
+            icon: Target,
+          },
+          {
+            titleKey: 'nav.items.reflections',
+            href: '/planning/reflections',
+            icon: NotebookPen,
+          },
+        ],
       },
-      { titleKey: 'nav.items.workout', href: '/planning/workout', icon: Dumbbell },
       {
-        titleKey: 'nav.items.nutrition',
-        href: '/planning/nutrition',
-        icon: UtensilsCrossed,
+        id: 'planning-health',
+        titleKey: 'nav.submodules.health',
+        icon: HeartPulse,
+        items: [
+          { titleKey: 'nav.items.workout', href: '/planning/workout', icon: Dumbbell },
+          {
+            titleKey: 'nav.items.nutrition',
+            href: '/planning/nutrition',
+            icon: UtensilsCrossed,
+          },
+        ],
       },
     ],
   },
@@ -126,6 +159,11 @@ export const navModules: NavModule[] = [
             href: '/categorization-rules',
             icon: Tag,
           },
+          {
+            titleKey: 'nav.items.tags',
+            href: '/tags',
+            icon: Tag,
+          },
         ],
       },
       {
@@ -150,6 +188,21 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.bankReconciliation',
             href: '/bank-reconciliation',
             icon: Scale,
+          },
+          {
+            titleKey: 'nav.items.financialCalendar',
+            href: '/finance/calendar',
+            icon: CalendarDays,
+          },
+          {
+            titleKey: 'nav.items.netWorth',
+            href: '/finance/net-worth',
+            icon: TrendingUp,
+          },
+          {
+            titleKey: 'nav.items.subscriptions',
+            href: '/finance/subscriptions',
+            icon: RefreshCcw,
           },
         ],
       },

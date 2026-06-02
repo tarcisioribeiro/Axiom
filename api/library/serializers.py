@@ -11,6 +11,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    IntellectBadge,
     KnowledgeLink,
     LiteraryTypeGoal,
     Publisher,
@@ -1115,3 +1116,30 @@ class KnowledgeLinkCreateUpdateSerializer(serializers.ModelSerializer):
             "relation_label",
             "owner",
         ]
+
+
+# ============================================================================
+# INTELLECT BADGE SERIALIZER
+# ============================================================================
+
+
+class IntellectBadgeSerializer(serializers.ModelSerializer):
+    code_display = serializers.CharField(
+        source="get_code_display", read_only=True
+    )
+    level_display = serializers.CharField(
+        source="get_level_display", read_only=True
+    )
+
+    class Meta:
+        model = IntellectBadge
+        fields = [
+            "id",
+            "code",
+            "code_display",
+            "level",
+            "level_display",
+            "awarded_at",
+            "created_at",
+        ]
+        read_only_fields = fields

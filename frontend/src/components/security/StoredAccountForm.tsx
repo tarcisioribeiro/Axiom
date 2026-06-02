@@ -9,8 +9,9 @@ import {
   Link2,
   Loader2,
   Lock,
+  Search,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -33,11 +34,36 @@ import type { StoredBankAccount, Account, Member } from '@/types';
 const ACCOUNT_TYPE_VALUES = ['CC', 'CS', 'CP', 'CI', 'OTHER'] as const;
 
 const INSTITUTIONS = [
-  { value: 'NUB', label: 'Nubank' },
-  { value: 'SIC', label: 'Sicoob' },
-  { value: 'MPG', label: 'Mercado Pago' },
-  { value: 'IFB', label: 'Ifood Benefícios' },
-  { value: 'CEF', label: 'Caixa Econômica Federal' },
+  { value: 'NUB', label: 'Nubank', ispb: '18236120' },
+  { value: 'SIC', label: 'Sicoob', ispb: '00714671' },
+  { value: 'MPG', label: 'Mercado Pago', ispb: '10573521' },
+  { value: 'IFB', label: 'Ifood Benefícios', ispb: '' },
+  { value: 'CEF', label: 'Caixa Econômica Federal', ispb: '00360305' },
+  { value: 'BB', label: 'Banco do Brasil', ispb: '00000000' },
+  { value: 'BRD', label: 'Bradesco', ispb: '60746948' },
+  { value: 'ITA', label: 'Itaú', ispb: '60701190' },
+  { value: 'SAN', label: 'Santander', ispb: '90400888' },
+  { value: 'INT', label: 'Inter', ispb: '00416968' },
+  { value: 'C6B', label: 'C6 Bank', ispb: '31872495' },
+  { value: 'XPB', label: 'XP Investimentos', ispb: '02332886' },
+  { value: 'BTG', label: 'BTG Pactual', ispb: '30306294' },
+  { value: 'PAN', label: 'Banco PAN', ispb: '59285411' },
+  { value: 'NXB', label: 'Next', ispb: '60746948' },
+  { value: 'ORI', label: 'Banco Original', ispb: '92894922' },
+  { value: 'PIC', label: 'Picpay', ispb: '22896431' },
+  { value: 'REK', label: 'Reck', ispb: '' },
+  { value: 'WIS', label: 'Wise', ispb: '' },
+  { value: 'PAG', label: 'PagBank', ispb: '08561701' },
+  { value: 'AVL', label: 'Agibank', ispb: '25228719' },
+  { value: 'SIE', label: 'Sicredi', ispb: '01181521' },
+  { value: 'ACR', label: 'Banco Ailos (ACRESCIMO)', ispb: '04902979' },
+  { value: 'UNO', label: 'Unicred', ispb: '03046391' },
+  { value: 'BAN', label: 'Banrisul', ispb: '92702067' },
+  { value: 'SFN', label: 'Safra', ispb: '58160789' },
+  { value: 'MOD', label: 'Modalmais', ispb: '30723886' },
+  { value: 'TOT', label: 'Totvs Financial', ispb: '' },
+  { value: 'REC', label: 'RecargaPay', ispb: '' },
+  { value: 'OTH', label: 'Outro', ispb: '' },
 ];
 
 interface StoredAccountFormProps {
@@ -60,6 +86,16 @@ export function StoredAccountForm({
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showSecondPassword, setShowSecondPassword] = useState(false);
+  const [bankSearch, setBankSearch] = useState('');
+  const [showBankDropdown, setShowBankDropdown] = useState(false);
+
+  const filteredInstitutions = useMemo(() => {
+    if (!bankSearch) return INSTITUTIONS;
+    const q = bankSearch.toLowerCase();
+    return INSTITUTIONS.filter(
+      (i) => i.label.toLowerCase().includes(q) || i.ispb.includes(q)
+    );
+  }, [bankSearch]);
 
   const {
     register,
@@ -125,30 +161,77 @@ export function StoredAccountForm({
               <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.storedAccounts.form.institutionLabel')}
             </Label>
-            <Select
-              value={watch('institution_name') || ''}
-              onValueChange={(value) => setValue('institution_name', value)}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.storedAccounts.form.institutionPlaceholder')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {INSTITUTIONS.map((inst) => (
-                  <SelectItem key={inst.value} value={inst.value}>
-                    <span className="flex items-center gap-2">
-                      {(() => {
-                        const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
-                        return <InstIcon className="h-4 w-4" />;
-                      })()}
-                      {inst.label}
+            <div className="relative">
+              <button
+                type="button"
+                className="flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                onClick={() => setShowBankDropdown((v) => !v)}
+              >
+                {(() => {
+                  const selected = INSTITUTIONS.find(
+                    (i) => i.value === watch('institution_name')
+                  );
+                  if (selected) {
+                    const InstIcon = INSTITUTION_ICONS[selected.value] ?? Building2;
+                    return (
+                      <span className="flex items-center gap-2">
+                        <InstIcon className="h-4 w-4" />
+                        {selected.label}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="text-muted-foreground">
+                      {t('pages.storedAccounts.form.institutionPlaceholder')}
                     </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  );
+                })()}
+              </button>
+
+              {showBankDropdown && (
+                <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md">
+                  <div className="flex items-center gap-xs border-b border-border p-sm">
+                    <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                    <input
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      placeholder={t('pages.storedAccounts.form.bankSearchPlaceholder')}
+                      value={bankSearch}
+                      onChange={(e) => setBankSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="custom-scrollbar max-h-48 overflow-y-auto">
+                    {filteredInstitutions.map((inst) => {
+                      const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
+                      return (
+                        <button
+                          key={inst.value}
+                          type="button"
+                          className="flex w-full items-center gap-2 px-md py-sm text-sm hover:bg-muted"
+                          onClick={() => {
+                            setValue('institution_name', inst.value);
+                            setBankSearch('');
+                            setShowBankDropdown(false);
+                          }}
+                        >
+                          <InstIcon className="h-4 w-4 shrink-0" />
+                          <span className="flex-1 text-left">{inst.label}</span>
+                          {inst.ispb && (
+                            <span className="text-xs text-muted-foreground">
+                              {inst.ispb}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                    {filteredInstitutions.length === 0 && (
+                      <p className="px-md py-sm text-sm text-muted-foreground">
+                        {t('common.noResults')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             {errors.institution_name && (
               <p className="mt-xs text-sm text-destructive">
                 {errors.institution_name.message}

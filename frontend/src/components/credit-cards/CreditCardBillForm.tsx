@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -192,195 +193,202 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
-        <div className="space-y-sm md:col-span-2">
-          <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
-          <Select
-            value={watch('credit_card') > 0 ? watch('credit_card').toString() : ''}
-            onValueChange={(v) => setValue('credit_card', parseInt(v))}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.creditCardBills.form.creditCardPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {creditCards.map((c) => {
-                // Extrai apenas os dígitos do número mascarado
-                const digitsOnly = c.card_number_masked
-                  ? c.card_number_masked.replace(/[^\d]/g, '')
-                  : '';
-                const last4 =
-                  digitsOnly && digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
-                const brandName =
-                  TRANSLATIONS.cardBrands[
-                    c.flag as keyof typeof TRANSLATIONS.cardBrands
-                  ] || c.flag;
-                const accountName = c.associated_account_name || 'Conta não informada';
-                return (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.on_card_name} ****{last4} - {brandName} - {accountName}
+      <FormSection title={t('pages.creditCardBills.form.sectionBasic')}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm md:col-span-2">
+            <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
+            <Select
+              value={watch('credit_card') > 0 ? watch('credit_card').toString() : ''}
+              onValueChange={(v) => setValue('credit_card', parseInt(v))}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={t('pages.creditCardBills.form.creditCardPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {creditCards.map((c) => {
+                  // Extrai apenas os dígitos do número mascarado
+                  const digitsOnly = c.card_number_masked
+                    ? c.card_number_masked.replace(/[^\d]/g, '')
+                    : '';
+                  const last4 =
+                    digitsOnly && digitsOnly.length >= 4
+                      ? digitsOnly.slice(-4)
+                      : '****';
+                  const brandName =
+                    TRANSLATIONS.cardBrands[
+                      c.flag as keyof typeof TRANSLATIONS.cardBrands
+                    ] || c.flag;
+                  const accountName =
+                    c.associated_account_name || 'Conta não informada';
+                  return (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.on_card_name} ****{last4} - {brandName} - {accountName}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-sm">
+            <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
+            <Select value={watch('year')} onValueChange={(v) => setValue('year', v)}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={t('pages.creditCardBills.form.yearPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
                   </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-sm">
-          <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
-          <Select value={watch('year')} onValueChange={(v) => setValue('year', v)}>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.creditCardBills.form.yearPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-sm">
+            <Label>{t('pages.creditCardBills.form.monthLabel')}</Label>
+            <Select value={watch('month')} onValueChange={(v) => setValue('month', v)}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={t('pages.creditCardBills.form.monthPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TRANSLATIONS.months).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-sm">
-          <Label>{t('pages.creditCardBills.form.monthLabel')}</Label>
-          <Select value={watch('month')} onValueChange={(v) => setValue('month', v)}>
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.creditCardBills.form.monthPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(TRANSLATIONS.months).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-sm">
+            <Label htmlFor="invoice_beginning_date">
+              {t('pages.creditCardBills.form.startDateLabel')}
+            </Label>
+            <DatePicker
+              value={watch('invoice_beginning_date')}
+              onChange={(date) =>
+                setValue('invoice_beginning_date', date ? formatLocalDate(date) : '')
+              }
+              placeholder={t('pages.creditCardBills.form.startDatePlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
 
-        <div className="space-y-sm">
-          <Label htmlFor="invoice_beginning_date">
-            {t('pages.creditCardBills.form.startDateLabel')}
-          </Label>
-          <DatePicker
-            value={watch('invoice_beginning_date')}
-            onChange={(date) =>
-              setValue('invoice_beginning_date', date ? formatLocalDate(date) : '')
-            }
-            placeholder={t('pages.creditCardBills.form.startDatePlaceholder')}
-            disabled={isLoading}
-          />
-        </div>
+          <div className="space-y-sm">
+            <Label htmlFor="invoice_ending_date">
+              {t('pages.creditCardBills.form.endDateLabel')}
+            </Label>
+            <DatePicker
+              value={watch('invoice_ending_date')}
+              onChange={(date) =>
+                setValue('invoice_ending_date', date ? formatLocalDate(date) : '')
+              }
+              placeholder={t('pages.creditCardBills.form.endDatePlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
 
-        <div className="space-y-sm">
-          <Label htmlFor="invoice_ending_date">
-            {t('pages.creditCardBills.form.endDateLabel')}
-          </Label>
-          <DatePicker
-            value={watch('invoice_ending_date')}
-            onChange={(date) =>
-              setValue('invoice_ending_date', date ? formatLocalDate(date) : '')
-            }
-            placeholder={t('pages.creditCardBills.form.endDatePlaceholder')}
-            disabled={isLoading}
-          />
-        </div>
+          <div className="space-y-sm">
+            <Label htmlFor="due_date">
+              {t('pages.creditCardBills.form.dueDateLabel')}
+            </Label>
+            <DatePicker
+              value={watch('due_date')}
+              onChange={(date) =>
+                setValue('due_date', date ? formatLocalDate(date) : '')
+              }
+              placeholder={t('pages.creditCardBills.form.dueDatePlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
 
-        <div className="space-y-sm">
-          <Label htmlFor="due_date">
-            {t('pages.creditCardBills.form.dueDateLabel')}
-          </Label>
-          <DatePicker
-            value={watch('due_date')}
-            onChange={(date) => setValue('due_date', date ? formatLocalDate(date) : '')}
-            placeholder={t('pages.creditCardBills.form.dueDatePlaceholder')}
-            disabled={isLoading}
-          />
-        </div>
-
-        {bill && (
-          <>
-            <div className="space-y-sm">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="total_amount">
-                  {t('pages.creditCardBills.form.totalAmountLabel')}
-                </Label>
-                {isCalculating && (
-                  <span className="text-xs">
-                    {t('pages.creditCardBills.form.calculating')}
-                  </span>
-                )}
+          {bill && (
+            <>
+              <div className="space-y-sm">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="total_amount">
+                    {t('pages.creditCardBills.form.totalAmountLabel')}
+                  </Label>
+                  {isCalculating && (
+                    <span className="text-xs">
+                      {t('pages.creditCardBills.form.calculating')}
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="total_amount"
+                  type="number"
+                  step="0.01"
+                  {...register('total_amount', { valueAsNumber: true })}
+                  placeholder="0.00"
+                  className="font-semibold"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.creditCardBills.form.totalAmountHint')}
+                </p>
               </div>
-              <Input
-                id="total_amount"
-                type="number"
-                step="0.01"
-                {...register('total_amount', { valueAsNumber: true })}
-                placeholder="0.00"
-                className="font-semibold"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('pages.creditCardBills.form.totalAmountHint')}
-              </p>
-            </div>
 
-            <div className="space-y-sm">
-              <Label htmlFor="minimum_payment">
-                {t('pages.creditCardBills.form.minPaymentLabel')}
-              </Label>
-              <Input
-                id="minimum_payment"
-                type="number"
-                step="0.01"
-                {...register('minimum_payment', { valueAsNumber: true })}
-                placeholder="0.00"
-                disabled
-                className="font-semibold text-warning"
-              />
-              <p className="text-xs">
-                {t('pages.creditCardBills.form.minPaymentHint')}
-              </p>
-            </div>
+              <div className="space-y-sm">
+                <Label htmlFor="minimum_payment">
+                  {t('pages.creditCardBills.form.minPaymentLabel')}
+                </Label>
+                <Input
+                  id="minimum_payment"
+                  type="number"
+                  step="0.01"
+                  {...register('minimum_payment', { valueAsNumber: true })}
+                  placeholder="0.00"
+                  disabled
+                  className="font-semibold text-warning"
+                />
+                <p className="text-xs">
+                  {t('pages.creditCardBills.form.minPaymentHint')}
+                </p>
+              </div>
 
-            <div className="space-y-sm">
-              <Label htmlFor="paid_amount">
-                {t('pages.creditCardBills.form.paidAmountLabel')}
-              </Label>
-              <Input
-                id="paid_amount"
-                type="number"
-                step="0.01"
-                {...register('paid_amount', { valueAsNumber: true })}
-                placeholder="0.00"
-                disabled
-                className="font-semibold text-success"
-              />
-              <p className="text-xs">
-                {t('pages.creditCardBills.form.paidAmountHint')}
-              </p>
-            </div>
+              <div className="space-y-sm">
+                <Label htmlFor="paid_amount">
+                  {t('pages.creditCardBills.form.paidAmountLabel')}
+                </Label>
+                <Input
+                  id="paid_amount"
+                  type="number"
+                  step="0.01"
+                  {...register('paid_amount', { valueAsNumber: true })}
+                  placeholder="0.00"
+                  disabled
+                  className="font-semibold text-success"
+                />
+                <p className="text-xs">
+                  {t('pages.creditCardBills.form.paidAmountHint')}
+                </p>
+              </div>
 
-            <div className="space-y-sm">
-              <Label htmlFor="payment_date">
-                {t('pages.creditCardBills.form.paymentDateLabel')}
-              </Label>
-              <DatePicker
-                value={watch('payment_date')}
-                onChange={(date) =>
-                  setValue('payment_date', date ? formatLocalDate(date) : '')
-                }
-                placeholder={t('pages.creditCardBills.form.paymentDatePlaceholder')}
-                disabled={isLoading}
-              />
-            </div>
-          </>
-        )}
-      </div>
+              <div className="space-y-sm">
+                <Label htmlFor="payment_date">
+                  {t('pages.creditCardBills.form.paymentDateLabel')}
+                </Label>
+                <DatePicker
+                  value={watch('payment_date')}
+                  onChange={(date) =>
+                    setValue('payment_date', date ? formatLocalDate(date) : '')
+                  }
+                  placeholder={t('pages.creditCardBills.form.paymentDatePlaceholder')}
+                  disabled={isLoading}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </FormSection>
 
       <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>

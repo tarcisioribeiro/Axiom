@@ -1,4 +1,3 @@
-import json
 import time
 
 from django.contrib.auth.models import User
@@ -121,7 +120,7 @@ class Command(BaseCommand):
         dry_run: bool,
     ) -> bool:
         from agents.core.llm_client import LLMClient
-        from agents.models import EmbeddingDocument
+        from agents.models import AgentEmbedding
 
         if dry_run:
             self.stdout.write(f"  [DRY-RUN] {source_title[:60]}...")
@@ -136,16 +135,16 @@ class Command(BaseCommand):
             )
             return False
 
-        EmbeddingDocument.objects.update_or_create(
+        AgentEmbedding.objects.update_or_create(
             user=user,
             source_id=source_id,
-            content=content,
+            source_type=source_type,
             defaults={
-                "source_type": source_type,
-                "source_title": source_title,
-                "embedding_json": json.dumps(embedding),
-                "created_by": user,
-                "updated_by": user,
+                "domain": "library",
+                "source_title": source_title[:255],
+                "content": content,
+                "embedding": embedding,
+                "is_deleted": False,
             },
         )
         time.sleep(0.05)  # Evita sobrecarga no Ollama
@@ -154,7 +153,7 @@ class Command(BaseCommand):
     def _index_summaries(
         self, user: User, force: bool, dry_run: bool, chunk_size: int
     ) -> tuple[int, int]:
-        from agents.models import EmbeddingDocument
+        from agents.models import AgentEmbedding
         from library.models import Summary
 
         summaries = Summary.objects.filter(
@@ -164,7 +163,7 @@ class Command(BaseCommand):
 
         if not force:
             already_indexed = set(
-                EmbeddingDocument.objects.filter(
+                AgentEmbedding.objects.filter(
                     user=user, source_type="book_summary"
                 ).values_list("source_id", flat=True)
             )
@@ -206,7 +205,7 @@ class Command(BaseCommand):
     def _index_reading_notes(
         self, user: User, force: bool, dry_run: bool, chunk_size: int
     ) -> tuple[int, int]:
-        from agents.models import EmbeddingDocument
+        from agents.models import AgentEmbedding
         from library.models import Reading
 
         readings = (
@@ -221,7 +220,7 @@ class Command(BaseCommand):
 
         if not force:
             already_indexed = set(
-                EmbeddingDocument.objects.filter(
+                AgentEmbedding.objects.filter(
                     user=user, source_type="reading_note"
                 ).values_list("source_id", flat=True)
             )
@@ -262,7 +261,7 @@ class Command(BaseCommand):
     def _index_highlights(
         self, user: User, force: bool, dry_run: bool, chunk_size: int
     ) -> tuple[int, int]:
-        from agents.models import EmbeddingDocument
+        from agents.models import AgentEmbedding
         from library.models import BookHighlight
 
         highlights = BookHighlight.objects.filter(
@@ -272,8 +271,8 @@ class Command(BaseCommand):
 
         if not force:
             already_indexed = set(
-                EmbeddingDocument.objects.filter(
-                    user=user, source_type="book_highlight"
+                AgentEmbedding.objects.filter(
+                    user=user, source_type="highlight"
                 ).values_list("source_id", flat=True)
             )
             highlights = highlights.exclude(uuid__in=already_indexed)
@@ -287,7 +286,7 @@ class Command(BaseCommand):
                 continue
             ok = self._upsert_embedding(
                 user=user,
-                source_type="book_highlight",
+                source_type="highlight",
                 source_id=hl.uuid,
                 source_title=str(hl.book) if hl.book else "Livro desconhecido",
                 content=content[:chunk_size],

@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Library,
   Plus,
@@ -16,9 +17,13 @@ import {
   ChevronRight,
   LayoutGrid,
   List,
+  BookOpen,
+  Brain,
+  CheckCircle,
 } from 'lucide-react';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const BookReader = lazy(() => import('./BookReader'));
 
@@ -40,6 +45,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -47,6 +53,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -69,6 +77,7 @@ import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
 import { booksService } from '@/services/books-service';
 import { publishersService } from '@/services/publishers-service';
+import { readingsService } from '@/services/readings-service';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { BOOK_GENRES, READ_STATUS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -161,6 +170,7 @@ function BookGridCard({
   onDelete,
   onOpenDetail,
   onOpenReader,
+  onAskIntellect,
 }: {
   book: Book;
   onOpen: (b: Book, tab: DetailTab) => void;
@@ -168,6 +178,7 @@ function BookGridCard({
   onDelete: (id: number) => void;
   onOpenDetail: (b: Book) => void;
   onOpenReader: (b: Book) => void;
+  onAskIntellect: (b: Book) => void;
 }) {
   const { t } = useTranslation();
   const pb = priorityBadge(book.reading_priority, t);
@@ -275,6 +286,10 @@ function BookGridCard({
               <Highlighter className="mr-sm h-4 w-4" />
               {t('pages.highlights.title')}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onAskIntellect(book)}>
+              <Brain className="mr-sm h-4 w-4" />
+              {t('pages.books.askIntellect')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Button
@@ -328,9 +343,48 @@ export default function Books() {
   // Inline reader modal
   const [readerBookId, setReaderBookId] = useState<number | null>(null);
 
+  const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
+  const [quickCaptureBookId, setQuickCaptureBookId] = useState<number | ''>('');
+  const [quickCapturePages, setQuickCapturePages] = useState('');
+
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const quickCaptureMutation = useMutation({
+    mutationFn: (data: { book: number; pages_read: number }) =>
+      readingsService.create({
+        book: data.book,
+        reading_date: new Date().toISOString().split('T')[0],
+        reading_time: 0,
+        pages_read: data.pages_read,
+        owner: 0,
+      }),
+    onSuccess: () => {
+      toast({ title: t('pages.books.quickCapture.saved') });
+      setIsQuickCaptureOpen(false);
+      setQuickCaptureBookId('');
+      setQuickCapturePages('');
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
+      void loadData();
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleQuickCapture = () => {
+    const bookId = Number(quickCaptureBookId);
+    const pages = Number(quickCapturePages);
+    if (!bookId || !pages || pages <= 0) return;
+    quickCaptureMutation.mutate({ book: bookId, pages_read: pages });
+  };
 
   useEffect(() => {
     void loadData();
@@ -480,6 +534,11 @@ export default function Books() {
 
   const handleOpenReader = (book: Book) => {
     setReaderBookId(book.id);
+  };
+
+  const handleAskIntellect = (book: Book) => {
+    const context = encodeURIComponent(`Livro: ${book.title}`);
+    void navigate(`/intellect/agents?context=${context}`);
   };
 
   const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
@@ -662,6 +721,7 @@ export default function Books() {
                       onDelete={(id) => void handleDelete(id)}
                       onOpenDetail={(b) => openDetail(b, 'info')}
                       onOpenReader={handleOpenReader}
+                      onAskIntellect={handleAskIntellect}
                     />
                   ))}
                 </div>
@@ -850,6 +910,12 @@ export default function Books() {
                                       <Highlighter className="mr-sm h-4 w-4" />
                                       {t('pages.highlights.title')}
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleAskIntellect(book)}
+                                    >
+                                      <Brain className="mr-sm h-4 w-4" />
+                                      {t('pages.books.askIntellect')}
+                                    </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                                 <Button
@@ -966,6 +1032,91 @@ export default function Books() {
             onCancel={() => setIsFormOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Capture FAB */}
+      {activeTab === 'books' && (
+        <button
+          onClick={() => setIsQuickCaptureOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-sm rounded-full bg-primary px-md py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
+          aria-label={t('pages.books.quickCapture.title')}
+        >
+          <CheckCircle className="h-4 w-4" />
+          {t('pages.books.quickCapture.title')}
+        </button>
+      )}
+
+      {/* Quick Capture Dialog */}
+      <Dialog open={isQuickCaptureOpen} onOpenChange={setIsQuickCaptureOpen}>
+        <DialogContent className="max-w-sm sm:bottom-0 sm:top-auto sm:translate-y-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-sm">
+              <BookOpen className="h-4 w-4 text-primary" />
+              {t('pages.books.quickCapture.title')}
+            </DialogTitle>
+            <DialogDescription>{t('pages.books.quickCapture.desc')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-md py-sm">
+            <div className="flex flex-col gap-xs">
+              <Label htmlFor="qc-book">
+                {t('pages.books.quickCapture.selectBook')}
+              </Label>
+              <Select
+                value={quickCaptureBookId === '' ? 'none' : String(quickCaptureBookId)}
+                onValueChange={(v) =>
+                  setQuickCaptureBookId(v === 'none' ? '' : Number(v))
+                }
+              >
+                <SelectTrigger id="qc-book">
+                  <SelectValue
+                    placeholder={t('pages.books.quickCapture.selectBookPlaceholder')}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {books
+                    .filter((b) => b.read_status === 'reading')
+                    .map((b) => (
+                      <SelectItem key={b.id} value={String(b.id)}>
+                        {b.title}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <Label htmlFor="qc-pages">
+                {t('pages.books.quickCapture.pagesRead')}
+              </Label>
+              <Input
+                id="qc-pages"
+                type="number"
+                min={1}
+                value={quickCapturePages}
+                onChange={(e) => setQuickCapturePages(e.target.value)}
+                placeholder={t('pages.books.quickCapture.pagesPlaceholder')}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsQuickCaptureOpen(false)}>
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              onClick={handleQuickCapture}
+              disabled={
+                !quickCaptureBookId ||
+                !quickCapturePages ||
+                Number(quickCapturePages) <= 0 ||
+                quickCaptureMutation.isPending
+              }
+            >
+              {quickCaptureMutation.isPending ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : null}
+              {t('common.actions.confirm')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

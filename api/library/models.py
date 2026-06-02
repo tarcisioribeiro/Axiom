@@ -1032,6 +1032,66 @@ class Skill(BaseModel):
 # ============================================================================
 
 
+BADGE_CODE_CHOICES = (
+    ("first_book", "Primeiro Livro Lido"),
+    ("reader_5", "Leitor Dedicado (5 livros)"),
+    ("reader_10", "Maratonista (10 livros)"),
+    ("reader_25", "Devorador de Livros (25 livros)"),
+    ("first_course", "Primeiro Curso Concluído"),
+    ("learner_3", "Aprendiz Ativo (3 cursos)"),
+    ("learner_10", "Especialista (10 cursos)"),
+    ("streak_7", "Leitura Constante (7 dias)"),
+    ("streak_30", "Leitura Consistente (30 dias)"),
+    ("first_highlight", "Primeiro Destaque"),
+    ("annotator_10", "Anotador (10 destaques)"),
+    ("annotator_50", "Curador (50 destaques)"),
+    ("knowledge_builder", "Construtor de Conhecimento (10 nós no grafo)"),
+    ("knowledge_master", "Mestre do Conhecimento (50 nós no grafo)"),
+    ("first_skill", "Primeira Habilidade"),
+    ("skill_collector", "Colecionador de Habilidades (5 habilidades)"),
+)
+
+
+BADGE_LEVEL_CHOICES = (
+    ("bronze", "Bronze"),
+    ("silver", "Prata"),
+    ("gold", "Ouro"),
+)
+
+
+class IntellectBadge(BaseModel):
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="intellect_badges",
+        verbose_name="Proprietário",
+    )
+    code = models.CharField(
+        max_length=30,
+        choices=BADGE_CODE_CHOICES,
+        verbose_name="Código",
+    )
+    level = models.CharField(
+        max_length=10,
+        choices=BADGE_LEVEL_CHOICES,
+        default="bronze",
+        verbose_name="Nível",
+    )
+    awarded_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Concedido em",
+    )
+
+    class Meta:
+        verbose_name = "Conquista"
+        verbose_name_plural = "Conquistas"
+        ordering = ["-awarded_at"]
+        unique_together = ("owner", "code")
+
+    def __str__(self):
+        return f"{self.get_code_display()} — {self.owner}"
+
+
 class KnowledgeLink(BaseModel):
     """Conexão explícita entre dois nós do grafo de conhecimento."""
 

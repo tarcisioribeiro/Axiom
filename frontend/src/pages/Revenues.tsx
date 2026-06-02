@@ -145,7 +145,48 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         </div>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.revenues.allCategories')}: ${REVENUE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${statusFilter === 'paid' ? t('common.status.paid') : t('common.status.pending')}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.revenues.searchPlaceholder')}
           value={searchTerm}
