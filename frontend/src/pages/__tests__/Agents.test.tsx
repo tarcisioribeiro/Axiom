@@ -160,7 +160,8 @@ describe('Agents page', () => {
       expect(textarea).toBeDisabled();
     });
 
-    expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled();
+    // While streaming, the stop button replaces the send button
+    expect(screen.queryByRole('button', { name: /enviar/i })).not.toBeInTheDocument();
   });
 
   it('input is enabled when agent is selected and streaming is done', async () => {

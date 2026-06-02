@@ -275,7 +275,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const hasEligibleLinks = eligibleLoans.length > 0 || eligiblePayables.length > 0;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg" noValidate>
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">

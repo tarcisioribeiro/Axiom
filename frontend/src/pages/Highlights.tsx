@@ -7,6 +7,8 @@ import {
   Edit,
   Highlighter,
   Lightbulb,
+  Layers,
+  Palette,
   Plus,
   Quote,
   StickyNote,
@@ -558,7 +560,10 @@ export default function Highlights() {
             setCurrentPage(1);
           }}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger
+            className="w-36"
+            startIcon={<Layers className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -591,7 +596,10 @@ export default function Highlights() {
             setCurrentPage(1);
           }}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger
+            className="w-36"
+            startIcon={<Palette className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder="Cor" />
           </SelectTrigger>
           <SelectContent>

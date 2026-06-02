@@ -365,7 +365,10 @@ export default function Budgets() {
           className="w-44 flex-none"
         />
         <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger
+            className="w-40"
+            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder={t('pages.budgets.month')} />
           </SelectTrigger>
           <SelectContent>
@@ -377,7 +380,10 @@ export default function Budgets() {
           </SelectContent>
         </Select>
         <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger className="w-28">
+          <SelectTrigger
+            className="w-28"
+            startIcon={<CalendarDays className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder={t('pages.budgets.year')} />
           </SelectTrigger>
           <SelectContent>
