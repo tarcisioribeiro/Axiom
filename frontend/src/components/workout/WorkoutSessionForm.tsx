@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -130,57 +131,59 @@ export function WorkoutSessionForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
-      <div className="grid grid-cols-2 gap-sm">
-        <div className="space-y-sm">
-          <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
-          <DatePicker
-            value={watch('date')}
-            onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="session-day">{t('pages.workoutSessions.workoutDay')}</Label>
-          <Select
-            value={watch('workout_day')}
-            onValueChange={(v) => setValue('workout_day', v)}
-          >
-            <SelectTrigger id="session-day">
-              <SelectValue
-                placeholder={t('pages.workoutSessions.workoutDayPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {t('pages.workoutSessions.noWorkoutDay')}
-              </SelectItem>
-              {workoutDays.map((d) => (
-                <SelectItem key={d.id} value={String(d.id)}>
-                  {d.name}
-                  {d.muscle_groups ? ` — ${d.muscle_groups}` : ''}
+      <FormSection title={t('pages.workoutSessions.sectionSession')}>
+        <div className="grid grid-cols-2 gap-sm">
+          <div className="space-y-sm">
+            <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
+            <DatePicker
+              value={watch('date')}
+              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-sm">
+            <Label htmlFor="session-day">{t('pages.workoutSessions.workoutDay')}</Label>
+            <Select
+              value={watch('workout_day')}
+              onValueChange={(v) => setValue('workout_day', v)}
+            >
+              <SelectTrigger id="session-day">
+                <SelectValue
+                  placeholder={t('pages.workoutSessions.workoutDayPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  {t('pages.workoutSessions.noWorkoutDay')}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {workoutDays.map((d) => (
+                  <SelectItem key={d.id} value={String(d.id)}>
+                    {d.name}
+                    {d.muscle_groups ? ` — ${d.muscle_groups}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-sm">
-        <div className="space-y-sm">
-          <Label>{t('pages.workoutSessions.startTime')}</Label>
-          <TimePicker
-            value={watch('started_at') || undefined}
-            onChange={(t) => setValue('started_at', t ?? '')}
-          />
+        <div className="grid grid-cols-2 gap-sm">
+          <div className="space-y-sm">
+            <Label>{t('pages.workoutSessions.startTime')}</Label>
+            <TimePicker
+              value={watch('started_at') || undefined}
+              onChange={(t) => setValue('started_at', t ?? '')}
+            />
+          </div>
+          <div className="space-y-sm">
+            <Label>{t('pages.workoutSessions.endTime')}</Label>
+            <TimePicker
+              value={watch('finished_at') || undefined}
+              onChange={(t) => setValue('finished_at', t ?? '')}
+            />
+          </div>
         </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.workoutSessions.endTime')}</Label>
-          <TimePicker
-            value={watch('finished_at') || undefined}
-            onChange={(t) => setValue('finished_at', t ?? '')}
-          />
-        </div>
-      </div>
+      </FormSection>
 
       <div className="space-y-sm">
         <div className="flex items-center justify-between">

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501
+from library.views import (
     AuthorDetailView,
     AuthorListCreateView,
     AuthorPhotoStreamView,
@@ -15,6 +15,7 @@ from library.views import (  # noqa: E501
     BookMarkAsReadView,
     BookReadingQueueView,
     BookReorderView,
+    CourseLessonBulkCompleteView,
     CourseLessonListCreateView,
     CourseLessonRetrieveUpdateDestroyView,
     CourseLessonToggleView,
@@ -24,6 +25,7 @@ from library.views import (  # noqa: E501
     CourseRetrieveUpdateDestroyView,
     CourseSessionListCreateView,
     CourseSessionRetrieveUpdateDestroyView,
+    IntellectBadgeListView,
     KnowledgeGraphView,
     KnowledgeLinkListCreateView,
     KnowledgeLinkRetrieveUpdateDestroyView,
@@ -196,6 +198,11 @@ urlpatterns = [
         CourseLessonToggleView.as_view(),
         name="course-lesson-toggle",
     ),
+    path(
+        "course-lessons/bulk-complete/",
+        CourseLessonBulkCompleteView.as_view(),
+        name="course-lesson-bulk-complete",
+    ),
     # Course Sessions
     path(
         "course-sessions/",
@@ -213,6 +220,12 @@ urlpatterns = [
         "skills/<int:pk>/",
         SkillRetrieveUpdateDestroyView.as_view(),
         name="skill-detail",
+    ),
+    # Intellect Badges
+    path(
+        "badges/",
+        IntellectBadgeListView.as_view(),
+        name="intellect-badge-list",
     ),
     # Knowledge Graph
     path(

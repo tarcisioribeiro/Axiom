@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  HelpCircle,
   Link2,
   Loader2,
   Repeat,
@@ -35,6 +36,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
+import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
@@ -203,6 +205,47 @@ export function RoutineTaskForm({
 
   const hasLinks = financialGoals.length > 0 || readingBooksList.length > 0;
 
+  const frequencyPreview = (): string => {
+    const weekdayNames = [
+      t('pages.routineTasks.form.weekdayOptions.0').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.1').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.2').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.3').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.4').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.5').substring(0, 3),
+      t('pages.routineTasks.form.weekdayOptions.6').substring(0, 3),
+    ];
+    switch (periodicity) {
+      case 'daily':
+        return t('pages.routineTasks.form.frequencyPreview.daily');
+      case 'weekdays':
+        return t('pages.routineTasks.form.frequencyPreview.weekdays');
+      case 'weekly': {
+        const wd = watch('weekday');
+        return wd != null
+          ? t('pages.routineTasks.form.frequencyPreview.weekly', {
+              day: weekdayNames[wd],
+            })
+          : '';
+      }
+      case 'monthly': {
+        const dom = watch('day_of_month');
+        return dom !== undefined
+          ? t('pages.routineTasks.form.frequencyPreview.monthly', { day: dom })
+          : '';
+      }
+      case 'custom': {
+        const cwd = watch('custom_weekdays');
+        if (cwd && cwd.length > 0) {
+          return cwd.map((d) => weekdayNames[d]).join(', ');
+        }
+        return t('pages.routineTasks.form.frequencyPreview.custom');
+      }
+      default:
+        return '';
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       <FormSection
@@ -305,6 +348,12 @@ export function RoutineTaskForm({
             <Label className="flex items-center gap-xs">
               <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.routineTasks.form.periodicityLabel')}
+              <Tooltip
+                content={t('pages.routineTasks.form.periodicityTooltip')}
+                side="right"
+              >
+                <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+              </Tooltip>
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
               {PERIODICITY_CHOICES.map((period) => (
@@ -329,6 +378,9 @@ export function RoutineTaskForm({
                 </button>
               ))}
             </div>
+            {frequencyPreview() && (
+              <p className="text-xs font-medium text-primary">{frequencyPreview()}</p>
+            )}
             {errors.periodicity && (
               <p className="mt-xs text-sm text-destructive">
                 {errors.periodicity.message}
@@ -551,6 +603,12 @@ export function RoutineTaskForm({
             <Label htmlFor="target_quantity" className="flex items-center gap-xs">
               <Target className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.routineTasks.form.targetQuantityLabel')}
+              <Tooltip
+                content={t('pages.routineTasks.form.targetQuantityTooltip')}
+                side="right"
+              >
+                <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+              </Tooltip>
             </Label>
             <Input
               id="target_quantity"

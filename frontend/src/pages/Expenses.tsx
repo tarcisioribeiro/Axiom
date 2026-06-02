@@ -57,6 +57,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     loans,
     payables,
     isLoading,
+    isFetching,
     isDialogOpen,
     setIsDialogOpen,
     selectedExpense,
@@ -279,7 +280,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         data={expenses}
         columns={columns}
         keyExtractor={(expense) => expense.id}
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         emptyState={{
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.expenses.emptyState'),

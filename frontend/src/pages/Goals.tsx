@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { motion } from 'framer-motion';
 import {
   Plus,
   Trophy,
@@ -12,6 +13,8 @@ import {
   Calendar,
   AlertTriangle,
   Loader2,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -139,9 +142,27 @@ function GoalCard({
               <span className="text-muted-foreground">
                 {t('pages.goals.columns.progress')}
               </span>
-              <span className="font-medium">
-                {displayValue} / {goal.target_value}
-              </span>
+              <div className="flex items-center gap-xs font-medium">
+                {pct >= 80 ? (
+                  <TrendingUp className="h-3.5 w-3.5 text-success" />
+                ) : pct < 30 ? (
+                  <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                ) : null}
+                <span>
+                  {displayValue} / {goal.target_value}
+                </span>
+              </div>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <motion.div
+                className={cn(
+                  'h-full rounded-full',
+                  pct >= 80 ? 'bg-success' : pct < 30 ? 'bg-destructive' : 'bg-primary'
+                )}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(pct, 100)}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              />
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
@@ -443,6 +464,11 @@ export default function Goals({ embedded = false }: GoalsProps) {
           icon={<Trophy className="h-12 w-12" />}
           title={t('pages.goals.emptyState')}
           message={t('pages.goals.emptyStateDesc')}
+          action={{
+            label: t('pages.goals.emptyStateAction'),
+            icon: <Plus className="mr-xs h-4 w-4" />,
+            onClick: handleCreate,
+          }}
         />
       ) : (
         <div className="space-y-xl">
