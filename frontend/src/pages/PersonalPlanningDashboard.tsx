@@ -38,6 +38,7 @@ import { CircularProgress } from '@/components/ui/circular-progress';
 import { translate } from '@/config/constants';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
@@ -253,9 +254,63 @@ export default function PersonalPlanningDashboard() {
     );
   }
 
+  const MODULE_CARDS = [
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.workoutTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.workoutSubtitle' as const,
+      icon: Dumbbell,
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10 border-amber-500/20',
+      route: '/planning/workout',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.nutritionTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.nutritionSubtitle' as const,
+      icon: UtensilsCrossed,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      route: '/planning/nutrition',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.tasksTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.tasksSubtitle' as const,
+      icon: ListTodo,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10 border-blue-500/20',
+      route: '/planning/tasks-goals',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.goalsTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.goalsSubtitle' as const,
+      icon: Target,
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10 border-purple-500/20',
+      route: '/planning/tasks-goals',
+    },
+  ] as const;
+
   return (
     <PageContainer>
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {MODULE_CARDS.map((card) => (
+          <button
+            key={card.route + card.titleKey}
+            onClick={() => void navigate(card.route)}
+            className={cn(
+              'flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all hover:scale-[1.02]',
+              card.bg
+            )}
+          >
+            <card.icon className={cn('h-6 w-6', card.color)} />
+            <div>
+              <p className="text-sm font-semibold">{t(card.titleKey)}</p>
+              <p className="text-xs text-muted-foreground">{t(card.subtitleKey)}</p>
+            </div>
+          </button>
+        ))}
+      </div>
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
       <div className="grid grid-cols-2 gap-md lg:grid-cols-4">

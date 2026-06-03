@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
+import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -67,6 +67,7 @@ export default function NetWorthTracker() {
     overdraftAccounts,
     totalBankAssets,
     totalVaultAssets,
+    totalLentLoanAssets,
     totalLoanLiabilities,
     totalCreditCardLiabilities,
     totalOverdraftLiabilities,
@@ -91,13 +92,22 @@ export default function NetWorthTracker() {
       .filter((v) => v.is_active)
       .reduce((s, v) => s + parseFloat(v.current_balance), 0);
 
-    const loanLiabilities = loans
-      .filter((l) => l.status !== 'paid')
-      .reduce((s, l) => s + parseFloat(l.remaining_balance ?? l.value), 0);
+    const activeLoans = loans.filter((l) => l.status !== 'paid');
+    const lentLoans = activeLoans.filter((l) => l.loan_type === 'lent');
+    const borrowedLoans = activeLoans.filter((l) => l.loan_type !== 'lent');
+
+    const lentLoanAssets = lentLoans.reduce(
+      (s, l) => s + parseFloat(l.remaining_balance ?? l.value),
+      0
+    );
+    const loanLiabilities = borrowedLoans.reduce(
+      (s, l) => s + parseFloat(l.remaining_balance ?? l.value),
+      0
+    );
 
     const cardLiabilities = cards.reduce((s, c) => s + (c.used_credit ?? 0), 0);
 
-    const assets = bankAssets + vaultAssets;
+    const assets = bankAssets + vaultAssets + lentLoanAssets;
     const liabilities = loanLiabilities + cardLiabilities + overdraftLiabilities;
 
     return {
@@ -105,6 +115,7 @@ export default function NetWorthTracker() {
       overdraftAccounts: overdraftAccts,
       totalBankAssets: bankAssets,
       totalVaultAssets: vaultAssets,
+      totalLentLoanAssets: lentLoanAssets,
       totalLoanLiabilities: loanLiabilities,
       totalCreditCardLiabilities: cardLiabilities,
       totalOverdraftLiabilities: overdraftLiabilities,
@@ -124,6 +135,9 @@ export default function NetWorthTracker() {
     if (totalVaultAssets > 0) {
       data.push({ name: t('netWorth.vaults'), value: totalVaultAssets });
     }
+    if (totalLentLoanAssets > 0) {
+      data.push({ name: t('netWorth.lentLoans'), value: totalLentLoanAssets });
+    }
     if (totalLoanLiabilities > 0) {
       data.push({ name: t('netWorth.loans'), value: totalLoanLiabilities });
     }
@@ -137,6 +151,7 @@ export default function NetWorthTracker() {
   }, [
     totalBankAssets,
     totalVaultAssets,
+    totalLentLoanAssets,
     totalLoanLiabilities,
     totalCreditCardLiabilities,
     totalOverdraftLiabilities,
@@ -184,37 +199,17 @@ export default function NetWorthTracker() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={({ name, percent }) =>
-                        `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                    >
-                      {pieData.map((_, index) => (
-                        <Cell
-                          key={index}
-                          fill={chartColors[index % chartColors.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="py-xl text-center text-sm text-muted-foreground">
-                  {t('netWorth.noAssets')}
-                </p>
-              )}
+              <ChartContainer
+                chartId="net-worth-distribution"
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                formatter={(v) => formatCurrency(Number(v))}
+                colors={chartColors}
+                emptyMessage={t('netWorth.noAssets')}
+                lockChartType="pie"
+                height={280}
+              />
             </CardContent>
           </Card>
 
@@ -257,6 +252,17 @@ export default function NetWorthTracker() {
                     </div>
                     <span className="font-semibold text-blue-500">
                       {formatCurrency(totalVaultAssets)}
+                    </span>
+                  </div>
+                )}
+                {totalLentLoanAssets > 0 && (
+                  <div className="flex items-center justify-between rounded-lg bg-teal-500/5 p-sm">
+                    <div className="flex items-center gap-sm">
+                      <HandCoins className="h-4 w-4 text-teal-500" />
+                      <span className="text-sm">{t('netWorth.lentLoans')}</span>
+                    </div>
+                    <span className="font-semibold text-teal-500">
+                      {formatCurrency(totalLentLoanAssets)}
                     </span>
                   </div>
                 )}

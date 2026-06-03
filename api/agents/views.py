@@ -40,6 +40,7 @@ from agents.serializers import (
     AgentAskSerializer,
     AgentConversationSerializer,
     AgentStatusSerializer,
+    CategoryClassifySerializer,
 )
 from app.throttles import AgentRateThrottle
 
@@ -546,3 +547,170 @@ class SemanticSearchView(APIView):
             )
 
         return Response({"results": results, "query": query, "domain": domain})
+
+
+# ============================================================================
+# CATEGORY CLASSIFY VIEW
+# ============================================================================
+
+
+class CategoryClassifyView(APIView):
+    """
+    Classifica automaticamente a categoria de uma senha via heurística +
+    LLM fallback.
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
+
+    _HEURISTICS: dict[str, list[str]] = {
+        "banking": [
+            "bank",
+            "banco",
+            "nubank",
+            "itau",
+            "bradesco",
+            "santander",
+            "caixa",
+            "bb",
+            "inter",
+            "sicredi",
+            "sicoob",
+            "mercadopago",
+            "pagbank",
+            "c6bank",
+            "next",
+            "conta",
+        ],
+        "email": [
+            "gmail",
+            "outlook",
+            "hotmail",
+            "yahoo",
+            "protonmail",
+            "thunderbird",
+            "email",
+            "mail",
+            "webmail",
+        ],
+        "social": [
+            "facebook",
+            "instagram",
+            "twitter",
+            "tiktok",
+            "linkedin",
+            "snapchat",
+            "reddit",
+            "discord",
+            "telegram",
+            "whatsapp",
+            "threads",
+        ],
+        "streaming": [
+            "netflix",
+            "spotify",
+            "amazon",
+            "prime",
+            "disney",
+            "hbo",
+            "paramount",
+            "apple tv",
+            "crunchyroll",
+            "youtube premium",
+            "deezer",
+            "tidal",
+        ],
+        "shopping": [
+            "amazon",
+            "mercadolivre",
+            "shopee",
+            "americanas",
+            "magalu",
+            "aliexpress",
+            "wish",
+            "shein",
+            "kabum",
+            "ponto frio",
+        ],
+        "gaming": [
+            "steam",
+            "epic",
+            "battle.net",
+            "origin",
+            "ubisoft",
+            "xbox",
+            "playstation",
+            "nintendo",
+            "riot",
+            "gog",
+            "itch.io",
+        ],
+        "work": [
+            "jira",
+            "confluence",
+            "slack",
+            "notion",
+            "trello",
+            "asana",
+            "monday",
+            "gitlab",
+            "github",
+            "bitbucket",
+            "vpn",
+            "office365",
+            "gsuite",
+        ],
+        "entertainment": [
+            "twitch",
+            "youtube",
+            "vimeo",
+            "soundcloud",
+            "bandcamp",
+            "lastfm",
+        ],
+    }
+
+    def post(self, request: Request) -> Response:
+        serializer = CategoryClassifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        title = data.get("title", "").lower()
+        site = data.get("site", "").lower()
+        username = data.get("username", "").lower()
+        combined = f"{title} {site} {username}"
+
+        # Heuristic pass
+        for category, keywords in self._HEURISTICS.items():
+            if any(kw in combined for kw in keywords):
+                return Response(
+                    {"category": category, "confidence": "heuristic"}
+                )
+
+        # LLM fallback
+        try:
+            from agents.core.llm_client import LLMClient
+
+            prompt = (
+                "Classify the following password entry into ONE of these"
+                " categories: social, email, banking, work, entertainment,"
+                " shopping, streaming, gaming, other.\n\n"
+                f"Title: {data.get('title', '')}\n"
+                f"Site: {data.get('site', '')}\n"
+                f"Username: {data.get('username', '')}\n\n"
+                "Respond with ONLY the category name, nothing else."
+            )
+            category_raw = (
+                LLMClient.chat([{"role": "user", "content": prompt}])
+                .strip()
+                .lower()
+            )
+
+            from security.models import PASSWORD_CATEGORIES
+
+            valid = {c[0] for c in PASSWORD_CATEGORIES}
+            category = category_raw if category_raw in valid else "other"
+            return Response({"category": category, "confidence": "llm"})
+        except Exception:
+            logger.exception("LLM classify failed, fallback to other")
+            return Response({"category": "other", "confidence": "fallback"})

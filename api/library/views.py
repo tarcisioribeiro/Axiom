@@ -36,6 +36,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    FlashCard,
     IntellectBadge,
     KnowledgeLink,
     LiteraryTypeGoal,
@@ -43,6 +44,7 @@ from library.models import (
     Reading,
     ReadingGoal,
     Skill,
+    SkillHistory,
     Summary,
 )
 from library.serializers import (
@@ -61,6 +63,9 @@ from library.serializers import (
     CourseSerializer,
     CourseSessionCreateUpdateSerializer,
     CourseSessionSerializer,
+    FlashCardCreateUpdateSerializer,
+    FlashCardReviewSerializer,
+    FlashCardSerializer,
     IntellectBadgeSerializer,
     KnowledgeLinkCreateUpdateSerializer,
     KnowledgeLinkSerializer,
@@ -74,6 +79,7 @@ from library.serializers import (
     ReadingGoalSerializer,
     ReadingSerializer,
     SkillCreateUpdateSerializer,
+    SkillHistorySerializer,
     SkillSerializer,
     SummaryCreateUpdateSerializer,
     SummarySerializer,
@@ -2857,3 +2863,228 @@ class IntellectBadgeListView(generics.ListAPIView):
         return IntellectBadge.objects.filter(
             owner=member, deleted_at__isnull=True
         ).order_by("-awarded_at")
+
+
+# ============================================================================
+# SKILL HISTORY VIEW
+# ============================================================================
+
+
+class SkillHistoryView(generics.ListAPIView):
+    """Retorna o histórico de evolução de proficiência de uma habilidade."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    serializer_class = SkillHistorySerializer
+
+    def get_queryset(self):
+        skill_id = self.kwargs["pk"]
+        return SkillHistory.objects.filter(
+            skill_id=skill_id,
+            owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).order_by("created_at")
+
+
+# ============================================================================
+# FLASHCARD VIEWS
+# ============================================================================
+
+
+class FlashCardListCreateView(BaseListCreateView):
+    """Lista flashcards ou cria um novo."""
+
+    queryset = FlashCard.objects.all()
+
+    def get_queryset(self):
+        qs = FlashCard.objects.filter(
+            owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("book", "highlight")
+        due_only = self.request.query_params.get("due")
+        if due_only == "true":
+            qs = qs.filter(next_review__lte=timezone.localdate())
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return FlashCardCreateUpdateSerializer
+        return FlashCardSerializer
+
+
+class FlashCardDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um flashcard."""
+
+    queryset = FlashCard.objects.all()
+
+    def get_queryset(self):
+        return FlashCard.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return FlashCardCreateUpdateSerializer
+        return FlashCardSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+class FlashCardReviewView(APIView):
+    """Aplica resultado de revisão (SM-2) ao flashcard."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def post(self, request, pk):
+        try:
+            card = FlashCard.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except FlashCard.DoesNotExist:
+            return Response(
+                {"error": "Flash card não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = FlashCardReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        card.apply_review(serializer.validated_data["rating"])
+        return Response(FlashCardSerializer(card).data)
+
+
+class FlashCardFromHighlightView(APIView):
+    """Cria flashcards automaticamente a partir dos destaques de um livro."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def post(self, request, pk):
+        try:
+            book = Book.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Book.DoesNotExist:
+            return Response(
+                {"error": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        member = request.user.member
+        highlights = BookHighlight.objects.filter(
+            book=book, owner=member, deleted_at__isnull=True
+        )
+        created = 0
+        for highlight in highlights:
+            if not FlashCard.objects.filter(
+                highlight=highlight, deleted_at__isnull=True
+            ).exists():
+                FlashCard.objects.create(
+                    book=book,
+                    highlight=highlight,
+                    front=highlight.text[:200],
+                    back=(
+                        f"Livro: {book.title}"
+                        + (
+                            f", p. {highlight.page_number}"
+                            if highlight.page_number
+                            else ""
+                        )
+                    ),
+                    owner=member,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                created += 1
+        return Response({"created": created})
+
+
+# ============================================================================
+# KNOWLEDGE GRAPH SUGGEST LINKS VIEW
+# ============================================================================
+
+
+class KnowledgeGraphSuggestLinksView(APIView):
+    """
+    Sugere links de conhecimento baseados em similaridade semântica via
+    pgvector. Retorna até 10 pares de nós com maior similaridade que ainda
+    não têm link.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request):
+        try:
+            from agents.models import AgentEmbedding
+
+            member = request.user.member
+
+            # Buscar embeddings existentes do usuário no domínio library
+            embeddings = list(
+                AgentEmbedding.objects.filter(domain="library").values(
+                    "id",
+                    "source_type",
+                    "source_id",
+                    "source_title",
+                    "embedding",
+                )[:200]
+            )
+
+            if len(embeddings) < 2:
+                return Response({"suggestions": []})
+
+            # Buscar links já existentes para excluir
+            existing_links = set(
+                KnowledgeLink.objects.filter(
+                    owner=member, deleted_at__isnull=True
+                ).values_list("source_id", "target_id")
+            )
+
+            suggestions = []
+            seen = set()
+
+            for i, emb_a in enumerate(embeddings):
+                for emb_b in embeddings[i + 1 :]:
+                    pair = (str(emb_a["source_id"]), str(emb_b["source_id"]))
+                    rev_pair = (
+                        str(emb_b["source_id"]),
+                        str(emb_a["source_id"]),
+                    )
+                    if pair in seen or rev_pair in seen:
+                        continue
+                    if pair in existing_links or rev_pair in existing_links:
+                        continue
+                    seen.add(pair)
+
+                    # Calcular similaridade coseno em Python
+                    if emb_a["embedding"] and emb_b["embedding"]:
+                        vec_a = emb_a["embedding"]
+                        vec_b = emb_b["embedding"]
+                        dot = sum(a * b for a, b in zip(vec_a, vec_b))
+                        mag_a = sum(a * a for a in vec_a) ** 0.5
+                        mag_b = sum(b * b for b in vec_b) ** 0.5
+                        sim = (
+                            dot / (mag_a * mag_b)
+                            if mag_a > 0 and mag_b > 0
+                            else 0.0
+                        )
+                        if sim >= 0.75:
+                            suggestions.append(
+                                {
+                                    "source_type": emb_a["source_type"],
+                                    "source_id": str(emb_a["source_id"]),
+                                    "source_title": emb_a["source_title"],
+                                    "target_type": emb_b["source_type"],
+                                    "target_id": str(emb_b["source_id"]),
+                                    "target_title": emb_b["source_title"],
+                                    "similarity": round(sim, 3),
+                                }
+                            )
+
+            suggestions.sort(key=lambda x: x["similarity"], reverse=True)
+            return Response({"suggestions": suggestions[:10]})
+
+        except Exception:
+            logger.exception("Erro ao sugerir links de conhecimento")
+            return Response({"suggestions": []})

@@ -538,8 +538,12 @@ export default function NutritionPage() {
           icon={<UtensilsCrossed className="h-6 w-6 text-category-nutrition" />}
         />
 
-        <Tabs defaultValue="log" className="flex flex-1 flex-col">
+        <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
+            <TabsTrigger value="today" className="flex-1 gap-xs">
+              <Sun className="h-4 w-4" />
+              {t('pages.nutritionHub.todayMeals')}
+            </TabsTrigger>
             <TabsTrigger value="log" className="flex-1 gap-xs">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
@@ -553,6 +557,70 @@ export default function NutritionPage() {
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Hoje ─────────────────────────────────────────────────────── */}
+          <TabsContent value="today" className="mt-0 flex-1">
+            <div className="space-y-md">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t('pages.nutritionHub.subtitle')}
+                </p>
+                <Button onClick={() => setDialog({ type: 'new-log' })}>
+                  <Plus className="mr-sm h-4 w-4" />
+                  {t('pages.nutritionHub.addMeal')}
+                </Button>
+              </div>
+              {(() => {
+                const today = new Date().toISOString().slice(0, 10);
+                const todayLogs = logs.filter((l) => l.date === today);
+                if (logsLoading) return <LoadingState />;
+                if (todayLogs.length === 0)
+                  return (
+                    <EmptyState
+                      title={t('pages.nutritionHub.noMealsToday')}
+                      icon={<UtensilsCrossed className="h-8 w-8" />}
+                      action={{
+                        label: t('pages.nutritionHub.addMeal'),
+                        icon: <Plus className="mr-xs h-4 w-4" />,
+                        onClick: () => setDialog({ type: 'new-log' }),
+                      }}
+                    />
+                  );
+                return (
+                  <div className="space-y-sm">
+                    {todayLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-center justify-between rounded-md border border-border p-sm"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            {log.meal_type_name ?? log.meal_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {log.menu_option_name}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-sm">
+                          <span className="text-xs text-muted-foreground">
+                            {log.time ?? ''}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive"
+                            onClick={() => deleteLogMutation.mutate(log.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </TabsContent>
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
