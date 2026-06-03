@@ -7,6 +7,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -24,27 +25,16 @@ interface Props {
   onClose: () => void;
 }
 
-const STEPS = [
-  {
-    id: 1,
-    title: 'Bem-vindo ao Cofre',
-    icon: <Lock className="h-10 w-10 text-primary" />,
-  },
-  {
-    id: 2,
-    title: 'Configure sua Senha Mestre',
-    icon: <KeyRound className="h-10 w-10 text-primary" />,
-  },
-  {
-    id: 3,
-    title: 'Primeiros Passos',
-    icon: <CheckCircle2 className="text-chart-2 h-10 w-10" />,
-  },
-];
-
 export function VaultOnboardingWizard({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
+
+  const STEPS = [
+    { id: 1, icon: <Lock className="h-10 w-10 text-primary" /> },
+    { id: 2, icon: <KeyRound className="h-10 w-10 text-primary" /> },
+    { id: 3, icon: <CheckCircle2 className="text-chart-2 h-10 w-10" /> },
+  ];
 
   const handleComplete = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
@@ -67,7 +57,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-sm">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            Configurar Cofre de Segurança
+            {t('vaultOnboarding.dialogTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -102,20 +92,18 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
               <Lock className="h-16 w-16 text-primary" />
               <div className="space-y-xs">
                 <h3 className="text-lg font-semibold">
-                  Seu cofre de segurança pessoal
+                  {t('vaultOnboarding.step1Title')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  O Cofre protege suas senhas, cartões de crédito, contas bancárias e
-                  arquivos confidenciais com criptografia de nível militar.
+                  {t('vaultOnboarding.step1Desc')}
                 </p>
               </div>
               <div className="w-full rounded-lg border border-warning/30 bg-warning/10 p-3 text-left">
                 <p className="text-xs font-medium text-warning">
-                  ⚠️ Atenção importante
+                  {t('vaultOnboarding.step1Warning')}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Sua senha mestre <strong>não pode ser recuperada</strong>. Guarde-a em
-                  local seguro. Se perdida, os dados do cofre são irrecuperáveis.
+                  {t('vaultOnboarding.step1WarningDesc')}
                 </p>
               </div>
             </>
@@ -125,19 +113,22 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
             <>
               <KeyRound className="h-16 w-16 text-primary" />
               <div className="space-y-xs">
-                <h3 className="text-lg font-semibold">Configure sua Senha Mestre</h3>
+                <h3 className="text-lg font-semibold">
+                  {t('vaultOnboarding.step2Title')}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  A senha mestre é a chave que protege todo o seu cofre. Use uma senha
-                  forte e única que você não use em nenhum outro lugar.
+                  {t('vaultOnboarding.step2Desc')}
                 </p>
               </div>
               <div className="w-full space-y-xs text-left">
-                <p className="text-xs font-medium">Dicas para uma senha forte:</p>
+                <p className="text-xs font-medium">
+                  {t('vaultOnboarding.step2TipsTitle')}
+                </p>
                 {[
-                  'Mínimo 12 caracteres',
-                  'Misture letras, números e símbolos',
-                  'Evite palavras do dicionário',
-                  'Não reutilize senhas de outros serviços',
+                  t('vaultOnboarding.step2Tip1'),
+                  t('vaultOnboarding.step2Tip2'),
+                  t('vaultOnboarding.step2Tip3'),
+                  t('vaultOnboarding.step2Tip4'),
                 ].map((tip) => (
                   <div
                     key={tip}
@@ -149,7 +140,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 ))}
               </div>
               <Button className="w-full" onClick={() => handleAction('/security')}>
-                Configurar senha mestre agora
+                {t('vaultOnboarding.step2ConfigureBtn')}
               </Button>
             </>
           )}
@@ -159,10 +150,10 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
               <CheckCircle2 className="text-chart-2 h-16 w-16" />
               <div className="space-y-xs">
                 <h3 className="text-lg font-semibold">
-                  Cofre configurado! O que fazer agora?
+                  {t('vaultOnboarding.step3Title')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Comece a adicionar suas credenciais para mantê-las seguras.
+                  {t('vaultOnboarding.step3Desc')}
                 </p>
               </div>
               <div className="grid w-full grid-cols-1 gap-sm">
@@ -172,7 +163,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                   onClick={() => handleAction('/security/passwords')}
                 >
                   <KeyRound className="h-4 w-4" />
-                  Adicionar primeira senha
+                  {t('vaultOnboarding.step3AddPassword')}
                 </Button>
                 <Button
                   variant="outline"
@@ -180,7 +171,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                   onClick={() => handleAction('/security/password-import')}
                 >
                   <Import className="h-4 w-4" />
-                  Importar senhas de outro app
+                  {t('vaultOnboarding.step3ImportPasswords')}
                 </Button>
                 <Button
                   variant="outline"
@@ -188,7 +179,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                   onClick={() => handleAction('/security/health')}
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Ver relatório de saúde
+                  {t('vaultOnboarding.step3HealthReport')}
                 </Button>
                 <Button
                   variant="outline"
@@ -196,7 +187,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                   onClick={() => handleAction('/security/archives')}
                 >
                   <FileArchive className="h-4 w-4" />
-                  Armazenar arquivo confidencial
+                  {t('vaultOnboarding.step3StoreArchive')}
                 </Button>
               </div>
             </>
@@ -207,17 +198,19 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         <div className="flex justify-between gap-sm">
           {step > 1 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              Voltar
+              {t('vaultOnboarding.back')}
             </Button>
           ) : (
             <Button variant="ghost" onClick={handleComplete}>
-              Pular
+              {t('vaultOnboarding.skip')}
             </Button>
           )}
           {step < STEPS.length ? (
-            <Button onClick={() => setStep((s) => s + 1)}>Próximo</Button>
+            <Button onClick={() => setStep((s) => s + 1)}>
+              {t('vaultOnboarding.next')}
+            </Button>
           ) : (
-            <Button onClick={handleComplete}>Concluir</Button>
+            <Button onClick={handleComplete}>{t('vaultOnboarding.finish')}</Button>
           )}
         </div>
       </DialogContent>

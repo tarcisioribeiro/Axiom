@@ -174,7 +174,14 @@
         "configuration": "Configuration"
       }
     },
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "mood": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "neutral": "Neutral",
+      "bad": "Bad",
+      "terrible": "Terrible"
+    }
   },
   "nav": {
     "home": "Home",
@@ -998,7 +1005,8 @@
         "income": "Income:"
       },
       "noRole": "No role defined",
-      "emptySearch": "No members found."
+      "emptySearch": "No members found.",
+      "searchPlaceholder": "Search by name, CPF or phone..."
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",
@@ -2083,7 +2091,26 @@
         "groupCards": "Cards",
         "groupAccounts": "Accounts",
         "groupArchives": "Archives"
-      }
+      },
+      "vaultHub": {
+        "overview": "Vault Overview",
+        "anomalyTitle": "Suspicious Activity Detected",
+        "anomalyDesc": "Unusual activities detected. Review your activity log.",
+        "viewAnomalies": "View activities",
+        "quickStats": "Summary",
+        "vaultHealth": "Vault Health",
+        "securityScore": "Security Score",
+        "recentActivity": "Recent Activity",
+        "quickActions": "Quick Actions"
+      },
+      "alertConfig": "Alert Settings",
+      "alertConfigSaved": "Settings saved",
+      "alertOnNewIp": "Alert on new IP",
+      "alertOnNewIpDesc": "Notify when the vault is accessed from a new IP address.",
+      "alertOnFailedUnlock": "Alert on failed unlock attempts",
+      "alertOnFailedUnlockDesc": "Notify after multiple incorrect unlock attempts.",
+      "alertOnReveal": "Alert on password reveal",
+      "alertOnRevealDesc": "Notify each time a password is revealed."
     },
     "passwords": {
       "title": "Passwords",
@@ -2131,7 +2158,6 @@
         "errorDesc": "Could not check password. Please try again."
       },
       "keepCurrentPassword": "Leave blank to keep current",
-      "keepCurrentPassword": "Leave blank to keep current",
       "copyWithoutReveal": "Copy without revealing",
       "copied": "Copied!",
       "copiedClipboard": "Password copied to clipboard",
@@ -2146,7 +2172,10 @@
         "fair": "Fair",
         "good": "Good",
         "strong": "Strong"
-      }
+      },
+      "autoClassify": "Auto-classify",
+      "classifySuccess": "Category classified: {{category}}",
+      "classifyError": "Failed to classify category"
     },
     "sharePassword": {
       "title": "Share Credential",
@@ -2254,7 +2283,12 @@
       "importAnother": "Import another file",
       "noMemberMsg": "Could not identify the current user's member.",
       "selectedCount": "{{count}} selected",
-      "selectedCount_other": "{{count}} selected"
+      "selectedCount_other": "{{count}} selected",
+      "categoryMappingStep": "Category Mapping",
+      "categoryMappingDesc": "Adjust automatically detected categories",
+      "suggestedCategory": "Suggested",
+      "finalCategory": "Final Category",
+      "skipMapping": "Keep suggested categories"
     },
     "storedCards": {
       "title": "Stored Cards",
@@ -2860,7 +2894,9 @@
         "reading": "Reading",
         "read": "Read",
         "paused": "Paused"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Chat with the agent about this book"
     },
     "authors": {
       "title": "Authors",
@@ -3308,6 +3344,12 @@
       "radarChart": {
         "title": "Skills Radar",
         "emptyState": "Add skills to visualize the radar"
+      },
+      "history": {
+        "title": "Proficiency History",
+        "noHistory": "No history available",
+        "timeline": "Evolution timeline",
+        "viewHistory": "View history"
       }
     },
     "planningOnboarding": {
@@ -3430,7 +3472,16 @@
       "insightCTAWorstDay": "Adjust routine",
       "insightCTAWorkout": "Log workout",
       "insightCTAGoals": "See goals",
-      "sessionCount_other": "{{count}} sessions"
+      "moduleCards": {
+        "workoutTitle": "Workout",
+        "workoutSubtitle": "Sessions and exercises",
+        "nutritionTitle": "Nutrition",
+        "nutritionSubtitle": "Meals and macros",
+        "tasksTitle": "Tasks",
+        "tasksSubtitle": "Checklist and routine",
+        "goalsTitle": "Goals",
+        "goalsSubtitle": "Personal objectives"
+      }
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -4008,7 +4059,8 @@
         "statusMatched": "Matched",
         "statusUnmatched": "Divergent",
         "statusIgnored": "Ignored"
-      }
+      },
+      "importWithPreview": "Import with Preview"
     },
     "agents": {
       "title": "AI Agents",
@@ -5084,7 +5136,124 @@
         "explicit": "Explicit connection",
         "implicit": "Implicit connection"
       },
-      "exportPNG": "Export as PNG"
+      "exportPNG": "Export as PNG",
+      "suggestLinks": "Suggest Connections",
+      "suggestionsPanel": "Suggested Connections",
+      "noSuggestions": "No suggestions found. Add more content to the graph.",
+      "similarity": "Similarity",
+      "addLink": "Add connection",
+      "loadingSuggestions": "Loading suggestions..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Spaced repetition of highlights",
+      "newCard": "New Card",
+      "reviewNow": "Review now",
+      "dueToday": "Due today",
+      "generateFromBook": "Generate from Highlights",
+      "flipCard": "Flip card",
+      "nextReview": "Next review",
+      "generatedSuccess": "{{count}} card(s) generated successfully",
+      "noneToGenerate": "All highlights already have flashcards",
+      "status": {
+        "new": "New",
+        "learning": "Learning",
+        "review": "Review",
+        "mastered": "Mastered"
+      },
+      "rating": {
+        "label": "How did you do?",
+        "0": "Forgot",
+        "1": "Hard",
+        "2": "With effort",
+        "3": "Good",
+        "4": "Easy",
+        "5": "Very easy"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Due",
+        "mastered": "Mastered",
+        "new": "New"
+      },
+      "empty": {
+        "title": "No flash cards",
+        "description": "Create cards from your book highlights to review with spaced repetition."
+      },
+      "emptyReview": {
+        "title": "All caught up!",
+        "description": "You have no pending reviews. Come back later."
+      },
+      "front": "Front (question)",
+      "back": "Back (answer)",
+      "selectBook": "Select book (optional)"
+    },
+    "intellectToday": {
+      "title": "Intellect Today",
+      "subtitle": "Your daily learning hub",
+      "continueReading": "Continue Reading",
+      "startReading": "Start reading",
+      "startCourse": "Start a course",
+      "logReading": "Log reading",
+      "reviewCards": "Review cards",
+      "quickActions": "Quick Actions",
+      "activeBook": "Currently reading",
+      "activeCourse": "Active course",
+      "noActiveBook": "No book currently reading",
+      "noCourse": "No active course",
+      "dueFlashcards": "Cards to review",
+      "streak": "Learning streak",
+      "days": "{{count}} day(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pgs.",
+      "todayStudy": "Today's study",
+      "weekProgress": "Weekly progress",
+      "badges": "Recent achievements",
+      "viewAll": "View all",
+      "noStreak": "Start your streak today!"
+    },
+    "tags": {
+      "title": "Tags",
+      "newBtn": "New Tag",
+      "editTitle": "Edit Tag",
+      "newTitle": "New Tag",
+      "editDesc": "Update the tag information",
+      "newDesc": "Create a new tag to categorize transactions",
+      "deleteTitle": "Delete tag",
+      "deleteDesc": "Are you sure you want to delete this tag?",
+      "created": "Tag created",
+      "createdDesc": "The tag was created successfully.",
+      "updated": "Tag updated",
+      "updatedDesc": "The tag was updated successfully.",
+      "deleted": "Tag deleted",
+      "deletedDesc": "The tag was deleted successfully.",
+      "emptyState": "No tags created yet.",
+      "name": "Name",
+      "color": "Color"
+    },
+    "workoutHub": {
+      "title": "Workout",
+      "subtitle": "Sessions and progress",
+      "todayPlan": "Today's plan",
+      "quickLog": "Log Session",
+      "recentSessions": "Recent Sessions",
+      "startSession": "Start Session",
+      "noActivePlan": "No active workout plan",
+      "createPlan": "Create Plan",
+      "managePlans": "Manage Plans",
+      "manageExercises": "Exercises",
+      "viewHistory": "History"
+    },
+    "nutritionHub": {
+      "title": "Nutrition",
+      "subtitle": "Today's meals and macros",
+      "todayMeals": "Today's meals",
+      "quickLog": "Log Meal",
+      "mealHistory": "History",
+      "manageFoods": "Foods",
+      "manageMeals": "Meals",
+      "noMealsToday": "No meals logged today",
+      "addMeal": "Add Meal"
     }
   },
   "userProfile": {
@@ -5392,10 +5561,36 @@
       "payable": "Payable",
       "receivable": "Receivable",
       "creditCard": "Credit Card Bill",
-      "loan": "Loan Installment"
+      "loan": "Loan Installment",
+      "revenue": "Pending Revenue"
     },
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar..."
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Set Up Security Vault",
+    "step1Title": "Your personal security vault",
+    "step1Desc": "The Vault protects your passwords, credit cards, bank accounts and confidential files with military-grade encryption.",
+    "step1Warning": "⚠️ Important notice",
+    "step1WarningDesc": "Your master password cannot be recovered. Store it in a safe place. If lost, vault data is unrecoverable.",
+    "step2Title": "Set Up Your Master Password",
+    "step2Desc": "The master password is the key that protects your entire vault. Use a strong, unique password you don't use anywhere else.",
+    "step2TipsTitle": "Tips for a strong password:",
+    "step2Tip1": "At least 12 characters",
+    "step2Tip2": "Mix letters, numbers and symbols",
+    "step2Tip3": "Avoid dictionary words",
+    "step2Tip4": "Do not reuse passwords from other services",
+    "step2ConfigureBtn": "Set up master password now",
+    "step3Title": "Vault set up! What's next?",
+    "step3Desc": "Start adding your credentials to keep them safe.",
+    "step3AddPassword": "Add first password",
+    "step3ImportPasswords": "Import passwords from another app",
+    "step3HealthReport": "View health report",
+    "step3StoreArchive": "Store a confidential file",
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Finish"
   },
   "netWorth": {
     "title": "Net Worth",
@@ -5407,7 +5602,8 @@
     "liabilitiesSection": "Liability Breakdown",
     "bankAccounts": "Bank Accounts",
     "vaults": "Vaults / Investments",
-    "loans": "Loans",
+    "loans": "Loans (payable)",
+    "lentLoans": "Loans (receivable)",
     "creditCards": "Credit Cards",
     "overdraft": "Overdraft Used",
     "noAssets": "No assets found",
