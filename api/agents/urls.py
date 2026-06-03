@@ -6,6 +6,7 @@ from agents.views import (
     AgentNewSessionView,
     AgentStatusView,
     AgentStreamView,
+    SemanticSearchView,
 )
 
 urlpatterns = [
@@ -18,4 +19,7 @@ urlpatterns = [
     ),
     path("sessions/", AgentNewSessionView.as_view(), name="agent-new-session"),
     path("status/", AgentStatusView.as_view(), name="agent-status"),
+    path(
+        "search/", SemanticSearchView.as_view(), name="agent-semantic-search"
+    ),
 ]

@@ -3,6 +3,7 @@ import logging
 import re
 import secrets
 import string
+import urllib.request
 from datetime import date, timedelta
 
 from django.db.models import Count
@@ -37,6 +38,7 @@ from security.models import (
     Password,
     StoredBankAccount,
     StoredCreditCard,
+    VaultHealthSnapshot,
 )
 from security.serializers import (
     ActivityLogSerializer,
@@ -1198,6 +1200,75 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             description_params={},
         )
 
+        # HIBP k-anonymity check for stale passwords (max 10 per request).
+        # Only passwords not checked in the last 7 days.
+        hibp_cutoff = timezone.now() - timedelta(days=7)
+        stale_passwords = [
+            pw
+            for pw in passwords
+            if pw.hibp_last_checked is None
+            or pw.hibp_last_checked < hibp_cutoff
+        ][:10]
+
+        for pw in stale_passwords:
+            decrypted = pw.password
+            if not decrypted:
+                continue
+            sha1 = (
+                hashlib.sha1(decrypted.encode("utf-8")).hexdigest().upper()
+            )  # nosec B324
+            prefix, suffix = sha1[:5], sha1[5:]
+            compromised = False
+            try:
+                url = f"https://api.pwnedpasswords.com/range/{prefix}"
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        "Add-Padding": "true",
+                        "User-Agent": "Axiom-App/1.0",
+                    },
+                )
+                with urllib.request.urlopen(
+                    req, timeout=3
+                ) as resp:  # nosec B310
+                    body = resp.read().decode("utf-8")
+                for line in body.splitlines():
+                    parts = line.split(":")
+                    if parts and parts[0].upper() == suffix:
+                        compromised = int(parts[1]) > 0
+                        break
+            except Exception:
+                pass
+
+            previously_compromised = pw.hibp_compromised
+            pw.hibp_compromised = compromised
+            pw.hibp_last_checked = timezone.now()
+            Password.objects.filter(pk=pw.pk).update(
+                hibp_compromised=compromised,
+                hibp_last_checked=pw.hibp_last_checked,
+            )
+
+            if compromised and not previously_compromised:
+                from notifications.models import Notification as _Notification
+
+                _Notification.objects.get_or_create(
+                    owner=member,
+                    notification_type="vault_breach_detected",
+                    content_type="Password",
+                    object_id=pw.id,
+                    defaults={
+                        "title": f"Senha '{pw.title}' encontrada em vazamento",
+                        "message": (
+                            f"A senha de '{pw.title}' foi encontrada"
+                            " em um banco de dados de vazamentos"
+                            " (HaveIBeenPwned). Recomenda-se"
+                            " trocá-la imediatamente."
+                        ),
+                        "created_by": request.user,
+                        "updated_by": request.user,
+                    },
+                )
+
         # Analyse stored credit cards
         card_issues: list[dict] = []
         today = timezone.now().date()
@@ -1269,6 +1340,32 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             description_key="vault.health_check",
             description_params={},
         )
+
+        today = timezone.localdate()
+        try:
+            snap = VaultHealthSnapshot.objects.get(
+                owner=member, snapshot_date=today
+            )
+            snap.score = score
+            snap.weak_passwords = weak_count
+            snap.medium_passwords = medium_count
+            snap.duplicate_passwords = duplicate_count
+            snap.outdated_passwords = outdated_count
+            snap.total_passwords = total
+            snap.updated_by = request.user
+            snap.save()
+        except VaultHealthSnapshot.DoesNotExist:
+            VaultHealthSnapshot.objects.create(
+                owner=member,
+                score=score,
+                weak_passwords=weak_count,
+                medium_passwords=medium_count,
+                duplicate_passwords=duplicate_count,
+                outdated_passwords=outdated_count,
+                total_passwords=total,
+                created_by=request.user,
+                updated_by=request.user,
+            )
 
         return Response(
             {
@@ -1731,13 +1828,45 @@ class PasswordGenerateView(APIView):
 # ============================================================================
 
 
+def _build_share_token(request, credential_obj, credential_type, snapshot):
+    """
+    Helper: encrypts `snapshot` (str) with a per-token key and persists a
+    CredentialShareToken. Returns (token_obj, token_key_str).
+    """
+    serializer = CreateShareTokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    ttl_hours = serializer.validated_data["ttl_hours"]
+    max_uses = serializer.validated_data["max_uses"]
+    allowed_ips = serializer.validated_data.get("allowed_ips", [])
+
+    token_key = FieldEncryption.generate_key()
+    encrypted_snapshot = FieldEncryption.encrypt_with_key(
+        snapshot, token_key.encode()
+    )
+
+    kwargs = {
+        "credential_type": credential_type,
+        "_encrypted_password": encrypted_snapshot,
+        "expires_at": timezone.now() + timedelta(hours=ttl_hours),
+        "max_uses": max_uses,
+        "allowed_ips": allowed_ips,
+        "created_by": request.user,
+    }
+    if credential_type == "password":
+        kwargs["password"] = credential_obj
+    elif credential_type == "stored_credit_card":
+        kwargs["stored_credit_card"] = credential_obj
+    elif credential_type == "stored_bank_account":
+        kwargs["stored_bank_account"] = credential_obj
+
+    token_obj = CredentialShareToken.objects.create(**kwargs)
+    return token_obj, token_key
+
+
 class ShareTokenListCreateView(VaultLockedMixin, APIView):
     """
-    GET  /api/v1/security/passwords/<pk>/share-tokens/  — lista tokens da senha
-    POST /api/v1/security/passwords/<pk>/share-tokens/  — cria novo token
-
-    Requer cofre desbloqueado (VaultLockedMixin) para descriptografar a senha
-    e re-criptografá-la com a app key no snapshot do token.
+    GET  /api/v1/security/passwords/<pk>/share-tokens/
+    POST /api/v1/security/passwords/<pk>/share-tokens/
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
@@ -1752,11 +1881,12 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
         return Response(serializer.data)
 
     def post(self, request, pk):
+        import json
+
         password_obj = get_object_or_404(
             Password, pk=pk, owner__user=request.user
         )
 
-        # Decrypt with vault key (already set by VaultLockedMixin)
         plaintext = password_obj.password
         if plaintext is None:
             return Response(
@@ -1764,31 +1894,18 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = CreateShareTokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        ttl_hours = serializer.validated_data["ttl_hours"]
-        max_uses = serializer.validated_data["max_uses"]
-        allowed_ips = serializer.validated_data.get("allowed_ips", [])
-
-        # Generate a random per-token Fernet key.
-        # This key is NEVER stored server-side — it is returned to the caller
-        # once and must be embedded in the share URL fragment (#key=...) so
-        # that only someone who has the full URL can decrypt the snapshot.
-        token_key = (
-            FieldEncryption.generate_key()
-        )  # base64-encoded 32-byte key
-        token_key_bytes = token_key.encode()
-        encrypted_snapshot = FieldEncryption.encrypt_with_key(
-            plaintext, token_key_bytes
+        snapshot = json.dumps(
+            {
+                "credential_type": "password",
+                "title": password_obj.title,
+                "username": password_obj.username or "",
+                "password": plaintext,
+                "site": password_obj.site or "",
+                "category": password_obj.category or "",
+            }
         )
-
-        token_obj = CredentialShareToken.objects.create(
-            password=password_obj,
-            _encrypted_password=encrypted_snapshot,
-            expires_at=timezone.now() + timedelta(hours=ttl_hours),
-            max_uses=max_uses,
-            allowed_ips=allowed_ips,
-            created_by=request.user,
+        token_obj, token_key = _build_share_token(
+            request, password_obj, "password", snapshot
         )
 
         log_activity(
@@ -1801,6 +1918,118 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
             description_params={"name": password_obj.title},
         )
 
+        return Response(
+            CredentialShareTokenCreateResponseSerializer(
+                token_obj, token_key=token_key
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class StoredCardShareTokenView(VaultLockedMixin, APIView):
+    """
+    GET  /api/v1/security/stored-credit-cards/<pk>/share-tokens/
+    POST /api/v1/security/stored-credit-cards/<pk>/share-tokens/
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request, pk):
+        card = get_object_or_404(
+            StoredCreditCard, pk=pk, owner__user=request.user
+        )
+        tokens = CredentialShareToken.objects.filter(stored_credit_card=card)
+        serializer = CredentialShareTokenSerializer(tokens, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, pk):
+        import json
+
+        card = get_object_or_404(
+            StoredCreditCard, pk=pk, owner__user=request.user
+        )
+        snapshot = json.dumps(
+            {
+                "credential_type": "stored_credit_card",
+                "name": card.name,
+                "card_number": card.card_number or "",
+                "security_code": card.security_code or "",
+                "expiration_month": card.expiration_month,
+                "expiration_year": card.expiration_year,
+                "cardholder_name": card.cardholder_name,
+                "flag": card.flag,
+                "notes": card.notes or "",
+            }
+        )
+        token_obj, token_key = _build_share_token(
+            request, card, "stored_credit_card", snapshot
+        )
+        log_activity(
+            request,
+            "create",
+            "CredentialShareToken",
+            token_obj.id,
+            f"Criou link de compartilhamento para cartão: {card.name}",
+            description_key="credential_share.create",
+            description_params={"name": card.name},
+        )
+        return Response(
+            CredentialShareTokenCreateResponseSerializer(
+                token_obj, token_key=token_key
+            ).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class StoredAccountShareTokenView(VaultLockedMixin, APIView):
+    """
+    GET  /api/v1/security/stored-bank-accounts/<pk>/share-tokens/
+    POST /api/v1/security/stored-bank-accounts/<pk>/share-tokens/
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request, pk):
+        account = get_object_or_404(
+            StoredBankAccount, pk=pk, owner__user=request.user
+        )
+        tokens = CredentialShareToken.objects.filter(
+            stored_bank_account=account
+        )
+        serializer = CredentialShareTokenSerializer(tokens, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, pk):
+        import json
+
+        account = get_object_or_404(
+            StoredBankAccount, pk=pk, owner__user=request.user
+        )
+        snapshot = json.dumps(
+            {
+                "credential_type": "stored_bank_account",
+                "name": account.name,
+                "institution_name": account.institution_name,
+                "account_type": account.account_type,
+                "account_number": account.account_number or "",
+                "agency": account.agency or "",
+                "password": account.password or "",
+                "digital_password": account.digital_password or "",
+                "notes": account.notes or "",
+            }
+        )
+        token_obj, token_key = _build_share_token(
+            request, account, "stored_bank_account", snapshot
+        )
+        log_activity(
+            request,
+            "create",
+            "CredentialShareToken",
+            token_obj.id,
+            f"Criou link de compartilhamento para conta: {account.name}",
+            description_key="credential_share.create",
+            description_params={"name": account.name},
+        )
         return Response(
             CredentialShareTokenCreateResponseSerializer(
                 token_obj, token_key=token_key
@@ -1827,14 +2056,15 @@ class RevokeShareTokenView(APIView):
         token_obj.is_revoked = True
         token_obj.save(update_fields=["is_revoked"])
 
+        cred_title = token_obj.credential_title
         log_activity(
             request,
             "other",
             "CredentialShareToken",
             token_obj.id,
-            f"Revogou link de compartilhamento: {token_obj.password.title}",
+            f"Revogou link de compartilhamento: {cred_title}",
             description_key="credential_share.revoke",
-            description_params={"name": token_obj.password.title},
+            description_params={"name": cred_title},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -1870,7 +2100,7 @@ class RedeemShareTokenView(APIView):
 
         try:
             token_obj = CredentialShareToken.objects.select_related(
-                "password"
+                "password", "stored_credit_card", "stored_bank_account"
             ).get(token=token)
         except CredentialShareToken.DoesNotExist:
             return Response(
@@ -1937,22 +2167,19 @@ class RedeemShareTokenView(APIView):
         token_obj.used_at = timezone.now()
         token_obj.save(update_fields=["use_count", "used_at"])
 
+        cred_title = token_obj.credential_title
         ActivityLog.log_action(
             user=None,
             action="shared_reveal",
-            description=(
-                f"Acesso via link compartilhado:"
-                f" {token_obj.password.title}"
-            ),
+            description=f"Acesso via link compartilhado: {cred_title}",
             description_key="credential_share.access",
-            description_params={"name": token_obj.password.title},
+            description_params={"name": cred_title},
             model_name="CredentialShareToken",
             object_id=token_obj.id,
             ip_address=get_client_ip(request),
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
 
-        # #203 — notificar o criador do token in-app
         if token_obj.created_by:
             try:
                 from members.models import Member
@@ -1966,9 +2193,11 @@ class RedeemShareTokenView(APIView):
                     content_type="CredentialShareToken",
                     object_id=token_obj.id,
                     defaults={
-                        "title": "Credencial acessada via link compartilhado",
+                        "title": (
+                            "Credencial acessada via link compartilhado"
+                        ),
                         "message": (
-                            f'Sua senha "{token_obj.password.title}" foi '
+                            f'Sua credencial "{cred_title}" foi '
                             f"acessada via link em {accessed_at}."
                         ),
                         "is_read": False,
@@ -1977,16 +2206,74 @@ class RedeemShareTokenView(APIView):
             except Exception:
                 logger.exception("Falha ao criar notificação de share_token")
 
-        pw = token_obj.password
+        # Parse snapshot: new tokens use JSON; legacy password tokens store
+        # only the plaintext password string for backward compatibility.
+        import json
+
+        try:
+            data = json.loads(plaintext)
+        except (ValueError, TypeError):
+            data = {
+                "credential_type": "password",
+                "password": plaintext,
+            }
+
+        ctype = data.get("credential_type", "password")
+        base = {
+            "credential_type": ctype,
+            "expires_at": token_obj.expires_at,
+            "uses_remaining": token_obj.max_uses - token_obj.use_count,
+        }
+
+        if ctype == "stored_credit_card":
+            return Response(
+                {
+                    **base,
+                    "name": data.get("name"),
+                    "card_number": data.get("card_number"),
+                    "security_code": data.get("security_code"),
+                    "expiration_month": data.get("expiration_month"),
+                    "expiration_year": data.get("expiration_year"),
+                    "cardholder_name": data.get("cardholder_name"),
+                    "flag": data.get("flag"),
+                    "notes": data.get("notes"),
+                }
+            )
+        if ctype == "stored_bank_account":
+            return Response(
+                {
+                    **base,
+                    "name": data.get("name"),
+                    "institution_name": data.get("institution_name"),
+                    "account_type": data.get("account_type"),
+                    "account_number": data.get("account_number"),
+                    "agency": data.get("agency"),
+                    "password": data.get("password"),
+                    "digital_password": data.get("digital_password"),
+                    "notes": data.get("notes"),
+                }
+            )
+        # Default: password (new JSON format or legacy string)
+        if token_obj.password:
+            pw = token_obj.password
+            return Response(
+                {
+                    **base,
+                    "title": data.get("title", pw.title),
+                    "username": data.get("username", pw.username),
+                    "password": data.get("password", plaintext),
+                    "site": data.get("site", pw.site),
+                    "category": data.get("category", pw.category),
+                }
+            )
         return Response(
             {
-                "title": pw.title,
-                "username": pw.username,
-                "password": plaintext,
-                "site": pw.site,
-                "category": pw.category,
-                "expires_at": token_obj.expires_at,
-                "uses_remaining": token_obj.max_uses - token_obj.use_count,
+                **base,
+                "title": data.get("title", ""),
+                "username": data.get("username", ""),
+                "password": data.get("password", plaintext),
+                "site": data.get("site", ""),
+                "category": data.get("category", ""),
             }
         )
 
@@ -2050,9 +2337,9 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         with zipfile.ZipFile(
             buffer, mode="w", compression=zipfile.ZIP_DEFLATED
         ) as zf:
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             # passwords.csv
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             passwords = Password.objects.filter(
                 owner=member, is_deleted=False
             ).only(
@@ -2100,9 +2387,9 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                 )
             zf.writestr("passwords.csv", pw_buf.getvalue())
 
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             # stored_cards.csv
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             cards = StoredCreditCard.objects.filter(
                 owner=member, is_deleted=False
             )
@@ -2145,9 +2432,9 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                 )
             zf.writestr("stored_cards.csv", cards_buf.getvalue())
 
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             # stored_accounts.csv
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             accounts = StoredBankAccount.objects.filter(
                 owner=member, is_deleted=False
             )
@@ -2196,13 +2483,13 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                 )
             zf.writestr("stored_accounts.csv", acc_buf.getvalue())
 
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             # archives/ — arquivos reais e conteúdo de texto descriptografado
             # Usa archive.encrypted_file.open("rb") — a abstração de storage do
             # Django funciona tanto com MinIO (Docker/K8s) quanto com
             # filesystem
             # local (testes), sem nenhuma diferença no código.
-            # ------------------------------------------------------------------
+            # -----------------------------------------------------------------
             archives = Archive.objects.filter(owner=member, is_deleted=False)
             for arch in archives:
                 safe_title = self._safe_name(arch.title)
@@ -2244,10 +2531,39 @@ class VaultExportZipView(VaultLockedMixin, APIView):
 
         buffer.seek(0)
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"axiom_vault_{timestamp}.zip"
 
-        response = HttpResponse(buffer.read(), content_type="application/zip")
+        # AES-256-GCM: derive key from BACKUP_ENCRYPTION_KEY via PBKDF2.
+        # The nonce (12 bytes) is prepended to the ciphertext so the frontend
+        # (or CLI) can decrypt with: nonce = data[:12]; ct = data[12:].
+        import os
+
+        from django.conf import settings
+
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        passphrase = (
+            getattr(settings, "BACKUP_ENCRYPTION_KEY", "") or ""
+        ).encode()
+        salt = b"axiom-vault-export-v1"
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100_000
+        )
+        aes_key = kdf.derive(passphrase)
+        nonce = os.urandom(12)
+        aesgcm = AESGCM(aes_key)
+        plaintext_zip = buffer.read()
+        ciphertext = aesgcm.encrypt(nonce, plaintext_zip, None)
+        encrypted_blob = nonce + ciphertext
+
+        filename = f"axiom_vault_{timestamp}.zip.enc"
+        response = HttpResponse(
+            encrypted_blob, content_type="application/octet-stream"
+        )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response["X-Vault-Export-Format"] = "AES-256-GCM"
+        response["X-Vault-Export-Nonce-Bytes"] = "12"
         return response
 
 
