@@ -56,6 +56,7 @@ export const API_CONFIG = {
     // Resources
     ACCOUNTS: '/api/v1/accounts/',
     EXPENSES: '/api/v1/expenses/',
+    EXPENSE_SUGGEST_CATEGORY: '/api/v1/expenses/suggest-category/',
     FIXED_EXPENSES: '/api/v1/fixed-expenses/',
     REVENUES: '/api/v1/revenues/',
     CREDIT_CARDS: '/api/v1/credit-cards/',
