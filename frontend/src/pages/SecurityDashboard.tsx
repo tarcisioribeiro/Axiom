@@ -331,9 +331,7 @@ function VaultAlertConfigPanel() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vaultAlertConfig'] });
       toast({
-        title: t('pages.securityDashboard.alertConfigSaved', {
-          defaultValue: 'Configurações salvas',
-        }),
+        title: t('pages.securityDashboard.alertConfigSaved'),
       });
     },
     onError: () => {
@@ -367,32 +365,20 @@ function VaultAlertConfigPanel() {
   }[] = [
     {
       field: 'alert_on_new_ip',
-      label: t('pages.securityDashboard.alertOnNewIp', {
-        defaultValue: 'Alerta por novo IP',
-      }),
-      desc: t('pages.securityDashboard.alertOnNewIpDesc', {
-        defaultValue: 'Notificar ao acessar o cofre de um novo endereço IP.',
-      }),
+      label: t('pages.securityDashboard.alertOnNewIp'),
+      desc: t('pages.securityDashboard.alertOnNewIpDesc'),
       value: alertConfig?.alert_on_new_ip ?? true,
     },
     {
       field: 'alert_on_failed_unlock',
-      label: t('pages.securityDashboard.alertOnFailedUnlock', {
-        defaultValue: 'Alerta por tentativas falhas',
-      }),
-      desc: t('pages.securityDashboard.alertOnFailedUnlockDesc', {
-        defaultValue: 'Notificar após múltiplas tentativas de desbloqueio incorretas.',
-      }),
+      label: t('pages.securityDashboard.alertOnFailedUnlock'),
+      desc: t('pages.securityDashboard.alertOnFailedUnlockDesc'),
       value: alertConfig?.alert_on_failed_unlock ?? true,
     },
     {
       field: 'alert_on_reveal',
-      label: t('pages.securityDashboard.alertOnReveal', {
-        defaultValue: 'Alerta ao revelar senha',
-      }),
-      desc: t('pages.securityDashboard.alertOnRevealDesc', {
-        defaultValue: 'Notificar cada vez que uma senha for revelada.',
-      }),
+      label: t('pages.securityDashboard.alertOnReveal'),
+      desc: t('pages.securityDashboard.alertOnRevealDesc'),
       value: alertConfig?.alert_on_reveal ?? false,
     },
   ];
@@ -402,9 +388,7 @@ function VaultAlertConfigPanel() {
       <CardHeader>
         <CardTitle className="flex items-center gap-sm text-base">
           <Bell className="h-4 w-4" />
-          {t('pages.securityDashboard.alertConfig', {
-            defaultValue: 'Configurações de Alertas',
-          })}
+          {t('pages.securityDashboard.alertConfig')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-sm">
@@ -536,7 +520,7 @@ export default function SecurityDashboard() {
             className="gap-sm"
           >
             <Key className="h-4 w-4" />
-            {t('pages.security.recoveryKey.menuBtn')}
+            {t('userProfile.security.recoveryKey.menuBtn')}
           </Button>
           <Button
             variant="outline"
@@ -699,7 +683,8 @@ export default function SecurityDashboard() {
                 }
                 colors={COLORS}
                 customColors={(entry) =>
-                  strengthColors[entry.strength as PasswordStrength] || COLORS[0]
+                  strengthColors[(entry as { strength: PasswordStrength }).strength] ||
+                  COLORS[0]
                 }
                 emptyMessage={t('pages.securityDashboard.noPasswords')}
                 lockChartType="pie"

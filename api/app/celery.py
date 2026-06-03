@@ -51,4 +51,24 @@ app.conf.beat_schedule = {
         "task": "security.tasks.check_stored_card_expiry",
         "schedule": crontab(hour=9, minute=0),
     },
+    # Notifica senhas comprometidas (HIBP) — semanal, domingo às 08h.
+    "notify-compromised-passwords-weekly": {
+        "task": "security.tasks.notify_compromised_passwords",
+        "schedule": crontab(hour=8, minute=0, day_of_week=0),
+    },
+    # Resumo semanal de segurança do cofre — segunda às 09h.
+    "send-weekly-security-summary-monday": {
+        "task": "security.tasks.send_weekly_security_summary",
+        "schedule": crontab(hour=9, minute=0, day_of_week=1),
+    },
+    # Detecta anomalias no ActivityLog diariamente às 06h.
+    "detect-activity-anomalies-daily": {
+        "task": "security.tasks.detect_activity_anomalies",
+        "schedule": crontab(hour=6, minute=0),
+    },
+    # Recomendações semanais de aprendizado — segunda às 10h.
+    "send-weekly-learning-recommendations-monday": {
+        "task": "library.tasks.send_weekly_learning_recommendations",
+        "schedule": crontab(hour=10, minute=0, day_of_week=1),
+    },
 }

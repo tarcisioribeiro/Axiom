@@ -2,7 +2,12 @@ import { API_CONFIG } from '@/config/constants';
 
 import { apiClient } from './api-client';
 
-export type ImportFormat = 'bitwarden_json' | 'lastpass_csv';
+export type ImportFormat =
+  | 'bitwarden_json'
+  | 'lastpass_csv'
+  | 'onepassword_csv'
+  | 'dashlane_csv'
+  | 'keepass_xml';
 
 export interface ImportPreviewEntry {
   index: number;
@@ -11,6 +16,7 @@ export interface ImportPreviewEntry {
   password: string;
   site: string;
   category: string;
+  suggested_category: string;
   notes: string;
   is_duplicate: boolean;
 }
@@ -49,10 +55,13 @@ class PasswordImportService {
     );
   }
 
-  async confirm(entries: ImportConfirmEntry[]): Promise<ImportConfirmResponse> {
+  async confirm(
+    entries: ImportConfirmEntry[],
+    categoryMapping?: Record<string, string>
+  ): Promise<ImportConfirmResponse> {
     return apiClient.post<ImportConfirmResponse>(
       API_CONFIG.ENDPOINTS.PASSWORD_IMPORT_CONFIRM,
-      { entries }
+      { entries, category_mapping: categoryMapping ?? {} }
     );
   }
 }
