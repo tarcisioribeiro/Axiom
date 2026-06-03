@@ -287,7 +287,7 @@ export default function BankReconciliation() {
         title={t('pages.bankReconciliation.title')}
         icon={<ArrowLeftRight />}
         action={{
-          label: 'Importar com prévia',
+          label: t('pages.bankReconciliation.importWithPreview'),
           icon: <FileUp className="h-4 w-4" />,
           onClick: () => void navigate('/bank-reconciliation/import'),
         }}

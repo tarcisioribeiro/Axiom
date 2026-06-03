@@ -174,7 +174,14 @@
         "configuration": "Configuração"
       }
     },
-    "noResults": "Nenhum resultado encontrado"
+    "noResults": "Nenhum resultado encontrado",
+    "mood": {
+      "excellent": "Excelente",
+      "good": "Bom",
+      "neutral": "Neutro",
+      "bad": "Ruim",
+      "terrible": "Péssimo"
+    }
   },
   "nav": {
     "home": "Início",
@@ -998,7 +1005,8 @@
         "income": "Renda:"
       },
       "noRole": "Sem papel definido",
-      "emptySearch": "Nenhum membro encontrado."
+      "emptySearch": "Nenhum membro encontrado.",
+      "searchPlaceholder": "Buscar por nome, CPF ou telefone..."
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",
@@ -4068,7 +4076,8 @@
         "statusMatched": "Conciliado",
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
-      }
+      },
+      "importWithPreview": "Importar com prévia"
     },
     "agents": {
       "title": "Agentes IA",
