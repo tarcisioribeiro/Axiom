@@ -27,6 +27,109 @@ SUPPORTED_FORMATS = (
     "keepass_xml",
 )
 
+_CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "banking": [
+        "bank",
+        "banco",
+        "nubank",
+        "itau",
+        "bradesco",
+        "santander",
+        "caixa",
+        "bb",
+        "inter",
+        "sicredi",
+        "conta",
+        "mercadopago",
+        "pagbank",
+    ],
+    "email": [
+        "gmail",
+        "outlook",
+        "hotmail",
+        "yahoo",
+        "protonmail",
+        "email",
+        "mail",
+        "webmail",
+    ],
+    "social": [
+        "facebook",
+        "instagram",
+        "twitter",
+        "tiktok",
+        "linkedin",
+        "snapchat",
+        "reddit",
+        "discord",
+        "telegram",
+        "whatsapp",
+        "threads",
+    ],
+    "streaming": [
+        "netflix",
+        "spotify",
+        "amazon",
+        "prime",
+        "disney",
+        "hbo",
+        "paramount",
+        "crunchyroll",
+        "deezer",
+        "tidal",
+    ],
+    "shopping": [
+        "mercadolivre",
+        "shopee",
+        "americanas",
+        "magalu",
+        "aliexpress",
+        "wish",
+        "shein",
+        "kabum",
+    ],
+    "gaming": [
+        "steam",
+        "epic",
+        "origin",
+        "ubisoft",
+        "xbox",
+        "playstation",
+        "nintendo",
+        "riot",
+        "gog",
+    ],
+    "work": [
+        "jira",
+        "confluence",
+        "slack",
+        "notion",
+        "trello",
+        "asana",
+        "gitlab",
+        "github",
+        "bitbucket",
+        "vpn",
+        "office",
+        "gsuite",
+    ],
+    "entertainment": [
+        "twitch",
+        "youtube",
+        "vimeo",
+        "soundcloud",
+    ],
+}
+
+
+def guess_category(title: str, site: str) -> str:
+    """Retorna categoria sugerida via heurística."""
+    combined = f"{title} {site}".lower()
+    for category, keywords in _CATEGORY_KEYWORDS.items():
+        if any(kw in combined for kw in keywords):
+            return category
+    return "other"
+
 
 class ImportParseError(Exception):
     pass

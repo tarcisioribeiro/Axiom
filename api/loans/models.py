@@ -113,6 +113,16 @@ class Loan(BaseModel):
         verbose_name="Status",
         default="active",
     )
+    loan_type = models.CharField(
+        max_length=10,
+        choices=[
+            ("borrowed", "Empréstimo Tomado"),
+            ("lent", "Empréstimo Realizado"),
+        ],
+        verbose_name="Tipo de Empréstimo",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-date"]

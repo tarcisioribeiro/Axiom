@@ -6,6 +6,7 @@ from agents.views import (
     AgentNewSessionView,
     AgentStatusView,
     AgentStreamView,
+    CategoryClassifyView,
     SemanticSearchView,
 )
 
@@ -21,5 +22,10 @@ urlpatterns = [
     path("status/", AgentStatusView.as_view(), name="agent-status"),
     path(
         "search/", SemanticSearchView.as_view(), name="agent-semantic-search"
+    ),
+    path(
+        "classify-category/",
+        CategoryClassifyView.as_view(),
+        name="agent-classify-category",
     ),
 ]

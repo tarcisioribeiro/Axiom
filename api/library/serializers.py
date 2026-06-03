@@ -11,6 +11,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    FlashCard,
     IntellectBadge,
     KnowledgeLink,
     LiteraryTypeGoal,
@@ -18,6 +19,7 @@ from library.models import (
     Reading,
     ReadingGoal,
     Skill,
+    SkillHistory,
     Summary,
 )
 
@@ -1178,3 +1180,90 @@ class IntellectBadgeSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = fields
+
+
+# ============================================================================
+# SKILL HISTORY SERIALIZER
+# ============================================================================
+
+
+class SkillHistorySerializer(serializers.ModelSerializer):
+    proficiency_display = serializers.CharField(
+        source="get_proficiency_display", read_only=True
+    )
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
+    proficiency_order = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SkillHistory
+        fields = [
+            "id",
+            "uuid",
+            "skill",
+            "proficiency",
+            "proficiency_display",
+            "proficiency_order",
+            "status",
+            "status_display",
+            "notes",
+            "created_at",
+        ]
+
+    def get_proficiency_order(self, obj):
+        from library.models import PROFICIENCY_ORDER
+
+        return PROFICIENCY_ORDER.get(obj.proficiency, 0)
+
+
+# ============================================================================
+# FLASHCARD SERIALIZERS
+# ============================================================================
+
+
+class FlashCardSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
+    book_title = serializers.CharField(source="book.title", read_only=True)
+
+    class Meta:
+        model = FlashCard
+        fields = [
+            "id",
+            "uuid",
+            "book",
+            "book_title",
+            "highlight",
+            "front",
+            "back",
+            "status",
+            "status_display",
+            "ease_factor",
+            "interval_days",
+            "repetitions",
+            "next_review",
+            "last_reviewed",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class FlashCardCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FlashCard
+        fields = ["book", "highlight", "front", "back"]
+
+    def create(self, validated_data):
+        member = self.context["request"].user.member
+        return FlashCard.objects.create(
+            **validated_data,
+            owner=member,
+            created_by=self.context["request"].user,
+            updated_by=self.context["request"].user,
+        )
+
+
+class FlashCardReviewSerializer(serializers.Serializer):
+    rating = serializers.IntegerField(min_value=0, max_value=5)
