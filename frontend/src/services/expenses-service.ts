@@ -4,6 +4,17 @@ import type { Expense, ExpenseFormData } from '@/types';
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
+export interface CategorySuggestionParams {
+  description?: string;
+  merchant?: string;
+  value?: number | string;
+}
+
+export interface CategorySuggestion {
+  category: string;
+  method: 'rule' | 'llm' | 'none';
+}
+
 export interface ExpenseExportParams {
   export_format: 'csv' | 'pdf';
   date_from?: string;
@@ -48,6 +59,18 @@ class ExpensesService extends BaseService<Expense, ExpenseFormData> {
     return apiClient.post(`${this.endpoint}bulk-mark-paid/`, {
       expense_ids: expenseIds,
     });
+  }
+
+  /**
+   * Sugere uma categoria para a despesa via heurística + LLM fallback.
+   *
+   * @param params - description e/ou merchant da despesa
+   */
+  async suggestCategory(params: CategorySuggestionParams): Promise<CategorySuggestion> {
+    return apiClient.post<CategorySuggestion>(
+      API_CONFIG.ENDPOINTS.EXPENSE_SUGGEST_CATEGORY,
+      params
+    );
   }
 
   /**
