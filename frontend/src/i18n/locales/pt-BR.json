@@ -637,6 +637,8 @@
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Supermercado Extra",
         "merchantHint": "Preencha para categorização automática",
+        "aiSuggesting": "Consultando IA para sugerir categoria...",
+        "aiSuggested": "IA sugeriu",
         "categoryLabel": "Categoria *",
         "paymentStatusLabel": "Status de Pagamento *",
         "pending": "Pendente",

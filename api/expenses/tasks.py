@@ -1,6 +1,50 @@
 from celery import shared_task
 
 
+@shared_task(
+    bind=True, max_retries=2, default_retry_delay=60, ignore_result=True
+)
+def async_categorize_expense(self, expense_id: int) -> None:
+    """Categoriza uma despesa via LLM em background quando a heurística falhou.
+
+    Executa apenas se a despesa ainda tiver category='others' e
+    auto_categorized=False, garantindo que não sobrescreve escolhas manuais.
+    """
+    try:
+        from expenses.categorization_service import suggest_category
+        from expenses.models import Expense
+
+        expense = Expense.objects.filter(
+            pk=expense_id,
+            category="others",
+            auto_categorized=False,
+            is_deleted=False,
+        ).first()
+
+        if not expense:
+            return
+
+        user = expense.created_by
+        if not user:
+            return
+
+        result = suggest_category(
+            user,
+            description=expense.description or "",
+            merchant=expense.merchant or "",
+            value=expense.value,
+        )
+
+        if result["method"] == "llm" and result["category"] != "others":
+            expense.category = result["category"]
+            expense.auto_categorized = True
+            expense.save(
+                update_fields=["category", "auto_categorized", "updated_at"]
+            )
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def generate_fixed_expenses_for_month(
     self, month_str: str | None = None
