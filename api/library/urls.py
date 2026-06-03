@@ -4,6 +4,7 @@ from library.views import (
     AuthorDetailView,
     AuthorListCreateView,
     AuthorPhotoStreamView,
+    BookAISummaryView,
     BookCoverStreamView,
     BookDetailView,
     BookFileStreamView,
@@ -25,7 +26,13 @@ from library.views import (
     CourseRetrieveUpdateDestroyView,
     CourseSessionListCreateView,
     CourseSessionRetrieveUpdateDestroyView,
+    FlashCardDetailView,
+    FlashCardFromHighlightView,
+    FlashCardListCreateView,
+    FlashCardReviewView,
     IntellectBadgeListView,
+    KindleImportView,
+    KnowledgeGraphSuggestLinksView,
     KnowledgeGraphView,
     KnowledgeLinkListCreateView,
     KnowledgeLinkRetrieveUpdateDestroyView,
@@ -38,6 +45,7 @@ from library.views import (
     ReadingGoalDetailView,
     ReadingGoalListCreateView,
     ReadingListCreateView,
+    SkillHistoryView,
     SkillListCreateView,
     SkillRetrieveUpdateDestroyView,
     SummaryDetailView,
@@ -77,6 +85,11 @@ urlpatterns = [
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    path(
+        "books/<int:pk>/ai-summary/",
+        BookAISummaryView.as_view(),
+        name="book-ai-summary",
+    ),
     path(
         "books/<int:pk>/cover/",
         BookCoverStreamView.as_view(),
@@ -158,6 +171,11 @@ urlpatterns = [
         name="highlight-export",
     ),
     path(
+        "highlights/kindle-import/",
+        KindleImportView.as_view(),
+        name="highlight-kindle-import",
+    ),
+    path(
         "highlights/<int:pk>/",
         BookHighlightDetailView.as_view(),
         name="highlight-detail",
@@ -227,11 +245,43 @@ urlpatterns = [
         IntellectBadgeListView.as_view(),
         name="intellect-badge-list",
     ),
+    # Skills history
+    path(
+        "skills/<int:pk>/history/",
+        SkillHistoryView.as_view(),
+        name="skill-history",
+    ),
+    # FlashCards
+    path(
+        "flashcards/",
+        FlashCardListCreateView.as_view(),
+        name="flashcard-list-create",
+    ),
+    path(
+        "flashcards/<int:pk>/",
+        FlashCardDetailView.as_view(),
+        name="flashcard-detail",
+    ),
+    path(
+        "flashcards/<int:pk>/review/",
+        FlashCardReviewView.as_view(),
+        name="flashcard-review",
+    ),
+    path(
+        "books/<int:pk>/flashcards/generate/",
+        FlashCardFromHighlightView.as_view(),
+        name="book-flashcards-generate",
+    ),
     # Knowledge Graph
     path(
         "knowledge-graph/",
         KnowledgeGraphView.as_view(),
         name="knowledge-graph",
+    ),
+    path(
+        "knowledge-graph/suggest-links/",
+        KnowledgeGraphSuggestLinksView.as_view(),
+        name="knowledge-graph-suggest-links",
     ),
     path(
         "knowledge-links/",

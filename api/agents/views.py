@@ -40,6 +40,7 @@ from agents.serializers import (
     AgentAskSerializer,
     AgentConversationSerializer,
     AgentStatusSerializer,
+    CategoryClassifySerializer,
 )
 from app.throttles import AgentRateThrottle
 
@@ -464,3 +465,252 @@ class AgentStreamView(APIView):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
         return response
+
+
+# ============================================================================
+# SEMANTIC SEARCH VIEW
+# ============================================================================
+
+
+class SemanticSearchView(APIView):
+    """
+    POST /api/v1/agents/search/
+
+    Busca semântica global nos embeddings do usuário.
+
+    Body: { "query": "...", "domain": "library", "top_k": 10 }
+      domain: "library" | "planning" | "finance" | null (busca em todos)
+      top_k: número máximo de resultados (1-20, default 10)
+
+    Returns: { "results": [{ content, source_title, source_type,
+      similarity }] }
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    _DOMAINS = ("library", "planning", "finance", "security")
+
+    def post(self, request: Request) -> Response:
+        query = (request.data.get("query") or "").strip()
+        if not query:
+            return Response(
+                {"detail": "Informe um query para busca."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(query) > 500:
+            return Response(
+                {"detail": "Query muito longa (máximo 500 caracteres)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        domain = request.data.get("domain") or None
+        if domain and domain not in self._DOMAINS:
+            return Response(
+                {
+                    "detail": (
+                        "Domínio inválido. Use: " + ", ".join(self._DOMAINS)
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_top_k = request.data.get("top_k", 10)
+        try:
+            top_k = max(1, min(20, int(raw_top_k)))
+        except (TypeError, ValueError):
+            top_k = 10
+
+        from agents.tools.rag_tools import search_embeddings
+
+        user: User = cast(User, request.user)
+
+        try:
+            if domain:
+                results = search_embeddings(query, user, domain, top_k=top_k)
+            else:
+                # Search all domains and merge by similarity
+                all_results: list[dict] = []
+                for d in self._DOMAINS:
+                    all_results.extend(
+                        search_embeddings(query, user, d, top_k=top_k)
+                    )
+                results = sorted(
+                    all_results,
+                    key=lambda x: cast(float, x.get("similarity", 0)),
+                    reverse=True,
+                )[:top_k]
+        except Exception as exc:
+            logging.getLogger(__name__).error("Semantic search error: %s", exc)
+            return Response(
+                {"detail": "Erro ao realizar busca semântica."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({"results": results, "query": query, "domain": domain})
+
+
+# ============================================================================
+# CATEGORY CLASSIFY VIEW
+# ============================================================================
+
+
+class CategoryClassifyView(APIView):
+    """
+    Classifica automaticamente a categoria de uma senha via heurística +
+    LLM fallback.
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
+
+    _HEURISTICS: dict[str, list[str]] = {
+        "banking": [
+            "bank",
+            "banco",
+            "nubank",
+            "itau",
+            "bradesco",
+            "santander",
+            "caixa",
+            "bb",
+            "inter",
+            "sicredi",
+            "sicoob",
+            "mercadopago",
+            "pagbank",
+            "c6bank",
+            "next",
+            "conta",
+        ],
+        "email": [
+            "gmail",
+            "outlook",
+            "hotmail",
+            "yahoo",
+            "protonmail",
+            "thunderbird",
+            "email",
+            "mail",
+            "webmail",
+        ],
+        "social": [
+            "facebook",
+            "instagram",
+            "twitter",
+            "tiktok",
+            "linkedin",
+            "snapchat",
+            "reddit",
+            "discord",
+            "telegram",
+            "whatsapp",
+            "threads",
+        ],
+        "streaming": [
+            "netflix",
+            "spotify",
+            "amazon",
+            "prime",
+            "disney",
+            "hbo",
+            "paramount",
+            "apple tv",
+            "crunchyroll",
+            "youtube premium",
+            "deezer",
+            "tidal",
+        ],
+        "shopping": [
+            "amazon",
+            "mercadolivre",
+            "shopee",
+            "americanas",
+            "magalu",
+            "aliexpress",
+            "wish",
+            "shein",
+            "kabum",
+            "ponto frio",
+        ],
+        "gaming": [
+            "steam",
+            "epic",
+            "battle.net",
+            "origin",
+            "ubisoft",
+            "xbox",
+            "playstation",
+            "nintendo",
+            "riot",
+            "gog",
+            "itch.io",
+        ],
+        "work": [
+            "jira",
+            "confluence",
+            "slack",
+            "notion",
+            "trello",
+            "asana",
+            "monday",
+            "gitlab",
+            "github",
+            "bitbucket",
+            "vpn",
+            "office365",
+            "gsuite",
+        ],
+        "entertainment": [
+            "twitch",
+            "youtube",
+            "vimeo",
+            "soundcloud",
+            "bandcamp",
+            "lastfm",
+        ],
+    }
+
+    def post(self, request: Request) -> Response:
+        serializer = CategoryClassifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        title = data.get("title", "").lower()
+        site = data.get("site", "").lower()
+        username = data.get("username", "").lower()
+        combined = f"{title} {site} {username}"
+
+        # Heuristic pass
+        for category, keywords in self._HEURISTICS.items():
+            if any(kw in combined for kw in keywords):
+                return Response(
+                    {"category": category, "confidence": "heuristic"}
+                )
+
+        # LLM fallback
+        try:
+            from agents.core.llm_client import LLMClient
+
+            prompt = (
+                "Classify the following password entry into ONE of these"
+                " categories: social, email, banking, work, entertainment,"
+                " shopping, streaming, gaming, other.\n\n"
+                f"Title: {data.get('title', '')}\n"
+                f"Site: {data.get('site', '')}\n"
+                f"Username: {data.get('username', '')}\n\n"
+                "Respond with ONLY the category name, nothing else."
+            )
+            category_raw = (
+                LLMClient.chat([{"role": "user", "content": prompt}])
+                .strip()
+                .lower()
+            )
+
+            from security.models import PASSWORD_CATEGORIES
+
+            valid = {c[0] for c in PASSWORD_CATEGORIES}
+            category = category_raw if category_raw in valid else "other"
+            return Response({"category": category, "confidence": "llm"})
+        except Exception:
+            logger.exception("LLM classify failed, fallback to other")
+            return Response({"category": "other", "confidence": "fallback"})

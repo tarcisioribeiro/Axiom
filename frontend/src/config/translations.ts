@@ -153,6 +153,7 @@ export const TRANSLATIONS = {
     overdue: 'Atrasado',
     cancelled: 'Cancelado',
     pending: 'Pendente',
+    defaulted: 'Inadimplente',
   },
 
   // Payable Status
@@ -589,6 +590,15 @@ export const TRANSLATIONS_EN = {
     closed: 'Closed',
     paid: 'Paid',
     overdue: 'Overdue',
+  },
+
+  loanStatus: {
+    active: 'Active',
+    paid: 'Paid',
+    overdue: 'Overdue',
+    cancelled: 'Cancelled',
+    pending: 'Pending',
+    defaulted: 'Defaulted',
   },
 
   passwordCategories: {
