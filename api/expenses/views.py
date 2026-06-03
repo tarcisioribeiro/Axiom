@@ -17,7 +17,7 @@ from app.export_utils import (
     format_decimal,
 )
 from app.permissions import GlobalDefaultPermission
-from app.throttles import ExportRateThrottle
+from app.throttles import CategorizationSuggestThrottle, ExportRateThrottle
 from expenses.filters import ExpenseFilter
 from expenses.models import (
     EXPENSES_CATEGORIES,
@@ -295,6 +295,50 @@ class CategorizationRuleRetrieveUpdateDestroyView(
         instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
+
+
+class ExpenseSuggestCategoryView(APIView):
+    """
+    Sugere uma categoria para uma despesa via heurística + LLM fallback.
+
+    POST /api/v1/expenses/suggest-category/
+
+    Body:
+        description (str, optional): descrição da despesa
+        merchant    (str, optional): nome do estabelecimento
+        value       (str|number, optional): valor da despesa
+
+    Pelo menos um de description ou merchant deve ser fornecido.
+
+    Response:
+        category (str): chave de categoria sugerida
+        method   (str): 'rule' | 'llm' | 'none'
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Expense.objects.none()
+    throttle_classes = [CategorizationSuggestThrottle]
+
+    def post(self, request):
+        description = str(request.data.get("description", "") or "").strip()
+        merchant = str(request.data.get("merchant", "") or "").strip()
+        value = request.data.get("value")
+
+        if not description and not merchant:
+            return Response(
+                {"detail": "Informe 'description' ou 'merchant'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from expenses.categorization_service import suggest_category
+
+        result = suggest_category(
+            request.user,
+            description=description,
+            merchant=merchant,
+            value=value,
+        )
+        return Response(result)
 
 
 class ApplyCategorizationRulesView(APIView):
