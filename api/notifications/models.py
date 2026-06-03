@@ -21,6 +21,8 @@ NOTIFICATION_TYPE_CHOICES = (
     ("reconciliation_pending", "Reconciliação Bancária Pendente"),
     ("stored_card_expiring", "Cartão Armazenado Próximo do Vencimento"),
     ("credential_share_accessed", "Credencial Acessada via Link"),
+    ("vault_breach_detected", "Senha Comprometida em Vazamento"),
+    ("vault_weekly_report", "Relatório Semanal de Segurança"),
 )
 
 NOTIFICATION_CHANNEL_CHOICES = (

@@ -635,17 +635,21 @@ class CredentialShareTokenSerializer(serializers.ModelSerializer):
     )
     is_expired = serializers.BooleanField(read_only=True)
     is_exhausted = serializers.BooleanField(read_only=True)
-    password_title = serializers.CharField(
-        source="password.title", read_only=True
-    )
+    credential_title = serializers.SerializerMethodField()
+
+    def get_credential_title(self, obj):
+        return obj.credential_title
 
     class Meta:
         model = CredentialShareToken
         fields = [
             "id",
             "token",
+            "credential_type",
+            "credential_title",
             "password",
-            "password_title",
+            "stored_credit_card",
+            "stored_bank_account",
             "expires_at",
             "used_at",
             "use_count",
@@ -676,12 +680,12 @@ class CredentialShareTokenCreateResponseSerializer(
     )
     is_expired = serializers.BooleanField(read_only=True)
     is_exhausted = serializers.BooleanField(read_only=True)
-    password_title = serializers.CharField(
-        source="password.title", read_only=True
-    )
+    credential_title = serializers.SerializerMethodField()
     token_key = serializers.SerializerMethodField(
-        help_text="Chave Fernet (base64) para decriptação do snapshot. "
-        "Exibida apenas na criação — não fica armazenada no servidor."
+        help_text=(
+            "Chave Fernet (base64) para decriptação do snapshot. "
+            "Exibida apenas na criação — não fica armazenada no servidor."
+        )
     )
 
     def __init__(self, *args, token_key: str = "", **kwargs):
@@ -691,14 +695,20 @@ class CredentialShareTokenCreateResponseSerializer(
     def get_token_key(self, obj) -> str:  # noqa: ARG002
         return self._token_key
 
+    def get_credential_title(self, obj):
+        return obj.credential_title
+
     class Meta:
         model = CredentialShareToken
         fields = [
             "id",
             "token",
             "token_key",
+            "credential_type",
+            "credential_title",
             "password",
-            "password_title",
+            "stored_credit_card",
+            "stored_bank_account",
             "expires_at",
             "used_at",
             "use_count",

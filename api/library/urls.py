@@ -4,6 +4,7 @@ from library.views import (
     AuthorDetailView,
     AuthorListCreateView,
     AuthorPhotoStreamView,
+    BookAISummaryView,
     BookCoverStreamView,
     BookDetailView,
     BookFileStreamView,
@@ -26,6 +27,7 @@ from library.views import (
     CourseSessionListCreateView,
     CourseSessionRetrieveUpdateDestroyView,
     IntellectBadgeListView,
+    KindleImportView,
     KnowledgeGraphView,
     KnowledgeLinkListCreateView,
     KnowledgeLinkRetrieveUpdateDestroyView,
@@ -77,6 +79,11 @@ urlpatterns = [
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    path(
+        "books/<int:pk>/ai-summary/",
+        BookAISummaryView.as_view(),
+        name="book-ai-summary",
+    ),
     path(
         "books/<int:pk>/cover/",
         BookCoverStreamView.as_view(),
@@ -156,6 +163,11 @@ urlpatterns = [
         "highlights/export/",
         BookHighlightExportView.as_view(),
         name="highlight-export",
+    ),
+    path(
+        "highlights/kindle-import/",
+        KindleImportView.as_view(),
+        name="highlight-kindle-import",
     ),
     path(
         "highlights/<int:pk>/",
