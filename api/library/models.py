@@ -1010,6 +1010,18 @@ class Skill(BaseModel):
         related_name="skills",
         verbose_name="Proprietário",
     )
+    books = models.ManyToManyField(
+        "library.Book",
+        blank=True,
+        related_name="related_skills",
+        verbose_name="Livros relacionados",
+    )
+    courses = models.ManyToManyField(
+        "library.Course",
+        blank=True,
+        related_name="related_skills",
+        verbose_name="Cursos relacionados",
+    )
 
     class Meta:
         verbose_name = "Habilidade"

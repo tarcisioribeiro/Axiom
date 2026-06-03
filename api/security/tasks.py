@@ -4,7 +4,9 @@ Security periodic tasks.
 
 import logging
 from calendar import monthrange
-from datetime import date
+from datetime import date, timedelta
+
+from django.utils import timezone
 
 from celery import shared_task
 
@@ -79,3 +81,131 @@ def check_stored_card_expiry() -> dict:
         )
 
     return {"created": created, "skipped": skipped}
+
+
+@shared_task
+def notify_compromised_passwords() -> dict:
+    """
+    Cria notificações in-app para senhas marcadas como comprometidas pelo HIBP
+    que ainda não foram trocadas.
+
+    Roda semanalmente via beat_schedule. Não precisa de acesso ao cofre —
+    apenas lê o flag hibp_compromised salvo durante o health report.
+    """
+    from notifications.models import Notification
+    from security.models import Password
+
+    created = 0
+    skipped = 0
+
+    compromised_qs = Password.objects.filter(
+        hibp_compromised=True,
+        is_deleted=False,
+        deleted_at__isnull=True,
+    ).select_related("owner", "owner__user")
+
+    for pw in compromised_qs:
+        already = Notification.objects.filter(
+            owner=pw.owner,
+            notification_type="vault_breach_detected",
+            content_type="Password",
+            object_id=pw.id,
+        ).exists()
+        if already:
+            skipped += 1
+            continue
+
+        Notification.objects.create(
+            owner=pw.owner,
+            notification_type="vault_breach_detected",
+            title=f"Senha '{pw.title}' encontrada em vazamento",
+            message=(
+                f"A senha de '{pw.title}' foi detectada em um banco"
+                " de dados de credenciais vazadas. Troque-a"
+                " imediatamente no Cofre de Segurança."
+            ),
+            content_type="Password",
+            object_id=pw.id,
+            created_by=pw.owner.user,
+            updated_by=pw.owner.user,
+        )
+        created += 1
+        logger.info(
+            "Notificação HIBP criada: password=%s owner=%s", pw.id, pw.owner_id
+        )
+
+    return {"created": created, "skipped": skipped}
+
+
+@shared_task
+def send_weekly_security_summary() -> dict:
+    """
+    Envia resumo semanal de segurança do cofre para cada membro.
+
+    Usa os VaultHealthSnapshot da última semana para agregar tendência
+    de score. Cria notificação in-app e e-mail (se configurado).
+
+    Roda toda segunda-feira às 09h via beat_schedule.
+    """
+    from members.models import Member
+    from notifications.models import Notification
+    from security.models import VaultHealthSnapshot
+
+    week_ago = timezone.now() - timedelta(days=7)
+    sent = 0
+
+    for member in Member.objects.filter(user__is_active=True).select_related(
+        "user"
+    ):
+        snapshots = list(
+            VaultHealthSnapshot.objects.filter(
+                owner=member, snapshot_date__gte=week_ago.date()
+            ).order_by("snapshot_date")
+        )
+        if not snapshots:
+            continue
+
+        latest = snapshots[-1]
+        oldest = snapshots[0]
+        trend = latest.score - oldest.score
+        trend_label = (
+            "melhorou" if trend > 0 else ("piorou" if trend < 0 else "estável")
+        )
+
+        already = Notification.objects.filter(
+            owner=member,
+            notification_type="vault_weekly_report",
+            created_at__gte=week_ago,
+        ).exists()
+        if already:
+            continue
+
+        score_emoji = (
+            "🟢"
+            if latest.score >= 80
+            else ("🟡" if latest.score >= 50 else "🔴")
+        )
+        message = (
+            f"Score atual: {latest.score}/100 {score_emoji}. "
+            f"Tendência na semana: {trend_label} ({trend:+d} pts). "
+            f"Senhas fracas: {latest.weak_passwords}, "
+            f"duplicadas: {latest.duplicate_passwords}, "
+            f"desatualizadas: {latest.outdated_passwords}."
+        )
+
+        Notification.objects.create(
+            owner=member,
+            notification_type="vault_weekly_report",
+            title="Resumo semanal de segurança do Cofre",
+            message=message,
+            created_by=member.user,
+            updated_by=member.user,
+        )
+        sent += 1
+        logger.info(
+            "Resumo semanal enviado para member=%s score=%s",
+            member.id,
+            latest.score,
+        )
+
+    return {"sent": sent}

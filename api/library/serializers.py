@@ -984,6 +984,22 @@ class CourseSessionCreateUpdateSerializer(serializers.ModelSerializer):
 # ============================================================================
 
 
+class SkillBookSerializer(serializers.ModelSerializer):
+    """Serializer simplificado de Book para uso em Skill."""
+
+    class Meta:
+        model = Book
+        fields = ["id", "title", "genre"]
+
+
+class SkillCourseSerializer(serializers.ModelSerializer):
+    """Serializer simplificado de Course para uso em Skill."""
+
+    class Meta:
+        model = Course
+        fields = ["id", "title", "platform"]
+
+
 class SkillSerializer(serializers.ModelSerializer):
     """Serializer para visualização de habilidades."""
 
@@ -998,6 +1014,8 @@ class SkillSerializer(serializers.ModelSerializer):
         source="get_status_display", read_only=True
     )
     proficiency_level = serializers.SerializerMethodField()
+    books = SkillBookSerializer(many=True, read_only=True)
+    courses = SkillCourseSerializer(many=True, read_only=True)
 
     class Meta:
         model = Skill
@@ -1015,6 +1033,8 @@ class SkillSerializer(serializers.ModelSerializer):
             "notes",
             "owner",
             "owner_name",
+            "books",
+            "courses",
             "created_at",
             "updated_at",
         ]
@@ -1032,7 +1052,20 @@ class SkillSerializer(serializers.ModelSerializer):
 
 
 class SkillCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer para criação/atualização de habilidades."""
+    """Serializer para criação/atualização de habilidades com conexões."""
+
+    book_ids = serializers.PrimaryKeyRelatedField(
+        source="books",
+        queryset=Book.objects.all(),
+        many=True,
+        required=False,
+    )
+    course_ids = serializers.PrimaryKeyRelatedField(
+        source="courses",
+        queryset=Course.objects.all(),
+        many=True,
+        required=False,
+    )
 
     def validate(self, data):
         owner = data.get("owner") or (
@@ -1063,6 +1096,8 @@ class SkillCreateUpdateSerializer(serializers.ModelSerializer):
             "status",
             "notes",
             "owner",
+            "book_ids",
+            "course_ids",
         ]
 
 
