@@ -637,6 +637,8 @@
         "merchantLabel": "Merchant",
         "merchantPlaceholder": "Ex: Supermarket",
         "merchantHint": "Fill in for automatic categorization",
+        "aiSuggesting": "Asking AI to suggest a category...",
+        "aiSuggested": "AI suggested",
         "categoryLabel": "Category *",
         "paymentStatusLabel": "Payment Status *",
         "pending": "Pending",
