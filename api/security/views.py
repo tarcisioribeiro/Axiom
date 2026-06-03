@@ -1216,8 +1216,10 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             if not decrypted:
                 continue
             sha1 = (
-                hashlib.sha1(decrypted.encode("utf-8")).hexdigest().upper()
-            )  # nosec B324
+                hashlib.sha1(decrypted.encode("utf-8"), usedforsecurity=False)
+                .hexdigest()
+                .upper()
+            )
             prefix, suffix = sha1[:5], sha1[5:]
             compromised = False
             try:
