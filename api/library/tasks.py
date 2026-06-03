@@ -204,3 +204,94 @@ def award_intellect_badges_all() -> dict:
     for member_id in member_ids:
         award_intellect_badges_for_member.delay(member_id)
     return {"dispatched": len(member_ids)}
+
+
+@shared_task
+def send_weekly_learning_recommendations() -> dict:
+    """
+    Envia recomendações semanais de aprendizado para cada membro ativo.
+
+    Analisa o progresso da semana (leituras, cursos, habilidades) e gera
+    sugestões personalizadas. Roda toda segunda-feira às 10h.
+    """
+    import logging
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from members.models import Member
+    from notifications.models import Notification
+    from notifications.services import dispatch_notification
+
+    log = logging.getLogger(__name__)
+    week_ago = timezone.now() - timedelta(days=7)
+    sent = 0
+
+    for member in Member.objects.filter(user__is_active=True).select_related(
+        "user"
+    ):
+        already = Notification.objects.filter(
+            owner=member,
+            notification_type="learning_weekly_recommendations",
+            created_at__gte=week_ago,
+        ).exists()
+        if already:
+            continue
+
+        from library.models import Book, Course, Reading, Skill
+
+        books_reading = Book.objects.filter(
+            owner=member, read_status="reading", deleted_at__isnull=True
+        ).count()
+        readings_this_week = Reading.objects.filter(
+            owner=member,
+            reading_date__gte=week_ago.date(),
+            deleted_at__isnull=True,
+        ).count()
+        courses_in_progress = Course.objects.filter(
+            owner=member, status="in_progress", deleted_at__isnull=True
+        ).count()
+        skills_learning = Skill.objects.filter(
+            owner=member, status="learning", deleted_at__isnull=True
+        ).count()
+
+        if (
+            readings_this_week == 0
+            and courses_in_progress == 0
+            and skills_learning == 0
+        ):
+            continue
+
+        parts = []
+        if readings_this_week > 0:
+            parts.append(
+                f"{readings_this_week} sessão(ões) de leitura esta semana"
+            )
+        if books_reading > 0:
+            parts.append(f"{books_reading} livro(s) em andamento")
+        if courses_in_progress > 0:
+            parts.append(f"{courses_in_progress} curso(s) em progresso")
+        if skills_learning > 0:
+            parts.append(f"{skills_learning} habilidade(s) em aprendizado")
+
+        summary = ". ".join(parts)
+
+        notif = Notification.objects.create(
+            owner=member,
+            notification_type="learning_weekly_recommendations",
+            title="Resumo semanal de aprendizado",
+            message=(
+                f"Seu progresso esta semana: {summary}. "
+                "Continue assim! Acesse o módulo Intelecto para ver"
+                " seus flashcards em atraso."
+            ),
+            content_type="Member",
+            object_id=member.id,
+            created_by=member.user,
+            updated_by=member.user,
+        )
+        dispatch_notification(notif)
+        sent += 1
+        log.info("Recomendação semanal enviada para member=%s", member.id)
+
+    return {"sent": sent}

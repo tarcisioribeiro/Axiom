@@ -174,7 +174,14 @@
         "configuration": "Configuração"
       }
     },
-    "noResults": "Nenhum resultado encontrado"
+    "noResults": "Nenhum resultado encontrado",
+    "mood": {
+      "excellent": "Excelente",
+      "good": "Bom",
+      "neutral": "Neutro",
+      "bad": "Ruim",
+      "terrible": "Péssimo"
+    }
   },
   "nav": {
     "home": "Início",
@@ -998,7 +1005,8 @@
         "income": "Renda:"
       },
       "noRole": "Sem papel definido",
-      "emptySearch": "Nenhum membro encontrado."
+      "emptySearch": "Nenhum membro encontrado.",
+      "searchPlaceholder": "Buscar por nome, CPF ou telefone..."
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",
@@ -2139,7 +2147,26 @@
         "groupCards": "Cartões",
         "groupAccounts": "Contas",
         "groupArchives": "Arquivos"
-      }
+      },
+      "vaultHub": {
+        "overview": "Visão Geral do Cofre",
+        "anomalyTitle": "Atividade Suspeita Detectada",
+        "anomalyDesc": "Foram detectadas atividades incomuns. Revise seu log de atividades.",
+        "viewAnomalies": "Ver atividades",
+        "quickStats": "Resumo",
+        "vaultHealth": "Saúde do Cofre",
+        "securityScore": "Score de Segurança",
+        "recentActivity": "Atividade Recente",
+        "quickActions": "Ações Rápidas"
+      },
+      "alertConfig": "Configurações de Alertas",
+      "alertConfigSaved": "Configurações salvas",
+      "alertOnNewIp": "Alerta por novo IP",
+      "alertOnNewIpDesc": "Notificar ao acessar o cofre de um novo endereço IP.",
+      "alertOnFailedUnlock": "Alerta por tentativas falhas",
+      "alertOnFailedUnlockDesc": "Notificar após múltiplas tentativas de desbloqueio incorretas.",
+      "alertOnReveal": "Alerta ao revelar senha",
+      "alertOnRevealDesc": "Notificar cada vez que uma senha for revelada."
     },
     "passwords": {
       "title": "Senhas",
@@ -2205,7 +2232,10 @@
         "fair": "Razoável",
         "good": "Boa",
         "strong": "Forte"
-      }
+      },
+      "autoClassify": "Classificar automaticamente",
+      "classifySuccess": "Categoria classificada: {{category}}",
+      "classifyError": "Erro ao classificar categoria"
     },
     "sharePassword": {
       "title": "Compartilhar Credencial",
@@ -2313,7 +2343,12 @@
       "importAnother": "Importar outro arquivo",
       "noMemberMsg": "Não foi possível identificar o membro do usuário atual.",
       "selectedCount": "{{count}} selecionada",
-      "selectedCount_other": "{{count}} selecionadas"
+      "selectedCount_other": "{{count}} selecionadas",
+      "categoryMappingStep": "Mapeamento de Categorias",
+      "categoryMappingDesc": "Ajuste as categorias detectadas automaticamente",
+      "suggestedCategory": "Sugerida",
+      "finalCategory": "Categoria Final",
+      "skipMapping": "Manter categorias sugeridas"
     },
     "storedCards": {
       "title": "Cartões Armazenados",
@@ -2921,7 +2956,9 @@
         "reading": "Lendo",
         "read": "Lido",
         "paused": "Pausado"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Converse com o agente sobre este livro"
     },
     "authors": {
       "title": "Autores",
@@ -3369,6 +3406,12 @@
       "radarChart": {
         "title": "Radar de Habilidades",
         "emptyState": "Adicione habilidades para visualizar o radar"
+      },
+      "history": {
+        "title": "Histórico de Proficiência",
+        "noHistory": "Sem histórico disponível",
+        "timeline": "Linha do tempo de evolução",
+        "viewHistory": "Ver histórico"
       }
     },
     "planningOnboarding": {
@@ -3490,7 +3533,17 @@
       "xpProgress": "Nível {{level}}",
       "insightCTAWorstDay": "Ajustar rotina",
       "insightCTAWorkout": "Registrar treino",
-      "insightCTAGoals": "Ver metas"
+      "insightCTAGoals": "Ver metas",
+      "moduleCards": {
+        "workoutTitle": "Treino",
+        "workoutSubtitle": "Sessões e exercícios",
+        "nutritionTitle": "Nutrição",
+        "nutritionSubtitle": "Refeições e macros",
+        "tasksTitle": "Tarefas",
+        "tasksSubtitle": "Checklist e rotina",
+        "goalsTitle": "Metas",
+        "goalsSubtitle": "Objetivos pessoais"
+      }
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -4068,7 +4121,8 @@
         "statusMatched": "Conciliado",
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
-      }
+      },
+      "importWithPreview": "Importar com prévia"
     },
     "agents": {
       "title": "Agentes IA",
@@ -5144,7 +5198,105 @@
         "explicit": "Conexão explícita",
         "implicit": "Conexão implícita"
       },
-      "exportPNG": "Exportar como PNG"
+      "exportPNG": "Exportar como PNG",
+      "suggestLinks": "Sugerir Conexões",
+      "suggestionsPanel": "Conexões Sugeridas",
+      "noSuggestions": "Nenhuma sugestão encontrada. Adicione mais conteúdo ao grafo.",
+      "similarity": "Similaridade",
+      "addLink": "Adicionar conexão",
+      "loadingSuggestions": "Buscando sugestões..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Revisão espaçada de destaques",
+      "newCard": "Novo Card",
+      "reviewNow": "Revisar agora",
+      "dueToday": "Para revisar hoje",
+      "generateFromBook": "Gerar de Destaques",
+      "flipCard": "Virar card",
+      "nextReview": "Próxima revisão",
+      "generatedSuccess": "{{count}} card(s) gerado(s) com sucesso",
+      "noneToGenerate": "Todos os destaques já têm flashcards",
+      "status": {
+        "new": "Novo",
+        "learning": "Aprendendo",
+        "review": "Revisão",
+        "mastered": "Dominado"
+      },
+      "rating": {
+        "label": "Como você se saiu?",
+        "0": "Não lembrei",
+        "1": "Difícil",
+        "2": "Com esforço",
+        "3": "Bom",
+        "4": "Fácil",
+        "5": "Muito fácil"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Para revisar",
+        "mastered": "Dominados",
+        "new": "Novos"
+      },
+      "empty": {
+        "title": "Sem flash cards",
+        "description": "Crie cards a partir dos seus destaques de livros para revisar com espaçamento."
+      },
+      "emptyReview": {
+        "title": "Em dia!",
+        "description": "Você não tem revisões pendentes. Volte mais tarde."
+      },
+      "front": "Frente (pergunta)",
+      "back": "Verso (resposta)",
+      "selectBook": "Selecionar livro (opcional)"
+    },
+    "intellectToday": {
+      "title": "Hoje no Intelecto",
+      "subtitle": "Seu hub diário de aprendizado",
+      "continueReading": "Continuar Lendo",
+      "startReading": "Começar a ler",
+      "startCourse": "Iniciar um curso",
+      "logReading": "Registrar leitura",
+      "reviewCards": "Revisar cards",
+      "quickActions": "Ações Rápidas",
+      "activeBook": "Em leitura",
+      "activeCourse": "Curso ativo",
+      "noActiveBook": "Nenhum livro em leitura",
+      "noCourse": "Nenhum curso em andamento",
+      "dueFlashcards": "Cards para revisar",
+      "streak": "Sequência de aprendizado",
+      "days": "{{count}} dia(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pág.",
+      "todayStudy": "Estudo hoje",
+      "weekProgress": "Progresso da semana",
+      "badges": "Conquistas recentes",
+      "viewAll": "Ver tudo",
+      "noStreak": "Comece sua sequência hoje!"
+    },
+    "workoutHub": {
+      "title": "Treino",
+      "subtitle": "Sessões e progresso",
+      "todayPlan": "Plano de hoje",
+      "quickLog": "Registrar Sessão",
+      "recentSessions": "Sessões Recentes",
+      "startSession": "Iniciar Sessão",
+      "noActivePlan": "Nenhum plano de treino ativo",
+      "createPlan": "Criar Plano",
+      "managePlans": "Gerenciar Planos",
+      "manageExercises": "Exercícios",
+      "viewHistory": "Histórico"
+    },
+    "nutritionHub": {
+      "title": "Nutrição",
+      "subtitle": "Refeições e macros do dia",
+      "todayMeals": "Refeições de hoje",
+      "quickLog": "Registrar Refeição",
+      "mealHistory": "Histórico",
+      "manageFoods": "Alimentos",
+      "manageMeals": "Refeições",
+      "noMealsToday": "Nenhuma refeição registrada hoje",
+      "addMeal": "Adicionar Refeição"
     }
   },
   "userProfile": {
@@ -5452,10 +5604,36 @@
       "payable": "A Pagar",
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
-      "loan": "Parcela Empréstimo"
+      "loan": "Parcela Empréstimo",
+      "revenue": "Receita Pendente"
     },
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário..."
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Configurar Cofre de Segurança",
+    "step1Title": "Seu cofre de segurança pessoal",
+    "step1Desc": "O Cofre protege suas senhas, cartões de crédito, contas bancárias e arquivos confidenciais com criptografia de nível militar.",
+    "step1Warning": "⚠️ Atenção importante",
+    "step1WarningDesc": "Sua senha mestre não pode ser recuperada. Guarde-a em local seguro. Se perdida, os dados do cofre são irrecuperáveis.",
+    "step2Title": "Configure sua Senha Mestre",
+    "step2Desc": "A senha mestre é a chave que protege todo o seu cofre. Use uma senha forte e única que você não use em nenhum outro lugar.",
+    "step2TipsTitle": "Dicas para uma senha forte:",
+    "step2Tip1": "Mínimo 12 caracteres",
+    "step2Tip2": "Misture letras, números e símbolos",
+    "step2Tip3": "Evite palavras do dicionário",
+    "step2Tip4": "Não reutilize senhas de outros serviços",
+    "step2ConfigureBtn": "Configurar senha mestre agora",
+    "step3Title": "Cofre configurado! O que fazer agora?",
+    "step3Desc": "Comece a adicionar suas credenciais para mantê-las seguras.",
+    "step3AddPassword": "Adicionar primeira senha",
+    "step3ImportPasswords": "Importar senhas de outro app",
+    "step3HealthReport": "Ver relatório de saúde",
+    "step3StoreArchive": "Armazenar arquivo confidencial",
+    "back": "Voltar",
+    "skip": "Pular",
+    "next": "Próximo",
+    "finish": "Concluir"
   },
   "netWorth": {
     "title": "Patrimônio Líquido",
@@ -5467,7 +5645,8 @@
     "liabilitiesSection": "Detalhamento dos Passivos",
     "bankAccounts": "Contas Bancárias",
     "vaults": "Cofres / Investimentos",
-    "loans": "Empréstimos",
+    "loans": "Empréstimos (a pagar)",
+    "lentLoans": "Empréstimos (a receber)",
     "creditCards": "Cartões de Crédito",
     "overdraft": "Cheque Especial Utilizado",
     "noAssets": "Nenhum ativo encontrado",
