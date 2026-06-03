@@ -10,6 +10,11 @@ urlpatterns = [
         name="expense-export",
     ),
     path(
+        "expenses/suggest-category/",
+        views.ExpenseSuggestCategoryView.as_view(),
+        name="expense-suggest-category",
+    ),
+    path(
         "expenses/",
         views.ExpenseCreateListView.as_view(),
         name="expense-create-list",

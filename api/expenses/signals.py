@@ -111,6 +111,25 @@ def record_expense_metric(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender="expenses.Expense")
+def dispatch_llm_categorization(sender, instance, created, **kwargs):
+    """Dispara categorização LLM em background quando a heurística falhou.
+
+    Acionado somente em criação, quando category ainda é 'others' e
+    auto_categorized=False (nenhuma regra heurística correspondeu).
+    """
+    if not created:
+        return
+    if instance.category != "others" or instance.auto_categorized:
+        return
+    if not (instance.merchant or instance.description):
+        return
+
+    from expenses.tasks import async_categorize_expense
+
+    transaction.on_commit(lambda: async_categorize_expense.delay(instance.pk))
+
+
+@receiver(post_save, sender="expenses.Expense")
 def embed_expense(sender, instance, **kwargs):
     from agents.services.embedding_service import (
         generate_embedding_for_instance,
