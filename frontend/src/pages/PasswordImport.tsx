@@ -52,7 +52,19 @@ import type {
 import { passwordImportService } from '@/services/password-import-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
-type Step = 'upload' | 'preview' | 'summary';
+type Step = 'upload' | 'preview' | 'mapping' | 'summary';
+
+const PASSWORD_CATEGORIES_CHOICES = [
+  'social',
+  'email',
+  'banking',
+  'work',
+  'entertainment',
+  'shopping',
+  'streaming',
+  'gaming',
+  'other',
+] as const;
 
 export default function PasswordImport() {
   const { t } = useTranslation();
@@ -62,6 +74,7 @@ export default function PasswordImport() {
   const [format, setFormat] = useState<ImportFormat | ''>('');
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [categoryMapping, setCategoryMapping] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -132,7 +145,22 @@ export default function PasswordImport() {
 
   // ── Confirm ────────────────────────────────────────────────────────────────
 
-  const handleImport = async () => {
+  const handleGoToMapping = () => {
+    if (!preview || selected.size === 0) {
+      toast({ title: t('pages.passwordImport.noSelection'), variant: 'destructive' });
+      return;
+    }
+    const initial: Record<string, string> = {};
+    preview.entries
+      .filter((e) => selected.has(e.index))
+      .forEach((e) => {
+        initial[String(e.index)] = e.suggested_category || e.category || 'other';
+      });
+    setCategoryMapping(initial);
+    setStep('mapping');
+  };
+
+  const handleImport = async (mapping?: Record<string, string>) => {
     if (!preview || selected.size === 0) {
       toast({
         title: t('pages.passwordImport.noSelection'),
@@ -141,6 +169,7 @@ export default function PasswordImport() {
       return;
     }
 
+    const finalMapping = mapping ?? categoryMapping;
     const entries = preview.entries
       .filter((e) => selected.has(e.index))
       .map((e) => ({
@@ -148,13 +177,13 @@ export default function PasswordImport() {
         username: e.username,
         password: e.password,
         site: e.site,
-        category: e.category,
+        category: finalMapping[String(e.index)] ?? e.category,
         notes: e.notes,
       }));
 
     setIsLoading(true);
     try {
-      const result = await passwordImportService.confirm(entries);
+      const result = await passwordImportService.confirm(entries, finalMapping);
       setSummary(result);
       setStep('summary');
       toast({
@@ -185,6 +214,7 @@ export default function PasswordImport() {
     setPreview(null);
     setSelected(new Set());
     setSummary(null);
+    setCategoryMapping({});
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -405,15 +435,104 @@ export default function PasswordImport() {
                 </span>
                 <Button
                   disabled={selected.size === 0 || isLoading}
-                  onClick={() => void handleImport()}
+                  onClick={handleGoToMapping}
                 >
-                  {isLoading
-                    ? t('pages.passwordImport.importing')
-                    : t('pages.passwordImport.importBtn')}
+                  {t('pages.passwordImport.importBtn')}
                 </Button>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Category mapping step */}
+        {step === 'mapping' && preview && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('pages.passwordImport.categoryMappingStep')}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.passwordImport.categoryMappingDesc')}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
+                {preview.entries
+                  .filter((e) => selected.has(e.index))
+                  .map((e) => (
+                    <div
+                      key={e.index}
+                      className="flex items-center justify-between gap-sm rounded-md border border-border p-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{e.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {e.site || e.username}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-sm">
+                        <span className="text-xs text-muted-foreground">
+                          {t('pages.passwordImport.suggestedCategory')}:{' '}
+                          <strong>{e.suggested_category || e.category}</strong>
+                        </span>
+                        <Select
+                          value={
+                            categoryMapping[String(e.index)] ??
+                            e.suggested_category ??
+                            e.category
+                          }
+                          onValueChange={(v) =>
+                            setCategoryMapping((prev) => ({
+                              ...prev,
+                              [String(e.index)]: v,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="h-7 w-32 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PASSWORD_CATEGORIES_CHOICES.map((cat) => (
+                              <SelectItem key={cat} value={cat} className="text-xs">
+                                {cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <div className="mt-md flex justify-between">
+                <Button variant="outline" onClick={() => setStep('preview')}>
+                  {t('common.actions.back')}
+                </Button>
+                <div className="flex gap-sm">
+                  <Button
+                    variant="ghost"
+                    onClick={() =>
+                      void handleImport(
+                        Object.fromEntries(
+                          preview.entries
+                            .filter((e) => selected.has(e.index))
+                            .map((e) => [
+                              String(e.index),
+                              e.suggested_category || e.category,
+                            ])
+                        )
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    {t('pages.passwordImport.skipMapping')}
+                  </Button>
+                  <Button onClick={() => void handleImport()} disabled={isLoading}>
+                    {isLoading
+                      ? t('pages.passwordImport.importing')
+                      : t('pages.passwordImport.importBtn')}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Summary step */}

@@ -55,6 +55,12 @@ class Password(BaseModel):
     _totp_secret = models.TextField(
         blank=True, null=True, verbose_name="Segredo TOTP (Criptografado)"
     )
+    hibp_compromised = models.BooleanField(
+        null=True, blank=True, verbose_name="Comprometida (HIBP)"
+    )
+    hibp_last_checked = models.DateTimeField(
+        null=True, blank=True, verbose_name="Última verificação HIBP"
+    )
 
     password = VaultEncryptedField("_password")
     totp_secret = VaultEncryptedField("_totp_secret")
@@ -391,11 +397,40 @@ class CredentialShareToken(models.Model):
     app key (snapshot). Assim o resgate não requer cofre desbloqueado.
     """
 
+    CREDENTIAL_TYPE_CHOICES = (
+        ("password", "Senha"),
+        ("stored_credit_card", "Cartão de Crédito"),
+        ("stored_bank_account", "Conta Bancária"),
+    )
+    credential_type = models.CharField(
+        max_length=30,
+        choices=CREDENTIAL_TYPE_CHOICES,
+        default="password",
+        verbose_name="Tipo de Credencial",
+    )
     password = models.ForeignKey(
         "Password",
         on_delete=models.CASCADE,
         related_name="share_tokens",
         verbose_name="Senha",
+        null=True,
+        blank=True,
+    )
+    stored_credit_card = models.ForeignKey(
+        "StoredCreditCard",
+        on_delete=models.CASCADE,
+        related_name="share_tokens",
+        verbose_name="Cartão Armazenado",
+        null=True,
+        blank=True,
+    )
+    stored_bank_account = models.ForeignKey(
+        "StoredBankAccount",
+        on_delete=models.CASCADE,
+        related_name="share_tokens",
+        verbose_name="Conta Bancária Armazenada",
+        null=True,
+        blank=True,
     )
     token = models.UUIDField(
         default=_uuid.uuid4,
@@ -403,9 +438,11 @@ class CredentialShareToken(models.Model):
         editable=False,
         verbose_name="Token",
     )
-    # Snapshot da senha re-criptografada com a app key (não a vault_key)
+    # Snapshot da credencial re-criptografado com a app key (não a vault_key).
+    # Para senhas: string simples (compat. legada) ou JSON.
+    # Para cartões/contas: JSON com todos os campos relevantes.
     _encrypted_password = models.TextField(
-        verbose_name="Senha (snapshot criptografado)"
+        verbose_name="Credencial (snapshot criptografado)"
     )
     expires_at = models.DateTimeField(verbose_name="Expira em")
     used_at = models.DateTimeField(
@@ -455,8 +492,22 @@ class CredentialShareToken(models.Model):
         verbose_name_plural = "Tokens de Compartilhamento"
         ordering = ["-created_at"]
 
+    @property
+    def credential_title(self):
+        if (
+            self.credential_type == "stored_credit_card"
+            and self.stored_credit_card
+        ):
+            return self.stored_credit_card.name
+        if (
+            self.credential_type == "stored_bank_account"
+            and self.stored_bank_account
+        ):
+            return self.stored_bank_account.name
+        return self.password.title if self.password else "—"
+
     def __str__(self):
-        return f"ShareToken({self.password.title} | exp={self.expires_at})"
+        return f"ShareToken({self.credential_title} | exp={self.expires_at})"
 
 
 ACTION_TYPES = (

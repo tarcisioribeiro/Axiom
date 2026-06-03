@@ -549,6 +549,7 @@ export default function KnowledgeGraph() {
     new Set(ALL_NODE_TYPES)
   );
   const [includeHighlights, setIncludeHighlights] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
@@ -600,6 +601,27 @@ export default function KnowledgeGraph() {
     queryKey: ['knowledge-graph', includeHighlights],
     queryFn: () => knowledgeGraphService.getGraph(includeHighlights),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: suggestData, isFetching: suggestLoading } = useQuery({
+    queryKey: ['knowledge-graph-suggestions'],
+    queryFn: async () => {
+      const { apiClient } = await import('@/services/api-client');
+      const { API_CONFIG } = await import('@/config/constants');
+      return apiClient.get<{
+        suggestions: Array<{
+          source_type: string;
+          source_id: string;
+          source_title: string;
+          target_type: string;
+          target_id: string;
+          target_title: string;
+          similarity: number;
+        }>;
+      }>(API_CONFIG.ENDPOINTS.KNOWLEDGE_GRAPH_SUGGEST_LINKS);
+    },
+    enabled: showSuggestions,
+    staleTime: 60_000,
   });
 
   const { data: memberData } = useQuery({
@@ -887,6 +909,22 @@ export default function KnowledgeGraph() {
         <div className="relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-lg border border-border bg-card">
           {/* Left sidebar */}
           <div className="z-10 flex w-52 shrink-0 flex-col gap-md border-r border-border bg-card p-md">
+            {/* Suggest links button */}
+            <Tooltip content={t('pages.knowledgeGraph.suggestLinks')} side="right">
+              <button
+                onClick={() => setShowSuggestions((v) => !v)}
+                className={cn(
+                  'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs font-medium transition-colors',
+                  showSuggestions
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                {t('pages.knowledgeGraph.suggestLinks')}
+              </button>
+            </Tooltip>
+
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -1057,6 +1095,69 @@ export default function KnowledgeGraph() {
                 d3AlphaDecay={0.02}
                 d3VelocityDecay={0.3}
               />
+            )}
+
+            {/* Suggest links panel */}
+            {showSuggestions && (
+              <div className="absolute right-md top-md z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+                <div className="flex items-center justify-between border-b border-border px-md py-sm">
+                  <p className="text-sm font-semibold">
+                    {t('pages.knowledgeGraph.suggestionsPanel')}
+                  </p>
+                  <button
+                    onClick={() => setShowSuggestions(false)}
+                    className="rounded p-0.5 hover:bg-muted"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="custom-scrollbar flex-1 overflow-y-auto p-sm">
+                  {suggestLoading ? (
+                    <p className="py-md text-center text-xs text-muted-foreground">
+                      {t('pages.knowledgeGraph.loadingSuggestions')}
+                    </p>
+                  ) : !suggestData?.suggestions?.length ? (
+                    <p className="py-md text-center text-xs text-muted-foreground">
+                      {t('pages.knowledgeGraph.noSuggestions')}
+                    </p>
+                  ) : (
+                    <div className="space-y-xs">
+                      {suggestData.suggestions.map((s, i) => (
+                        <div key={i} className="rounded-md border border-border p-sm">
+                          <p className="truncate text-xs font-medium">
+                            {s.source_title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            → {s.target_title}
+                          </p>
+                          <div className="mt-xs flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              {t('pages.knowledgeGraph.similarity')}:{' '}
+                              {Math.round(s.similarity * 100)}%
+                            </span>
+                            <button
+                              onClick={() => {
+                                if (!memberData?.id) return;
+                                createLinkMutation.mutate({
+                                  source_type: s.source_type as KnowledgeNodeType,
+                                  source_id: s.source_id,
+                                  target_type: s.target_type as KnowledgeNodeType,
+                                  target_id: s.target_id,
+                                  relation_label: 'relates',
+                                  owner: memberData.id,
+                                });
+                              }}
+                              className="rounded px-xs py-0.5 text-xs text-primary hover:bg-primary/10"
+                            >
+                              {t('pages.knowledgeGraph.addLink')}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Zoom controls */}

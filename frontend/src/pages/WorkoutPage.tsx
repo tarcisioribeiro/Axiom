@@ -610,8 +610,12 @@ export default function WorkoutPage() {
           }}
         />
 
-        <Tabs defaultValue="sessions" className="flex flex-1 flex-col">
+        <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
+            <TabsTrigger value="today" className="flex-1 gap-xs">
+              <Flame className="h-4 w-4" />
+              {t('pages.workoutHub.todayPlan')}
+            </TabsTrigger>
             <TabsTrigger value="sessions" className="flex-1 gap-xs">
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
@@ -625,6 +629,59 @@ export default function WorkoutPage() {
               {t('pages.workoutPlans.tabExercises')}
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Hoje ──────────────────────────────────────────────────── */}
+          <TabsContent value="today" className="mt-0 flex-1">
+            <div className="space-y-md">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t('pages.workoutHub.subtitle')}
+                </p>
+                <Button onClick={() => setDialog({ type: 'new-session' })}>
+                  <Plus className="mr-sm h-4 w-4" />
+                  {t('pages.workoutHub.startSession')}
+                </Button>
+              </div>
+              {sessionsLoading ? (
+                <LoadingState />
+              ) : sessions.filter(
+                  (s) => s.date === new Date().toISOString().slice(0, 10)
+                ).length === 0 ? (
+                <EmptyState
+                  title={t('pages.workoutHub.noActivePlan')}
+                  description={t('pages.workoutHub.createPlan')}
+                  icon={<Dumbbell className="h-8 w-8" />}
+                  action={{
+                    label: t('pages.workoutHub.startSession'),
+                    icon: <Plus className="mr-xs h-4 w-4" />,
+                    onClick: () => setDialog({ type: 'new-session' }),
+                  }}
+                />
+              ) : (
+                <SessionsGrouped
+                  sessions={sessions.filter(
+                    (s) => s.date === new Date().toISOString().slice(0, 10)
+                  )}
+                  onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
+                  onDelete={handleDeleteSession}
+                  t={t}
+                />
+              )}
+              {sessions.length > 0 && (
+                <div>
+                  <p className="mb-sm text-sm font-medium">
+                    {t('pages.workoutHub.recentSessions')}
+                  </p>
+                  <SessionsGrouped
+                    sessions={sessions.slice(0, 5)}
+                    onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
+                    onDelete={handleDeleteSession}
+                    t={t}
+                  />
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions" className="mt-0 flex-1">

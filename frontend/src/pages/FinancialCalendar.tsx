@@ -10,6 +10,8 @@ import {
   addMonths,
   subMonths,
   isSameDay,
+  addDays,
+  startOfWeek,
 } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
@@ -31,9 +33,10 @@ import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import { receivablesService } from '@/services/receivables-service';
-import type { Payable, Receivable, Loan, CreditCardBill } from '@/types';
+import { revenuesService } from '@/services/revenues-service';
+import type { Payable, Receivable, Loan, CreditCardBill, Revenue } from '@/types';
 
-type EventType = 'payable' | 'receivable' | 'creditCard' | 'loan';
+type EventType = 'payable' | 'receivable' | 'creditCard' | 'loan' | 'revenue';
 
 interface CalendarEvent {
   id: string;
@@ -48,6 +51,7 @@ const EVENT_COLORS: Record<EventType, string> = {
   receivable: 'bg-success/15 text-success border-success/30',
   creditCard: 'bg-orange-500/15 text-orange-600 border-orange-500/30',
   loan: 'bg-purple-500/15 text-purple-600 border-purple-500/30',
+  revenue: 'bg-teal-500/15 text-teal-600 border-teal-500/30',
 };
 
 const EVENT_DOT_COLORS: Record<EventType, string> = {
@@ -55,6 +59,7 @@ const EVENT_DOT_COLORS: Record<EventType, string> = {
   receivable: 'bg-success',
   creditCard: 'bg-orange-500',
   loan: 'bg-purple-500',
+  revenue: 'bg-teal-500',
 };
 
 export default function FinancialCalendar() {
@@ -93,11 +98,18 @@ export default function FinancialCalendar() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const revenuesQuery = useQuery({
+    queryKey: ['revenues', 'calendar'],
+    queryFn: () => revenuesService.getAllPages(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
   const isLoading =
     payablesQuery.isLoading ||
     receivablesQuery.isLoading ||
     loansQuery.isLoading ||
-    billsQuery.isLoading;
+    billsQuery.isLoading ||
+    revenuesQuery.isLoading;
 
   const events = useMemo<CalendarEvent[]>(() => {
     const result: CalendarEvent[] = [];
@@ -168,12 +180,25 @@ export default function FinancialCalendar() {
       }
     });
 
+    (revenuesQuery.data ?? []).forEach((r: Revenue) => {
+      if (!r.received && r.date >= startStr && r.date <= endStr) {
+        result.push({
+          id: `revenue-${r.id}`,
+          type: 'revenue',
+          description: r.description,
+          value: parseFloat(String(r.value)),
+          date: r.date,
+        });
+      }
+    });
+
     return result;
   }, [
     payablesQuery.data,
     receivablesQuery.data,
     loansQuery.data,
     billsQuery.data,
+    revenuesQuery.data,
     startStr,
     endStr,
   ]);
@@ -193,6 +218,13 @@ export default function FinancialCalendar() {
     const leadingBlanks = Array.from({ length: firstDayOfWeek }, (_, i) => i);
     return { days, leadingBlanks };
   }, [monthStart, monthEnd]);
+
+  const weekdayLabels = useMemo(() => {
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
+    return Array.from({ length: 7 }, (_, i) =>
+      format(addDays(weekStart, i), 'EEEEEE', { locale: dateFnsLocale })
+    );
+  }, [dateFnsLocale]);
 
   const selectedDayEvents = useMemo(() => {
     if (!selectedDay) return [];
@@ -243,7 +275,7 @@ export default function FinancialCalendar() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-px">
-              {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d) => (
+              {weekdayLabels.map((d) => (
                 <div
                   key={d}
                   className="py-sm text-center text-xs font-semibold uppercase text-muted-foreground"

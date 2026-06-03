@@ -77,6 +77,7 @@ class LoanSerializer(serializers.ModelSerializer):
             "notes",
             "currency_code",
             "status",
+            "loan_type",
             "remaining_balance",
             "created_at",
             "updated_at",
