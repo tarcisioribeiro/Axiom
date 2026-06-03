@@ -174,7 +174,14 @@
         "configuration": "Configuration"
       }
     },
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "mood": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "neutral": "Neutral",
+      "bad": "Bad",
+      "terrible": "Terrible"
+    }
   },
   "nav": {
     "home": "Home",
@@ -998,7 +1005,8 @@
         "income": "Income:"
       },
       "noRole": "No role defined",
-      "emptySearch": "No members found."
+      "emptySearch": "No members found.",
+      "searchPlaceholder": "Search by name, CPF or phone..."
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",
@@ -2130,7 +2138,6 @@
         "errorTitle": "Check failed",
         "errorDesc": "Could not check password. Please try again."
       },
-      "keepCurrentPassword": "Leave blank to keep current",
       "keepCurrentPassword": "Leave blank to keep current",
       "copyWithoutReveal": "Copy without revealing",
       "copied": "Copied!",
@@ -3429,8 +3436,7 @@
       "xpProgress": "Level {{level}}",
       "insightCTAWorstDay": "Adjust routine",
       "insightCTAWorkout": "Log workout",
-      "insightCTAGoals": "See goals",
-      "sessionCount_other": "{{count}} sessions"
+      "insightCTAGoals": "See goals"
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -4008,7 +4014,8 @@
         "statusMatched": "Matched",
         "statusUnmatched": "Divergent",
         "statusIgnored": "Ignored"
-      }
+      },
+      "importWithPreview": "Import with Preview"
     },
     "agents": {
       "title": "AI Agents",
@@ -5085,6 +5092,25 @@
         "implicit": "Implicit connection"
       },
       "exportPNG": "Export as PNG"
+    },
+    "tags": {
+      "title": "Tags",
+      "newBtn": "New Tag",
+      "editTitle": "Edit Tag",
+      "newTitle": "New Tag",
+      "editDesc": "Update the tag information",
+      "newDesc": "Create a new tag to categorize transactions",
+      "deleteTitle": "Delete tag",
+      "deleteDesc": "Are you sure you want to delete this tag?",
+      "created": "Tag created",
+      "createdDesc": "The tag was created successfully.",
+      "updated": "Tag updated",
+      "updatedDesc": "The tag was updated successfully.",
+      "deleted": "Tag deleted",
+      "deletedDesc": "The tag was deleted successfully.",
+      "emptyState": "No tags created yet.",
+      "name": "Name",
+      "color": "Color"
     }
   },
   "userProfile": {

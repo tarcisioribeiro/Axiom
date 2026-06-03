@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
   Target,
@@ -191,13 +190,18 @@ export default function PersonalPlanningDashboard() {
   }, [stats, workoutSessions30d, mealLogsWeek, weekStart, weekEnd]);
 
   const workoutByDayData = useMemo(() => {
-    const weekDays: Record<string, number> = {};
+    const weekDays: Record<number, number> = {};
     workoutSessions30d.forEach((s) => {
-      const label = format(new Date(s.date + 'T00:00:00'), 'EEE', { locale: ptBR });
-      weekDays[label] = (weekDays[label] ?? 0) + 1;
+      const dayIdx = getISODay(new Date(s.date + 'T00:00:00')) - 1; // 0=Mon, 6=Sun
+      weekDays[dayIdx] = (weekDays[dayIdx] ?? 0) + 1;
     });
-    return Object.entries(weekDays).map(([day, count]) => ({ day, count }));
-  }, [workoutSessions30d]);
+    return Object.entries(weekDays)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([dayIdx, count]) => ({
+        day: t(`pages.planningDashboard.weekdayShort.${dayIdx}`),
+        count,
+      }));
+  }, [workoutSessions30d, t]);
 
   const weeklyProgressData = stats?.weekly_progress
     ? stats.weekly_progress.map((item) => {
