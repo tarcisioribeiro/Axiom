@@ -5,6 +5,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  ExternalLink,
   Loader2,
   Copy,
   Wallet,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -86,6 +88,7 @@ function getInstitutionInitials(name: string): string {
 }
 
 export default function StoredAccounts() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<StoredBankAccount[]>([]);
   const [financeAccounts, setFinanceAccounts] = useState<Account[]>([]);
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
@@ -408,9 +411,16 @@ export default function StoredAccounts() {
                     <div className="flex items-center justify-between gap-sm pt-xs">
                       <div className="min-w-0">
                         {acc.finance_account_name && (
-                          <p className="truncate text-xs text-muted-foreground">
+                          <button
+                            className="flex items-center gap-0.5 truncate text-xs text-primary hover:underline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void navigate('/finance/accounts');
+                            }}
+                          >
+                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                             {acc.finance_account_name}
-                          </p>
+                          </button>
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-0.5">

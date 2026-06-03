@@ -182,7 +182,7 @@ function GoalCard({
               goal.status === 'cancelled' && 'bg-muted'
             )}
           >
-            {goal.status_display}
+            {t(`pages.goals.form.statusOptions.${goal.status}`)}
           </Badge>
           <div className="flex gap-xs">
             {isAutoType && goal.status === 'active' && (

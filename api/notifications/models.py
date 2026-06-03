@@ -21,6 +21,13 @@ NOTIFICATION_TYPE_CHOICES = (
     ("reconciliation_pending", "Reconciliação Bancária Pendente"),
     ("stored_card_expiring", "Cartão Armazenado Próximo do Vencimento"),
     ("credential_share_accessed", "Credencial Acessada via Link"),
+    ("vault_breach_detected", "Senha Comprometida em Vazamento"),
+    ("vault_weekly_report", "Relatório Semanal de Segurança"),
+    ("vault_anomaly_detected", "Anomalia Detectada no Cofre"),
+    (
+        "learning_weekly_recommendations",
+        "Recomendações Semanais de Aprendizado",
+    ),
 )
 
 NOTIFICATION_CHANNEL_CHOICES = (
@@ -38,7 +45,7 @@ class Notification(BaseModel):
         related_name="notifications",
     )
     notification_type = models.CharField(
-        max_length=30,
+        max_length=40,
         choices=NOTIFICATION_TYPE_CHOICES,
         verbose_name="Tipo",
     )
@@ -95,7 +102,7 @@ class NotificationPreference(BaseModel):
         related_name="notification_preferences",
     )
     notification_type = models.CharField(
-        max_length=30,
+        max_length=40,
         choices=NOTIFICATION_TYPE_CHOICES,
         verbose_name="Tipo",
     )

@@ -57,6 +57,8 @@ const BookReader = lazy(() => import('./pages/BookReader'));
 const Courses = lazy(() => import('./pages/Courses'));
 const Skills = lazy(() => import('./pages/Skills'));
 const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
+const IntellectToday = lazy(() => import('./pages/IntellectToday'));
+const Flashcards = lazy(() => import('./pages/Flashcards'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -429,6 +431,22 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <KnowledgeGraphPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/intellect-today"
+            element={
+              <PageWrapper>
+                <IntellectToday />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/flashcards"
+            element={
+              <PageWrapper>
+                <Flashcards />
               </PageWrapper>
             }
           />

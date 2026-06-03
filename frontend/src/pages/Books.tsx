@@ -1017,6 +1017,10 @@ export default function Books() {
           setIsDetailOpen(false);
           void handleDelete(id);
         }}
+        onAskIntellect={(book) => {
+          setIsDetailOpen(false);
+          handleAskIntellect(book);
+        }}
       />
 
       {/* Create / Edit form dialog */}
