@@ -1,6 +1,8 @@
 import csv
 import io
 import json
+import logging
+import re
 from datetime import timedelta
 
 from django.core.cache import cache
@@ -76,6 +78,8 @@ from library.serializers import (
     SummaryCreateUpdateSerializer,
     SummarySerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 READING_SPEED_FALLBACK = {
     "book": 2.0,
@@ -873,6 +877,110 @@ class SummaryDetailView(BaseRetrieveUpdateDestroyView):
             f"Deletou resumo: {instance.title}",
             description_key="summary.delete",
             description_params={"name": instance.title},
+        )
+
+
+# ============================================================================
+# AI BOOK SUMMARY VIEW
+# ============================================================================
+
+
+class BookAISummaryView(APIView):
+    """
+    POST /api/v1/library/books/<pk>/ai-summary/
+
+    Gera um resumo do livro a partir dos destaques (BookHighlight) usando IA.
+    Se o livro tiver poucos highlights, usa título/autor/gênero como contexto.
+
+    Body: { "language": "pt-BR" }  (opcional)
+    Returns: { "summary": "<texto gerado>" }
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request, pk):
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            book = Book.objects.get(pk=pk, owner=member, is_deleted=False)
+        except Book.DoesNotExist:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        highlights = list(
+            BookHighlight.objects.filter(
+                book=book, owner=member, is_deleted=False
+            ).order_by("page_number")[:50]
+        )
+
+        language = request.data.get("language", "pt-BR")
+
+        if highlights:
+            quotes_text = "\n".join(
+                f"- (p.{h.page_number or '?'}) {h.text}" for h in highlights
+            )
+            authors_str = (
+                ", ".join(a.name for a in book.authors.all()) or "Desconhecido"
+            )
+            user_prompt = (
+                f"Livro: {book.title}\n"
+                f"Autor(es): {authors_str}\n\n"
+                f"Destaques do leitor:\n{quotes_text}\n\n"
+                f"Com base nesses destaques, escreva um resumo conciso"
+                f" e perspicaz do livro em {language}, destacando os"
+                f" temas principais, a tese central e as ideias mais"
+                f" relevantes capturadas pelo leitor. Máximo de 300"
+                f" palavras."
+            )
+        else:
+            if book.authors.exists():
+                by_str = "de " + ", ".join(a.name for a in book.authors.all())
+            else:
+                by_str = ""
+            user_prompt = (
+                f"Escreva um resumo conciso (máximo 200 palavras, em"
+                f" {language}) do livro '{book.title}' ({by_str}),"
+                f" destacando seus temas principais e valor para o"
+                f" leitor."
+            )
+
+        try:
+            from agents.core.llm_client import LLMClient
+
+            result = LLMClient.chat(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Você é um assistente especializado em"
+                            " literatura. Gere resumos claros,"
+                            " objetivos e perspicazes de livros."
+                        ),
+                    },
+                    {"role": "user", "content": user_prompt},
+                ],
+                agent_name="book_ai_summary",
+                language=language,
+            )
+        except Exception as exc:
+            logger.error("Erro ao gerar resumo com IA: %s", exc)
+            return Response(
+                {"detail": "Serviço de IA indisponível no momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(
+            {"summary": result, "highlight_count": len(highlights)}
         )
 
 
@@ -2031,6 +2139,147 @@ class BookHighlightExportView(APIView):
         )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+
+# ============================================================================
+# KINDLE IMPORT VIEW
+# ============================================================================
+
+
+class KindleImportView(APIView):
+    """
+    POST /api/v1/library/highlights/kindle-import/
+
+    Importa highlights do arquivo "My Clippings.txt" do Kindle.
+    O arquivo deve ser enviado como multipart/form-data no campo 'file'.
+
+    Formato esperado (cada entrada separada por "=========="):
+      <Título do Livro> (Autor)
+      - Seu destaque na página X | Posição Y-Z | Data, DD Mês AAAA
+
+      <texto do highlight>
+
+    Retorna: total_imported, total_skipped, errors[]
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    parser_classes = [MultiPartParser, FormParser]
+
+    _SEPARATOR = "=========="
+    _PAGE_RE = re.compile(r"página\s+(\d+)", re.IGNORECASE)
+
+    def post(self, request):
+        uploaded = request.FILES.get("file")
+        if not uploaded:
+            return Response(
+                {
+                    "detail": (
+                        "Envie o arquivo My Clippings.txt" " no campo 'file'."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            content = uploaded.read().decode("utf-8-sig", errors="replace")
+        except Exception:
+            return Response(
+                {"detail": "Não foi possível ler o arquivo. Use UTF-8."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        entries = [
+            e.strip() for e in content.split(self._SEPARATOR) if e.strip()
+        ]
+        imported = 0
+        skipped = 0
+        errors = []
+
+        for entry in entries:
+            lines = [ln for ln in entry.splitlines() if ln.strip()]
+            if len(lines) < 2:
+                skipped += 1
+                continue
+
+            header_line = lines[0].strip()
+            meta_line = lines[1].strip() if len(lines) > 1 else ""
+            text_lines = lines[2:] if len(lines) > 2 else []
+            text = " ".join(text_lines).strip()
+
+            # Skip bookmarks (no text) and notes without content
+            if not text or "- Seu marcador" in meta_line:
+                skipped += 1
+                continue
+
+            # Extract page number
+            page_match = self._PAGE_RE.search(meta_line)
+            page_number = int(page_match.group(1)) if page_match else None
+
+            # Extract book title (strip author in parentheses at end)
+            book_title = re.sub(r"\s*\([^)]+\)\s*$", "", header_line).strip()
+            if not book_title:
+                skipped += 1
+                continue
+
+            # Try to find existing book by title
+            book = (
+                Book.objects.filter(
+                    owner=member,
+                    title__iexact=book_title,
+                    is_deleted=False,
+                ).first()
+                or Book.objects.filter(
+                    owner=member,
+                    title__icontains=book_title[:30],
+                    is_deleted=False,
+                ).first()
+            )
+
+            if not book:
+                skipped += 1
+                continue
+
+            # Deduplicate: skip if same text already exists for this book
+            already = BookHighlight.objects.filter(
+                owner=member, book=book, text=text
+            ).exists()
+            if already:
+                skipped += 1
+                continue
+
+            try:
+                BookHighlight.objects.create(
+                    owner=member,
+                    book=book,
+                    text=text,
+                    page_number=page_number,
+                    highlight_type="quote",
+                    color="yellow",
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                imported += 1
+            except Exception as exc:
+                errors.append(f"Erro ao salvar highlight '{text[:40]}': {exc}")
+
+        return Response(
+            {
+                "total_imported": imported,
+                "total_skipped": skipped,
+                "errors": errors[:20],
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 # ============================================================================

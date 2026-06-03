@@ -30,9 +30,11 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     RevokeShareTokenView,
     SecurityDashboardStatsView,
     ShareTokenListCreateView,
+    StoredAccountShareTokenView,
     StoredBankAccountDetailView,
     StoredBankAccountListCreateView,
     StoredBankAccountRevealView,
+    StoredCardShareTokenView,
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
@@ -188,6 +190,16 @@ urlpatterns = [
         "passwords/<int:pk>/share-tokens/",
         ShareTokenListCreateView.as_view(),
         name="password-share-token-list-create",
+    ),
+    path(
+        "stored-credit-cards/<int:pk>/share-tokens/",
+        StoredCardShareTokenView.as_view(),
+        name="stored-card-share-token-list-create",
+    ),
+    path(
+        "stored-bank-accounts/<int:pk>/share-tokens/",
+        StoredAccountShareTokenView.as_view(),
+        name="stored-account-share-token-list-create",
     ),
     path(
         "share-tokens/<int:token_id>/revoke/",

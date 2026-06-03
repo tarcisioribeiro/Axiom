@@ -464,3 +464,85 @@ class AgentStreamView(APIView):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
         return response
+
+
+# ============================================================================
+# SEMANTIC SEARCH VIEW
+# ============================================================================
+
+
+class SemanticSearchView(APIView):
+    """
+    POST /api/v1/agents/search/
+
+    Busca semântica global nos embeddings do usuário.
+
+    Body: { "query": "...", "domain": "library", "top_k": 10 }
+      domain: "library" | "planning" | "finance" | null (busca em todos)
+      top_k: número máximo de resultados (1-20, default 10)
+
+    Returns: { "results": [{ content, source_title, source_type,
+      similarity }] }
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    _DOMAINS = ("library", "planning", "finance", "security")
+
+    def post(self, request: Request) -> Response:
+        query = (request.data.get("query") or "").strip()
+        if not query:
+            return Response(
+                {"detail": "Informe um query para busca."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if len(query) > 500:
+            return Response(
+                {"detail": "Query muito longa (máximo 500 caracteres)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        domain = request.data.get("domain") or None
+        if domain and domain not in self._DOMAINS:
+            return Response(
+                {
+                    "detail": (
+                        "Domínio inválido. Use: " + ", ".join(self._DOMAINS)
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_top_k = request.data.get("top_k", 10)
+        try:
+            top_k = max(1, min(20, int(raw_top_k)))
+        except (TypeError, ValueError):
+            top_k = 10
+
+        from agents.tools.rag_tools import search_embeddings
+
+        user: User = cast(User, request.user)
+
+        try:
+            if domain:
+                results = search_embeddings(query, user, domain, top_k=top_k)
+            else:
+                # Search all domains and merge by similarity
+                all_results: list[dict] = []
+                for d in self._DOMAINS:
+                    all_results.extend(
+                        search_embeddings(query, user, d, top_k=top_k)
+                    )
+                results = sorted(
+                    all_results,
+                    key=lambda x: cast(float, x.get("similarity", 0)),
+                    reverse=True,
+                )[:top_k]
+        except Exception as exc:
+            logging.getLogger(__name__).error("Semantic search error: %s", exc)
+            return Response(
+                {"detail": "Erro ao realizar busca semântica."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({"results": results, "query": query, "domain": domain})
