@@ -1,3 +1,4 @@
+import { CircleDot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { FilterBar } from '@/components/common/FilterBar';
@@ -54,7 +55,10 @@ export function TransferFilters({
         className="w-44 flex-none"
       />
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-40">
+        <SelectTrigger
+          className="w-40"
+          startIcon={<CircleDot className="h-3.5 w-3.5" />}
+        >
           <SelectValue placeholder={t('pages.transfers.allStatus')} />
         </SelectTrigger>
         <SelectContent>

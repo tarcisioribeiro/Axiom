@@ -49,7 +49,7 @@ export function VaultRecoveryKeyModal({
       setGeneratedKey(res.recovery_key);
     } catch (e) {
       toast({
-        title: t('pages.security.recoveryKey.generateError'),
+        title: t('userProfile.security.recoveryKey.generateError'),
         description: getErrorMessage(e),
         variant: 'destructive',
       });
@@ -73,12 +73,12 @@ export function VaultRecoveryKeyModal({
       await apiClient.post(API_CONFIG.ENDPOINTS.SECURITY_VAULT_RECOVERY_UNLOCK, {
         recovery_key: recoveryInput.trim(),
       });
-      toast({ title: t('pages.security.recoveryKey.unlockSuccess') });
+      toast({ title: t('userProfile.security.recoveryKey.unlockSuccess') });
       onOpenChange(false);
       onUnlocked?.();
     } catch (e) {
       toast({
-        title: t('pages.security.recoveryKey.unlockError'),
+        title: t('userProfile.security.recoveryKey.unlockError'),
         description: getErrorMessage(e),
         variant: 'destructive',
       });
@@ -101,13 +101,13 @@ export function VaultRecoveryKeyModal({
           <DialogTitle className="flex items-center gap-sm">
             <Key className="h-4 w-4" />
             {mode === 'generate'
-              ? t('pages.security.recoveryKey.generateTitle')
-              : t('pages.security.recoveryKey.useTitle')}
+              ? t('userProfile.security.recoveryKey.generateTitle')
+              : t('userProfile.security.recoveryKey.useTitle')}
           </DialogTitle>
           <DialogDescription>
             {mode === 'generate'
-              ? t('pages.security.recoveryKey.generateDesc')
-              : t('pages.security.recoveryKey.useDesc')}
+              ? t('userProfile.security.recoveryKey.generateDesc')
+              : t('userProfile.security.recoveryKey.useDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -117,7 +117,7 @@ export function VaultRecoveryKeyModal({
               <>
                 <div className="flex items-start gap-sm rounded-lg border border-warning/40 bg-warning/10 p-sm text-sm text-warning">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{t('pages.security.recoveryKey.generateWarning')}</span>
+                  <span>{t('userProfile.security.recoveryKey.generateWarning')}</span>
                 </div>
                 <Button
                   onClick={() => void handleGenerate()}
@@ -127,17 +127,17 @@ export function VaultRecoveryKeyModal({
                   <Key className="h-4 w-4" />
                   {loading
                     ? t('common.actions.loading')
-                    : t('pages.security.recoveryKey.generateBtn')}
+                    : t('userProfile.security.recoveryKey.generateBtn')}
                 </Button>
               </>
             ) : (
               <>
                 <div className="flex items-start gap-sm rounded-lg border border-destructive/40 bg-destructive/10 p-sm text-sm text-destructive">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{t('pages.security.recoveryKey.oneTimeWarning')}</span>
+                  <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
                 </div>
                 <div className="space-y-xs">
-                  <Label>{t('pages.security.recoveryKey.yourKey')}</Label>
+                  <Label>{t('userProfile.security.recoveryKey.yourKey')}</Label>
                   <div className="flex gap-sm">
                     <Input
                       value={generatedKey}
@@ -153,12 +153,12 @@ export function VaultRecoveryKeyModal({
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {t('pages.security.recoveryKey.saveHint')}
+                    {t('userProfile.security.recoveryKey.saveHint')}
                   </p>
                 </div>
                 <DialogFooter>
                   <Button onClick={handleClose}>
-                    {t('pages.security.recoveryKey.savedConfirm')}
+                    {t('userProfile.security.recoveryKey.savedConfirm')}
                   </Button>
                 </DialogFooter>
               </>
@@ -168,7 +168,7 @@ export function VaultRecoveryKeyModal({
           <div className="space-y-md">
             <div className="space-y-xs">
               <Label htmlFor="recovery-input">
-                {t('pages.security.recoveryKey.inputLabel')}
+                {t('userProfile.security.recoveryKey.inputLabel')}
               </Label>
               <Input
                 id="recovery-input"
@@ -191,7 +191,7 @@ export function VaultRecoveryKeyModal({
               >
                 {loading
                   ? t('common.actions.loading')
-                  : t('pages.security.recoveryKey.unlockBtn')}
+                  : t('userProfile.security.recoveryKey.unlockBtn')}
               </Button>
             </DialogFooter>
           </div>
