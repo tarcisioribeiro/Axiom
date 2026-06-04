@@ -1,5 +1,6 @@
 import { Bell, CheckCheck } from 'lucide-react';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,6 +10,7 @@ import { useNotificationsStore } from '@/stores/notifications-store';
 import { NotificationItem } from './NotificationItem';
 
 export function NotificationBell() {
+  const { t } = useTranslation();
   const {
     notifications,
     unreadCount,
@@ -33,7 +35,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="hover-lift relative transition-all hover:bg-secondary"
-          aria-label="Notificações"
+          aria-label={t('components.notificationBell.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
@@ -49,7 +51,9 @@ export function NotificationBell() {
         sideOffset={8}
       >
         <div className="flex items-center justify-between border-b p-3">
-          <h4 className="text-sm font-semibold">Notificações</h4>
+          <h4 className="text-sm font-semibold">
+            {t('components.notificationBell.title')}
+          </h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="xs" onClick={markAllAsRead}>
               <CheckCheck className="mr-xs h-3 w-3" />
@@ -61,11 +65,11 @@ export function NotificationBell() {
         <ScrollArea className="h-80 max-h-80">
           {isLoading ? (
             <div className="p-md text-center text-sm text-muted-foreground">
-              Carregando...
+              {t('common.actions.loading')}
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-md text-center text-sm text-muted-foreground">
-              Nenhuma notificação
+              {t('components.notificationBell.empty')}
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-border py-xs">

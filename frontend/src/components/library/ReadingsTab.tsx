@@ -58,6 +58,7 @@ interface BookProgressProps {
 }
 
 function BookProgressBar({ book, readings }: BookProgressProps) {
+  const { t } = useTranslation();
   const bookReadings = readings.filter((r) => r.book === book.id);
   const totalRead = bookReadings.reduce((sum, r) => sum + r.pages_read, 0);
   const pct = book.pages > 0 ? Math.min((totalRead / book.pages) * 100, 100) : 0;
@@ -77,7 +78,10 @@ function BookProgressBar({ book, readings }: BookProgressProps) {
         />
       </div>
       <p className="text-[10px] text-muted-foreground">
-        {bookReadings.length} {bookReadings.length === 1 ? 'sessão' : 'sessões'}
+        {bookReadings.length}{' '}
+        {bookReadings.length === 1
+          ? t('pages.readingsTab.sessionSingular')
+          : t('pages.readingsTab.sessionPlural')}
       </p>
     </div>
   );
@@ -92,6 +96,7 @@ interface MarkAsReadModalProps {
 }
 
 function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
+  const { t } = useTranslation();
   const [selectedBook, setSelectedBook] = useState<number>(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -115,7 +120,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
     }
     if (endDate < startDate) {
       toast({
-        title: 'Data de fim deve ser posterior à de início',
+        title: t('pages.readingsTab.invalidDateRange'),
         variant: 'destructive',
       });
       return;
@@ -124,8 +129,10 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
       setIsSubmitting(true);
       const result = await booksService.markAsRead(selectedBook, startDate, endDate);
       toast({
-        title: 'Leitura registrada!',
-        description: `${result.sessions_created} sessões criadas automaticamente.`,
+        title: t('pages.readings.created'),
+        description: t('pages.readingsTab.sessionsCreated', {
+          count: result.sessions_created,
+        }),
       });
       onClose();
     } catch (error: unknown) {
@@ -155,11 +162,8 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Marcar como Lido (período)</DialogTitle>
-          <DialogDescription>
-            Gera sessões de leitura distribuídas automaticamente entre as datas
-            informadas, usando seu ritmo histórico de leitura.
-          </DialogDescription>
+          <DialogTitle>{t('pages.readingsTab.markAsReadTitle')}</DialogTitle>
+          <DialogDescription>{t('pages.readingsTab.markAsReadDesc')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-md">
@@ -186,11 +190,11 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
           <div className="grid grid-cols-2 gap-md">
             <div className="space-y-sm">
-              <Label>Data de início *</Label>
+              <Label>{t('pages.readingsTab.startDateLabel')}</Label>
               <DatePicker
                 value={startDate}
                 onChange={(d) => setStartDate(d ? formatLocalDate(d) : '')}
-                placeholder="Quando começou"
+                placeholder={t('pages.readingsTab.startDatePlaceholder')}
               />
             </div>
             <div className="space-y-sm">
@@ -205,10 +209,10 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
           <div className="flex justify-end gap-sm border-t pt-md">
             <Button variant="outline" onClick={onClose}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
-              {isSubmitting ? 'Registrando...' : 'Registrar'}
+              {isSubmitting ? t('common.actions.loading') : t('common.actions.confirm')}
             </Button>
           </div>
         </div>
@@ -368,7 +372,9 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           className="gap-sm"
         >
           <BarChart2 className="h-4 w-4" />
-          {showProgress ? 'Ver sessões' : 'Ver progresso'}
+          {showProgress
+            ? t('pages.readingsTab.viewSessions')
+            : t('pages.readingsTab.viewProgress')}
         </Button>
         <Button
           variant="outline"
@@ -377,7 +383,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           className="gap-sm"
         >
           <CalendarRange className="h-4 w-4" />
-          Marcar como lido (período)
+          {t('pages.readingsTab.markAsReadBtn')}
         </Button>
       </div>
 
@@ -442,7 +448,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                       )}
                       {reading.current_page && (
                         <span className="text-muted-foreground">
-                          pág. {reading.current_page}
+                          {t('pages.readingsTab.pageLabel')} {reading.current_page}
                         </span>
                       )}
                     </div>

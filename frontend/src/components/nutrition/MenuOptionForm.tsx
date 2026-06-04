@@ -72,6 +72,7 @@ interface IngredientValues {
   is_optional: boolean;
   notes: string;
   order: number;
+  alternative_group: string;
 }
 
 interface MenuOptionFormValues {
@@ -126,6 +127,8 @@ export function MenuOptionForm({
           is_optional: i.is_optional,
           notes: i.notes ?? '',
           order: i.order,
+          alternative_group:
+            i.alternative_group != null ? String(i.alternative_group) : '',
         })) ?? [],
     },
   });
@@ -146,6 +149,8 @@ export function MenuOptionForm({
             is_optional: i.is_optional,
             notes: i.notes ?? '',
             order: i.order,
+            alternative_group:
+              i.alternative_group != null ? String(i.alternative_group) : '',
           })) ?? [],
       });
     }
@@ -304,7 +309,7 @@ export function MenuOptionForm({
                     </div>
                   </div>
 
-                  {/* Optional + Notes */}
+                  {/* Optional + Notes + Alternative Group */}
                   <div className="mt-xs flex items-center gap-sm">
                     <label className="flex cursor-pointer items-center gap-xs">
                       <Checkbox
@@ -327,6 +332,22 @@ export function MenuOptionForm({
                         className="h-7 pl-6 text-xs"
                       />
                     </div>
+                    <div className="flex w-24 items-center gap-xs">
+                      <Label className="shrink-0 text-[10px] text-muted-foreground">
+                        {t('pages.nutritionMealTypes.altGroup', 'Grupo Alt.')}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="—"
+                        {...register(`ingredients.${idx}.alternative_group`)}
+                        className="h-7 w-12 text-center text-xs"
+                        title={t(
+                          'pages.nutritionMealTypes.altGroupHelp',
+                          t('pages.nutritionMealTypes.altGroupHelp')
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -343,6 +364,7 @@ export function MenuOptionForm({
                 is_optional: false,
                 notes: '',
                 order: fields.length,
+                alternative_group: '',
               })
             }
             className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/30 py-sm text-sm font-medium text-category-nutrition transition-all hover:border-category-nutrition/60 hover:bg-category-nutrition/5"

@@ -34,7 +34,8 @@
       "update": "Update",
       "select": "Select",
       "none": "None",
-      "total": "Total"
+      "total": "Total",
+      "test": "Test"
     },
     "messages": {
       "loadError": "Error loading data",
@@ -53,7 +54,8 @@
       "copiedDesc": "{{label}} copied to clipboard.",
       "revealError": "Error revealing data",
       "invalidData": "Invalid data",
-      "fillRequired": "Please fill in all required fields."
+      "fillRequired": "Please fill in all required fields.",
+      "passwordCopied": "Password copied to clipboard."
     },
     "fields": {
       "name": "Name",
@@ -124,7 +126,9 @@
       "processing": "Processing",
       "completed": "Completed",
       "failed": "Failed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "retrying": "Retrying",
+      "success": "Success"
     },
     "emailVerificationBanner": {
       "message": "Please confirm your email address to ensure full access to your account.",
@@ -381,7 +385,8 @@
       "goToLogin": "Go to login",
       "invalidLink": "Invalid or expired link",
       "invalidLinkDesc": "Please request a new password reset link.",
-      "errorTitle": "Error resetting"
+      "errorTitle": "Error resetting",
+      "passwordMismatch": "Passwords do not match."
     },
     "verifyEmail": {
       "title": "Email verification",
@@ -580,7 +585,12 @@
         "statusProcessing": "Processing",
         "statusFailed": "Failed"
       },
-      "available": "Available: {{value}}"
+      "available": "Available: {{value}}",
+      "invalidFormatError": "Invalid format. Use OFX or CSV.",
+      "reconciliationTitle": "Bank Reconciliation",
+      "reconciliationDesc": "Import bank statements to reconcile with your transactions.",
+      "reconciliationEmpty": "Click 'Import Statement' to get started.",
+      "balanceDistribution": "Balance distribution"
     },
     "expenses": {
       "title": "Expenses",
@@ -1533,7 +1543,13 @@
         "withinLimit": "within limit",
         "warning": "warning",
         "exceeded": "exceeded"
-      }
+      },
+      "createError": "Error creating budget.",
+      "aiSuggestionsTitle": "AI Budget Suggestions",
+      "aiSuggestionsDesc": "Based on your last 3 months of expenses. Click \"Apply\" to create this month's budget.",
+      "analyzing": "Analyzing history...",
+      "averageLabel": "Average",
+      "suggestionLabel": "Suggestion"
     },
     "fixedRevenues": {
       "title": "Fixed Monthly Revenues",
@@ -2498,7 +2514,17 @@
     "passwordGenerator": {
       "title": "Password Generator",
       "subtitle": "Generate Secure Password",
-      "desc": "Create cryptographically secure passwords with configurable options. Passwords are generated on the server using secure algorithms."
+      "desc": "Create cryptographically secure passwords with configurable options. Passwords are generated on the server using secure algorithms.",
+      "strengthLabel": "Password strength",
+      "strengthWeak": "Weak",
+      "strengthMedium": "Medium",
+      "strengthStrong": "Strong",
+      "uppercaseLabel": "Uppercase (A-Z)",
+      "lowercaseLabel": "Lowercase (a-z)",
+      "numbersLabel": "Numbers (0-9)",
+      "excludeAmbiguous": "Exclude ambiguous",
+      "invalidConfig": "Invalid configuration",
+      "selectCharType": "Please select at least one character type."
     },
     "libraryDashboard": {
       "title": "Intellect Dashboard",
@@ -3106,7 +3132,10 @@
       "emptyTitle": "No books in queue",
       "emptyDesc": "Add books with \"To Read\" status to build your reading queue.",
       "errorLoad": "Error loading queue",
-      "errorSave": "Error saving order"
+      "errorSave": "Error saving order",
+      "priorityHigh": "High",
+      "priorityMedium": "Medium",
+      "priorityLow": "Low"
     },
     "highlights": {
       "title": "Highlights",
@@ -4846,6 +4875,16 @@
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Error loading plans",
       "saveError": "Error saving",
+      "reorderError": "Error reordering exercises",
+      "exerciseSingular": "exercise",
+      "exercisePlural": "exercises",
+      "noSets": "no sets",
+      "noSetsLabel": "No sets defined",
+      "setsOf": "sets of",
+      "repsPlural": "reps",
+      "restSeconds": "Rest between sets",
+      "noRest": "No rest",
+      "seconds": "seconds",
       "muscleChips": {
         "chest": "Chest",
         "back": "Back",
@@ -4985,7 +5024,18 @@
       "foodDescriptionPlaceholder": "Additional information...",
       "loadError": "Error loading foods",
       "saveError": "Error saving food",
-      "searchPlaceholder": "Search food..."
+      "searchPlaceholder": "Search food...",
+      "caloriesSection": "Calorie Information",
+      "caloriesHelp": "Enter the calories for the reference portion. Leave blank if unknown.",
+      "servingSize": "Serving Size",
+      "servingUnit": "Unit",
+      "caloriesPerServing": "Calories (kcal) per Serving",
+      "servingUnitUnidade": "unit",
+      "servingUnitScoop": "scoop",
+      "servingUnitColherSopa": "tablespoon",
+      "servingUnitColherCha": "teaspoon",
+      "servingUnitXicara": "cup",
+      "servingUnitPorcao": "portion"
     },
     "nutritionMealTypes": {
       "newMealTypeBtn": "New Meal",
@@ -5040,7 +5090,16 @@
       "removeIngredient": "Remove",
       "noIngredients": "No ingredients added",
       "loadError": "Error loading data",
-      "saveError": "Error saving"
+      "saveError": "Error saving",
+      "altGroup": "Alt. Group",
+      "altGroupHelp": "Same number = alternatives to each other (e.g. egg OR beef). Leave empty if not an alternative.",
+      "ingredientOr": "or",
+      "ingredientKcal": "kcal",
+      "suggestedTimeEarlyMorning": "Early morning",
+      "suggestedTimeMorning": "Morning",
+      "suggestedTimeLunch": "Lunch",
+      "suggestedTimeAfternoon": "Afternoon",
+      "suggestedTimeNight": "Night"
     },
     "nutritionLog": {
       "title": "Meal Diary",
@@ -5265,7 +5324,9 @@
       "createPlan": "Create Plan",
       "managePlans": "Manage Plans",
       "manageExercises": "Exercises",
-      "viewHistory": "History"
+      "viewHistory": "History",
+      "todaySessions": "Sessions logged today",
+      "emptyDays": "No splits registered in this plan."
     },
     "nutritionHub": {
       "title": "Nutrition",
@@ -5664,6 +5725,89 @@
       "cash": "Cash",
       "noInterest": "Interest-free",
       "enterValue": "Enter the purchase value to calculate installments"
+    },
+    "chartContainer": {
+      "noDataMessage": "No data available",
+      "toggleChartType": "Toggle chart type",
+      "toggleView": "Toggle view"
+    },
+    "commandPalette": {
+      "ariaLabel": "Available commands"
+    },
+    "notificationBell": {
+      "ariaLabel": "Notifications",
+      "title": "Notifications",
+      "empty": "No notifications"
+    },
+    "timePicker": {
+      "placeholder": "Select a time",
+      "clearAriaLabel": "Clear time"
+    },
+    "gamification": {
+      "levelTitle": "Level",
+      "levelValue": "Level {{level}}",
+      "streakTitle": "Current streak",
+      "tasksTitle": "Completed tasks",
+      "totalHistory": "All time",
+      "levelProgress": "Progress to Level {{level}}"
+    },
+    "routineTemplate": {
+      "frequencyDaily": "Daily",
+      "frequencyWeekdays": "Weekdays"
+    },
+    "vaults": {
+      "contributionPlaceholder": "e.g. Monthly savings",
+      "depositPlaceholder": "e.g. Monthly deposit",
+      "withdrawalPlaceholder": "e.g. Emergency withdrawal"
+    },
+    "creditCards": {
+      "accountNotProvided": "Account not provided"
     }
+  },
+  "readingsTab": {
+    "sessionSingular": "session",
+    "sessionPlural": "sessions",
+    "invalidDateRange": "End date must be after start date",
+    "sessionsCreated": "{{count}} sessions created automatically.",
+    "markAsReadTitle": "Mark as Read (period)",
+    "markAsReadDesc": "Automatically generates reading sessions distributed between the given dates, using your historical reading pace.",
+    "startDateLabel": "Start date *",
+    "startDatePlaceholder": "When did you start",
+    "viewSessions": "View sessions",
+    "viewProgress": "View progress",
+    "markAsReadBtn": "Mark as read (period)",
+    "pageLabel": "p."
+  },
+  "webhooks": {
+    "description": "Receive real-time notifications of Axiom events in external systems.",
+    "newButton": "New Webhook",
+    "createButton": "Create webhook",
+    "emptyTitle": "No webhooks configured",
+    "emptyDescription": "Connect Axiom to Zapier, n8n or any external system.",
+    "editDialogTitle": "Edit Webhook",
+    "dialogDescription": "Configure the URL and events that trigger this webhook.",
+    "deliveryHistory": "Delivery history",
+    "noDeliveries": "No deliveries recorded.",
+    "viewDeliveries": "View deliveries",
+    "deliveryCount_one": "{{count}} delivery",
+    "deliveryCount_other": "{{count}} deliveries",
+    "nameLabel": "Name *",
+    "namePlaceholder": "e.g. Notify n8n",
+    "urlLabel": "Destination URL *",
+    "secretLabel": "Secret *",
+    "newSecretHint": "New secret (leave blank to keep current)",
+    "secretPlaceholder": "Key to sign the payload (HMAC-SHA256)",
+    "timeoutLabel": "Timeout (s)",
+    "maxRetriesLabel": "Max retries",
+    "activeLabel": "Webhook active",
+    "eventsLabel": "Events *",
+    "createdSuccess": "Webhook created successfully.",
+    "createError": "Error creating webhook.",
+    "updatedSuccess": "Webhook updated.",
+    "updateError": "Error updating webhook.",
+    "removedSuccess": "Webhook removed.",
+    "removeError": "Error removing webhook.",
+    "testQueuedSuccess": "Test queued successfully.",
+    "testQueueError": "Error queuing test."
   }
 }

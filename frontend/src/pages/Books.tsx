@@ -1059,7 +1059,7 @@ export default function Books() {
 
       {/* Quick Capture Dialog */}
       <Dialog open={isQuickCaptureOpen} onOpenChange={setIsQuickCaptureOpen}>
-        <DialogContent className="max-w-sm sm:bottom-0 sm:top-auto sm:translate-y-0">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-sm">
               <BookOpen className="h-4 w-4 text-primary" />

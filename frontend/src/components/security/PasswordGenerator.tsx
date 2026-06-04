@@ -1,5 +1,6 @@
 import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,19 +19,19 @@ interface PasswordGeneratorProps {
 
 const strengthConfig = {
   weak: {
-    label: 'Fraca',
+    labelKey: 'pages.passwordGenerator.strengthWeak',
     color: 'bg-destructive',
     badgeVariant: 'destructive' as const,
     width: 'w-1/3',
   },
   medium: {
-    label: 'Média',
+    labelKey: 'pages.passwordGenerator.strengthMedium',
     color: 'bg-warning',
     badgeVariant: 'secondary' as const,
     width: 'w-2/3',
   },
   strong: {
-    label: 'Forte',
+    labelKey: 'pages.passwordGenerator.strengthStrong',
     color: 'bg-success',
     badgeVariant: 'default' as const,
     width: 'w-full',
@@ -51,13 +52,14 @@ export function PasswordGenerator({
   const [strength, setStrength] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!uppercase && !lowercase && !numbers && !specialCharacters) {
       toast({
-        title: 'Configuração inválida',
-        description: 'Selecione pelo menos um tipo de caractere.',
+        title: t('pages.passwordGenerator.invalidConfig'),
+        description: t('pages.passwordGenerator.selectCharType'),
         variant: 'destructive',
       });
       return;
@@ -92,8 +94,8 @@ export function PasswordGenerator({
     await copyToClipboard(generatedPassword);
     setCopied(true);
     toast({
-      title: 'Copiado!',
-      description: 'Senha copiada para a área de transferência.',
+      title: t('common.messages.copied'),
+      description: t('common.messages.passwordCopied'),
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -149,7 +151,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setUppercase(checked === true)}
           />
           <Label htmlFor="gen-upper" className="cursor-pointer text-sm">
-            Maiúsculas (A-Z)
+            {t('pages.passwordGenerator.uppercaseLabel')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -159,7 +161,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setLowercase(checked === true)}
           />
           <Label htmlFor="gen-lower" className="cursor-pointer text-sm">
-            Minúsculas (a-z)
+            {t('pages.passwordGenerator.lowercaseLabel')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -169,7 +171,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setNumbers(checked === true)}
           />
           <Label htmlFor="gen-numbers" className="cursor-pointer text-sm">
-            Números (0-9)
+            {t('pages.passwordGenerator.numbersLabel')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -189,7 +191,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setExcludeAmbiguous(checked === true)}
           />
           <Label htmlFor="gen-ambiguous" className="cursor-pointer text-sm">
-            Excluir ambíguos
+            {t('pages.passwordGenerator.excludeAmbiguous')}
           </Label>
         </div>
       </div>
@@ -229,8 +231,12 @@ export function PasswordGenerator({
           {strengthInfo && (
             <div className="space-y-xs">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Força da senha</span>
-                <Badge variant={strengthInfo.badgeVariant}>{strengthInfo.label}</Badge>
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.passwordGenerator.strengthLabel')}
+                </span>
+                <Badge variant={strengthInfo.badgeVariant}>
+                  {t(strengthInfo.labelKey)}
+                </Badge>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div

@@ -501,9 +501,22 @@ export default function DailyChecklist() {
                   <ExternalLink className="h-3 w-3" />
                   {t('pages.dailyChecklist.viewAllReflections')}
                 </Link>
-                <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
-                  {t('common.actions.close')}
-                </Button>
+                <div className="flex gap-sm">
+                  <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
+                    {t('common.actions.close')}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      void handleSave().then(() => setIsReflectionOpen(false));
+                    }}
+                    disabled={
+                      isSaving ||
+                      (reflection.trim().length > 0 && reflection.trim().length < 10)
+                    }
+                  >
+                    {t('common.actions.save')}
+                  </Button>
+                </div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
