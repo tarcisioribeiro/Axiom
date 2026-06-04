@@ -215,7 +215,7 @@ export default function Budgets() {
       invalidateBudgets();
     },
     onError: () => {
-      toast({ title: 'Erro ao criar orçamento.', variant: 'destructive' });
+      toast({ title: t('pages.budgets.createError'), variant: 'destructive' });
     },
   });
 

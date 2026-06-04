@@ -172,7 +172,7 @@ export default function FinancialCalendar() {
           result.push({
             id: `bill-${b.id}`,
             type: 'creditCard',
-            description: `${b.credit_card_name ?? 'Cartão'} — ${b.month}/${b.year}`,
+            description: `${b.credit_card_name ?? t('nav.items.creditCards')} — ${b.month}/${b.year}`,
             value: parseFloat(b.total_amount),
             date: due,
           });
@@ -201,6 +201,7 @@ export default function FinancialCalendar() {
     revenuesQuery.data,
     startStr,
     endStr,
+    t,
   ]);
 
   const eventsByDate = useMemo(() => {
