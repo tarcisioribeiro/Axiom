@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command as CommandIcon } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ import { cn } from '@/lib/utils';
  * ```
  */
 export function CommandPalette() {
+  const { t } = useTranslation();
   const {
     isOpen,
     close,
@@ -175,7 +177,7 @@ export function CommandPalette() {
           ref={listRef}
           className="custom-scrollbar max-h-[60vh] overflow-y-auto p-sm"
           role="listbox"
-          aria-label="Comandos disponíveis"
+          aria-label={t('components.commandPalette.ariaLabel')}
         >
           <AnimatePresence mode="wait">
             {filteredCommands.length > 0 ? (

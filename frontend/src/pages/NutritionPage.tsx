@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Clock,
   Edit,
+  Flame,
   Moon,
   Plus,
   Salad,
@@ -63,6 +64,7 @@ import type {
   MealType,
   MealTypeFormData,
   MenuOption,
+  MenuOptionIngredient,
 } from '@/types/nutrition';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -308,6 +310,7 @@ export default function NutritionPage() {
         is_optional: boolean;
         notes: string;
         order: number;
+        alternative_group: string;
       }[];
     }) => {
       const option = await menuOptionService.create(optionData);
@@ -321,6 +324,9 @@ export default function NutritionPage() {
             is_optional: ing.is_optional,
             notes: ing.notes || undefined,
             order: ing.order,
+            alternative_group: ing.alternative_group
+              ? Number(ing.alternative_group)
+              : undefined,
             owner: ownerId,
           })
         )
@@ -353,6 +359,7 @@ export default function NutritionPage() {
         is_optional: boolean;
         notes: string;
         order: number;
+        alternative_group: string;
       }[];
     }) => {
       await menuOptionService.update(id, optionData);
@@ -372,6 +379,9 @@ export default function NutritionPage() {
                 is_optional: ing.is_optional,
                 notes: ing.notes || undefined,
                 order: ing.order,
+                alternative_group: ing.alternative_group
+                  ? Number(ing.alternative_group)
+                  : undefined,
                 owner: ownerId,
               })
             : menuOptionIngredientService.create({
@@ -382,6 +392,9 @@ export default function NutritionPage() {
                 is_optional: ing.is_optional,
                 notes: ing.notes || undefined,
                 order: ing.order,
+                alternative_group: ing.alternative_group
+                  ? Number(ing.alternative_group)
+                  : undefined,
                 owner: ownerId,
               })
         )
@@ -1117,27 +1130,7 @@ function MealTypeCard({
                       </div>
                       {/* Ingredients */}
                       {opt.ingredients.length > 0 ? (
-                        <div className="grid gap-xs p-sm sm:grid-cols-2">
-                          {opt.ingredients.map((ing) => (
-                            <div key={ing.id} className="flex items-start gap-xs">
-                              <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
-                              <span className="text-xs text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  {ing.food_name}
-                                </span>
-                                {ing.quantity
-                                  ? ` — ${ing.quantity} ${ing.unit_display}`
-                                  : ''}
-                                {ing.is_optional && (
-                                  <span className="ml-xs italic text-muted-foreground/60">
-                                    (opt.)
-                                  </span>
-                                )}
-                                {ing.notes ? ` · ${ing.notes}` : ''}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        <IngredientList ingredients={opt.ingredients} />
                       ) : (
                         <p className="px-sm py-xs text-xs text-muted-foreground">
                           {t('pages.nutritionMealTypes.noIngredients')}
@@ -1368,6 +1361,82 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── Ingredient list with alternative groups ─────────────────────────────────
+
+function calcCalories(ing: MenuOptionIngredient): number | null {
+  if (!ing.food_calories_per_serving || !ing.food_serving_size) return null;
+  const cals = parseFloat(ing.food_calories_per_serving);
+  const servingSize = parseFloat(ing.food_serving_size);
+  if (!servingSize) return null;
+  const qty = ing.quantity ? parseFloat(ing.quantity) : servingSize;
+  return Math.round((qty / servingSize) * cals);
+}
+
+function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
+  const { t } = useTranslation();
+  const cal = calcCalories(ing);
+  return (
+    <div className="flex items-start gap-xs">
+      <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
+      <span className="text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{ing.food_name}</span>
+        {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
+        {cal != null && (
+          <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
+            <Flame className="h-2.5 w-2.5" />
+            {cal} {t('pages.nutritionMealTypes.ingredientKcal')}
+          </span>
+        )}
+        {ing.is_optional && (
+          <span className="ml-xs italic text-muted-foreground/60">(opt.)</span>
+        )}
+        {ing.notes ? ` · ${ing.notes}` : ''}
+      </span>
+    </div>
+  );
+}
+
+function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }) {
+  const { t } = useTranslation();
+  // group by alternative_group; null/undefined = standalone
+  const groups: Map<number | null, MenuOptionIngredient[]> = new Map();
+  for (const ing of ingredients) {
+    const key = ing.alternative_group ?? null;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(ing);
+  }
+
+  const entries = Array.from(groups.entries()).sort(([a], [b]) => {
+    if (a === null && b === null) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return a - b;
+  });
+
+  return (
+    <div className="grid gap-xs p-sm sm:grid-cols-2">
+      {entries.map(([groupKey, items]) =>
+        items.length === 1 ? (
+          <IngredientItem key={items[0].id} ing={items[0]} />
+        ) : (
+          <div key={groupKey ?? `g-${items[0].id}`} className="space-y-xs">
+            {items.map((ing, idx) => (
+              <div key={ing.id}>
+                <IngredientItem ing={ing} />
+                {idx < items.length - 1 && (
+                  <p className="ml-3 text-[10px] font-semibold uppercase tracking-wider text-category-nutrition/60">
+                    {t('pages.nutritionMealTypes.ingredientOr')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      )}
     </div>
   );
 }

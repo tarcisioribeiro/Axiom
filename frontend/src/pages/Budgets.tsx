@@ -215,7 +215,7 @@ export default function Budgets() {
       invalidateBudgets();
     },
     onError: () => {
-      toast({ title: 'Erro ao criar orçamento.', variant: 'destructive' });
+      toast({ title: t('pages.budgets.createError'), variant: 'destructive' });
     },
   });
 
@@ -301,17 +301,16 @@ export default function Budgets() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              Sugestões de Orçamento com IA
+              {t('pages.budgets.aiSuggestionsTitle')}
             </DialogTitle>
             <DialogDescription>
-              Baseado nos seus últimos 3 meses de despesas. Clique em
-              &quot;Aplicar&quot; para criar o orçamento do mês atual.
+              {t('pages.budgets.aiSuggestionsDesc')}
             </DialogDescription>
           </DialogHeader>
           {isSuggestLoading ? (
             <div className="flex items-center justify-center gap-sm py-xl text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Analisando histórico...
+              {t('pages.budgets.analyzing')}
             </div>
           ) : (
             <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
@@ -333,7 +332,9 @@ export default function Budgets() {
                       {translate('expenseCategories', s.category)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Média: {formatCurrency(s.avg_monthly_spent)} · Sugestão:{' '}
+                      {t('pages.budgets.averageLabel')}:{' '}
+                      {formatCurrency(s.avg_monthly_spent)} ·{' '}
+                      {t('pages.budgets.suggestionLabel')}:{' '}
                       {formatCurrency(s.suggested_limit)}
                     </p>
                     {s.reasoning && (

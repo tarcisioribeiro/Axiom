@@ -23,12 +23,12 @@ interface RoutineTemplateModalProps {
   onImported: (createdIds: number[]) => void;
 }
 
-const PERIODICITY_LABELS: Record<string, string> = {
-  daily: 'Diário',
-  weekdays: 'Dias úteis',
-  weekly: 'Semanal',
-  monthly: 'Mensal',
-  custom: 'Personalizado',
+const PERIODICITY_KEYS: Record<string, string> = {
+  daily: 'pages.routineTasks.form.periodicityOptions.daily',
+  weekdays: 'pages.routineTasks.form.periodicityOptions.weekdays',
+  weekly: 'pages.routineTasks.form.periodicityOptions.weekly',
+  monthly: 'pages.routineTasks.form.periodicityOptions.monthly',
+  custom: 'pages.routineTasks.form.periodicityOptions.custom',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -207,7 +207,9 @@ export function RoutineTemplateModal({
                             <Badge
                               className={`text-xs ${CATEGORY_COLORS[task.category] ?? 'bg-muted'}`}
                             >
-                              {PERIODICITY_LABELS[task.periodicity] ?? task.periodicity}
+                              {PERIODICITY_KEYS[task.periodicity]
+                                ? t(PERIODICITY_KEYS[task.periodicity])
+                                : task.periodicity}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {task.target_quantity} {task.unit}

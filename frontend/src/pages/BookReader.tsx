@@ -70,7 +70,6 @@ const WIDTH_PRESETS = [600, 750, 900, 1100] as const;
 type WidthPreset = (typeof WIDTH_PRESETS)[number];
 
 interface ThemeConfig {
-  label: string;
   backgroundColor: string;
   color: string;
   borderColor: string;
@@ -90,7 +89,6 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
     // ── Dracula palette variants ─────────────────────────────────────────────
     return {
       light: {
-        label: 'Claro',
         backgroundColor: '#ECEEF8', // very light cool blue-grey (Dracula-tinted)
         color: '#21222C', // Dracula near-black
         borderColor: '#B0BAD4',
@@ -98,18 +96,16 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
         epubBody: { background: '#ECEEF8', color: '#21222C', linkColor: '#1D4ED8' },
       },
       sepia: {
-        label: 'Sépia',
-        backgroundColor: '#E8E2F5', // cool lavender parchment (Dracula purple-tinted)
-        color: '#3D2852', // deep purple-brown
+        backgroundColor: '#E8E2F5',
+        color: '#3D2852',
         borderColor: '#9478C2',
         icon: <Palette className="h-4 w-4" />,
         epubBody: { background: '#E8E2F5', color: '#3D2852', linkColor: '#6D28D9' },
       },
       dark: {
-        label: 'Escuro',
-        backgroundColor: '#282A36', // Dracula background
-        color: '#F8F8F2', // Dracula foreground
-        borderColor: '#44475A', // Dracula current-line
+        backgroundColor: '#282A36',
+        color: '#F8F8F2',
+        borderColor: '#44475A',
         icon: <Moon className="h-4 w-4" />,
         epubBody: { background: '#282A36', color: '#F8F8F2', linkColor: '#8BE9FD' },
       },
@@ -118,25 +114,22 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
   // ── Alucard palette variants ───────────────────────────────────────────────
   return {
     light: {
-      label: 'Claro',
-      backgroundColor: '#FFFBEB', // Alucard warm cream (hsl 48 100% 96%)
+      backgroundColor: '#FFFBEB',
       color: '#1F1F1F',
       borderColor: '#C8C4D8',
       icon: <Sun className="h-4 w-4" />,
       epubBody: { background: '#FFFBEB', color: '#1F1F1F', linkColor: '#2563EB' },
     },
     sepia: {
-      label: 'Sépia',
-      backgroundColor: '#F5E6C8', // warm golden parchment (Alucard amber tones)
-      color: '#5C3D2E', // warm dark brown
+      backgroundColor: '#F5E6C8',
+      color: '#5C3D2E',
       borderColor: '#C8A870',
       icon: <Palette className="h-4 w-4" />,
       epubBody: { background: '#F5E6C8', color: '#5C3D2E', linkColor: '#2563EB' },
     },
     dark: {
-      label: 'Escuro',
-      backgroundColor: '#1A0E08', // very dark warm brown (Alucard inverted)
-      color: '#F5EDD6', // warm cream
+      backgroundColor: '#1A0E08',
+      color: '#F5EDD6',
       borderColor: '#4A3020',
       icon: <Moon className="h-4 w-4" />,
       epubBody: { background: '#1A0E08', color: '#F5EDD6', linkColor: '#F5A623' },
@@ -176,12 +169,12 @@ function applyEpubThemes(
 // HIGHLIGHT COLORS
 // ============================================================================
 
-const HIGHLIGHT_COLORS: { value: string; label: string; dot: string }[] = [
-  { value: 'yellow', label: 'Amarelo', dot: 'bg-yellow-400' },
-  { value: 'green', label: 'Verde', dot: 'bg-green-400' },
-  { value: 'blue', label: 'Azul', dot: 'bg-blue-400' },
-  { value: 'pink', label: 'Rosa', dot: 'bg-pink-400' },
-  { value: 'orange', label: 'Laranja', dot: 'bg-orange-400' },
+const HIGHLIGHT_COLOR_VALUES = [
+  { value: 'yellow', key: 'colorYellow', dot: 'bg-yellow-400' },
+  { value: 'green', key: 'colorGreen', dot: 'bg-green-400' },
+  { value: 'blue', key: 'colorBlue', dot: 'bg-blue-400' },
+  { value: 'pink', key: 'colorPink', dot: 'bg-pink-400' },
+  { value: 'orange', key: 'colorOrange', dot: 'bg-orange-400' },
 ];
 
 const COLOR_BG: Record<string, string> = {
@@ -240,7 +233,7 @@ function AnnotationForm({
       };
       const created = await bookHighlightsService.create(data);
       onSaved(created);
-      toast({ title: 'Anotação salva' });
+      toast({ title: t('pages.bookReader.annotationSaved') });
     } catch (err) {
       toast({
         title: t('pages.bookReader.annotationError'),
@@ -296,11 +289,11 @@ function AnnotationForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {HIGHLIGHT_COLORS.map((c) => (
+              {HIGHLIGHT_COLOR_VALUES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
                   <span className="flex items-center gap-sm">
                     <span className={`inline-block h-3 w-3 rounded-full ${c.dot}`} />
-                    {c.label}
+                    {t(`pages.bookReader.${c.key}`)}
                   </span>
                 </SelectItem>
               ))}
@@ -880,24 +873,26 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           />
 
           {/* Theme switcher */}
-          {(Object.keys(themes) as ReaderTheme[]).map((t) => (
+          {(Object.keys(themes) as ReaderTheme[]).map((themeKey) => (
             <Button
-              key={t}
+              key={themeKey}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => handleThemeChange(t)}
-              title={themes[t].label}
+              onClick={() => handleThemeChange(themeKey)}
+              title={t(
+                `pages.bookReader.theme${themeKey.charAt(0).toUpperCase()}${themeKey.slice(1)}`
+              )}
               style={
-                theme === t
+                theme === themeKey
                   ? {
-                      backgroundColor: `${themes[t].color}20`,
-                      color: themes[t].color,
+                      backgroundColor: `${themes[themeKey].color}20`,
+                      color: themes[themeKey].color,
                     }
                   : { color: cfg.color }
               }
             >
-              {themes[t].icon}
+              {themes[themeKey].icon}
             </Button>
           ))}
 
