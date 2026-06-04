@@ -17,9 +17,11 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     ArchiveDownloadView,
     ArchiveListCreateView,
     ArchiveRevealView,
+    HibpCheckView,
     PasswordDetailView,
     PasswordFavoriteToggleView,
     PasswordGenerateView,
+    PasswordHistoryListView,
     PasswordImportConfirmView,
     PasswordImportPreviewView,
     PasswordListCreateView,
@@ -28,13 +30,18 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     RevokeShareTokenView,
     SecurityDashboardStatsView,
     ShareTokenListCreateView,
+    StoredAccountShareTokenView,
     StoredBankAccountDetailView,
     StoredBankAccountListCreateView,
     StoredBankAccountRevealView,
+    StoredCardShareTokenView,
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
+    TOTPVerifyView,
+    VaultAlertConfigView,
     VaultExportZipView,
+    VaultHealthHistoryView,
     VaultHealthReportView,
 )
 
@@ -185,6 +192,16 @@ urlpatterns = [
         name="password-share-token-list-create",
     ),
     path(
+        "stored-credit-cards/<int:pk>/share-tokens/",
+        StoredCardShareTokenView.as_view(),
+        name="stored-card-share-token-list-create",
+    ),
+    path(
+        "stored-bank-accounts/<int:pk>/share-tokens/",
+        StoredAccountShareTokenView.as_view(),
+        name="stored-account-share-token-list-create",
+    ),
+    path(
         "share-tokens/<int:token_id>/revoke/",
         RevokeShareTokenView.as_view(),
         name="share-token-revoke",
@@ -194,5 +211,35 @@ urlpatterns = [
         "share/<uuid:token>/",
         RedeemShareTokenView.as_view(),
         name="share-token-redeem",
+    ),
+    # HIBP (HaveIBeenPwned) check — k-anonymity proxy
+    path(
+        "hibp-check/",
+        HibpCheckView.as_view(),
+        name="hibp-check",
+    ),
+    # Password History
+    path(
+        "passwords/<int:pk>/history/",
+        PasswordHistoryListView.as_view(),
+        name="password-history",
+    ),
+    # TOTP verify
+    path(
+        "passwords/<int:pk>/totp/verify/",
+        TOTPVerifyView.as_view(),
+        name="password-totp-verify",
+    ),
+    # Vault Health History (score evolution)
+    path(
+        "vault-health-history/",
+        VaultHealthHistoryView.as_view(),
+        name="vault-health-history",
+    ),
+    # Vault Alert Config
+    path(
+        "alert-config/",
+        VaultAlertConfigView.as_view(),
+        name="vault-alert-config",
     ),
 ]

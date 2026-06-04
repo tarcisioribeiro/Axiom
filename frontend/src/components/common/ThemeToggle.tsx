@@ -41,7 +41,12 @@ const DARK_VARIANTS: DarkVariantOption[] = [
   { id: 'tokyo-night', label: 'Tokyo Night', primary: '#7AA2F7', bg: '#1A1B26' },
   { id: 'gruvbox-dark', label: 'Gruvbox Dark', primary: '#FE8019', bg: '#282828' },
   { id: 'cyberpunk', label: 'Cyberpunk', primary: '#FF00FF', bg: '#0D0D1A' },
-  { id: 'flat-remix', label: 'Flat Remix', primary: '#5294E2', bg: '#383C4A' },
+  {
+    id: 'flat-remix-blue-darkest',
+    label: 'Flat Remix Blue Darkest',
+    primary: '#5294E2',
+    bg: '#1A1C23',
+  },
   { id: 'everforest', label: 'Everforest', primary: '#7FBBB3', bg: '#2D353B' },
 ];
 

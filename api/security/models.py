@@ -49,8 +49,21 @@ class Password(BaseModel):
     owner = models.ForeignKey(
         "members.Member", on_delete=models.PROTECT, related_name="passwords"
     )
+    totp_enabled = models.BooleanField(
+        default=False, verbose_name="TOTP Habilitado"
+    )
+    _totp_secret = models.TextField(
+        blank=True, null=True, verbose_name="Segredo TOTP (Criptografado)"
+    )
+    hibp_compromised = models.BooleanField(
+        null=True, blank=True, verbose_name="Comprometida (HIBP)"
+    )
+    hibp_last_checked = models.DateTimeField(
+        null=True, blank=True, verbose_name="Última verificação HIBP"
+    )
 
     password = VaultEncryptedField("_password")
+    totp_secret = VaultEncryptedField("_totp_secret")
 
     class Meta:
         verbose_name = "Senha"
@@ -384,11 +397,40 @@ class CredentialShareToken(models.Model):
     app key (snapshot). Assim o resgate não requer cofre desbloqueado.
     """
 
+    CREDENTIAL_TYPE_CHOICES = (
+        ("password", "Senha"),
+        ("stored_credit_card", "Cartão de Crédito"),
+        ("stored_bank_account", "Conta Bancária"),
+    )
+    credential_type = models.CharField(
+        max_length=30,
+        choices=CREDENTIAL_TYPE_CHOICES,
+        default="password",
+        verbose_name="Tipo de Credencial",
+    )
     password = models.ForeignKey(
         "Password",
         on_delete=models.CASCADE,
         related_name="share_tokens",
         verbose_name="Senha",
+        null=True,
+        blank=True,
+    )
+    stored_credit_card = models.ForeignKey(
+        "StoredCreditCard",
+        on_delete=models.CASCADE,
+        related_name="share_tokens",
+        verbose_name="Cartão Armazenado",
+        null=True,
+        blank=True,
+    )
+    stored_bank_account = models.ForeignKey(
+        "StoredBankAccount",
+        on_delete=models.CASCADE,
+        related_name="share_tokens",
+        verbose_name="Conta Bancária Armazenada",
+        null=True,
+        blank=True,
     )
     token = models.UUIDField(
         default=_uuid.uuid4,
@@ -396,9 +438,11 @@ class CredentialShareToken(models.Model):
         editable=False,
         verbose_name="Token",
     )
-    # Snapshot da senha re-criptografada com a app key (não a vault_key)
+    # Snapshot da credencial re-criptografado com a app key (não a vault_key).
+    # Para senhas: string simples (compat. legada) ou JSON.
+    # Para cartões/contas: JSON com todos os campos relevantes.
     _encrypted_password = models.TextField(
-        verbose_name="Senha (snapshot criptografado)"
+        verbose_name="Credencial (snapshot criptografado)"
     )
     expires_at = models.DateTimeField(verbose_name="Expira em")
     used_at = models.DateTimeField(
@@ -448,8 +492,22 @@ class CredentialShareToken(models.Model):
         verbose_name_plural = "Tokens de Compartilhamento"
         ordering = ["-created_at"]
 
+    @property
+    def credential_title(self):
+        if (
+            self.credential_type == "stored_credit_card"
+            and self.stored_credit_card
+        ):
+            return self.stored_credit_card.name
+        if (
+            self.credential_type == "stored_bank_account"
+            and self.stored_bank_account
+        ):
+            return self.stored_bank_account.name
+        return self.password.title if self.password else "—"
+
     def __str__(self):
-        return f"ShareToken({self.password.title} | exp={self.expires_at})"
+        return f"ShareToken({self.credential_title} | exp={self.expires_at})"
 
 
 ACTION_TYPES = (
@@ -633,3 +691,110 @@ class DeletionRecord(models.Model):
             f"{self.model_name} {self.record_uuid} "
             f"purged at {self.purged_at.strftime('%Y-%m-%dT%H:%M:%SZ')}"
         )
+
+
+# ============================================================================
+# PASSWORD HISTORY MODEL
+# ============================================================================
+
+
+class PasswordHistory(BaseModel):
+    """Histório de versões anteriores de uma senha."""
+
+    password = models.ForeignKey(
+        "Password",
+        on_delete=models.CASCADE,
+        related_name="history",
+        verbose_name="Senha",
+    )
+    _old_password = models.TextField(
+        verbose_name="Senha Anterior (Criptografada)"
+    )
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Alterado por",
+    )
+
+    old_password = VaultEncryptedField("_old_password")
+
+    class Meta:
+        verbose_name = "Histórico de Senha"
+        verbose_name_plural = "Histórico de Senhas"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Histórico de {self.password.title} — {self.created_at}"
+
+
+# ============================================================================
+# VAULT HEALTH SNAPSHOT MODEL
+# ============================================================================
+
+
+class VaultHealthSnapshot(BaseModel):
+    """Snapshot diário do score de saúde do cofre para histórico e evolução."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="health_snapshots",
+        verbose_name="Proprietário",
+    )
+    score = models.IntegerField(verbose_name="Score")
+    weak_passwords = models.IntegerField(default=0)
+    medium_passwords = models.IntegerField(default=0)
+    duplicate_passwords = models.IntegerField(default=0)
+    outdated_passwords = models.IntegerField(default=0)
+    total_passwords = models.IntegerField(default=0)
+    snapshot_date = models.DateField(
+        auto_now_add=True, verbose_name="Data do Snapshot"
+    )
+
+    class Meta:
+        verbose_name = "Snapshot de Saúde do Cofre"
+        verbose_name_plural = "Snapshots de Saúde do Cofre"
+        ordering = ["-snapshot_date"]
+        unique_together = ("owner", "snapshot_date")
+
+    def __str__(self):
+        return (
+            f"Snapshot {self.owner} — {self.snapshot_date} score={self.score}"
+        )
+
+
+# ============================================================================
+# VAULT ALERT CONFIG MODEL
+# ============================================================================
+
+
+class VaultAlertConfig(BaseModel):
+    """Configuração de alertas de atividade suspeita no cofre por usuário."""
+
+    owner = models.OneToOneField(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="vault_alert_config",
+        verbose_name="Proprietário",
+    )
+    alert_on_new_ip = models.BooleanField(
+        default=True, verbose_name="Alertar em novo IP"
+    )
+    alert_on_failed_unlock = models.BooleanField(
+        default=True, verbose_name="Alertar em falha de desbloqueio"
+    )
+    alert_on_reveal = models.BooleanField(
+        default=False, verbose_name="Alertar em revelação de senha"
+    )
+    failed_unlock_threshold = models.IntegerField(
+        default=3, verbose_name="Threshold de falhas de desbloqueio"
+    )
+
+    class Meta:
+        verbose_name = "Configuração de Alertas do Cofre"
+        verbose_name_plural = "Configurações de Alertas do Cofre"
+
+    def __str__(self):
+        return f"VaultAlertConfig({self.owner})"

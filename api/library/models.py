@@ -1010,6 +1010,18 @@ class Skill(BaseModel):
         related_name="skills",
         verbose_name="Proprietário",
     )
+    books = models.ManyToManyField(
+        "library.Book",
+        blank=True,
+        related_name="related_skills",
+        verbose_name="Livros relacionados",
+    )
+    courses = models.ManyToManyField(
+        "library.Course",
+        blank=True,
+        related_name="related_skills",
+        verbose_name="Cursos relacionados",
+    )
 
     class Meta:
         verbose_name = "Habilidade"
@@ -1030,6 +1042,66 @@ class Skill(BaseModel):
 # ============================================================================
 # KNOWLEDGE LINK MODEL
 # ============================================================================
+
+
+BADGE_CODE_CHOICES = (
+    ("first_book", "Primeiro Livro Lido"),
+    ("reader_5", "Leitor Dedicado (5 livros)"),
+    ("reader_10", "Maratonista (10 livros)"),
+    ("reader_25", "Devorador de Livros (25 livros)"),
+    ("first_course", "Primeiro Curso Concluído"),
+    ("learner_3", "Aprendiz Ativo (3 cursos)"),
+    ("learner_10", "Especialista (10 cursos)"),
+    ("streak_7", "Leitura Constante (7 dias)"),
+    ("streak_30", "Leitura Consistente (30 dias)"),
+    ("first_highlight", "Primeiro Destaque"),
+    ("annotator_10", "Anotador (10 destaques)"),
+    ("annotator_50", "Curador (50 destaques)"),
+    ("knowledge_builder", "Construtor de Conhecimento (10 nós no grafo)"),
+    ("knowledge_master", "Mestre do Conhecimento (50 nós no grafo)"),
+    ("first_skill", "Primeira Habilidade"),
+    ("skill_collector", "Colecionador de Habilidades (5 habilidades)"),
+)
+
+
+BADGE_LEVEL_CHOICES = (
+    ("bronze", "Bronze"),
+    ("silver", "Prata"),
+    ("gold", "Ouro"),
+)
+
+
+class IntellectBadge(BaseModel):
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="intellect_badges",
+        verbose_name="Proprietário",
+    )
+    code = models.CharField(
+        max_length=30,
+        choices=BADGE_CODE_CHOICES,
+        verbose_name="Código",
+    )
+    level = models.CharField(
+        max_length=10,
+        choices=BADGE_LEVEL_CHOICES,
+        default="bronze",
+        verbose_name="Nível",
+    )
+    awarded_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name="Concedido em",
+    )
+
+    class Meta:
+        verbose_name = "Conquista"
+        verbose_name_plural = "Conquistas"
+        ordering = ["-awarded_at"]
+        unique_together = ("owner", "code")
+
+    def __str__(self):
+        return f"{self.get_code_display()} — {self.owner}"
 
 
 class KnowledgeLink(BaseModel):
@@ -1082,4 +1154,187 @@ class KnowledgeLink(BaseModel):
         return (
             f"{self.source_type}:{self.source_id}"
             f" → {self.target_type}:{self.target_id}"
+        )
+
+
+# ============================================================================
+# SKILL HISTORY MODEL
+# ============================================================================
+
+PROFICIENCY_ORDER = {
+    "beginner": 1,
+    "basic": 2,
+    "intermediate": 3,
+    "advanced": 4,
+    "expert": 5,
+}
+
+
+class SkillHistory(BaseModel):
+    """Histórico de evolução de proficiência de uma habilidade."""
+
+    skill = models.ForeignKey(
+        Skill,
+        on_delete=models.CASCADE,
+        related_name="history",
+        verbose_name="Habilidade",
+    )
+    proficiency = models.CharField(
+        max_length=20,
+        choices=SKILL_PROFICIENCY_CHOICES,
+        verbose_name="Proficiência",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=SKILL_STATUS_CHOICES,
+        verbose_name="Status",
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="skill_history",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Histórico de Habilidade"
+        verbose_name_plural = "Histórico de Habilidades"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.skill.name} → {self.proficiency}"
+            f" ({self.created_at.date()})"
+        )
+
+
+# ============================================================================
+# FLASHCARD MODEL (Spaced Repetition - SM-2)
+# ============================================================================
+
+FLASHCARD_STATUS_CHOICES = (
+    ("new", "Novo"),
+    ("learning", "Aprendendo"),
+    ("review", "Revisão"),
+    ("mastered", "Dominado"),
+)
+
+FLASHCARD_RATING_CHOICES = (
+    (0, "Não lembrei (resetar)"),
+    (1, "Difícil (reaprender)"),
+    (2, "Com esforço (reduzir intervalo)"),
+    (3, "Bom (manter)"),
+    (4, "Fácil (aumentar intervalo)"),
+    (5, "Muito fácil (boost)"),
+)
+
+
+class FlashCard(BaseModel):
+    """Flash card para revisão espaçada (SM-2 algorithm)."""
+
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="flashcards",
+        verbose_name="Livro",
+    )
+    highlight = models.ForeignKey(
+        BookHighlight,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="flashcards",
+        verbose_name="Destaque de origem",
+    )
+    front = models.TextField(verbose_name="Frente (pergunta)")
+    back = models.TextField(verbose_name="Verso (resposta)")
+    status = models.CharField(
+        max_length=10,
+        choices=FLASHCARD_STATUS_CHOICES,
+        default="new",
+        verbose_name="Status",
+    )
+    # SM-2 fields
+    ease_factor = models.FloatField(
+        default=2.5,
+        verbose_name="Fator de facilidade (SM-2)",
+    )
+    interval_days = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Intervalo (dias)",
+    )
+    repetitions = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Repetições bem-sucedidas",
+    )
+    next_review = models.DateField(
+        default=timezone.now,
+        verbose_name="Próxima revisão",
+    )
+    last_reviewed = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Última revisão",
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="flashcards",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Flash Card"
+        verbose_name_plural = "Flash Cards"
+        ordering = ["next_review", "created_at"]
+
+    def __str__(self):
+        return f"{self.front[:50]}..."
+
+    def apply_review(self, rating: int) -> None:
+        """Apply SM-2 algorithm result. rating: 0-5."""
+        from datetime import date, timedelta
+
+        from django.utils import timezone as tz
+
+        now = tz.now()
+        self.last_reviewed = now
+
+        if rating < 3:
+            self.repetitions = 0
+            self.interval_days = 1
+            self.status = "learning"
+        else:
+            if self.repetitions == 0:
+                self.interval_days = 1
+            elif self.repetitions == 1:
+                self.interval_days = 6
+            else:
+                self.interval_days = round(
+                    self.interval_days * self.ease_factor
+                )
+
+            self.ease_factor = max(
+                1.3,
+                self.ease_factor
+                + 0.1
+                - (5 - rating) * (0.08 + (5 - rating) * 0.02),
+            )
+            self.repetitions += 1
+            self.status = "mastered" if self.repetitions >= 5 else "review"
+
+        self.next_review = date.today() + timedelta(days=self.interval_days)
+        self.save(
+            update_fields=[
+                "ease_factor",
+                "interval_days",
+                "repetitions",
+                "next_review",
+                "last_reviewed",
+                "status",
+                "updated_at",
+            ]
         )

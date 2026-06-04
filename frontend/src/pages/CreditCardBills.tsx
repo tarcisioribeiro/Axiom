@@ -9,6 +9,7 @@ import {
   RotateCcw,
   AlertTriangle,
   CheckCircle2,
+  CircleDot,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -450,7 +451,10 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger
+              className="w-36"
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
               <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
             </SelectTrigger>
             <SelectContent>

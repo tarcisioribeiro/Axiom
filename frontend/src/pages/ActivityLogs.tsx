@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
