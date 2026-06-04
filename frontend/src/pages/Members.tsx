@@ -197,7 +197,7 @@ export default function Members() {
 
       <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput
-          placeholder="Buscar por nome, CPF ou telefone…"
+          placeholder={t('pages.members.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="w-52 sm:w-64"

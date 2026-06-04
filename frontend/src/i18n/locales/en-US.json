@@ -22,6 +22,7 @@
       "download": "Download",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
+      "remove": "Remove",
       "filters": {
         "fromDate": "From: DD/MM/YYYY",
         "toDate": "To: DD/MM/YYYY"
@@ -173,7 +174,14 @@
         "configuration": "Configuration"
       }
     },
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "mood": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "neutral": "Neutral",
+      "bad": "Bad",
+      "terrible": "Terrible"
+    }
   },
   "nav": {
     "home": "Home",
@@ -245,6 +253,9 @@
       "courses": "Courses",
       "skills": "Skills",
       "knowledgeGraph": "Knowledge Graph",
+      "financialCalendar": "Financial Calendar",
+      "netWorth": "Net Worth",
+      "subscriptions": "Subscriptions",
       "reflections": "Daily Reflections",
       "tags": "Tags"
     },
@@ -472,6 +483,12 @@
           "Skills Map"
         ]
       },
+      "knowledgeGraph": {
+        "title": "Knowledge Graph",
+        "nodes": "nodes",
+        "links": "connections",
+        "desc": "View full graph"
+      },
       "quickActionsTitle": "Quick Actions",
       "modulesTitle": "Available Modules",
       "modules": {
@@ -620,6 +637,8 @@
         "merchantLabel": "Merchant",
         "merchantPlaceholder": "Ex: Supermarket",
         "merchantHint": "Fill in for automatic categorization",
+        "aiSuggesting": "Asking AI to suggest a category...",
+        "aiSuggested": "AI suggested",
         "categoryLabel": "Category *",
         "paymentStatusLabel": "Payment Status *",
         "pending": "Pending",
@@ -988,7 +1007,8 @@
         "income": "Income:"
       },
       "noRole": "No role defined",
-      "emptySearch": "No members found."
+      "emptySearch": "No members found.",
+      "searchPlaceholder": "Search by name, CPF or phone..."
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",
@@ -1998,6 +2018,7 @@
         "errorDesc": "Could not generate the IR report."
       },
       "monthComposition": "Month overview",
+      "monthCompositionShort": "This month",
       "monthOverMonth": "Month over month",
       "vsPrevMonth": "vs prev. month:",
       "installmentSimulator": "Installment Simulator"
@@ -2062,7 +2083,36 @@
       "exportVaultDesc": "Download passwords, cards and accounts as a ZIP file",
       "exportVaultSuccess": "Export started",
       "exportVaultSuccessDesc": "The ZIP file download has started.",
-      "exportVaultError": "Error exporting vault"
+      "exportVaultError": "Error exporting vault",
+      "vaultSearch": {
+        "placeholder": "Search vault (passwords, cards, accounts, files)...",
+        "title": "Global Vault Search",
+        "noResults": "No results found",
+        "noResultsDesc": "Try a different search term.",
+        "groupPasswords": "Passwords",
+        "groupCards": "Cards",
+        "groupAccounts": "Accounts",
+        "groupArchives": "Archives"
+      },
+      "vaultHub": {
+        "overview": "Vault Overview",
+        "anomalyTitle": "Suspicious Activity Detected",
+        "anomalyDesc": "Unusual activities detected. Review your activity log.",
+        "viewAnomalies": "View activities",
+        "quickStats": "Summary",
+        "vaultHealth": "Vault Health",
+        "securityScore": "Security Score",
+        "recentActivity": "Recent Activity",
+        "quickActions": "Quick Actions"
+      },
+      "alertConfig": "Alert Settings",
+      "alertConfigSaved": "Settings saved",
+      "alertOnNewIp": "Alert on new IP",
+      "alertOnNewIpDesc": "Notify when the vault is accessed from a new IP address.",
+      "alertOnFailedUnlock": "Alert on failed unlock attempts",
+      "alertOnFailedUnlockDesc": "Notify after multiple incorrect unlock attempts.",
+      "alertOnReveal": "Alert on password reveal",
+      "alertOnRevealDesc": "Notify each time a password is revealed."
     },
     "passwords": {
       "title": "Passwords",
@@ -2102,6 +2152,13 @@
         "gaming": "Gaming",
         "other": "Other"
       },
+      "hibp": {
+        "check": "Check for Breaches",
+        "safe": "Password Safe",
+        "breached": "Exposed {{count}}x",
+        "errorTitle": "Check failed",
+        "errorDesc": "Could not check password. Please try again."
+      },
       "keepCurrentPassword": "Leave blank to keep current",
       "copyWithoutReveal": "Copy without revealing",
       "copied": "Copied!",
@@ -2117,7 +2174,10 @@
         "fair": "Fair",
         "good": "Good",
         "strong": "Strong"
-      }
+      },
+      "autoClassify": "Auto-classify",
+      "classifySuccess": "Category classified: {{category}}",
+      "classifyError": "Failed to classify category"
     },
     "sharePassword": {
       "title": "Share Credential",
@@ -2144,7 +2204,31 @@
       "revoked": "Link revoked",
       "revokedDesc": "The sharing link has been revoked.",
       "revokeError": "Error revoking link",
-      "loadError": "Error loading links"
+      "loadError": "Error loading links",
+      "step1Title": "Recipient",
+      "step2Title": "Configuration",
+      "step3Title": "Confirmation",
+      "step1Desc": "Select who you want to share with",
+      "step2Desc": "Configure sharing options",
+      "step3Desc": "Confirm and generate the link",
+      "searchMembers": "Search members...",
+      "noMembers": "No members found.",
+      "loadMembersError": "Error loading members",
+      "selectMemberFirst": "Select a recipient before continuing.",
+      "expiresIn1h": "1 hour",
+      "expiresIn6h": "6 hours",
+      "expiresIn24h": "24 hours",
+      "expiresIn7d": "7 days",
+      "expiryLabel": "Link expiry",
+      "previewLabel": "Preview",
+      "confirmTitle": "Sharing Summary",
+      "confirmRecipient": "Recipient",
+      "confirmExpiry": "Expiry",
+      "confirmMaxUses": "Max uses",
+      "confirmPassword": "Credential",
+      "nextBtn": "Next",
+      "backBtn": "Back",
+      "confirmBtn": "Generate Link"
     },
     "shareCredential": {
       "title": "Shared Credential",
@@ -2201,7 +2285,12 @@
       "importAnother": "Import another file",
       "noMemberMsg": "Could not identify the current user's member.",
       "selectedCount": "{{count}} selected",
-      "selectedCount_other": "{{count}} selected"
+      "selectedCount_other": "{{count}} selected",
+      "categoryMappingStep": "Category Mapping",
+      "categoryMappingDesc": "Adjust automatically detected categories",
+      "suggestedCategory": "Suggested",
+      "finalCategory": "Final Category",
+      "skipMapping": "Keep suggested categories"
     },
     "storedCards": {
       "title": "Stored Cards",
@@ -2413,6 +2502,16 @@
     },
     "libraryDashboard": {
       "title": "Intellect Dashboard",
+      "monthAnalysis": {
+        "title": "Month Analysis",
+        "totalPages": "Total pages read",
+        "pagesUnit": "pages this month",
+        "dailyAverage": "Daily average",
+        "pagesPerDay": "pages per day",
+        "bestDay": "Best weekday",
+        "pagesOnBestDay_one": "{{count}} page on this day",
+        "pagesOnBestDay_other": "{{count}} pages on this day"
+      },
       "overview": "Overview",
       "books": "Works",
       "authors": "Authors",
@@ -2587,6 +2686,9 @@
       "courseStatusInProgress": "In progress",
       "courseStatusPaused": "Paused",
       "courseStatusNotStarted": "Not started",
+      "badges": {
+        "title": "Achievements"
+      },
       "streakDays": "days in a row",
       "bestStreak": "best",
       "studyTimer": "Study timer",
@@ -2640,6 +2742,16 @@
       "priorityHigh": "High",
       "priorityMedium": "Medium",
       "priorityLow": "Low",
+      "askIntellect": "Ask Intellect",
+      "quickCapture": {
+        "title": "Log Progress",
+        "desc": "Quickly log today's pages read",
+        "selectBook": "Book in progress",
+        "selectBookPlaceholder": "Select a book",
+        "pagesRead": "Pages read",
+        "pagesPlaceholder": "e.g. 30",
+        "saved": "Progress logged successfully"
+      },
       "form": {
         "coverLabel": "Book Cover",
         "coverAlt": "Cover",
@@ -2784,7 +2896,9 @@
         "reading": "Reading",
         "read": "Read",
         "paused": "Paused"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Chat with the agent about this book"
     },
     "authors": {
       "title": "Authors",
@@ -3051,6 +3165,12 @@
       "updated": "Course updated",
       "saved": "Course saved",
       "deleteConfirm": "Delete course \"{{title}}\"? This action cannot be undone.",
+      "askIntellect": "Ask Intellect",
+      "studyHours": {
+        "title": "Study Hours this week",
+        "subtitle": "Sessions logged Monday through Sunday",
+        "hours": "hours"
+      },
       "tabs": {
         "overview": "Overview",
         "modules": "Modules",
@@ -3226,6 +3346,33 @@
       "radarChart": {
         "title": "Skills Radar",
         "emptyState": "Add skills to visualize the radar"
+      },
+      "history": {
+        "title": "Proficiency History",
+        "noHistory": "No history available",
+        "timeline": "Evolution timeline",
+        "viewHistory": "View history"
+      }
+    },
+    "planningOnboarding": {
+      "skip": "Skip",
+      "next": "Next",
+      "start": "Get started",
+      "step0": {
+        "title": "Welcome to Personal Planning",
+        "desc": "Organize your daily routine, health goals, and reflections all in one place."
+      },
+      "step1": {
+        "title": "Daily Checklist",
+        "desc": "Create routine tasks and track completion day by day with a visual kanban board."
+      },
+      "step2": {
+        "title": "Goals & Objectives",
+        "desc": "Define measurable goals, track progress, and stay focused on what matters."
+      },
+      "step3": {
+        "title": "Workout & Nutrition",
+        "desc": "Log workout sessions and meals to have a complete view of your health."
       }
     },
     "planningOnboarding": {
@@ -3341,7 +3488,23 @@
       "workoutsByDayTitle": "Workouts by day of week — last 30 days",
       "noWorkoutsRegistered": "No workouts registered",
       "sessionCount_one": "{{count}} session",
-      "sessionCount_other": "{{count}} sessions"
+      "sessionCount_other": "{{count}} sessions",
+      "weeklyXP": "Weekly Progress — XP",
+      "xpLabel": "XP this week",
+      "xpProgress": "Level {{level}}",
+      "insightCTAWorstDay": "Adjust routine",
+      "insightCTAWorkout": "Log workout",
+      "insightCTAGoals": "See goals",
+      "moduleCards": {
+        "workoutTitle": "Workout",
+        "workoutSubtitle": "Sessions and exercises",
+        "nutritionTitle": "Nutrition",
+        "nutritionSubtitle": "Meals and macros",
+        "tasksTitle": "Tasks",
+        "tasksSubtitle": "Checklist and routine",
+        "goalsTitle": "Goals",
+        "goalsSubtitle": "Personal objectives"
+      }
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -3359,7 +3522,7 @@
       "deleted": "Task deleted",
       "deletedDesc": "The task was deleted successfully.",
       "emptyState": "No tasks found",
-      "emptyStateDesc": "Start by creating your first routine task.",
+      "emptyStateDesc": "Routine tasks build consistency. Create your first routine and track your daily progress with consistency charts.",
       "viewHeatmap": "View heatmap",
       "viewConsistency": "View consistency",
       "heatmapTitle": "Consistency",
@@ -3393,6 +3556,13 @@
         "alreadyImported": "Nothing to import",
         "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list.",
         "saveAsTemplate": "Save as Template",
+        "saveAsTemplateTitle": "Save as Template",
+        "saveAsTemplateDesc": "Give this template a name so you can reuse it in the future.",
+        "templateNameLabel": "Template Name",
+        "templateNamePlaceholder": "e.g. Morning Routine",
+        "saveBtn": "Save Template",
+        "saveSuccess": "Template saved!",
+        "saveSuccessDesc": "The template \"{{name}}\" was saved successfully.",
         "saved": "Template saved locally"
       },
       "export": {
@@ -3492,7 +3662,16 @@
         "sectionIdentification": "Identification",
         "sectionPeriodicity": "Periodicity",
         "sectionGoalUnit": "Goal & Unit",
-        "sectionBehavior": "Behavior"
+        "sectionBehavior": "Behavior",
+        "periodicityTooltip": "Defines how often the task appears in your daily checklist. Use 'Custom' to pick specific days of the week.",
+        "targetQuantityTooltip": "The quantity you need to complete to count the task as done. E.g.: 30 minutes of reading, 8 glasses of water.",
+        "frequencyPreview": {
+          "daily": "Every day",
+          "weekdays": "Monday to Friday",
+          "weekly": "Every {{day}}",
+          "monthly": "Every {{day}}th of the month",
+          "custom": "Custom days"
+        }
       }
     },
     "goals": {
@@ -3513,7 +3692,8 @@
       "recalculated": "Progress recalculated",
       "recalculateError": "Error recalculating",
       "emptyState": "No goals found",
-      "emptyStateDesc": "Start by creating your first goal.",
+      "emptyStateDesc": "Set clear goals to track your progress and stay focused on what matters.",
+      "emptyStateAction": "Create first goal",
       "recalculateBtn": "Recalculate progress",
       "columns": {
         "title": "Title",
@@ -3759,6 +3939,19 @@
         "household": "Household",
         "personal_care": "Personal Care",
         "other": "Other"
+      },
+      "pomodoroTitle": "Focus Mode",
+      "pomodoroStart": "Start",
+      "pomodoroPause": "Pause",
+      "pomodoroReset": "Reset",
+      "pomodoroFocusDone": "Focus session complete! Take a break.",
+      "pomodoroBreakDone": "Break over! Time to focus.",
+      "pomodoroCycles_one": "{{count}} cycle completed",
+      "pomodoroCycles_other": "{{count}} cycles completed",
+      "pomodoroMode": {
+        "focus": "Focus",
+        "shortBreak": "Short Break",
+        "longBreak": "Long Break"
       }
     },
     "categorizationRules": {
@@ -3814,6 +4007,11 @@
       "lastImport": "Last Import",
       "emptyTitle": "No statements imported",
       "emptyMessage": "Click 'Import Statement' to get started.",
+      "flowTitle": "How bank reconciliation works:",
+      "flowStep1": "Import Statement",
+      "flowStep2": "Review Transactions",
+      "flowStep3": "Confirm Reconciliation",
+      "emptyGuide": "Start by importing a bank statement in OFX or CSV format. Then review the identified transactions and confirm the reconciliation.",
       "columns": {
         "file": "File",
         "format": "Format",
@@ -3884,7 +4082,8 @@
         "statusMatched": "Matched",
         "statusUnmatched": "Divergent",
         "statusIgnored": "Ignored"
-      }
+      },
+      "importWithPreview": "Import with Preview"
     },
     "agents": {
       "title": "AI Agents",
@@ -4586,7 +4785,8 @@
       "planDeleted": "Plan deleted",
       "planDeletedDesc": "The workout plan was deleted successfully.",
       "emptyPlans": "No plans registered",
-      "emptyPlansDesc": "Create your first workout plan to organize your splits.",
+      "emptyPlansDesc": "Create your first workout plan to organize your splits and track your progress.",
+      "emptyPlansAction": "Create workout plan",
       "planName": "Plan Name",
       "planNamePlaceholder": "e.g. My ABC Plan",
       "planDescription": "Description",
@@ -4688,6 +4888,7 @@
       "saveError": "Error saving exercise",
       "empty": "No exercises registered",
       "emptyDesc": "Add exercises to use in your workout plans.",
+      "emptyAction": "Add exercise",
       "fieldName": "Name",
       "fieldNamePlaceholder": "e.g. Bench Press",
       "fieldMuscles": "Muscle Groups",
@@ -4711,7 +4912,20 @@
       "sessionDeleted": "Session deleted",
       "sessionDeletedDesc": "The session was deleted successfully.",
       "emptySessions": "No sessions logged",
-      "emptySessionsDesc": "Log your first workout session.",
+      "emptySessionsDesc": "Log your workouts to track your frequency and progress over time.",
+      "emptyAction": "Log first workout",
+      "quickLogBtn": "Quick Log Workout",
+      "quickLogTitle": "Quick Log Workout",
+      "quickLogDesc": "Log a workout in 2 steps without filling in all details.",
+      "quickLogStep1": "Select Plan",
+      "quickLogStep2": "Confirm Duration",
+      "quickLogPlanLabel": "Workout plan",
+      "quickLogNoPlan": "No plan (ad-hoc session)",
+      "quickLogDuration": "Workout duration",
+      "quickLogMin": "min",
+      "quickLogNext": "Next",
+      "quickLogConfirm": "Log Workout",
+      "quickLogSuccess": "Workout logged!",
       "date": "Date",
       "startTime": "Start",
       "endTime": "End",
@@ -4945,7 +5159,124 @@
         "explicit": "Explicit connection",
         "implicit": "Implicit connection"
       },
-      "exportPNG": "Export as PNG"
+      "exportPNG": "Export as PNG",
+      "suggestLinks": "Suggest Connections",
+      "suggestionsPanel": "Suggested Connections",
+      "noSuggestions": "No suggestions found. Add more content to the graph.",
+      "similarity": "Similarity",
+      "addLink": "Add connection",
+      "loadingSuggestions": "Loading suggestions..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Spaced repetition of highlights",
+      "newCard": "New Card",
+      "reviewNow": "Review now",
+      "dueToday": "Due today",
+      "generateFromBook": "Generate from Highlights",
+      "flipCard": "Flip card",
+      "nextReview": "Next review",
+      "generatedSuccess": "{{count}} card(s) generated successfully",
+      "noneToGenerate": "All highlights already have flashcards",
+      "status": {
+        "new": "New",
+        "learning": "Learning",
+        "review": "Review",
+        "mastered": "Mastered"
+      },
+      "rating": {
+        "label": "How did you do?",
+        "0": "Forgot",
+        "1": "Hard",
+        "2": "With effort",
+        "3": "Good",
+        "4": "Easy",
+        "5": "Very easy"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Due",
+        "mastered": "Mastered",
+        "new": "New"
+      },
+      "empty": {
+        "title": "No flash cards",
+        "description": "Create cards from your book highlights to review with spaced repetition."
+      },
+      "emptyReview": {
+        "title": "All caught up!",
+        "description": "You have no pending reviews. Come back later."
+      },
+      "front": "Front (question)",
+      "back": "Back (answer)",
+      "selectBook": "Select book (optional)"
+    },
+    "intellectToday": {
+      "title": "Intellect Today",
+      "subtitle": "Your daily learning hub",
+      "continueReading": "Continue Reading",
+      "startReading": "Start reading",
+      "startCourse": "Start a course",
+      "logReading": "Log reading",
+      "reviewCards": "Review cards",
+      "quickActions": "Quick Actions",
+      "activeBook": "Currently reading",
+      "activeCourse": "Active course",
+      "noActiveBook": "No book currently reading",
+      "noCourse": "No active course",
+      "dueFlashcards": "Cards to review",
+      "streak": "Learning streak",
+      "days": "{{count}} day(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pgs.",
+      "todayStudy": "Today's study",
+      "weekProgress": "Weekly progress",
+      "badges": "Recent achievements",
+      "viewAll": "View all",
+      "noStreak": "Start your streak today!"
+    },
+    "tags": {
+      "title": "Tags",
+      "newBtn": "New Tag",
+      "editTitle": "Edit Tag",
+      "newTitle": "New Tag",
+      "editDesc": "Update the tag information",
+      "newDesc": "Create a new tag to categorize transactions",
+      "deleteTitle": "Delete tag",
+      "deleteDesc": "Are you sure you want to delete this tag?",
+      "created": "Tag created",
+      "createdDesc": "The tag was created successfully.",
+      "updated": "Tag updated",
+      "updatedDesc": "The tag was updated successfully.",
+      "deleted": "Tag deleted",
+      "deletedDesc": "The tag was deleted successfully.",
+      "emptyState": "No tags created yet.",
+      "name": "Name",
+      "color": "Color"
+    },
+    "workoutHub": {
+      "title": "Workout",
+      "subtitle": "Sessions and progress",
+      "todayPlan": "Today's plan",
+      "quickLog": "Log Session",
+      "recentSessions": "Recent Sessions",
+      "startSession": "Start Session",
+      "noActivePlan": "No active workout plan",
+      "createPlan": "Create Plan",
+      "managePlans": "Manage Plans",
+      "manageExercises": "Exercises",
+      "viewHistory": "History"
+    },
+    "nutritionHub": {
+      "title": "Nutrition",
+      "subtitle": "Today's meals and macros",
+      "todayMeals": "Today's meals",
+      "quickLog": "Log Meal",
+      "mealHistory": "History",
+      "manageFoods": "Foods",
+      "manageMeals": "Meals",
+      "noMealsToday": "No meals logged today",
+      "addMeal": "Add Meal"
     }
   },
   "userProfile": {
@@ -5241,6 +5572,84 @@
     "capsule": "capsule",
     "mcg": "mcg",
     "ui": "IU"
+  },
+  "financialCalendar": {
+    "title": "Financial Calendar",
+    "subtitle": "Unified temporal view of all due dates",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "summaryDue": "{{count}} due date(s) this month",
+    "noEvents": "No due dates on this day",
+    "eventTypes": {
+      "payable": "Payable",
+      "receivable": "Receivable",
+      "creditCard": "Credit Card Bill",
+      "loan": "Loan Installment",
+      "revenue": "Pending Revenue"
+    },
+    "dayDetail": "Due dates on {{date}}",
+    "loading": "Loading calendar..."
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Set Up Security Vault",
+    "step1Title": "Your personal security vault",
+    "step1Desc": "The Vault protects your passwords, credit cards, bank accounts and confidential files with military-grade encryption.",
+    "step1Warning": "⚠️ Important notice",
+    "step1WarningDesc": "Your master password cannot be recovered. Store it in a safe place. If lost, vault data is unrecoverable.",
+    "step2Title": "Set Up Your Master Password",
+    "step2Desc": "The master password is the key that protects your entire vault. Use a strong, unique password you don't use anywhere else.",
+    "step2TipsTitle": "Tips for a strong password:",
+    "step2Tip1": "At least 12 characters",
+    "step2Tip2": "Mix letters, numbers and symbols",
+    "step2Tip3": "Avoid dictionary words",
+    "step2Tip4": "Do not reuse passwords from other services",
+    "step2ConfigureBtn": "Set up master password now",
+    "step3Title": "Vault set up! What's next?",
+    "step3Desc": "Start adding your credentials to keep them safe.",
+    "step3AddPassword": "Add first password",
+    "step3ImportPasswords": "Import passwords from another app",
+    "step3HealthReport": "View health report",
+    "step3StoreArchive": "Store a confidential file",
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Finish"
+  },
+  "netWorth": {
+    "title": "Net Worth",
+    "subtitle": "Assets minus liabilities — your real wealth",
+    "netWorthLabel": "Net Worth",
+    "assetsLabel": "Assets",
+    "liabilitiesLabel": "Liabilities",
+    "assetsSection": "Asset Breakdown",
+    "liabilitiesSection": "Liability Breakdown",
+    "bankAccounts": "Bank Accounts",
+    "vaults": "Vaults / Investments",
+    "loans": "Loans (payable)",
+    "lentLoans": "Loans (receivable)",
+    "creditCards": "Credit Cards",
+    "overdraft": "Overdraft Used",
+    "noAssets": "No assets found",
+    "noLiabilities": "No liabilities found",
+    "loading": "Calculating net worth..."
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "subtitle": "Monthly recurring expense tracker",
+    "monthlyTotal": "Monthly Total",
+    "activeCount": "{{count}} active subscription(s)",
+    "dueSoon": "Due soon",
+    "dueSoonDesc": "Renewal in the next 7 days",
+    "noSubscriptions": "No subscriptions found",
+    "noSubscriptionsDesc": "Subscriptions are fixed expenses with digital signs, entertainment, or bills & services categories, or linked to a credit card.",
+    "groups": {
+      "digital_signs": "Digital Subscriptions",
+      "entertainment": "Entertainment",
+      "bills_and_services": "Bills & Services",
+      "other": "Other"
+    },
+    "renewalOn": "Renews on day {{day}}",
+    "loading": "Loading subscriptions..."
   },
   "components": {
     "installmentSimulator": {

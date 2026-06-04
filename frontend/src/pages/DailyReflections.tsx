@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -229,6 +230,13 @@ export default function DailyReflections() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
+  const hasActiveFilters = moodFilter !== 'all' || !!startDate || !!endDate;
+  const clearFilters = () => {
+    setMoodFilter('all');
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
   useEffect(() => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -364,45 +372,50 @@ export default function DailyReflections() {
       )}
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-md">
-        <div className="w-48">
-          <Select value={moodFilter} onValueChange={setMoodFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {t('pages.dailyReflections.filters.allMoods')}
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <Select value={moodFilter} onValueChange={setMoodFilter}>
+          <SelectTrigger
+            className="w-44"
+            startIcon={<SmilePlus className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.dailyReflections.filters.allMoods')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.dailyReflections.filters.allMoods')}
+            </SelectItem>
+            {MOOD_CHOICES.map((choice) => (
+              <SelectItem
+                key={choice.value}
+                value={choice.value}
+                icon={getMoodIcon(choice.value)}
+              >
+                {t(`common.mood.${choice.value}`)}
               </SelectItem>
-              {MOOD_CHOICES.map((choice) => (
-                <SelectItem key={choice.value} value={choice.value}>
-                  {choice.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="mb-xs block text-sm text-muted-foreground">
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-xs">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
             {t('pages.dailyReflections.filters.startDate')}
-          </label>
+          </span>
           <DatePicker
             value={startDate ? formatLocalDate(startDate) : ''}
             onChange={setStartDate}
             placeholder={t('pages.dailyReflections.filters.startDate')}
+            clearable
           />
-        </div>
-        <div>
-          <label className="mb-xs block text-sm text-muted-foreground">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
             {t('pages.dailyReflections.filters.endDate')}
-          </label>
+          </span>
           <DatePicker
             value={endDate ? formatLocalDate(endDate) : ''}
             onChange={setEndDate}
             placeholder={t('pages.dailyReflections.filters.endDate')}
+            clearable
           />
         </div>
-      </div>
+      </FilterBar>
 
       {/* Entradas no estilo diário */}
       {filtered.length === 0 ? (

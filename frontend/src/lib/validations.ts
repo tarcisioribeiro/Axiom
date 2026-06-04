@@ -430,6 +430,8 @@ export const passwordSchema = z.object({
     .number({ message: 'Proprietário inválido' })
     .int('Proprietário deve ser um número inteiro')
     .positive('Selecione um proprietário'),
+  totp_enabled: z.boolean().optional(),
+  totp_secret: z.string().max(255).optional().or(z.literal('')),
 });
 
 export const storedCardSchema = z.object({

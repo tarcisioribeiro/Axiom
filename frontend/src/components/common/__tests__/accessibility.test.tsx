@@ -41,6 +41,7 @@ vi.mock('@/lib/animations', () => ({
 
 import { render } from '@testing-library/react';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -74,10 +75,12 @@ describe('Accessibility (axe)', () => {
 
   it('PageHeader with action — no violations', async () => {
     const { container } = render(
-      <PageHeader
-        title="Despesas"
-        action={{ label: 'Nova Despesa', onClick: vi.fn() }}
-      />
+      <MemoryRouter>
+        <PageHeader
+          title="Despesas"
+          action={{ label: 'Nova Despesa', onClick: vi.fn() }}
+        />
+      </MemoryRouter>
     );
     expect(await axe(container)).toHaveNoViolations();
   });

@@ -50,7 +50,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
       {chips.length > 0 && (
-        <div className="flex flex-wrap gap-xs px-1">
+        <div className="flex flex-wrap gap-xs px-xs">
           {chips.map((chip) => (
             <span
               key={chip.key}

@@ -57,8 +57,29 @@ import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { coursesService } from '@/services/courses-service';
+import type { IntellectBadge } from '@/services/intellect-badges-service';
+import { intellectBadgesService } from '@/services/intellect-badges-service';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
 import { skillsService } from '@/services/skills-service';
+
+const BADGE_LEVEL_COLORS: Record<string, string> = {
+  bronze:
+    'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300',
+  silver:
+    'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
+  gold: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300',
+};
+
+function BadgeChip({ badge }: { badge: IntellectBadge }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-xs rounded-full border px-sm py-xs text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
+    >
+      <Award className="h-3 w-3 shrink-0" />
+      {badge.code_display}
+    </span>
+  );
+}
 
 export default function LibraryDashboard() {
   const { t } = useTranslation();
@@ -67,6 +88,12 @@ export default function LibraryDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['libraryDashboard'],
     queryFn: () => libraryDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: badges = [] } = useQuery({
+    queryKey: ['intellectBadges'],
+    queryFn: () => intellectBadgesService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -676,17 +703,527 @@ export default function LibraryDashboard() {
         />
       </div>
 
-      {/* Courses Section */}
-      <CollapsibleSection
-        title={t('pages.libraryDashboard.coursesTitle')}
-        icon={<GraduationCap className="h-4 w-4" />}
-        open={sections.courses}
-        onToggle={() => toggle('courses')}
-      >
-        <div className="flex flex-col gap-md">
-          {/* Intelecto: Cursos — métricas principais */}
-          <Card>
-            <CardHeader className="pb-sm">
+      {/* Análise do Mês */}
+      {stats?.monthly_comparison && (
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              {t('pages.libraryDashboard.monthAnalysis.title')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.totalPages')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {stats.monthly_comparison.current_month.pages_read}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.libraryDashboard.monthAnalysis.pagesUnit')}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <CalendarClock className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.dailyAverage')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {(
+                    stats.monthly_comparison.current_month.pages_read /
+                    new Date().getDate()
+                  ).toFixed(1)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.libraryDashboard.monthAnalysis.pagesPerDay')}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.bestDay')}
+                  </span>
+                </div>
+                <span className="text-lg font-bold">
+                  {stats.most_productive_day?.weekday_display ?? '—'}
+                </span>
+                {stats.most_productive_day && (
+                  <span className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.monthAnalysis.pagesOnBestDay', {
+                      count: stats.most_productive_day.total_pages,
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Intelecto: Cursos — métricas principais */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <div className="flex items-center gap-sm">
+            <GraduationCap className="h-4 w-4 text-category-intellect" />
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.coursesTitle')}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-md sm:grid-cols-6">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <BookOpen className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.totalCourses')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">{courseStats.total}</span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Play className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesInProgress')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-info">
+                {courseStats.inProgress}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesCompleted')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-success">
+                {courseStats.completed}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesInvestedHours')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {courseStats.investedHours.toFixed(0)}h
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.completionRate')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-category-intellect">
+                {courseStats.completionRate.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.avgProgress')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {courseStats.avgProgress.toFixed(0)}%
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.inProgressSubtitle')}
+              </span>
+            </div>
+          </div>
+
+          {/* Barra de progresso visual por status */}
+          {courseStats.total > 0 && (
+            <div className="mt-md space-y-sm border-t pt-md">
+              {[
+                {
+                  label: t('pages.libraryDashboard.courseStatusCompleted'),
+                  count: courseStats.completed,
+                  colorClass: 'bg-success',
+                },
+                {
+                  label: t('pages.libraryDashboard.courseStatusInProgress'),
+                  count: courseStats.inProgress,
+                  colorClass: 'bg-info',
+                },
+                {
+                  label: t('pages.libraryDashboard.courseStatusPaused'),
+                  count: courseStats.paused,
+                  colorClass: 'bg-warning',
+                },
+                {
+                  label: t('pages.libraryDashboard.courseStatusNotStarted'),
+                  count: courseStats.notStarted,
+                  colorClass: 'bg-muted-foreground/40',
+                },
+              ]
+                .filter((s) => s.count > 0)
+                .map((s) => {
+                  const pct = (s.count / courseStats.total) * 100;
+                  return (
+                    <div key={s.label} className="flex items-center gap-3">
+                      <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                        {s.label}
+                      </span>
+                      <div className="flex flex-1 items-center gap-sm">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full rounded-full transition-all ${s.colorClass}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-8 text-right text-xs font-medium">
+                          {s.count}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Cursos: distribuição por categoria e plataforma */}
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <GraduationCap className="h-4 w-4" />
+              {t('pages.libraryDashboard.coursesByCategory')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-courses-by-category"
+              data={courseStats.byCategoryData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) =>
+                t('pages.libraryDashboard.courseCount', { count: Number(value) })
+              }
+              colors={COLORS}
+              emptyMessage={t('pages.libraryDashboard.noCourses')}
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Play className="h-4 w-4" />
+              {t('pages.libraryDashboard.coursesByPlatform')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-courses-by-platform"
+              data={courseStats.byPlatformData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) =>
+                t('pages.libraryDashboard.courseCount', { count: Number(value) })
+              }
+              colors={COLORS}
+              emptyMessage={t('pages.libraryDashboard.noCourses')}
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Intelecto: Habilidades — métricas principais */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <div className="flex items-center gap-sm">
+            <Brain className="h-4 w-4 text-category-intellect" />
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.skillsTitle')}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Brain className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.totalSkills')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">{skillStats.total}</span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Award className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsMastered')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-success">
+                {skillStats.mastered}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsEvolving')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-warning">
+                {skillStats.evolving}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsLearning')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-info">
+                {skillStats.learning}
+              </span>
+            </div>
+          </div>
+
+          {/* Distribuição por proficiência */}
+          {skillStats.byProficiencyData.length > 0 && (
+            <div className="mt-md space-y-sm border-t pt-md">
+              <p className="mb-sm text-xs font-semibold text-muted-foreground">
+                {t('pages.libraryDashboard.proficiencyDistribution')}
+              </p>
+              {skillStats.byProficiencyData.map((item, i) => {
+                const max = Math.max(
+                  ...skillStats.byProficiencyData.map((d) => d.count)
+                );
+                const pct = max > 0 ? (item.count / max) * 100 : 0;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                      {item.name}
+                    </span>
+                    <div className="flex flex-1 items-center gap-sm">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-category-intellect/70 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-right text-xs font-medium">
+                        {item.count}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Habilidades: distribuição por categoria + status */}
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Brain className="h-4 w-4" />
+              {t('pages.libraryDashboard.skillsByCategory')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-skills-by-category"
+              data={skillStats.byCategoryData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) =>
+                t('pages.libraryDashboard.skillCount', { count: Number(value) })
+              }
+              colors={COLORS}
+              emptyMessage={t('pages.libraryDashboard.noSkills')}
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Award className="h-4 w-4" />
+              {t('pages.libraryDashboard.skillsByProficiency')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-skills-proficiency"
+              data={skillStats.byProficiencyData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) =>
+                t('pages.libraryDashboard.skillCount', { count: Number(value) })
+              }
+              colors={COLORS}
+              emptyMessage={t('pages.libraryDashboard.noSkills')}
+              lockChartType="bar"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Distribuição de Conteúdo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
+          <p className="text-sm">
+            {t('pages.libraryDashboard.contentDistributionDesc')}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            chartId="intellect-content-distribution"
+            data={contentDistributionData}
+            dataKey="value"
+            nameKey="name"
+            formatter={(value) => String(value)}
+            colors={[COLORS[0], 'hsl(var(--category-intellect))']}
+            emptyMessage={t('pages.libraryDashboard.noContentDistribution')}
+            lockChartType="pie"
+            height={250}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Block 2: Estatísticas Gerais */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <CardTitle className="text-sm font-medium">
+            {t('pages.libraryDashboard.generalStats')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.readingTime')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {stats?.total_reading_time_hours || 0}h
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.readingTimeTotal')}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.avgPerBook')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {stats?.average_pages_per_book?.toFixed(0) || 0}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.pagesPerBook')}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.mostReadAuthor')}
+                </span>
+              </div>
+              {stats?.most_read_author ? (
+                <>
+                  <span
+                    className="truncate text-lg font-bold"
+                    title={stats.most_read_author.name}
+                  >
+                    {stats.most_read_author.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_author.books_count,
+                    })}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.libraryDashboard.noAuthor')}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Building2 className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.mostReadPublisher')}
+                </span>
+              </div>
+              {stats?.most_read_publisher ? (
+                <>
+                  <span
+                    className="truncate text-lg font-bold"
+                    title={stats.most_read_publisher.name}
+                  >
+                    {stats.most_read_publisher.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_publisher.books_count,
+                    })}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.libraryDashboard.noAuthor')}
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Block 3: Sessões & Ritmo | Previsão de Conclusão */}
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        {/* Sessões & Ritmo */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.sessionsAndPace')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {/* Streak em destaque */}
+            <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-sm dark:bg-orange-950/20">
               <div className="flex items-center gap-sm">
                 <GraduationCap className="h-4 w-4 text-category-intellect" />
                 <CardTitle className="text-sm font-medium">
@@ -1733,121 +2270,28 @@ export default function LibraryDashboard() {
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </CollapsibleSection>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* When You Read + Recent Readings */}
-      <CollapsibleSection
-        title={t('pages.libraryDashboard.whenYouRead')}
-        icon={<Clock className="h-4 w-4" />}
-        open={sections.timeOfDay}
-        onToggle={() => toggle('timeOfDay')}
-      >
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-          {/* Quando você mais lê */}
+        {badges.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.libraryDashboard.whenYouRead')}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.libraryDashboard.sessionDistribution')}
-              </p>
+              <CardTitle className="flex items-center gap-sm">
+                <Award className="h-5 w-5" />
+                {t('pages.libraryDashboard.badges.title')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {translatedReadingByTimeOfDay.length === 0 ? (
-                <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-                  {t('pages.libraryDashboard.noSessionPeriods')}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {translatedReadingByTimeOfDay.map((item) => {
-                    const total = translatedReadingByTimeOfDay.reduce(
-                      (s, i) => s + i.session_count,
-                      0
-                    );
-                    const pct = total > 0 ? (item.session_count / total) * 100 : 0;
-                    const barColors: Record<string, string> = {
-                      morning: 'hsl(var(--warning))',
-                      afternoon: 'hsl(var(--accent))',
-                      evening: 'hsl(var(--info))',
-                      dawn: 'hsl(var(--primary))',
-                    };
-                    const barColor =
-                      barColors[item.time_of_day] ?? 'hsl(var(--muted-foreground))';
-                    return (
-                      <div key={item.time_of_day} className="space-y-xs">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-sm">
-                            {timeOfDayIcons[item.time_of_day]}
-                            <span>{item.time_of_day_display}</span>
-                          </div>
-                          <span className="text-muted-foreground">
-                            {t('pages.libraryDashboard.sessionCount', {
-                              count: item.session_count,
-                            })}{' '}
-                            · {item.total_pages}{' '}
-                            {t('pages.libraryDashboard.pageAbbrev')}
-                          </span>
-                        </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{ width: `${pct}%`, backgroundColor: barColor }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="flex flex-wrap gap-sm">
+                {badges.map((badge) => (
+                  <BadgeChip key={badge.id} badge={badge} />
+                ))}
+              </div>
             </CardContent>
           </Card>
-
-          {/* Leituras Recentes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('pages.libraryDashboard.recentReadings')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.recentReadingsDesc')}
-              </p>
-            </CardHeader>
-            <CardContent>
-              {!stats || stats.recent_readings.length === 0 ? (
-                <div className="flex h-32 items-center justify-center">
-                  {t('pages.libraryDashboard.noReadings')}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {stats.recent_readings.map((reading, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
-                    >
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="h-5 w-5" />
-                        <div>
-                          <p className="text-sm font-medium">{reading.book_title}</p>
-                          <p className="text-xs">
-                            {t('pages.libraryDashboard.pagesReadCount', {
-                              count: reading.pages_read,
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs">
-                        {format(new Date(reading.reading_date), "dd 'de' MMM", {
-                          locale: ptBR,
-                        })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </CollapsibleSection>
+        )}
+      </div>
     </PageContainer>
   );
 }

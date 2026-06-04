@@ -2,6 +2,7 @@
 import {
   BookMarked,
   BookOpen,
+  Brain,
   Calendar,
   CheckCircle2,
   Download,
@@ -233,6 +234,7 @@ interface BookDetailModalProps {
   onEdit: (book: Book) => void;
   onDelete: (id: number) => void;
   initialTab?: DetailTab;
+  onAskIntellect?: (book: Book) => void;
 }
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
@@ -285,6 +287,7 @@ export function BookDetailModal({
   onEdit,
   onDelete,
   initialTab = 'info',
+  onAskIntellect,
 }: BookDetailModalProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
 
@@ -796,29 +799,46 @@ export function BookDetailModal({
 
               {/* Actions */}
               <div className="border-t" />
-              <div className="flex justify-end gap-sm">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onOpenChange(false);
-                    onDelete(book.id);
-                  }}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="mr-sm h-4 w-4" />
-                  {t('common.actions.delete')}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    onOpenChange(false);
-                    onEdit(book);
-                  }}
-                >
-                  <Edit className="mr-sm h-4 w-4" />
-                  {t('common.actions.edit')}
-                </Button>
+              <div className="flex justify-between gap-sm">
+                <div>
+                  {onAskIntellect && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onOpenChange(false);
+                        onAskIntellect(book);
+                      }}
+                    >
+                      <Brain className="mr-sm h-4 w-4 text-primary" />
+                      {t('pages.books.chatTabDesc')}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onOpenChange(false);
+                      onDelete(book.id);
+                    }}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="mr-sm h-4 w-4" />
+                    {t('common.actions.delete')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      onOpenChange(false);
+                      onEdit(book);
+                    }}
+                  >
+                    <Edit className="mr-sm h-4 w-4" />
+                    {t('common.actions.edit')}
+                  </Button>
+                </div>
               </div>
             </> /* end info tab */
           )}
