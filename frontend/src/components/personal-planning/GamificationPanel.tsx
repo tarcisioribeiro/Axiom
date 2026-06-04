@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Award, Flame, Medal, Star, TrendingUp, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { StatCard } from '@/components/common/StatCard';
@@ -37,6 +38,7 @@ interface GamificationData {
 }
 
 export function GamificationPanel() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<GamificationData>({
     queryKey: ['gamification-profile'],
     queryFn: () =>
@@ -62,22 +64,22 @@ export function GamificationPanel() {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          title="Nível"
-          value={`Nível ${data.current_level}`}
+          title={t('components.gamification.levelTitle')}
+          value={t('components.gamification.levelValue', { level: data.current_level })}
           icon={<Star className="h-4 w-4" />}
           description={`${data.total_xp} XP total`}
         />
         <StatCard
-          title="Sequência atual"
+          title={t('components.gamification.streakTitle')}
           value={`${data.current_streak} dias`}
           icon={<Flame className="h-4 w-4 text-orange-500" />}
           description={`Recorde: ${data.longest_streak} dias`}
         />
         <StatCard
-          title="Tarefas concluídas"
+          title={t('components.gamification.tasksTitle')}
           value={data.tasks_completed_total}
           icon={<TrendingUp className="h-4 w-4 text-green-500" />}
-          description="Total histórico"
+          description={t('components.gamification.totalHistory')}
         />
         <StatCard
           title="Badges"
@@ -96,7 +98,9 @@ export function GamificationPanel() {
             >
               {data.current_level}
             </div>
-            Progresso para o Nível {data.current_level + 1}
+            {t('components.gamification.levelProgress', {
+              level: data.current_level + 1,
+            })}
           </CardTitle>
         </CardHeader>
         <CardContent>
