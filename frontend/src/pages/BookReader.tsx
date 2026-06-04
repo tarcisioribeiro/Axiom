@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -85,12 +85,15 @@ interface ThemeConfig {
 // they can be safely injected into EPUB iframes without resolution.
 // ============================================================================
 
-function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
+function buildThemes(
+  isDark: boolean,
+  labels: { light: string; sepia: string; dark: string }
+): Record<ReaderTheme, ThemeConfig> {
   if (isDark) {
     // ── Dracula palette variants ─────────────────────────────────────────────
     return {
       light: {
-        label: 'Claro',
+        label: labels.light,
         backgroundColor: '#ECEEF8', // very light cool blue-grey (Dracula-tinted)
         color: '#21222C', // Dracula near-black
         borderColor: '#B0BAD4',
@@ -98,7 +101,7 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
         epubBody: { background: '#ECEEF8', color: '#21222C', linkColor: '#1D4ED8' },
       },
       sepia: {
-        label: 'Sépia',
+        label: labels.sepia,
         backgroundColor: '#E8E2F5', // cool lavender parchment (Dracula purple-tinted)
         color: '#3D2852', // deep purple-brown
         borderColor: '#9478C2',
@@ -106,7 +109,7 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
         epubBody: { background: '#E8E2F5', color: '#3D2852', linkColor: '#6D28D9' },
       },
       dark: {
-        label: 'Escuro',
+        label: labels.dark,
         backgroundColor: '#282A36', // Dracula background
         color: '#F8F8F2', // Dracula foreground
         borderColor: '#44475A', // Dracula current-line
@@ -118,7 +121,7 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
   // ── Alucard palette variants ───────────────────────────────────────────────
   return {
     light: {
-      label: 'Claro',
+      label: labels.light,
       backgroundColor: '#FFFBEB', // Alucard warm cream (hsl 48 100% 96%)
       color: '#1F1F1F',
       borderColor: '#C8C4D8',
@@ -126,7 +129,7 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
       epubBody: { background: '#FFFBEB', color: '#1F1F1F', linkColor: '#2563EB' },
     },
     sepia: {
-      label: 'Sépia',
+      label: labels.sepia,
       backgroundColor: '#F5E6C8', // warm golden parchment (Alucard amber tones)
       color: '#5C3D2E', // warm dark brown
       borderColor: '#C8A870',
@@ -134,7 +137,7 @@ function buildThemes(isDark: boolean): Record<ReaderTheme, ThemeConfig> {
       epubBody: { background: '#F5E6C8', color: '#5C3D2E', linkColor: '#2563EB' },
     },
     dark: {
-      label: 'Escuro',
+      label: labels.dark,
       backgroundColor: '#1A0E08', // very dark warm brown (Alucard inverted)
       color: '#F5EDD6', // warm cream
       borderColor: '#4A3020',
@@ -240,7 +243,7 @@ function AnnotationForm({
       };
       const created = await bookHighlightsService.create(data);
       onSaved(created);
-      toast({ title: 'Anotação salva' });
+      toast({ title: t('pages.bookReader.annotationSaved') });
     } catch (err) {
       toast({
         title: t('pages.bookReader.annotationError'),
@@ -351,6 +354,14 @@ function EpubReader({
   onLocationChange,
 }: EpubReaderProps) {
   const { t } = useTranslation();
+  const themeLabels = useMemo(
+    () => ({
+      light: t('pages.bookReader.themeLight'),
+      sepia: t('pages.bookReader.themeSepia'),
+      dark: t('pages.bookReader.themeDark'),
+    }),
+    [t]
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<EpubBook | null>(null);
   const renditionRef = useRef<Rendition | null>(null);
@@ -379,7 +390,7 @@ function EpubReader({
       });
       renditionRef.current = rendition;
 
-      applyEpubThemes(rendition, buildThemes(isDark), theme);
+      applyEpubThemes(rendition, buildThemes(isDark, themeLabels), theme);
 
       await rendition.display(initialCfi ?? undefined);
       if (!cancelled) setIsLoading(false);
@@ -409,8 +420,8 @@ function EpubReader({
   useEffect(() => {
     const rendition = renditionRef.current;
     if (!rendition) return;
-    applyEpubThemes(rendition, buildThemes(isDark), theme);
-  }, [isDark, theme]);
+    applyEpubThemes(rendition, buildThemes(isDark, themeLabels), theme);
+  }, [isDark, theme, themeLabels]);
 
   // Apply width change
   useEffect(() => {
@@ -420,7 +431,7 @@ function EpubReader({
   const prev = () => renditionRef.current?.prev();
   const next = () => renditionRef.current?.next();
 
-  const themes = buildThemes(isDark);
+  const themes = buildThemes(isDark, themeLabels);
   const cfg = themes[theme];
 
   return (
@@ -499,7 +510,15 @@ function PdfReader({
   onNumPagesChange,
 }: PdfReaderProps) {
   const { t } = useTranslation();
-  const themes = buildThemes(isDark);
+  const themeLabels = useMemo(
+    () => ({
+      light: t('pages.bookReader.themeLight'),
+      sepia: t('pages.bookReader.themeSepia'),
+      dark: t('pages.bookReader.themeDark'),
+    }),
+    [t]
+  );
+  const themes = buildThemes(isDark, themeLabels);
   const cfg = themes[theme];
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 
@@ -594,9 +613,17 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
     () => (localStorage.getItem('reader-theme') as ReaderTheme) ?? 'light'
   );
 
+  const themeLabels = useMemo(
+    () => ({
+      light: t('pages.bookReader.themeLight'),
+      sepia: t('pages.bookReader.themeSepia'),
+      dark: t('pages.bookReader.themeDark'),
+    }),
+    [t]
+  );
   // Re-computed on every render; cheap since it only builds a plain object.
   // Depends on both isDark (app palette) and theme (reader mode).
-  const themes = buildThemes(isDark);
+  const themes = buildThemes(isDark, themeLabels);
   const cfg = themes[theme];
 
   const [contentWidth, setContentWidth] = useState<WidthPreset>(

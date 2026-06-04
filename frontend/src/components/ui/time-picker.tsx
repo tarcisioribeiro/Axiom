@@ -3,6 +3,7 @@ import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
 import { Clock, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 
@@ -35,11 +36,13 @@ function dateToTimeStr(d: Date): string {
 export function TimePicker({
   value,
   onChange,
-  placeholder = 'Selecione um horário',
+  placeholder,
   disabled = false,
   className,
   clearable = true,
 }: TimePickerProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('common.fields.horary');
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
   const onChangeRef = useRef(onChange);
@@ -107,7 +110,7 @@ export function TimePicker({
       <input
         ref={inputRef}
         type="text"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         disabled={disabled}
         className={cn(
           'flatpickr-input',
@@ -125,7 +128,7 @@ export function TimePicker({
         <button
           type="button"
           onClick={handleClear}
-          aria-label="Limpar horário"
+          aria-label={t('common.actions.clearTime')}
           className={cn(
             'absolute right-3 top-1/2 z-10 -translate-y-1/2',
             'h-5 w-5 rounded-full',

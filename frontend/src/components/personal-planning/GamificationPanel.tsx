@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Award, Flame, Medal, Star, TrendingUp, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { StatCard } from '@/components/common/StatCard';
@@ -37,6 +38,7 @@ interface GamificationData {
 }
 
 export function GamificationPanel() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<GamificationData>({
     queryKey: ['gamification-profile'],
     queryFn: () =>
@@ -62,28 +64,28 @@ export function GamificationPanel() {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          title="Nível"
-          value={`Nível ${data.current_level}`}
+          title={t('gamification.level')}
+          value={t('gamification.levelValue', { level: data.current_level })}
           icon={<Star className="h-4 w-4" />}
-          description={`${data.total_xp} XP total`}
+          description={t('gamification.xpTotal', { xp: data.total_xp })}
         />
         <StatCard
-          title="Sequência atual"
-          value={`${data.current_streak} dias`}
+          title={t('gamification.streak')}
+          value={t('gamification.streakValue', { count: data.current_streak })}
           icon={<Flame className="h-4 w-4 text-orange-500" />}
-          description={`Recorde: ${data.longest_streak} dias`}
+          description={t('gamification.streakRecord', { count: data.longest_streak })}
         />
         <StatCard
-          title="Tarefas concluídas"
+          title={t('gamification.tasksCompleted')}
           value={data.tasks_completed_total}
           icon={<TrendingUp className="h-4 w-4 text-green-500" />}
-          description="Total histórico"
+          description={t('gamification.totalHistoric')}
         />
         <StatCard
-          title="Badges"
+          title={t('gamification.badgesCard')}
           value={data.badges.length}
           icon={<Award className="h-4 w-4 text-amber-500" />}
-          description="Conquistados"
+          description={t('gamification.badgesEarned')}
         />
       </div>
 
@@ -96,7 +98,7 @@ export function GamificationPanel() {
             >
               {data.current_level}
             </div>
-            Progresso para o Nível {data.current_level + 1}
+            {t('gamification.levelProgress', { level: data.current_level + 1 })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,7 +114,7 @@ export function GamificationPanel() {
       {data.badges.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Badges Conquistados</CardTitle>
+            <CardTitle className="text-base">{t('gamification.badgesSection')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -140,7 +142,7 @@ export function GamificationPanel() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Zap className="h-4 w-4 text-yellow-500" />
-              Últimos XP Ganhos
+              {t('gamification.recentXp')}
             </CardTitle>
           </CardHeader>
           <CardContent>

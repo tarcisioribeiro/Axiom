@@ -22,6 +22,7 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "clearTime": "Limpar horário",
       "remove": "Remover",
       "filters": {
         "fromDate": "De: DD/MM/AAAA",
@@ -175,6 +176,25 @@
       }
     },
     "noResults": "Nenhum resultado encontrado",
+    "iconPicker": {
+      "placeholder": "Selecione um ícone...",
+      "searchPlaceholder": "Buscar ícone..."
+    },
+    "charts": {
+      "emptyMessage": "Nenhum dado disponível",
+      "toggleType": "Alternar tipo de gráfico",
+      "toggleView": "Alternar visualização"
+    },
+    "passwordStrength": {
+      "weak": "Fraca",
+      "medium": "Média",
+      "strong": "Forte",
+      "invalidConfig": "Configuração inválida",
+      "selectCharType": "Selecione pelo menos um tipo de caractere."
+    },
+    "navigation": {
+      "backTo": "Voltar para {{label}}"
+    },
     "mood": {
       "excellent": "Excelente",
       "good": "Bom",
@@ -283,6 +303,21 @@
       "config": "Configurações",
       "integrations": "Integrações",
       "logs": "Logs de Atividade"
+    },
+    "commandPalette": {
+      "placeholder": "Buscar comandos...",
+      "noResults": "Nenhum comando encontrado",
+      "noResultsHint": "Tente buscar por outra palavra-chave",
+      "navigate": "navegar",
+      "select": "selecionar",
+      "close": "fechar",
+      "ariaLabel": "Comandos disponíveis"
+    },
+    "notifications": {
+      "title": "Notificações",
+      "markAllRead": "Marcar todas como lidas",
+      "empty": "Nenhuma notificação",
+      "ariaLabel": "Notificações"
     }
   },
   "breadcrumb": {
@@ -580,7 +615,14 @@
         "statusProcessing": "Processando",
         "statusFailed": "Falhou"
       },
-      "available": "Disponível: {{value}}"
+      "available": "Disponível: {{value}}",
+      "bankReconciliation": "Conciliação Bancária",
+      "bankReconciliationTitle": "Conciliação Bancária — {{account}}",
+      "bankReconciliationDesc": "Importe extratos bancários para conciliar com suas transações.",
+      "importStatement": "Importar Extrato",
+      "noImports": "Nenhum extrato importado",
+      "noImportsDesc": "Clique em 'Importar Extrato' para começar.",
+      "invalidFormat": "Formato inválido. Use OFX ou CSV."
     },
     "expenses": {
       "title": "Despesas",
@@ -1487,6 +1529,7 @@
       "updatedDesc": "O orçamento foi atualizado com sucesso.",
       "deleted": "Orçamento excluído",
       "deletedDesc": "O orçamento foi excluído com sucesso.",
+      "createError": "Erro ao criar orçamento.",
       "emptySearch": "Nenhum orçamento encontrado para a pesquisa atual.",
       "emptyState": "Nenhum orçamento cadastrado para este período. Clique em \"Novo Orçamento\" para começar.",
       "searchPlaceholder": "Buscar categoria...",
@@ -1670,7 +1713,9 @@
       "totalYield": "Rendimentos Acumulados",
       "pendingYield": "Rendimentos Pendentes",
       "depositTitle": "Depositar no Cofre",
+      "depositPlaceholder": "Ex: Depósito mensal",
       "withdrawTitle": "Sacar do Cofre",
+      "withdrawPlaceholder": "Ex: Saque para emergência",
       "depositBtn": "Depositar",
       "withdrawBtn": "Sacar",
       "applyYieldBtn": "Aplicar Rendimento",
@@ -1740,6 +1785,7 @@
         "deleteDesc": "Tem certeza que deseja excluir esta contribuição recorrente?",
         "fields": {
           "description": "Descrição *",
+          "descriptionPlaceholder": "Ex: Poupança mensal",
           "amount": "Valor (R$) *",
           "dayOfMonth": "Dia do Mês (1–31) *",
           "startDate": "Data de Início *",
@@ -2197,6 +2243,17 @@
       "searchPlaceholder": "Buscar senhas...",
       "generatePassword": "Gerar Senha",
       "hideGenerator": "Ocultar Gerador",
+      "generator": {
+        "length": "Comprimento: {{count}}",
+        "uppercase": "Maiúsculas (A-Z)",
+        "lowercase": "Minúsculas (a-z)",
+        "numbers": "Números (0-9)",
+        "special": "Especiais (!@#$...)",
+        "excludeAmbiguous": "Excluir ambíguos",
+        "generating": "Gerando...",
+        "generateError": "Erro ao gerar senha",
+        "strengthLabel": "Força da senha"
+      },
       "titlePlaceholder": "Ex: Gmail, Netflix, etc.",
       "sitePlaceholder": "https://exemplo.com",
       "usernamePlaceholder": "usuario@email.com",
@@ -2517,6 +2574,8 @@
       "searchPlaceholder": "Buscar arquivos...",
       "viewContent": "Ver conteúdo",
       "downloadFile": "Baixar arquivo",
+      "preview": "Pré-visualizar",
+      "previewTitle": "Pré-visualização",
       "categories": {
         "personal": "Pessoal",
         "financial": "Financeiro",
@@ -3138,6 +3197,31 @@
       "emptyState": "Nenhuma leitura registrada. Clique em \"Nova Leitura\" para começar.",
       "searchPlaceholder": "Buscar leituras...",
       "pagesRead": "{{count}} pág.",
+      "viewSessions": "Ver sessões",
+      "viewProgress": "Ver progresso",
+      "markAsReadPeriodBtn": "Marcar como lido (período)",
+      "noReadingsProgress": "Nenhuma leitura registrada ainda.",
+      "sessionsCount_one": "{{count}} sessão",
+      "sessionsCount_other": "{{count}} sessões",
+      "markAsRead": {
+        "title": "Marcar como Lido (período)",
+        "description": "Gera sessões de leitura distribuídas automaticamente entre as datas informadas, usando seu ritmo histórico de leitura.",
+        "bookLabel": "Livro *",
+        "bookPlaceholder": "Selecione um livro",
+        "startDateLabel": "Data de início *",
+        "endDateLabel": "Data de fim *",
+        "startDatePlaceholder": "Quando começou",
+        "endDatePlaceholder": "Quando terminou",
+        "submitBtn": "Registrar",
+        "submitting": "Registrando...",
+        "fillRequired": "Preencha todos os campos",
+        "endAfterStart": "Data de fim deve ser posterior à de início",
+        "successTitle": "Leitura registrada!",
+        "successDesc_one": "{{count}} sessão criada automaticamente.",
+        "successDesc_other": "{{count}} sessões criadas automaticamente.",
+        "errorTitle": "Erro ao registrar leitura",
+        "cancelBtn": "Cancelar"
+      },
       "form": {
         "bookLabel": "Livro *",
         "bookPlaceholder": "Selecione um livro",
@@ -3210,7 +3294,9 @@
         "allBooks": "Todos os livros",
         "allTypes": "Todos os tipos",
         "allColors": "Todas as cores"
-      }
+      },
+      "paginationInfo_one": "{{count}} destaque — página {{page}} de {{totalPages}}",
+      "paginationInfo_other": "{{count}} destaques — página {{page}} de {{totalPages}}"
     },
     "courses": {
       "title": "Cursos",
@@ -4124,7 +4210,16 @@
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
       },
-      "importWithPreview": "Importar com prévia"
+      "importWithPreview": "Importar com prévia",
+      "completedLabel": "concluídos",
+      "pendingLabel": "pendentes",
+      "transactionsLabel": "transações",
+      "importedAtLabel": "importado em",
+      "reconciliationTitle": "Conciliação",
+      "matchedLabel": "conciliados",
+      "divergencesLabel": "divergências",
+      "dragDrop": "Arraste ou clique para selecionar",
+      "supportedFormats": "Suporte: OFX, CSV"
     },
     "agents": {
       "title": "Agentes IA",
@@ -4208,7 +4303,33 @@
         "error": "Erro ao receber resposta do agente"
       },
       "stop": "Parar geração",
-      "sessions": "Histórico de sessões"
+      "sessions": "Histórico de sessões",
+      "suggestedQuestions": {
+        "intellect": [
+          "O que aprendi no último livro?",
+          "Qual meu progresso nos cursos?",
+          "Quais são minhas habilidades dominadas?",
+          "Quanto li este mês?"
+        ],
+        "financial": [
+          "Quanto gastei este mês?",
+          "Vou estourar o orçamento?",
+          "Qual minha previsão de saldo?",
+          "Quais foram minhas maiores despesas?"
+        ],
+        "personal": [
+          "Como estão minhas rotinas?",
+          "Treinei esta semana?",
+          "Qual meu progresso nas metas?",
+          "Como está minha alimentação?"
+        ],
+        "security": [
+          "Tenho senhas desatualizadas?",
+          "Qual foi minha atividade recente no cofre?",
+          "Existe algum risco de segurança?",
+          "Quantas senhas estão armazenadas?"
+        ]
+      }
     },
     "twoFactor": {
       "title": "Autenticação de dois fatores (2FA)",
@@ -4347,7 +4468,9 @@
       "analysisOf_one": "Análise de {{count}} senha",
       "analysisOf_other": "Análise de {{count}} senhas",
       "needsAttention": "Senhas que precisam de atenção",
-      "allGood": "Todas as senhas estão em boa forma!"
+      "allGood": "Todas as senhas estão em boa forma!",
+      "scoreHistory": "Evolução do Score",
+      "criticalPasswords": "Senhas Críticas"
     },
     "bookReader": {
       "themeLight": "Claro",
@@ -4912,7 +5035,9 @@
         "cycling": "Ciclismo",
         "swimming": "Natação",
         "fullBody": "Full Body"
-      }
+      },
+      "hideNotes": "Ocultar observações",
+      "showNotes": "Adicionar observações"
     },
     "exercises": {
       "title": "Exercícios",
@@ -5610,7 +5735,8 @@
       "revenue": "Receita Pendente"
     },
     "dayDetail": "Vencimentos em {{date}}",
-    "loading": "Carregando calendário..."
+    "loading": "Carregando calendário...",
+    "weekDays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
   },
   "vaultOnboarding": {
     "dialogTitle": "Configurar Cofre de Segurança",
@@ -5672,6 +5798,67 @@
     },
     "renewalOn": "Renova dia {{day}}",
     "loading": "Carregando assinaturas..."
+  },
+  "gamification": {
+    "level": "Nível",
+    "levelValue": "Nível {{level}}",
+    "xpTotal": "{{xp}} XP total",
+    "streak": "Sequência atual",
+    "streakValue": "{{count}} dias",
+    "streakRecord": "Recorde: {{count}} dias",
+    "tasksCompleted": "Tarefas concluídas",
+    "totalHistoric": "Total histórico",
+    "badgesCard": "Badges",
+    "badgesEarned": "Conquistados",
+    "levelProgress": "Progresso para o Nível {{level}}",
+    "badgesSection": "Badges Conquistados",
+    "recentXp": "Últimos XP Ganhos"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "Receba notificações em tempo real de eventos do Axiom em sistemas externos.",
+    "newBtn": "Novo Webhook",
+    "createBtn": "Criar webhook",
+    "empty": "Nenhum webhook configurado",
+    "emptyDesc": "Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo.",
+    "inactive": "Inativo",
+    "deliveries_one": "{{count}} entrega",
+    "deliveries_other": "{{count}} entregas",
+    "deliveryHistory": "Histórico de entregas",
+    "noDeliveries": "Nenhuma entrega registrada.",
+    "viewDeliveries": "Ver entregas",
+    "testBtn": "Testar",
+    "created": "Webhook criado com sucesso.",
+    "createError": "Erro ao criar webhook.",
+    "updated": "Webhook atualizado.",
+    "updateError": "Erro ao atualizar webhook.",
+    "deleted": "Webhook removido.",
+    "deleteError": "Erro ao remover webhook.",
+    "testSuccess": "Teste enfileirado com sucesso.",
+    "testError": "Erro ao enfileirar teste.",
+    "status": {
+      "success": "Sucesso",
+      "failed": "Falhou",
+      "retrying": "Tentando",
+      "pending": "Pendente"
+    },
+    "form": {
+      "editTitle": "Editar Webhook",
+      "newTitle": "Novo Webhook",
+      "dialogDesc": "Configure a URL e os eventos que disparam este webhook.",
+      "nameLabel": "Nome *",
+      "namePlaceholder": "Ex: Notificar n8n",
+      "urlLabel": "URL de destino *",
+      "secretLabel": "Secret *",
+      "secretEditLabel": "Novo secret (deixe em branco para manter)",
+      "secretPlaceholder": "Chave para assinar o payload (HMAC-SHA256)",
+      "timeoutLabel": "Timeout (s)",
+      "maxRetriesLabel": "Máx. tentativas",
+      "isActiveLabel": "Webhook ativo",
+      "eventsLabel": "Eventos *",
+      "saveBtn": "Salvar",
+      "createBtn": "Criar"
+    }
   },
   "components": {
     "installmentSimulator": {
