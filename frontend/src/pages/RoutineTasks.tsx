@@ -9,7 +9,7 @@ import {
   Download,
   FileText,
   Sheet,
-  Bookmark,
+  Save,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import React, { useState, useEffect } from 'react';
@@ -29,6 +29,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -39,6 +40,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
@@ -67,6 +70,9 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | null>(null);
+  const [templateName, setTemplateName] = useState('');
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -213,6 +219,50 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     const idSet = new Set(createdIds);
     setHighlightedIds(idSet);
     setTimeout(() => setHighlightedIds(new Set()), 5000);
+  };
+
+  const handleSaveTemplate = () => {
+    if (!saveTemplateTask || !templateName.trim()) return;
+    setIsSavingTemplate(true);
+    const stored = localStorage.getItem('axiom.userTemplates');
+    const templates = stored ? (JSON.parse(stored) as object[]) : [];
+    const newTemplate = {
+      id: `user-${Date.now()}`,
+      name: templateName.trim(),
+      description: saveTemplateTask.description || '',
+      icon: saveTemplateTask.icon || '',
+      task_count: 1,
+      tasks: [
+        {
+          name: saveTemplateTask.name,
+          description: saveTemplateTask.description,
+          category: saveTemplateTask.category,
+          icon: saveTemplateTask.icon,
+          periodicity: saveTemplateTask.periodicity,
+          weekday: saveTemplateTask.weekday,
+          day_of_month: saveTemplateTask.day_of_month,
+          custom_weekdays: saveTemplateTask.custom_weekdays,
+          target_quantity: saveTemplateTask.target_quantity,
+          unit: saveTemplateTask.unit,
+          default_time: saveTemplateTask.default_time,
+          daily_occurrences: saveTemplateTask.daily_occurrences,
+          is_active: true,
+        },
+      ],
+    };
+    localStorage.setItem(
+      'axiom.userTemplates',
+      JSON.stringify([...templates, newTemplate])
+    );
+    setIsSavingTemplate(false);
+    setSaveTemplateTask(null);
+    setTemplateName('');
+    toast({
+      title: t('pages.routineTasks.templates.saveSuccess'),
+      description: t('pages.routineTasks.templates.saveSuccessDesc', {
+        name: newTemplate.name,
+      }),
+    });
   };
 
   // Retorna os índices dos dias ativos para a tarefa (0=Seg, 1=Ter, ... 6=Dom)
@@ -392,6 +442,18 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => {
+              setSaveTemplateTask(task);
+              setTemplateName(task.name);
+            }}
+            aria-label={t('pages.routineTasks.templates.saveAsTemplate')}
+            title={t('pages.routineTasks.templates.saveAsTemplate')}
+          >
+            <Save className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => handleEdit(task)}
             aria-label={t('common.actions.edit')}
             title={t('common.actions.edit')}
@@ -521,6 +583,60 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         onOpenChange={setIsTemplateModalOpen}
         onImported={(ids) => void handleImported(ids)}
       />
+
+      <Dialog
+        open={!!saveTemplateTask}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSaveTemplateTask(null);
+            setTemplateName('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {t('pages.routineTasks.templates.saveAsTemplateTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('pages.routineTasks.templates.saveAsTemplateDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-sm">
+            <Label htmlFor="template-name">
+              {t('pages.routineTasks.templates.templateNameLabel')}
+            </Label>
+            <Input
+              id="template-name"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder={t('pages.routineTasks.templates.templateNamePlaceholder')}
+              className="mt-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTemplate();
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSaveTemplateTask(null);
+                setTemplateName('');
+              }}
+            >
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              onClick={handleSaveTemplate}
+              disabled={!templateName.trim() || isSavingTemplate}
+            >
+              <Save className="mr-sm h-4 w-4" />
+              {t('pages.routineTasks.templates.saveBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Heatmap Dialog */}
       <Dialog

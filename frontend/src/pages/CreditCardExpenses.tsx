@@ -8,6 +8,8 @@ import {
   Calendar,
   DollarSign,
   Link2,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -308,7 +310,7 @@ export default function CreditCardExpenses({
             bill,
             card,
             label: bill
-              ? `${TRANSLATIONS.months[bill.month as keyof typeof TRANSLATIONS.months]}/${bill.year}`
+              ? `${translate('months', bill.month)}/${bill.year}`
               : t('pages.creditCardExpenses.orphanBillLabel'),
             period: bill
               ? `${formatDate(bill.invoice_beginning_date, 'dd/MM')} a ${formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')}`
@@ -797,29 +799,35 @@ export default function CreditCardExpenses({
               </SelectItem>
               {availableBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
-                  {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
-                  {b.year}
+                  {translate('months', b.month)}/{b.year}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
+            <SelectTrigger startIcon={<Tag className="h-3.5 w-3.5" />}>
               <SelectValue placeholder={t('pages.creditCardExpenses.allCategories')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">
                 {t('pages.creditCardExpenses.allCategories')}
               </SelectItem>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
-                <SelectItem key={key} value={key}>
-                  {label}
-                </SelectItem>
-              ))}
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
+            <SelectTrigger startIcon={<CircleDot className="h-3.5 w-3.5" />}>
               <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
             </SelectTrigger>
             <SelectContent>
@@ -1198,12 +1206,7 @@ export default function CreditCardExpenses({
                       <SelectContent>
                         {eligibleBills.map((bill) => (
                           <SelectItem key={bill.id} value={bill.id.toString()}>
-                            {
-                              TRANSLATIONS.months[
-                                bill.month as keyof typeof TRANSLATIONS.months
-                              ]
-                            }
-                            /{bill.year} (
+                            {translate('months', bill.month)}/{bill.year} (
                             {formatDate(bill.invoice_beginning_date, 'dd/MM')}
                             {' – '}
                             {formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')})

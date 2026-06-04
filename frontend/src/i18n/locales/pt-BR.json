@@ -22,6 +22,7 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "remove": "Remover",
       "filters": {
         "fromDate": "De: DD/MM/AAAA",
         "toDate": "Até: DD/MM/AAAA"
@@ -173,7 +174,14 @@
         "configuration": "Configuração"
       }
     },
-    "noResults": "Nenhum resultado encontrado"
+    "noResults": "Nenhum resultado encontrado",
+    "mood": {
+      "excellent": "Excelente",
+      "good": "Bom",
+      "neutral": "Neutro",
+      "bad": "Ruim",
+      "terrible": "Péssimo"
+    }
   },
   "nav": {
     "home": "Início",
@@ -245,6 +253,9 @@
       "courses": "Cursos",
       "skills": "Habilidades",
       "knowledgeGraph": "Grafo de Conhecimento",
+      "financialCalendar": "Calendário Financeiro",
+      "netWorth": "Patrimônio Líquido",
+      "subscriptions": "Assinaturas",
       "reflections": "Reflexões Diárias",
       "tags": "Tags"
     },
@@ -472,6 +483,12 @@
           "Mapa de Habilidades"
         ]
       },
+      "knowledgeGraph": {
+        "title": "Grafo de Conhecimento",
+        "nodes": "nós",
+        "links": "conexões",
+        "desc": "Ver grafo completo"
+      },
       "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
       "modules": {
@@ -620,6 +637,8 @@
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Supermercado Extra",
         "merchantHint": "Preencha para categorização automática",
+        "aiSuggesting": "Consultando IA para sugerir categoria...",
+        "aiSuggested": "IA sugeriu",
         "categoryLabel": "Categoria *",
         "paymentStatusLabel": "Status de Pagamento *",
         "pending": "Pendente",
@@ -988,7 +1007,8 @@
         "income": "Renda:"
       },
       "noRole": "Sem papel definido",
-      "emptySearch": "Nenhum membro encontrado."
+      "emptySearch": "Nenhum membro encontrado.",
+      "searchPlaceholder": "Buscar por nome, CPF ou telefone..."
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",
@@ -2054,6 +2074,7 @@
         "errorDesc": "Não foi possível gerar o relatório IR."
       },
       "monthComposition": "Composição do mês",
+      "monthCompositionShort": "Este mês",
       "monthOverMonth": "Comparativo mês a mês",
       "vsPrevMonth": "vs mês anterior:",
       "installmentSimulator": "Simulador de Parcelas"
@@ -2118,7 +2139,36 @@
       "exportVaultDesc": "Baixar senhas, cartões e contas em arquivo ZIP",
       "exportVaultSuccess": "Exportação iniciada",
       "exportVaultSuccessDesc": "O download do arquivo ZIP foi iniciado.",
-      "exportVaultError": "Erro ao exportar cofre"
+      "exportVaultError": "Erro ao exportar cofre",
+      "vaultSearch": {
+        "placeholder": "Buscar no cofre (senhas, cartões, contas, arquivos)...",
+        "title": "Busca Global no Cofre",
+        "noResults": "Nenhum resultado encontrado",
+        "noResultsDesc": "Tente um termo diferente de busca.",
+        "groupPasswords": "Senhas",
+        "groupCards": "Cartões",
+        "groupAccounts": "Contas",
+        "groupArchives": "Arquivos"
+      },
+      "vaultHub": {
+        "overview": "Visão Geral do Cofre",
+        "anomalyTitle": "Atividade Suspeita Detectada",
+        "anomalyDesc": "Foram detectadas atividades incomuns. Revise seu log de atividades.",
+        "viewAnomalies": "Ver atividades",
+        "quickStats": "Resumo",
+        "vaultHealth": "Saúde do Cofre",
+        "securityScore": "Score de Segurança",
+        "recentActivity": "Atividade Recente",
+        "quickActions": "Ações Rápidas"
+      },
+      "alertConfig": "Configurações de Alertas",
+      "alertConfigSaved": "Configurações salvas",
+      "alertOnNewIp": "Alerta por novo IP",
+      "alertOnNewIpDesc": "Notificar ao acessar o cofre de um novo endereço IP.",
+      "alertOnFailedUnlock": "Alerta por tentativas falhas",
+      "alertOnFailedUnlockDesc": "Notificar após múltiplas tentativas de desbloqueio incorretas.",
+      "alertOnReveal": "Alerta ao revelar senha",
+      "alertOnRevealDesc": "Notificar cada vez que uma senha for revelada."
     },
     "passwords": {
       "title": "Senhas",
@@ -2163,6 +2213,13 @@
         "gaming": "Games",
         "other": "Outro"
       },
+      "hibp": {
+        "check": "Verificar Vazamento",
+        "safe": "Senha Segura",
+        "breached": "Exposta {{count}}x",
+        "errorTitle": "Erro na verificação",
+        "errorDesc": "Não foi possível verificar a senha. Tente novamente."
+      },
       "copyWithoutReveal": "Copiar sem revelar",
       "copied": "Copiada!",
       "copiedClipboard": "Senha copiada para a área de transferência",
@@ -2177,7 +2234,10 @@
         "fair": "Razoável",
         "good": "Boa",
         "strong": "Forte"
-      }
+      },
+      "autoClassify": "Classificar automaticamente",
+      "classifySuccess": "Categoria classificada: {{category}}",
+      "classifyError": "Erro ao classificar categoria"
     },
     "sharePassword": {
       "title": "Compartilhar Credencial",
@@ -2204,7 +2264,31 @@
       "revoked": "Link revogado",
       "revokedDesc": "O link de compartilhamento foi revogado.",
       "revokeError": "Erro ao revogar link",
-      "loadError": "Erro ao carregar links"
+      "loadError": "Erro ao carregar links",
+      "step1Title": "Destinatário",
+      "step2Title": "Configuração",
+      "step3Title": "Confirmação",
+      "step1Desc": "Selecione para quem você deseja compartilhar",
+      "step2Desc": "Configure as opções de compartilhamento",
+      "step3Desc": "Confirme e gere o link",
+      "searchMembers": "Buscar membros...",
+      "noMembers": "Nenhum membro encontrado.",
+      "loadMembersError": "Erro ao carregar membros",
+      "selectMemberFirst": "Selecione um destinatário antes de continuar.",
+      "expiresIn1h": "1 hora",
+      "expiresIn6h": "6 horas",
+      "expiresIn24h": "24 horas",
+      "expiresIn7d": "7 dias",
+      "expiryLabel": "Validade do link",
+      "previewLabel": "Pré-visualização",
+      "confirmTitle": "Resumo do Compartilhamento",
+      "confirmRecipient": "Destinatário",
+      "confirmExpiry": "Validade",
+      "confirmMaxUses": "Usos máximos",
+      "confirmPassword": "Credencial",
+      "nextBtn": "Próximo",
+      "backBtn": "Voltar",
+      "confirmBtn": "Gerar Link"
     },
     "shareCredential": {
       "title": "Credencial Compartilhada",
@@ -2261,7 +2345,12 @@
       "importAnother": "Importar outro arquivo",
       "noMemberMsg": "Não foi possível identificar o membro do usuário atual.",
       "selectedCount": "{{count}} selecionada",
-      "selectedCount_other": "{{count}} selecionadas"
+      "selectedCount_other": "{{count}} selecionadas",
+      "categoryMappingStep": "Mapeamento de Categorias",
+      "categoryMappingDesc": "Ajuste as categorias detectadas automaticamente",
+      "suggestedCategory": "Sugerida",
+      "finalCategory": "Categoria Final",
+      "skipMapping": "Manter categorias sugeridas"
     },
     "storedCards": {
       "title": "Cartões Armazenados",
@@ -2475,6 +2564,16 @@
     },
     "libraryDashboard": {
       "title": "Dashboard Intelecto",
+      "monthAnalysis": {
+        "title": "Análise do Mês",
+        "totalPages": "Total de páginas lidas",
+        "pagesUnit": "páginas este mês",
+        "dailyAverage": "Média diária",
+        "pagesPerDay": "páginas por dia",
+        "bestDay": "Melhor dia da semana",
+        "pagesOnBestDay_one": "{{count}} página neste dia",
+        "pagesOnBestDay_other": "{{count}} páginas neste dia"
+      },
       "overview": "Visão Geral",
       "books": "Obras",
       "authors": "Autores",
@@ -2649,6 +2748,9 @@
       "courseStatusInProgress": "Em andamento",
       "courseStatusPaused": "Pausados",
       "courseStatusNotStarted": "Não iniciados",
+      "badges": {
+        "title": "Conquistas"
+      },
       "streakDays": "dias seguidos",
       "bestStreak": "melhor",
       "studyTimer": "Timer de estudo",
@@ -2702,6 +2804,16 @@
       "priorityHigh": "Alta",
       "priorityMedium": "Média",
       "priorityLow": "Baixa",
+      "askIntellect": "Perguntar ao Intelecto",
+      "quickCapture": {
+        "title": "Registrar Progresso",
+        "desc": "Registre rapidamente as páginas lidas hoje",
+        "selectBook": "Livro em leitura",
+        "selectBookPlaceholder": "Selecione um livro",
+        "pagesRead": "Páginas lidas",
+        "pagesPlaceholder": "Ex: 30",
+        "saved": "Progresso registrado com sucesso"
+      },
       "form": {
         "coverLabel": "Capa do Livro",
         "coverAlt": "Capa",
@@ -2846,7 +2958,9 @@
         "reading": "Lendo",
         "read": "Lido",
         "paused": "Pausado"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Converse com o agente sobre este livro"
     },
     "authors": {
       "title": "Autores",
@@ -3113,6 +3227,12 @@
       "updated": "Curso atualizado",
       "saved": "Curso salvo",
       "deleteConfirm": "Deseja excluir o curso \"{{title}}\"? Esta ação não pode ser desfeita.",
+      "askIntellect": "Perguntar ao Intelecto",
+      "studyHours": {
+        "title": "Horas de Estudo esta semana",
+        "subtitle": "Sessões registradas de segunda a domingo",
+        "hours": "horas"
+      },
       "tabs": {
         "overview": "Visão Geral",
         "modules": "Módulos",
@@ -3288,6 +3408,33 @@
       "radarChart": {
         "title": "Radar de Habilidades",
         "emptyState": "Adicione habilidades para visualizar o radar"
+      },
+      "history": {
+        "title": "Histórico de Proficiência",
+        "noHistory": "Sem histórico disponível",
+        "timeline": "Linha do tempo de evolução",
+        "viewHistory": "Ver histórico"
+      }
+    },
+    "planningOnboarding": {
+      "skip": "Pular",
+      "next": "Próximo",
+      "start": "Começar agora",
+      "step0": {
+        "title": "Bem-vindo ao Planejamento Pessoal",
+        "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
+      },
+      "step1": {
+        "title": "Checklist Diário",
+        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
+      },
+      "step2": {
+        "title": "Objetivos e Metas",
+        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
+      },
+      "step3": {
+        "title": "Treino e Nutrição",
+        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
       }
     },
     "planningOnboarding": {
@@ -3403,7 +3550,23 @@
       "workoutsByDayTitle": "Treinos por dia da semana — últimos 30 dias",
       "noWorkoutsRegistered": "Nenhum treino registrado",
       "sessionCount_one": "{{count}} sessão",
-      "sessionCount_other": "{{count}} sessões"
+      "sessionCount_other": "{{count}} sessões",
+      "weeklyXP": "Progresso Semanal — XP",
+      "xpLabel": "XP esta semana",
+      "xpProgress": "Nível {{level}}",
+      "insightCTAWorstDay": "Ajustar rotina",
+      "insightCTAWorkout": "Registrar treino",
+      "insightCTAGoals": "Ver metas",
+      "moduleCards": {
+        "workoutTitle": "Treino",
+        "workoutSubtitle": "Sessões e exercícios",
+        "nutritionTitle": "Nutrição",
+        "nutritionSubtitle": "Refeições e macros",
+        "tasksTitle": "Tarefas",
+        "tasksSubtitle": "Checklist e rotina",
+        "goalsTitle": "Metas",
+        "goalsSubtitle": "Objetivos pessoais"
+      }
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -3421,7 +3584,7 @@
       "deleted": "Tarefa excluída",
       "deletedDesc": "A tarefa foi excluída com sucesso.",
       "emptyState": "Nenhuma tarefa encontrada",
-      "emptyStateDesc": "Comece criando sua primeira tarefa rotineira.",
+      "emptyStateDesc": "Tarefas rotineiras geram consistência. Crie sua primeira rotina e acompanhe seu progresso diário com gráficos de consistência.",
       "viewHeatmap": "Ver heatmap",
       "viewConsistency": "Ver consistência",
       "heatmapTitle": "Consistência",
@@ -3455,6 +3618,13 @@
         "alreadyImported": "Nada a importar",
         "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista.",
         "saveAsTemplate": "Salvar como Template",
+        "saveAsTemplateTitle": "Salvar como Template",
+        "saveAsTemplateDesc": "Dê um nome ao template para poder reutilizá-lo no futuro.",
+        "templateNameLabel": "Nome do Template",
+        "templateNamePlaceholder": "Ex: Rotina Matinal",
+        "saveBtn": "Salvar Template",
+        "saveSuccess": "Template salvo!",
+        "saveSuccessDesc": "O template \"{{name}}\" foi salvo com sucesso.",
         "saved": "Template salvo localmente"
       },
       "export": {
@@ -3554,7 +3724,16 @@
         "sectionIdentification": "Identificação",
         "sectionPeriodicity": "Periodicidade",
         "sectionGoalUnit": "Meta & Unidade",
-        "sectionBehavior": "Comportamento"
+        "sectionBehavior": "Comportamento",
+        "periodicityTooltip": "Define com que frequência a tarefa aparece no seu checklist diário. Use 'Personalizado' para dias específicos da semana.",
+        "targetQuantityTooltip": "Quantidade que você precisa realizar para contar a tarefa como concluída. Ex: 30 minutos de leitura, 8 copos de água.",
+        "frequencyPreview": {
+          "daily": "Todos os dias",
+          "weekdays": "Segunda a Sexta-feira",
+          "weekly": "Toda {{day}}",
+          "monthly": "Todo dia {{day}} do mês",
+          "custom": "Dias personalizados"
+        }
       }
     },
     "goals": {
@@ -3575,7 +3754,8 @@
       "recalculated": "Progresso recalculado",
       "recalculateError": "Erro ao recalcular",
       "emptyState": "Nenhum objetivo encontrado",
-      "emptyStateDesc": "Comece criando seu primeiro objetivo.",
+      "emptyStateDesc": "Defina metas claras para acompanhar seu progresso e manter o foco no que importa.",
+      "emptyStateAction": "Criar primeira meta",
       "recalculateBtn": "Recalcular progresso",
       "columns": {
         "title": "Título",
@@ -3821,6 +4001,19 @@
         "household": "Casa",
         "personal_care": "Cuidado Pessoal",
         "other": "Outros"
+      },
+      "pomodoroTitle": "Modo Foco",
+      "pomodoroStart": "Iniciar",
+      "pomodoroPause": "Pausar",
+      "pomodoroReset": "Reiniciar",
+      "pomodoroFocusDone": "Foco concluído! Faça uma pausa.",
+      "pomodoroBreakDone": "Pausa encerrada! Hora de focar.",
+      "pomodoroCycles_one": "{{count}} ciclo concluído",
+      "pomodoroCycles_other": "{{count}} ciclos concluídos",
+      "pomodoroMode": {
+        "focus": "Foco",
+        "shortBreak": "Pausa Curta",
+        "longBreak": "Pausa Longa"
       }
     },
     "categorizationRules": {
@@ -3876,6 +4069,11 @@
       "lastImport": "Última Importação",
       "emptyTitle": "Nenhum extrato importado",
       "emptyMessage": "Clique em 'Importar Extrato' para começar.",
+      "flowTitle": "Como funciona a conciliação bancária:",
+      "flowStep1": "Importar Extrato",
+      "flowStep2": "Revisar Transações",
+      "flowStep3": "Confirmar Conciliação",
+      "emptyGuide": "Comece importando o extrato bancário no formato OFX ou CSV. Em seguida, revise as transações identificadas e confirme a conciliação.",
       "columns": {
         "file": "Arquivo",
         "format": "Formato",
@@ -3946,7 +4144,8 @@
         "statusMatched": "Conciliado",
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
-      }
+      },
+      "importWithPreview": "Importar com prévia"
     },
     "agents": {
       "title": "Agentes IA",
@@ -4648,7 +4847,8 @@
       "planDeleted": "Plano excluído",
       "planDeletedDesc": "O plano de treino foi excluído com sucesso.",
       "emptyPlans": "Nenhum plano cadastrado",
-      "emptyPlansDesc": "Crie seu primeiro plano de treino para organizar suas divisões.",
+      "emptyPlansDesc": "Crie seu primeiro plano de treino para organizar suas divisões e acompanhar sua evolução.",
+      "emptyPlansAction": "Criar plano de treino",
       "planName": "Nome do Plano",
       "planNamePlaceholder": "Ex: Meu Plano ABC",
       "planDescription": "Descrição",
@@ -4750,6 +4950,7 @@
       "saveError": "Erro ao salvar exercício",
       "empty": "Nenhum exercício cadastrado",
       "emptyDesc": "Cadastre exercícios para usar nos seus planos de treino.",
+      "emptyAction": "Cadastrar exercício",
       "fieldName": "Nome",
       "fieldNamePlaceholder": "Ex: Supino Reto",
       "fieldMuscles": "Grupos Musculares",
@@ -4773,7 +4974,20 @@
       "sessionDeleted": "Sessão excluída",
       "sessionDeletedDesc": "A sessão foi excluída com sucesso.",
       "emptySessions": "Nenhuma sessão registrada",
-      "emptySessionsDesc": "Registre sua primeira sessão de treino.",
+      "emptySessionsDesc": "Registre seus treinos para acompanhar sua frequência e evolução ao longo do tempo.",
+      "emptyAction": "Registrar primeiro treino",
+      "quickLogBtn": "Registrar Treino Rápido",
+      "quickLogTitle": "Registrar Treino Rápido",
+      "quickLogDesc": "Registre um treino em 2 passos sem preencher todos os detalhes.",
+      "quickLogStep1": "Selecionar Plano",
+      "quickLogStep2": "Confirmar Duração",
+      "quickLogPlanLabel": "Plano de treino",
+      "quickLogNoPlan": "Sem plano (sessão avulsa)",
+      "quickLogDuration": "Duração do treino",
+      "quickLogMin": "min",
+      "quickLogNext": "Próximo",
+      "quickLogConfirm": "Registrar Treino",
+      "quickLogSuccess": "Treino registrado!",
       "date": "Data",
       "startTime": "Início",
       "endTime": "Término",
@@ -5007,7 +5221,105 @@
         "explicit": "Conexão explícita",
         "implicit": "Conexão implícita"
       },
-      "exportPNG": "Exportar como PNG"
+      "exportPNG": "Exportar como PNG",
+      "suggestLinks": "Sugerir Conexões",
+      "suggestionsPanel": "Conexões Sugeridas",
+      "noSuggestions": "Nenhuma sugestão encontrada. Adicione mais conteúdo ao grafo.",
+      "similarity": "Similaridade",
+      "addLink": "Adicionar conexão",
+      "loadingSuggestions": "Buscando sugestões..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Revisão espaçada de destaques",
+      "newCard": "Novo Card",
+      "reviewNow": "Revisar agora",
+      "dueToday": "Para revisar hoje",
+      "generateFromBook": "Gerar de Destaques",
+      "flipCard": "Virar card",
+      "nextReview": "Próxima revisão",
+      "generatedSuccess": "{{count}} card(s) gerado(s) com sucesso",
+      "noneToGenerate": "Todos os destaques já têm flashcards",
+      "status": {
+        "new": "Novo",
+        "learning": "Aprendendo",
+        "review": "Revisão",
+        "mastered": "Dominado"
+      },
+      "rating": {
+        "label": "Como você se saiu?",
+        "0": "Não lembrei",
+        "1": "Difícil",
+        "2": "Com esforço",
+        "3": "Bom",
+        "4": "Fácil",
+        "5": "Muito fácil"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Para revisar",
+        "mastered": "Dominados",
+        "new": "Novos"
+      },
+      "empty": {
+        "title": "Sem flash cards",
+        "description": "Crie cards a partir dos seus destaques de livros para revisar com espaçamento."
+      },
+      "emptyReview": {
+        "title": "Em dia!",
+        "description": "Você não tem revisões pendentes. Volte mais tarde."
+      },
+      "front": "Frente (pergunta)",
+      "back": "Verso (resposta)",
+      "selectBook": "Selecionar livro (opcional)"
+    },
+    "intellectToday": {
+      "title": "Hoje no Intelecto",
+      "subtitle": "Seu hub diário de aprendizado",
+      "continueReading": "Continuar Lendo",
+      "startReading": "Começar a ler",
+      "startCourse": "Iniciar um curso",
+      "logReading": "Registrar leitura",
+      "reviewCards": "Revisar cards",
+      "quickActions": "Ações Rápidas",
+      "activeBook": "Em leitura",
+      "activeCourse": "Curso ativo",
+      "noActiveBook": "Nenhum livro em leitura",
+      "noCourse": "Nenhum curso em andamento",
+      "dueFlashcards": "Cards para revisar",
+      "streak": "Sequência de aprendizado",
+      "days": "{{count}} dia(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pág.",
+      "todayStudy": "Estudo hoje",
+      "weekProgress": "Progresso da semana",
+      "badges": "Conquistas recentes",
+      "viewAll": "Ver tudo",
+      "noStreak": "Comece sua sequência hoje!"
+    },
+    "workoutHub": {
+      "title": "Treino",
+      "subtitle": "Sessões e progresso",
+      "todayPlan": "Plano de hoje",
+      "quickLog": "Registrar Sessão",
+      "recentSessions": "Sessões Recentes",
+      "startSession": "Iniciar Sessão",
+      "noActivePlan": "Nenhum plano de treino ativo",
+      "createPlan": "Criar Plano",
+      "managePlans": "Gerenciar Planos",
+      "manageExercises": "Exercícios",
+      "viewHistory": "Histórico"
+    },
+    "nutritionHub": {
+      "title": "Nutrição",
+      "subtitle": "Refeições e macros do dia",
+      "todayMeals": "Refeições de hoje",
+      "quickLog": "Registrar Refeição",
+      "mealHistory": "Histórico",
+      "manageFoods": "Alimentos",
+      "manageMeals": "Refeições",
+      "noMealsToday": "Nenhuma refeição registrada hoje",
+      "addMeal": "Adicionar Refeição"
     }
   },
   "userProfile": {
@@ -5303,6 +5615,84 @@
     "capsule": "cápsula",
     "mcg": "mcg",
     "ui": "UI"
+  },
+  "financialCalendar": {
+    "title": "Calendário Financeiro",
+    "subtitle": "Visão temporal unificada de todos os vencimentos",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "summaryDue": "{{count}} vencimento(s) este mês",
+    "noEvents": "Nenhum vencimento neste dia",
+    "eventTypes": {
+      "payable": "A Pagar",
+      "receivable": "A Receber",
+      "creditCard": "Fatura Cartão",
+      "loan": "Parcela Empréstimo",
+      "revenue": "Receita Pendente"
+    },
+    "dayDetail": "Vencimentos em {{date}}",
+    "loading": "Carregando calendário..."
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Configurar Cofre de Segurança",
+    "step1Title": "Seu cofre de segurança pessoal",
+    "step1Desc": "O Cofre protege suas senhas, cartões de crédito, contas bancárias e arquivos confidenciais com criptografia de nível militar.",
+    "step1Warning": "⚠️ Atenção importante",
+    "step1WarningDesc": "Sua senha mestre não pode ser recuperada. Guarde-a em local seguro. Se perdida, os dados do cofre são irrecuperáveis.",
+    "step2Title": "Configure sua Senha Mestre",
+    "step2Desc": "A senha mestre é a chave que protege todo o seu cofre. Use uma senha forte e única que você não use em nenhum outro lugar.",
+    "step2TipsTitle": "Dicas para uma senha forte:",
+    "step2Tip1": "Mínimo 12 caracteres",
+    "step2Tip2": "Misture letras, números e símbolos",
+    "step2Tip3": "Evite palavras do dicionário",
+    "step2Tip4": "Não reutilize senhas de outros serviços",
+    "step2ConfigureBtn": "Configurar senha mestre agora",
+    "step3Title": "Cofre configurado! O que fazer agora?",
+    "step3Desc": "Comece a adicionar suas credenciais para mantê-las seguras.",
+    "step3AddPassword": "Adicionar primeira senha",
+    "step3ImportPasswords": "Importar senhas de outro app",
+    "step3HealthReport": "Ver relatório de saúde",
+    "step3StoreArchive": "Armazenar arquivo confidencial",
+    "back": "Voltar",
+    "skip": "Pular",
+    "next": "Próximo",
+    "finish": "Concluir"
+  },
+  "netWorth": {
+    "title": "Patrimônio Líquido",
+    "subtitle": "Ativos menos passivos — sua riqueza real",
+    "netWorthLabel": "Patrimônio Líquido",
+    "assetsLabel": "Ativos",
+    "liabilitiesLabel": "Passivos",
+    "assetsSection": "Detalhamento dos Ativos",
+    "liabilitiesSection": "Detalhamento dos Passivos",
+    "bankAccounts": "Contas Bancárias",
+    "vaults": "Cofres / Investimentos",
+    "loans": "Empréstimos (a pagar)",
+    "lentLoans": "Empréstimos (a receber)",
+    "creditCards": "Cartões de Crédito",
+    "overdraft": "Cheque Especial Utilizado",
+    "noAssets": "Nenhum ativo encontrado",
+    "noLiabilities": "Nenhum passivo encontrado",
+    "loading": "Calculando patrimônio..."
+  },
+  "subscriptions": {
+    "title": "Assinaturas",
+    "subtitle": "Controle de gastos recorrentes mensais",
+    "monthlyTotal": "Total Mensal",
+    "activeCount": "{{count}} assinatura(s) ativa(s)",
+    "dueSoon": "Vence em breve",
+    "dueSoonDesc": "Renovação nos próximos 7 dias",
+    "noSubscriptions": "Nenhuma assinatura encontrada",
+    "noSubscriptionsDesc": "Assinaturas são despesas fixas com categoria de assinatura digital, entretenimento ou contas/serviços, ou vinculadas a um cartão de crédito.",
+    "groups": {
+      "digital_signs": "Assinaturas Digitais",
+      "entertainment": "Entretenimento",
+      "bills_and_services": "Contas e Serviços",
+      "other": "Outros"
+    },
+    "renewalOn": "Renova dia {{day}}",
+    "loading": "Carregando assinaturas..."
   },
   "components": {
     "installmentSimulator": {

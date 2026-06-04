@@ -3,6 +3,7 @@ export type {
   VaultSetupData,
   VaultUnlockData,
   VaultChangePasswordData,
+  VaultPreferences,
   Password,
   PasswordFormData,
   PasswordReveal,

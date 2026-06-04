@@ -7,7 +7,8 @@ import {
   Download,
   CheckCircle2,
   Clock,
-  GitFork,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -59,6 +60,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     loans,
     payables,
     isLoading,
+    isFetching,
     isDialogOpen,
     setIsDialogOpen,
     selectedExpense,
@@ -202,6 +204,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           <SelectTrigger
             className="w-40"
             aria-label={t('pages.expenses.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
           >
             <SelectValue placeholder={t('pages.expenses.allCategories')} />
           </SelectTrigger>
@@ -222,7 +225,11 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.expenses.allStatus')}
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder={t('pages.expenses.allStatus')} />
           </SelectTrigger>
           <SelectContent>
@@ -324,8 +331,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         data={expenses}
         columns={columns}
         keyExtractor={(expense) => expense.id}
-        isLoading={isLoading}
-        rowClassName={(expense) => (expense.payed ? '' : 'opacity-75 bg-warning/5')}
+        isLoading={isLoading || isFetching}
         emptyState={{
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.expenses.emptyState'),
@@ -362,15 +368,6 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                   memberName={getMemberDisplayName(expense.member_name, user)}
                 />
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSplitExpense(expense)}
-                aria-label={t('pages.expenses.splits.manage')}
-                title={t('pages.expenses.splits.manage')}
-              >
-                <GitFork className="h-4 w-4" aria-hidden="true" />
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"

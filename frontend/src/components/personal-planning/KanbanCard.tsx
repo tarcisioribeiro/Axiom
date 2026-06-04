@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Clock, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { GripVertical, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,6 @@ export function KanbanCard({ card }: KanbanCardProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
   };
 
   const getCategoryColor = (category: string) => {
@@ -55,15 +55,20 @@ export function KanbanCard({ card }: KanbanCardProps) {
   const isDone = card.status === 'done';
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(
-        'cursor-grab rounded-lg border-2 bg-card p-md shadow-sm transition-all hover:shadow-md active:cursor-grabbing',
-        isDone ? 'border-success/40 bg-success/5 opacity-80' : 'border-border'
-      )}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: isDragging ? 0.4 : 1, y: 0, scale: isDragging ? 1.03 : 1 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      whileHover={{
+        scale: isDragging ? 1.03 : 1.01,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+      }}
+      className="cursor-grab rounded-lg border-2 border-border bg-card p-md shadow-sm active:cursor-grabbing"
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle / Done indicator */}
@@ -138,6 +143,6 @@ export function KanbanCard({ card }: KanbanCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

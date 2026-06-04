@@ -5,12 +5,14 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  ExternalLink,
   Loader2,
   Copy,
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -78,6 +80,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
 const DEFAULT_FLAG: FlagConfig = FLAG_CONFIG.OTHER;
 
 export default function StoredCards() {
+  const navigate = useNavigate();
   const [cards, setCards] = useState<StoredCreditCard[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
@@ -357,9 +360,16 @@ export default function StoredCards() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{card.name}</p>
                       {card.finance_card_name && (
-                        <p className="truncate text-xs text-muted-foreground">
+                        <button
+                          className="flex items-center gap-0.5 truncate text-xs text-primary hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void navigate('/finance/credit-cards');
+                          }}
+                        >
+                          <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                           {card.finance_card_name}
-                        </p>
+                        </button>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">

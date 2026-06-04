@@ -7,9 +7,12 @@ import {
   ChevronUp,
   Clock,
   Link2,
+  Loader2,
+  Sparkles,
   Store,
   Tag,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -40,6 +43,8 @@ import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
 import { accountsService } from '@/services/accounts-service';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
+import type { CategorySuggestion } from '@/services/expenses-service';
+import { expensesService } from '@/services/expenses-service';
 import { membersService } from '@/services/members-service';
 import type {
   Account,
@@ -86,7 +91,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     []
   );
   const [linksOpen, setLinksOpen] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<CategorySuggestion | null>(null);
+  const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiSuggestionAbortRef = useRef<AbortController | null>(null);
 
   const {
     register,
@@ -175,28 +183,74 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   }, [expense, accounts, setValue]);
 
+  const fetchAiSuggestion = async (merchant: string) => {
+    const description = watch('description');
+    if (!merchant.trim() && !description?.trim()) return;
+
+    if (aiSuggestionAbortRef.current) aiSuggestionAbortRef.current.abort();
+    aiSuggestionAbortRef.current = new AbortController();
+
+    setIsLoadingAiSuggestion(true);
+    setAiSuggestion(null);
+    try {
+      const result = await Promise.race([
+        expensesService.suggestCategory({
+          description: description || '',
+          merchant,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10000)
+        ),
+      ]);
+      const currentCat = watch('category');
+      const categoryIsEmpty =
+        !currentCat || currentCat === 'others' || currentCat === '';
+      if (result.method === 'rule' && categoryIsEmpty) {
+        setValue('category', result.category);
+      } else if (result.method === 'llm' && result.category !== 'others') {
+        setAiSuggestion(result);
+      }
+    } catch {
+      // silent — LLM é opcional
+    } finally {
+      setIsLoadingAiSuggestion(false);
+    }
+  };
+
   const handleMerchantChange = (value: string) => {
     setValue('merchant', value);
+    setAiSuggestion(null);
     if (merchantDebounceRef.current) clearTimeout(merchantDebounceRef.current);
-    if (!value.trim() || categorizationRules.length === 0) return;
+    if (!value.trim()) {
+      setIsLoadingAiSuggestion(false);
+      return;
+    }
     merchantDebounceRef.current = setTimeout(() => {
       const lower = value.toLowerCase();
-      const matched = categorizationRules.find(
-        (rule) =>
-          lower.includes(rule.merchant_contains.toLowerCase()) ||
-          rule.merchant_contains.toLowerCase().includes(lower)
-      );
-      if (matched) {
-        const currentCategory = watch('category');
-        if (
-          !currentCategory ||
-          currentCategory === 'others' ||
-          currentCategory === ''
-        ) {
-          setValue('category', matched.category);
+
+      // Verificação heurística local (feedback imediato, sem chamada de rede)
+      if (categorizationRules.length > 0) {
+        const matched = categorizationRules.find(
+          (rule) =>
+            lower.includes(rule.merchant_contains.toLowerCase()) ||
+            rule.merchant_contains.toLowerCase().includes(lower)
+        );
+        if (matched) {
+          const currentCategory = watch('category');
+          if (
+            !currentCategory ||
+            currentCategory === 'others' ||
+            currentCategory === ''
+          ) {
+            setValue('category', matched.category);
+          }
+          return; // Regra local encontrada — sem necessidade de chamar API
         }
       }
-    }, 400);
+
+      // Nenhuma regra local correspondeu: tenta LLM via API
+      void fetchAiSuggestion(value);
+    }, 600);
   };
 
   useEffect(() => {
@@ -274,7 +328,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const hasEligibleLinks = eligibleLoans.length > 0 || eligiblePayables.length > 0;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg" noValidate>
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
@@ -401,29 +455,66 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <Tag className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.expenses.form.categoryLabel')}
             </Label>
-            <Select
-              value={watch('category') || ''}
-              onValueChange={(v) => setValue('category', v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('common.actions.select')} />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
-                  const Icon = EXPENSE_CATEGORY_ICONS[key];
-                  return (
-                    <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        {Icon && (
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        )}
-                        {translate('expenseCategories', key)}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Select
+                value={watch('category') || ''}
+                onValueChange={(v) => {
+                  setValue('category', v);
+                  setAiSuggestion(null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.actions.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                    const Icon = EXPENSE_CATEGORY_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {Icon && (
+                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          {translate('expenseCategories', key)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            {isLoadingAiSuggestion && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>{t('pages.expenses.form.aiSuggesting')}</span>
+              </div>
+            )}
+            {aiSuggestion && !isLoadingAiSuggestion && (
+              <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs">
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <span className="text-muted-foreground">
+                  {t('pages.expenses.form.aiSuggested')}:{' '}
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    onClick={() => {
+                      setValue('category', aiSuggestion.category);
+                      setAiSuggestion(null);
+                    }}
+                  >
+                    {translate('expenseCategories', aiSuggestion.category)}
+                  </button>
+                </span>
+                <button
+                  type="button"
+                  aria-label={t('common.actions.close')}
+                  className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
+                  onClick={() => setAiSuggestion(null)}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
             {errors.category && (
               <p className="text-sm text-destructive">{errors.category.message}</p>
             )}
@@ -628,11 +719,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             (!!futureBalanceInfo && !futureBalanceInfo.canPay)
           }
         >
-          {isLoading
-            ? t('common.actions.saving')
-            : expense
-              ? t('common.actions.update')
-              : t('common.actions.create')}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
+            </>
+          ) : expense ? (
+            t('common.actions.update')
+          ) : (
+            t('common.actions.create')
+          )}
         </Button>
       </div>
     </form>

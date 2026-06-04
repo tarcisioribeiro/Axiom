@@ -746,58 +746,63 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* 6. 4 StatCards */}
+        {/* 6. StatCards — saldo total em destaque, demais em 3 cols */}
         <motion.div
-          className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4"
+          className="space-y-md"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
+          {/* Saldo total — informação primária em destaque */}
           <motion.div variants={itemVariants}>
             <StatCard
               title={t('pages.dashboard.totalBalance')}
               value={formatCurrency(stats?.total_balance || 0)}
-              icon={<Wallet className="h-4 w-4" />}
+              icon={<Wallet className="h-5 w-5" />}
+              accentColor={(stats?.total_balance || 0) >= 0 ? 'green' : 'red'}
+              prominent
+              description={t('pages.dashboard.accountBalanceDesc')}
             />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <Link
-              to="/transactions"
-              title={t('pages.dashboard.viewExpenses')}
-              className="block transition-opacity hover:opacity-80"
-            >
-              <StatCard
-                title={t('pages.dashboard.monthExpenses')}
-                value={formatCurrency(stats?.total_expenses || 0)}
-                icon={<TrendingDown className="h-4 w-4" />}
-                variant="danger"
-              />
-            </Link>
-          </motion.div>
+          {/* Separador visual entre primário e secundários */}
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {t('pages.dashboard.monthCompositionShort')}
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
 
-          <motion.div variants={itemVariants}>
-            <Link
-              to="/transactions"
-              title={t('pages.dashboard.viewRevenues')}
-              className="block transition-opacity hover:opacity-80"
-            >
+          {/* Receitas, Despesas e Cartão — informações secundárias */}
+          <div className="grid grid-cols-1 gap-md md:grid-cols-3">
+            <motion.div variants={itemVariants}>
               <StatCard
                 title={t('pages.dashboard.monthRevenues')}
                 value={formatCurrency(stats?.total_revenues || 0)}
                 icon={<TrendingUp className="h-4 w-4" />}
-                variant="success"
+                accentColor="green"
               />
-            </Link>
-          </motion.div>
+            </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.creditLimit')}
-              value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
-              icon={<CreditCard className="h-4 w-4" />}
-            />
-          </motion.div>
+            <motion.div variants={itemVariants}>
+              <StatCard
+                title={t('pages.dashboard.monthExpenses')}
+                value={formatCurrency(stats?.total_expenses || 0)}
+                icon={<TrendingDown className="h-4 w-4" />}
+                accentColor="red"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <StatCard
+                title={t('pages.dashboard.creditLimit')}
+                value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
+                icon={<CreditCard className="h-4 w-4" />}
+                accentColor="blue"
+              />
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* 7. Score de Saúde Financeira */}

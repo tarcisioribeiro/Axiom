@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard,
@@ -33,6 +34,9 @@ import {
   Library,
   BookMarked,
   Scale,
+  CalendarDays,
+  TrendingUp,
+  RefreshCcw,
   NotebookPen,
   ListTodo,
   HeartPulse,
@@ -184,6 +188,21 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.bankReconciliation',
             href: '/bank-reconciliation',
             icon: Scale,
+          },
+          {
+            titleKey: 'nav.items.financialCalendar',
+            href: '/finance/calendar',
+            icon: CalendarDays,
+          },
+          {
+            titleKey: 'nav.items.netWorth',
+            href: '/finance/net-worth',
+            icon: TrendingUp,
+          },
+          {
+            titleKey: 'nav.items.subscriptions',
+            href: '/finance/subscriptions',
+            icon: RefreshCcw,
           },
         ],
       },

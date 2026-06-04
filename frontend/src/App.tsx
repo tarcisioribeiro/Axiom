@@ -57,6 +57,8 @@ const BookReader = lazy(() => import('./pages/BookReader'));
 const Courses = lazy(() => import('./pages/Courses'));
 const Skills = lazy(() => import('./pages/Skills'));
 const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
+const IntellectToday = lazy(() => import('./pages/IntellectToday'));
+const Flashcards = lazy(() => import('./pages/Flashcards'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -101,6 +103,11 @@ const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
+
+// Finance extras
+const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
+const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
+const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -427,6 +434,22 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
+          <Route
+            path="/library/intellect-today"
+            element={
+              <PageWrapper>
+                <IntellectToday />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/flashcards"
+            element={
+              <PageWrapper>
+                <Flashcards />
+              </PageWrapper>
+            }
+          />
           {/* Personal Planning Module routes */}
           <Route
             path="/planning/dashboard"
@@ -561,6 +584,32 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <VaultSimulator />
+              </PageWrapper>
+            }
+          />
+
+          {/* Finance extras */}
+          <Route
+            path="/finance/calendar"
+            element={
+              <PageWrapper>
+                <FinancialCalendar />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/net-worth"
+            element={
+              <PageWrapper>
+                <NetWorthTracker />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/subscriptions"
+            element={
+              <PageWrapper>
+                <SubscriptionTracker />
               </PageWrapper>
             }
           />
