@@ -77,6 +77,7 @@ repos:
         name: commitlint
         language: node
         entry: commitlint --edit --config frontend/commitlint.config.cjs
+        pass_filenames: false
         additional_dependencies:
           - '@commitlint/cli@19'
           - '@commitlint/config-conventional@19'

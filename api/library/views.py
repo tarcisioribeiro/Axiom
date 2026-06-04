@@ -1,6 +1,8 @@
 import csv
 import io
 import json
+import logging
+import re
 from datetime import timedelta
 
 from django.core.cache import cache
@@ -17,7 +19,7 @@ from django.db.models import (
 )
 from django.http import FileResponse
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -34,12 +36,15 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    FlashCard,
+    IntellectBadge,
     KnowledgeLink,
     LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
     Skill,
+    SkillHistory,
     Summary,
 )
 from library.serializers import (
@@ -58,6 +63,10 @@ from library.serializers import (
     CourseSerializer,
     CourseSessionCreateUpdateSerializer,
     CourseSessionSerializer,
+    FlashCardCreateUpdateSerializer,
+    FlashCardReviewSerializer,
+    FlashCardSerializer,
+    IntellectBadgeSerializer,
     KnowledgeLinkCreateUpdateSerializer,
     KnowledgeLinkSerializer,
     LiteraryTypeGoalCreateUpdateSerializer,
@@ -70,10 +79,13 @@ from library.serializers import (
     ReadingGoalSerializer,
     ReadingSerializer,
     SkillCreateUpdateSerializer,
+    SkillHistorySerializer,
     SkillSerializer,
     SummaryCreateUpdateSerializer,
     SummarySerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 READING_SPEED_FALLBACK = {
     "book": 2.0,
@@ -871,6 +883,110 @@ class SummaryDetailView(BaseRetrieveUpdateDestroyView):
             f"Deletou resumo: {instance.title}",
             description_key="summary.delete",
             description_params={"name": instance.title},
+        )
+
+
+# ============================================================================
+# AI BOOK SUMMARY VIEW
+# ============================================================================
+
+
+class BookAISummaryView(APIView):
+    """
+    POST /api/v1/library/books/<pk>/ai-summary/
+
+    Gera um resumo do livro a partir dos destaques (BookHighlight) usando IA.
+    Se o livro tiver poucos highlights, usa título/autor/gênero como contexto.
+
+    Body: { "language": "pt-BR" }  (opcional)
+    Returns: { "summary": "<texto gerado>" }
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request, pk):
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            book = Book.objects.get(pk=pk, owner=member, is_deleted=False)
+        except Book.DoesNotExist:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        highlights = list(
+            BookHighlight.objects.filter(
+                book=book, owner=member, is_deleted=False
+            ).order_by("page_number")[:50]
+        )
+
+        language = request.data.get("language", "pt-BR")
+
+        if highlights:
+            quotes_text = "\n".join(
+                f"- (p.{h.page_number or '?'}) {h.text}" for h in highlights
+            )
+            authors_str = (
+                ", ".join(a.name for a in book.authors.all()) or "Desconhecido"
+            )
+            user_prompt = (
+                f"Livro: {book.title}\n"
+                f"Autor(es): {authors_str}\n\n"
+                f"Destaques do leitor:\n{quotes_text}\n\n"
+                f"Com base nesses destaques, escreva um resumo conciso"
+                f" e perspicaz do livro em {language}, destacando os"
+                f" temas principais, a tese central e as ideias mais"
+                f" relevantes capturadas pelo leitor. Máximo de 300"
+                f" palavras."
+            )
+        else:
+            if book.authors.exists():
+                by_str = "de " + ", ".join(a.name for a in book.authors.all())
+            else:
+                by_str = ""
+            user_prompt = (
+                f"Escreva um resumo conciso (máximo 200 palavras, em"
+                f" {language}) do livro '{book.title}' ({by_str}),"
+                f" destacando seus temas principais e valor para o"
+                f" leitor."
+            )
+
+        try:
+            from agents.core.llm_client import LLMClient
+
+            result = LLMClient.chat(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Você é um assistente especializado em"
+                            " literatura. Gere resumos claros,"
+                            " objetivos e perspicazes de livros."
+                        ),
+                    },
+                    {"role": "user", "content": user_prompt},
+                ],
+                agent_name="book_ai_summary",
+                language=language,
+            )
+        except Exception as exc:
+            logger.error("Erro ao gerar resumo com IA: %s", exc)
+            return Response(
+                {"detail": "Serviço de IA indisponível no momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(
+            {"summary": result, "highlight_count": len(highlights)}
         )
 
 
@@ -2032,6 +2148,147 @@ class BookHighlightExportView(APIView):
 
 
 # ============================================================================
+# KINDLE IMPORT VIEW
+# ============================================================================
+
+
+class KindleImportView(APIView):
+    """
+    POST /api/v1/library/highlights/kindle-import/
+
+    Importa highlights do arquivo "My Clippings.txt" do Kindle.
+    O arquivo deve ser enviado como multipart/form-data no campo 'file'.
+
+    Formato esperado (cada entrada separada por "=========="):
+      <Título do Livro> (Autor)
+      - Seu destaque na página X | Posição Y-Z | Data, DD Mês AAAA
+
+      <texto do highlight>
+
+    Retorna: total_imported, total_skipped, errors[]
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    parser_classes = [MultiPartParser, FormParser]
+
+    _SEPARATOR = "=========="
+    _PAGE_RE = re.compile(r"página\s+(\d+)", re.IGNORECASE)
+
+    def post(self, request):
+        uploaded = request.FILES.get("file")
+        if not uploaded:
+            return Response(
+                {
+                    "detail": (
+                        "Envie o arquivo My Clippings.txt" " no campo 'file'."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            content = uploaded.read().decode("utf-8-sig", errors="replace")
+        except Exception:
+            return Response(
+                {"detail": "Não foi possível ler o arquivo. Use UTF-8."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        entries = [
+            e.strip() for e in content.split(self._SEPARATOR) if e.strip()
+        ]
+        imported = 0
+        skipped = 0
+        errors = []
+
+        for entry in entries:
+            lines = [ln for ln in entry.splitlines() if ln.strip()]
+            if len(lines) < 2:
+                skipped += 1
+                continue
+
+            header_line = lines[0].strip()
+            meta_line = lines[1].strip() if len(lines) > 1 else ""
+            text_lines = lines[2:] if len(lines) > 2 else []
+            text = " ".join(text_lines).strip()
+
+            # Skip bookmarks (no text) and notes without content
+            if not text or "- Seu marcador" in meta_line:
+                skipped += 1
+                continue
+
+            # Extract page number
+            page_match = self._PAGE_RE.search(meta_line)
+            page_number = int(page_match.group(1)) if page_match else None
+
+            # Extract book title (strip author in parentheses at end)
+            book_title = re.sub(r"\s*\([^)]+\)\s*$", "", header_line).strip()
+            if not book_title:
+                skipped += 1
+                continue
+
+            # Try to find existing book by title
+            book = (
+                Book.objects.filter(
+                    owner=member,
+                    title__iexact=book_title,
+                    is_deleted=False,
+                ).first()
+                or Book.objects.filter(
+                    owner=member,
+                    title__icontains=book_title[:30],
+                    is_deleted=False,
+                ).first()
+            )
+
+            if not book:
+                skipped += 1
+                continue
+
+            # Deduplicate: skip if same text already exists for this book
+            already = BookHighlight.objects.filter(
+                owner=member, book=book, text=text
+            ).exists()
+            if already:
+                skipped += 1
+                continue
+
+            try:
+                BookHighlight.objects.create(
+                    owner=member,
+                    book=book,
+                    text=text,
+                    page_number=page_number,
+                    highlight_type="quote",
+                    color="yellow",
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                imported += 1
+            except Exception as exc:
+                errors.append(f"Erro ao salvar highlight '{text[:40]}': {exc}")
+
+        return Response(
+            {
+                "total_imported": imported,
+                "total_skipped": skipped,
+                "errors": errors[:20],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+# ============================================================================
 # COURSE VIEWS
 # ============================================================================
 
@@ -2588,3 +2845,246 @@ class KnowledgeGraphView(APIView):
             )
 
         return Response({"nodes": nodes, "links": links})
+
+
+# ============================================================================
+# INTELLECT BADGE VIEWS
+# ============================================================================
+
+
+class IntellectBadgeListView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = IntellectBadgeSerializer
+
+    def get_queryset(self):
+        from members.models import Member
+
+        member = Member.objects.get(user=self.request.user)
+        return IntellectBadge.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).order_by("-awarded_at")
+
+
+# ============================================================================
+# SKILL HISTORY VIEW
+# ============================================================================
+
+
+class SkillHistoryView(generics.ListAPIView):
+    """Retorna o histórico de evolução de proficiência de uma habilidade."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    serializer_class = SkillHistorySerializer
+
+    def get_queryset(self):
+        skill_id = self.kwargs["pk"]
+        return SkillHistory.objects.filter(
+            skill_id=skill_id,
+            owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).order_by("created_at")
+
+
+# ============================================================================
+# FLASHCARD VIEWS
+# ============================================================================
+
+
+class FlashCardListCreateView(BaseListCreateView):
+    """Lista flashcards ou cria um novo."""
+
+    queryset = FlashCard.objects.all()
+
+    def get_queryset(self):
+        qs = FlashCard.objects.filter(
+            owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("book", "highlight")
+        due_only = self.request.query_params.get("due")
+        if due_only == "true":
+            qs = qs.filter(next_review__lte=timezone.localdate())
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return FlashCardCreateUpdateSerializer
+        return FlashCardSerializer
+
+
+class FlashCardDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um flashcard."""
+
+    queryset = FlashCard.objects.all()
+
+    def get_queryset(self):
+        return FlashCard.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return FlashCardCreateUpdateSerializer
+        return FlashCardSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+class FlashCardReviewView(APIView):
+    """Aplica resultado de revisão (SM-2) ao flashcard."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def post(self, request, pk):
+        try:
+            card = FlashCard.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except FlashCard.DoesNotExist:
+            return Response(
+                {"error": "Flash card não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = FlashCardReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        card.apply_review(serializer.validated_data["rating"])
+        return Response(FlashCardSerializer(card).data)
+
+
+class FlashCardFromHighlightView(APIView):
+    """Cria flashcards automaticamente a partir dos destaques de um livro."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def post(self, request, pk):
+        try:
+            book = Book.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Book.DoesNotExist:
+            return Response(
+                {"error": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        member = request.user.member
+        highlights = BookHighlight.objects.filter(
+            book=book, owner=member, deleted_at__isnull=True
+        )
+        created = 0
+        for highlight in highlights:
+            if not FlashCard.objects.filter(
+                highlight=highlight, deleted_at__isnull=True
+            ).exists():
+                FlashCard.objects.create(
+                    book=book,
+                    highlight=highlight,
+                    front=highlight.text[:200],
+                    back=(
+                        f"Livro: {book.title}"
+                        + (
+                            f", p. {highlight.page_number}"
+                            if highlight.page_number
+                            else ""
+                        )
+                    ),
+                    owner=member,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                created += 1
+        return Response({"created": created})
+
+
+# ============================================================================
+# KNOWLEDGE GRAPH SUGGEST LINKS VIEW
+# ============================================================================
+
+
+class KnowledgeGraphSuggestLinksView(APIView):
+    """
+    Sugere links de conhecimento baseados em similaridade semântica via
+    pgvector. Retorna até 10 pares de nós com maior similaridade que ainda
+    não têm link.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request):
+        try:
+            from agents.models import AgentEmbedding
+
+            member = request.user.member
+
+            # Buscar embeddings existentes do usuário no domínio library
+            embeddings = list(
+                AgentEmbedding.objects.filter(domain="library").values(
+                    "id",
+                    "source_type",
+                    "source_id",
+                    "source_title",
+                    "embedding",
+                )[:200]
+            )
+
+            if len(embeddings) < 2:
+                return Response({"suggestions": []})
+
+            # Buscar links já existentes para excluir
+            existing_links = set(
+                KnowledgeLink.objects.filter(
+                    owner=member, deleted_at__isnull=True
+                ).values_list("source_id", "target_id")
+            )
+
+            suggestions = []
+            seen = set()
+
+            for i, emb_a in enumerate(embeddings):
+                for emb_b in embeddings[i + 1 :]:
+                    pair = (str(emb_a["source_id"]), str(emb_b["source_id"]))
+                    rev_pair = (
+                        str(emb_b["source_id"]),
+                        str(emb_a["source_id"]),
+                    )
+                    if pair in seen or rev_pair in seen:
+                        continue
+                    if pair in existing_links or rev_pair in existing_links:
+                        continue
+                    seen.add(pair)
+
+                    # Calcular similaridade coseno em Python
+                    if emb_a["embedding"] and emb_b["embedding"]:
+                        vec_a = emb_a["embedding"]
+                        vec_b = emb_b["embedding"]
+                        dot = sum(a * b for a, b in zip(vec_a, vec_b))
+                        mag_a = sum(a * a for a in vec_a) ** 0.5
+                        mag_b = sum(b * b for b in vec_b) ** 0.5
+                        sim = (
+                            dot / (mag_a * mag_b)
+                            if mag_a > 0 and mag_b > 0
+                            else 0.0
+                        )
+                        if sim >= 0.75:
+                            suggestions.append(
+                                {
+                                    "source_type": emb_a["source_type"],
+                                    "source_id": str(emb_a["source_id"]),
+                                    "source_title": emb_a["source_title"],
+                                    "target_type": emb_b["source_type"],
+                                    "target_id": str(emb_b["source_id"]),
+                                    "target_title": emb_b["source_title"],
+                                    "similarity": round(sim, 3),
+                                }
+                            )
+
+            suggestions.sort(key=lambda x: x["similarity"], reverse=True)
+            return Response({"suggestions": suggestions[:10]})
+
+        except Exception:
+            logger.exception("Erro ao sugerir links de conhecimento")
+            return Response({"suggestions": []})

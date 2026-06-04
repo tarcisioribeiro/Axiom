@@ -7,6 +7,8 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  Tag,
+  CircleDot,
 } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -171,8 +173,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             ? [
                 {
                   key: 'startDate',
-                  label: `${t('common.fields.from')}: ${startDate}`,
-                  onRemove: () => setStartDate(''),
+                  label: `${t('pages.revenues.dateFrom')}: ${formatDate(startDate)}`,
+                  onRemove: () => setStartDate(undefined),
                 },
               ]
             : []),
@@ -180,8 +182,8 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             ? [
                 {
                   key: 'endDate',
-                  label: `${t('common.fields.to')}: ${endDate}`,
-                  onRemove: () => setEndDate(''),
+                  label: `${t('pages.revenues.dateTo')}: ${formatDate(endDate)}`,
+                  onRemove: () => setEndDate(undefined),
                 },
               ]
             : []),
@@ -194,7 +196,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           className="w-44 flex-none"
         />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
             <SelectValue placeholder={t('pages.revenues.allCategories')} />
           </SelectTrigger>
           <SelectContent>
@@ -214,7 +216,10 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger
+            className="w-36"
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
             <SelectValue placeholder={t('pages.revenues.allStatus')} />
           </SelectTrigger>
           <SelectContent>

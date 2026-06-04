@@ -1,7 +1,16 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Brain, Edit, LayoutGrid, Plus, Radar, Search, Trash2 } from 'lucide-react';
+import {
+  Brain,
+  Clock,
+  Edit,
+  LayoutGrid,
+  Plus,
+  Radar,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -28,6 +37,7 @@ import { cardVariants } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
+import { skillHistoryService } from '@/services/skill-history-service';
 import { skillsService } from '@/services/skills-service';
 import type { Skill, SkillFormData, SkillStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -60,10 +70,12 @@ function SkillCard({
   skill,
   onEdit,
   onDelete,
+  onViewHistory,
 }: {
   skill: Skill;
   onEdit: (s: Skill) => void;
   onDelete: (s: Skill) => void;
+  onViewHistory: (s: Skill) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -121,6 +133,15 @@ function SkillCard({
         <Button
           size="sm"
           variant="ghost"
+          className="h-7 gap-xs text-xs"
+          title={t('pages.skills.history.viewHistory')}
+          onClick={() => onViewHistory(skill)}
+        >
+          <Clock className="h-3 w-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           className="h-7 flex-1 gap-xs text-xs text-destructive hover:text-destructive"
           onClick={() => onDelete(skill)}
         >
@@ -142,6 +163,14 @@ export default function Skills() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [formOpen, setFormOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [historySkill, setHistorySkill] = useState<Skill | null>(null);
+
+  const { data: historyData, isLoading: historyLoading } = useQuery({
+    queryKey: ['skill-history', historySkill?.id],
+    queryFn: () => skillHistoryService.getHistory(historySkill!.id),
+    enabled: !!historySkill,
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
   const { data: member } = useQuery({
     queryKey: ['member-me'],
@@ -350,6 +379,7 @@ export default function Skills() {
                   skill={skill}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onViewHistory={(s) => setHistorySkill(s)}
                 />
               ))}
             </div>
@@ -396,6 +426,63 @@ export default function Skills() {
               }}
               isLoading={createMutation.isPending || updateMutation.isPending}
             />
+          </DialogContent>
+        </Dialog>
+
+        {/* Skill History Dialog */}
+        <Dialog
+          open={!!historySkill}
+          onOpenChange={(v) => {
+            if (!v) setHistorySkill(null);
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-sm">
+                <Clock className="h-4 w-4 text-primary" />
+                {t('pages.skills.history.title')}
+                {historySkill && (
+                  <span className="text-muted-foreground">— {historySkill.name}</span>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {t('pages.skills.history.timeline')}
+              </DialogDescription>
+            </DialogHeader>
+            {historyLoading ? (
+              <LoadingState />
+            ) : !historyData?.results?.length ? (
+              <p className="py-lg text-center text-sm text-muted-foreground">
+                {t('pages.skills.history.noHistory')}
+              </p>
+            ) : (
+              <div className="relative space-y-0 pl-5">
+                <div className="absolute left-2 top-0 h-full w-px bg-border" />
+                {historyData.results.map((entry, i) => (
+                  <div key={entry.id} className="relative pb-md">
+                    <div
+                      className={cn(
+                        'absolute -left-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background',
+                        i === 0 ? 'bg-primary' : 'bg-muted'
+                      )}
+                    >
+                      <div className="h-2 w-2 rounded-full bg-background" />
+                    </div>
+                    <div className="ml-md">
+                      <p className="text-sm font-medium">
+                        {t(`pages.skills.proficiency.${entry.proficiency}`)}
+                        <span className="ml-xs text-xs font-normal text-muted-foreground">
+                          · {t(`pages.skills.status.${entry.status}`)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(entry.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </PageContainer>

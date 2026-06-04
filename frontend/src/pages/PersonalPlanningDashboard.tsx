@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { motion } from 'framer-motion';
 import {
   Target,
   CheckCircle2,
@@ -20,10 +20,11 @@ import {
   Utensils,
   ClipboardList,
   Zap,
+  Star,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -31,7 +32,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
-import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { API_CONFIG } from '@/config/api-config';
@@ -39,7 +40,7 @@ import { translate } from '@/config/constants';
 import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
-import { apiClient } from '@/services/api-client';
+import { cn } from '@/lib/utils';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
@@ -91,8 +92,7 @@ function renderInsight(
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
-  const { shouldShow: showOnboarding } = usePlanningOnboarding();
-  const [onboardingDone, setOnboardingDone] = useState(false);
+  const navigate = useNavigate();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
 
@@ -192,14 +192,34 @@ export default function PersonalPlanningDashboard() {
     };
   }, [mealLogsWeek, mealTypes, today]);
 
+  const weeklyXP = useMemo(() => {
+    const sessionsWeek = workoutSessions30d.filter(
+      (s) => s.date >= weekStart && s.date <= weekEnd
+    );
+    const weeklyTasksCompleted =
+      stats?.weekly_progress?.reduce((sum, d) => sum + d.completed, 0) ?? 0;
+    const reflectionsCount = mealLogsWeek.length > 0 ? 1 : 0;
+    const xp =
+      weeklyTasksCompleted * 10 + sessionsWeek.length * 20 + reflectionsCount * 5;
+    const level = Math.floor(xp / 100);
+    const xpInLevel = xp % 100;
+    const streak = stats?.current_streak ?? 0;
+    return { xp, level, xpInLevel, streak };
+  }, [stats, workoutSessions30d, mealLogsWeek, weekStart, weekEnd]);
+
   const workoutByDayData = useMemo(() => {
-    const weekDays: Record<string, number> = {};
+    const weekDays: Record<number, number> = {};
     workoutSessions30d.forEach((s) => {
-      const label = format(new Date(s.date + 'T00:00:00'), 'EEE', { locale: ptBR });
-      weekDays[label] = (weekDays[label] ?? 0) + 1;
+      const dayIdx = getISODay(new Date(s.date + 'T00:00:00')) - 1; // 0=Mon, 6=Sun
+      weekDays[dayIdx] = (weekDays[dayIdx] ?? 0) + 1;
     });
-    return Object.entries(weekDays).map(([day, count]) => ({ day, count }));
-  }, [workoutSessions30d]);
+    return Object.entries(weekDays)
+      .sort(([a], [b]) => Number(a) - Number(b))
+      .map(([dayIdx, count]) => ({
+        day: t(`pages.planningDashboard.weekdayShort.${dayIdx}`),
+        count,
+      }));
+  }, [workoutSessions30d, t]);
 
   const weeklyProgressData = stats?.weekly_progress
     ? stats.weekly_progress.map((item) => {
@@ -251,12 +271,66 @@ export default function PersonalPlanningDashboard() {
     );
   }
 
+  const MODULE_CARDS = [
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.workoutTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.workoutSubtitle' as const,
+      icon: Dumbbell,
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10 border-amber-500/20',
+      route: '/planning/workout',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.nutritionTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.nutritionSubtitle' as const,
+      icon: UtensilsCrossed,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      route: '/planning/nutrition',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.tasksTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.tasksSubtitle' as const,
+      icon: ListTodo,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10 border-blue-500/20',
+      route: '/planning/tasks-goals',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.goalsTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.goalsSubtitle' as const,
+      icon: Target,
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10 border-purple-500/20',
+      route: '/planning/tasks-goals',
+    },
+  ] as const;
+
   return (
     <PageContainer>
       {showOnboarding && !onboardingDone && (
         <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
       )}
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {MODULE_CARDS.map((card) => (
+          <button
+            key={card.route + card.titleKey}
+            onClick={() => void navigate(card.route)}
+            className={cn(
+              'flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all hover:scale-[1.02]',
+              card.bg
+            )}
+          >
+            <card.icon className={cn('h-6 w-6', card.color)} />
+            <div>
+              <p className="text-sm font-semibold">{t(card.titleKey)}</p>
+              <p className="text-xs text-muted-foreground">{t(card.subtitleKey)}</p>
+            </div>
+          </button>
+        ))}
+      </div>
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
       <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
@@ -402,6 +476,59 @@ export default function PersonalPlanningDashboard() {
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
       </div>
+
+      {/* Linha 2b: XP Semanal */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <CardTitle className="flex items-center gap-sm text-sm">
+            <Zap className="h-4 w-4 text-warning" />
+            {t('pages.planningDashboard.weeklyXP')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-lg">
+            <div className="flex items-center gap-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning/15">
+                <Star className="h-5 w-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold leading-none">{weeklyXP.xp}</p>
+                <p className="mt-xs text-xs text-muted-foreground">
+                  {t('pages.planningDashboard.xpLabel')}
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 space-y-xs">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {t('pages.planningDashboard.xpProgress', { level: weeklyXP.level })}
+                </span>
+                <span>{weeklyXP.xpInLevel}/100 XP</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  className="h-full rounded-full bg-warning"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${weeklyXP.xpInLevel}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+            {weeklyXP.streak > 3 && (
+              <motion.div
+                className="flex items-center gap-xs rounded-full bg-orange-500/15 px-sm py-xs"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-bold text-orange-500">
+                  {weeklyXP.streak}
+                </span>
+              </motion.div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Linha 3: Treinos */}
       <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
@@ -802,12 +929,48 @@ export default function PersonalPlanningDashboard() {
               </CardHeader>
               <CardContent className="space-y-md">
                 <ul className="space-y-3">
-                  {analytics.insights.map((insight, i) => (
-                    <li key={i} className="flex gap-sm text-sm leading-relaxed">
-                      <span className="mt-0.5 shrink-0 text-primary">•</span>
-                      <span>{renderInsight(insight, t)}</span>
-                    </li>
-                  ))}
+                  {analytics.insights.map((insight, i) => {
+                    const insightCTA =
+                      insight.type === 'worst_day'
+                        ? {
+                            label: t('pages.planningDashboard.insightCTAWorstDay'),
+                            onClick: () => navigate('/planning/routine-tasks'),
+                          }
+                        : insight.type === 'overall_low'
+                          ? {
+                              label: t('pages.planningDashboard.insightCTAWorkout'),
+                              onClick: () => navigate('/planning/workout'),
+                            }
+                          : insight.type === 'overall_excellent' ||
+                              insight.type === 'best_day'
+                            ? {
+                                label: t('pages.planningDashboard.insightCTAGoals'),
+                                onClick: () => navigate('/planning/goals'),
+                              }
+                            : null;
+
+                    return (
+                      <li
+                        key={i}
+                        className="flex items-start justify-between gap-sm text-sm leading-relaxed"
+                      >
+                        <div className="flex gap-sm">
+                          <span className="mt-0.5 shrink-0 text-primary">•</span>
+                          <span>{renderInsight(insight, t)}</span>
+                        </div>
+                        {insightCTA && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto shrink-0 px-sm py-xs text-xs text-primary hover:text-primary"
+                            onClick={insightCTA.onClick}
+                          >
+                            {insightCTA.label}
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <div className="flex flex-wrap gap-sm border-t pt-sm">
                   <Link

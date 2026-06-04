@@ -25,6 +25,7 @@ export interface Loan {
   notes?: string;
   status: string;
   remaining_balance?: string;
+  loan_type?: 'borrowed' | 'lent';
   created_at: string;
   updated_at: string;
   created_by?: number;

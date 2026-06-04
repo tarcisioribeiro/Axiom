@@ -30,6 +30,7 @@ export interface Password {
   notes?: string;
   is_favorite: boolean;
   last_password_change: string;
+  totp_enabled: boolean;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -49,6 +50,8 @@ export interface PasswordFormData {
   category: string;
   notes?: string;
   owner: number;
+  totp_enabled?: boolean;
+  totp_secret?: string;
 }
 
 export interface PasswordReveal {

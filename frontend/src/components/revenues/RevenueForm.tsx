@@ -5,6 +5,7 @@ import {
   ChevronUp,
   Clock,
   Link2,
+  Loader2,
   Tag,
   TrendingUp,
   Wallet,
@@ -374,11 +375,16 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? t('common.actions.saving')
-            : revenue
-              ? t('common.actions.update')
-              : t('common.actions.create')}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
+            </>
+          ) : revenue ? (
+            t('common.actions.update')
+          ) : (
+            t('common.actions.create')
+          )}
         </Button>
       </div>
     </form>
