@@ -3,6 +3,9 @@ export interface Food {
   uuid: string;
   name: string;
   description?: string | null;
+  calories_per_serving?: string | null;
+  serving_size?: string | null;
+  serving_unit?: string | null;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -11,6 +14,9 @@ export interface Food {
 export interface FoodFormData {
   name: string;
   description?: string | null;
+  calories_per_serving?: string | null;
+  serving_size?: string | null;
+  serving_unit?: string | null;
   owner: number;
 }
 
@@ -60,12 +66,16 @@ export interface MenuOptionIngredient {
   menu_option: number;
   food: number;
   food_name: string;
+  food_calories_per_serving?: string | null;
+  food_serving_size?: string | null;
+  food_serving_unit?: string | null;
   quantity?: string | null;
   unit: string;
   unit_display: string;
   is_optional: boolean;
   notes?: string | null;
   order: number;
+  alternative_group?: number | null;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -79,6 +89,7 @@ export interface MenuOptionIngredientFormData {
   is_optional: boolean;
   notes?: string | null;
   order: number;
+  alternative_group?: number | null;
   owner: number;
 }
 

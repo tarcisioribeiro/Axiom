@@ -31,43 +31,43 @@ interface MealTypeFormProps {
 
 function getPeriodInfo(time: string): {
   icon: ReactNode;
-  label: string;
+  labelKey: string;
   color: string;
 } {
   if (!time)
     return {
       icon: <UtensilsCrossed className="h-5 w-5" />,
-      label: '',
+      labelKey: '',
       color: 'text-muted-foreground',
     };
   const h = parseInt(time.slice(0, 2));
   if (h >= 4 && h < 9)
     return {
       icon: <Sunrise className="h-5 w-5 text-amber-500" />,
-      label: 'Manhã cedo',
+      labelKey: 'pages.nutritionMealTypes.suggestedTimeEarlyMorning',
       color: 'text-amber-500',
     };
   if (h >= 9 && h < 12)
     return {
       icon: <Sun className="h-5 w-5 text-yellow-500" />,
-      label: 'Manhã',
+      labelKey: 'pages.nutritionMealTypes.suggestedTimeMorning',
       color: 'text-yellow-500',
     };
   if (h >= 12 && h < 15)
     return {
       icon: <Sun className="h-5 w-5 text-orange-500" />,
-      label: 'Almoço',
+      labelKey: 'pages.nutritionMealTypes.suggestedTimeLunch',
       color: 'text-orange-500',
     };
   if (h >= 15 && h < 19)
     return {
       icon: <Sun className="h-5 w-5 text-amber-600" />,
-      label: 'Tarde',
+      labelKey: 'pages.nutritionMealTypes.suggestedTimeAfternoon',
       color: 'text-amber-600',
     };
   return {
     icon: <Moon className="h-5 w-5 text-violet-500" />,
-    label: 'Noite',
+    labelKey: 'pages.nutritionMealTypes.suggestedTimeNight',
     color: 'text-violet-500',
   };
 }
@@ -173,7 +173,7 @@ export function MealTypeForm({
               )}
             >
               {period.icon}
-              <span>{period.label}</span>
+              <span>{period.labelKey ? t(period.labelKey) : ''}</span>
             </div>
           )}
         </div>

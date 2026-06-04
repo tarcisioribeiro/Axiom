@@ -28,12 +28,14 @@ import type { Book } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function getPriorityBadge(rank: number): {
-  label: string;
+  labelKey: string;
   variant: 'destructive' | 'warning' | 'secondary';
 } {
-  if (rank === 1) return { label: 'Alta', variant: 'destructive' };
-  if (rank <= 3) return { label: 'Média', variant: 'warning' };
-  return { label: 'Baixa', variant: 'secondary' };
+  if (rank === 1)
+    return { labelKey: 'pages.readingQueue.priorityHigh', variant: 'destructive' };
+  if (rank <= 3)
+    return { labelKey: 'pages.readingQueue.priorityMedium', variant: 'warning' };
+  return { labelKey: 'pages.readingQueue.priorityLow', variant: 'secondary' };
 }
 
 const RANK_COLORS = ['bg-amber-500', 'bg-zinc-400', 'bg-orange-600'];
@@ -44,6 +46,7 @@ interface SortableBookItemProps {
 }
 
 function SortableBookItem({ book, rank }: SortableBookItemProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: book.id });
 
@@ -117,7 +120,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
           </Badge>
         )}
         <Badge variant={badge.variant} className="text-xs">
-          {badge.label}
+          {t(badge.labelKey)}
         </Badge>
       </div>
     </div>

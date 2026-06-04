@@ -1324,6 +1324,12 @@ class WorkoutExercise(BaseModel):
     reps_max = models.PositiveIntegerField(
         default=12, verbose_name="Repetições Máximas"
     )
+    rest_seconds = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Descanso (segundos)",
+        help_text="Tempo de descanso entre séries em segundos",
+    )
     load = models.CharField(
         max_length=20, null=True, blank=True, verbose_name="Carga"
     )
@@ -1542,6 +1548,30 @@ class Food(BaseModel):
     description = models.TextField(
         null=True, blank=True, verbose_name="Descrição"
     )
+    calories_per_serving = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Calorias por Porção (kcal)",
+        help_text="Quantidade de calorias para a porção de referência",
+    )
+    serving_size = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Tamanho da Porção",
+        help_text="Quantidade numérica da porção de referência",
+    )
+    serving_unit = models.CharField(
+        max_length=20,
+        choices=MEASUREMENT_UNIT_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Unidade da Porção",
+        help_text="Unidade da porção de referência (ex: g, unidade, scoop)",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1675,6 +1705,16 @@ class MenuOptionIngredient(BaseModel):
         help_text="Ex: tempero a gosto, orégano à vontade",
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    alternative_group = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Grupo de Alternativas",
+        help_text=(
+            "Ingredientes com o mesmo número nesta opção de "
+            "cardápio são alternativas entre si "
+            "(ex: 3 ovos OU 120g carne OU 140g frango)"
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1685,7 +1725,7 @@ class MenuOptionIngredient(BaseModel):
     class Meta:
         verbose_name = "Ingrediente da Opção"
         verbose_name_plural = "Ingredientes da Opção"
-        ordering = ["menu_option", "order"]
+        ordering = ["menu_option", "alternative_group", "order"]
         indexes = [models.Index(fields=["menu_option", "order"])]
 
     def __str__(self):
