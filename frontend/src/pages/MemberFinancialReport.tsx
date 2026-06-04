@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -40,45 +41,17 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
-  'food and drink': 'Comida e bebida',
-  'bills and services': 'Contas e serviços',
-  electronics: 'Eletrônicos',
-  'family and friends': 'Amizades e Família',
-  pets: 'Animais de estimação',
-  'digital signs': 'Assinaturas digitais',
-  house: 'Casa',
-  purchases: 'Compras',
-  donate: 'Doações',
-  education: 'Educação',
-  loans: 'Empréstimos',
-  entertainment: 'Entretenimento',
-  taxes: 'Impostos',
-  investments: 'Investimentos',
-  others: 'Outros',
-  vestuary: 'Roupas',
-  'health and care': 'Saúde e cuidados pessoais',
-  'professional services': 'Serviços profissionais',
-  supermarket: 'Supermercado',
-  rates: 'Taxas',
-  transport: 'Transporte',
-  travels: 'Viagens',
-};
+function expenseCategoryLabel(category: string): string {
+  return translate('expenseCategories', category) || category;
+}
 
-const LOAN_STATUS_LABELS: Record<string, string> = {
-  active: 'Ativo',
-  paid: 'Quitado',
-  overdue: 'Em atraso',
-  cancelled: 'Cancelado',
-  renegotiated: 'Renegociado',
-};
+function loanStatusLabel(status: string): string {
+  return translate('loanStatus', status) || status;
+}
 
-const PAYABLE_STATUS_LABELS: Record<string, string> = {
-  active: 'Ativo',
-  paid: 'Quitado',
-  overdue: 'Em atraso',
-  cancelled: 'Cancelado',
-};
+function payableStatusLabel(status: string): string {
+  return translate('billStatus', status) || status;
+}
 
 export default function MemberFinancialReportPage() {
   const { id } = useParams<{ id: string }>();
@@ -147,7 +120,7 @@ export default function MemberFinancialReportPage() {
   const pieData = expenses_by_category
     .filter((item) => parseFloat(item.total) > 0)
     .map((item) => ({
-      name: EXPENSE_CATEGORY_LABELS[item.category] ?? item.category,
+      name: expenseCategoryLabel(item.category),
       value: parseFloat(item.total),
     }));
 
@@ -443,7 +416,7 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
                 {formatCurrency(item.value)}
               </Td>
               <Td>{formatDate(item.date)}</Td>
-              <Td>{EXPENSE_CATEGORY_LABELS[item.category] ?? item.category}</Td>
+              <Td>{expenseCategoryLabel(item.category)}</Td>
               <Td className="text-muted-foreground">{item.merchant || '—'}</Td>
               <Td>
                 <Badge variant={item.payed ? 'default' : 'outline'}>
@@ -533,7 +506,7 @@ function LoansTable({
               <Td>{item[counterpartKey] ?? '—'}</Td>
               <Td>
                 <Badge variant={item.status === 'paid' ? 'default' : 'outline'}>
-                  {LOAN_STATUS_LABELS[item.status] ?? item.status}
+                  {loanStatusLabel(item.status)}
                 </Badge>
               </Td>
             </tr>
@@ -579,7 +552,7 @@ function PayablesTable({ items }: { items: MemberReportPayable[] }) {
                         : 'outline'
                   }
                 >
-                  {PAYABLE_STATUS_LABELS[item.status] ?? item.status}
+                  {payableStatusLabel(item.status)}
                 </Badge>
               </Td>
             </tr>
