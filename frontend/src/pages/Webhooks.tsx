@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -48,22 +49,26 @@ const EMPTY_FORM: WebhookFormData = {
   max_retries: 3,
 };
 
-function statusBadge(status: Webhook['last_delivery_status']) {
+function statusBadge(
+  status: Webhook['last_delivery_status'],
+  t: (key: string) => string
+) {
   if (!status) return null;
   const map: Record<
     string,
-    { label: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' }
+    { labelKey: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' }
   > = {
-    success: { label: 'Sucesso', variant: 'default' },
-    failed: { label: 'Falhou', variant: 'destructive' },
-    retrying: { label: 'Tentando', variant: 'secondary' },
-    pending: { label: 'Pendente', variant: 'outline' },
+    success: { labelKey: 'webhooks.status.success', variant: 'default' },
+    failed: { labelKey: 'webhooks.status.failed', variant: 'destructive' },
+    retrying: { labelKey: 'webhooks.status.retrying', variant: 'secondary' },
+    pending: { labelKey: 'webhooks.status.pending', variant: 'outline' },
   };
-  const m = map[status] ?? { label: status, variant: 'outline' as const };
-  return <Badge variant={m.variant}>{m.label}</Badge>;
+  const m = map[status] ?? { labelKey: status, variant: 'outline' as const };
+  return <Badge variant={m.variant}>{t(m.labelKey)}</Badge>;
 }
 
 export default function Webhooks() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { showDelete } = useAlertDialog();
@@ -102,10 +107,10 @@ export default function Webhooks() {
       apiClient.post(API_CONFIG.ENDPOINTS.WEBHOOKS, data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['webhooks'] });
-      toast({ title: 'Webhook criado com sucesso.' });
+      toast({ title: t('webhooks.created') });
       setDialogOpen(false);
     },
-    onError: () => toast({ title: 'Erro ao criar webhook.', variant: 'destructive' }),
+    onError: () => toast({ title: t('webhooks.createError'), variant: 'destructive' }),
   });
 
   const updateMutation = useMutation({
@@ -113,11 +118,11 @@ export default function Webhooks() {
       apiClient.patch(API_CONFIG.ENDPOINTS.WEBHOOK_DETAIL(id), data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['webhooks'] });
-      toast({ title: 'Webhook atualizado.' });
+      toast({ title: t('webhooks.updated') });
       setDialogOpen(false);
     },
     onError: () =>
-      toast({ title: 'Erro ao atualizar webhook.', variant: 'destructive' }),
+      toast({ title: t('webhooks.updateError'), variant: 'destructive' }),
   });
 
   const deleteMutation = useMutation({
@@ -125,17 +130,17 @@ export default function Webhooks() {
       apiClient.delete(API_CONFIG.ENDPOINTS.WEBHOOK_DETAIL(id)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['webhooks'] });
-      toast({ title: 'Webhook removido.' });
+      toast({ title: t('webhooks.deleted') });
     },
-    onError: () => toast({ title: 'Erro ao remover webhook.', variant: 'destructive' }),
+    onError: () => toast({ title: t('webhooks.deleteError'), variant: 'destructive' }),
   });
 
   const testMutation = useMutation({
     mutationFn: (id: number) =>
       apiClient.post(API_CONFIG.ENDPOINTS.WEBHOOK_TEST(id), {}),
-    onSuccess: () => toast({ title: 'Teste enfileirado com sucesso.' }),
+    onSuccess: () => toast({ title: t('webhooks.testSuccess') }),
     onError: () =>
-      toast({ title: 'Erro ao enfileirar teste.', variant: 'destructive' }),
+      toast({ title: t('webhooks.testError'), variant: 'destructive' }),
   });
 
   function openCreate() {
@@ -188,12 +193,12 @@ export default function Webhooks() {
   return (
     <PageContainer>
       <PageHeader
-        title="Webhooks"
-        description="Receba notificações em tempo real de eventos do Axiom em sistemas externos."
+        title={t('webhooks.title')}
+        description={t('webhooks.description')}
         actions={
           <Button onClick={openCreate}>
             <Plus className="mr-sm h-md w-md" />
-            Novo Webhook
+            {t('webhooks.newBtn')}
           </Button>
         }
       />
@@ -203,12 +208,12 @@ export default function Webhooks() {
       ) : !webhooks?.length ? (
         <EmptyState
           icon={<Zap className="h-10 w-10" />}
-          title="Nenhum webhook configurado"
-          description="Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo."
+          title={t('webhooks.empty')}
+          description={t('webhooks.emptyDesc')}
           action={
             <Button onClick={openCreate}>
               <Plus className="mr-sm h-md w-md" />
-              Criar webhook
+              {t('webhooks.createBtn')}
             </Button>
           }
         />
@@ -226,8 +231,8 @@ export default function Webhooks() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-sm">
                     <span className="font-medium">{w.name}</span>
-                    {!w.is_active && <Badge variant="secondary">Inativo</Badge>}
-                    {statusBadge(w.last_delivery_status)}
+                    {!w.is_active && <Badge variant="secondary">{t('webhooks.inactive')}</Badge>}
+                    {statusBadge(w.last_delivery_status, t)}
                   </div>
                   <p className="max-w-xs truncate text-sm text-muted-foreground">
                     {w.url}
@@ -245,7 +250,7 @@ export default function Webhooks() {
                     )}
                   </div>
                   <p className="mt-xs text-xs text-muted-foreground">
-                    {w.delivery_count} entrega{w.delivery_count !== 1 ? 's' : ''}
+                    {t('webhooks.deliveries', { count: w.delivery_count })}
                   </p>
                 </div>
               </div>
@@ -254,7 +259,7 @@ export default function Webhooks() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Ver entregas"
+                  title={t('webhooks.viewDeliveries')}
                   onClick={() =>
                     setDeliveriesWebhookId(w.id === deliveriesWebhookId ? null : w.id)
                   }
@@ -264,7 +269,7 @@ export default function Webhooks() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Testar"
+                  title={t('webhooks.testBtn')}
                   onClick={() => testMutation.mutate(w.id)}
                   disabled={testMutation.isPending}
                 >
@@ -287,14 +292,14 @@ export default function Webhooks() {
 
           {deliveriesWebhookId && (
             <div className="rounded-lg border bg-card p-md">
-              <h3 className="mb-sm font-medium">Histórico de entregas</h3>
+              <h3 className="mb-sm font-medium">{t('webhooks.deliveryHistory')}</h3>
               {loadingDeliveries ? (
                 <div className="flex justify-center py-md">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : !deliveries?.length ? (
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma entrega registrada.
+                  {t('webhooks.noDeliveries')}
                 </p>
               ) : (
                 <div className="space-y-sm">
@@ -342,24 +347,24 @@ export default function Webhooks() {
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingWebhook ? 'Editar Webhook' : 'Novo Webhook'}
+              {editingWebhook ? t('webhooks.form.editTitle') : t('webhooks.form.newTitle')}
             </DialogTitle>
             <DialogDescription>
-              Configure a URL e os eventos que disparam este webhook.
+              {t('webhooks.form.dialogDesc')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-md py-sm">
             <div className="space-y-xs">
-              <Label>Nome *</Label>
+              <Label>{t('webhooks.form.nameLabel')}</Label>
               <Input
-                placeholder="Ex: Notificar n8n"
+                placeholder={t('webhooks.form.namePlaceholder')}
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
               />
             </div>
             <div className="space-y-xs">
-              <Label>URL de destino *</Label>
+              <Label>{t('webhooks.form.urlLabel')}</Label>
               <Input
                 placeholder="https://hooks.zapier.com/..."
                 value={form.url}
@@ -369,12 +374,12 @@ export default function Webhooks() {
             <div className="space-y-xs">
               <Label>
                 {editingWebhook
-                  ? 'Novo secret (deixe em branco para manter)'
-                  : 'Secret *'}
+                  ? t('webhooks.form.secretEditLabel')
+                  : t('webhooks.form.secretLabel')}
               </Label>
               <Input
                 type="password"
-                placeholder="Chave para assinar o payload (HMAC-SHA256)"
+                placeholder={t('webhooks.form.secretPlaceholder')}
                 value={form.secret}
                 onChange={(e) => setForm((p) => ({ ...p, secret: e.target.value }))}
               />
@@ -382,7 +387,7 @@ export default function Webhooks() {
 
             <div className="grid grid-cols-2 gap-sm">
               <div className="space-y-xs">
-                <Label>Timeout (s)</Label>
+                <Label>{t('webhooks.form.timeoutLabel')}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -394,7 +399,7 @@ export default function Webhooks() {
                 />
               </div>
               <div className="space-y-xs">
-                <Label>Máx. tentativas</Label>
+                <Label>{t('webhooks.form.maxRetriesLabel')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -413,11 +418,11 @@ export default function Webhooks() {
                 checked={form.is_active}
                 onCheckedChange={(v) => setForm((p) => ({ ...p, is_active: !!v }))}
               />
-              <Label htmlFor="is_active">Webhook ativo</Label>
+              <Label htmlFor="is_active">{t('webhooks.form.isActiveLabel')}</Label>
             </div>
 
             <div className="space-y-sm">
-              <Label>Eventos *</Label>
+              <Label>{t('webhooks.form.eventsLabel')}</Label>
               <div className="grid max-h-48 grid-cols-1 gap-xs overflow-y-auto rounded-md border p-sm">
                 {(events ?? []).map((ev) => (
                   <div key={ev.value} className="flex items-center gap-sm">
@@ -444,11 +449,11 @@ export default function Webhooks() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-sm h-md w-md animate-spin" />}
-              {editingWebhook ? 'Salvar' : 'Criar'}
+              {editingWebhook ? t('webhooks.form.saveBtn') : t('webhooks.form.createBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
