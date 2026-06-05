@@ -193,7 +193,7 @@ export default function LibraryDashboard() {
     [stats?.rating_distribution, t]
   );
 
-  const translatedReadingByTimeOfDay = useMemo(
+  const _translatedReadingByTimeOfDay = useMemo(
     () =>
       (stats?.reading_by_time_of_day || []).map((item) => {
         const key =
@@ -434,7 +434,7 @@ export default function LibraryDashboard() {
     return <LoadingState fullScreen />;
   }
 
-  const timeOfDayIcons: Record<string, React.ReactNode> = {
+  const _timeOfDayIcons: Record<string, React.ReactNode> = {
     morning: <Sun className="h-4 w-4 text-yellow-500" />,
     afternoon: <Sunset className="h-4 w-4 text-orange-500" />,
     evening: <Moon className="h-4 w-4 text-blue-400" />,
@@ -1212,200 +1212,6 @@ export default function LibraryDashboard() {
         </CardContent>
       </Card>
 
-      {/* Block 3: Sessões & Ritmo | Previsão de Conclusão */}
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
-        {/* Sessões & Ritmo */}
-        <Card>
-          <CardHeader className="pb-sm">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.sessionsAndPace')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {/* Streak em destaque */}
-            <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-sm dark:bg-orange-950/20">
-              <div className="flex items-center gap-sm">
-                <GraduationCap className="h-4 w-4 text-category-intellect" />
-                <CardTitle className="text-sm font-medium">
-                  {t('pages.libraryDashboard.coursesTitle')}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-md sm:grid-cols-6">
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.totalCourses')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold">{courseStats.total}</span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <Play className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.coursesInProgress')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-info">
-                    {courseStats.inProgress}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.coursesCompleted')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-success">
-                    {courseStats.completed}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.coursesInvestedHours')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold">
-                    {courseStats.investedHours.toFixed(0)}h
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <TrendingUp className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.completionRate')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-category-intellect">
-                    {courseStats.completionRate.toFixed(0)}%
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <Zap className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.avgProgress')}
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold">
-                    {courseStats.avgProgress.toFixed(0)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {t('pages.libraryDashboard.inProgressSubtitle')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Barra de progresso visual por status */}
-              {courseStats.total > 0 && (
-                <div className="mt-md space-y-sm border-t pt-md">
-                  {[
-                    {
-                      label: t('pages.libraryDashboard.courseStatusCompleted'),
-                      count: courseStats.completed,
-                      colorClass: 'bg-success',
-                    },
-                    {
-                      label: t('pages.libraryDashboard.courseStatusInProgress'),
-                      count: courseStats.inProgress,
-                      colorClass: 'bg-info',
-                    },
-                    {
-                      label: t('pages.libraryDashboard.courseStatusPaused'),
-                      count: courseStats.paused,
-                      colorClass: 'bg-warning',
-                    },
-                    {
-                      label: t('pages.libraryDashboard.courseStatusNotStarted'),
-                      count: courseStats.notStarted,
-                      colorClass: 'bg-muted-foreground/40',
-                    },
-                  ]
-                    .filter((s) => s.count > 0)
-                    .map((s) => {
-                      const pct = (s.count / courseStats.total) * 100;
-                      return (
-                        <div key={s.label} className="flex items-center gap-3">
-                          <span className="w-28 shrink-0 text-xs text-muted-foreground">
-                            {s.label}
-                          </span>
-                          <div className="flex flex-1 items-center gap-sm">
-                            <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                              <div
-                                className={`h-full rounded-full transition-all ${s.colorClass}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </div>
-                            <span className="w-8 text-right text-xs font-medium">
-                              {s.count}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Cursos: distribuição por categoria e plataforma */}
-          <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-sm">
-                <CardTitle className="flex items-center gap-sm text-sm">
-                  <GraduationCap className="h-4 w-4" />
-                  {t('pages.libraryDashboard.coursesByCategory')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  chartId="intellect-courses-by-category"
-                  data={courseStats.byCategoryData}
-                  dataKey="count"
-                  nameKey="name"
-                  formatter={(value) =>
-                    t('pages.libraryDashboard.courseCount', { count: Number(value) })
-                  }
-                  colors={COLORS}
-                  emptyMessage={t('pages.libraryDashboard.noCourses')}
-                  lockChartType="pie"
-                  height={250}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-sm">
-                <CardTitle className="flex items-center gap-sm text-sm">
-                  <Play className="h-4 w-4" />
-                  {t('pages.libraryDashboard.coursesByPlatform')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  chartId="intellect-courses-by-platform"
-                  data={courseStats.byPlatformData}
-                  dataKey="count"
-                  nameKey="name"
-                  formatter={(value) =>
-                    t('pages.libraryDashboard.courseCount', { count: Number(value) })
-                  }
-                  colors={COLORS}
-                  emptyMessage={t('pages.libraryDashboard.noCourses')}
-                  lockChartType="pie"
-                  height={250}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </CollapsibleSection>
 
       {/* Skills Section */}
       <CollapsibleSection
@@ -2270,7 +2076,6 @@ export default function LibraryDashboard() {
                   />
                 </div>
               </div>
-            )}
           </CardContent>
         </Card>
 
@@ -2292,6 +2097,7 @@ export default function LibraryDashboard() {
           </Card>
         )}
       </div>
+      </CollapsibleSection>
     </PageContainer>
   );
 }

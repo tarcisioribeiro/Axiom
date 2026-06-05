@@ -196,7 +196,9 @@ export function VaultContributionsDialog({
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    placeholder={t('components.vaults.contributionPlaceholder')}
+                    placeholder={t(
+                      'pages.vaults.recurringContributions.fields.descriptionPlaceholder'
+                    )}
                   />
                 </div>
                 <div>

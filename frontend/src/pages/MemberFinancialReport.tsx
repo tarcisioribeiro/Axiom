@@ -25,10 +25,10 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { translate } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
@@ -41,8 +41,16 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-function categoryLabel(category: string): string {
+function expenseCategoryLabel(category: string): string {
   return translate('expenseCategories', category) || category;
+}
+
+function loanStatusLabel(status: string): string {
+  return translate('loanStatus', status) || status;
+}
+
+function payableStatusLabel(status: string): string {
+  return translate('billStatus', status) || status;
 }
 
 export default function MemberFinancialReportPage() {
@@ -112,7 +120,7 @@ export default function MemberFinancialReportPage() {
   const pieData = expenses_by_category
     .filter((item) => parseFloat(item.total) > 0)
     .map((item) => ({
-      name: categoryLabel(item.category),
+      name: expenseCategoryLabel(item.category),
       value: parseFloat(item.total),
     }));
 
@@ -408,7 +416,7 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
                 {formatCurrency(item.value)}
               </Td>
               <Td>{formatDate(item.date)}</Td>
-              <Td>{categoryLabel(item.category)}</Td>
+              <Td>{expenseCategoryLabel(item.category)}</Td>
               <Td className="text-muted-foreground">{item.merchant || '—'}</Td>
               <Td>
                 <Badge variant={item.payed ? 'default' : 'outline'}>
@@ -498,7 +506,7 @@ function LoansTable({
               <Td>{item[counterpartKey] ?? '—'}</Td>
               <Td>
                 <Badge variant={item.status === 'paid' ? 'default' : 'outline'}>
-                  {t(`common.status.${item.status}`, { defaultValue: item.status })}
+                  {loanStatusLabel(item.status)}
                 </Badge>
               </Td>
             </tr>
@@ -544,7 +552,7 @@ function PayablesTable({ items }: { items: MemberReportPayable[] }) {
                         : 'outline'
                   }
                 >
-                  {t(`common.status.${item.status}`, { defaultValue: item.status })}
+                  {payableStatusLabel(item.status)}
                 </Badge>
               </Td>
             </tr>
