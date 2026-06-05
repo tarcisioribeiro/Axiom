@@ -269,6 +269,7 @@ REST_FRAMEWORK = {
         "vault_unlock": "10/minute",
         # LLM calls are expensive — conservative per-user cap
         "agent": "30/minute",
+        "categorization_suggest": "20/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

@@ -1,4 +1,19 @@
 /* eslint-disable max-lines */
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -11,6 +26,7 @@ import {
   Edit,
   FileText,
   Flame,
+  GripVertical,
   Layers,
   Loader2,
   Plus,
@@ -18,7 +34,7 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import React, { type ReactNode, useState } from 'react';
+import React, { type ReactNode, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -271,6 +287,7 @@ export default function WorkoutPage() {
       sets: number;
       reps_min: number;
       reps_max: number;
+      rest_seconds: number | null;
       load: string | null;
       load_unit: string;
       order: number;
@@ -278,6 +295,7 @@ export default function WorkoutPage() {
     }) =>
       workoutExerciseService.create({
         ...data,
+        rest_seconds: data.rest_seconds ?? undefined,
         load: data.load ?? undefined,
         notes: data.notes ?? undefined,
         owner: ownerId,
@@ -305,6 +323,7 @@ export default function WorkoutPage() {
         sets: number;
         reps_min: number;
         reps_max: number;
+        rest_seconds: number | null;
         load: string | null;
         load_unit: string;
         order: number;
@@ -313,6 +332,7 @@ export default function WorkoutPage() {
     }) =>
       workoutExerciseService.update(id, {
         ...data,
+        rest_seconds: data.rest_seconds ?? undefined,
         load: data.load ?? undefined,
         notes: data.notes ?? undefined,
         owner: ownerId,
@@ -610,8 +630,12 @@ export default function WorkoutPage() {
           }}
         />
 
-        <Tabs defaultValue="sessions" className="flex flex-1 flex-col">
+        <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
+            <TabsTrigger value="today" className="flex-1 gap-xs">
+              <Flame className="h-4 w-4" />
+              {t('pages.workoutHub.todayPlan')}
+            </TabsTrigger>
             <TabsTrigger value="sessions" className="flex-1 gap-xs">
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
@@ -625,6 +649,20 @@ export default function WorkoutPage() {
               {t('pages.workoutPlans.tabExercises')}
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Hoje ──────────────────────────────────────────────────── */}
+          <TabsContent value="today" className="mt-0 flex-1">
+            <TodayPlanTab
+              activePlans={activePlans}
+              sessions={sessions}
+              plansLoading={plansLoading}
+              sessionsLoading={sessionsLoading}
+              onStartSession={() => setDialog({ type: 'new-session' })}
+              onEditSession={(s) => setDialog({ type: 'edit-session', session: s })}
+              onDeleteSession={handleDeleteSession}
+              t={t}
+            />
+          </TabsContent>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions" className="mt-0 flex-1">
@@ -1143,14 +1181,37 @@ function QuickLogForm({
       const finished = new Date(now.getTime() + duration * 60 * 1000);
       const toTimeStr = (d: Date) =>
         `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-      await workoutSessionService.create({
+
+      const selectedDay =
+        selectedDayId && selectedDayId !== 'none'
+          ? days.find((d) => d.id === Number(selectedDayId))
+          : undefined;
+
+      const session = await workoutSessionService.create({
         date: format(now, 'yyyy-MM-dd'),
         started_at: toTimeStr(now),
         finished_at: toTimeStr(finished),
         owner: ownerId,
-        workout_day:
-          selectedDayId && selectedDayId !== 'none' ? Number(selectedDayId) : undefined,
+        workout_day: selectedDay?.id,
       });
+
+      // auto-populate session exercises from the plan day
+      if (selectedDay && selectedDay.exercises.length > 0) {
+        await Promise.all(
+          selectedDay.exercises.map((ex, idx) =>
+            workoutSessionExerciseService.create({
+              session: session.id,
+              exercise_name: ex.name,
+              sets_target: ex.sets,
+              reps_target_min: ex.reps_min,
+              reps_target_max: ex.reps_max,
+              order: idx,
+              owner: ownerId,
+            })
+          )
+        );
+      }
+
       toast({ title: t('pages.workoutSessions.quickLogSuccess') });
       onSuccess();
     } catch {
@@ -1457,6 +1518,99 @@ function ExerciseCatalogForm({
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
+function SortableExerciseItem({
+  ex,
+  idx,
+  onEdit,
+  onDelete,
+}: {
+  ex: WorkoutExercise;
+  idx: number;
+  onEdit?: (ex: WorkoutExercise) => void;
+  onDelete?: (ex: WorkoutExercise) => void;
+}) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: ex.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group flex items-center gap-sm rounded-lg bg-background px-sm py-xs"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
+        aria-label="Reordenar"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-category-exercise/20 text-xs font-bold text-category-exercise">
+        {idx + 1}
+      </span>
+      <span className="flex-1 text-sm font-medium">{ex.name}</span>
+      <div className="flex shrink-0 items-center gap-xs">
+        {ex.load && (
+          <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+            {ex.load} {ex.load_unit}
+          </span>
+        )}
+        {ex.sets > 0 ? (
+          <>
+            <span className="rounded-full bg-category-exercise/15 px-xs py-px text-xs font-semibold text-category-exercise">
+              {ex.sets}×
+            </span>
+            <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+              {ex.reps_min}–{ex.reps_max}
+            </span>
+          </>
+        ) : (
+          <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+            {t('pages.workoutPlans.noSets')}
+          </span>
+        )}
+        {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+          <span className="flex items-center gap-0.5 rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+            <Clock className="h-2.5 w-2.5" />
+            {ex.rest_seconds}s
+          </span>
+        )}
+        {(onEdit || onDelete) && (
+          <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(ex)}
+                className="rounded p-xs text-muted-foreground hover:text-foreground"
+              >
+                <Edit className="h-3 w-3" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(ex)}
+                className="rounded p-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ExerciseList({
   exercises,
   onEdit,
@@ -1466,55 +1620,66 @@ function ExerciseList({
   onEdit?: (ex: WorkoutExercise) => void;
   onDelete?: (ex: WorkoutExercise) => void;
 }) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [items, setItems] = useState<WorkoutExercise[]>(exercises);
+
+  React.useEffect(() => {
+    setItems(exercises);
+  }, [exercises]);
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const oldIndex = items.findIndex((e) => e.id === active.id);
+      const newIndex = items.findIndex((e) => e.id === over.id);
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      setItems(reordered);
+
+      try {
+        await Promise.all(
+          reordered.map((ex, idx) =>
+            workoutExerciseService.patch(ex.id, { order: idx })
+          )
+        );
+        void queryClient.invalidateQueries({ queryKey: ['workout-plans'] });
+        void queryClient.invalidateQueries({ queryKey: ['workout-days'] });
+      } catch {
+        toast({ title: t('pages.workoutPlans.reorderError'), variant: 'destructive' });
+        setItems(exercises);
+      }
+    },
+    [items, exercises, queryClient, t, toast]
+  );
+
   return (
-    <div className="space-y-xs">
-      {exercises.map((ex, idx) => (
-        <div
-          key={ex.id}
-          className="group flex items-center gap-sm rounded-lg bg-background px-sm py-xs"
-        >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-category-exercise/20 text-xs font-bold text-category-exercise">
-            {idx + 1}
-          </span>
-          <span className="flex-1 text-sm font-medium">{ex.name}</span>
-          <div className="flex shrink-0 items-center gap-xs">
-            {ex.load && (
-              <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
-                {ex.load} {ex.load_unit}
-              </span>
-            )}
-            <span className="rounded-full bg-category-exercise/15 px-xs py-px text-xs font-semibold text-category-exercise">
-              {ex.sets}×
-            </span>
-            <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
-              {ex.reps_min}–{ex.reps_max}
-            </span>
-            {(onEdit || onDelete) && (
-              <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
-                {onEdit && (
-                  <button
-                    type="button"
-                    onClick={() => onEdit(ex)}
-                    className="rounded p-xs text-muted-foreground hover:text-foreground"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(ex)}
-                    className="rounded p-xs text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={(e) => void handleDragEnd(e)}
+    >
+      <SortableContext
+        items={items.map((e) => e.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-xs">
+          {items.map((ex, idx) => (
+            <SortableExerciseItem
+              key={ex.id}
+              ex={ex}
+              idx={idx}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
         </div>
-      ))}
-    </div>
+      </SortableContext>
+    </DndContext>
   );
 }
 
@@ -1819,6 +1984,157 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Today Plan Tab ──────────────────────────────────────────────────────────
+
+interface TodayPlanTabProps {
+  activePlans: WorkoutPlan[];
+  sessions: WorkoutSession[];
+  plansLoading: boolean;
+  sessionsLoading: boolean;
+  onStartSession: () => void;
+  onEditSession: (s: WorkoutSession) => void;
+  onDeleteSession: (s: WorkoutSession) => Promise<void>;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}
+
+function TodayPlanTab({
+  activePlans,
+  sessions,
+  plansLoading,
+  sessionsLoading,
+  onStartSession,
+  onEditSession,
+  onDeleteSession,
+  t,
+}: TodayPlanTabProps) {
+  const today = new Date().toISOString().slice(0, 10);
+  const todaySessions = sessions.filter((s) => s.date === today);
+
+  if (plansLoading || sessionsLoading) return <LoadingState />;
+
+  return (
+    <div className="space-y-lg">
+      {/* Sessões de hoje */}
+      {todaySessions.length > 0 && (
+        <div>
+          <p className="mb-sm text-sm font-semibold text-foreground">
+            {t('pages.workoutHub.todaySessions')}
+          </p>
+          <SessionsGrouped
+            sessions={todaySessions}
+            onEdit={onEditSession}
+            onDelete={onDeleteSession}
+            t={t}
+          />
+        </div>
+      )}
+
+      {/* Plano ativo */}
+      {activePlans.length === 0 ? (
+        <EmptyState
+          title={t('pages.workoutHub.noActivePlan')}
+          description={t('pages.workoutHub.createPlan')}
+          icon={<Dumbbell className="h-8 w-8" />}
+          action={{
+            label: t('pages.workoutSessions.newSessionBtn'),
+            icon: <Plus className="mr-xs h-4 w-4" />,
+            onClick: onStartSession,
+          }}
+        />
+      ) : (
+        activePlans.map((plan) => (
+          <div key={plan.id} className="space-y-sm">
+            <div className="flex items-center gap-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-category-exercise/10">
+                <ClipboardList className="h-4 w-4 text-category-exercise" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">{plan.name}</p>
+                {plan.description && (
+                  <p className="text-xs text-muted-foreground">{plan.description}</p>
+                )}
+              </div>
+            </div>
+
+            {plan.days.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('pages.workoutPlans.emptyDays')}
+              </p>
+            ) : (
+              <div className="space-y-sm">
+                {plan.days.map((day) => (
+                  <div
+                    key={day.id}
+                    className="overflow-hidden rounded-lg border border-border bg-card"
+                  >
+                    <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-md py-sm">
+                      <div className="flex items-center gap-sm">
+                        {getMuscleIcon(day.muscle_groups)}
+                        <div>
+                          <p className="text-sm font-semibold">{day.name}</p>
+                          {day.muscle_groups && (
+                            <p className="text-xs text-muted-foreground">
+                              {day.muscle_groups}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {day.exercises.length}{' '}
+                        {day.exercises.length === 1
+                          ? t('pages.workoutPlans.exerciseSingular')
+                          : t('pages.workoutPlans.exercisePlural')}
+                      </Badge>
+                    </div>
+                    {day.exercises.length > 0 && (
+                      <div className="divide-y divide-border/40">
+                        {day.exercises.map((ex) => (
+                          <div
+                            key={ex.id}
+                            className="flex items-center justify-between px-md py-xs"
+                          >
+                            <div className="flex items-center gap-sm">
+                              <Dumbbell className="h-3.5 w-3.5 shrink-0 text-category-exercise/60" />
+                              <span className="text-sm">{ex.name}</span>
+                            </div>
+                            <div className="flex items-center gap-sm text-xs text-muted-foreground">
+                              {ex.sets > 0 ? (
+                                <span>
+                                  {ex.sets}×
+                                  {ex.reps_min === ex.reps_max
+                                    ? ex.reps_min
+                                    : `${ex.reps_min}–${ex.reps_max}`}
+                                </span>
+                              ) : (
+                                <span>{t('pages.workoutPlans.noSets')}</span>
+                              )}
+                              {ex.load && (
+                                <span className="font-medium text-foreground">
+                                  {ex.load} {ex.load_unit}
+                                </span>
+                              )}
+                              {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+                                <span className="flex items-center gap-0.5">
+                                  <Clock className="h-3 w-3" />
+                                  {ex.rest_seconds}s
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 }

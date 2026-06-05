@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useChartType } from '@/hooks/use-chart-type';
 import type {
@@ -57,7 +58,7 @@ export const ChartContainer = ({
   formatter,
   colors,
   enabledTypes = ['pie', 'bar', 'line'],
-  emptyMessage = 'Nenhum dado disponível',
+  emptyMessage,
   customColors,
   dualYAxis,
   lines,
@@ -70,6 +71,8 @@ export const ChartContainer = ({
   tooltipLabelFormatter,
   tooltipNameFormatter,
 }: ChartContainerProps) => {
+  const { t } = useTranslation();
+  const resolvedEmptyMessage = emptyMessage ?? t('common.charts.emptyMessage');
   const { chartType: storedChartType, cycleChartType } = useChartType(
     chartId,
     defaultType
@@ -105,7 +108,9 @@ export const ChartContainer = ({
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50">
           <BarChart2 className="h-6 w-6 opacity-40" />
         </div>
-        <p className="text-center text-sm text-muted-foreground">{emptyMessage}</p>
+        <p className="text-center text-sm text-muted-foreground">
+          {resolvedEmptyMessage}
+        </p>
       </div>
     );
   }
@@ -121,7 +126,7 @@ export const ChartContainer = ({
             className="rounded-lg border border-border bg-background/80 p-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="Alternar tipo de gráfico"
+            aria-label={t('common.charts.toggleType')}
           >
             <RefreshCw
               className={cn(
@@ -133,7 +138,7 @@ export const ChartContainer = ({
 
           {/* Tooltip no hover */}
           <div className="pointer-events-none absolute right-0 top-full z-20 mt-xs whitespace-nowrap rounded-md border border-border bg-popover/95 px-sm py-xs text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
-            Alternar visualização
+            {t('common.charts.toggleView')}
           </div>
         </div>
       )}

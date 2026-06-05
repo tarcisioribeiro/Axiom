@@ -75,3 +75,14 @@ class AgentStatusSerializer(serializers.Serializer):
         child=serializers.DictField(child=serializers.CharField()),
         default=list,
     )
+
+
+class CategoryClassifySerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    site = serializers.CharField(
+        max_length=500, required=False, allow_blank=True
+    )
+    username = serializers.CharField(
+        max_length=200, required=False, allow_blank=True
+    )
+    notes = serializers.CharField(required=False, allow_blank=True)

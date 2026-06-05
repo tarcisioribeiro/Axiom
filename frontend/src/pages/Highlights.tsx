@@ -668,8 +668,11 @@ export default function Highlights() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                {filtered.length} destaque{filtered.length !== 1 ? 's' : ''} — página{' '}
-                {safePage} de {totalPages}
+                {t('pages.highlights.paginationInfo', {
+                  count: filtered.length,
+                  page: safePage,
+                  totalPages,
+                })}
               </span>
               <div className="flex items-center gap-xs">
                 <Button

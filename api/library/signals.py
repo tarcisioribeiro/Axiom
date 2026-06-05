@@ -3,6 +3,38 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+@receiver(post_save, sender="library.Skill")
+def record_skill_history(sender, instance, created, **kwargs):
+    """Registra histórico quando proficiência ou status muda."""
+    from library.models import SkillHistory
+
+    if not instance.owner_id:
+        return
+
+    def _record():
+        last = (
+            SkillHistory.objects.filter(skill=instance)
+            .order_by("-created_at")
+            .first()
+        )
+        if (
+            last is None
+            or last.proficiency != instance.proficiency
+            or last.status != instance.status
+        ):
+            SkillHistory.objects.create(
+                skill=instance,
+                proficiency=instance.proficiency,
+                status=instance.status,
+                notes=instance.notes,
+                owner=instance.owner,
+                created_by=instance.updated_by or instance.created_by,
+                updated_by=instance.updated_by or instance.created_by,
+            )
+
+    transaction.on_commit(_record)
+
+
 @receiver(post_save, sender="library.BookHighlight")
 def embed_book_highlight(sender, instance, **kwargs):
     from agents.services.embedding_service import (
