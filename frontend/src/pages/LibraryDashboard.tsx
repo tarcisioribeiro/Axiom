@@ -19,9 +19,6 @@ import {
   Star,
   Flame,
   Download,
-  Moon,
-  Sun,
-  Sunset,
   GraduationCap,
   Brain,
   CheckCircle2,
@@ -191,21 +188,6 @@ export default function LibraryDashboard() {
         };
       }),
     [stats?.rating_distribution, t]
-  );
-
-  const _translatedReadingByTimeOfDay = useMemo(
-    () =>
-      (stats?.reading_by_time_of_day || []).map((item) => {
-        const key =
-          'pages.readings.form.timeOfDay' +
-          item.time_of_day.charAt(0).toUpperCase() +
-          item.time_of_day.slice(1);
-        return {
-          ...item,
-          time_of_day_display: t(key, { defaultValue: item.time_of_day_display }),
-        };
-      }),
-    [stats?.reading_by_time_of_day, t]
   );
 
   const courseStats = useMemo(() => {
@@ -392,7 +374,7 @@ export default function LibraryDashboard() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [timerRunning]);
+  }, [timerRunning, timerMode]);
 
   const timerDisplay = `${String(Math.floor(timerSeconds / 60)).padStart(2, '0')}:${String(timerSeconds % 60).padStart(2, '0')}`;
 
@@ -433,13 +415,6 @@ export default function LibraryDashboard() {
   if (isLoading) {
     return <LoadingState fullScreen />;
   }
-
-  const _timeOfDayIcons: Record<string, React.ReactNode> = {
-    morning: <Sun className="h-4 w-4 text-yellow-500" />,
-    afternoon: <Sunset className="h-4 w-4 text-orange-500" />,
-    evening: <Moon className="h-4 w-4 text-blue-400" />,
-    dawn: <Moon className="h-4 w-4 text-indigo-500" />,
-  };
 
   return (
     <PageContainer>
@@ -1211,7 +1186,6 @@ export default function LibraryDashboard() {
           </div>
         </CardContent>
       </Card>
-
 
       {/* Skills Section */}
       <CollapsibleSection
@@ -2076,27 +2050,27 @@ export default function LibraryDashboard() {
                   />
                 </div>
               </div>
-          </CardContent>
-        </Card>
-
-        {badges.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
-                <Award className="h-5 w-5" />
-                {t('pages.libraryDashboard.badges.title')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-sm">
-                {badges.map((badge) => (
-                  <BadgeChip key={badge.id} badge={badge} />
-                ))}
-              </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+
+          {badges.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm">
+                  <Award className="h-5 w-5" />
+                  {t('pages.libraryDashboard.badges.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-sm">
+                  {badges.map((badge) => (
+                    <BadgeChip key={badge.id} badge={badge} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </CollapsibleSection>
     </PageContainer>
   );

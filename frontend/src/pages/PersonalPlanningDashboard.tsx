@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -323,7 +323,7 @@ export default function PersonalPlanningDashboard() {
             key={card.route + card.titleKey}
             onClick={() => void navigate(card.route)}
             className={cn(
-              'flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all hover:scale-[1.02]',
+              'flex flex-col items-start gap-sm rounded-lg border p-md text-left transition-all hover:scale-[1.02]',
               card.bg
             )}
           >

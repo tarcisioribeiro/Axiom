@@ -9,6 +9,7 @@ import {
   Clock,
   Tag,
   CircleDot,
+  GitFork,
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -179,7 +180,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                 {
                   key: 'startDate',
                   label: `${t('common.fields.from')}: ${formatDate(startDate)}`,
-                  onRemove: () => setStartDate(''),
+                  onRemove: () => setStartDate(undefined),
                 },
               ]
             : []),
@@ -188,7 +189,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                 {
                   key: 'endDate',
                   label: `${t('common.fields.to')}: ${formatDate(endDate)}`,
-                  onRemove: () => setEndDate(''),
+                  onRemove: () => setEndDate(undefined),
                 },
               ]
             : []),
