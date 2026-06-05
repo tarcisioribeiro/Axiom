@@ -529,7 +529,6 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
-  const [_copyingId, setCopyingId] = useState<number | null>(null);
   const [_copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
   const [_countdown, setCountdown] = useState<Map<number, number>>(new Map());
@@ -741,28 +740,6 @@ export default function Passwords() {
     await copyToClipboard(password);
     setCopiedId(id);
     setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
-  };
-
-  const _handleCopyWithoutReveal = async (id: number) => {
-    try {
-      setCopyingId(id);
-      const revealData = await passwordsService.reveal(id);
-      await copyToClipboard(revealData.password);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
-      toast({
-        title: t('pages.passwords.copied'),
-        description: t('pages.passwords.copiedClipboard'),
-      });
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.passwords.revealError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setCopyingId(null);
-    }
   };
 
   const onFormSubmit = async (data: PasswordFormData) => {
