@@ -262,7 +262,7 @@ export default function Accounts() {
     if (!uploadFile || !reconciliationAccount) return;
     const format = detectFormat(uploadFile.name);
     if (!format) {
-      toast({ title: t('pages.accounts.invalidFormatError'), variant: 'destructive' });
+      toast({ title: t('pages.accounts.invalidFormat'), variant: 'destructive' });
       return;
     }
     setUploadLoading(true);
@@ -498,8 +498,8 @@ export default function Accounts() {
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => void openReconciliation(account)}
-                        title={t('pages.accounts.reconciliationTitle')}
-                        aria-label={t('pages.accounts.reconciliationTitle')}
+                        title={t('pages.accounts.bankReconciliation')}
+                        aria-label={t('pages.accounts.bankReconciliation')}
                       >
                         <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -564,18 +564,19 @@ export default function Accounts() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-sm">
               <ArrowLeftRight className="h-5 w-5" />
-              {t('pages.accounts.reconciliationTitle')} —{' '}
-              {reconciliationAccount?.account_name}
+              {t('pages.accounts.bankReconciliationTitle', {
+                account: reconciliationAccount?.account_name,
+              })}
             </DialogTitle>
             <DialogDescription>
-              {t('pages.accounts.reconciliationDesc')}
+              {t('pages.accounts.bankReconciliationDesc')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setIsUploadOpen(true)}>
               <FileUp className="mr-sm h-4 w-4" />
-              Importar Extrato
+              {t('pages.accounts.importStatement')}
             </Button>
           </div>
 
@@ -586,8 +587,8 @@ export default function Accounts() {
           ) : imports.length === 0 ? (
             <EmptyState
               icon={<ArrowLeftRight className="h-12 w-12 text-muted-foreground" />}
-              title="Nenhum extrato importado"
-              message={t('pages.accounts.reconciliationEmpty')}
+              title={t('pages.accounts.noImports')}
+              message={t('pages.accounts.noImportsDesc')}
             />
           ) : (
             <div className="rounded-md border">

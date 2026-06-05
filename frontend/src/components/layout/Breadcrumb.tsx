@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { useBreadcrumb } from '@/hooks/use-breadcrumb';
@@ -20,6 +21,7 @@ interface BreadcrumbProps {
  * ```
  */
 export function Breadcrumb({ className }: BreadcrumbProps) {
+  const { t } = useTranslation();
   const { breadcrumbs } = useBreadcrumb();
 
   if (breadcrumbs.length <= 1) {
@@ -71,7 +73,9 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
             <Link
               to={breadcrumbs[breadcrumbs.length - 2].href ?? '/'}
               className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label={`Voltar para ${breadcrumbs[breadcrumbs.length - 2].label}`}
+              aria-label={t('common.navigation.backTo', {
+                label: breadcrumbs[breadcrumbs.length - 2].label,
+              })}
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>

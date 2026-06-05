@@ -72,8 +72,7 @@ export const ChartContainer = ({
   tooltipNameFormatter,
 }: ChartContainerProps) => {
   const { t } = useTranslation();
-  const resolvedEmptyMessage =
-    emptyMessage ?? t('components.chartContainer.noDataMessage');
+  const resolvedEmptyMessage = emptyMessage ?? t('common.charts.emptyMessage');
   const { chartType: storedChartType, cycleChartType } = useChartType(
     chartId,
     defaultType
@@ -127,7 +126,7 @@ export const ChartContainer = ({
             className="rounded-lg border border-border bg-background/80 p-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label={t('components.chartContainer.toggleChartType')}
+            aria-label={t('common.charts.toggleType')}
           >
             <RefreshCw
               className={cn(
@@ -139,7 +138,7 @@ export const ChartContainer = ({
 
           {/* Tooltip no hover */}
           <div className="pointer-events-none absolute right-0 top-full z-20 mt-xs whitespace-nowrap rounded-md border border-border bg-popover/95 px-sm py-xs text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
-            {t('components.chartContainer.toggleView')}
+            {t('common.charts.toggleView')}
           </div>
         </div>
       )}
