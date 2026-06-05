@@ -120,7 +120,7 @@ export function RevenuesFilters({
           <DatePicker
             value={endDate}
             onChange={setEndDate}
-            placeholder="Até..."
+            placeholder={t('common.actions.filters.toDate')}
             clearable
           />
         </div>

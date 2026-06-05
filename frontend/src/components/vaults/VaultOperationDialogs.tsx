@@ -115,7 +115,7 @@ export function VaultDepositDialog({
               id="deposit_description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('components.vaults.depositPlaceholder')}
+              placeholder={t('pages.vaults.depositPlaceholder')}
             />
           </div>
         </div>
@@ -234,7 +234,7 @@ export function VaultWithdrawDialog({
               id="withdraw_description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('components.vaults.withdrawalPlaceholder')}
+              placeholder={t('pages.vaults.withdrawPlaceholder')}
             />
           </div>
         </div>

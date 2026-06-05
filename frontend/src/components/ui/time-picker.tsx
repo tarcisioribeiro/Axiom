@@ -42,7 +42,7 @@ export function TimePicker({
   clearable = true,
 }: TimePickerProps) {
   const { t } = useTranslation();
-  const resolvedPlaceholder = placeholder ?? t('components.timePicker.placeholder');
+  const resolvedPlaceholder = placeholder ?? t('common.fields.horary');
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
   const onChangeRef = useRef(onChange);
@@ -128,7 +128,7 @@ export function TimePicker({
         <button
           type="button"
           onClick={handleClear}
-          aria-label={t('components.timePicker.clearAriaLabel')}
+          aria-label={t('common.actions.clearTime')}
           className={cn(
             'absolute right-3 top-1/2 z-10 -translate-y-1/2',
             'h-5 w-5 rounded-full',

@@ -78,10 +78,7 @@ function BookProgressBar({ book, readings }: BookProgressProps) {
         />
       </div>
       <p className="text-[10px] text-muted-foreground">
-        {bookReadings.length}{' '}
-        {bookReadings.length === 1
-          ? t('pages.readingsTab.sessionSingular')
-          : t('pages.readingsTab.sessionPlural')}
+        {t('pages.readings.sessionsCount', { count: bookReadings.length })}
       </p>
     </div>
   );
@@ -115,12 +112,15 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
   const handleSubmit = async () => {
     if (!selectedBook || !startDate || !endDate) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
+      toast({
+        title: t('pages.readings.markAsRead.fillRequired'),
+        variant: 'destructive',
+      });
       return;
     }
     if (endDate < startDate) {
       toast({
-        title: t('pages.readingsTab.invalidDateRange'),
+        title: t('pages.readings.markAsRead.endAfterStart'),
         variant: 'destructive',
       });
       return;
@@ -129,15 +129,15 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
       setIsSubmitting(true);
       const result = await booksService.markAsRead(selectedBook, startDate, endDate);
       toast({
-        title: t('pages.readings.created'),
-        description: t('pages.readingsTab.sessionsCreated', {
+        title: t('pages.readings.markAsRead.successTitle'),
+        description: t('pages.readings.markAsRead.successDesc', {
           count: result.sessions_created,
         }),
       });
       onClose();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao registrar leitura',
+        title: t('pages.readings.markAsRead.errorTitle'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -162,20 +162,24 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('pages.readingsTab.markAsReadTitle')}</DialogTitle>
-          <DialogDescription>{t('pages.readingsTab.markAsReadDesc')}</DialogDescription>
+          <DialogTitle>{t('pages.readings.markAsRead.title')}</DialogTitle>
+          <DialogDescription>
+            {t('pages.readings.markAsRead.description')}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-md">
           {eligibleBooks.length > 1 && (
             <div className="space-y-sm">
-              <Label>Livro *</Label>
+              <Label>{t('pages.readings.markAsRead.bookLabel')}</Label>
               <Select
                 value={selectedBook ? selectedBook.toString() : ''}
                 onValueChange={(v) => setSelectedBook(parseInt(v))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um livro" />
+                  <SelectValue
+                    placeholder={t('pages.readings.markAsRead.bookPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {eligibleBooks.map((b) => (
@@ -190,29 +194,31 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
           <div className="grid grid-cols-2 gap-md">
             <div className="space-y-sm">
-              <Label>{t('pages.readingsTab.startDateLabel')}</Label>
+              <Label>{t('pages.readings.markAsRead.startDateLabel')}</Label>
               <DatePicker
                 value={startDate}
                 onChange={(d) => setStartDate(d ? formatLocalDate(d) : '')}
-                placeholder={t('pages.readingsTab.startDatePlaceholder')}
+                placeholder={t('pages.readings.markAsRead.startDatePlaceholder')}
               />
             </div>
             <div className="space-y-sm">
-              <Label>Data de fim *</Label>
+              <Label>{t('pages.readings.markAsRead.endDateLabel')}</Label>
               <DatePicker
                 value={endDate}
                 onChange={(d) => setEndDate(d ? formatLocalDate(d) : '')}
-                placeholder="Quando terminou"
+                placeholder={t('pages.readings.markAsRead.endDatePlaceholder')}
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-sm border-t pt-md">
             <Button variant="outline" onClick={onClose}>
-              {t('common.actions.cancel')}
+              {t('pages.readings.markAsRead.cancelBtn')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
-              {isSubmitting ? t('common.actions.loading') : t('common.actions.confirm')}
+              {isSubmitting
+                ? t('pages.readings.markAsRead.submitting')
+                : t('pages.readings.markAsRead.submitBtn')}
             </Button>
           </div>
         </div>
@@ -373,8 +379,8 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         >
           <BarChart2 className="h-4 w-4" />
           {showProgress
-            ? t('pages.readingsTab.viewSessions')
-            : t('pages.readingsTab.viewProgress')}
+            ? t('pages.readings.viewSessions')
+            : t('pages.readings.viewProgress')}
         </Button>
         <Button
           variant="outline"
@@ -383,7 +389,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           className="gap-sm"
         >
           <CalendarRange className="h-4 w-4" />
-          {t('pages.readingsTab.markAsReadBtn')}
+          {t('pages.readings.markAsReadPeriodBtn')}
         </Button>
       </div>
 
@@ -392,7 +398,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         booksWithReadings.length === 0 ? (
           <EmptyState
             icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
-            message="Nenhuma leitura registrada ainda."
+            message={t('pages.readings.noReadingsProgress')}
           />
         ) : (
           <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">

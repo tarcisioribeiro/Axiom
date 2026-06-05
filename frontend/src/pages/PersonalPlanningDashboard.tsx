@@ -32,6 +32,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
+import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
@@ -41,6 +42,7 @@ import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
@@ -95,6 +97,8 @@ export default function PersonalPlanningDashboard() {
   const navigate = useNavigate();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
+  const { shouldShow: showOnboarding } = usePlanningOnboarding();
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
