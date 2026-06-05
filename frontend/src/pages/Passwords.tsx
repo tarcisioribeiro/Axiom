@@ -10,7 +10,6 @@ import {
   EyeOff,
   Loader2,
   Copy,
-  Check,
   ExternalLink,
   Key,
   Share2,
@@ -28,7 +27,7 @@ import {
   History,
   Shield,
 } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -530,10 +529,10 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
-  const [copyingId, setCopyingId] = useState<number | null>(null);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [_copyingId, setCopyingId] = useState<number | null>(null);
+  const [_copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
-  const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
+  const [_countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
@@ -744,7 +743,7 @@ export default function Passwords() {
     setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
   };
 
-  const handleCopyWithoutReveal = async (id: number) => {
+  const _handleCopyWithoutReveal = async (id: number) => {
     try {
       setCopyingId(id);
       const revealData = await passwordsService.reveal(id);
@@ -814,8 +813,7 @@ export default function Passwords() {
       pwd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.site?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  );
 
   if (isLoading) {
     return <LoadingState />;

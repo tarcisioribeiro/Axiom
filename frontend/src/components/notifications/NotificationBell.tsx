@@ -35,7 +35,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="hover-lift relative transition-all hover:bg-secondary"
-          aria-label={t('components.notificationBell.ariaLabel')}
+          aria-label={t('layout.notifications.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
@@ -51,13 +51,11 @@ export function NotificationBell() {
         sideOffset={8}
       >
         <div className="flex items-center justify-between border-b p-3">
-          <h4 className="text-sm font-semibold">
-            {t('components.notificationBell.title')}
-          </h4>
+          <h4 className="text-sm font-semibold">{t('layout.notifications.title')}</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="xs" onClick={markAllAsRead}>
               <CheckCheck className="mr-xs h-3 w-3" />
-              Marcar todas como lidas
+              {t('layout.notifications.markAllRead')}
             </Button>
           )}
         </div>
@@ -69,7 +67,7 @@ export function NotificationBell() {
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-md text-center text-sm text-muted-foreground">
-              {t('components.notificationBell.empty')}
+              {t('layout.notifications.empty')}
             </div>
           ) : (
             <div className="flex flex-col divide-y divide-border py-xs">

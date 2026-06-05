@@ -162,7 +162,7 @@ export function CommandPalette() {
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Buscar comandos..."
+            placeholder={t('layout.commandPalette.placeholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="h-auto border-0 px-0 text-base shadow-none focus-visible:ring-0"
@@ -177,7 +177,7 @@ export function CommandPalette() {
           ref={listRef}
           className="custom-scrollbar max-h-[60vh] overflow-y-auto p-sm"
           role="listbox"
-          aria-label={t('components.commandPalette.ariaLabel')}
+          aria-label={t('layout.commandPalette.ariaLabel')}
         >
           <AnimatePresence mode="wait">
             {filteredCommands.length > 0 ? (
@@ -212,8 +212,8 @@ export function CommandPalette() {
                 className="py-12 text-center text-muted-foreground"
               >
                 <Search className="mx-auto mb-3 h-12 w-12 opacity-50" />
-                <p className="font-medium">Nenhum comando encontrado</p>
-                <p className="text-sm">Tente buscar por outra palavra-chave</p>
+                <p className="font-medium">{t('layout.commandPalette.noResults')}</p>
+                <p className="text-sm">{t('layout.commandPalette.noResultsHint')}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -225,16 +225,16 @@ export function CommandPalette() {
             <span className="flex items-center gap-xs">
               <kbd className="rounded border bg-background px-sm py-0.5">↑</kbd>
               <kbd className="rounded border bg-background px-sm py-0.5">↓</kbd>
-              <span>navegar</span>
+              <span>{t('layout.commandPalette.navigate')}</span>
             </span>
             <span className="flex items-center gap-xs">
               <kbd className="rounded border bg-background px-sm py-0.5">Enter</kbd>
-              <span>selecionar</span>
+              <span>{t('layout.commandPalette.select')}</span>
             </span>
           </div>
           <span className="flex items-center gap-xs">
             <kbd className="rounded border bg-background px-sm py-0.5">Esc</kbd>
-            <span>fechar</span>
+            <span>{t('layout.commandPalette.close')}</span>
           </span>
         </div>
       </DialogContent>

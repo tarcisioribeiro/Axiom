@@ -129,6 +129,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 
@@ -409,6 +410,7 @@ interface IconPickerProps {
 }
 
 export function IconPicker({ value, onChange, className }: IconPickerProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -445,14 +447,16 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
               {value}
             </>
           ) : (
-            <span className="text-muted-foreground">Selecione um ícone...</span>
+            <span className="text-muted-foreground">
+              {t('common.iconPicker.placeholder')}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         <div className="border-b p-sm">
           <Input
-            placeholder="Buscar icone..."
+            placeholder={t('common.iconPicker.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8"
