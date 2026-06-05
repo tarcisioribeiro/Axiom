@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Key,
   Share2,
+  Star,
   Wand2,
   Upload,
   X,
@@ -26,7 +27,7 @@ import {
   History,
   Shield,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -528,10 +529,15 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
+  const [_copiedId, setCopiedId] = useState<number | null>(null);
+  const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
+  const [_countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const autoHideInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -563,6 +569,53 @@ export default function Passwords() {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-hide revealed passwords after 30 seconds with countdown
+  useEffect(() => {
+    if (revealedAt.size === 0) {
+      if (autoHideInterval.current) {
+        clearInterval(autoHideInterval.current);
+        autoHideInterval.current = null;
+      }
+      setCountdown(new Map());
+      return;
+    }
+
+    autoHideInterval.current = setInterval(() => {
+      const now = Date.now();
+      const newCountdown = new Map<number, number>();
+      const toRemove: number[] = [];
+
+      for (const [id, ts] of revealedAt) {
+        const elapsed = (now - ts) / 1000;
+        const remaining = Math.max(0, 30 - elapsed);
+        if (remaining <= 0) {
+          toRemove.push(id);
+        } else {
+          newCountdown.set(id, Math.ceil(remaining));
+        }
+      }
+
+      if (toRemove.length > 0) {
+        setRevealedPasswords((prev) => {
+          const next = new Map(prev);
+          toRemove.forEach((id) => next.delete(id));
+          return next;
+        });
+        setRevealedAt((prev) => {
+          const next = new Map(prev);
+          toRemove.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+
+      setCountdown(newCountdown);
+    }, 1000);
+
+    return () => {
+      if (autoHideInterval.current) clearInterval(autoHideInterval.current);
+    };
+  }, [revealedAt]);
 
   const loadData = async () => {
     try {
@@ -654,23 +707,22 @@ export default function Passwords() {
 
   const handleReveal = async (id: number) => {
     if (revealedPasswords.has(id)) {
-      // Ocultar senha
       const newMap = new Map(revealedPasswords);
       newMap.delete(id);
       setRevealedPasswords(newMap);
+      setRevealedAt((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
       return;
     }
 
     try {
       setRevealingId(id);
       const revealData = await passwordsService.reveal(id);
-      const newMap = new Map(revealedPasswords);
-      newMap.set(id, revealData.password);
-      setRevealedPasswords(newMap);
-      toast({
-        title: t('pages.passwords.revealed'),
-        description: t('pages.passwords.revealedDesc'),
-      });
+      setRevealedPasswords((prev) => new Map(prev).set(id, revealData.password));
+      setRevealedAt((prev) => new Map(prev).set(id, Date.now()));
     } catch (error: unknown) {
       toast({
         title: t('pages.passwords.revealError'),
@@ -684,13 +736,10 @@ export default function Passwords() {
 
   const handleCopyPassword = async (id: number) => {
     const password = revealedPasswords.get(id);
-    if (password) {
-      await copyToClipboard(password);
-      toast({
-        title: t('common.messages.copied'),
-        description: t('pages.passwords.copiedDesc'),
-      });
-    }
+    if (!password) return;
+    await copyToClipboard(password);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
   };
 
   const onFormSubmit = async (data: PasswordFormData) => {
@@ -767,13 +816,29 @@ export default function Passwords() {
           </div>
         </PageHeader>
 
-        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <FilterBar
+          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          onClear={() => {
+            setSearchTerm('');
+            setShowFavoritesOnly(false);
+          }}
+        >
           <SearchInput
             placeholder={t('pages.passwords.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Button
+            variant={showFavoritesOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFavoritesOnly((v) => !v)}
+            className="gap-xs"
+            title={t('pages.passwords.favoritesFilter')}
+          >
+            <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
+            {t('pages.passwords.favoritesFilter')}
+          </Button>
         </FilterBar>
 
         <div className={cn('flex gap-lg', detailPassword ? 'lg:flex-row' : 'flex-col')}>

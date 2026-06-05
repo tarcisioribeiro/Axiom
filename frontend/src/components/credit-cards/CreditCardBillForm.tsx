@@ -221,7 +221,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                       c.flag as keyof typeof TRANSLATIONS.cardBrands
                     ] || c.flag;
                   const accountName =
-                    c.associated_account_name || 'Conta não informada';
+                    c.associated_account_name ||
+                    t('components.creditCards.accountNotProvided');
                   return (
                     <SelectItem key={c.id} value={c.id.toString()}>
                       {c.on_card_name} ****{last4} - {brandName} - {accountName}

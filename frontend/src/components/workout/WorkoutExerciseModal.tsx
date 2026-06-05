@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   StickyNote,
+  Timer,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -24,6 +25,7 @@ interface FormValues {
   sets: number;
   reps_min: number;
   reps_max: number;
+  rest_seconds: number;
   load: string;
   load_unit: string;
   notes: string;
@@ -39,6 +41,7 @@ interface WorkoutExerciseModalProps {
     sets: number;
     reps_min: number;
     reps_max: number;
+    rest_seconds: number | null;
     load: string | null;
     load_unit: string;
     order: number;
@@ -53,6 +56,8 @@ const LOAD_UNITS = [
   { value: 'lb', label: 'lb' },
   { value: 'bw', label: 'Peso Corp.' },
 ];
+
+const REST_PRESETS = [0, 30, 60, 90, 120, 180];
 
 function CounterInput({
   value,
@@ -114,6 +119,7 @@ export function WorkoutExerciseModal({
       sets: existing?.sets ?? 3,
       reps_min: existing?.reps_min ?? 8,
       reps_max: existing?.reps_max ?? 12,
+      rest_seconds: existing?.rest_seconds ?? 60,
       load: existing?.load ?? '',
       load_unit: existing?.load_unit ?? 'kg',
       notes: existing?.notes ?? '',
@@ -124,6 +130,7 @@ export function WorkoutExerciseModal({
   const sets = watch('sets');
   const repsMin = watch('reps_min');
   const repsMax = watch('reps_max');
+  const restSeconds = watch('rest_seconds');
 
   useEffect(() => {
     if (selectedExercise) setValue('exercise_id', selectedExercise.id);
@@ -143,6 +150,7 @@ export function WorkoutExerciseModal({
       sets: data.sets,
       reps_min: data.reps_min,
       reps_max: data.reps_max,
+      rest_seconds: data.rest_seconds > 0 ? data.rest_seconds : null,
       load: data.load || null,
       load_unit: data.load_unit,
       order: existing?.order ?? nextOrder,
@@ -256,6 +264,7 @@ export function WorkoutExerciseModal({
           <CounterInput
             value={sets}
             onChange={(v) => setValue('sets', v)}
+            min={0}
             label={t('pages.workoutPlans.sets')}
           />
           <div className="flex items-center gap-md pt-8">
@@ -273,11 +282,56 @@ export function WorkoutExerciseModal({
           </div>
         </div>
         <div className="rounded-lg bg-muted/40 py-xs text-center text-xs text-muted-foreground">
-          <strong className="font-semibold text-foreground">{sets}</strong> séries de{' '}
-          <strong className="font-semibold text-foreground">
-            {repsMin === repsMax ? repsMin : `${repsMin}–${repsMax}`}
-          </strong>{' '}
-          repetições
+          {sets === 0 ? (
+            <span>{t('pages.workoutPlans.noSetsLabel')}</span>
+          ) : (
+            <>
+              <strong className="font-semibold text-foreground">{sets}</strong>{' '}
+              {t('pages.workoutPlans.setsOf')}{' '}
+              <strong className="font-semibold text-foreground">
+                {repsMin === repsMax ? repsMin : `${repsMin}–${repsMax}`}
+              </strong>{' '}
+              {t('pages.workoutPlans.repsPlural', 'repetições')}
+            </>
+          )}
+        </div>
+      </FormSection>
+
+      {/* Descanso entre séries */}
+      <FormSection
+        title={t('pages.workoutPlans.restSeconds', 'Descanso entre séries')}
+        icon={Timer}
+      >
+        <div className="space-y-sm">
+          <div className="flex flex-wrap gap-xs">
+            {REST_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setValue('rest_seconds', preset)}
+                className={cn(
+                  'rounded-lg border px-sm py-xs text-xs font-semibold transition-all',
+                  restSeconds === preset
+                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
+                )}
+              >
+                {preset === 0 ? t('pages.workoutPlans.noRest') : `${preset}s`}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-sm">
+            <input
+              type="number"
+              min={0}
+              step={5}
+              {...register('rest_seconds', { valueAsNumber: true })}
+              className="w-24 rounded-lg border border-input bg-background px-sm py-2 text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-sm text-muted-foreground">
+              {t('pages.workoutPlans.seconds')}
+            </span>
+          </div>
         </div>
       </FormSection>
 

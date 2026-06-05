@@ -209,3 +209,76 @@ def send_weekly_security_summary() -> dict:
         )
 
     return {"sent": sent}
+
+
+@shared_task
+def detect_activity_anomalies() -> dict:
+    """
+    Detecta padrões anômalos no ActivityLog (múltiplas falhas, acessos
+    fora do horário habitual) e cria notificações in-app.
+
+    Roda diariamente às 06h.
+    """
+    from datetime import timedelta
+
+    from django.db.models import Count
+
+    from notifications.models import Notification
+    from notifications.services import dispatch_notification
+    from security.models import ActivityLog
+
+    since = timezone.now() - timedelta(hours=24)
+    flagged = 0
+
+    # Detectar múltiplas tentativas de unlock com falha (≥3 em 24h)
+    failed_unlocks = (
+        ActivityLog.objects.filter(
+            action="failed_vault_unlock",
+            created_at__gte=since,
+        )
+        .values("user")
+        .annotate(count=Count("id"))
+        .filter(count__gte=3)
+    )
+
+    for item in failed_unlocks:
+        if not item["user"]:
+            continue
+        try:
+            from members.models import Member
+
+            member = Member.objects.get(user_id=item["user"])
+        except Member.DoesNotExist:
+            continue
+
+        already = Notification.objects.filter(
+            owner=member,
+            notification_type="vault_anomaly_detected",
+            created_at__gte=since,
+        ).exists()
+        if already:
+            continue
+
+        notif = Notification.objects.create(
+            owner=member,
+            notification_type="vault_anomaly_detected",
+            title="Atividade suspeita detectada no Cofre",
+            message=(
+                f"Foram detectadas {item['count']} tentativas de"
+                " desbloqueio com falha nas últimas 24 horas. Verifique"
+                " se sua conta foi comprometida."
+            ),
+            content_type="ActivityLog",
+            object_id=0,
+            created_by=member.user,
+            updated_by=member.user,
+        )
+        dispatch_notification(notif)
+        flagged += 1
+        logger.info(
+            "Anomalia detectada para member=%s (%d falhas)",
+            member.id,
+            item["count"],
+        )
+
+    return {"flagged": flagged}

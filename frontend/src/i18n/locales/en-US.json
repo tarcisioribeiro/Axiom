@@ -22,6 +22,7 @@
       "download": "Download",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
+      "clearTime": "Clear time",
       "remove": "Remove",
       "filters": {
         "fromDate": "From: DD/MM/YYYY",
@@ -34,7 +35,8 @@
       "update": "Update",
       "select": "Select",
       "none": "None",
-      "total": "Total"
+      "total": "Total",
+      "test": "Test"
     },
     "messages": {
       "loadError": "Error loading data",
@@ -53,7 +55,8 @@
       "copiedDesc": "{{label}} copied to clipboard.",
       "revealError": "Error revealing data",
       "invalidData": "Invalid data",
-      "fillRequired": "Please fill in all required fields."
+      "fillRequired": "Please fill in all required fields.",
+      "passwordCopied": "Password copied to clipboard."
     },
     "fields": {
       "name": "Name",
@@ -124,7 +127,9 @@
       "processing": "Processing",
       "completed": "Completed",
       "failed": "Failed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "retrying": "Retrying",
+      "success": "Success"
     },
     "emailVerificationBanner": {
       "message": "Please confirm your email address to ensure full access to your account.",
@@ -175,6 +180,25 @@
       }
     },
     "noResults": "No results found",
+    "iconPicker": {
+      "placeholder": "Select an icon...",
+      "searchPlaceholder": "Search icon..."
+    },
+    "charts": {
+      "emptyMessage": "No data available",
+      "toggleType": "Toggle chart type",
+      "toggleView": "Toggle view"
+    },
+    "passwordStrength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "invalidConfig": "Invalid configuration",
+      "selectCharType": "Select at least one character type."
+    },
+    "navigation": {
+      "backTo": "Back to {{label}}"
+    },
     "mood": {
       "excellent": "Excellent",
       "good": "Good",
@@ -283,6 +307,21 @@
       "config": "Settings",
       "integrations": "Integrations",
       "logs": "Activity Logs"
+    },
+    "commandPalette": {
+      "placeholder": "Search commands...",
+      "noResults": "No commands found",
+      "noResultsHint": "Try searching with a different keyword",
+      "navigate": "navigate",
+      "select": "select",
+      "close": "close",
+      "ariaLabel": "Available commands"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Mark all as read",
+      "empty": "No notifications",
+      "ariaLabel": "Notifications"
     }
   },
   "breadcrumb": {
@@ -381,7 +420,8 @@
       "goToLogin": "Go to login",
       "invalidLink": "Invalid or expired link",
       "invalidLinkDesc": "Please request a new password reset link.",
-      "errorTitle": "Error resetting"
+      "errorTitle": "Error resetting",
+      "passwordMismatch": "Passwords do not match."
     },
     "verifyEmail": {
       "title": "Email verification",
@@ -580,7 +620,15 @@
         "statusProcessing": "Processing",
         "statusFailed": "Failed"
       },
-      "available": "Available: {{value}}"
+      "available": "Available: {{value}}",
+      "bankReconciliation": "Bank Reconciliation",
+      "bankReconciliationTitle": "Bank Reconciliation — {{account}}",
+      "bankReconciliationDesc": "Import bank statements to reconcile with your transactions.",
+      "importStatement": "Import Statement",
+      "noImports": "No statements imported",
+      "noImportsDesc": "Click 'Import Statement' to get started.",
+      "invalidFormat": "Invalid format. Use OFX or CSV.",
+      "balanceDistribution": "Balance distribution"
     },
     "expenses": {
       "title": "Expenses",
@@ -637,6 +685,8 @@
         "merchantLabel": "Merchant",
         "merchantPlaceholder": "Ex: Supermarket",
         "merchantHint": "Fill in for automatic categorization",
+        "aiSuggesting": "Asking AI to suggest a category...",
+        "aiSuggested": "AI suggested",
         "categoryLabel": "Category *",
         "paymentStatusLabel": "Payment Status *",
         "pending": "Pending",
@@ -1485,6 +1535,7 @@
       "updatedDesc": "The budget was updated successfully.",
       "deleted": "Budget deleted",
       "deletedDesc": "The budget was deleted successfully.",
+      "createError": "Error creating budget.",
       "emptySearch": "No budgets found for the current search.",
       "emptyState": "No budgets registered for this period. Click \"New Budget\" to get started.",
       "searchPlaceholder": "Search category...",
@@ -1531,7 +1582,13 @@
         "withinLimit": "within limit",
         "warning": "warning",
         "exceeded": "exceeded"
-      }
+      },
+      "createError": "Error creating budget.",
+      "aiSuggestionsTitle": "AI Budget Suggestions",
+      "aiSuggestionsDesc": "Based on your last 3 months of expenses. Click \"Apply\" to create this month's budget.",
+      "analyzing": "Analyzing history...",
+      "averageLabel": "Average",
+      "suggestionLabel": "Suggestion"
     },
     "fixedRevenues": {
       "title": "Fixed Monthly Revenues",
@@ -1623,7 +1680,9 @@
       "totalYield": "Accumulated Yield",
       "pendingYield": "Pending Yield",
       "depositTitle": "Deposit to Vault",
+      "depositPlaceholder": "e.g. Monthly deposit",
       "withdrawTitle": "Withdraw from Vault",
+      "withdrawPlaceholder": "e.g. Emergency withdrawal",
       "depositBtn": "Deposit",
       "withdrawBtn": "Withdraw",
       "applyYieldBtn": "Apply Yield",
@@ -1693,6 +1752,7 @@
         "deleteDesc": "Are you sure you want to delete this recurring contribution?",
         "fields": {
           "description": "Description *",
+          "descriptionPlaceholder": "e.g. Monthly savings",
           "amount": "Amount *",
           "dayOfMonth": "Day of Month (1–31) *",
           "startDate": "Start Date *",
@@ -2091,7 +2151,26 @@
         "groupCards": "Cards",
         "groupAccounts": "Accounts",
         "groupArchives": "Archives"
-      }
+      },
+      "vaultHub": {
+        "overview": "Vault Overview",
+        "anomalyTitle": "Suspicious Activity Detected",
+        "anomalyDesc": "Unusual activities detected. Review your activity log.",
+        "viewAnomalies": "View activities",
+        "quickStats": "Summary",
+        "vaultHealth": "Vault Health",
+        "securityScore": "Security Score",
+        "recentActivity": "Recent Activity",
+        "quickActions": "Quick Actions"
+      },
+      "alertConfig": "Alert Settings",
+      "alertConfigSaved": "Settings saved",
+      "alertOnNewIp": "Alert on new IP",
+      "alertOnNewIpDesc": "Notify when the vault is accessed from a new IP address.",
+      "alertOnFailedUnlock": "Alert on failed unlock attempts",
+      "alertOnFailedUnlockDesc": "Notify after multiple incorrect unlock attempts.",
+      "alertOnReveal": "Alert on password reveal",
+      "alertOnRevealDesc": "Notify each time a password is revealed."
     },
     "passwords": {
       "title": "Passwords",
@@ -2120,6 +2199,17 @@
       "searchPlaceholder": "Search passwords...",
       "generatePassword": "Generate Password",
       "hideGenerator": "Hide Generator",
+      "generator": {
+        "length": "Length: {{count}}",
+        "uppercase": "Uppercase (A-Z)",
+        "lowercase": "Lowercase (a-z)",
+        "numbers": "Numbers (0-9)",
+        "special": "Special (!@#$...)",
+        "excludeAmbiguous": "Exclude ambiguous",
+        "generating": "Generating...",
+        "generateError": "Error generating password",
+        "strengthLabel": "Password strength"
+      },
       "categories": {
         "social": "Social Networks",
         "email": "E-mail",
@@ -2153,7 +2243,10 @@
         "fair": "Fair",
         "good": "Good",
         "strong": "Strong"
-      }
+      },
+      "autoClassify": "Auto-classify",
+      "classifySuccess": "Category classified: {{category}}",
+      "classifyError": "Failed to classify category"
     },
     "sharePassword": {
       "title": "Share Credential",
@@ -2261,7 +2354,12 @@
       "importAnother": "Import another file",
       "noMemberMsg": "Could not identify the current user's member.",
       "selectedCount": "{{count}} selected",
-      "selectedCount_other": "{{count}} selected"
+      "selectedCount_other": "{{count}} selected",
+      "categoryMappingStep": "Category Mapping",
+      "categoryMappingDesc": "Adjust automatically detected categories",
+      "suggestedCategory": "Suggested",
+      "finalCategory": "Final Category",
+      "skipMapping": "Keep suggested categories"
     },
     "storedCards": {
       "title": "Stored Cards",
@@ -2426,6 +2524,8 @@
       "searchPlaceholder": "Search files...",
       "viewContent": "View content",
       "downloadFile": "Download file",
+      "preview": "Preview",
+      "previewTitle": "Preview",
       "categories": {
         "personal": "Personal",
         "financial": "Financial",
@@ -2469,7 +2569,17 @@
     "passwordGenerator": {
       "title": "Password Generator",
       "subtitle": "Generate Secure Password",
-      "desc": "Create cryptographically secure passwords with configurable options. Passwords are generated on the server using secure algorithms."
+      "desc": "Create cryptographically secure passwords with configurable options. Passwords are generated on the server using secure algorithms.",
+      "strengthLabel": "Password strength",
+      "strengthWeak": "Weak",
+      "strengthMedium": "Medium",
+      "strengthStrong": "Strong",
+      "uppercaseLabel": "Uppercase (A-Z)",
+      "lowercaseLabel": "Lowercase (a-z)",
+      "numbersLabel": "Numbers (0-9)",
+      "excludeAmbiguous": "Exclude ambiguous",
+      "invalidConfig": "Invalid configuration",
+      "selectCharType": "Please select at least one character type."
     },
     "libraryDashboard": {
       "title": "Intellect Dashboard",
@@ -2867,7 +2977,9 @@
         "reading": "Reading",
         "read": "Read",
         "paused": "Paused"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Chat with the agent about this book"
     },
     "authors": {
       "title": "Authors",
@@ -3045,6 +3157,31 @@
       "emptyState": "No readings recorded. Click \"New Reading\" to get started.",
       "searchPlaceholder": "Search readings...",
       "pagesRead": "{{count}} p.",
+      "viewSessions": "View sessions",
+      "viewProgress": "View progress",
+      "markAsReadPeriodBtn": "Mark as read (period)",
+      "noReadingsProgress": "No readings recorded yet.",
+      "sessionsCount_one": "{{count}} session",
+      "sessionsCount_other": "{{count}} sessions",
+      "markAsRead": {
+        "title": "Mark as Read (period)",
+        "description": "Automatically generates reading sessions distributed over the given date range, based on your historical reading pace.",
+        "bookLabel": "Book *",
+        "bookPlaceholder": "Select a book",
+        "startDateLabel": "Start date *",
+        "endDateLabel": "End date *",
+        "startDatePlaceholder": "When you started",
+        "endDatePlaceholder": "When you finished",
+        "submitBtn": "Register",
+        "submitting": "Registering...",
+        "fillRequired": "Fill in all required fields",
+        "endAfterStart": "End date must be after start date",
+        "successTitle": "Reading registered!",
+        "successDesc_one": "{{count}} session created automatically.",
+        "successDesc_other": "{{count}} sessions created automatically.",
+        "errorTitle": "Error registering reading",
+        "cancelBtn": "Cancel"
+      },
       "form": {
         "bookLabel": "Book *",
         "bookPlaceholder": "Select a book",
@@ -3075,7 +3212,10 @@
       "emptyTitle": "No books in queue",
       "emptyDesc": "Add books with \"To Read\" status to build your reading queue.",
       "errorLoad": "Error loading queue",
-      "errorSave": "Error saving order"
+      "errorSave": "Error saving order",
+      "priorityHigh": "High",
+      "priorityMedium": "Medium",
+      "priorityLow": "Low"
     },
     "highlights": {
       "title": "Highlights",
@@ -3117,7 +3257,9 @@
         "allBooks": "All books",
         "allTypes": "All types",
         "allColors": "All colors"
-      }
+      },
+      "paginationInfo_one": "{{count}} highlight — page {{page}} of {{totalPages}}",
+      "paginationInfo_other": "{{count}} highlights — page {{page}} of {{totalPages}}"
     },
     "courses": {
       "title": "Courses",
@@ -3315,6 +3457,33 @@
       "radarChart": {
         "title": "Skills Radar",
         "emptyState": "Add skills to visualize the radar"
+      },
+      "history": {
+        "title": "Proficiency History",
+        "noHistory": "No history available",
+        "timeline": "Evolution timeline",
+        "viewHistory": "View history"
+      }
+    },
+    "planningOnboarding": {
+      "skip": "Skip",
+      "next": "Next",
+      "start": "Get started",
+      "step0": {
+        "title": "Welcome to Personal Planning",
+        "desc": "Organize your daily routine, health goals, and reflections all in one place."
+      },
+      "step1": {
+        "title": "Daily Checklist",
+        "desc": "Create routine tasks and track completion day by day with a visual kanban board."
+      },
+      "step2": {
+        "title": "Goals & Objectives",
+        "desc": "Define measurable goals, track progress, and stay focused on what matters."
+      },
+      "step3": {
+        "title": "Workout & Nutrition",
+        "desc": "Log workout sessions and meals to have a complete view of your health."
       }
     },
     "planningOnboarding": {
@@ -3436,7 +3605,17 @@
       "xpProgress": "Level {{level}}",
       "insightCTAWorstDay": "Adjust routine",
       "insightCTAWorkout": "Log workout",
-      "insightCTAGoals": "See goals"
+      "insightCTAGoals": "See goals",
+      "moduleCards": {
+        "workoutTitle": "Workout",
+        "workoutSubtitle": "Sessions and exercises",
+        "nutritionTitle": "Nutrition",
+        "nutritionSubtitle": "Meals and macros",
+        "tasksTitle": "Tasks",
+        "tasksSubtitle": "Checklist and routine",
+        "goalsTitle": "Goals",
+        "goalsSubtitle": "Personal objectives"
+      }
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -4015,7 +4194,16 @@
         "statusUnmatched": "Divergent",
         "statusIgnored": "Ignored"
       },
-      "importWithPreview": "Import with Preview"
+      "importWithPreview": "Import with Preview",
+      "completedLabel": "completed",
+      "pendingLabel": "pending",
+      "transactionsLabel": "transactions",
+      "importedAtLabel": "imported at",
+      "reconciliationTitle": "Reconciliation",
+      "matchedLabel": "matched",
+      "divergencesLabel": "divergences",
+      "dragDrop": "Drag or click to select",
+      "supportedFormats": "Supported: OFX, CSV"
     },
     "agents": {
       "title": "AI Agents",
@@ -4099,7 +4287,33 @@
         "error": "Error receiving agent response"
       },
       "stop": "Stop generation",
-      "sessions": "Session history"
+      "sessions": "Session history",
+      "suggestedQuestions": {
+        "intellect": [
+          "What did I learn from my last book?",
+          "What is my course progress?",
+          "Which skills have I mastered?",
+          "How much did I read this month?"
+        ],
+        "financial": [
+          "How much did I spend this month?",
+          "Will I exceed my budget?",
+          "What is my balance forecast?",
+          "What were my biggest expenses?"
+        ],
+        "personal": [
+          "How are my routines going?",
+          "Did I work out this week?",
+          "What is my goal progress?",
+          "How is my nutrition?"
+        ],
+        "security": [
+          "Do I have outdated passwords?",
+          "What was my recent vault activity?",
+          "Is there any security risk?",
+          "How many passwords are stored?"
+        ]
+      }
     },
     "twoFactor": {
       "title": "Two-Factor Authentication (2FA)",
@@ -4238,7 +4452,9 @@
       "analysisOf_one": "Analysis of {{count}} password",
       "analysisOf_other": "Analysis of {{count}} passwords",
       "needsAttention": "Passwords that need attention",
-      "allGood": "All passwords are in good shape!"
+      "allGood": "All passwords are in good shape!",
+      "scoreHistory": "Score History",
+      "criticalPasswords": "Critical Passwords"
     },
     "bookReader": {
       "themeLight": "Light",
@@ -4778,6 +4994,16 @@
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Error loading plans",
       "saveError": "Error saving",
+      "reorderError": "Error reordering exercises",
+      "exerciseSingular": "exercise",
+      "exercisePlural": "exercises",
+      "noSets": "no sets",
+      "noSetsLabel": "No sets defined",
+      "setsOf": "sets of",
+      "repsPlural": "reps",
+      "restSeconds": "Rest between sets",
+      "noRest": "No rest",
+      "seconds": "seconds",
       "muscleChips": {
         "chest": "Chest",
         "back": "Back",
@@ -4803,7 +5029,9 @@
         "cycling": "Cycling",
         "swimming": "Swimming",
         "fullBody": "Full Body"
-      }
+      },
+      "hideNotes": "Hide notes",
+      "showNotes": "Add notes"
     },
     "exercises": {
       "title": "Exercises",
@@ -4917,7 +5145,18 @@
       "foodDescriptionPlaceholder": "Additional information...",
       "loadError": "Error loading foods",
       "saveError": "Error saving food",
-      "searchPlaceholder": "Search food..."
+      "searchPlaceholder": "Search food...",
+      "caloriesSection": "Calorie Information",
+      "caloriesHelp": "Enter the calories for the reference portion. Leave blank if unknown.",
+      "servingSize": "Serving Size",
+      "servingUnit": "Unit",
+      "caloriesPerServing": "Calories (kcal) per Serving",
+      "servingUnitUnidade": "unit",
+      "servingUnitScoop": "scoop",
+      "servingUnitColherSopa": "tablespoon",
+      "servingUnitColherCha": "teaspoon",
+      "servingUnitXicara": "cup",
+      "servingUnitPorcao": "portion"
     },
     "nutritionMealTypes": {
       "newMealTypeBtn": "New Meal",
@@ -4972,7 +5211,16 @@
       "removeIngredient": "Remove",
       "noIngredients": "No ingredients added",
       "loadError": "Error loading data",
-      "saveError": "Error saving"
+      "saveError": "Error saving",
+      "altGroup": "Alt. Group",
+      "altGroupHelp": "Same number = alternatives to each other (e.g. egg OR beef). Leave empty if not an alternative.",
+      "ingredientOr": "or",
+      "ingredientKcal": "kcal",
+      "suggestedTimeEarlyMorning": "Early morning",
+      "suggestedTimeMorning": "Morning",
+      "suggestedTimeLunch": "Lunch",
+      "suggestedTimeAfternoon": "Afternoon",
+      "suggestedTimeNight": "Night"
     },
     "nutritionLog": {
       "title": "Meal Diary",
@@ -5091,7 +5339,81 @@
         "explicit": "Explicit connection",
         "implicit": "Implicit connection"
       },
-      "exportPNG": "Export as PNG"
+      "exportPNG": "Export as PNG",
+      "suggestLinks": "Suggest Connections",
+      "suggestionsPanel": "Suggested Connections",
+      "noSuggestions": "No suggestions found. Add more content to the graph.",
+      "similarity": "Similarity",
+      "addLink": "Add connection",
+      "loadingSuggestions": "Loading suggestions..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Spaced repetition of highlights",
+      "newCard": "New Card",
+      "reviewNow": "Review now",
+      "dueToday": "Due today",
+      "generateFromBook": "Generate from Highlights",
+      "flipCard": "Flip card",
+      "nextReview": "Next review",
+      "generatedSuccess": "{{count}} card(s) generated successfully",
+      "noneToGenerate": "All highlights already have flashcards",
+      "status": {
+        "new": "New",
+        "learning": "Learning",
+        "review": "Review",
+        "mastered": "Mastered"
+      },
+      "rating": {
+        "label": "How did you do?",
+        "0": "Forgot",
+        "1": "Hard",
+        "2": "With effort",
+        "3": "Good",
+        "4": "Easy",
+        "5": "Very easy"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Due",
+        "mastered": "Mastered",
+        "new": "New"
+      },
+      "empty": {
+        "title": "No flash cards",
+        "description": "Create cards from your book highlights to review with spaced repetition."
+      },
+      "emptyReview": {
+        "title": "All caught up!",
+        "description": "You have no pending reviews. Come back later."
+      },
+      "front": "Front (question)",
+      "back": "Back (answer)",
+      "selectBook": "Select book (optional)"
+    },
+    "intellectToday": {
+      "title": "Intellect Today",
+      "subtitle": "Your daily learning hub",
+      "continueReading": "Continue Reading",
+      "startReading": "Start reading",
+      "startCourse": "Start a course",
+      "logReading": "Log reading",
+      "reviewCards": "Review cards",
+      "quickActions": "Quick Actions",
+      "activeBook": "Currently reading",
+      "activeCourse": "Active course",
+      "noActiveBook": "No book currently reading",
+      "noCourse": "No active course",
+      "dueFlashcards": "Cards to review",
+      "streak": "Learning streak",
+      "days": "{{count}} day(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pgs.",
+      "todayStudy": "Today's study",
+      "weekProgress": "Weekly progress",
+      "badges": "Recent achievements",
+      "viewAll": "View all",
+      "noStreak": "Start your streak today!"
     },
     "tags": {
       "title": "Tags",
@@ -5111,6 +5433,32 @@
       "emptyState": "No tags created yet.",
       "name": "Name",
       "color": "Color"
+    },
+    "workoutHub": {
+      "title": "Workout",
+      "subtitle": "Sessions and progress",
+      "todayPlan": "Today's plan",
+      "quickLog": "Log Session",
+      "recentSessions": "Recent Sessions",
+      "startSession": "Start Session",
+      "noActivePlan": "No active workout plan",
+      "createPlan": "Create Plan",
+      "managePlans": "Manage Plans",
+      "manageExercises": "Exercises",
+      "viewHistory": "History",
+      "todaySessions": "Sessions logged today",
+      "emptyDays": "No splits registered in this plan."
+    },
+    "nutritionHub": {
+      "title": "Nutrition",
+      "subtitle": "Today's meals and macros",
+      "todayMeals": "Today's meals",
+      "quickLog": "Log Meal",
+      "mealHistory": "History",
+      "manageFoods": "Foods",
+      "manageMeals": "Meals",
+      "noMealsToday": "No meals logged today",
+      "addMeal": "Add Meal"
     }
   },
   "userProfile": {
@@ -5418,10 +5766,37 @@
       "payable": "Payable",
       "receivable": "Receivable",
       "creditCard": "Credit Card Bill",
-      "loan": "Loan Installment"
+      "loan": "Loan Installment",
+      "revenue": "Pending Revenue"
     },
     "dayDetail": "Due dates on {{date}}",
-    "loading": "Loading calendar..."
+    "loading": "Loading calendar...",
+    "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Set Up Security Vault",
+    "step1Title": "Your personal security vault",
+    "step1Desc": "The Vault protects your passwords, credit cards, bank accounts and confidential files with military-grade encryption.",
+    "step1Warning": "⚠️ Important notice",
+    "step1WarningDesc": "Your master password cannot be recovered. Store it in a safe place. If lost, vault data is unrecoverable.",
+    "step2Title": "Set Up Your Master Password",
+    "step2Desc": "The master password is the key that protects your entire vault. Use a strong, unique password you don't use anywhere else.",
+    "step2TipsTitle": "Tips for a strong password:",
+    "step2Tip1": "At least 12 characters",
+    "step2Tip2": "Mix letters, numbers and symbols",
+    "step2Tip3": "Avoid dictionary words",
+    "step2Tip4": "Do not reuse passwords from other services",
+    "step2ConfigureBtn": "Set up master password now",
+    "step3Title": "Vault set up! What's next?",
+    "step3Desc": "Start adding your credentials to keep them safe.",
+    "step3AddPassword": "Add first password",
+    "step3ImportPasswords": "Import passwords from another app",
+    "step3HealthReport": "View health report",
+    "step3StoreArchive": "Store a confidential file",
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Finish"
   },
   "netWorth": {
     "title": "Net Worth",
@@ -5433,7 +5808,8 @@
     "liabilitiesSection": "Liability Breakdown",
     "bankAccounts": "Bank Accounts",
     "vaults": "Vaults / Investments",
-    "loans": "Loans",
+    "loans": "Loans (payable)",
+    "lentLoans": "Loans (receivable)",
     "creditCards": "Credit Cards",
     "overdraft": "Overdraft Used",
     "noAssets": "No assets found",
@@ -5458,6 +5834,67 @@
     "renewalOn": "Renews on day {{day}}",
     "loading": "Loading subscriptions..."
   },
+  "gamification": {
+    "level": "Level",
+    "levelValue": "Level {{level}}",
+    "xpTotal": "{{xp}} XP total",
+    "streak": "Current streak",
+    "streakValue": "{{count}} days",
+    "streakRecord": "Record: {{count}} days",
+    "tasksCompleted": "Tasks completed",
+    "totalHistoric": "All time",
+    "badgesCard": "Badges",
+    "badgesEarned": "Earned",
+    "levelProgress": "Progress to Level {{level}}",
+    "badgesSection": "Earned Badges",
+    "recentXp": "Recent XP Gained"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "Receive real-time notifications of Axiom events in external systems.",
+    "newBtn": "New Webhook",
+    "createBtn": "Create webhook",
+    "empty": "No webhooks configured",
+    "emptyDesc": "Connect Axiom to Zapier, n8n or any external system.",
+    "inactive": "Inactive",
+    "deliveries_one": "{{count}} delivery",
+    "deliveries_other": "{{count}} deliveries",
+    "deliveryHistory": "Delivery history",
+    "noDeliveries": "No deliveries recorded.",
+    "viewDeliveries": "View deliveries",
+    "testBtn": "Test",
+    "created": "Webhook created successfully.",
+    "createError": "Error creating webhook.",
+    "updated": "Webhook updated.",
+    "updateError": "Error updating webhook.",
+    "deleted": "Webhook removed.",
+    "deleteError": "Error removing webhook.",
+    "testSuccess": "Test queued successfully.",
+    "testError": "Error queuing test.",
+    "status": {
+      "success": "Success",
+      "failed": "Failed",
+      "retrying": "Retrying",
+      "pending": "Pending"
+    },
+    "form": {
+      "editTitle": "Edit Webhook",
+      "newTitle": "New Webhook",
+      "dialogDesc": "Configure the URL and events that trigger this webhook.",
+      "nameLabel": "Name *",
+      "namePlaceholder": "e.g. Notify n8n",
+      "urlLabel": "Destination URL *",
+      "secretLabel": "Secret *",
+      "secretEditLabel": "New secret (leave blank to keep current)",
+      "secretPlaceholder": "Key to sign the payload (HMAC-SHA256)",
+      "timeoutLabel": "Timeout (s)",
+      "maxRetriesLabel": "Max retries",
+      "isActiveLabel": "Webhook active",
+      "eventsLabel": "Events *",
+      "saveBtn": "Save",
+      "createBtn": "Create"
+    }
+  },
   "components": {
     "installmentSimulator": {
       "title": "Installment Simulator",
@@ -5471,6 +5908,89 @@
       "cash": "Cash",
       "noInterest": "Interest-free",
       "enterValue": "Enter the purchase value to calculate installments"
+    },
+    "chartContainer": {
+      "noDataMessage": "No data available",
+      "toggleChartType": "Toggle chart type",
+      "toggleView": "Toggle view"
+    },
+    "commandPalette": {
+      "ariaLabel": "Available commands"
+    },
+    "notificationBell": {
+      "ariaLabel": "Notifications",
+      "title": "Notifications",
+      "empty": "No notifications"
+    },
+    "timePicker": {
+      "placeholder": "Select a time",
+      "clearAriaLabel": "Clear time"
+    },
+    "gamification": {
+      "levelTitle": "Level",
+      "levelValue": "Level {{level}}",
+      "streakTitle": "Current streak",
+      "tasksTitle": "Completed tasks",
+      "totalHistory": "All time",
+      "levelProgress": "Progress to Level {{level}}"
+    },
+    "routineTemplate": {
+      "frequencyDaily": "Daily",
+      "frequencyWeekdays": "Weekdays"
+    },
+    "vaults": {
+      "contributionPlaceholder": "e.g. Monthly savings",
+      "depositPlaceholder": "e.g. Monthly deposit",
+      "withdrawalPlaceholder": "e.g. Emergency withdrawal"
+    },
+    "creditCards": {
+      "accountNotProvided": "Account not provided"
     }
+  },
+  "readingsTab": {
+    "sessionSingular": "session",
+    "sessionPlural": "sessions",
+    "invalidDateRange": "End date must be after start date",
+    "sessionsCreated": "{{count}} sessions created automatically.",
+    "markAsReadTitle": "Mark as Read (period)",
+    "markAsReadDesc": "Automatically generates reading sessions distributed between the given dates, using your historical reading pace.",
+    "startDateLabel": "Start date *",
+    "startDatePlaceholder": "When did you start",
+    "viewSessions": "View sessions",
+    "viewProgress": "View progress",
+    "markAsReadBtn": "Mark as read (period)",
+    "pageLabel": "p."
+  },
+  "webhooks": {
+    "description": "Receive real-time notifications of Axiom events in external systems.",
+    "newButton": "New Webhook",
+    "createButton": "Create webhook",
+    "emptyTitle": "No webhooks configured",
+    "emptyDescription": "Connect Axiom to Zapier, n8n or any external system.",
+    "editDialogTitle": "Edit Webhook",
+    "dialogDescription": "Configure the URL and events that trigger this webhook.",
+    "deliveryHistory": "Delivery history",
+    "noDeliveries": "No deliveries recorded.",
+    "viewDeliveries": "View deliveries",
+    "deliveryCount_one": "{{count}} delivery",
+    "deliveryCount_other": "{{count}} deliveries",
+    "nameLabel": "Name *",
+    "namePlaceholder": "e.g. Notify n8n",
+    "urlLabel": "Destination URL *",
+    "secretLabel": "Secret *",
+    "newSecretHint": "New secret (leave blank to keep current)",
+    "secretPlaceholder": "Key to sign the payload (HMAC-SHA256)",
+    "timeoutLabel": "Timeout (s)",
+    "maxRetriesLabel": "Max retries",
+    "activeLabel": "Webhook active",
+    "eventsLabel": "Events *",
+    "createdSuccess": "Webhook created successfully.",
+    "createError": "Error creating webhook.",
+    "updatedSuccess": "Webhook updated.",
+    "updateError": "Error updating webhook.",
+    "removedSuccess": "Webhook removed.",
+    "removeError": "Error removing webhook.",
+    "testQueuedSuccess": "Test queued successfully.",
+    "testQueueError": "Error queuing test."
   }
 }

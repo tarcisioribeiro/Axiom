@@ -23,6 +23,7 @@ from authentication.throttles import ShareTokenRateThrottle
 from security.importers import (
     SUPPORTED_FORMATS,
     ImportParseError,
+    guess_category,
     parse_bitwarden_json,
     parse_dashlane_csv,
     parse_keepass_xml,
@@ -1215,8 +1216,10 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             if not decrypted:
                 continue
             sha1 = (
-                hashlib.sha1(decrypted.encode("utf-8")).hexdigest().upper()
-            )  # nosec B324
+                hashlib.sha1(decrypted.encode("utf-8"), usedforsecurity=False)
+                .hexdigest()
+                .upper()
+            )
             prefix, suffix = sha1[:5], sha1[5:]
             compromised = False
             try:
@@ -1551,6 +1554,9 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
         tagged_entries = []
         for i, entry in enumerate(entries):
             key = (entry["title"], entry["username"])
+            suggested = guess_category(
+                entry.get("title", ""), entry.get("site", "")
+            )
             tagged_entries.append(
                 {
                     "index": i,
@@ -1559,6 +1565,7 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
                     "password": entry["password"],
                     "site": entry["site"],
                     "category": entry["category"],
+                    "suggested_category": suggested,
                     "notes": entry["notes"],
                     "is_duplicate": key in existing,
                 }
@@ -1607,6 +1614,8 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
 
     def post(self, request):
         entries = request.data.get("entries", [])
+        # category_mapping: dict of str(index) → category, applied before save
+        category_mapping: dict = request.data.get("category_mapping") or {}
 
         if not isinstance(entries, list) or not entries:
             return Response(
@@ -1630,6 +1639,9 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
             )
         )
 
+        # Build set of valid categories for validation
+        valid_categories = {c[0] for c in PASSWORD_CATEGORIES}
+
         imported = 0
         duplicates_skipped = 0
         errors = 0
@@ -1647,12 +1659,24 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
                 duplicates_skipped += 1
                 continue
 
+            # Apply category_mapping override if provided
+            entry_index = str(entry.get("index", ""))
+            if entry_index in category_mapping:
+                mapped_cat = str(category_mapping[entry_index]).strip()
+                resolved_category = (
+                    mapped_cat
+                    if mapped_cat in valid_categories
+                    else entry.get("category", "other")
+                )
+            else:
+                resolved_category = entry.get("category", "other")
+
             try:
                 pw = Password(
                     title=title,
                     username=username,
                     site=entry.get("site", "").strip() or None,
-                    category=entry.get("category", "other"),
+                    category=resolved_category,
                     notes=entry.get("notes", "").strip() or None,
                     owner=member,
                     created_by=request.user,
@@ -2184,10 +2208,11 @@ class RedeemShareTokenView(APIView):
             try:
                 from members.models import Member
                 from notifications.models import Notification
+                from notifications.services import dispatch_notification
 
                 creator_member = Member.objects.get(user=token_obj.created_by)
                 accessed_at = timezone.now().strftime("%d/%m/%Y às %H:%M")
-                Notification.objects.get_or_create(
+                notification, _ = Notification.objects.get_or_create(
                     owner=creator_member,
                     notification_type="credential_share_accessed",
                     content_type="CredentialShareToken",
@@ -2203,6 +2228,7 @@ class RedeemShareTokenView(APIView):
                         "is_read": False,
                     },
                 )
+                dispatch_notification(notification)
             except Exception:
                 logger.exception("Falha ao criar notificação de share_token")
 

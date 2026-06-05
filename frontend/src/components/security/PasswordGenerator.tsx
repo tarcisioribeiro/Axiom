@@ -1,5 +1,6 @@
 import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,19 +19,19 @@ interface PasswordGeneratorProps {
 
 const strengthConfig = {
   weak: {
-    label: 'Fraca',
+    labelKey: 'common.passwordStrength.weak',
     color: 'bg-destructive',
     badgeVariant: 'destructive' as const,
     width: 'w-1/3',
   },
   medium: {
-    label: 'Média',
+    labelKey: 'common.passwordStrength.medium',
     color: 'bg-warning',
     badgeVariant: 'secondary' as const,
     width: 'w-2/3',
   },
   strong: {
-    label: 'Forte',
+    labelKey: 'common.passwordStrength.strong',
     color: 'bg-success',
     badgeVariant: 'default' as const,
     width: 'w-full',
@@ -51,13 +52,14 @@ export function PasswordGenerator({
   const [strength, setStrength] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!uppercase && !lowercase && !numbers && !specialCharacters) {
       toast({
-        title: 'Configuração inválida',
-        description: 'Selecione pelo menos um tipo de caractere.',
+        title: t('common.passwordStrength.invalidConfig'),
+        description: t('common.passwordStrength.selectCharType'),
         variant: 'destructive',
       });
       return;
@@ -78,7 +80,7 @@ export function PasswordGenerator({
       onPasswordGenerated?.(result.password);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao gerar senha',
+        title: t('pages.passwords.generator.generateError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -92,8 +94,8 @@ export function PasswordGenerator({
     await copyToClipboard(generatedPassword);
     setCopied(true);
     toast({
-      title: 'Copiado!',
-      description: 'Senha copiada para a área de transferência.',
+      title: t('common.messages.copied'),
+      description: t('pages.passwords.copiedDesc'),
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -113,7 +115,9 @@ export function PasswordGenerator({
     <div className={cn('space-y-md', compact && 'space-y-3')}>
       {/* Length */}
       <div className="space-y-sm">
-        <Label htmlFor="gen-length">Comprimento: {length}</Label>
+        <Label htmlFor="gen-length">
+          {t('pages.passwords.generator.length', { count: length })}
+        </Label>
         <div className="flex items-center gap-3">
           <input
             type="range"
@@ -149,7 +153,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setUppercase(checked === true)}
           />
           <Label htmlFor="gen-upper" className="cursor-pointer text-sm">
-            Maiúsculas (A-Z)
+            {t('pages.passwords.generator.uppercase')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -159,7 +163,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setLowercase(checked === true)}
           />
           <Label htmlFor="gen-lower" className="cursor-pointer text-sm">
-            Minúsculas (a-z)
+            {t('pages.passwords.generator.lowercase')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -169,7 +173,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setNumbers(checked === true)}
           />
           <Label htmlFor="gen-numbers" className="cursor-pointer text-sm">
-            Números (0-9)
+            {t('pages.passwords.generator.numbers')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -179,7 +183,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setSpecialCharacters(checked === true)}
           />
           <Label htmlFor="gen-special" className="cursor-pointer text-sm">
-            Especiais (!@#$...)
+            {t('pages.passwords.generator.special')}
           </Label>
         </div>
         <div className="flex items-center space-x-sm">
@@ -189,7 +193,7 @@ export function PasswordGenerator({
             onCheckedChange={(checked) => setExcludeAmbiguous(checked === true)}
           />
           <Label htmlFor="gen-ambiguous" className="cursor-pointer text-sm">
-            Excluir ambíguos
+            {t('pages.passwords.generator.excludeAmbiguous')}
           </Label>
         </div>
       </div>
@@ -199,12 +203,12 @@ export function PasswordGenerator({
         {isGenerating ? (
           <>
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-            Gerando...
+            {t('pages.passwords.generator.generating')}
           </>
         ) : (
           <>
             <RefreshCw className="mr-sm h-4 w-4" />
-            Gerar Senha
+            {t('pages.passwords.generatePassword')}
           </>
         )}
       </Button>
@@ -229,8 +233,12 @@ export function PasswordGenerator({
           {strengthInfo && (
             <div className="space-y-xs">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Força da senha</span>
-                <Badge variant={strengthInfo.badgeVariant}>{strengthInfo.label}</Badge>
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.passwords.generator.strengthLabel')}
+                </span>
+                <Badge variant={strengthInfo.badgeVariant}>
+                  {t(strengthInfo.labelKey)}
+                </Badge>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div

@@ -22,9 +22,9 @@ import {
   Zap,
   Star,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -32,12 +32,17 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
+import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
+import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
@@ -92,6 +97,8 @@ export default function PersonalPlanningDashboard() {
   const navigate = useNavigate();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
+  const { shouldShow: showOnboarding } = usePlanningOnboarding();
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
@@ -131,6 +138,21 @@ export default function PersonalPlanningDashboard() {
   const { data: mealTypes = [] } = useQuery({
     queryKey: ['mealTypes'],
     queryFn: () => mealTypeService.getAll({ page_size: 50 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: gamification } = useQuery({
+    queryKey: ['gamificationProfile'],
+    queryFn: () =>
+      apiClient.get<{
+        total_xp: number;
+        current_level: number;
+        level_progress_pct: number;
+        xp_in_level: number;
+        xp_needed_for_next_level: number;
+        tasks_completed_total: number;
+        badges: Array<{ slug: string; name: string; icon: string; category: string }>;
+      }>(API_CONFIG.ENDPOINTS.GAMIFICATION_PROFILE),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -253,9 +275,66 @@ export default function PersonalPlanningDashboard() {
     );
   }
 
+  const MODULE_CARDS = [
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.workoutTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.workoutSubtitle' as const,
+      icon: Dumbbell,
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10 border-amber-500/20',
+      route: '/planning/workout',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.nutritionTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.nutritionSubtitle' as const,
+      icon: UtensilsCrossed,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      route: '/planning/nutrition',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.tasksTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.tasksSubtitle' as const,
+      icon: ListTodo,
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10 border-blue-500/20',
+      route: '/planning/tasks-goals',
+    },
+    {
+      titleKey: 'pages.planningDashboard.moduleCards.goalsTitle' as const,
+      subtitleKey: 'pages.planningDashboard.moduleCards.goalsSubtitle' as const,
+      icon: Target,
+      color: 'text-purple-500',
+      bg: 'bg-purple-500/10 border-purple-500/20',
+      route: '/planning/tasks-goals',
+    },
+  ] as const;
+
   return (
     <PageContainer>
+      {showOnboarding && !onboardingDone && (
+        <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
+      )}
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {MODULE_CARDS.map((card) => (
+          <button
+            key={card.route + card.titleKey}
+            onClick={() => void navigate(card.route)}
+            className={cn(
+              'flex flex-col items-start gap-sm rounded-lg border p-md text-left transition-all hover:scale-[1.02]',
+              card.bg
+            )}
+          >
+            <card.icon className={cn('h-6 w-6', card.color)} />
+            <div>
+              <p className="text-sm font-semibold">{t(card.titleKey)}</p>
+              <p className="text-xs text-muted-foreground">{t(card.subtitleKey)}</p>
+            </div>
+          </button>
+        ))}
+      </div>
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
       <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
@@ -339,6 +418,62 @@ export default function PersonalPlanningDashboard() {
           </div>
         </Card>
 
+        {gamification && (
+          <Card className="col-span-1 flex flex-col gap-sm p-5 sm:col-span-2 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold leading-none">
+                    {t('pages.planningDashboard.level')} {gamification.current_level}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {gamification.total_xp} XP · {gamification.tasks_completed_total}{' '}
+                    {t('pages.planningDashboard.tasksCompleted')}
+                  </p>
+                </div>
+              </div>
+              {gamification.badges.length > 0 && (
+                <div className="flex -space-x-xs">
+                  {gamification.badges.slice(0, 5).map((b) => (
+                    <span
+                      key={b.slug}
+                      title={b.name}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-sm"
+                    >
+                      {b.icon}
+                    </span>
+                  ))}
+                  {gamification.badges.length > 5 && (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-xs font-medium text-muted-foreground">
+                      +{gamification.badges.length - 5}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="mb-xs flex justify-between text-xs text-muted-foreground">
+                <span>{gamification.xp_in_level} XP</span>
+                <span>
+                  {gamification.xp_needed_for_next_level} XP{' '}
+                  {t('pages.planningDashboard.toNextLevel')}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{
+                    width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </Card>
+        )}
+
         <StatCard
           title={t('pages.planningDashboard.completedGoals')}
           value={stats.completed_goals}
@@ -404,10 +539,18 @@ export default function PersonalPlanningDashboard() {
         {/* Card: Resumo de Treinos */}
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <Dumbbell className="h-4 w-4 text-category-health" />
-              {t('pages.planningDashboard.workoutsTitle')}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-sm text-sm">
+                <Dumbbell className="h-4 w-4 text-category-health" />
+                {t('pages.planningDashboard.workoutsTitle')}
+              </CardTitle>
+              <Link
+                to="/planning/workout"
+                className="rounded-md bg-primary/10 px-sm py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                {t('pages.planningDashboard.ctaLogWorkout')}
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
@@ -488,10 +631,18 @@ export default function PersonalPlanningDashboard() {
         {/* Card: Nutrição */}
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <UtensilsCrossed className="h-4 w-4 text-category-health" />
-              {t('pages.planningDashboard.nutritionTitle')}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-sm text-sm">
+                <UtensilsCrossed className="h-4 w-4 text-category-health" />
+                {t('pages.planningDashboard.nutritionTitle')}
+              </CardTitle>
+              <Link
+                to="/planning/nutrition"
+                className="rounded-md bg-success/10 px-sm py-0.5 text-xs font-medium text-success transition-colors hover:bg-success/20"
+              >
+                {t('pages.planningDashboard.ctaLogMeal')}
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-md">
@@ -780,7 +931,7 @@ export default function PersonalPlanningDashboard() {
                   {t('pages.planningDashboard.insights')}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-md">
                 <ul className="space-y-3">
                   {analytics.insights.map((insight, i) => {
                     const insightCTA =
@@ -825,6 +976,26 @@ export default function PersonalPlanningDashboard() {
                     );
                   })}
                 </ul>
+                <div className="flex flex-wrap gap-sm border-t pt-sm">
+                  <Link
+                    to="/planning/daily-checklist"
+                    className="rounded-md bg-primary/10 px-sm py-xs text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                  >
+                    {t('pages.planningDashboard.ctaChecklist')}
+                  </Link>
+                  <Link
+                    to="/planning/tasks-goals"
+                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                  >
+                    {t('pages.planningDashboard.ctaTasks')}
+                  </Link>
+                  <Link
+                    to="/planning/reflections"
+                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                  >
+                    {t('pages.planningDashboard.ctaReflect')}
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )}

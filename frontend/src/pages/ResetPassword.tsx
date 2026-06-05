@@ -30,7 +30,7 @@ export default function ResetPassword() {
     if (!uid || !token) return;
 
     if (newPassword !== confirmPassword) {
-      setError('As senhas não coincidem.');
+      setError(t('auth.resetPassword.passwordMismatch'));
       return;
     }
 

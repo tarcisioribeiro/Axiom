@@ -69,33 +69,6 @@ const markdownComponents: Components = {
   a: CitationLink as Components['a'],
 };
 
-const SUGGESTED_QUESTIONS: Record<AgentName, string[]> = {
-  intellect: [
-    'O que aprendi no último livro?',
-    'Qual meu progresso nos cursos?',
-    'Quais são minhas habilidades dominadas?',
-    'Quanto li este mês?',
-  ],
-  financial: [
-    'Quanto gastei este mês?',
-    'Vou estourar o orçamento?',
-    'Qual minha previsão de saldo?',
-    'Quais foram minhas maiores despesas?',
-  ],
-  personal: [
-    'Como estão minhas rotinas?',
-    'Treinei esta semana?',
-    'Qual meu progresso nas metas?',
-    'Como está minha alimentação?',
-  ],
-  security: [
-    'Tenho senhas desatualizadas?',
-    'Qual foi minha atividade recente no cofre?',
-    'Existe algum risco de segurança?',
-    'Quantas senhas estão armazenadas?',
-  ],
-};
-
 // Mapeamento agente → CSS class (sem cores hardcoded — usa variáveis CSS)
 const AGENT_BADGE_CLASS: Record<string, string> = {
   personal: 'agent-badge-personal',
@@ -713,7 +686,11 @@ export default function Agents() {
               !showStreamingBubble &&
               !query && (
                 <div className="mb-sm flex flex-wrap gap-xs">
-                  {(SUGGESTED_QUESTIONS[selectedAgent] ?? []).map((q) => (
+                  {(
+                    (t(`pages.agents.suggestedQuestions.${selectedAgent}`, {
+                      returnObjects: true,
+                    }) as string[]) ?? []
+                  ).map((q) => (
                     <button
                       key={q}
                       type="button"

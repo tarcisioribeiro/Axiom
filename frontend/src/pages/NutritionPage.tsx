@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Clock,
   Edit,
+  Flame,
   Moon,
   Plus,
   Salad,
@@ -63,6 +64,7 @@ import type {
   MealType,
   MealTypeFormData,
   MenuOption,
+  MenuOptionIngredient,
 } from '@/types/nutrition';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -308,6 +310,7 @@ export default function NutritionPage() {
         is_optional: boolean;
         notes: string;
         order: number;
+        alternative_group: string;
       }[];
     }) => {
       const option = await menuOptionService.create(optionData);
@@ -321,6 +324,9 @@ export default function NutritionPage() {
             is_optional: ing.is_optional,
             notes: ing.notes || undefined,
             order: ing.order,
+            alternative_group: ing.alternative_group
+              ? Number(ing.alternative_group)
+              : undefined,
             owner: ownerId,
           })
         )
@@ -353,6 +359,7 @@ export default function NutritionPage() {
         is_optional: boolean;
         notes: string;
         order: number;
+        alternative_group: string;
       }[];
     }) => {
       await menuOptionService.update(id, optionData);
@@ -372,6 +379,9 @@ export default function NutritionPage() {
                 is_optional: ing.is_optional,
                 notes: ing.notes || undefined,
                 order: ing.order,
+                alternative_group: ing.alternative_group
+                  ? Number(ing.alternative_group)
+                  : undefined,
                 owner: ownerId,
               })
             : menuOptionIngredientService.create({
@@ -382,6 +392,9 @@ export default function NutritionPage() {
                 is_optional: ing.is_optional,
                 notes: ing.notes || undefined,
                 order: ing.order,
+                alternative_group: ing.alternative_group
+                  ? Number(ing.alternative_group)
+                  : undefined,
                 owner: ownerId,
               })
         )
@@ -538,8 +551,12 @@ export default function NutritionPage() {
           icon={<UtensilsCrossed className="h-6 w-6 text-category-nutrition" />}
         />
 
-        <Tabs defaultValue="log" className="flex flex-1 flex-col">
+        <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
+            <TabsTrigger value="today" className="flex-1 gap-xs">
+              <Sun className="h-4 w-4" />
+              {t('pages.nutritionHub.todayMeals')}
+            </TabsTrigger>
             <TabsTrigger value="log" className="flex-1 gap-xs">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
@@ -553,6 +570,70 @@ export default function NutritionPage() {
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Hoje ─────────────────────────────────────────────────────── */}
+          <TabsContent value="today" className="mt-0 flex-1">
+            <div className="space-y-md">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t('pages.nutritionHub.subtitle')}
+                </p>
+                <Button onClick={() => setDialog({ type: 'new-log' })}>
+                  <Plus className="mr-sm h-4 w-4" />
+                  {t('pages.nutritionHub.addMeal')}
+                </Button>
+              </div>
+              {(() => {
+                const today = new Date().toISOString().slice(0, 10);
+                const todayLogs = logs.filter((l) => l.date === today);
+                if (logsLoading) return <LoadingState />;
+                if (todayLogs.length === 0)
+                  return (
+                    <EmptyState
+                      title={t('pages.nutritionHub.noMealsToday')}
+                      icon={<UtensilsCrossed className="h-8 w-8" />}
+                      action={{
+                        label: t('pages.nutritionHub.addMeal'),
+                        icon: <Plus className="mr-xs h-4 w-4" />,
+                        onClick: () => setDialog({ type: 'new-log' }),
+                      }}
+                    />
+                  );
+                return (
+                  <div className="space-y-sm">
+                    {todayLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-center justify-between rounded-md border border-border p-sm"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            {log.meal_type_name ?? log.meal_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {log.menu_option_name}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-sm">
+                          <span className="text-xs text-muted-foreground">
+                            {log.time ?? ''}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive"
+                            onClick={() => deleteLogMutation.mutate(log.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </TabsContent>
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
@@ -1049,27 +1130,7 @@ function MealTypeCard({
                       </div>
                       {/* Ingredients */}
                       {opt.ingredients.length > 0 ? (
-                        <div className="grid gap-xs p-sm sm:grid-cols-2">
-                          {opt.ingredients.map((ing) => (
-                            <div key={ing.id} className="flex items-start gap-xs">
-                              <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
-                              <span className="text-xs text-muted-foreground">
-                                <span className="font-medium text-foreground">
-                                  {ing.food_name}
-                                </span>
-                                {ing.quantity
-                                  ? ` — ${ing.quantity} ${ing.unit_display}`
-                                  : ''}
-                                {ing.is_optional && (
-                                  <span className="ml-xs italic text-muted-foreground/60">
-                                    (opt.)
-                                  </span>
-                                )}
-                                {ing.notes ? ` · ${ing.notes}` : ''}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        <IngredientList ingredients={opt.ingredients} />
                       ) : (
                         <p className="px-sm py-xs text-xs text-muted-foreground">
                           {t('pages.nutritionMealTypes.noIngredients')}
@@ -1300,6 +1361,82 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
+    </div>
+  );
+}
+
+// ── Ingredient list with alternative groups ─────────────────────────────────
+
+function calcCalories(ing: MenuOptionIngredient): number | null {
+  if (!ing.food_calories_per_serving || !ing.food_serving_size) return null;
+  const cals = parseFloat(ing.food_calories_per_serving);
+  const servingSize = parseFloat(ing.food_serving_size);
+  if (!servingSize) return null;
+  const qty = ing.quantity ? parseFloat(ing.quantity) : servingSize;
+  return Math.round((qty / servingSize) * cals);
+}
+
+function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
+  const { t } = useTranslation();
+  const cal = calcCalories(ing);
+  return (
+    <div className="flex items-start gap-xs">
+      <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
+      <span className="text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{ing.food_name}</span>
+        {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
+        {cal != null && (
+          <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
+            <Flame className="h-2.5 w-2.5" />
+            {cal} {t('pages.nutritionMealTypes.ingredientKcal')}
+          </span>
+        )}
+        {ing.is_optional && (
+          <span className="ml-xs italic text-muted-foreground/60">(opt.)</span>
+        )}
+        {ing.notes ? ` · ${ing.notes}` : ''}
+      </span>
+    </div>
+  );
+}
+
+function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }) {
+  const { t } = useTranslation();
+  // group by alternative_group; null/undefined = standalone
+  const groups: Map<number | null, MenuOptionIngredient[]> = new Map();
+  for (const ing of ingredients) {
+    const key = ing.alternative_group ?? null;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(ing);
+  }
+
+  const entries = Array.from(groups.entries()).sort(([a], [b]) => {
+    if (a === null && b === null) return 0;
+    if (a === null) return 1;
+    if (b === null) return -1;
+    return a - b;
+  });
+
+  return (
+    <div className="grid gap-xs p-sm sm:grid-cols-2">
+      {entries.map(([groupKey, items]) =>
+        items.length === 1 ? (
+          <IngredientItem key={items[0].id} ing={items[0]} />
+        ) : (
+          <div key={groupKey ?? `g-${items[0].id}`} className="space-y-xs">
+            {items.map((ing, idx) => (
+              <div key={ing.id}>
+                <IngredientItem ing={ing} />
+                {idx < items.length - 1 && (
+                  <p className="ml-3 text-[10px] font-semibold uppercase tracking-wider text-category-nutrition/60">
+                    {t('pages.nutritionMealTypes.ingredientOr')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )
+      )}
     </div>
   );
 }

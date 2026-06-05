@@ -56,6 +56,7 @@ export const API_CONFIG = {
     // Resources
     ACCOUNTS: '/api/v1/accounts/',
     EXPENSES: '/api/v1/expenses/',
+    EXPENSE_SUGGEST_CATEGORY: '/api/v1/expenses/suggest-category/',
     FIXED_EXPENSES: '/api/v1/fixed-expenses/',
     REVENUES: '/api/v1/revenues/',
     CREDIT_CARDS: '/api/v1/credit-cards/',
@@ -122,6 +123,12 @@ export const API_CONFIG = {
     KNOWLEDGE_GRAPH: '/api/v1/library/knowledge-graph/',
     KNOWLEDGE_LINKS: '/api/v1/library/knowledge-links/',
     INTELLECT_BADGES: '/api/v1/library/badges/',
+    FLASHCARDS: '/api/v1/library/flashcards/',
+    FLASHCARD_REVIEW: '/api/v1/library/flashcards/', // + /:id/review/
+    BOOK_FLASHCARDS_GENERATE: '/api/v1/library/books/', // + /:id/flashcards/generate/
+    SKILL_HISTORY: '/api/v1/library/skills/', // + /:id/history/
+    KNOWLEDGE_GRAPH_SUGGEST_LINKS: '/api/v1/library/knowledge-graph/suggest-links/',
+    AGENTS_CLASSIFY_CATEGORY: '/api/v1/agents/classify-category/',
     HIBP_CHECK: '/api/v1/security/hibp-check/',
 
     // Personal Planning Module

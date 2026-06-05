@@ -22,6 +22,7 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "clearTime": "Limpar horário",
       "remove": "Remover",
       "filters": {
         "fromDate": "De: DD/MM/AAAA",
@@ -34,7 +35,8 @@
       "update": "Atualizar",
       "select": "Selecione",
       "none": "Nenhum",
-      "total": "Total"
+      "total": "Total",
+      "test": "Testar"
     },
     "messages": {
       "loadError": "Erro ao carregar dados",
@@ -53,7 +55,8 @@
       "copiedDesc": "{{label}} copiado para a área de transferência.",
       "revealError": "Erro ao revelar dados",
       "invalidData": "Dados inválidos",
-      "fillRequired": "Preencha todos os campos obrigatórios."
+      "fillRequired": "Preencha todos os campos obrigatórios.",
+      "passwordCopied": "Senha copiada para a área de transferência."
     },
     "fields": {
       "name": "Nome",
@@ -124,7 +127,9 @@
       "processing": "Processando",
       "completed": "Concluído",
       "failed": "Falhou",
-      "cancelled": "Cancelado"
+      "cancelled": "Cancelado",
+      "retrying": "Tentando",
+      "success": "Sucesso"
     },
     "emailVerificationBanner": {
       "message": "Confirme seu endereço de email para garantir acesso completo à sua conta.",
@@ -175,6 +180,25 @@
       }
     },
     "noResults": "Nenhum resultado encontrado",
+    "iconPicker": {
+      "placeholder": "Selecione um ícone...",
+      "searchPlaceholder": "Buscar ícone..."
+    },
+    "charts": {
+      "emptyMessage": "Nenhum dado disponível",
+      "toggleType": "Alternar tipo de gráfico",
+      "toggleView": "Alternar visualização"
+    },
+    "passwordStrength": {
+      "weak": "Fraca",
+      "medium": "Média",
+      "strong": "Forte",
+      "invalidConfig": "Configuração inválida",
+      "selectCharType": "Selecione pelo menos um tipo de caractere."
+    },
+    "navigation": {
+      "backTo": "Voltar para {{label}}"
+    },
     "mood": {
       "excellent": "Excelente",
       "good": "Bom",
@@ -283,6 +307,21 @@
       "config": "Configurações",
       "integrations": "Integrações",
       "logs": "Logs de Atividade"
+    },
+    "commandPalette": {
+      "placeholder": "Buscar comandos...",
+      "noResults": "Nenhum comando encontrado",
+      "noResultsHint": "Tente buscar por outra palavra-chave",
+      "navigate": "navegar",
+      "select": "selecionar",
+      "close": "fechar",
+      "ariaLabel": "Comandos disponíveis"
+    },
+    "notifications": {
+      "title": "Notificações",
+      "markAllRead": "Marcar todas como lidas",
+      "empty": "Nenhuma notificação",
+      "ariaLabel": "Notificações"
     }
   },
   "breadcrumb": {
@@ -381,7 +420,8 @@
       "goToLogin": "Ir para o login",
       "invalidLink": "Link inválido ou expirado",
       "invalidLinkDesc": "Solicite um novo link de redefinição de senha.",
-      "errorTitle": "Erro ao redefinir"
+      "errorTitle": "Erro ao redefinir",
+      "passwordMismatch": "As senhas não coincidem."
     },
     "verifyEmail": {
       "title": "Verificação de e-mail",
@@ -580,7 +620,15 @@
         "statusProcessing": "Processando",
         "statusFailed": "Falhou"
       },
-      "available": "Disponível: {{value}}"
+      "available": "Disponível: {{value}}",
+      "bankReconciliation": "Conciliação Bancária",
+      "bankReconciliationTitle": "Conciliação Bancária — {{account}}",
+      "bankReconciliationDesc": "Importe extratos bancários para conciliar com suas transações.",
+      "importStatement": "Importar Extrato",
+      "noImports": "Nenhum extrato importado",
+      "noImportsDesc": "Clique em 'Importar Extrato' para começar.",
+      "invalidFormat": "Formato inválido. Use OFX ou CSV.",
+      "balanceDistribution": "Distribuição de saldo"
     },
     "expenses": {
       "title": "Despesas",
@@ -637,6 +685,8 @@
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Supermercado Extra",
         "merchantHint": "Preencha para categorização automática",
+        "aiSuggesting": "Consultando IA para sugerir categoria...",
+        "aiSuggested": "IA sugeriu",
         "categoryLabel": "Categoria *",
         "paymentStatusLabel": "Status de Pagamento *",
         "pending": "Pendente",
@@ -1485,6 +1535,7 @@
       "updatedDesc": "O orçamento foi atualizado com sucesso.",
       "deleted": "Orçamento excluído",
       "deletedDesc": "O orçamento foi excluído com sucesso.",
+      "createError": "Erro ao criar orçamento.",
       "emptySearch": "Nenhum orçamento encontrado para a pesquisa atual.",
       "emptyState": "Nenhum orçamento cadastrado para este período. Clique em \"Novo Orçamento\" para começar.",
       "searchPlaceholder": "Buscar categoria...",
@@ -1531,7 +1582,13 @@
         "withinLimit": "dentro do limite",
         "warning": "em alerta",
         "exceeded": "excedidos"
-      }
+      },
+      "createError": "Erro ao criar orçamento.",
+      "aiSuggestionsTitle": "Sugestões de Orçamento com IA",
+      "aiSuggestionsDesc": "Baseado nos seus últimos 3 meses de despesas. Clique em \"Aplicar\" para criar o orçamento do mês atual.",
+      "analyzing": "Analisando histórico...",
+      "averageLabel": "Média",
+      "suggestionLabel": "Sugestão"
     },
     "fixedRevenues": {
       "title": "Receitas Fixas Mensais",
@@ -1668,7 +1725,9 @@
       "totalYield": "Rendimentos Acumulados",
       "pendingYield": "Rendimentos Pendentes",
       "depositTitle": "Depositar no Cofre",
+      "depositPlaceholder": "Ex: Depósito mensal",
       "withdrawTitle": "Sacar do Cofre",
+      "withdrawPlaceholder": "Ex: Saque para emergência",
       "depositBtn": "Depositar",
       "withdrawBtn": "Sacar",
       "applyYieldBtn": "Aplicar Rendimento",
@@ -1738,6 +1797,7 @@
         "deleteDesc": "Tem certeza que deseja excluir esta contribuição recorrente?",
         "fields": {
           "description": "Descrição *",
+          "descriptionPlaceholder": "Ex: Poupança mensal",
           "amount": "Valor (R$) *",
           "dayOfMonth": "Dia do Mês (1–31) *",
           "startDate": "Data de Início *",
@@ -2147,7 +2207,26 @@
         "groupCards": "Cartões",
         "groupAccounts": "Contas",
         "groupArchives": "Arquivos"
-      }
+      },
+      "vaultHub": {
+        "overview": "Visão Geral do Cofre",
+        "anomalyTitle": "Atividade Suspeita Detectada",
+        "anomalyDesc": "Foram detectadas atividades incomuns. Revise seu log de atividades.",
+        "viewAnomalies": "Ver atividades",
+        "quickStats": "Resumo",
+        "vaultHealth": "Saúde do Cofre",
+        "securityScore": "Score de Segurança",
+        "recentActivity": "Atividade Recente",
+        "quickActions": "Ações Rápidas"
+      },
+      "alertConfig": "Configurações de Alertas",
+      "alertConfigSaved": "Configurações salvas",
+      "alertOnNewIp": "Alerta por novo IP",
+      "alertOnNewIpDesc": "Notificar ao acessar o cofre de um novo endereço IP.",
+      "alertOnFailedUnlock": "Alerta por tentativas falhas",
+      "alertOnFailedUnlockDesc": "Notificar após múltiplas tentativas de desbloqueio incorretas.",
+      "alertOnReveal": "Alerta ao revelar senha",
+      "alertOnRevealDesc": "Notificar cada vez que uma senha for revelada."
     },
     "passwords": {
       "title": "Senhas",
@@ -2176,6 +2255,17 @@
       "searchPlaceholder": "Buscar senhas...",
       "generatePassword": "Gerar Senha",
       "hideGenerator": "Ocultar Gerador",
+      "generator": {
+        "length": "Comprimento: {{count}}",
+        "uppercase": "Maiúsculas (A-Z)",
+        "lowercase": "Minúsculas (a-z)",
+        "numbers": "Números (0-9)",
+        "special": "Especiais (!@#$...)",
+        "excludeAmbiguous": "Excluir ambíguos",
+        "generating": "Gerando...",
+        "generateError": "Erro ao gerar senha",
+        "strengthLabel": "Força da senha"
+      },
       "titlePlaceholder": "Ex: Gmail, Netflix, etc.",
       "sitePlaceholder": "https://exemplo.com",
       "usernamePlaceholder": "usuario@email.com",
@@ -2213,7 +2303,10 @@
         "fair": "Razoável",
         "good": "Boa",
         "strong": "Forte"
-      }
+      },
+      "autoClassify": "Classificar automaticamente",
+      "classifySuccess": "Categoria classificada: {{category}}",
+      "classifyError": "Erro ao classificar categoria"
     },
     "sharePassword": {
       "title": "Compartilhar Credencial",
@@ -2321,7 +2414,12 @@
       "importAnother": "Importar outro arquivo",
       "noMemberMsg": "Não foi possível identificar o membro do usuário atual.",
       "selectedCount": "{{count}} selecionada",
-      "selectedCount_other": "{{count}} selecionadas"
+      "selectedCount_other": "{{count}} selecionadas",
+      "categoryMappingStep": "Mapeamento de Categorias",
+      "categoryMappingDesc": "Ajuste as categorias detectadas automaticamente",
+      "suggestedCategory": "Sugerida",
+      "finalCategory": "Categoria Final",
+      "skipMapping": "Manter categorias sugeridas"
     },
     "storedCards": {
       "title": "Cartões Armazenados",
@@ -2488,6 +2586,8 @@
       "searchPlaceholder": "Buscar arquivos...",
       "viewContent": "Ver conteúdo",
       "downloadFile": "Baixar arquivo",
+      "preview": "Pré-visualizar",
+      "previewTitle": "Pré-visualização",
       "categories": {
         "personal": "Pessoal",
         "financial": "Financeiro",
@@ -2531,7 +2631,17 @@
     "passwordGenerator": {
       "title": "Gerador de Senhas",
       "subtitle": "Gerar Senha Segura",
-      "desc": "Crie senhas criptograficamente seguras com opções configuráveis. As senhas são geradas no servidor usando algoritmos seguros."
+      "desc": "Crie senhas criptograficamente seguras com opções configuráveis. As senhas são geradas no servidor usando algoritmos seguros.",
+      "strengthLabel": "Força da senha",
+      "strengthWeak": "Fraca",
+      "strengthMedium": "Média",
+      "strengthStrong": "Forte",
+      "uppercaseLabel": "Maiúsculas (A-Z)",
+      "lowercaseLabel": "Minúsculas (a-z)",
+      "numbersLabel": "Números (0-9)",
+      "excludeAmbiguous": "Excluir ambíguos",
+      "invalidConfig": "Configuração inválida",
+      "selectCharType": "Selecione pelo menos um tipo de caractere."
     },
     "libraryDashboard": {
       "title": "Dashboard Intelecto",
@@ -2929,7 +3039,9 @@
         "reading": "Lendo",
         "read": "Lido",
         "paused": "Pausado"
-      }
+      },
+      "chatTab": "Chat",
+      "chatTabDesc": "Converse com o agente sobre este livro"
     },
     "authors": {
       "title": "Autores",
@@ -3107,6 +3219,31 @@
       "emptyState": "Nenhuma leitura registrada. Clique em \"Nova Leitura\" para começar.",
       "searchPlaceholder": "Buscar leituras...",
       "pagesRead": "{{count}} pág.",
+      "viewSessions": "Ver sessões",
+      "viewProgress": "Ver progresso",
+      "markAsReadPeriodBtn": "Marcar como lido (período)",
+      "noReadingsProgress": "Nenhuma leitura registrada ainda.",
+      "sessionsCount_one": "{{count}} sessão",
+      "sessionsCount_other": "{{count}} sessões",
+      "markAsRead": {
+        "title": "Marcar como Lido (período)",
+        "description": "Gera sessões de leitura distribuídas automaticamente entre as datas informadas, usando seu ritmo histórico de leitura.",
+        "bookLabel": "Livro *",
+        "bookPlaceholder": "Selecione um livro",
+        "startDateLabel": "Data de início *",
+        "endDateLabel": "Data de fim *",
+        "startDatePlaceholder": "Quando começou",
+        "endDatePlaceholder": "Quando terminou",
+        "submitBtn": "Registrar",
+        "submitting": "Registrando...",
+        "fillRequired": "Preencha todos os campos",
+        "endAfterStart": "Data de fim deve ser posterior à de início",
+        "successTitle": "Leitura registrada!",
+        "successDesc_one": "{{count}} sessão criada automaticamente.",
+        "successDesc_other": "{{count}} sessões criadas automaticamente.",
+        "errorTitle": "Erro ao registrar leitura",
+        "cancelBtn": "Cancelar"
+      },
       "form": {
         "bookLabel": "Livro *",
         "bookPlaceholder": "Selecione um livro",
@@ -3137,7 +3274,24 @@
       "emptyTitle": "Nenhum livro na fila",
       "emptyDesc": "Adicione livros com status \"Para Ler\" para montar sua fila de leitura.",
       "errorLoad": "Erro ao carregar a fila",
-      "errorSave": "Erro ao salvar a ordem"
+      "errorSave": "Erro ao salvar a ordem",
+      "priorityHigh": "Alta",
+      "priorityMedium": "Média",
+      "priorityLow": "Baixa"
+    },
+    "readingsTab": {
+      "sessionSingular": "sessão",
+      "sessionPlural": "sessões",
+      "invalidDateRange": "Data de fim deve ser posterior à de início",
+      "sessionsCreated": "{{count}} sessões criadas automaticamente.",
+      "markAsReadTitle": "Marcar como Lido (período)",
+      "markAsReadDesc": "Gera sessões de leitura distribuídas automaticamente entre as datas informadas, usando seu ritmo histórico de leitura.",
+      "startDateLabel": "Data de início *",
+      "startDatePlaceholder": "Quando começou",
+      "viewSessions": "Ver sessões",
+      "viewProgress": "Ver progresso",
+      "markAsReadBtn": "Marcar como lido (período)",
+      "pageLabel": "pág."
     },
     "highlights": {
       "title": "Destaques",
@@ -3179,7 +3333,9 @@
         "allBooks": "Todos os livros",
         "allTypes": "Todos os tipos",
         "allColors": "Todas as cores"
-      }
+      },
+      "paginationInfo_one": "{{count}} destaque — página {{page}} de {{totalPages}}",
+      "paginationInfo_other": "{{count}} destaques — página {{page}} de {{totalPages}}"
     },
     "courses": {
       "title": "Cursos",
@@ -3377,6 +3533,33 @@
       "radarChart": {
         "title": "Radar de Habilidades",
         "emptyState": "Adicione habilidades para visualizar o radar"
+      },
+      "history": {
+        "title": "Histórico de Proficiência",
+        "noHistory": "Sem histórico disponível",
+        "timeline": "Linha do tempo de evolução",
+        "viewHistory": "Ver histórico"
+      }
+    },
+    "planningOnboarding": {
+      "skip": "Pular",
+      "next": "Próximo",
+      "start": "Começar agora",
+      "step0": {
+        "title": "Bem-vindo ao Planejamento Pessoal",
+        "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
+      },
+      "step1": {
+        "title": "Checklist Diário",
+        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
+      },
+      "step2": {
+        "title": "Objetivos e Metas",
+        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
+      },
+      "step3": {
+        "title": "Treino e Nutrição",
+        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
       }
     },
     "planningOnboarding": {
@@ -3498,7 +3681,17 @@
       "xpProgress": "Nível {{level}}",
       "insightCTAWorstDay": "Ajustar rotina",
       "insightCTAWorkout": "Registrar treino",
-      "insightCTAGoals": "Ver metas"
+      "insightCTAGoals": "Ver metas",
+      "moduleCards": {
+        "workoutTitle": "Treino",
+        "workoutSubtitle": "Sessões e exercícios",
+        "nutritionTitle": "Nutrição",
+        "nutritionSubtitle": "Refeições e macros",
+        "tasksTitle": "Tarefas",
+        "tasksSubtitle": "Checklist e rotina",
+        "goalsTitle": "Metas",
+        "goalsSubtitle": "Objetivos pessoais"
+      }
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -4077,7 +4270,16 @@
         "statusUnmatched": "Divergente",
         "statusIgnored": "Ignorado"
       },
-      "importWithPreview": "Importar com prévia"
+      "importWithPreview": "Importar com prévia",
+      "completedLabel": "concluídos",
+      "pendingLabel": "pendentes",
+      "transactionsLabel": "transações",
+      "importedAtLabel": "importado em",
+      "reconciliationTitle": "Conciliação",
+      "matchedLabel": "conciliados",
+      "divergencesLabel": "divergências",
+      "dragDrop": "Arraste ou clique para selecionar",
+      "supportedFormats": "Suporte: OFX, CSV"
     },
     "agents": {
       "title": "Agentes IA",
@@ -4161,7 +4363,33 @@
         "error": "Erro ao receber resposta do agente"
       },
       "stop": "Parar geração",
-      "sessions": "Histórico de sessões"
+      "sessions": "Histórico de sessões",
+      "suggestedQuestions": {
+        "intellect": [
+          "O que aprendi no último livro?",
+          "Qual meu progresso nos cursos?",
+          "Quais são minhas habilidades dominadas?",
+          "Quanto li este mês?"
+        ],
+        "financial": [
+          "Quanto gastei este mês?",
+          "Vou estourar o orçamento?",
+          "Qual minha previsão de saldo?",
+          "Quais foram minhas maiores despesas?"
+        ],
+        "personal": [
+          "Como estão minhas rotinas?",
+          "Treinei esta semana?",
+          "Qual meu progresso nas metas?",
+          "Como está minha alimentação?"
+        ],
+        "security": [
+          "Tenho senhas desatualizadas?",
+          "Qual foi minha atividade recente no cofre?",
+          "Existe algum risco de segurança?",
+          "Quantas senhas estão armazenadas?"
+        ]
+      }
     },
     "twoFactor": {
       "title": "Autenticação de dois fatores (2FA)",
@@ -4300,7 +4528,9 @@
       "analysisOf_one": "Análise de {{count}} senha",
       "analysisOf_other": "Análise de {{count}} senhas",
       "needsAttention": "Senhas que precisam de atenção",
-      "allGood": "Todas as senhas estão em boa forma!"
+      "allGood": "Todas as senhas estão em boa forma!",
+      "scoreHistory": "Evolução do Score",
+      "criticalPasswords": "Senhas Críticas"
     },
     "bookReader": {
       "themeLight": "Claro",
@@ -4840,6 +5070,16 @@
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Erro ao carregar planos",
       "saveError": "Erro ao salvar",
+      "reorderError": "Erro ao reordenar exercícios",
+      "exerciseSingular": "exercício",
+      "exercisePlural": "exercícios",
+      "noSets": "sem série",
+      "noSetsLabel": "Sem série definida",
+      "setsOf": "séries de",
+      "repsPlural": "repetições",
+      "restSeconds": "Descanso entre séries",
+      "noRest": "Sem descanso",
+      "seconds": "segundos",
       "muscleChips": {
         "chest": "Peito",
         "back": "Costas",
@@ -4865,7 +5105,9 @@
         "cycling": "Ciclismo",
         "swimming": "Natação",
         "fullBody": "Full Body"
-      }
+      },
+      "hideNotes": "Ocultar observações",
+      "showNotes": "Adicionar observações"
     },
     "exercises": {
       "title": "Exercícios",
@@ -4979,7 +5221,18 @@
       "foodDescriptionPlaceholder": "Informações adicionais...",
       "loadError": "Erro ao carregar alimentos",
       "saveError": "Erro ao salvar alimento",
-      "searchPlaceholder": "Buscar alimento..."
+      "searchPlaceholder": "Buscar alimento...",
+      "caloriesSection": "Informação Calórica",
+      "caloriesHelp": "Informe as calorias para a porção de referência. Deixe em branco se não souber.",
+      "servingSize": "Tamanho da Porção",
+      "servingUnit": "Unidade",
+      "caloriesPerServing": "Calorias (kcal) por Porção",
+      "servingUnitUnidade": "unidade",
+      "servingUnitScoop": "scoop",
+      "servingUnitColherSopa": "colher de sopa",
+      "servingUnitColherCha": "colher de chá",
+      "servingUnitXicara": "xícara",
+      "servingUnitPorcao": "porção"
     },
     "nutritionMealTypes": {
       "newMealTypeBtn": "Nova Refeição",
@@ -5034,7 +5287,16 @@
       "removeIngredient": "Remover",
       "noIngredients": "Nenhum ingrediente adicionado",
       "loadError": "Erro ao carregar dados",
-      "saveError": "Erro ao salvar"
+      "saveError": "Erro ao salvar",
+      "altGroup": "Grupo Alt.",
+      "altGroupHelp": "Mesmo número = alternativas entre si (ex: ovo OU carne). Deixe vazio se não for alternativa.",
+      "ingredientOr": "ou",
+      "ingredientKcal": "kcal",
+      "suggestedTimeEarlyMorning": "Manhã cedo",
+      "suggestedTimeMorning": "Manhã",
+      "suggestedTimeLunch": "Almoço",
+      "suggestedTimeAfternoon": "Tarde",
+      "suggestedTimeNight": "Noite"
     },
     "nutritionLog": {
       "title": "Diário Alimentar",
@@ -5153,7 +5415,139 @@
         "explicit": "Conexão explícita",
         "implicit": "Conexão implícita"
       },
-      "exportPNG": "Exportar como PNG"
+      "exportPNG": "Exportar como PNG",
+      "suggestLinks": "Sugerir Conexões",
+      "suggestionsPanel": "Conexões Sugeridas",
+      "noSuggestions": "Nenhuma sugestão encontrada. Adicione mais conteúdo ao grafo.",
+      "similarity": "Similaridade",
+      "addLink": "Adicionar conexão",
+      "loadingSuggestions": "Buscando sugestões..."
+    },
+    "flashcards": {
+      "title": "Flash Cards",
+      "subtitle": "Revisão espaçada de destaques",
+      "newCard": "Novo Card",
+      "reviewNow": "Revisar agora",
+      "dueToday": "Para revisar hoje",
+      "generateFromBook": "Gerar de Destaques",
+      "flipCard": "Virar card",
+      "nextReview": "Próxima revisão",
+      "generatedSuccess": "{{count}} card(s) gerado(s) com sucesso",
+      "noneToGenerate": "Todos os destaques já têm flashcards",
+      "status": {
+        "new": "Novo",
+        "learning": "Aprendendo",
+        "review": "Revisão",
+        "mastered": "Dominado"
+      },
+      "rating": {
+        "label": "Como você se saiu?",
+        "0": "Não lembrei",
+        "1": "Difícil",
+        "2": "Com esforço",
+        "3": "Bom",
+        "4": "Fácil",
+        "5": "Muito fácil"
+      },
+      "stats": {
+        "total": "Total",
+        "due": "Para revisar",
+        "mastered": "Dominados",
+        "new": "Novos"
+      },
+      "empty": {
+        "title": "Sem flash cards",
+        "description": "Crie cards a partir dos seus destaques de livros para revisar com espaçamento."
+      },
+      "emptyReview": {
+        "title": "Em dia!",
+        "description": "Você não tem revisões pendentes. Volte mais tarde."
+      },
+      "front": "Frente (pergunta)",
+      "back": "Verso (resposta)",
+      "selectBook": "Selecionar livro (opcional)"
+    },
+    "intellectToday": {
+      "title": "Hoje no Intelecto",
+      "subtitle": "Seu hub diário de aprendizado",
+      "continueReading": "Continuar Lendo",
+      "startReading": "Começar a ler",
+      "startCourse": "Iniciar um curso",
+      "logReading": "Registrar leitura",
+      "reviewCards": "Revisar cards",
+      "quickActions": "Ações Rápidas",
+      "activeBook": "Em leitura",
+      "activeCourse": "Curso ativo",
+      "noActiveBook": "Nenhum livro em leitura",
+      "noCourse": "Nenhum curso em andamento",
+      "dueFlashcards": "Cards para revisar",
+      "streak": "Sequência de aprendizado",
+      "days": "{{count}} dia(s)",
+      "minutes": "{{count}} min",
+      "pages": "{{count}} pág.",
+      "todayStudy": "Estudo hoje",
+      "weekProgress": "Progresso da semana",
+      "badges": "Conquistas recentes",
+      "viewAll": "Ver tudo",
+      "noStreak": "Comece sua sequência hoje!"
+    },
+    "workoutHub": {
+      "title": "Treino",
+      "subtitle": "Sessões e progresso",
+      "todayPlan": "Plano de hoje",
+      "quickLog": "Registrar Sessão",
+      "recentSessions": "Sessões Recentes",
+      "startSession": "Iniciar Sessão",
+      "noActivePlan": "Nenhum plano de treino ativo",
+      "createPlan": "Criar Plano",
+      "managePlans": "Gerenciar Planos",
+      "manageExercises": "Exercícios",
+      "viewHistory": "Histórico",
+      "todaySessions": "Sessões registradas hoje",
+      "emptyDays": "Nenhuma divisão cadastrada neste plano."
+    },
+    "nutritionHub": {
+      "title": "Nutrição",
+      "subtitle": "Refeições e macros do dia",
+      "todayMeals": "Refeições de hoje",
+      "quickLog": "Registrar Refeição",
+      "mealHistory": "Histórico",
+      "manageFoods": "Alimentos",
+      "manageMeals": "Refeições",
+      "noMealsToday": "Nenhuma refeição registrada hoje",
+      "addMeal": "Adicionar Refeição"
+    },
+    "webhooks": {
+      "description": "Receba notificações em tempo real de eventos do Axiom em sistemas externos.",
+      "newButton": "Novo Webhook",
+      "createButton": "Criar webhook",
+      "emptyTitle": "Nenhum webhook configurado",
+      "emptyDescription": "Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo.",
+      "editDialogTitle": "Editar Webhook",
+      "dialogDescription": "Configure a URL e os eventos que disparam este webhook.",
+      "deliveryHistory": "Histórico de entregas",
+      "noDeliveries": "Nenhuma entrega registrada.",
+      "viewDeliveries": "Ver entregas",
+      "deliveryCount_one": "{{count}} entrega",
+      "deliveryCount_other": "{{count}} entregas",
+      "nameLabel": "Nome *",
+      "namePlaceholder": "Ex: Notificar n8n",
+      "urlLabel": "URL de destino *",
+      "secretLabel": "Secret *",
+      "newSecretHint": "Novo secret (deixe em branco para manter)",
+      "secretPlaceholder": "Chave para assinar o payload (HMAC-SHA256)",
+      "timeoutLabel": "Timeout (s)",
+      "maxRetriesLabel": "Máx. tentativas",
+      "activeLabel": "Webhook ativo",
+      "eventsLabel": "Eventos *",
+      "createdSuccess": "Webhook criado com sucesso.",
+      "createError": "Erro ao criar webhook.",
+      "updatedSuccess": "Webhook atualizado.",
+      "updateError": "Erro ao atualizar webhook.",
+      "removedSuccess": "Webhook removido.",
+      "removeError": "Erro ao remover webhook.",
+      "testQueuedSuccess": "Teste enfileirado com sucesso.",
+      "testQueueError": "Erro ao enfileirar teste."
     }
   },
   "userProfile": {
@@ -5461,10 +5855,37 @@
       "payable": "A Pagar",
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
-      "loan": "Parcela Empréstimo"
+      "loan": "Parcela Empréstimo",
+      "revenue": "Receita Pendente"
     },
     "dayDetail": "Vencimentos em {{date}}",
-    "loading": "Carregando calendário..."
+    "loading": "Carregando calendário...",
+    "weekDays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+  },
+  "vaultOnboarding": {
+    "dialogTitle": "Configurar Cofre de Segurança",
+    "step1Title": "Seu cofre de segurança pessoal",
+    "step1Desc": "O Cofre protege suas senhas, cartões de crédito, contas bancárias e arquivos confidenciais com criptografia de nível militar.",
+    "step1Warning": "⚠️ Atenção importante",
+    "step1WarningDesc": "Sua senha mestre não pode ser recuperada. Guarde-a em local seguro. Se perdida, os dados do cofre são irrecuperáveis.",
+    "step2Title": "Configure sua Senha Mestre",
+    "step2Desc": "A senha mestre é a chave que protege todo o seu cofre. Use uma senha forte e única que você não use em nenhum outro lugar.",
+    "step2TipsTitle": "Dicas para uma senha forte:",
+    "step2Tip1": "Mínimo 12 caracteres",
+    "step2Tip2": "Misture letras, números e símbolos",
+    "step2Tip3": "Evite palavras do dicionário",
+    "step2Tip4": "Não reutilize senhas de outros serviços",
+    "step2ConfigureBtn": "Configurar senha mestre agora",
+    "step3Title": "Cofre configurado! O que fazer agora?",
+    "step3Desc": "Comece a adicionar suas credenciais para mantê-las seguras.",
+    "step3AddPassword": "Adicionar primeira senha",
+    "step3ImportPasswords": "Importar senhas de outro app",
+    "step3HealthReport": "Ver relatório de saúde",
+    "step3StoreArchive": "Armazenar arquivo confidencial",
+    "back": "Voltar",
+    "skip": "Pular",
+    "next": "Próximo",
+    "finish": "Concluir"
   },
   "netWorth": {
     "title": "Patrimônio Líquido",
@@ -5476,7 +5897,8 @@
     "liabilitiesSection": "Detalhamento dos Passivos",
     "bankAccounts": "Contas Bancárias",
     "vaults": "Cofres / Investimentos",
-    "loans": "Empréstimos",
+    "loans": "Empréstimos (a pagar)",
+    "lentLoans": "Empréstimos (a receber)",
     "creditCards": "Cartões de Crédito",
     "overdraft": "Cheque Especial Utilizado",
     "noAssets": "Nenhum ativo encontrado",
@@ -5501,6 +5923,67 @@
     "renewalOn": "Renova dia {{day}}",
     "loading": "Carregando assinaturas..."
   },
+  "gamification": {
+    "level": "Nível",
+    "levelValue": "Nível {{level}}",
+    "xpTotal": "{{xp}} XP total",
+    "streak": "Sequência atual",
+    "streakValue": "{{count}} dias",
+    "streakRecord": "Recorde: {{count}} dias",
+    "tasksCompleted": "Tarefas concluídas",
+    "totalHistoric": "Total histórico",
+    "badgesCard": "Badges",
+    "badgesEarned": "Conquistados",
+    "levelProgress": "Progresso para o Nível {{level}}",
+    "badgesSection": "Badges Conquistados",
+    "recentXp": "Últimos XP Ganhos"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "description": "Receba notificações em tempo real de eventos do Axiom em sistemas externos.",
+    "newBtn": "Novo Webhook",
+    "createBtn": "Criar webhook",
+    "empty": "Nenhum webhook configurado",
+    "emptyDesc": "Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo.",
+    "inactive": "Inativo",
+    "deliveries_one": "{{count}} entrega",
+    "deliveries_other": "{{count}} entregas",
+    "deliveryHistory": "Histórico de entregas",
+    "noDeliveries": "Nenhuma entrega registrada.",
+    "viewDeliveries": "Ver entregas",
+    "testBtn": "Testar",
+    "created": "Webhook criado com sucesso.",
+    "createError": "Erro ao criar webhook.",
+    "updated": "Webhook atualizado.",
+    "updateError": "Erro ao atualizar webhook.",
+    "deleted": "Webhook removido.",
+    "deleteError": "Erro ao remover webhook.",
+    "testSuccess": "Teste enfileirado com sucesso.",
+    "testError": "Erro ao enfileirar teste.",
+    "status": {
+      "success": "Sucesso",
+      "failed": "Falhou",
+      "retrying": "Tentando",
+      "pending": "Pendente"
+    },
+    "form": {
+      "editTitle": "Editar Webhook",
+      "newTitle": "Novo Webhook",
+      "dialogDesc": "Configure a URL e os eventos que disparam este webhook.",
+      "nameLabel": "Nome *",
+      "namePlaceholder": "Ex: Notificar n8n",
+      "urlLabel": "URL de destino *",
+      "secretLabel": "Secret *",
+      "secretEditLabel": "Novo secret (deixe em branco para manter)",
+      "secretPlaceholder": "Chave para assinar o payload (HMAC-SHA256)",
+      "timeoutLabel": "Timeout (s)",
+      "maxRetriesLabel": "Máx. tentativas",
+      "isActiveLabel": "Webhook ativo",
+      "eventsLabel": "Eventos *",
+      "saveBtn": "Salvar",
+      "createBtn": "Criar"
+    }
+  },
   "components": {
     "installmentSimulator": {
       "title": "Simulador de Parcelamento",
@@ -5514,6 +5997,43 @@
       "cash": "À vista",
       "noInterest": "Sem juros",
       "enterValue": "Informe o valor da compra para calcular as parcelas"
+    },
+    "chartContainer": {
+      "noDataMessage": "Nenhum dado disponível",
+      "toggleChartType": "Alternar tipo de gráfico",
+      "toggleView": "Alternar visualização"
+    },
+    "commandPalette": {
+      "ariaLabel": "Comandos disponíveis"
+    },
+    "notificationBell": {
+      "ariaLabel": "Notificações",
+      "title": "Notificações",
+      "empty": "Nenhuma notificação"
+    },
+    "timePicker": {
+      "placeholder": "Selecione um horário",
+      "clearAriaLabel": "Limpar horário"
+    },
+    "gamification": {
+      "levelTitle": "Nível",
+      "levelValue": "Nível {{level}}",
+      "streakTitle": "Sequência atual",
+      "tasksTitle": "Tarefas concluídas",
+      "totalHistory": "Total histórico",
+      "levelProgress": "Progresso para o Nível {{level}}"
+    },
+    "routineTemplate": {
+      "frequencyDaily": "Diário",
+      "frequencyWeekdays": "Dias úteis"
+    },
+    "vaults": {
+      "contributionPlaceholder": "Ex: Poupança mensal",
+      "depositPlaceholder": "Ex: Depósito mensal",
+      "withdrawalPlaceholder": "Ex: Saque para emergência"
+    },
+    "creditCards": {
+      "accountNotProvided": "Conta não informada"
     }
   }
 }
