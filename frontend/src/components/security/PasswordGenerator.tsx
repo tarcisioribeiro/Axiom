@@ -52,8 +52,8 @@ export function PasswordGenerator({
   const [strength, setStrength] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
   const { t } = useTranslation();
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!uppercase && !lowercase && !numbers && !specialCharacters) {
@@ -115,7 +115,9 @@ export function PasswordGenerator({
     <div className={cn('space-y-md', compact && 'space-y-3')}>
       {/* Length */}
       <div className="space-y-sm">
-        <Label htmlFor="gen-length">{t('pages.passwords.generator.length', { count: length })}</Label>
+        <Label htmlFor="gen-length">
+          {t('pages.passwords.generator.length', { count: length })}
+        </Label>
         <div className="flex items-center gap-3">
           <input
             type="range"
@@ -231,8 +233,12 @@ export function PasswordGenerator({
           {strengthInfo && (
             <div className="space-y-xs">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{t('pages.passwords.generator.strengthLabel')}</span>
-                <Badge variant={strengthInfo.badgeVariant}>{t(strengthInfo.labelKey)}</Badge>
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.passwords.generator.strengthLabel')}
+                </span>
+                <Badge variant={strengthInfo.badgeVariant}>
+                  {t(strengthInfo.labelKey)}
+                </Badge>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div

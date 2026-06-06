@@ -383,7 +383,7 @@ export default function Accounts() {
       {balanceDistribution.positiveAccounts.length > 1 && (
         <div className="rounded-lg border bg-card p-md">
           <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Distribuição de saldo
+            {t('pages.accounts.balanceDistribution')}
           </p>
           <div className="flex h-2 overflow-hidden rounded-full bg-muted">
             {balanceDistribution.positiveAccounts.map((acc, i) => (
@@ -564,7 +564,9 @@ export default function Accounts() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-sm">
               <ArrowLeftRight className="h-5 w-5" />
-              {t('pages.accounts.bankReconciliationTitle', { account: reconciliationAccount?.account_name })}
+              {t('pages.accounts.bankReconciliationTitle', {
+                account: reconciliationAccount?.account_name,
+              })}
             </DialogTitle>
             <DialogDescription>
               {t('pages.accounts.bankReconciliationDesc')}

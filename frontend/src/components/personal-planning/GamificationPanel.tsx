@@ -114,7 +114,9 @@ export function GamificationPanel() {
       {data.badges.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">{t('gamification.badgesSection')}</CardTitle>
+            <CardTitle className="text-base">
+              {t('gamification.badgesSection')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">

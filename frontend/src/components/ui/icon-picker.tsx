@@ -447,7 +447,9 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
               {value}
             </>
           ) : (
-            <span className="text-muted-foreground">{t('common.iconPicker.placeholder')}</span>
+            <span className="text-muted-foreground">
+              {t('common.iconPicker.placeholder')}
+            </span>
           )}
         </Button>
       </PopoverTrigger>

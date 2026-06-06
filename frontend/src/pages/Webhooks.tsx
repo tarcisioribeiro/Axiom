@@ -121,8 +121,7 @@ export default function Webhooks() {
       toast({ title: t('webhooks.updated') });
       setDialogOpen(false);
     },
-    onError: () =>
-      toast({ title: t('webhooks.updateError'), variant: 'destructive' }),
+    onError: () => toast({ title: t('webhooks.updateError'), variant: 'destructive' }),
   });
 
   const deleteMutation = useMutation({
@@ -139,8 +138,7 @@ export default function Webhooks() {
     mutationFn: (id: number) =>
       apiClient.post(API_CONFIG.ENDPOINTS.WEBHOOK_TEST(id), {}),
     onSuccess: () => toast({ title: t('webhooks.testSuccess') }),
-    onError: () =>
-      toast({ title: t('webhooks.testError'), variant: 'destructive' }),
+    onError: () => toast({ title: t('webhooks.testError'), variant: 'destructive' }),
   });
 
   function openCreate() {
@@ -231,7 +229,9 @@ export default function Webhooks() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-sm">
                     <span className="font-medium">{w.name}</span>
-                    {!w.is_active && <Badge variant="secondary">{t('webhooks.inactive')}</Badge>}
+                    {!w.is_active && (
+                      <Badge variant="secondary">{t('webhooks.inactive')}</Badge>
+                    )}
                     {statusBadge(w.last_delivery_status, t)}
                   </div>
                   <p className="max-w-xs truncate text-sm text-muted-foreground">
@@ -347,11 +347,11 @@ export default function Webhooks() {
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingWebhook ? t('webhooks.form.editTitle') : t('webhooks.form.newTitle')}
+              {editingWebhook
+                ? t('webhooks.form.editTitle')
+                : t('webhooks.form.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {t('webhooks.form.dialogDesc')}
-            </DialogDescription>
+            <DialogDescription>{t('webhooks.form.dialogDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-md py-sm">
@@ -453,7 +453,9 @@ export default function Webhooks() {
             </Button>
             <Button onClick={handleSubmit} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-sm h-md w-md animate-spin" />}
-              {editingWebhook ? t('webhooks.form.saveBtn') : t('webhooks.form.createBtn')}
+              {editingWebhook
+                ? t('webhooks.form.saveBtn')
+                : t('webhooks.form.createBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
