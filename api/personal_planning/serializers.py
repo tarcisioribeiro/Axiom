@@ -450,6 +450,7 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "sets",
             "reps_min",
             "reps_max",
+            "rest_seconds",
             "load",
             "load_unit",
             "load_unit_display",
@@ -473,6 +474,7 @@ class WorkoutExerciseCreateUpdateSerializer(serializers.ModelSerializer):
             "sets",
             "reps_min",
             "reps_max",
+            "rest_seconds",
             "load",
             "load_unit",
             "order",
@@ -691,6 +693,9 @@ class FoodSerializer(serializers.ModelSerializer):
             "uuid",
             "name",
             "description",
+            "calories_per_serving",
+            "serving_size",
+            "serving_unit",
             "owner",
             "created_at",
             "updated_at",
@@ -701,11 +706,36 @@ class FoodSerializer(serializers.ModelSerializer):
 class FoodCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Food
-        fields = ["id", "name", "description", "owner"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "calories_per_serving",
+            "serving_size",
+            "serving_unit",
+            "owner",
+        ]
 
 
 class MenuOptionIngredientSerializer(serializers.ModelSerializer):
     food_name = serializers.CharField(source="food.name", read_only=True)
+    food_calories_per_serving = serializers.DecimalField(
+        source="food.calories_per_serving",
+        read_only=True,
+        max_digits=8,
+        decimal_places=2,
+        default=None,
+    )
+    food_serving_size = serializers.DecimalField(
+        source="food.serving_size",
+        read_only=True,
+        max_digits=8,
+        decimal_places=2,
+        default=None,
+    )
+    food_serving_unit = serializers.CharField(
+        source="food.serving_unit", read_only=True, default=None
+    )
     unit_display = serializers.CharField(
         source="get_unit_display", read_only=True
     )
@@ -718,12 +748,16 @@ class MenuOptionIngredientSerializer(serializers.ModelSerializer):
             "menu_option",
             "food",
             "food_name",
+            "food_calories_per_serving",
+            "food_serving_size",
+            "food_serving_unit",
             "quantity",
             "unit",
             "unit_display",
             "is_optional",
             "notes",
             "order",
+            "alternative_group",
             "owner",
             "created_at",
             "updated_at",
@@ -743,6 +777,7 @@ class MenuOptionIngredientCreateUpdateSerializer(serializers.ModelSerializer):
             "is_optional",
             "notes",
             "order",
+            "alternative_group",
             "owner",
         ]
 

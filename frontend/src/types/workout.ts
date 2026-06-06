@@ -69,6 +69,7 @@ export interface WorkoutExercise {
   sets: number;
   reps_min: number;
   reps_max: number;
+  rest_seconds?: number | null;
   load?: string | null;
   load_unit: string;
   load_unit_display?: string | null;
@@ -86,6 +87,7 @@ export interface WorkoutExerciseFormData {
   sets: number;
   reps_min: number;
   reps_max: number;
+  rest_seconds?: number | null;
   load?: string | null;
   load_unit: string;
   order: number;

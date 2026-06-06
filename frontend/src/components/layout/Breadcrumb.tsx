@@ -73,7 +73,9 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
             <Link
               to={breadcrumbs[breadcrumbs.length - 2].href ?? '/'}
               className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label={t('common.navigation.backTo', { label: breadcrumbs[breadcrumbs.length - 2].label })}
+              aria-label={t('common.navigation.backTo', {
+                label: breadcrumbs[breadcrumbs.length - 2].label,
+              })}
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>

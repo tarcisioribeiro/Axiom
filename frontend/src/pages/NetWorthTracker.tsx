@@ -94,7 +94,7 @@ export default function NetWorthTracker() {
 
     const activeLoans = loans.filter((l) => l.status !== 'paid');
     const lentLoans = activeLoans.filter((l) => l.loan_type === 'lent');
-    const borrowedLoans = activeLoans.filter((l) => l.loan_type !== 'lent');
+    const borrowedLoans = activeLoans.filter((l) => l.loan_type === 'borrowed');
 
     const lentLoanAssets = lentLoans.reduce(
       (s, l) => s + parseFloat(l.remaining_balance ?? l.value),

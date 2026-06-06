@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/incompatible-library */
-import { FileText, Loader2, Salad } from 'lucide-react';
+import { FileText, Flame, Loader2, Salad } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { Food, FoodFormData } from '@/types/nutrition';
+
+const SERVING_UNIT_VALUES = [
+  'g',
+  'ml',
+  'unit',
+  'scoop',
+  'tablespoon',
+  'teaspoon',
+  'cup',
+  'slice',
+  'portion',
+] as const;
 
 interface FoodFormProps {
   food?: Food;
@@ -40,13 +52,23 @@ export function FoodForm({
     defaultValues: {
       name: food?.name ?? '',
       description: food?.description ?? '',
+      calories_per_serving: food?.calories_per_serving ?? '',
+      serving_size: food?.serving_size ?? '',
+      serving_unit: food?.serving_unit ?? 'g',
       owner: ownerId,
     },
   });
 
   useEffect(() => {
     if (food)
-      reset({ name: food.name, description: food.description ?? '', owner: ownerId });
+      reset({
+        name: food.name,
+        description: food.description ?? '',
+        calories_per_serving: food.calories_per_serving ?? '',
+        serving_size: food.serving_size ?? '',
+        serving_unit: food.serving_unit ?? 'g',
+        owner: ownerId,
+      });
   }, [food, ownerId, reset]);
 
   const nameValue = watch('name');
@@ -54,7 +76,12 @@ export function FoodForm({
 
   const handleFormSubmit = async (data: FoodFormData) => {
     try {
-      await onSubmit(data);
+      await onSubmit({
+        ...data,
+        calories_per_serving: data.calories_per_serving || null,
+        serving_size: data.serving_size || null,
+        serving_unit: data.serving_unit || null,
+      });
     } catch {
       toast({ title: t('pages.nutritionFoods.saveError'), variant: 'destructive' });
     }
@@ -103,6 +130,65 @@ export function FoodForm({
           {...register('description')}
           className="resize-none"
         />
+      </FormSection>
+
+      {/* Informação nutricional */}
+      <FormSection
+        title={t('pages.nutritionFoods.caloriesSection', 'Informação Calórica')}
+        icon={Flame}
+      >
+        <div className="space-y-sm">
+          <p className="text-xs text-muted-foreground">
+            {t(
+              'pages.nutritionFoods.caloriesHelp',
+              t('pages.nutritionFoods.caloriesHelp')
+            )}
+          </p>
+          <div className="grid grid-cols-2 gap-sm">
+            <div className="space-y-xs">
+              <label className="text-xs font-medium text-foreground">
+                {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
+              </label>
+              <Input
+                type="number"
+                min={0}
+                step="0.1"
+                placeholder="100"
+                {...register('serving_size')}
+              />
+            </div>
+            <div className="space-y-xs">
+              <label className="text-xs font-medium text-foreground">
+                {t('pages.nutritionFoods.servingUnit', 'Unidade')}
+              </label>
+              <select
+                {...register('serving_unit')}
+                className="w-full rounded-md border border-input bg-background px-sm py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {SERVING_UNIT_VALUES.map((val) => (
+                  <option key={val} value={val}>
+                    {t(`units.${val}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-xs">
+            <label className="text-xs font-medium text-foreground">
+              {t(
+                'pages.nutritionFoods.caloriesPerServing',
+                'Calorias (kcal) por Porção'
+              )}
+            </label>
+            <Input
+              type="number"
+              min={0}
+              step="0.1"
+              placeholder="ex: 70"
+              {...register('calories_per_serving')}
+            />
+          </div>
+        </div>
       </FormSection>
 
       <div className="flex justify-end gap-sm border-t border-border pt-md">

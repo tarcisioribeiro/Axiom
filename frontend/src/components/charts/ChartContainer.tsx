@@ -108,7 +108,9 @@ export const ChartContainer = ({
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50">
           <BarChart2 className="h-6 w-6 opacity-40" />
         </div>
-        <p className="text-center text-sm text-muted-foreground">{resolvedEmptyMessage}</p>
+        <p className="text-center text-sm text-muted-foreground">
+          {resolvedEmptyMessage}
+        </p>
       </div>
     );
   }

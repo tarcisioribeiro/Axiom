@@ -69,7 +69,6 @@ const markdownComponents: Components = {
   a: CitationLink as Components['a'],
 };
 
-
 // Mapeamento agente → CSS class (sem cores hardcoded — usa variáveis CSS)
 const AGENT_BADGE_CLASS: Record<string, string> = {
   personal: 'agent-badge-personal',
@@ -687,7 +686,11 @@ export default function Agents() {
               !showStreamingBubble &&
               !query && (
                 <div className="mb-sm flex flex-wrap gap-xs">
-                  {(t(`pages.agents.suggestedQuestions.${selectedAgent}`, { returnObjects: true }) as string[] ?? []).map((q) => (
+                  {(
+                    (t(`pages.agents.suggestedQuestions.${selectedAgent}`, {
+                      returnObjects: true,
+                    }) as string[]) ?? []
+                  ).map((q) => (
                     <button
                       key={q}
                       type="button"
