@@ -1238,6 +1238,17 @@ class WorkoutPlan(BaseModel):
         return f"{self.name} ({'ativo' if self.is_active else 'inativo'})"
 
 
+WORKOUT_WEEKDAY_CHOICES = [
+    (0, "Segunda-feira"),
+    (1, "Terça-feira"),
+    (2, "Quarta-feira"),
+    (3, "Quinta-feira"),
+    (4, "Sexta-feira"),
+    (5, "Sábado"),
+    (6, "Domingo"),
+]
+
+
 class WorkoutDay(BaseModel):
     """Divisão de treino dentro de um plano
     (ex: Treino A — Costas/Ombro/Bíceps)."""
@@ -1261,6 +1272,13 @@ class WorkoutDay(BaseModel):
         blank=True,
         verbose_name="Grupos Musculares",
         help_text="Ex: Costas / Ombro / Bíceps",
+    )
+    day_of_week = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        choices=WORKOUT_WEEKDAY_CHOICES,
+        verbose_name="Dia da Semana",
+        help_text="Dia da semana em que esta divisão é executada (0=Seg, 6=Dom). Vazio = qualquer dia.",
     )
     order = models.PositiveIntegerField(
         default=0,

@@ -1,5 +1,14 @@
 /* eslint-disable react-hooks/incompatible-library */
-import { Activity, Dumbbell, Flame, Layers, Loader2, Target, Zap } from 'lucide-react';
+import {
+  Activity,
+  Calendar,
+  Dumbbell,
+  Flame,
+  Layers,
+  Loader2,
+  Target,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -10,9 +19,20 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
 
+const WEEKDAYS = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
+
 interface WorkoutDayFormValues {
   name: string;
   muscle_groups: string;
+  day_of_week: number | '';
   order: number;
 }
 
@@ -21,7 +41,11 @@ interface WorkoutDayFormProps {
   planId: number;
   ownerId: number;
   onSubmit: (
-    data: WorkoutDayFormValues & { plan: number; owner: number }
+    data: Omit<WorkoutDayFormValues, 'day_of_week'> & {
+      day_of_week: number | null;
+      plan: number;
+      owner: number;
+    }
   ) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -82,6 +106,7 @@ export function WorkoutDayForm({
     defaultValues: {
       name: day?.name ?? '',
       muscle_groups: day?.muscle_groups ?? '',
+      day_of_week: day?.day_of_week ?? '',
       order: day?.order ?? 0,
     },
   });
@@ -98,6 +123,7 @@ export function WorkoutDayForm({
       reset({
         name: day.name,
         muscle_groups: day.muscle_groups ?? '',
+        day_of_week: day.day_of_week ?? '',
         order: day.order,
       });
     }
@@ -116,7 +142,12 @@ export function WorkoutDayForm({
   };
 
   const handleFormSubmit = async (data: WorkoutDayFormValues) => {
-    await onSubmit({ ...data, plan: planId, owner: ownerId });
+    await onSubmit({
+      ...data,
+      day_of_week: data.day_of_week === '' ? null : data.day_of_week,
+      plan: planId,
+      owner: ownerId,
+    });
   };
 
   return (
@@ -162,6 +193,33 @@ export function WorkoutDayForm({
             />
           </div>
         </div>
+      </FormSection>
+
+      {/* Dia da semana */}
+      <FormSection title={t('pages.workoutPlans.dayOfWeek')} icon={Calendar}>
+        <div className="flex flex-wrap gap-xs">
+          {WEEKDAYS.map((wd, i) => {
+            const selected = watch('day_of_week') === i;
+            return (
+              <button
+                key={wd}
+                type="button"
+                onClick={() => setValue('day_of_week', selected ? '' : i)}
+                className={cn(
+                  'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                  selected
+                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                )}
+              >
+                {t(`pages.workoutPlans.weekdays.${wd}`)}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-xs text-xs text-muted-foreground">
+          {t('pages.workoutPlans.dayOfWeekHint')}
+        </p>
       </FormSection>
 
       {/* Grupos musculares */}
