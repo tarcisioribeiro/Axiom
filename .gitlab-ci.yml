@@ -83,6 +83,23 @@ workflow:
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
+# SSH tunnel → K3s local API (127.0.0.1:6443).
+# Qualquer runner pode executar deploy — não depende de acesso externo à porta 6443.
+# Variáveis necessárias: DEPLOY_SSH_KEY (chave privada), DEPLOY_USER (usuário SSH na VPS).
+.k8s_tunnel:
+  before_script: &k8s_tunnel_before_script
+    - command -v ssh >/dev/null 2>&1 || apt-get update -qq && apt-get install -y -qq openssh-client 2>/dev/null || true
+    - mkdir -p /tmp/.ssh && chmod 700 /tmp/.ssh
+    - printf '%s\n' "$DEPLOY_SSH_KEY" > /tmp/.ssh/deploy_key && chmod 600 /tmp/.ssh/deploy_key
+    - ssh -fNT -i /tmp/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ExitOnForwardFailure=yes -L 6443:127.0.0.1:6443 ${DEPLOY_USER}@84.247.184.151
+    - |
+      for i in $(seq 1 10); do
+        bash -c "echo >/dev/tcp/127.0.0.1/6443" 2>/dev/null && echo "Tunnel K3s pronto." && break
+        [ $i -eq 10 ] && echo "AVISO: tunnel pode não estar pronto" || sleep 1
+      done
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+
 .docker_base:
   image: docker:26
   services:
@@ -624,9 +641,7 @@ deploy:staging:
   environment:
     name: staging
     url: $STAGING_URL
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     # Pause both deployments so all spec changes (configmap, service, deployment)
     # are batched into a single rollout on resume.  The image is substituted
@@ -772,9 +787,7 @@ seed:staging:
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     - |
       if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
@@ -1335,9 +1348,7 @@ deploy:production:
   environment:
     name: production
     url: $PRODUCTION_URL
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     # ── 0. Guard: abort early if any required production variable is unset ───────
     - |
@@ -1462,9 +1473,7 @@ smoke:production:
     - job: deploy:production
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     - |
       set -e
