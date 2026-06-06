@@ -23,7 +23,6 @@ interface RoutineTemplateModalProps {
   onImported: (createdIds: number[]) => void;
 }
 
-
 const CATEGORY_COLORS: Record<string, string> = {
   health: 'bg-category-health',
   studies: 'bg-category-studies',
@@ -200,7 +199,10 @@ export function RoutineTemplateModal({
                             <Badge
                               className={`text-xs ${CATEGORY_COLORS[task.category] ?? 'bg-muted'}`}
                             >
-                              {t(`pages.routineTasks.form.periodicityOptions.${task.periodicity}`, { defaultValue: task.periodicity })}
+                              {t(
+                                `pages.routineTasks.form.periodicityOptions.${task.periodicity}`,
+                                { defaultValue: task.periodicity }
+                              )}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {task.target_quantity} {task.unit}
