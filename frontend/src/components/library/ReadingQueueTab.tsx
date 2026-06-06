@@ -29,8 +29,10 @@ function getPriorityBadge(rank: number): {
   labelKey: string;
   variant: 'destructive' | 'warning' | 'secondary';
 } {
-  if (rank === 1) return { labelKey: 'pages.readingQueue.priorityHigh', variant: 'destructive' };
-  if (rank <= 3) return { labelKey: 'pages.readingQueue.priorityMedium', variant: 'warning' };
+  if (rank === 1)
+    return { labelKey: 'pages.readingQueue.priorityHigh', variant: 'destructive' };
+  if (rank <= 3)
+    return { labelKey: 'pages.readingQueue.priorityMedium', variant: 'warning' };
   return { labelKey: 'pages.readingQueue.priorityLow', variant: 'secondary' };
 }
 

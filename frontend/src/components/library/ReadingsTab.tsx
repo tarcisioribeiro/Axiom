@@ -93,12 +93,12 @@ interface MarkAsReadModalProps {
 }
 
 function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
+  const { t } = useTranslation();
   const [selectedBook, setSelectedBook] = useState<number>(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isOpen) {
@@ -112,7 +112,10 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
   const handleSubmit = async () => {
     if (!selectedBook || !startDate || !endDate) {
-      toast({ title: t('pages.readings.markAsRead.fillRequired'), variant: 'destructive' });
+      toast({
+        title: t('pages.readings.markAsRead.fillRequired'),
+        variant: 'destructive',
+      });
       return;
     }
     if (endDate < startDate) {
@@ -127,7 +130,9 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
       const result = await booksService.markAsRead(selectedBook, startDate, endDate);
       toast({
         title: t('pages.readings.markAsRead.successTitle'),
-        description: t('pages.readings.markAsRead.successDesc', { count: result.sessions_created }),
+        description: t('pages.readings.markAsRead.successDesc', {
+          count: result.sessions_created,
+        }),
       });
       onClose();
     } catch (error: unknown) {
@@ -172,7 +177,9 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
                 onValueChange={(v) => setSelectedBook(parseInt(v))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('pages.readings.markAsRead.bookPlaceholder')} />
+                  <SelectValue
+                    placeholder={t('pages.readings.markAsRead.bookPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {eligibleBooks.map((b) => (
@@ -209,7 +216,9 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
               {t('pages.readings.markAsRead.cancelBtn')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
-              {isSubmitting ? t('pages.readings.markAsRead.submitting') : t('pages.readings.markAsRead.submitBtn')}
+              {isSubmitting
+                ? t('pages.readings.markAsRead.submitting')
+                : t('pages.readings.markAsRead.submitBtn')}
             </Button>
           </div>
         </div>
@@ -369,7 +378,9 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           className="gap-sm"
         >
           <BarChart2 className="h-4 w-4" />
-          {showProgress ? t('pages.readings.viewSessions') : t('pages.readings.viewProgress')}
+          {showProgress
+            ? t('pages.readings.viewSessions')
+            : t('pages.readings.viewProgress')}
         </Button>
         <Button
           variant="outline"
@@ -443,7 +454,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                       )}
                       {reading.current_page && (
                         <span className="text-muted-foreground">
-                          pág. {reading.current_page}
+                          {t('pages.readingsTab.pageLabel')} {reading.current_page}
                         </span>
                       )}
                     </div>

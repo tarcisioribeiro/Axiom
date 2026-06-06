@@ -37,7 +37,7 @@ import {
   Download,
   FileText,
 } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -48,6 +48,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { StatementExportModal } from '@/components/common/StatementExportModal';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { HealthScore } from '@/components/dashboard/HealthScore';
+import { InstallmentSimulator } from '@/components/financial/InstallmentSimulator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -123,9 +124,10 @@ export default function Dashboard() {
   const [irYear, setIrYear] = useState<number>(new Date().getFullYear() - 1);
   const [irReport, setIrReport] = useState<IRReport | null>(null);
   const [showIrReport, setShowIrReport] = useState(false);
+  const [installmentSimOpen, setInstallmentSimOpen] = useState(false);
   const { toast } = useToast();
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
 
   // ── Queries ────────────────────────────────────────────────────────────────
   // staleTime mirrors backend Redis cache TTLs (see STALE_TIMES in query-client.ts).
@@ -217,18 +219,23 @@ export default function Dashboard() {
     queryKey: ['dashboard', 'cashFlowForecast', forecastDays],
     queryFn: () => dashboardService.getCashFlowForecast(forecastDays),
     staleTime: STALE_TIMES.CASH_FLOW_FORECAST,
+    refetchOnWindowFocus: false,
   });
 
+  // ML-based alerts: expensive to recompute; 5-min stale window avoids
+  // spurious refetches on tab focus while still refreshing after navigation.
   const financialAlertsQuery = useQuery({
     queryKey: ['dashboard', 'financialAlerts'],
     queryFn: () => dashboardService.getFinancialAlerts(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
+    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
+    refetchOnWindowFocus: false,
   });
 
   const anomaliesQuery = useQuery({
     queryKey: ['dashboard', 'anomalies'],
     queryFn: () => dashboardService.getAnomalies(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
+    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
+    refetchOnWindowFocus: false,
   });
 
   const lgpdMutation = useMutation({
@@ -300,6 +307,25 @@ export default function Dashboard() {
     () => (Array.isArray(anomaliesQuery.data) ? anomaliesQuery.data : []),
     [anomaliesQuery.data]
   );
+
+  // Show a proactive toast when critical alerts load for the first time
+  const alertsNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (alertsNotifiedRef.current) return;
+    const critical = financialAlerts.filter(
+      (a) => a.severity === 'danger' || a.severity === 'warning'
+    );
+    if (critical.length > 0) {
+      alertsNotifiedRef.current = true;
+      toast({
+        title: t('pages.dashboard.financialAlerts.proactiveTitle', {
+          count: critical.length,
+        }),
+        description: t('pages.dashboard.financialAlerts.proactiveDesc'),
+        variant: 'destructive',
+      });
+    }
+  }, [financialAlerts, t, toast]);
 
   // Overall loading: show full-screen spinner only until the primary stats
   // query resolves. Secondary queries (charts, forecast, alerts) load in the
@@ -492,6 +518,48 @@ export default function Dashboard() {
 
   const COLORS = useChartColors();
 
+  const monthOverMonth = useMemo(() => {
+    const currentMonthStr = format(now, 'yyyy-MM');
+    const prevMonthStr = format(subMonths(now, 1), 'yyyy-MM');
+
+    const sum = <T extends { date: string; value: string }>(
+      arr: T[],
+      monthStr: string,
+      filterFn: (e: T) => boolean
+    ) =>
+      arr
+        .filter((e) => e.date.startsWith(monthStr) && filterFn(e))
+        .reduce((s, e) => s + parseFloat(e.value), 0);
+
+    const currExp = sum(expenses, currentMonthStr, (e) => e.payed);
+    const prevExp = sum(expenses, prevMonthStr, (e) => e.payed);
+    const currRev = sum(
+      revenues,
+      currentMonthStr,
+      (r) =>
+        (r as { received?: boolean }).received === true && r.category !== 'transfer'
+    );
+    const prevRev = sum(
+      revenues,
+      prevMonthStr,
+      (r) =>
+        (r as { received?: boolean }).received === true && r.category !== 'transfer'
+    );
+
+    const delta = (curr: number, prev: number) =>
+      prev === 0 ? (curr > 0 ? 100 : 0) : ((curr - prev) / prev) * 100;
+
+    return {
+      expenses: { current: currExp, prev: prevExp, delta: delta(currExp, prevExp) },
+      revenues: { current: currRev, prev: prevRev, delta: delta(currRev, prevRev) },
+      balance: {
+        current: currRev - currExp,
+        prev: prevRev - prevExp,
+        delta: delta(currRev - currExp, prevRev - prevExp),
+      },
+    };
+  }, [expenses, revenues, now]);
+
   const cashFlowChartData = useMemo(() => {
     if (!cashFlowForecast) return [];
     return cashFlowForecast.daily_breakdown.map((day) => ({
@@ -570,6 +638,15 @@ export default function Dashboard() {
               {t('pages.dashboard.irReport.title')}
             </Button>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInstallmentSimOpen(true)}
+            className="gap-xs"
+          >
+            <Calculator className="h-4 w-4" />
+            {t('pages.dashboard.installmentSimulator')}
+          </Button>
           {financialAlerts.length > 0 && (
             <Button
               variant="outline"
@@ -584,6 +661,10 @@ export default function Dashboard() {
               </Badge>
             </Button>
           )}
+          <InstallmentSimulator
+            open={installmentSimOpen}
+            onOpenChange={setInstallmentSimOpen}
+          />
         </div>
 
         {/* 4. Relatório IR (quando visível) */}
@@ -1278,6 +1359,78 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </motion.div>
+        </div>
+
+        {/* 9b. Comparativo Mês a Mês */}
+        <div className="flex items-center gap-3 py-sm">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.dashboard.monthOverMonth')}
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+          {(
+            [
+              {
+                label: t('pages.dashboard.expenses'),
+                data: monthOverMonth.expenses,
+                color: 'text-destructive',
+                positiveIsBad: true,
+              },
+              {
+                label: t('pages.dashboard.revenues'),
+                data: monthOverMonth.revenues,
+                color: 'text-success',
+                positiveIsBad: false,
+              },
+              {
+                label: t('pages.dashboard.balance'),
+                data: monthOverMonth.balance,
+                color:
+                  monthOverMonth.balance.current >= 0
+                    ? 'text-success'
+                    : 'text-destructive',
+                positiveIsBad: false,
+              },
+            ] as const
+          ).map(({ label, data, color, positiveIsBad }) => {
+            const isUp = data.delta >= 0;
+            const deltaColor = positiveIsBad
+              ? isUp
+                ? 'text-destructive'
+                : 'text-success'
+              : isUp
+                ? 'text-success'
+                : 'text-destructive';
+
+            return (
+              <Card key={label} className="overflow-hidden">
+                <CardContent className="pt-md">
+                  <p className="mb-xs text-sm font-medium text-muted-foreground">
+                    {label}
+                  </p>
+                  <p className={cn('text-2xl font-bold', color)}>
+                    {formatCurrency(data.current)}
+                  </p>
+                  <div className="mt-sm flex items-center gap-xs text-xs">
+                    {isUp ? (
+                      <ArrowUpRight className={cn('h-3.5 w-3.5', deltaColor)} />
+                    ) : (
+                      <ArrowDownRight className={cn('h-3.5 w-3.5', deltaColor)} />
+                    )}
+                    <span className={cn('font-medium', deltaColor)}>
+                      {Math.abs(data.delta).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground">
+                      {t('pages.dashboard.vsPrevMonth')} {formatCurrency(data.prev)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* 10. Separador: Composição do mês */}

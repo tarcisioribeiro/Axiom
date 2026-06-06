@@ -1,4 +1,4 @@
-/* eslint-disable max-lines, react-hooks/incompatible-library */
+/* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,

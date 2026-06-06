@@ -70,7 +70,6 @@ const WIDTH_PRESETS = [600, 750, 900, 1100] as const;
 type WidthPreset = (typeof WIDTH_PRESETS)[number];
 
 interface ThemeConfig {
-  label: string;
   backgroundColor: string;
   color: string;
   borderColor: string;
@@ -87,13 +86,12 @@ interface ThemeConfig {
 
 function buildThemes(
   isDark: boolean,
-  labels: { light: string; sepia: string; dark: string }
+  _labels: { light: string; sepia: string; dark: string }
 ): Record<ReaderTheme, ThemeConfig> {
   if (isDark) {
     // ── Dracula palette variants ─────────────────────────────────────────────
     return {
       light: {
-        label: labels.light,
         backgroundColor: '#ECEEF8', // very light cool blue-grey (Dracula-tinted)
         color: '#21222C', // Dracula near-black
         borderColor: '#B0BAD4',
@@ -101,7 +99,6 @@ function buildThemes(
         epubBody: { background: '#ECEEF8', color: '#21222C', linkColor: '#1D4ED8' },
       },
       sepia: {
-        label: labels.sepia,
         backgroundColor: '#E8E2F5', // cool lavender parchment (Dracula purple-tinted)
         color: '#3D2852', // deep purple-brown
         borderColor: '#9478C2',
@@ -109,7 +106,6 @@ function buildThemes(
         epubBody: { background: '#E8E2F5', color: '#3D2852', linkColor: '#6D28D9' },
       },
       dark: {
-        label: labels.dark,
         backgroundColor: '#282A36', // Dracula background
         color: '#F8F8F2', // Dracula foreground
         borderColor: '#44475A', // Dracula current-line
@@ -121,7 +117,6 @@ function buildThemes(
   // ── Alucard palette variants ───────────────────────────────────────────────
   return {
     light: {
-      label: labels.light,
       backgroundColor: '#FFFBEB', // Alucard warm cream (hsl 48 100% 96%)
       color: '#1F1F1F',
       borderColor: '#C8C4D8',
@@ -129,7 +124,6 @@ function buildThemes(
       epubBody: { background: '#FFFBEB', color: '#1F1F1F', linkColor: '#2563EB' },
     },
     sepia: {
-      label: labels.sepia,
       backgroundColor: '#F5E6C8', // warm golden parchment (Alucard amber tones)
       color: '#5C3D2E', // warm dark brown
       borderColor: '#C8A870',
@@ -137,7 +131,6 @@ function buildThemes(
       epubBody: { background: '#F5E6C8', color: '#5C3D2E', linkColor: '#2563EB' },
     },
     dark: {
-      label: labels.dark,
       backgroundColor: '#1A0E08', // very dark warm brown (Alucard inverted)
       color: '#F5EDD6', // warm cream
       borderColor: '#4A3020',
@@ -179,12 +172,12 @@ function applyEpubThemes(
 // HIGHLIGHT COLORS
 // ============================================================================
 
-const HIGHLIGHT_COLORS: { value: string; label: string; dot: string }[] = [
-  { value: 'yellow', label: 'Amarelo', dot: 'bg-yellow-400' },
-  { value: 'green', label: 'Verde', dot: 'bg-green-400' },
-  { value: 'blue', label: 'Azul', dot: 'bg-blue-400' },
-  { value: 'pink', label: 'Rosa', dot: 'bg-pink-400' },
-  { value: 'orange', label: 'Laranja', dot: 'bg-orange-400' },
+const HIGHLIGHT_COLOR_VALUES = [
+  { value: 'yellow', key: 'colorYellow', dot: 'bg-yellow-400' },
+  { value: 'green', key: 'colorGreen', dot: 'bg-green-400' },
+  { value: 'blue', key: 'colorBlue', dot: 'bg-blue-400' },
+  { value: 'pink', key: 'colorPink', dot: 'bg-pink-400' },
+  { value: 'orange', key: 'colorOrange', dot: 'bg-orange-400' },
 ];
 
 const COLOR_BG: Record<string, string> = {
@@ -299,11 +292,11 @@ function AnnotationForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {HIGHLIGHT_COLORS.map((c) => (
+              {HIGHLIGHT_COLOR_VALUES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
                   <span className="flex items-center gap-sm">
                     <span className={`inline-block h-3 w-3 rounded-full ${c.dot}`} />
-                    {c.label}
+                    {t(`pages.bookReader.${c.key}`)}
                   </span>
                 </SelectItem>
               ))}
@@ -907,24 +900,26 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           />
 
           {/* Theme switcher */}
-          {(Object.keys(themes) as ReaderTheme[]).map((t) => (
+          {(Object.keys(themes) as ReaderTheme[]).map((themeKey) => (
             <Button
-              key={t}
+              key={themeKey}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => handleThemeChange(t)}
-              title={themes[t].label}
+              onClick={() => handleThemeChange(themeKey)}
+              title={t(
+                `pages.bookReader.theme${themeKey.charAt(0).toUpperCase()}${themeKey.slice(1)}`
+              )}
               style={
-                theme === t
+                theme === themeKey
                   ? {
-                      backgroundColor: `${themes[t].color}20`,
-                      color: themes[t].color,
+                      backgroundColor: `${themes[themeKey].color}20`,
+                      color: themes[themeKey].color,
                     }
                   : { color: cfg.color }
               }
             >
-              {themes[t].icon}
+              {themes[themeKey].icon}
             </Button>
           ))}
 
