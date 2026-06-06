@@ -512,7 +512,15 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
 class WorkoutDayCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkoutDay
-        fields = ["id", "plan", "name", "muscle_groups", "day_of_week", "order", "owner"]
+        fields = [
+            "id",
+            "plan",
+            "name",
+            "muscle_groups",
+            "day_of_week",
+            "order",
+            "owner",
+        ]
 
 
 class WorkoutPlanSerializer(serializers.ModelSerializer):
