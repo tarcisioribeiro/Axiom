@@ -271,12 +271,14 @@ export function WorkoutExerciseModal({
             <CounterInput
               value={repsMin}
               onChange={(v) => setValue('reps_min', Math.min(v, repsMax))}
+              min={0}
               label={t('pages.workoutPlans.repsMin')}
             />
             <span className="pb-2 text-xs font-medium text-muted-foreground">–</span>
             <CounterInput
               value={repsMax}
               onChange={(v) => setValue('reps_max', Math.max(v, repsMin))}
+              min={0}
               label={t('pages.workoutPlans.repsMax')}
             />
           </div>
@@ -284,6 +286,12 @@ export function WorkoutExerciseModal({
         <div className="rounded-lg bg-muted/40 py-xs text-center text-xs text-muted-foreground">
           {sets === 0 ? (
             <span>{t('pages.workoutPlans.noSetsLabel')}</span>
+          ) : repsMin === 0 && repsMax === 0 ? (
+            <>
+              <strong className="font-semibold text-foreground">{sets}</strong>{' '}
+              {t('pages.workoutPlans.setsOf')}{' '}
+              <span>{t('pages.workoutPlans.noRepsLabel', 'sem repetições')}</span>
+            </>
           ) : (
             <>
               <strong className="font-semibold text-foreground">{sets}</strong>{' '}
