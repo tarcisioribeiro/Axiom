@@ -743,28 +743,6 @@ export default function Passwords() {
     setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
   };
 
-  const _handleCopyWithoutReveal = async (id: number) => {
-    try {
-      setCopyingId(id);
-      const revealData = await passwordsService.reveal(id);
-      await copyToClipboard(revealData.password);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
-      toast({
-        title: t('pages.passwords.copied'),
-        description: t('pages.passwords.copiedClipboard'),
-      });
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.passwords.revealError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setCopyingId(null);
-    }
-  };
-
   const onFormSubmit = async (data: PasswordFormData) => {
     // Password required on create
     if (!selectedPassword && !data.password) {
