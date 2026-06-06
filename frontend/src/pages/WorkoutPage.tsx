@@ -2022,7 +2022,7 @@ function TodayPlanTab({
       {todaySessions.length > 0 && (
         <div>
           <p className="mb-sm text-sm font-semibold text-foreground">
-            {t('pages.workoutHub.todaySessions', 'Sessões registradas hoje')}
+            {t('pages.workoutHub.todaySessions')}
           </p>
           <SessionsGrouped
             sessions={todaySessions}
@@ -2062,10 +2062,7 @@ function TodayPlanTab({
 
             {plan.days.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {t(
-                  'pages.workoutPlans.emptyDays',
-                  'Nenhuma divisão cadastrada neste plano.'
-                )}
+                {t('pages.workoutPlans.emptyDays')}
               </p>
             ) : (
               <div className="space-y-sm">

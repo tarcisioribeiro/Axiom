@@ -10,6 +10,7 @@ import {
   FileText,
   Sheet,
   Save,
+  Bookmark,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import React, { useState, useEffect } from 'react';
