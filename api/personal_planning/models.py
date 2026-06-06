@@ -1278,7 +1278,10 @@ class WorkoutDay(BaseModel):
         blank=True,
         choices=WORKOUT_WEEKDAY_CHOICES,
         verbose_name="Dia da Semana",
-        help_text="Dia da semana em que esta divisão é executada (0=Seg, 6=Dom). Vazio = qualquer dia.",
+        help_text=(
+            "Dia da semana em que esta divisão é executada "
+            "(0=Seg, 6=Dom). Vazio = qualquer dia."
+        ),
     )
     order = models.PositiveIntegerField(
         default=0,

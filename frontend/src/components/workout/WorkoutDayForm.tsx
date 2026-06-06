@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/incompatible-library */
+/* eslint-disable max-lines */
 import {
   Activity,
   Calendar,
