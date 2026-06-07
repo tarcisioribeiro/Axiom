@@ -83,20 +83,12 @@ workflow:
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
-# SSH tunnel → K3s local API (127.0.0.1:6443).
-# Qualquer runner pode executar deploy — não depende de acesso externo à porta 6443.
-# Variáveis necessárias: DEPLOY_SSH_KEY (chave privada), DEPLOY_USER (usuário SSH na VPS).
+# Acesso direto à API k3s via IP público (84.247.184.151:6443).
+# O certificado TLS do k3s já inclui 84.247.184.151 como SAN.
+# Variável necessária: KUBECONFIG_CONTENT com server: https://84.247.184.151:6443
+# Para gerar: sed 's|127.0.0.1:6443|84.247.184.151:6443|' ~/.kube/config | base64 -w0
 .k8s_tunnel:
   before_script: &k8s_tunnel_before_script
-    - apk add --no-cache openssh-client
-    - mkdir -p /tmp/.ssh && chmod 700 /tmp/.ssh
-    - printf '%s\n' "$DEPLOY_SSH_KEY" > /tmp/.ssh/deploy_key && chmod 600 /tmp/.ssh/deploy_key
-    - ssh -fNT -i /tmp/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ExitOnForwardFailure=yes -L 6443:127.0.0.1:6443 ${DEPLOY_USER}@84.247.184.151
-    - |
-      for i in $(seq 1 10); do
-        bash -c "echo >/dev/tcp/127.0.0.1/6443" 2>/dev/null && echo "Tunnel K3s pronto." && break
-        [ $i -eq 10 ] && echo "AVISO: tunnel pode não estar pronto" || sleep 1
-      done
     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
 
