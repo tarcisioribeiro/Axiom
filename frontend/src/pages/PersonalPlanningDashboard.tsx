@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Zap,
   Star,
+  Trophy,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -443,7 +444,7 @@ export default function PersonalPlanningDashboard() {
                       title={b.name}
                       className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-sm"
                     >
-                      {b.icon}
+                      <Trophy className="h-3.5 w-3.5 text-primary" />
                     </span>
                   ))}
                   {gamification.badges.length > 5 && (
