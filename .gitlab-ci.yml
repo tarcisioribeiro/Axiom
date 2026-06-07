@@ -83,11 +83,11 @@ workflow:
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
-# Acesso direto à API k3s via IP público (84.247.184.151:6443).
-# O certificado TLS do k3s já inclui 84.247.184.151 como SAN.
-# Variável necessária: KUBECONFIG_CONTENT com server: https://84.247.184.151:6443
-# Para gerar: sed 's|127.0.0.1:6443|84.247.184.151:6443|' ~/.kube/config | base64 -w0
+# Runner local na VPS (tag: vps) — network_mode=host → acesso direto a 127.0.0.1:6443.
+# KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
+# Para gerar: base64 -w0 /etc/rancher/k3s/k3s.yaml
 .k8s_tunnel:
+  tags: [vps]
   before_script: &k8s_tunnel_before_script
     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
@@ -621,6 +621,7 @@ deploy:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-staging
   interruptible: false
   needs:
@@ -773,6 +774,7 @@ seed:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-staging
   needs:
     - job: deploy:staging
@@ -1326,6 +1328,7 @@ deploy:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-production
   interruptible: false
   needs:
@@ -1459,6 +1462,7 @@ smoke:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1570,6 +1574,7 @@ deploy:rollback:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1760,6 +1765,7 @@ rollback:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1966,6 +1972,7 @@ cleanup:k8s:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:
@@ -2004,6 +2011,7 @@ cleanup:k8s:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:
