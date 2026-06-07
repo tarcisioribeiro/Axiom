@@ -1713,12 +1713,7 @@ promote:to_main:
       print("No open MR found — creating develop → main MR...")
       from datetime import datetime, timezone
       date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-      # Build a descriptive title: date + last commit subject + SHA + pipeline ID
-      title_suffix = f" · {commit_title}" if commit_title else ""
-      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha}){title_suffix}"
-      # Truncate to commitlint's 100-char header limit
-      if len(mr_title) > 100:
-          mr_title = mr_title[:97] + "..."
+      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha})"
       description = (
           "## Promoção automática\n\n"
           "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
