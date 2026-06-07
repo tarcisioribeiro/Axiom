@@ -1716,9 +1716,9 @@ promote:to_main:
       # Build a descriptive title: date + last commit subject + SHA + pipeline ID
       title_suffix = f" · {commit_title}" if commit_title else ""
       mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha}){title_suffix}"
-      # Truncate to GitLab's 255-char MR title limit
-      if len(mr_title) > 255:
-          mr_title = mr_title[:252] + "..."
+      # Truncate to commitlint's 100-char header limit
+      if len(mr_title) > 100:
+          mr_title = mr_title[:97] + "..."
       description = (
           "## Promoção automática\n\n"
           "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
