@@ -623,11 +623,6 @@ export default function WorkoutPage() {
         <PageHeader
           title={t('pages.workoutPlans.title')}
           icon={<Dumbbell className="h-6 w-6 text-category-exercise" />}
-          action={{
-            label: t('pages.workoutSessions.newSessionBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: () => setDialog({ type: 'new-session' }),
-          }}
         />
 
         <Tabs defaultValue="today" className="flex flex-1 flex-col">
@@ -2013,6 +2008,9 @@ function TodayPlanTab({
 }: TodayPlanTabProps) {
   const today = new Date().toISOString().slice(0, 10);
   const todaySessions = sessions.filter((s) => s.date === today);
+  // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
+  const jsDay = new Date().getDay();
+  const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
 
   if (plansLoading || sessionsLoading) return <LoadingState />;
 
@@ -2066,70 +2064,74 @@ function TodayPlanTab({
               </p>
             ) : (
               <div className="space-y-sm">
-                {plan.days.map((day) => (
-                  <div
-                    key={day.id}
-                    className="overflow-hidden rounded-lg border border-border bg-card"
-                  >
-                    <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-md py-sm">
-                      <div className="flex items-center gap-sm">
-                        {getMuscleIcon(day.muscle_groups)}
-                        <div>
-                          <p className="text-sm font-semibold">{day.name}</p>
-                          {day.muscle_groups && (
-                            <p className="text-xs text-muted-foreground">
-                              {day.muscle_groups}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {day.exercises.length}{' '}
-                        {day.exercises.length === 1
-                          ? t('pages.workoutPlans.exerciseSingular')
-                          : t('pages.workoutPlans.exercisePlural')}
-                      </Badge>
-                    </div>
-                    {day.exercises.length > 0 && (
-                      <div className="divide-y divide-border/40">
-                        {day.exercises.map((ex) => (
-                          <div
-                            key={ex.id}
-                            className="flex items-center justify-between px-md py-xs"
-                          >
-                            <div className="flex items-center gap-sm">
-                              <Dumbbell className="h-3.5 w-3.5 shrink-0 text-category-exercise/60" />
-                              <span className="text-sm">{ex.name}</span>
-                            </div>
-                            <div className="flex items-center gap-sm text-xs text-muted-foreground">
-                              {ex.sets > 0 ? (
-                                <span>
-                                  {ex.sets}×
-                                  {ex.reps_min === ex.reps_max
-                                    ? ex.reps_min
-                                    : `${ex.reps_min}–${ex.reps_max}`}
-                                </span>
-                              ) : (
-                                <span>{t('pages.workoutPlans.noSets')}</span>
-                              )}
-                              {ex.load && (
-                                <span className="font-medium text-foreground">
-                                  {ex.load} {ex.load_unit}
-                                </span>
-                              )}
-                              {ex.rest_seconds != null && ex.rest_seconds > 0 && (
-                                <span className="flex items-center gap-0.5">
-                                  <Clock className="h-3 w-3" />
-                                  {ex.rest_seconds}s
-                                </span>
-                              )}
-                            </div>
+                {plan.days
+                  .filter(
+                    (day) => day.day_of_week == null || day.day_of_week === todayWeekday
+                  )
+                  .map((day) => (
+                    <div
+                      key={day.id}
+                      className="overflow-hidden rounded-lg border border-border bg-card"
+                    >
+                      <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-md py-sm">
+                        <div className="flex items-center gap-sm">
+                          {getMuscleIcon(day.muscle_groups)}
+                          <div>
+                            <p className="text-sm font-semibold">{day.name}</p>
+                            {day.muscle_groups && (
+                              <p className="text-xs text-muted-foreground">
+                                {day.muscle_groups}
+                              </p>
+                            )}
                           </div>
-                        ))}
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {day.exercises.length}{' '}
+                          {day.exercises.length === 1
+                            ? t('pages.workoutPlans.exerciseSingular')
+                            : t('pages.workoutPlans.exercisePlural')}
+                        </Badge>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {day.exercises.length > 0 && (
+                        <div className="divide-y divide-border/40">
+                          {day.exercises.map((ex) => (
+                            <div
+                              key={ex.id}
+                              className="flex items-center justify-between px-md py-xs"
+                            >
+                              <div className="flex items-center gap-sm">
+                                <Dumbbell className="h-3.5 w-3.5 shrink-0 text-category-exercise/60" />
+                                <span className="text-sm">{ex.name}</span>
+                              </div>
+                              <div className="flex items-center gap-sm text-xs text-muted-foreground">
+                                {ex.sets > 0 ? (
+                                  <span>
+                                    {ex.sets}×
+                                    {ex.reps_min === ex.reps_max
+                                      ? ex.reps_min
+                                      : `${ex.reps_min}–${ex.reps_max}`}
+                                  </span>
+                                ) : (
+                                  <span>{t('pages.workoutPlans.noSets')}</span>
+                                )}
+                                {ex.load && (
+                                  <span className="font-medium text-foreground">
+                                    {ex.load} {ex.load_unit}
+                                  </span>
+                                )}
+                                {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+                                  <span className="flex items-center gap-0.5">
+                                    <Clock className="h-3 w-3" />
+                                    {ex.rest_seconds}s
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
               </div>
             )}
           </div>

@@ -192,7 +192,7 @@ export default function Home() {
       </div>
 
       {/* Knowledge Graph Widget */}
-      <Link to="/intellect/knowledge-graph" className="block">
+      <Link to="/library/knowledge-graph" className="block">
         <Card className="border-primary/20 transition-all hover:border-primary hover:shadow-md">
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm font-medium">
