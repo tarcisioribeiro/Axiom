@@ -52,12 +52,15 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 type DailyReflectionFormData = z.infer<typeof dailyReflectionSchema>;
 
-const MOOD_COLOR: Record<string, string> = {
-  excellent: 'bg-success',
-  good: 'bg-category-studies',
-  neutral: 'bg-secondary',
-  bad: 'bg-warning',
-  terrible: 'bg-destructive',
+const MOOD_VARIANT: Record<
+  string,
+  'success' | 'info' | 'secondary' | 'warning' | 'destructive'
+> = {
+  excellent: 'success',
+  good: 'info',
+  neutral: 'secondary',
+  bad: 'warning',
+  terrible: 'destructive',
 };
 
 const MOOD_DOT: Record<string, string> = {
@@ -158,10 +161,8 @@ function ReflectionCard({
             <div className="mb-sm flex items-center gap-sm">
               {reflection.mood && (
                 <Badge
-                  className={cn(
-                    'gap-sm',
-                    MOOD_COLOR[reflection.mood] ?? 'bg-secondary'
-                  )}
+                  variant={MOOD_VARIANT[reflection.mood] ?? 'secondary'}
+                  className="gap-sm"
                 >
                   {getMoodIcon(reflection.mood)}
                   {reflection.mood_display ?? reflection.mood}
