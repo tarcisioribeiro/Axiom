@@ -83,6 +83,15 @@ workflow:
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
+# Runner local na VPS (tag: vps) — network_mode=host → acesso direto a 127.0.0.1:6443.
+# KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
+# Para gerar: base64 -w0 /etc/rancher/k3s/k3s.yaml
+.k8s_tunnel:
+  tags: [vps]
+  before_script: &k8s_tunnel_before_script
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+
 .docker_base:
   image: docker:26
   services:
@@ -610,8 +619,9 @@ scan:frontend:
 
 deploy:staging:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-staging
   interruptible: false
   needs:
@@ -624,9 +634,7 @@ deploy:staging:
   environment:
     name: staging
     url: $STAGING_URL
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     # Pause both deployments so all spec changes (configmap, service, deployment)
     # are batched into a single rollout on resume.  The image is substituted
@@ -764,17 +772,16 @@ deploy:staging:
 
 seed:staging:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-staging
   needs:
     - job: deploy:staging
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     - |
       if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
@@ -1319,8 +1326,9 @@ seed:staging:
 
 deploy:production:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: deploy-production
   interruptible: false
   needs:
@@ -1335,9 +1343,7 @@ deploy:production:
   environment:
     name: production
     url: $PRODUCTION_URL
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     # ── 0. Guard: abort early if any required production variable is unset ───────
     - |
@@ -1454,17 +1460,16 @@ deploy:production:
 
 smoke:production:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
     - job: deploy:production
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-  before_script:
-    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
+  before_script: *k8s_tunnel_before_script
   script:
     - |
       set -e
@@ -1567,8 +1572,9 @@ smoke:production:
 
 deploy:rollback:production:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1707,12 +1713,7 @@ promote:to_main:
       print("No open MR found — creating develop → main MR...")
       from datetime import datetime, timezone
       date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-      # Build a descriptive title: date + last commit subject + SHA + pipeline ID
-      title_suffix = f" · {commit_title}" if commit_title else ""
-      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha}){title_suffix}"
-      # Truncate to GitLab's 255-char MR title limit
-      if len(mr_title) > 255:
-          mr_title = mr_title[:252] + "..."
+      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha})"
       description = (
           "## Promoção automática\n\n"
           "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
@@ -1757,8 +1758,9 @@ promote:to_main:
 # API uses the same blue-green slot-switch as the automated rollback.
 rollback:production:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1963,8 +1965,9 @@ cleanup:registry:
 
 cleanup:k8s:staging:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:
@@ -2001,8 +2004,9 @@ cleanup:k8s:staging:
 
 cleanup:k8s:production:
   image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    name: alpine/k8s:1.30.10
     entrypoint: [""]
+  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:

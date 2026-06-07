@@ -529,6 +529,7 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
+  const [_copyingId, _setCopyingId] = useState<number | null>(null);
   const [_copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
   const [_countdown, setCountdown] = useState<Map<number, number>>(new Map());

@@ -43,6 +43,7 @@ export interface WorkoutDay {
   plan: number;
   name: string;
   muscle_groups?: string | null;
+  day_of_week?: number | null;
   order: number;
   exercises: WorkoutExercise[];
   exercise_count: number;
@@ -55,6 +56,7 @@ export interface WorkoutDayFormData {
   plan: number;
   name: string;
   muscle_groups?: string | null;
+  day_of_week?: number | null;
   order: number;
   owner: number;
 }
