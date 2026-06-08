@@ -10,6 +10,7 @@ from .views import (
     CashFlowForecastView,
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
+    DashboardSummaryView,
     FinancialAlertsView,
     FinancialHealthScoreView,
     IRReportView,
@@ -19,6 +20,7 @@ from .views import (
 
 urlpatterns = [
     path("stats/", DashboardStatsView.as_view(), name="dashboard-stats"),
+    path("summary/", DashboardSummaryView.as_view(), name="dashboard-summary"),
     path(
         "account-balances/",
         AccountBalancesView.as_view(),

@@ -53,6 +53,7 @@
       "confirmDeleteNamedDesc": "Tem certeza que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
       "copied": "Copiado!",
       "copiedDesc": "{{label}} copiado para a área de transferência.",
+      "copyError": "Erro ao copiar",
       "revealError": "Erro ao revelar dados",
       "invalidData": "Dados inválidos",
       "fillRequired": "Preencha todos os campos obrigatórios.",
@@ -699,7 +700,9 @@
         "relatedPayablePlaceholder": "Selecione (opcional)",
         "relatedPayableHint": "Vincule esta despesa a um valor a pagar",
         "none": "Nenhum",
-        "balanceInfo": "Saldo: R$ {{value}}"
+        "balanceInfo": "Saldo: R$ {{value}}",
+        "splitToggle": "Dividir despesa",
+        "splitToggleHint": "Ao criar, abrirá automaticamente o gerenciador de divisões"
       },
       "splits": {
         "title": "Divisões da Despesa",
@@ -2322,6 +2325,7 @@
         "errorDesc": "Não foi possível verificar a senha. Tente novamente."
       },
       "copyWithoutReveal": "Copiar sem revelar",
+      "copyError": "Erro ao copiar senha",
       "copied": "Copiada!",
       "copiedClipboard": "Senha copiada para a área de transferência",
       "autoHideIn": "Oculta em {{seconds}}s",
@@ -2510,7 +2514,8 @@
         "sectionLink": "Vínculo Financeiro",
         "sectionNotes": "Notas"
       },
-      "otherBrand": "Outro"
+      "otherBrand": "Outro",
+      "copyCardNumber": "Copiar número do cartão"
     },
     "storedAccounts": {
       "title": "Contas Bancárias",
@@ -2536,6 +2541,7 @@
       "emptySearch": "Nenhuma conta armazenada encontrada.",
       "searchPlaceholder": "Buscar contas...",
       "noFinanceAccount": "Nenhuma",
+      "copyAccountNumber": "Copiar número da conta",
       "password1": "Senha 1",
       "password2": "Senha 2",
       "columns": {
@@ -3013,6 +3019,9 @@
         "exportingBtn": "Exportando...",
         "exportBtn": "Exportar MD",
         "addBtn": "Adicionar",
+        "aiSummaryBtn": "Gerar Resumo com IA",
+        "aiSummaryDefaultTitle": "Resumo com IA — {{title}}",
+        "aiSummaryError": "Erro ao gerar resumo com IA",
         "loadingHighlights": "Carregando destaques...",
         "loadingReadings": "Carregando leituras...",
         "loadingSummaries": "Carregando resumos...",
@@ -4520,7 +4529,14 @@
       "expiry": {
         "hours": "Cofre expira em {{hours}}h {{minutes}}min",
         "minutes": "Cofre expira em {{minutes}} min",
-        "soon": "Cofre expira em breve"
+        "soon": "Cofre expira em breve",
+        "renewBtn": "Renovar",
+        "renewTitle": "Renovar Sessão do Cofre",
+        "renewDesc": "Digite sua senha mestre para estender a sessão do cofre.",
+        "renewConfirm": "Renovar Sessão",
+        "renewSuccess": "Sessão renovada",
+        "renewSuccessDesc": "A sessão do cofre foi estendida com sucesso.",
+        "renewError": "Erro ao renovar sessão"
       }
     },
     "vaultHealth": {

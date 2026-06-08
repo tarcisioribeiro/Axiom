@@ -45,6 +45,10 @@ class PasswordsService extends BaseService<Password, PasswordFormData> {
     return apiClient.get<PasswordReveal>(`${this.endpoint}${id}/reveal/`);
   }
 
+  async copy(id: number): Promise<PasswordReveal> {
+    return apiClient.get<PasswordReveal>(`${this.endpoint}${id}/copy/`);
+  }
+
   /**
    * Gera uma senha criptograficamente segura.
    *

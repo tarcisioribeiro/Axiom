@@ -18,6 +18,7 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     ArchiveListCreateView,
     ArchiveRevealView,
     HibpCheckView,
+    PasswordCopyView,
     PasswordDetailView,
     PasswordFavoriteToggleView,
     PasswordGenerateView,
@@ -31,10 +32,12 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     SecurityDashboardStatsView,
     ShareTokenListCreateView,
     StoredAccountShareTokenView,
+    StoredBankAccountCopyView,
     StoredBankAccountDetailView,
     StoredBankAccountListCreateView,
     StoredBankAccountRevealView,
     StoredCardShareTokenView,
+    StoredCreditCardCopyView,
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
@@ -117,6 +120,11 @@ urlpatterns = [
         name="password-reveal",
     ),
     path(
+        "passwords/<int:pk>/copy/",
+        PasswordCopyView.as_view(),
+        name="password-copy",
+    ),
+    path(
         "passwords/<int:pk>/favorite/",
         PasswordFavoriteToggleView.as_view(),
         name="password-favorite-toggle",
@@ -137,6 +145,11 @@ urlpatterns = [
         StoredCreditCardRevealView.as_view(),
         name="stored-card-reveal",
     ),
+    path(
+        "stored-cards/<int:pk>/copy/",
+        StoredCreditCardCopyView.as_view(),
+        name="stored-card-copy",
+    ),
     # Stored Bank Accounts
     path(
         "stored-accounts/",
@@ -152,6 +165,11 @@ urlpatterns = [
         "stored-accounts/<int:pk>/reveal/",
         StoredBankAccountRevealView.as_view(),
         name="stored-account-reveal",
+    ),
+    path(
+        "stored-accounts/<int:pk>/copy/",
+        StoredBankAccountCopyView.as_view(),
+        name="stored-account-copy",
     ),
     # Archives
     path(

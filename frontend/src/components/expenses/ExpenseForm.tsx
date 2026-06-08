@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  GitFork,
   Link2,
   Loader2,
   Sparkles,
@@ -68,7 +69,7 @@ interface ExpenseFormProps {
   accounts: Account[];
   loans?: Loan[];
   payables?: Payable[];
-  onSubmit: (data: ExpenseFormData) => void;
+  onSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -91,6 +92,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     []
   );
   const [linksOpen, setLinksOpen] = useState(false);
+  const [splitOnCreate, setSplitOnCreate] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<CategorySuggestion | null>(null);
   const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -321,7 +323,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const handleFormSubmit = (data: ExpenseFormData) => {
     if (data.payed && balanceInfo && !balanceInfo.canPay) return;
     if (futureBalanceInfo && !futureBalanceInfo.canPay) return;
-    onSubmit(data);
+    onSubmit(data, !expense && splitOnCreate);
   };
 
   const selectedAccount = accounts.find((a) => a.id === watchedAccount);
@@ -704,6 +706,36 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   total: formatCurrency(balanceInfo.available.toFixed(2)),
                 })}
           </p>
+        </div>
+      )}
+
+      {/* Toggle: Dividir despesa — only for new expenses */}
+      {!expense && (
+        <div className="flex items-center gap-sm rounded-md border border-dashed border-border px-md py-sm">
+          <GitFork className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="flex flex-1 flex-col gap-0.5">
+            <span className="text-sm font-medium">
+              {t('pages.expenses.form.splitToggle')}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t('pages.expenses.form.splitToggleHint')}
+            </span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={splitOnCreate}
+            onClick={() => setSplitOnCreate((v) => !v)}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+              splitOnCreate ? 'bg-primary' : 'bg-input'
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                splitOnCreate ? 'translate-x-[18px]' : 'translate-x-[3px]'
+              }`}
+            />
+          </button>
         </div>
       )}
 

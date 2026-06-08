@@ -34,6 +34,12 @@ export interface AccountBalance {
   future_balance: number;
 }
 
+export interface DashboardSummary {
+  stats: DashboardStats;
+  account_balances: AccountBalance[];
+  financial_alerts: FinancialAlert[];
+}
+
 export interface BalanceForecast {
   current_total_balance: number;
   forecast_balance: number;
