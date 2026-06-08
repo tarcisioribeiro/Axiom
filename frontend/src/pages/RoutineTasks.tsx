@@ -548,6 +548,10 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
           icon: <CheckSquare className="h-12 w-12" />,
           title: t('pages.routineTasks.emptyState'),
           message: t('pages.routineTasks.emptyStateDesc'),
+          action: {
+            label: t('pages.routineTasks.emptyStateAction'),
+            onClick: handleCreate,
+          },
         }}
         rowClassName={(task) =>
           highlightedIds.has(task.id)

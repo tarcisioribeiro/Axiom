@@ -24,6 +24,8 @@ interface StatCardProps {
   accentColor?: 'green' | 'red' | 'blue' | 'orange' | 'purple';
   /** If true, renders the value in a larger text size to emphasize importance */
   prominent?: boolean;
+  /** Optional click handler — adds cursor-pointer and hover ring */
+  onClick?: () => void;
 }
 
 const extractNumber = (val: string | number): number => {
@@ -74,6 +76,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   variant = 'default',
   accentColor,
   prominent = false,
+  onClick,
 }) => {
   const { i18n } = useTranslation();
   const variantClasses = {
@@ -136,7 +139,13 @@ export const StatCard: React.FC<StatCardProps> = ({
       whileHover="hover"
       whileTap="tap"
     >
-      <Card className={`transition-shadow ${cardClass}`}>
+      <Card
+        className={cn(
+          `transition-shadow ${cardClass}`,
+          onClick && 'cursor-pointer hover:ring-2 hover:ring-primary/30'
+        )}
+        onClick={onClick}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (

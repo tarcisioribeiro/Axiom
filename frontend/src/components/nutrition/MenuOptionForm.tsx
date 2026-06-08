@@ -1,4 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
+import type { TFunction } from 'i18next';
 import {
   GripVertical,
   ListChecks,
@@ -94,6 +95,33 @@ interface MenuOptionFormProps {
   isLoading?: boolean;
 }
 
+interface VisualGroup {
+  groupId: string | null;
+  indices: number[];
+}
+
+function buildVisualGroups(ingredients: IngredientValues[]): VisualGroup[] {
+  const groups: VisualGroup[] = [];
+  const groupMap = new Map<string, number>(); // groupId → index in groups
+
+  ingredients.forEach((ing, idx) => {
+    const ag = ing.alternative_group?.trim();
+    if (!ag) {
+      groups.push({ groupId: null, indices: [idx] });
+    } else {
+      const existing = groupMap.get(ag);
+      if (existing !== undefined) {
+        groups[existing].indices.push(idx);
+      } else {
+        groupMap.set(ag, groups.length);
+        groups.push({ groupId: ag, indices: [idx] });
+      }
+    }
+  });
+
+  return groups;
+}
+
 export function MenuOptionForm({
   option,
   mealTypeId,
@@ -157,6 +185,53 @@ export function MenuOptionForm({
   }, [option, reset]);
 
   const nameValue = watch('name');
+  const allIngredients = watch('ingredients');
+  const visualGroups = buildVisualGroups(allIngredients);
+
+  const nextGroupId = (): string => {
+    const max = Math.max(
+      0,
+      ...allIngredients
+        .filter((i) => i.alternative_group)
+        .map((i) => parseInt(i.alternative_group) || 0)
+    );
+    return String(max + 1);
+  };
+
+  const addStandalone = () =>
+    append({
+      food: '',
+      quantity: '',
+      unit: 'g',
+      is_optional: false,
+      notes: '',
+      order: fields.length,
+      alternative_group: '',
+    });
+
+  const addNewGroup = () => {
+    const gid = nextGroupId();
+    append({
+      food: '',
+      quantity: '',
+      unit: 'g',
+      is_optional: false,
+      notes: '',
+      order: fields.length,
+      alternative_group: gid,
+    });
+  };
+
+  const addVariantToGroup = (groupId: string) =>
+    append({
+      food: '',
+      quantity: '',
+      unit: 'g',
+      is_optional: false,
+      notes: '',
+      order: fields.length,
+      alternative_group: groupId,
+    });
 
   const handleFormSubmit = async (data: MenuOptionFormValues) => {
     try {
@@ -212,7 +287,7 @@ export function MenuOptionForm({
         </div>
       </FormSection>
 
-      {/* Ingredientes */}
+      {/* Ingredientes agrupados */}
       <FormSection
         title={t('pages.nutritionMealTypes.ingredientsSection')}
         icon={Salad}
@@ -226,152 +301,91 @@ export function MenuOptionForm({
               </p>
             </div>
           ) : (
-            <div className="max-h-80 space-y-sm overflow-y-auto pr-1">
-              {fields.map((field, idx) => (
-                <div
-                  key={field.id}
-                  className="group relative rounded-lg border border-border bg-card p-sm transition-all hover:border-category-nutrition/30"
-                >
-                  {/* Row header */}
-                  <div className="mb-sm flex items-center gap-xs">
-                    <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-category-nutrition/15 text-[10px] font-bold text-category-nutrition">
-                      {idx + 1}
-                    </span>
-                    <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      {t('pages.nutritionMealTypes.ingredientsSection')} {idx + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => remove(idx)}
-                      className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Food + Quantity + Unit */}
-                  <div className="grid grid-cols-[1fr_80px_100px] gap-xs">
-                    <div className="space-y-xs">
-                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('pages.nutritionMealTypes.food')}
-                      </Label>
-                      <Select
-                        value={watch(`ingredients.${idx}.food`)}
-                        onValueChange={(v) => setValue(`ingredients.${idx}.food`, v)}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue
-                            placeholder={t('pages.nutritionMealTypes.foodPlaceholder')}
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {foods.map((f) => (
-                            <SelectItem key={f.id} value={String(f.id)}>
-                              {f.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-xs">
-                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('pages.nutritionMealTypes.quantity')}
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min={0}
-                        placeholder="0"
-                        {...register(`ingredients.${idx}.quantity`)}
-                        className="h-8 text-center text-sm"
-                      />
-                    </div>
-                    <div className="space-y-xs">
-                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('pages.nutritionMealTypes.unit')}
-                      </Label>
-                      <Select
-                        value={watch(`ingredients.${idx}.unit`)}
-                        onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UNIT_KEYS.map((u) => (
-                            <SelectItem key={u} value={u}>
-                              {t(`units.${u}`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Optional + Notes + Alternative Group */}
-                  <div className="mt-xs flex items-center gap-sm">
-                    <label className="flex cursor-pointer items-center gap-xs">
-                      <Checkbox
-                        checked={watch(`ingredients.${idx}.is_optional`)}
-                        onCheckedChange={(v) =>
-                          setValue(`ingredients.${idx}.is_optional`, Boolean(v))
-                        }
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        {t('pages.nutritionMealTypes.optional')}
+            <div className="max-h-96 space-y-sm overflow-y-auto pr-1">
+              {visualGroups.map((group) =>
+                group.groupId === null ? (
+                  // ── Ingrediente simples ──────────────────────────────────────
+                  group.indices.map((idx) => (
+                    <IngredientRow
+                      key={fields[idx]?.id}
+                      idx={idx}
+                      label={t('pages.nutritionMealTypes.ingredientsSection')}
+                      foods={foods}
+                      register={register}
+                      watch={watch}
+                      setValue={setValue}
+                      onRemove={() => remove(idx)}
+                      t={t}
+                    />
+                  ))
+                ) : (
+                  // ── Grupo de alternativas ────────────────────────────────────
+                  <div
+                    key={`group-${group.groupId}`}
+                    className="rounded-lg border border-category-nutrition/30 bg-category-nutrition/5"
+                  >
+                    <div className="flex items-center justify-between border-b border-category-nutrition/20 px-sm py-xs">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-category-nutrition">
+                        {t(
+                          'pages.nutritionMealTypes.altGroupLabel',
+                          'Grupo de alternativas'
+                        )}
                       </span>
-                    </label>
-                    <div className="relative flex-1">
-                      <StickyNote className="absolute left-xs top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
-                      <Input
-                        placeholder={t(
-                          'pages.nutritionMealTypes.ingredientNotesPlaceholder'
-                        )}
-                        {...register(`ingredients.${idx}.notes`)}
-                        className="h-7 pl-6 text-xs"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => addVariantToGroup(group.groupId!)}
+                        className="flex items-center gap-xs rounded px-xs py-0.5 text-xs font-medium text-category-nutrition hover:bg-category-nutrition/10"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
+                      </button>
                     </div>
-                    <div className="flex w-24 items-center gap-xs">
-                      <Label className="shrink-0 text-[10px] text-muted-foreground">
-                        {t('pages.nutritionMealTypes.altGroup', 'Grupo Alt.')}
-                      </Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        placeholder="—"
-                        {...register(`ingredients.${idx}.alternative_group`)}
-                        className="h-7 w-12 text-center text-xs"
-                        title={t(
-                          'pages.nutritionMealTypes.altGroupHelp',
-                          t('pages.nutritionMealTypes.altGroupHelp')
-                        )}
-                      />
+                    <div className="space-y-0 p-sm">
+                      {group.indices.map((idx, position) => (
+                        <div key={fields[idx]?.id}>
+                          <IngredientRow
+                            idx={idx}
+                            label={`${t('pages.nutritionMealTypes.variantLabel', 'Opção')} ${position + 1}`}
+                            foods={foods}
+                            register={register}
+                            watch={watch}
+                            setValue={setValue}
+                            onRemove={() => remove(idx)}
+                            t={t}
+                          />
+                          {position < group.indices.length - 1 && (
+                            <p className="my-xs text-center text-[10px] font-bold uppercase tracking-widest text-category-nutrition/60">
+                              {t('pages.nutritionMealTypes.ingredientOr')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() =>
-              append({
-                food: '',
-                quantity: '',
-                unit: 'g',
-                is_optional: false,
-                notes: '',
-                order: fields.length,
-                alternative_group: '',
-              })
-            }
-            className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/30 py-sm text-sm font-medium text-category-nutrition transition-all hover:border-category-nutrition/60 hover:bg-category-nutrition/5"
-          >
-            <Plus className="h-4 w-4" />
-            {t('pages.nutritionMealTypes.addIngredient')}
-          </button>
+          {/* Botões de adição */}
+          <div className="flex gap-sm">
+            <button
+              type="button"
+              onClick={addStandalone}
+              className="flex flex-1 items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/30 py-sm text-sm font-medium text-category-nutrition transition-all hover:border-category-nutrition/60 hover:bg-category-nutrition/5"
+            >
+              <Plus className="h-4 w-4" />
+              {t('pages.nutritionMealTypes.addIngredient')}
+            </button>
+            <button
+              type="button"
+              onClick={addNewGroup}
+              className="flex flex-1 items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/20 py-sm text-sm font-medium text-category-nutrition/70 transition-all hover:border-category-nutrition/40 hover:bg-category-nutrition/5"
+            >
+              <Plus className="h-4 w-4" />
+              {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
+            </button>
+          </div>
         </div>
       </FormSection>
 
@@ -389,5 +403,130 @@ export function MenuOptionForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+// ── Ingredient row (shared by standalone and group) ─────────────────────────
+
+interface IngredientRowProps {
+  idx: number;
+  label: string;
+  foods: Food[];
+  register: ReturnType<typeof useForm<MenuOptionFormValues>>['register'];
+  watch: ReturnType<typeof useForm<MenuOptionFormValues>>['watch'];
+  setValue: ReturnType<typeof useForm<MenuOptionFormValues>>['setValue'];
+  onRemove: () => void;
+  t: TFunction;
+}
+
+function IngredientRow({
+  idx,
+  label,
+  foods,
+  register,
+  watch,
+  setValue,
+  onRemove,
+  t,
+}: IngredientRowProps) {
+  return (
+    <div className="group relative rounded-lg border border-border bg-card p-sm transition-all hover:border-category-nutrition/30">
+      {/* Row header */}
+      <div className="mb-sm flex items-center gap-xs">
+        <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+        <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Food + Quantity + Unit */}
+      <div className="grid grid-cols-[1fr_80px_100px] gap-xs">
+        <div className="space-y-xs">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.nutritionMealTypes.food')}
+          </Label>
+          <Select
+            value={watch(`ingredients.${idx}.food`)}
+            onValueChange={(v) => setValue(`ingredients.${idx}.food`, v)}
+          >
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue
+                placeholder={t('pages.nutritionMealTypes.foodPlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {foods.map((f) => (
+                <SelectItem key={f.id} value={String(f.id)}>
+                  {f.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-xs">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.nutritionMealTypes.quantity')}
+          </Label>
+          <Input
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="0"
+            {...register(`ingredients.${idx}.quantity`)}
+            className="h-8 text-center text-sm"
+          />
+        </div>
+        <div className="space-y-xs">
+          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.nutritionMealTypes.unit')}
+          </Label>
+          <Select
+            value={watch(`ingredients.${idx}.unit`)}
+            onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
+          >
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {UNIT_KEYS.map((u) => (
+                <SelectItem key={u} value={u}>
+                  {t(`units.${u}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Optional + Notes */}
+      <div className="mt-xs flex items-center gap-sm">
+        <label className="flex cursor-pointer items-center gap-xs">
+          <Checkbox
+            checked={watch(`ingredients.${idx}.is_optional`)}
+            onCheckedChange={(v) =>
+              setValue(`ingredients.${idx}.is_optional`, Boolean(v))
+            }
+          />
+          <span className="text-xs text-muted-foreground">
+            {t('pages.nutritionMealTypes.optional')}
+          </span>
+        </label>
+        <div className="relative flex-1">
+          <StickyNote className="absolute left-xs top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
+          <Input
+            placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
+            {...register(`ingredients.${idx}.notes`)}
+            className="h-7 pl-6 text-xs"
+          />
+        </div>
+      </div>
+    </div>
   );
 }

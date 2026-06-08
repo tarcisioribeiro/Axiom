@@ -180,7 +180,7 @@ export default function Tags() {
                 key={tag.id}
                 className="flex items-center justify-between gap-sm rounded-lg border border-border bg-card px-md py-sm shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="flex min-w-0 items-center gap-sm">
+                <div className="flex min-w-0 flex-1 items-center gap-sm">
                   <span
                     className="h-3 w-3 shrink-0 rounded-full"
                     style={{ backgroundColor: tag.color }}
@@ -193,6 +193,14 @@ export default function Tags() {
                     }}
                   >
                     {tag.name}
+                  </span>
+                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    {(tag as Tag & { expense_count?: number }).expense_count
+                      ? t('pages.tags.expenseCount', {
+                          count: (tag as Tag & { expense_count?: number })
+                            .expense_count,
+                        })
+                      : t('pages.tags.noExpenses')}
                   </span>
                 </div>
                 <div className="flex shrink-0 gap-xs">

@@ -2032,19 +2032,39 @@ function TodayPlanTab({
       )}
 
       {/* Plano ativo */}
-      {activePlans.length === 0 ? (
-        <EmptyState
-          title={t('pages.workoutHub.noActivePlan')}
-          description={t('pages.workoutHub.createPlan')}
-          icon={<Dumbbell className="h-8 w-8" />}
-          action={{
-            label: t('pages.workoutSessions.newSessionBtn'),
-            icon: <Plus className="mr-xs h-4 w-4" />,
-            onClick: onStartSession,
-          }}
-        />
-      ) : (
-        activePlans.map((plan) => (
+      {(() => {
+        const plansForToday = activePlans.filter((plan) =>
+          plan.days.some(
+            (day) => day.day_of_week == null || day.day_of_week === todayWeekday
+          )
+        );
+
+        if (activePlans.length === 0) {
+          return (
+            <EmptyState
+              title={t('pages.workoutHub.noActivePlan')}
+              description={t('pages.workoutHub.createPlan')}
+              icon={<Dumbbell className="h-8 w-8" />}
+              action={{
+                label: t('pages.workoutSessions.newSessionBtn'),
+                icon: <Plus className="mr-xs h-4 w-4" />,
+                onClick: onStartSession,
+              }}
+            />
+          );
+        }
+
+        if (plansForToday.length === 0) {
+          return (
+            <EmptyState
+              title={t('pages.workoutHub.noTrainingToday')}
+              description={t('pages.workoutHub.noTrainingTodayDesc')}
+              icon={<Dumbbell className="h-8 w-8" />}
+            />
+          );
+        }
+
+        return plansForToday.map((plan) => (
           <div key={plan.id} className="space-y-sm">
             <div className="flex items-center gap-sm">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-category-exercise/10">
@@ -2135,8 +2155,8 @@ function TodayPlanTab({
               </div>
             )}
           </div>
-        ))
-      )}
+        ));
+      })()}
     </div>
   );
 }
