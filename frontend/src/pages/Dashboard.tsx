@@ -153,10 +153,10 @@ export default function Dashboard() {
     }
   }, [evolutionPeriod]);
 
-  const statsQuery = useQuery({
-    queryKey: ['dashboard', 'stats'],
-    queryFn: () => dashboardService.getStats(),
-    staleTime: STALE_TIMES.DASHBOARD_STATS,
+  const summaryQuery = useQuery({
+    queryKey: ['dashboard', 'summary'],
+    queryFn: () => dashboardService.getSummary(),
+    staleTime: STALE_TIMES.ACCOUNT_BALANCES,
   });
 
   const expensesQuery = useQuery({
@@ -169,12 +169,6 @@ export default function Dashboard() {
     queryKey: ['revenues', 'dashboard', queryStartDate],
     queryFn: () => revenuesService.getAll({ date_from: queryStartDate }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
-
-  const accountBalancesQuery = useQuery({
-    queryKey: ['dashboard', 'accountBalances'],
-    queryFn: () => dashboardService.getAccountBalances(),
-    staleTime: STALE_TIMES.ACCOUNT_BALANCES,
   });
 
   const creditCardsQuery = useQuery({
@@ -224,15 +218,6 @@ export default function Dashboard() {
     refetchOnWindowFocus: false,
   });
 
-  // ML-based alerts: expensive to recompute; 5-min stale window avoids
-  // spurious refetches on tab focus while still refreshing after navigation.
-  const financialAlertsQuery = useQuery({
-    queryKey: ['dashboard', 'financialAlerts'],
-    queryFn: () => dashboardService.getFinancialAlerts(),
-    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
-    refetchOnWindowFocus: false,
-  });
-
   const anomaliesQuery = useQuery({
     queryKey: ['dashboard', 'anomalies'],
     queryFn: () => dashboardService.getAnomalies(),
@@ -275,12 +260,12 @@ export default function Dashboard() {
   // Arrays are wrapped in useMemo so the `?? []` fallback doesn't create a new
   // reference every render during the loading phase (which would break the
   // downstream useMemo hooks that list these as dependencies).
-  const stats = statsQuery.data ?? null;
+  const stats = summaryQuery.data?.stats ?? null;
   const expenses = useMemo(() => expensesQuery.data ?? [], [expensesQuery.data]);
   const revenues = useMemo(() => revenuesQuery.data ?? [], [revenuesQuery.data]);
   const accountBalances = useMemo(
-    () => accountBalancesQuery.data ?? [],
-    [accountBalancesQuery.data]
+    () => summaryQuery.data?.account_balances ?? [],
+    [summaryQuery.data]
   );
   const creditCards = useMemo(
     () => creditCardsQuery.data ?? [],
@@ -301,8 +286,11 @@ export default function Dashboard() {
   );
   const cashFlowForecast = cashFlowForecastQuery.data ?? null;
   const financialAlerts = useMemo(
-    () => (Array.isArray(financialAlertsQuery.data) ? financialAlertsQuery.data : []),
-    [financialAlertsQuery.data]
+    () =>
+      Array.isArray(summaryQuery.data?.financial_alerts)
+        ? summaryQuery.data.financial_alerts
+        : [],
+    [summaryQuery.data]
   );
 
   const anomalies = useMemo(
@@ -333,7 +321,7 @@ export default function Dashboard() {
   // query resolves. Secondary queries (charts, forecast, alerts) load in the
   // background and each section handles its own loading state. This prevents
   // slow/hung secondary queries from blocking the entire page.
-  const isLoading = statsQuery.isLoading;
+  const isLoading = summaryQuery.isLoading;
 
   // isForecastLoading: true while a forecastDays-triggered refetch is in flight.
   const isForecastLoading = cashFlowForecastQuery.isFetching;
