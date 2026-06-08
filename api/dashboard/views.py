@@ -1824,3 +1824,46 @@ class FinancialHealthScoreView(APIView):
         if score >= 40:
             return "D"
         return "F"
+
+
+class DashboardSummaryView(APIView):
+    """
+    GET /api/v1/dashboard/summary/
+
+    Agrega stats + saldos de contas + alertas financeiros em uma única
+    requisição, reduzindo round-trips do frontend.
+
+    Response:
+    {
+        "stats": { ...DashboardStatsView response... },
+        "account_balances": [ ...AccountBalancesView response... ],
+        "financial_alerts": [ ...FinancialAlertsView response... ]
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cache_key = get_cache_key("dashboard_summary", request.user.id)
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        stats_view = DashboardStatsView()
+        balances_view = AccountBalancesView()
+        alerts_view = FinancialAlertsView()
+
+        stats_resp = stats_view.get(request)
+        balances_resp = balances_view.get(request)
+        alerts_resp = alerts_view.get(request)
+
+        result = {
+            "stats": stats_resp.data,
+            "account_balances": balances_resp.data,
+            "financial_alerts": alerts_resp.data,
+        }
+
+        cache_ttl = getattr(settings, "CACHE_TTL_ACCOUNT_BALANCES", 30)
+        cache.set(cache_key, result, cache_ttl)
+
+        return Response(result)

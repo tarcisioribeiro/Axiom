@@ -1,5 +1,14 @@
 /* eslint-disable max-lines */
-import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle, Key } from 'lucide-react';
+import {
+  Lock,
+  Shield,
+  Eye,
+  EyeOff,
+  Clock,
+  AlertTriangle,
+  Key,
+  RefreshCw,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +21,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_CONFIG } from '@/config/api-config';
@@ -153,9 +169,19 @@ function useVaultCountdown(expiresAt: string | null) {
   return secondsLeft;
 }
 
-export function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
+interface VaultExpiryBadgeProps {
+  expiresAt: string | null;
+  onRenew?: () => Promise<void>;
+}
+
+export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const secondsLeft = useVaultCountdown(expiresAt);
+  const [isRenewOpen, setIsRenewOpen] = useState(false);
+  const [masterPassword, setMasterPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (secondsLeft === null) return null;
 
@@ -170,22 +196,115 @@ export function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
         ? t('pages.vaultGuard.expiry.minutes', { minutes })
         : t('pages.vaultGuard.expiry.soon');
 
+  const handleRenew = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!masterPassword) return;
+    try {
+      setIsSubmitting(true);
+      await vaultConfigService.unlock({ master_password: masterPassword });
+      toast({
+        title: t('pages.vaultGuard.expiry.renewSuccess'),
+        description: t('pages.vaultGuard.expiry.renewSuccessDesc'),
+      });
+      setIsRenewOpen(false);
+      setMasterPassword('');
+      if (onRenew) await onRenew();
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.vaultGuard.expiry.renewError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div
-      className={cn(
-        'flex items-center gap-sm rounded-md px-sm py-xs text-xs',
-        isWarning
-          ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
-          : 'bg-muted text-muted-foreground'
-      )}
-    >
-      {isWarning ? (
-        <AlertTriangle className="h-3 w-3" />
-      ) : (
-        <Clock className="h-3 w-3" />
-      )}
-      {label}
-    </div>
+    <>
+      <div
+        className={cn(
+          'flex items-center gap-sm rounded-md px-sm py-xs text-xs',
+          isWarning
+            ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+            : 'bg-muted text-muted-foreground'
+        )}
+      >
+        {isWarning ? (
+          <AlertTriangle className="h-3 w-3" />
+        ) : (
+          <Clock className="h-3 w-3" />
+        )}
+        {label}
+        {isWarning && onRenew && (
+          <button
+            type="button"
+            onClick={() => setIsRenewOpen(true)}
+            className="ml-xs flex items-center gap-0.5 font-medium underline underline-offset-2 hover:opacity-80"
+            aria-label={t('pages.vaultGuard.expiry.renewBtn')}
+          >
+            <RefreshCw className="h-2.5 w-2.5" />
+            {t('pages.vaultGuard.expiry.renewBtn')}
+          </button>
+        )}
+      </div>
+
+      <Dialog open={isRenewOpen} onOpenChange={setIsRenewOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('pages.vaultGuard.expiry.renewTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('pages.vaultGuard.expiry.renewDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => void handleRenew(e)} className="space-y-md">
+            <div className="space-y-xs">
+              <Label htmlFor="renew-password">
+                {t('pages.vaultGuard.locked.passwordLabel')}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="renew-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={masterPassword}
+                  onChange={(e) => setMasterPassword(e.target.value)}
+                  placeholder={t('pages.vaultGuard.locked.passwordPlaceholder')}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-sm">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsRenewOpen(false)}
+                disabled={isSubmitting}
+              >
+                {t('common.actions.cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting || !masterPassword}>
+                {isSubmitting ? (
+                  <RefreshCw className="mr-xs h-4 w-4 animate-spin" />
+                ) : null}
+                {t('pages.vaultGuard.expiry.renewConfirm')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

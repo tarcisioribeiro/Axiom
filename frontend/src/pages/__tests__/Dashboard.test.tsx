@@ -60,14 +60,17 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/services/dashboard-service', () => ({
   dashboardService: {
-    getStats: vi.fn().mockResolvedValue({
-      total_balance: 11111,
-      total_expenses: 2222,
-      total_revenues: 33333,
-      available_credit_limit: 4444,
-      total_credit_limit: 55555,
+    getSummary: vi.fn().mockResolvedValue({
+      stats: {
+        total_balance: 11111,
+        total_expenses: 2222,
+        total_revenues: 33333,
+        available_credit_limit: 4444,
+        total_credit_limit: 55555,
+      },
+      account_balances: [],
+      financial_alerts: [],
     }),
-    getAccountBalances: vi.fn().mockResolvedValue([]),
     getCreditCardExpensesByCategory: vi.fn().mockResolvedValue([]),
     getBalanceForecast: vi.fn().mockResolvedValue({
       current_total_balance: 8000,
@@ -91,7 +94,6 @@ vi.mock('@/services/dashboard-service', () => ({
       min_balance_date: '2024-01-15',
       daily_breakdown: [],
     }),
-    getFinancialAlerts: vi.fn().mockResolvedValue([]),
     getAnomalies: vi.fn().mockResolvedValue([]),
   },
 }));
@@ -152,12 +154,16 @@ function renderDashboard() {
   );
 }
 
-const defaultStats = {
-  total_balance: 11111,
-  total_expenses: 2222,
-  total_revenues: 33333,
-  available_credit_limit: 4444,
-  total_credit_limit: 55555,
+const defaultSummary = {
+  stats: {
+    total_balance: 11111,
+    total_expenses: 2222,
+    total_revenues: 33333,
+    available_credit_limit: 4444,
+    total_credit_limit: 55555,
+  },
+  account_balances: [],
+  financial_alerts: [],
 };
 
 describe('Dashboard page', () => {
@@ -165,12 +171,12 @@ describe('Dashboard page', () => {
     mockToast.mockClear();
     queryClient.clear(); // Reset cache to avoid cross-test contamination
     // Reset to default resolved values before each test
-    vi.mocked(dashboardService.getStats).mockResolvedValue(defaultStats);
+    vi.mocked(dashboardService.getSummary).mockResolvedValue(defaultSummary);
   });
 
   it('shows loading state while data is fetching', () => {
     // Use mockImplementationOnce so only this invocation is delayed
-    vi.mocked(dashboardService.getStats).mockImplementationOnce(
+    vi.mocked(dashboardService.getSummary).mockImplementationOnce(
       () => new Promise(() => undefined)
     );
 
@@ -215,14 +221,14 @@ describe('Dashboard page', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(dashboardService.getStats).toHaveBeenCalled();
-      expect(dashboardService.getAccountBalances).toHaveBeenCalled();
-      expect(dashboardService.getFinancialAlerts).toHaveBeenCalled();
+      expect(dashboardService.getSummary).toHaveBeenCalled();
     });
   });
 
   it('shows error toast when data loading fails', async () => {
-    vi.mocked(dashboardService.getStats).mockRejectedValue(new Error('Network error'));
+    vi.mocked(dashboardService.getSummary).mockRejectedValue(
+      new Error('Network error')
+    );
 
     renderDashboard();
 

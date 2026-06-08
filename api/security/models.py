@@ -546,6 +546,7 @@ ACTION_TYPES = (
     ("other", "Outro"),
     ("purge", "Purga de Dados (LGPD/GDPR)"),
     ("shared_reveal", "Acesso via Link Compartilhado"),
+    ("copy", "Cópia para Área de Transferência"),
 )
 
 

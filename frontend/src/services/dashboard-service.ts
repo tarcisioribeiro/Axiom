@@ -1,6 +1,7 @@
 import { API_CONFIG } from '@/config/api-config';
 import type {
   DashboardStats,
+  DashboardSummary,
   AccountBalance,
   CreditCardExpensesByCategory,
   BalanceForecast,
@@ -48,6 +49,10 @@ class DashboardService {
     // PERF-02: Endpoint otimizado que usa aggregations no banco de dados
     // Reduz de 4 requisições + cálculos no cliente para 1 requisição otimizada
     return apiClient.get<DashboardStats>('/api/v1/dashboard/stats/');
+  }
+
+  async getSummary(): Promise<DashboardSummary> {
+    return apiClient.get<DashboardSummary>('/api/v1/dashboard/summary/');
   }
 
   async getAccountBalances(): Promise<AccountBalance[]> {

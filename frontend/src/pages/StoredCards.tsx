@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Loader2,
   Copy,
+  Check,
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -92,6 +93,8 @@ export default function StoredCards() {
     Map<number, { number: string; cvv: string }>
   >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
+  const [copyingId, setCopyingId] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -196,6 +199,25 @@ export default function StoredCards() {
       title: t('common.messages.copied'),
       description: t('common.messages.copiedDesc', { label }),
     });
+  };
+
+  const handleCopyCardNumber = async (id: number) => {
+    const revealed = revealedData.get(id);
+    try {
+      setCopyingId(id);
+      const value = revealed?.number ?? (await storedCardsService.copy(id)).card_number;
+      await copyToClipboard(value);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.copyError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setCopyingId(null);
+    }
   };
 
   const handleSubmit = async (data: StoredCreditCardFormData) => {
@@ -396,6 +418,30 @@ export default function StoredCards() {
                           <EyeOff className="h-3.5 w-3.5" />
                         ) : (
                           <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0',
+                          copiedId === card.id && 'text-success'
+                        )}
+                        onClick={() => void handleCopyCardNumber(card.id)}
+                        disabled={copyingId === card.id}
+                        title={
+                          copiedId === card.id
+                            ? t('common.messages.copied')
+                            : t('pages.storedCards.copyCardNumber')
+                        }
+                        aria-label={t('pages.storedCards.copyCardNumber')}
+                      >
+                        {copyingId === card.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : copiedId === card.id ? (
+                          <Check className="h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
                         )}
                       </Button>
                       <Button
