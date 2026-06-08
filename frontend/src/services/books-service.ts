@@ -59,6 +59,15 @@ class BooksService extends BaseService<Book, BookFormData> {
     );
     return response;
   }
+
+  async generateAiSummary(
+    id: number
+  ): Promise<{ summary: string; highlight_count: number }> {
+    return apiClient.post<{ summary: string; highlight_count: number }>(
+      `${API_CONFIG.ENDPOINTS.BOOKS}${id}/ai-summary/`,
+      {}
+    );
+  }
 }
 
 export const booksService = new BooksService();

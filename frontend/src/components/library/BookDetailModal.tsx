@@ -12,7 +12,9 @@ import {
   Hash,
   Highlighter,
   Library,
+  Loader2,
   Plus,
+  Sparkles,
   Star,
   Tag,
   Trash2,
@@ -50,6 +52,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { bookHighlightsService } from '@/services/book-highlights-service';
+import { booksService } from '@/services/books-service';
 import { readingsService } from '@/services/readings-service';
 import { summariesService } from '@/services/summaries-service';
 import type {
@@ -317,6 +320,7 @@ export function BookDetailModal({
     owner: 0,
   });
   const [isSummarySubmitting, setIsSummarySubmitting] = useState(false);
+  const [isGeneratingAiSummary, setIsGeneratingAiSummary] = useState(false);
 
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
@@ -446,6 +450,30 @@ export function BookDetailModal({
     setEditingSummary(null);
     setSummaryFormData({ title: '', book: book.id, text: '', owner: book.owner });
     setIsSummaryFormOpen(true);
+  };
+
+  const handleGenerateAiSummary = async () => {
+    if (!book) return;
+    try {
+      setIsGeneratingAiSummary(true);
+      const result = await booksService.generateAiSummary(book.id);
+      setEditingSummary(null);
+      setSummaryFormData({
+        title: t('pages.books.detail.aiSummaryDefaultTitle', { title: book.title }),
+        book: book.id,
+        text: result.summary,
+        owner: book.owner,
+      });
+      setIsSummaryFormOpen(true);
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.books.detail.aiSummaryError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingAiSummary(false);
+    }
   };
 
   const openSummaryEdit = (summary: Summary) => {
@@ -1063,23 +1091,41 @@ export function BookDetailModal({
           {/* Summaries tab */}
           {activeTab === 'summaries' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-sm">
                 <span className="text-sm font-medium text-muted-foreground">
                   {t('pages.books.detail.summariesCount', { count: summaries.length })}
                 </span>
-                <Button
-                  size="sm"
-                  onClick={openSummaryCreate}
-                  disabled={book.read_status !== 'read'}
-                  title={
-                    book.read_status !== 'read'
-                      ? t('pages.books.detail.summariesReadOnlyBtn')
-                      : undefined
-                  }
-                >
-                  <Plus className="mr-sm h-3.5 w-3.5" />
-                  {t('pages.books.detail.addBtn')}
-                </Button>
+                <div className="flex shrink-0 items-center gap-xs">
+                  {book.read_status === 'read' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void handleGenerateAiSummary()}
+                      disabled={isGeneratingAiSummary}
+                      title={t('pages.books.detail.aiSummaryBtn')}
+                    >
+                      {isGeneratingAiSummary ? (
+                        <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="mr-xs h-3.5 w-3.5" />
+                      )}
+                      {t('pages.books.detail.aiSummaryBtn')}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={openSummaryCreate}
+                    disabled={book.read_status !== 'read'}
+                    title={
+                      book.read_status !== 'read'
+                        ? t('pages.books.detail.summariesReadOnlyBtn')
+                        : undefined
+                    }
+                  >
+                    <Plus className="mr-sm h-3.5 w-3.5" />
+                    {t('pages.books.detail.addBtn')}
+                  </Button>
+                </div>
               </div>
               {book.read_status !== 'read' && (
                 <p

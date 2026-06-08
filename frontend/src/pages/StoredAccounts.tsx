@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Loader2,
   Copy,
+  Check,
   Wallet,
   Building2,
 } from 'lucide-react';
@@ -102,6 +103,8 @@ export default function StoredAccounts() {
     Map<number, { password?: string; password2?: string }>
   >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
+  const [copyingId, setCopyingId] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -215,6 +218,24 @@ export default function StoredAccounts() {
       title: t('common.messages.copied'),
       description: t('common.messages.copiedDesc', { label }),
     });
+  };
+
+  const handleCopyAccountNumber = async (id: number) => {
+    try {
+      setCopyingId(id);
+      const data = await storedAccountsService.copy(id);
+      await copyToClipboard(data.account_number);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.copyError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setCopyingId(null);
+    }
   };
 
   const handleSubmit = async (data: StoredBankAccountFormData) => {
@@ -447,6 +468,30 @@ export default function StoredAccounts() {
                             <EyeOff className="h-3.5 w-3.5" />
                           ) : (
                             <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={cn(
+                            'h-8 w-8 p-0',
+                            copiedId === acc.id && 'text-success'
+                          )}
+                          onClick={() => void handleCopyAccountNumber(acc.id)}
+                          disabled={copyingId === acc.id}
+                          title={
+                            copiedId === acc.id
+                              ? t('common.messages.copied')
+                              : t('pages.storedAccounts.copyAccountNumber')
+                          }
+                          aria-label={t('pages.storedAccounts.copyAccountNumber')}
+                        >
+                          {copyingId === acc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : copiedId === acc.id ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
                           )}
                         </Button>
                         <Button

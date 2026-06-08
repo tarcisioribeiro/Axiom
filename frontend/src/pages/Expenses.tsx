@@ -47,6 +47,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
+import type { Expense } from '@/types';
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
@@ -55,6 +56,7 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function Expenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const [splitExpense, setSplitExpense] = useState<Expense | null>(null);
   const {
     expenses,
     accounts,
@@ -88,9 +90,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     hasActiveFilters,
     columns,
     prefillExpenseData,
-  } = useExpensesPage();
-
-  const [splitExpense, setSplitExpense] = useState<(typeof expenses)[0] | null>(null);
+  } = useExpensesPage({ onAfterCreate: setSplitExpense });
 
   const BREAKDOWN_COLORS = [
     'bg-primary',

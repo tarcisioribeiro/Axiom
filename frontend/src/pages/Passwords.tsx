@@ -736,11 +736,19 @@ export default function Passwords() {
   };
 
   const handleCopyPassword = async (id: number) => {
-    const password = revealedPasswords.get(id);
-    if (!password) return;
-    await copyToClipboard(password);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+    const alreadyRevealed = revealedPasswords.get(id);
+    try {
+      const value = alreadyRevealed ?? (await passwordsService.copy(id)).password;
+      await copyToClipboard(value);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.passwords.copyError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
   };
 
   const onFormSubmit = async (data: PasswordFormData) => {
@@ -991,6 +999,27 @@ export default function Passwords() {
                                   <Eye className="mr-xs h-3 w-3" />
                                   {t('common.actions.reveal')}
                                 </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleCopyPassword(password.id);
+                              }}
+                              title={
+                                copiedId === password.id
+                                  ? t('pages.passwords.copied')
+                                  : t('pages.passwords.copyWithoutReveal')
+                              }
+                              aria-label={t('pages.passwords.copyWithoutReveal')}
+                              className={cn(copiedId === password.id && 'text-success')}
+                            >
+                              {copiedId === password.id ? (
+                                <Check className="h-3 w-3" />
+                              ) : (
+                                <Copy className="h-3 w-3" aria-hidden="true" />
                               )}
                             </Button>
                             <Button

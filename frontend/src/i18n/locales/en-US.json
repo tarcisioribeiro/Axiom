@@ -53,6 +53,7 @@
       "confirmDeleteNamedDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "copied": "Copied!",
       "copiedDesc": "{{label}} copied to clipboard.",
+      "copyError": "Error copying",
       "revealError": "Error revealing data",
       "invalidData": "Invalid data",
       "fillRequired": "Please fill in all required fields.",
@@ -699,7 +700,9 @@
         "relatedPayablePlaceholder": "Select (optional)",
         "relatedPayableHint": "Link this expense to a payable",
         "none": "None",
-        "balanceInfo": "Balance: {{value}}"
+        "balanceInfo": "Balance: {{value}}",
+        "splitToggle": "Split expense",
+        "splitToggleHint": "After creating, the split manager will open automatically"
       },
       "splits": {
         "title": "Expense Splits",
@@ -2260,6 +2263,7 @@
       },
       "keepCurrentPassword": "Leave blank to keep current",
       "copyWithoutReveal": "Copy without revealing",
+      "copyError": "Error copying password",
       "copied": "Copied!",
       "copiedClipboard": "Password copied to clipboard",
       "autoHideIn": "Hides in {{seconds}}s",
@@ -2446,7 +2450,8 @@
         "sectionLink": "Financial Link",
         "sectionNotes": "Notes"
       },
-      "otherBrand": "Other"
+      "otherBrand": "Other",
+      "copyCardNumber": "Copy card number"
     },
     "storedAccounts": {
       "title": "Bank Accounts",
@@ -2481,6 +2486,7 @@
         "isFinancial": "Financial Account"
       },
       "noFinanceAccount": "No finance account",
+      "copyAccountNumber": "Copy account number",
       "password1": "Password",
       "password2": "Confirm Password",
       "accountTypes": {
@@ -2949,6 +2955,9 @@
         "exportingBtn": "Exporting...",
         "exportBtn": "Export MD",
         "addBtn": "Add",
+        "aiSummaryBtn": "Generate AI Summary",
+        "aiSummaryDefaultTitle": "AI Summary — {{title}}",
+        "aiSummaryError": "Error generating AI summary",
         "loadingHighlights": "Loading highlights...",
         "loadingReadings": "Loading readings...",
         "loadingSummaries": "Loading summaries...",
@@ -4442,7 +4451,14 @@
       "expiry": {
         "hours": "Vault expires in {{hours}}h {{minutes}}min",
         "minutes": "Vault expires in {{minutes}} min",
-        "soon": "Vault expiring soon"
+        "soon": "Vault expiring soon",
+        "renewBtn": "Renew",
+        "renewTitle": "Renew Vault Session",
+        "renewDesc": "Enter your master password to extend the vault session.",
+        "renewConfirm": "Renew Session",
+        "renewSuccess": "Session renewed",
+        "renewSuccessDesc": "The vault session has been extended successfully.",
+        "renewError": "Error renewing session"
       }
     },
     "vaultHealth": {
