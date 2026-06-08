@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Library,
   Plus,
@@ -74,8 +74,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
 import { authorsService } from '@/services/authors-service';
 import { booksService } from '@/services/books-service';
+import { membersService } from '@/services/members-service';
 import { publishersService } from '@/services/publishers-service';
 import { readingsService } from '@/services/readings-service';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
@@ -353,6 +355,13 @@ export default function Books() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
+
   const quickCaptureMutation = useMutation({
     mutationFn: (data: { book: number; pages_read: number }) =>
       readingsService.create({
@@ -360,7 +369,7 @@ export default function Books() {
         reading_date: new Date().toISOString().split('T')[0],
         reading_time: 0,
         pages_read: data.pages_read,
-        owner: 0,
+        owner: ownerId,
       }),
     onSuccess: () => {
       toast({ title: t('pages.books.quickCapture.saved') });
@@ -538,7 +547,7 @@ export default function Books() {
 
   const handleAskIntellect = (book: Book) => {
     const context = encodeURIComponent(`Livro: ${book.title}`);
-    void navigate(`/intellect/agents?context=${context}`);
+    void navigate(`/agents?context=${context}`);
   };
 
   const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };

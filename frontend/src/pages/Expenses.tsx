@@ -301,7 +301,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       {categoryBreakdown.length > 1 && (
         <div className="rounded-lg border bg-card p-md">
           <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Por categoria
+            {t('pages.expenses.byCategory')}
           </p>
           <div className="flex h-2 overflow-hidden rounded-full bg-muted">
             {categoryBreakdown.map(({ cat, pct }, i) => (
@@ -333,6 +333,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         columns={columns}
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading || isFetching}
+        rowClassName={(expense) => (expense.payed ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.expenses.emptyState'),

@@ -37,6 +37,13 @@ export const GOAL_TYPE_CHOICES = [
   { value: 'custom', label: 'Personalizado' },
 ] as const;
 
+export const GOAL_SOURCE_CHOICES = [
+  { value: 'task_instances', label: 'Tarefas de Rotina' },
+  { value: 'workout_sessions', label: 'Sessões de Treino' },
+  { value: 'meal_logs', label: 'Registros de Refeição' },
+  { value: 'custom', label: 'Manual' },
+] as const;
+
 export const GOAL_STATUS_CHOICES = [
   { value: 'active', label: 'Ativo' },
   { value: 'completed', label: 'Concluído' },

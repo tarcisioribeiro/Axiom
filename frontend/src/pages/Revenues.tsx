@@ -292,7 +292,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
       {categoryBreakdown.length > 1 && (
         <div className="rounded-lg border bg-card p-md">
           <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Por categoria
+            {t('pages.revenues.byCategory')}
           </p>
           <div className="flex h-2 overflow-hidden rounded-full bg-muted">
             {categoryBreakdown.map(({ cat, pct }, i) => (
@@ -324,6 +324,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         columns={columns}
         keyExtractor={(revenue) => revenue.id}
         isLoading={isLoading}
+        rowClassName={(revenue) => (revenue.received ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.revenues.emptyState'),

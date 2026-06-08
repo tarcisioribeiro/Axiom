@@ -884,6 +884,7 @@ export const goalSchema = z.object({
     .optional()
     .or(z.literal('')),
   goal_type: z.string().min(1, requiredError('Tipo de objetivo')),
+  goal_source: z.string().min(1, requiredError('Fonte do progresso')),
   related_task: z.number().positive().optional().nullable(),
   target_value: z
     .number()

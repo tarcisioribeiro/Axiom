@@ -28,6 +28,7 @@ import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialo
 import { LoanForm } from '@/components/loans/LoanForm';
 import { LoanInstallmentsDialog } from '@/components/loans/LoanInstallmentsDialog';
 import { LoanPaymentDialog } from '@/components/loans/LoanPaymentDialog';
+import { LoanProgressDialog } from '@/components/loans/LoanProgressDialog';
 import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +91,8 @@ export default function Loans() {
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  const [progressLoan, setProgressLoan] = useState<Loan | null>(null);
 
   const [amortizationLoan, setAmortizationLoan] = useState<Loan | null>(null);
   const [amortization, setAmortization] = useState<AmortizationSchedule | null>(null);
@@ -410,6 +413,16 @@ export default function Loans() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setProgressLoan(loan)}
+                    title={t('pages.loans.progress.progressBtn')}
+                    className="gap-xs text-xs"
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t('pages.loans.progress.progressBtn')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => void handleOpenAmortization(loan)}
                     title={t('pages.loans.amortization.title')}
                     className="gap-xs text-xs"
@@ -489,6 +502,8 @@ export default function Loans() {
         accounts={accounts}
         onClose={() => setReceiptLoan(null)}
       />
+
+      <LoanProgressDialog loan={progressLoan} onClose={() => setProgressLoan(null)} />
 
       <LoanInstallmentsDialog
         loan={installmentsLoan}

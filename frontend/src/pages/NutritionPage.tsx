@@ -601,34 +601,61 @@ export default function NutritionPage() {
                   );
                 return (
                   <div className="space-y-sm">
-                    {todayLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="flex items-center justify-between rounded-md border border-border p-sm"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">
-                            {log.meal_type_name ?? log.meal_type}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {log.menu_option_name}
-                          </p>
+                    {todayLogs.map((log) => {
+                      const linkedOption = log.menu_option
+                        ? mealTypes
+                            .flatMap((mt) => mt.options)
+                            .find((o) => o.id === log.menu_option)
+                        : null;
+                      const totalCal = linkedOption
+                        ? linkedOption.ingredients.reduce((acc, ing) => {
+                            const c = calcCalories(ing);
+                            return c != null ? acc + c : acc;
+                          }, 0)
+                        : null;
+                      const hasCalData =
+                        linkedOption?.ingredients.some(
+                          (ing) => calcCalories(ing) != null
+                        ) ?? false;
+                      return (
+                        <div
+                          key={log.id}
+                          className="flex items-center justify-between rounded-md border border-border p-sm"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">
+                              {log.meal_type_name ?? log.meal_type}
+                            </p>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                              {log.menu_option_name && (
+                                <p className="text-xs text-muted-foreground">
+                                  {log.menu_option_name}
+                                </p>
+                              )}
+                              {hasCalData && totalCal != null && totalCal > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
+                                  <Flame className="h-3 w-3" />
+                                  {totalCal} kcal
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-sm">
+                            <span className="text-xs text-muted-foreground">
+                              {log.time ?? ''}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 text-destructive"
+                              onClick={() => deleteLogMutation.mutate(log.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-sm">
-                          <span className="text-xs text-muted-foreground">
-                            {log.time ?? ''}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 w-7 p-0 text-destructive"
-                            onClick={() => deleteLogMutation.mutate(log.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -1108,6 +1135,21 @@ function MealTypeCard({
                             <BookOpen className="h-3.5 w-3.5 text-category-nutrition" />
                           </div>
                           <span className="text-sm font-semibold">{opt.name}</span>
+                          {(() => {
+                            const total = opt.ingredients.reduce((acc, ing) => {
+                              const c = calcCalories(ing);
+                              return c != null ? acc + c : acc;
+                            }, 0);
+                            const hasData = opt.ingredients.some(
+                              (ing) => calcCalories(ing) != null
+                            );
+                            return hasData && total > 0 ? (
+                              <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
+                                <Flame className="h-3 w-3" />
+                                {total} kcal
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                         <div className="flex gap-xs">
                           <Button
@@ -1332,6 +1374,7 @@ interface FoodCardProps {
 }
 
 function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
+  const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
     <div className="group flex items-center gap-sm rounded-lg border border-border bg-card p-md transition-all hover:border-category-nutrition/40 hover:shadow-sm">
@@ -1340,12 +1383,23 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold leading-snug">{food.name}</p>
-        {food.description ? (
+        <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+          {food.calories_per_serving && (
+            <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
+              <Flame className="h-3 w-3" />
+              {food.calories_per_serving} kcal
+            </span>
+          )}
+          {food.serving_size && food.serving_unit && (
+            <span className="text-xs text-muted-foreground">
+              {food.serving_size} {t(`units.${food.serving_unit}`, food.serving_unit)}
+            </span>
+          )}
+        </div>
+        {food.description && (
           <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
             {food.description}
           </p>
-        ) : (
-          <p className="mt-0.5 text-xs text-muted-foreground/50">—</p>
         )}
       </div>
       <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
@@ -1402,19 +1456,20 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
 
 function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }) {
   const { t } = useTranslation();
-  // group by alternative_group; null/undefined = standalone
-  const groups: Map<number | null, MenuOptionIngredient[]> = new Map();
+  // Ingredients with the same alternative_group are alternatives (show with "OR").
+  // Standalone ingredients (null/undefined alternative_group) are each their own entry.
+  const groups: Map<number | string, MenuOptionIngredient[]> = new Map();
   for (const ing of ingredients) {
-    const key = ing.alternative_group ?? null;
+    const key =
+      ing.alternative_group != null ? ing.alternative_group : `__solo_${ing.id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(ing);
   }
 
   const entries = Array.from(groups.entries()).sort(([a], [b]) => {
-    if (a === null && b === null) return 0;
-    if (a === null) return 1;
-    if (b === null) return -1;
-    return a - b;
+    const numA = typeof a === 'number' ? a : Infinity;
+    const numB = typeof b === 'number' ? b : Infinity;
+    return numA - numB;
   });
 
   return (
