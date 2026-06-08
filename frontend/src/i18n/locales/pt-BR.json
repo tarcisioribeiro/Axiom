@@ -1349,6 +1349,27 @@
         "paidCount_one": "{{count}} fatura paga",
         "paidCount_other": "{{count}} faturas pagas",
         "minPaymentNote": "pagamento mínimo das abertas"
+      },
+      "renegotiateTitle": "Renegociar Fatura",
+      "renegotiateDesc": "Informe o valor total com juros e a quantidade de parcelas para o saldo restante.",
+      "renegotiateBtn": "Confirmar Renegociação",
+      "renegotiateBillLabel": "Renegociar fatura",
+      "renegotiateSuccess": "Renegociação realizada",
+      "renegotiateSuccessDesc": "Saldo renegociado em {{count}}x de {{value}}.",
+      "renegotiateError": "Erro ao renegociar fatura",
+      "renegotiateForm": {
+        "remainingLabel": "Saldo Restante",
+        "totalWithInterestLabel": "Valor Total com Juros *",
+        "totalWithInterestHint": "Informe o valor que o banco indicou (saldo + juros aplicados)",
+        "totalRequired": "Informe o valor total com juros",
+        "installmentsLabel": "Quantidade de Parcelas *",
+        "installmentsPlaceholder": "Ex: 6",
+        "installmentsRequired": "Informe a quantidade de parcelas",
+        "installmentValuePreview": "Valor de cada parcela",
+        "of": "de",
+        "billWillBePaid": "A fatura atual será marcada como paga. As parcelas serão lançadas nas faturas futuras do cartão.",
+        "interestWarning": "Informe o valor total já com os juros cobrados pelo banco — o sistema não calcula juros automaticamente.",
+        "processing": "Processando..."
       }
     },
     "creditCardExpenses": {

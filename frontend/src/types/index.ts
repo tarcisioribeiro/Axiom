@@ -41,6 +41,8 @@ export type {
   BillPaymentResponse,
   BillItem,
   BillItemsResponse,
+  RenegotiateBillFormData,
+  RenegotiateBillResponse,
   CreditCardExpensesByCategory,
 } from './credit-cards';
 export type {
