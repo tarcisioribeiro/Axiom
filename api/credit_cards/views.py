@@ -26,6 +26,7 @@ from credit_cards.serializers import (
     CreditCardPurchaseUpdateSerializer,
     CreditCardSerializer,
     PayCreditCardBillSerializer,
+    RenegotiateBillSerializer,
 )
 from credit_cards.utils import recalculate_bill_total
 from expenses.models import Expense
@@ -438,6 +439,159 @@ class PayCreditCardBillView(APIView):
                     "id": account.id,
                     "name": account.account_name,
                     "balance": str(account.current_balance),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class RenegotiateBillView(APIView):
+    """
+    View para renegociar o saldo restante de uma fatura de cartão.
+
+    POST /api/v1/credit-cards-bills/{id}/renegotiate/
+
+    Lógica:
+    1. Valida que a fatura possui saldo restante
+    2. Cria um novo CreditCardPurchase do tipo renegociação
+    3. Gera N CreditCardInstallment distribuídas nas faturas futuras
+    4. Marca a fatura atual como paga (o débito foi rolado)
+    """
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
+    queryset = CreditCardBill.objects.all()
+
+    @transaction.atomic
+    def post(self, request, pk):
+        import calendar as cal
+        from datetime import date, timedelta
+
+        try:
+            bill = CreditCardBill.objects.select_related(
+                "credit_card", "credit_card__associated_account"
+            ).get(pk=pk)
+        except CreditCardBill.DoesNotExist:
+            return Response(
+                {"detail": "Fatura não encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        remaining = Decimal(str(bill.total_amount)) - Decimal(
+            str(bill.paid_amount)
+        )
+        if remaining <= 0:
+            return Response(
+                {
+                    "detail": "Esta fatura não possui saldo "
+                    + ("restante para renegociar")
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = RenegotiateBillSerializer(
+            data=request.data, context={"bill": bill}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        total_with_interest = Decimal(
+            str(serializer.validated_data["total_with_interest"])
+        )
+        n_installments = serializer.validated_data["installments"]
+        start_date = serializer.validated_data.get("start_date")
+
+        # Padrão: primeiro dia após o fechamento da fatura atual
+        if not start_date:
+            start_date = bill.invoice_ending_date + timedelta(days=1)
+
+        card = bill.credit_card
+        installment_value = total_with_interest / n_installments
+
+        # Cria a compra representando a renegociação
+        purchase = CreditCardPurchase.objects.create(
+            description=(
+                f"Renegociação Fatura {card.name} {bill.month}/{bill.year}"
+            ),
+            total_value=total_with_interest,
+            purchase_date=start_date,
+            purchase_time=timezone.now().time(),
+            category="bills and services",
+            card=card,
+            total_installments=n_installments,
+            notes=(
+                f"Renegociação da fatura {bill.month}/{bill.year}. "
+                f"Saldo original: R$ {remaining:.2f}. "
+                f"Total com juros: R$ {total_with_interest:.2f}."
+            ),
+            created_by=request.user,
+            updated_by=request.user,
+        )
+
+        # Busca faturas existentes do cartão para associar as parcelas
+        future_bills = list(
+            CreditCardBill.objects.filter(
+                credit_card=card, is_deleted=False
+            ).order_by("invoice_beginning_date")
+        )
+
+        def add_months(source_date, months):
+            month = source_date.month - 1 + months
+            year = source_date.year + month // 12
+            month = month % 12 + 1
+            day = min(source_date.day, cal.monthrange(year, month)[1])
+            return date(year, month, day)
+
+        for i in range(n_installments):
+            due_date = add_months(start_date, i)
+            matching_bill = None
+            for b in future_bills:
+                if (
+                    b.invoice_beginning_date
+                    <= due_date
+                    <= b.invoice_ending_date
+                ):
+                    matching_bill = b
+                    break
+
+            CreditCardInstallment.objects.create(
+                purchase=purchase,
+                installment_number=i + 1,
+                value=installment_value,
+                due_date=due_date,
+                bill=matching_bill,
+                payed=False,
+            )
+
+        # Marca a fatura atual como paga (o débito foi rolado)
+        bill.paid_amount = bill.total_amount
+        bill.status = "paid"
+        bill.closed = True
+        bill.payment_date = timezone.now().date()
+        CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
+            payed=True
+        )
+        bill.save()
+
+        return Response(
+            {
+                "message": "Renegociação realizada com sucesso",
+                "bill": {
+                    "id": bill.id,
+                    "month": bill.month,
+                    "year": bill.year,
+                    "total_amount": str(bill.total_amount),
+                    "paid_amount": str(bill.paid_amount),
+                    "status": bill.status,
+                    "closed": bill.closed,
+                },
+                "renegotiation": {
+                    "purchase_id": purchase.id,
+                    "total_with_interest": str(total_with_interest),
+                    "installments": n_installments,
+                    "installment_value": str(installment_value),
+                    "start_date": str(start_date),
                 },
             },
             status=status.HTTP_200_OK,
