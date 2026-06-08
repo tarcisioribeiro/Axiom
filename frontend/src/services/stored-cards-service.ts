@@ -19,6 +19,10 @@ class StoredCardsService extends BaseService<
   async reveal(id: number): Promise<StoredCreditCardReveal> {
     return apiClient.get<StoredCreditCardReveal>(`${this.endpoint}${id}/reveal/`);
   }
+
+  async copy(id: number): Promise<StoredCreditCardReveal> {
+    return apiClient.get<StoredCreditCardReveal>(`${this.endpoint}${id}/copy/`);
+  }
 }
 
 export const storedCardsService = new StoredCardsService();

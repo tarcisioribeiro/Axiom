@@ -15,7 +15,7 @@ export const Header = () => {
   const { toggle: toggleSidebar } = useSidebar();
   const { t } = useTranslation();
   const openCommandPalette = useCommandPaletteStore((s) => s.open);
-  const { status: vaultStatus } = useVaultStatus();
+  const { status: vaultStatus, refresh: refreshVaultStatus } = useVaultStatus();
 
   return (
     <header className="sticky top-0 z-header border-b border-border/60 bg-card/80 px-md py-md backdrop-blur-md md:px-lg">
@@ -63,7 +63,10 @@ export const Header = () => {
           </Button>
 
           {vaultStatus?.is_unlocked && vaultStatus.expires_at && (
-            <VaultExpiryBadge expiresAt={vaultStatus.expires_at} />
+            <VaultExpiryBadge
+              expiresAt={vaultStatus.expires_at}
+              onRenew={refreshVaultStatus}
+            />
           )}
 
           <ThemeToggle />

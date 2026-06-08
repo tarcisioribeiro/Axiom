@@ -92,6 +92,7 @@ export type {
 export type {
   FinancialAlert,
   DashboardStats,
+  DashboardSummary,
   AccountBalance,
   BalanceForecast,
   CashFlowForecastDay,

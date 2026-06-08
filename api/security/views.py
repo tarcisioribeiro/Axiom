@@ -209,6 +209,34 @@ class PasswordRevealView(VaultLockedMixin, generics.RetrieveAPIView):
         return Response(serializer.data)
 
 
+class PasswordCopyView(VaultLockedMixin, generics.RetrieveAPIView):
+    """Retorna a senha para cópia (com log de auditoria), sem revelar na UI."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    serializer_class = PasswordRevealSerializer
+    queryset = Password.objects.all()
+
+    def get_queryset(self):
+        return Password.objects.filter(owner__user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        log_activity(
+            request,
+            "copy",
+            "Password",
+            instance.id,
+            f"Copiou senha: {instance.title}",
+            object_uuid=instance.uuid,
+            description_key="password.copy",
+            description_params={"name": instance.title},
+        )
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
 # ============================================================================
 # STORED CREDIT CARD VIEWS
 # ============================================================================
@@ -320,6 +348,33 @@ class StoredCreditCardRevealView(VaultLockedMixin, generics.RetrieveAPIView):
         return Response(serializer.data)
 
 
+class StoredCreditCardCopyView(VaultLockedMixin, generics.RetrieveAPIView):
+    """Retorna dados do cartão para cópia sem revelar na UI (auditado)."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    serializer_class = StoredCreditCardRevealSerializer
+    queryset = StoredCreditCard.objects.all()
+
+    def get_queryset(self):
+        return StoredCreditCard.objects.filter(owner__user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        log_activity(
+            request,
+            "copy",
+            "StoredCreditCard",
+            instance.id,
+            f"Copiou dados do cartão: {instance.name}",
+            description_key="card.copy",
+            description_params={"name": instance.name},
+        )
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
 # ============================================================================
 # STORED BANK ACCOUNT VIEWS
 # ============================================================================
@@ -424,6 +479,33 @@ class StoredBankAccountRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             instance.id,
             f"Revelou dados da conta: {instance.name}",
             description_key="bank_account.reveal",
+            description_params={"name": instance.name},
+        )
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class StoredBankAccountCopyView(VaultLockedMixin, generics.RetrieveAPIView):
+    """Retorna dados da conta para cópia sem revelar na UI (auditado)."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    serializer_class = StoredBankAccountRevealSerializer
+    queryset = StoredBankAccount.objects.all()
+
+    def get_queryset(self):
+        return StoredBankAccount.objects.filter(owner__user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        log_activity(
+            request,
+            "copy",
+            "StoredBankAccount",
+            instance.id,
+            f"Copiou dados da conta: {instance.name}",
+            description_key="bank_account.copy",
             description_params={"name": instance.name},
         )
 
