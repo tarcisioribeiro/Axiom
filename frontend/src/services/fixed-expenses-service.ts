@@ -5,6 +5,7 @@ import type {
   BulkGenerateRequest,
   BulkGenerateResponse,
   FixedExpenseStats,
+  FixedExpenseGenerationLog,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -21,6 +22,12 @@ class FixedExpensesService extends BaseService<FixedExpense, FixedExpenseFormDat
 
   async getStats(): Promise<FixedExpenseStats> {
     return apiClient.get<FixedExpenseStats>(`${this.endpoint}stats/`);
+  }
+
+  async getGenerationLog(): Promise<FixedExpenseGenerationLog[]> {
+    return apiClient.get<FixedExpenseGenerationLog[]>(
+      `${this.endpoint}generation-log/`
+    );
   }
 }
 

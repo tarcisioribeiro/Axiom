@@ -48,6 +48,13 @@ GOAL_TYPE_CHOICES = (
     ("custom", "Personalizado"),
 )
 
+GOAL_SOURCE_CHOICES = (
+    ("task_instances", "Instâncias de Tarefas"),
+    ("workout_sessions", "Sessões de Treino"),
+    ("meal_logs", "Registros de Refeição"),
+    ("custom", "Manual"),
+)
+
 PRIORITY_CHOICES = (
     ("low", "Baixa"),
     ("medium", "Média"),
@@ -538,6 +545,16 @@ class Goal(BaseModel):
     end_date = models.DateField(
         null=True, blank=True, verbose_name="Data de Conclusao"
     )
+    goal_source = models.CharField(
+        max_length=20,
+        choices=GOAL_SOURCE_CHOICES,
+        default="task_instances",
+        verbose_name="Fonte do Progresso",
+        help_text=(
+            "Define de onde vem o progresso automático:"
+            " tarefas, treinos, refeições ou manual"
+        ),
+    )
     status = models.CharField(
         max_length=20,
         choices=GOAL_STATUS_CHOICES,
@@ -563,15 +580,22 @@ class Goal(BaseModel):
     @property
     def calculated_current_value(self):
         """
-        Calcula o valor atual do progresso automaticamente baseado no tipo de
-        objetivo
-        e nas tarefas relacionadas completadas.
+        Calcula o valor atual do progresso automaticamente baseado no tipo
+        de objetivo e na fonte configurada (tarefas, treinos, refeições ou
+        manual).
         """
         from datetime import timedelta
 
         today = timezone.now().date()
 
-        # Para objetivos do tipo consecutive_days
+        if self.goal_source == "workout_sessions":
+            return self._calculate_from_workout_sessions(today, timedelta)
+        if self.goal_source == "meal_logs":
+            return self._calculate_from_meal_logs(today, timedelta)
+        if self.goal_source == "custom":
+            return self.current_value
+
+        # Fonte padrão: task_instances
         if self.goal_type == "consecutive_days":
             if self.related_task:
                 consecutive_days = 0
@@ -599,9 +623,6 @@ class Goal(BaseModel):
             else:
                 return self.days_active
 
-        # Para objetivos do tipo avoid_habit (evitar um hábito)
-        # Conta dias consecutivos desde start_date em que a tarefa NÃO foi
-        # completada
         if self.goal_type == "avoid_habit":
             if self.related_task:
                 consecutive_days = 0
@@ -620,12 +641,10 @@ class Goal(BaseModel):
                             deleted_at__isnull=True,
                         ).exists()
                         if completed_instance:
-                            # Hábito foi praticado — sequência quebrada
                             break
                         else:
                             consecutive_days += 1
                     else:
-                        # Dia sem agenda: conta como dia limpo
                         consecutive_days += 1
                     check_date -= timedelta(days=1)
 
@@ -633,10 +652,8 @@ class Goal(BaseModel):
             else:
                 return self.days_active
 
-        # Para objetivos do tipo total_days
         elif self.goal_type == "total_days":
             if self.related_task:
-                # Contar total de dias que a tarefa foi completada
                 return (
                     TaskInstance.objects.filter(
                         template=self.related_task,
@@ -652,8 +669,50 @@ class Goal(BaseModel):
             else:
                 return self.days_active
 
-        # Para outros tipos, usar o valor armazenado
         return self.current_value
+
+    def _calculate_from_workout_sessions(self, today, timedelta):
+        """Calcula progresso baseado em sessões de treino."""
+        qs = WorkoutSession.objects.filter(
+            owner=self.owner,
+            date__gte=self.start_date,
+            deleted_at__isnull=True,
+        )
+        if self.goal_type == "total_days":
+            return qs.values("date").distinct().count()
+        if self.goal_type == "consecutive_days":
+            consecutive = 0
+            check_date = today
+            while check_date >= self.start_date:
+                if qs.filter(date=check_date).exists():
+                    consecutive += 1
+                else:
+                    break
+                check_date -= timedelta(days=1)
+            return consecutive
+        # Para custom/avoid_habit: total de sessões
+        return qs.count()
+
+    def _calculate_from_meal_logs(self, today, timedelta):
+        """Calcula progresso baseado em registros de refeição."""
+        qs = MealLog.objects.filter(
+            owner=self.owner,
+            date__gte=self.start_date,
+            deleted_at__isnull=True,
+        )
+        if self.goal_type == "total_days":
+            return qs.values("date").distinct().count()
+        if self.goal_type == "consecutive_days":
+            consecutive = 0
+            check_date = today
+            while check_date >= self.start_date:
+                if qs.filter(date=check_date).exists():
+                    consecutive += 1
+                else:
+                    break
+                check_date -= timedelta(days=1)
+            return consecutive
+        return qs.count()
 
     @property
     def progress_percentage(self):

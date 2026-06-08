@@ -1,5 +1,16 @@
 /* eslint-disable max-lines */
-import { Plus, Pencil, Trash2, Calendar, TrendingDown, History } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Calendar,
+  TrendingDown,
+  History,
+  ClipboardList,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,6 +33,7 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -31,6 +43,7 @@ import type {
   Expense,
   FixedExpense,
   FixedExpenseFormData,
+  FixedExpenseGenerationLog,
   Account,
   CreditCard,
 } from '@/types';
@@ -48,6 +61,14 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
   const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
+  const [showGenerationLog, setShowGenerationLog] = useState(false);
+
+  const generationLogQuery = useQuery<FixedExpenseGenerationLog[]>({
+    queryKey: ['fixedExpenses', 'generationLog'],
+    queryFn: () => fixedExpensesService.getGenerationLog(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: showGenerationLog,
+  });
   const [historyLoading, setHistoryLoading] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -381,6 +402,73 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
           </div>
         )}
       />
+
+      {/* Generation Log */}
+      <div className="rounded-lg border bg-card">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between px-md py-sm text-left"
+          onClick={() => setShowGenerationLog((v) => !v)}
+        >
+          <div className="flex items-center gap-sm">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">
+              {t('pages.fixedExpenses.generationLog.viewLog')}
+            </span>
+          </div>
+          {showGenerationLog ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+        {showGenerationLog && (
+          <div className="border-t px-md pb-md pt-sm">
+            {generationLogQuery.isLoading ? (
+              <p className="py-sm text-center text-sm text-muted-foreground">
+                {t('common.actions.loading')}
+              </p>
+            ) : !generationLogQuery.data?.length ? (
+              <p className="py-sm text-center text-sm text-muted-foreground">
+                {t('pages.fixedExpenses.generationLog.emptyState')}
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="pb-xs pr-md">
+                      {t('pages.fixedExpenses.generationLog.month')}
+                    </th>
+                    <th className="pb-xs pr-md text-right">
+                      {t('pages.fixedExpenses.generationLog.totalGenerated')}
+                    </th>
+                    <th className="pb-xs pr-md">
+                      {t('pages.fixedExpenses.generationLog.generatedBy')}
+                    </th>
+                    <th className="pb-xs text-right">
+                      {t('pages.fixedExpenses.generationLog.generatedAt')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {generationLogQuery.data.map((log) => (
+                    <tr key={log.id}>
+                      <td className="py-xs pr-md font-medium">{log.month}</td>
+                      <td className="py-xs pr-md text-right">{log.total_generated}</td>
+                      <td className="py-xs pr-md text-muted-foreground">
+                        {log.generated_by_name ?? '—'}
+                      </td>
+                      <td className="py-xs text-right text-muted-foreground">
+                        {formatDate(log.created_at, 'dd/MM/yyyy HH:mm')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

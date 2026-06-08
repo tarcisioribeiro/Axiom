@@ -43,6 +43,8 @@ const mockGoal: Goal = {
   title: 'Meditar 30 dias',
   goal_type: 'consecutive_days',
   goal_type_display: 'Dias Consecutivos',
+  goal_source: 'task_instances',
+  goal_source_display: 'Instâncias de Tarefas',
   target_value: 30,
   current_value: 5,
   calculated_current_value: 5,

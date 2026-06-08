@@ -2,7 +2,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  BookOpen,
   Download,
+  GraduationCap,
   Highlighter,
   Link2,
   Maximize2,
@@ -17,6 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -1030,7 +1033,13 @@ export default function KnowledgeGraph() {
           </div>
 
           {/* Graph area */}
-          <div ref={containerRef} className="relative flex-1 overflow-hidden">
+          <div
+            ref={containerRef}
+            className={cn(
+              'relative flex-1 overflow-hidden',
+              linkingFrom && 'cursor-crosshair'
+            )}
+          >
             {isLoading ? (
               <div className="flex h-full flex-col items-center justify-center gap-md text-muted-foreground">
                 <Network className="h-12 w-12 animate-pulse" />
@@ -1048,11 +1057,29 @@ export default function KnowledgeGraph() {
                       : t('pages.knowledgeGraph.empty')}
                   </p>
                   {!search && (
-                    <p className="max-w-xs text-sm text-muted-foreground">
+                    <p className="max-w-xs text-sm">
                       {t('pages.knowledgeGraph.emptyHint')}
                     </p>
                   )}
                 </div>
+                {!search && (
+                  <div className="flex items-center gap-sm">
+                    <Link
+                      to="/library/books"
+                      className="flex items-center gap-xs rounded-md border border-border bg-card px-md py-xs text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      {t('pages.knowledgeGraph.emptyCtaBooks')}
+                    </Link>
+                    <Link
+                      to="/library/courses"
+                      className="flex items-center gap-xs rounded-md border border-border bg-card px-md py-xs text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                    >
+                      <GraduationCap className="h-3.5 w-3.5" />
+                      {t('pages.knowledgeGraph.emptyCtaCourses')}
+                    </Link>
+                  </div>
+                )}
               </div>
             ) : (
               <ForceGraph2D
@@ -1062,7 +1089,11 @@ export default function KnowledgeGraph() {
                 height={dimensions.height}
                 backgroundColor="transparent"
                 nodeCanvasObject={nodeCanvasObject as never}
-                nodePointerAreaPaint={(node: GraphNode, color, ctx) => {
+                nodePointerAreaPaint={(
+                  node: GraphNode,
+                  color: string,
+                  ctx: CanvasRenderingContext2D
+                ) => {
                   ctx.fillStyle = color;
                   ctx.beginPath();
                   ctx.arc(

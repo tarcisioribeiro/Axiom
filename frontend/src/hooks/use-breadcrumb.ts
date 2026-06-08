@@ -347,6 +347,7 @@ export function useBreadcrumb() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const extraLabel = useBreadcrumbExtraStore((s) => s.extraLabel);
+  const extraSubLabel = useBreadcrumbExtraStore((s) => s.extraSubLabel);
 
   const breadcrumbs = useMemo((): BreadcrumbItem[] => {
     const pathname = location.pathname;
@@ -391,9 +392,14 @@ export function useBreadcrumb() {
       items.push({ label: extraLabel });
     }
 
+    // Adiciona sub-label extra (ex.: nome do cartão selecionado)
+    if (extraSubLabel) {
+      items.push({ label: extraSubLabel });
+    }
+
     return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname, i18n.language, t, extraLabel]);
+  }, [location.pathname, i18n.language, t, extraLabel, extraSubLabel]);
 
   const currentPage = useMemo(() => {
     const pathname = location.pathname;

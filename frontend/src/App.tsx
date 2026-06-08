@@ -12,6 +12,7 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { RouteProgressBar } from './components/common/RouteProgressBar';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { Layout } from './components/layout/Layout';
+import { PlanningLayout } from './components/layout/PlanningLayout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
 import { queryClient } from './lib/query-client';
@@ -108,6 +109,7 @@ const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
 const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
 const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
+const MonthComparison = lazy(() => import('./pages/MonthComparison'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -450,71 +452,73 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
-          {/* Personal Planning Module routes */}
-          <Route
-            path="/planning/dashboard"
-            element={
-              <PageWrapper>
-                <PersonalPlanningDashboard />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/planning/tasks-goals"
-            element={
-              <PageWrapper>
-                <TasksAndGoals />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/planning/routine-tasks"
-            element={<Navigate to="/planning/tasks-goals" replace />}
-          />
-          <Route
-            path="/planning/goals"
-            element={<Navigate to="/planning/tasks-goals" replace />}
-          />
-          <Route
-            path="/planning/daily"
-            element={<Navigate to="/planning/tasks-goals" replace />}
-          />
-          <Route
-            path="/planning/today-tasks"
-            element={<Navigate to="/planning/tasks-goals" replace />}
-          />
-          <Route
-            path="/planning/daily-checklist"
-            element={
-              <PageWrapper>
-                <DailyChecklist />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/planning/reflections"
-            element={
-              <PageWrapper>
-                <DailyReflections />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/planning/workout"
-            element={
-              <PageWrapper>
-                <WorkoutPage />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/planning/nutrition"
-            element={
-              <PageWrapper>
-                <NutritionPage />
-              </PageWrapper>
-            }
-          />
+          {/* Personal Planning Module routes — wrapped in contextual sidebar */}
+          <Route path="/planning" element={<PlanningLayout />}>
+            <Route
+              path="dashboard"
+              element={
+                <PageWrapper>
+                  <PersonalPlanningDashboard />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="tasks-goals"
+              element={
+                <PageWrapper>
+                  <TasksAndGoals />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="routine-tasks"
+              element={<Navigate to="/planning/tasks-goals" replace />}
+            />
+            <Route
+              path="goals"
+              element={<Navigate to="/planning/tasks-goals" replace />}
+            />
+            <Route
+              path="daily"
+              element={<Navigate to="/planning/tasks-goals" replace />}
+            />
+            <Route
+              path="today-tasks"
+              element={<Navigate to="/planning/tasks-goals" replace />}
+            />
+            <Route
+              path="daily-checklist"
+              element={
+                <PageWrapper>
+                  <DailyChecklist />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="reflections"
+              element={
+                <PageWrapper>
+                  <DailyReflections />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="workout"
+              element={
+                <PageWrapper>
+                  <WorkoutPage />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="nutrition"
+              element={
+                <PageWrapper>
+                  <NutritionPage />
+                </PageWrapper>
+              }
+            />
+          </Route>
 
           {/* Budgets Module routes */}
           <Route
@@ -610,6 +614,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <SubscriptionTracker />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/month-comparison"
+            element={
+              <PageWrapper>
+                <MonthComparison />
               </PageWrapper>
             }
           />

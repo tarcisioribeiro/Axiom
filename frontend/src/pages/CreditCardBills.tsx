@@ -46,6 +46,7 @@ import { accountsService } from '@/services/accounts-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { useAuthStore } from '@/stores/auth-store';
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type {
   Account,
   CreditCardBill,
@@ -73,6 +74,18 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
+  const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
+
+  useEffect(() => {
+    if (cardFilter === 'all') {
+      setExtraSubLabel(null);
+    } else {
+      const card = creditCards.find((c) => c.id.toString() === cardFilter);
+      setExtraSubLabel(card?.name ?? null);
+    }
+    return () => setExtraSubLabel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardFilter, creditCards]);
 
   useEffect(() => {
     void loadData();

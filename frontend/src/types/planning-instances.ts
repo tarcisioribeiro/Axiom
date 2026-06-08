@@ -8,6 +8,8 @@ export interface Goal {
   description?: string;
   goal_type: string;
   goal_type_display: string;
+  goal_source: string;
+  goal_source_display: string;
   related_task?: number;
   related_task_name?: string;
   target_value: number;
@@ -29,6 +31,7 @@ export interface GoalFormData {
   title: string;
   description?: string;
   goal_type: string;
+  goal_source: string;
   related_task?: number;
   target_value: number;
   current_value: number;

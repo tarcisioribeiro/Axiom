@@ -11,6 +11,21 @@ import type {
 
 import { apiClient } from './api-client';
 
+export interface MonthlyStatementCategory {
+  category: string;
+  total: string;
+  count: number;
+}
+
+export interface MonthlyStatement {
+  period: string;
+  total_revenues: string;
+  total_expenses: string;
+  balance: string;
+  revenues_by_category: MonthlyStatementCategory[];
+  expenses_by_category: MonthlyStatementCategory[];
+}
+
 export interface IRReport {
   year: number;
   revenues: { category: string; total: number }[];
@@ -71,6 +86,13 @@ class DashboardService {
       string,
       unknown
     >);
+  }
+
+  async getMonthlyStatement(year: number, month: number): Promise<MonthlyStatement> {
+    return apiClient.get<MonthlyStatement>(
+      API_CONFIG.ENDPOINTS.DASHBOARD_MONTHLY_STATEMENT,
+      { year, month } as Record<string, unknown>
+    );
   }
 
   async requestLGPDExport(): Promise<void> {
