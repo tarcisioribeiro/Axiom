@@ -34,6 +34,11 @@ urlpatterns = [
         name="credit-card-bill-reopen",
     ),
     path(
+        "credit-cards-bills/<int:pk>/renegotiate/",
+        views.RenegotiateBillView.as_view(),
+        name="credit-card-bill-renegotiate",
+    ),
+    path(
         "credit-cards-bills/<int:pk>/items/",
         views.BillItemsView.as_view(),
         name="credit-card-bill-items",

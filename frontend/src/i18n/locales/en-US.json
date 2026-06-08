@@ -1349,6 +1349,27 @@
         "paidCount_one": "{{count}} paid bill",
         "paidCount_other": "{{count}} paid bills",
         "minPaymentNote": "minimum payment for open bills"
+      },
+      "renegotiateTitle": "Renegotiate Bill",
+      "renegotiateDesc": "Enter the total amount with interest and the number of installments for the remaining balance.",
+      "renegotiateBtn": "Confirm Renegotiation",
+      "renegotiateBillLabel": "Renegotiate bill",
+      "renegotiateSuccess": "Renegotiation completed",
+      "renegotiateSuccessDesc": "Balance renegotiated in {{count}}x of {{value}}.",
+      "renegotiateError": "Error renegotiating bill",
+      "renegotiateForm": {
+        "remainingLabel": "Remaining Balance",
+        "totalWithInterestLabel": "Total Amount with Interest *",
+        "totalWithInterestHint": "Enter the amount informed by the bank (balance + applied interest)",
+        "totalRequired": "Enter the total amount with interest",
+        "installmentsLabel": "Number of Installments *",
+        "installmentsPlaceholder": "e.g. 6",
+        "installmentsRequired": "Enter the number of installments",
+        "installmentValuePreview": "Value per installment",
+        "of": "of",
+        "billWillBePaid": "The current bill will be marked as paid. Installments will be added to future card bills.",
+        "interestWarning": "Enter the total amount already including the bank's interest — the system does not calculate interest automatically.",
+        "processing": "Processing..."
       }
     },
     "creditCardExpenses": {
