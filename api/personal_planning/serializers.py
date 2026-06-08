@@ -178,6 +178,9 @@ class GoalSerializer(serializers.ModelSerializer):
     goal_type_display = serializers.CharField(
         source="get_goal_type_display", read_only=True
     )
+    goal_source_display = serializers.CharField(
+        source="get_goal_source_display", read_only=True
+    )
     status_display = serializers.CharField(
         source="get_status_display", read_only=True
     )
@@ -197,6 +200,8 @@ class GoalSerializer(serializers.ModelSerializer):
             "description",
             "goal_type",
             "goal_type_display",
+            "goal_source",
+            "goal_source_display",
             "related_task",
             "related_task_name",
             "target_value",
@@ -234,6 +239,7 @@ class GoalCreateUpdateSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "goal_type",
+            "goal_source",
             "related_task",
             "target_value",
             "current_value",

@@ -61,9 +61,31 @@ class Password(BaseModel):
     hibp_last_checked = models.DateTimeField(
         null=True, blank=True, verbose_name="Última verificação HIBP"
     )
+    strength_score = models.IntegerField(
+        default=0,
+        verbose_name="Força da Senha (0-4)",
+        help_text="0=Muito Fraca, 1=Fraca, 2=Razoável, 3=Boa, 4=Forte",
+    )
 
     password = VaultEncryptedField("_password")
     totp_secret = VaultEncryptedField("_totp_secret")
+
+    @staticmethod
+    def calculate_strength(password_text: str) -> int:
+        score = 0
+        if len(password_text) >= 8:
+            score += 1
+        if len(password_text) >= 12:
+            score += 1
+        has_upper = any(c.isupper() for c in password_text)
+        has_lower = any(c.islower() for c in password_text)
+        if has_upper and has_lower:
+            score += 1
+        if any(c.isdigit() for c in password_text):
+            score += 1
+        if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?/~`" for c in password_text):
+            score += 1
+        return min(4, score)
 
     class Meta:
         verbose_name = "Senha"

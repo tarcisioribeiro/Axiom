@@ -10,6 +10,7 @@ import {
   EyeOff,
   Loader2,
   Copy,
+  Check,
   ExternalLink,
   Key,
   Share2,
@@ -529,10 +530,9 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
-  const [_copyingId, _setCopyingId] = useState<number | null>(null);
-  const [_copiedId, setCopiedId] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
-  const [_countdown, setCountdown] = useState<Map<number, number>>(new Map());
+  const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
@@ -897,21 +897,72 @@ export default function Passwords() {
                             </span>
                           </div>
                         )}
+                        {password.strength_score !== undefined && (
+                          <div className="flex items-center gap-xs">
+                            <Shield className="h-3 w-3 text-muted-foreground" />
+                            <span
+                              className={cn(
+                                'text-xs font-medium',
+                                password.strength_score >= 4
+                                  ? 'text-success'
+                                  : password.strength_score >= 3
+                                    ? 'text-primary'
+                                    : password.strength_score >= 2
+                                      ? 'text-warning'
+                                      : 'text-destructive'
+                              )}
+                            >
+                              {t(
+                                `pages.passwords.passwordStrength.${
+                                  password.strength_score >= 4
+                                    ? 'strong'
+                                    : password.strength_score >= 3
+                                      ? 'good'
+                                      : password.strength_score >= 2
+                                        ? 'fair'
+                                        : password.strength_score >= 1
+                                          ? 'weak'
+                                          : 'veryWeak'
+                                }`
+                              )}
+                            </span>
+                          </div>
+                        )}
 
                         {!detailPassword && revealedPasswords.has(password.id) && (
                           <div className="flex items-center gap-sm rounded bg-muted p-sm">
-                            <code className="flex-1 text-sm">
+                            <code className="flex-1 truncate text-sm">
                               {revealedPasswords.get(password.id)}
                             </code>
+                            {countdown.get(password.id) !== undefined && (
+                              <span className="shrink-0 text-xs text-muted-foreground">
+                                {t('pages.passwords.autoHideIn', {
+                                  seconds: countdown.get(password.id),
+                                })}
+                              </span>
+                            )}
                             <Button
                               size="sm"
                               variant="ghost"
+                              className={cn(
+                                'shrink-0',
+                                copiedId === password.id && 'text-success'
+                              )}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 void handleCopyPassword(password.id);
                               }}
+                              title={
+                                copiedId === password.id
+                                  ? t('pages.passwords.copied')
+                                  : t('common.actions.copy')
+                              }
                             >
-                              <Copy className="h-3 w-3" />
+                              {copiedId === password.id ? (
+                                <Check className="h-3 w-3" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
                             </Button>
                           </div>
                         )}

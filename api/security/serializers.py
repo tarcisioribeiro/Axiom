@@ -38,6 +38,7 @@ class PasswordSerializer(serializers.ModelSerializer):
             "notes",
             "is_favorite",
             "last_password_change",
+            "strength_score",
             "owner",
             "owner_name",
             "created_at",
@@ -46,6 +47,7 @@ class PasswordSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "uuid",
             "last_password_change",
+            "strength_score",
             "created_at",
             "updated_at",
         ]
@@ -78,6 +80,7 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
         password_text = validated_data.pop("password")
         instance = Password(**validated_data)
         instance.password = password_text  # Property setter criptografa
+        instance.strength_score = Password.calculate_strength(password_text)
         instance.save()
         return instance
 
@@ -89,7 +92,9 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
 
         if password_text:
             instance.password = password_text
-            instance.save()
+            instance.strength_score = Password.calculate_strength(
+                password_text
+            )
 
         instance.save()
         return instance

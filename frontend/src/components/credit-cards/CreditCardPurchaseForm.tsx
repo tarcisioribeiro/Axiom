@@ -22,6 +22,7 @@ import {
   EXPENSE_CATEGORIES_CANONICAL,
   translate,
 } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -192,7 +193,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   const isEditMode = !!purchase;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md" noValidate>
       <div className="grid grid-cols-1 gap-md md:grid-cols-2">
         <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">
@@ -232,14 +233,33 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
+              {watch('category') ? (
+                <span className="flex items-center gap-2">
+                  {(() => {
+                    const TrigIcon = EXPENSE_CATEGORY_ICONS[watch('category')];
+                    return TrigIcon ? (
+                      <TrigIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    ) : null;
+                  })()}
+                  <span>{translate('expenseCategories', watch('category'))}</span>
+                </span>
+              ) : (
+                <SelectValue placeholder={t('common.fields.selectCategory')} />
+              )}
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
-                <SelectItem key={key} value={key}>
-                  {translate('expenseCategories', key)}
-                </SelectItem>
-              ))}
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {translate('expenseCategories', key)}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

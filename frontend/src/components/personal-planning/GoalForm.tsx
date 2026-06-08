@@ -26,6 +26,7 @@ import { goalSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import {
   GOAL_TYPE_CHOICES,
+  GOAL_SOURCE_CHOICES,
   GOAL_STATUS_CHOICES,
   type Goal,
   type RoutineTask,
@@ -64,6 +65,7 @@ export function GoalForm({
           title: goal.title,
           description: goal.description || '',
           goal_type: goal.goal_type,
+          goal_source: goal.goal_source ?? 'task_instances',
           related_task: goal.related_task,
           target_value: goal.target_value,
           current_value: goal.current_value,
@@ -76,6 +78,7 @@ export function GoalForm({
           title: '',
           description: '',
           goal_type: 'consecutive_days',
+          goal_source: 'task_instances',
           related_task: undefined,
           target_value: 30,
           current_value: 0,
@@ -102,7 +105,10 @@ export function GoalForm({
   }, [goal, setValue]);
 
   const watchedGoalType = watch('goal_type');
-  const isAutoType = AUTO_GOAL_TYPES.has(watchedGoalType);
+  const watchedGoalSource = watch('goal_source');
+  const isAutoType =
+    AUTO_GOAL_TYPES.has(watchedGoalType) && watchedGoalSource !== 'custom';
+  const isTaskSource = watchedGoalSource === 'task_instances';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
@@ -183,38 +189,66 @@ export function GoalForm({
 
           <div className="space-y-sm md:col-span-2">
             <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-              {t('pages.goals.form.relatedTaskLabel')}
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.goalSourceLabel')}
             </Label>
             <Select
-              value={watch('related_task')?.toString()}
-              onValueChange={(value) =>
-                setValue('related_task', value === 'none' ? undefined : parseInt(value))
-              }
+              value={watch('goal_source')}
+              onValueChange={(value) => setValue('goal_source', value)}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.goals.form.relatedTaskPlaceholder')}
-                />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">
-                  {t('pages.goals.form.relatedTaskNone')}
-                </SelectItem>
-                {routineTasks.map((task) => (
-                  <SelectItem key={task.id} value={task.id.toString()}>
-                    {task.name}
+                {GOAL_SOURCE_CHOICES.map((src) => (
+                  <SelectItem key={src.value} value={src.value}>
+                    {t(`pages.goals.form.goalSourceOptions.${src.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.related_task && (
-              <p className="mt-xs text-sm text-destructive">
-                {errors.related_task.message}
-              </p>
-            )}
           </div>
+
+          {isTaskSource && (
+            <div className="space-y-sm md:col-span-2">
+              <Label className="flex items-center gap-xs">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.goals.form.relatedTaskLabel')}
+              </Label>
+              <Select
+                value={watch('related_task')?.toString()}
+                onValueChange={(value) =>
+                  setValue(
+                    'related_task',
+                    value === 'none' ? undefined : parseInt(value)
+                  )
+                }
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t('pages.goals.form.relatedTaskPlaceholder')}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t('pages.goals.form.relatedTaskNone')}
+                  </SelectItem>
+                  {routineTasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id.toString()}>
+                      {task.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.related_task && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.related_task.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-sm">
             <Label htmlFor="target_value" className="flex items-center gap-xs">

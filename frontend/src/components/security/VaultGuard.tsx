@@ -203,6 +203,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
   const { toast } = useToast();
 
   const strength = getStrength(masterPassword, t);
@@ -254,9 +255,22 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
-            <div className="flex items-start gap-sm rounded-lg bg-warning/10 p-sm text-xs text-warning">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
+            <div className="rounded-lg bg-warning/10 p-sm text-xs text-warning">
+              <div className="flex items-start gap-sm">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
+              </div>
+              <label className="mt-sm flex cursor-pointer items-start gap-sm">
+                <input
+                  type="checkbox"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 accent-warning"
+                />
+                <span className="select-none">
+                  {t('pages.vaultGuard.setup.irreversibleAck')}
+                </span>
+              </label>
             </div>
 
             <div className="space-y-xs">
@@ -316,7 +330,11 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || !acknowledged}
+            >
               {isSubmitting
                 ? t('pages.vaultGuard.setup.configuring')
                 : t('pages.vaultGuard.setup.setupBtn')}
@@ -358,9 +376,14 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
       await vaultConfigService.unlock({ master_password: masterPassword });
       await onSuccess();
     } catch (err) {
-      const next = failedAttempts + 1;
-      setFailedAttempts(next);
       setMasterPassword('');
+      const errData = err as { response?: { data?: { attempts_remaining?: number } } };
+      const serverRemaining = errData?.response?.data?.attempts_remaining;
+      if (serverRemaining !== undefined) {
+        setFailedAttempts(MAX_ATTEMPTS - serverRemaining);
+      } else {
+        setFailedAttempts((prev) => prev + 1);
+      }
       toast({
         title: t('pages.vaultGuard.locked.failTitle'),
         description: getErrorMessage(err),

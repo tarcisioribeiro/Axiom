@@ -472,6 +472,7 @@ export default function Courses() {
             title={
               search ? t('pages.courses.emptySearch') : t('pages.courses.emptyState')
             }
+            message={!search ? t('pages.courses.emptyStateDesc') : undefined}
             icon={<GraduationCap className="h-10 w-10 text-muted-foreground" />}
             action={
               !search
