@@ -150,6 +150,32 @@ export interface BillItemsResponse {
   items: BillItem[];
 }
 
+export interface RenegotiateBillFormData {
+  total_with_interest: number;
+  installments: number;
+  start_date?: string;
+}
+
+export interface RenegotiateBillResponse {
+  message: string;
+  bill: {
+    id: number;
+    month: string;
+    year: string;
+    total_amount: string;
+    paid_amount: string;
+    status: string;
+    closed: boolean;
+  };
+  renegotiation: {
+    purchase_id: number;
+    total_with_interest: string;
+    installments: number;
+    installment_value: string;
+    start_date: string;
+  };
+}
+
 export interface CreditCardExpensesByCategory {
   category: string;
   total: number;

@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   CircleDot,
+  RefreshCw,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +20,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
+import { RenegotiateBillDialog } from '@/components/credit-cards/RenegotiateBillDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,6 +55,7 @@ import type {
   CreditCardBillFormData,
   CreditCard,
   BillPaymentFormData,
+  RenegotiateBillFormData,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -65,9 +68,11 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isRenegotiateDialogOpen, setIsRenegotiateDialogOpen] = useState(false);
   const [selectedBill, setSelectedBill] = useState<CreditCardBill | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
+  const [isRenegotiateSubmitting, setIsRenegotiateSubmitting] = useState(false);
   const [cardFilter, setCardFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
@@ -287,6 +292,39 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       });
     } finally {
       setIsPaymentSubmitting(false);
+    }
+  };
+
+  const handleOpenRenegotiate = (bill: CreditCardBill) => {
+    setSelectedBill(bill);
+    setIsRenegotiateDialogOpen(true);
+  };
+
+  const handleRenegotiate = async (data: RenegotiateBillFormData) => {
+    if (!selectedBill) return;
+    try {
+      setIsRenegotiateSubmitting(true);
+      const response = await creditCardBillsService.renegotiateBill(
+        selectedBill.id,
+        data
+      );
+      toast({
+        title: t('pages.creditCardBills.renegotiateSuccess'),
+        description: t('pages.creditCardBills.renegotiateSuccessDesc', {
+          count: response.renegotiation.installments,
+          value: formatCurrency(response.renegotiation.installment_value),
+        }),
+      });
+      setIsRenegotiateDialogOpen(false);
+      void loadData();
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.creditCardBills.renegotiateError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRenegotiateSubmitting(false);
     }
   };
 
@@ -619,6 +657,19 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                 <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
               </Button>
             )}
+            {bill.status !== 'paid' &&
+              parseFloat(bill.paid_amount) > 0 &&
+              parseFloat(bill.total_amount) - parseFloat(bill.paid_amount) > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleOpenRenegotiate(bill)}
+                  aria-label={t('pages.creditCardBills.renegotiateBillLabel')}
+                  title={t('pages.creditCardBills.renegotiateBillLabel')}
+                >
+                  <RefreshCw className="h-4 w-4 text-warning" aria-hidden="true" />
+                </Button>
+              )}
             {(bill.closed || bill.status === 'paid' || bill.status === 'closed') && (
               <Button
                 variant="ghost"
@@ -690,6 +741,16 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
           )}
         </DialogContent>
       </Dialog>
+
+      {selectedBill && (
+        <RenegotiateBillDialog
+          bill={selectedBill}
+          open={isRenegotiateDialogOpen}
+          onOpenChange={setIsRenegotiateDialogOpen}
+          onSubmit={handleRenegotiate}
+          isLoading={isRenegotiateSubmitting}
+        />
+      )}
     </Wrapper>
   );
 }
