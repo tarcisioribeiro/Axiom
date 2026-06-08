@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
@@ -55,7 +55,7 @@ export interface UseExpensesPageReturn {
   handleEdit: (expense: Expense) => void;
   handleDelete: (id: number) => Promise<void>;
   deletingExpenseIds: Set<number | string>;
-  handleSubmit: (data: ExpenseFormData) => void;
+  handleSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
     date_from?: string;
@@ -67,7 +67,9 @@ export interface UseExpensesPageReturn {
   prefillExpenseData: ExpensePrefillData | undefined;
 }
 
-export function useExpensesPage(): UseExpensesPageReturn {
+export function useExpensesPage(opts?: {
+  onAfterCreate?: (expense: Expense) => void;
+}): UseExpensesPageReturn {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -79,6 +81,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
   const prefillExpenseData = locationState?.prefillExpense;
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const splitAfterCreate = useRef(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -189,13 +192,17 @@ export function useExpensesPage(): UseExpensesPageReturn {
 
   const createMutation = useMutation({
     mutationFn: (data: ExpenseFormData) => expensesService.create(data),
-    onSuccess: () => {
+    onSuccess: (createdExpense) => {
       void invalidateExpenses();
       toast({
         title: t('pages.expenses.created'),
         description: t('pages.expenses.createdDesc'),
       });
       setIsDialogOpen(false);
+      if (splitAfterCreate.current) {
+        splitAfterCreate.current = false;
+        opts?.onAfterCreate?.(createdExpense);
+      }
     },
     onError: (error: unknown) => {
       toast({
@@ -276,10 +283,11 @@ export function useExpensesPage(): UseExpensesPageReturn {
     await optimisticDelete(id);
   };
 
-  const handleSubmit = (data: ExpenseFormData) => {
+  const handleSubmit = (data: ExpenseFormData, splitOnCreate?: boolean) => {
     if (selectedExpense) {
       updateMutation.mutate({ id: selectedExpense.id, data });
     } else {
+      splitAfterCreate.current = splitOnCreate ?? false;
       createMutation.mutate(data);
     }
   };

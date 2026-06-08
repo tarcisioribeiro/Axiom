@@ -19,6 +19,10 @@ class StoredAccountsService extends BaseService<
   async reveal(id: number): Promise<StoredBankAccountReveal> {
     return apiClient.get<StoredBankAccountReveal>(`${this.endpoint}${id}/reveal/`);
   }
+
+  async copy(id: number): Promise<StoredBankAccountReveal> {
+    return apiClient.get<StoredBankAccountReveal>(`${this.endpoint}${id}/copy/`);
+  }
 }
 
 export const storedAccountsService = new StoredAccountsService();
