@@ -71,6 +71,12 @@ urlpatterns = [
     # Tags
     path("tags/", views.TagListCreateView.as_view(), name="tag-list-create"),
     path("tags/<int:pk>/", views.TagDetailView.as_view(), name="tag-detail"),
+    # Fixed Expense Generation Log
+    path(
+        "fixed-expenses/generation-log/",
+        views.FixedExpenseGenerationLogListView.as_view(),
+        name="fixed-expense-generation-log",
+    ),
     # Expense Splits
     path(
         "expenses/<int:pk>/splits/",

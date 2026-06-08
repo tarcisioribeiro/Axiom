@@ -144,3 +144,12 @@ export interface FixedRevenueStats {
     total_amount: number;
   };
 }
+
+export interface FixedExpenseGenerationLog {
+  id: number;
+  uuid: string;
+  month: string;
+  total_generated: number;
+  generated_by_name: string | null;
+  created_at: string;
+}

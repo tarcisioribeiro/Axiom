@@ -615,7 +615,7 @@ class VaultUnlockView(APIView):
                     " Tente novamente em 15 minutos."
                 )
             return Response(
-                {"error": msg},
+                {"error": msg, "attempts_remaining": remaining},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:

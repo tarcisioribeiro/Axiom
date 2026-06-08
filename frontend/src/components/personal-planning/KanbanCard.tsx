@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { GripVertical, Clock, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -73,11 +73,23 @@ export function KanbanCard({ card }: KanbanCardProps) {
       <div className="flex items-start gap-3">
         {/* Drag Handle / Done indicator */}
         <div className="mt-xs hover:text-foreground">
-          {isDone ? (
-            <CheckCircle2 className="h-5 w-5 text-success" />
-          ) : (
-            <GripVertical className="h-5 w-5" />
-          )}
+          <AnimatePresence mode="wait">
+            {isDone ? (
+              <motion.div
+                key="done"
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              >
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </motion.div>
+            ) : (
+              <motion.div key="drag" initial={{ scale: 1 }} animate={{ scale: 1 }}>
+                <GripVertical className="h-5 w-5" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Card Content */}

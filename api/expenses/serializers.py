@@ -5,15 +5,32 @@ from expenses.models import (
     Expense,
     ExpenseSplit,
     FixedExpense,
+    FixedExpenseGenerationLog,
     Tag,
 )
 
 
 class TagSerializer(serializers.ModelSerializer):
+    expense_count = serializers.IntegerField(read_only=True, default=0)
+
     class Meta:
         model = Tag
-        fields = ["id", "uuid", "name", "color", "created_at", "updated_at"]
-        read_only_fields = ["id", "uuid", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "color",
+            "expense_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "expense_count",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class ExpenseSplitSerializer(serializers.ModelSerializer):
@@ -346,3 +363,24 @@ class CategorizationRuleSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class FixedExpenseGenerationLogSerializer(serializers.ModelSerializer):
+    generated_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FixedExpenseGenerationLog
+        fields = [
+            "id",
+            "uuid",
+            "month",
+            "total_generated",
+            "generated_by_name",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_generated_by_name(self, obj):
+        if obj.generated_by:
+            return obj.generated_by.get_full_name() or obj.generated_by.email
+        return None

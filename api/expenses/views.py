@@ -25,6 +25,7 @@ from expenses.models import (
     Expense,
     ExpenseSplit,
     FixedExpense,
+    FixedExpenseGenerationLog,
     Tag,
 )
 from expenses.serializers import (
@@ -35,6 +36,7 @@ from expenses.serializers import (
     ExpenseSerializer,
     ExpenseSplitSerializer,
     FixedExpenseCreateUpdateSerializer,
+    FixedExpenseGenerationLogSerializer,
     FixedExpenseSerializer,
     TagSerializer,
 )
@@ -574,7 +576,15 @@ class TagListCreateView(BaseListCreateView):
     serializer_class = TagSerializer
 
     def get_queryset(self):
-        return Tag.objects.filter(owner=self.request.user).order_by("name")
+        return (
+            Tag.objects.filter(owner=self.request.user)
+            .annotate(
+                expense_count=Count(
+                    "expenses", filter=Q(expenses__is_deleted=False)
+                )
+            )
+            .order_by("name")
+        )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -648,3 +658,22 @@ class ExpenseSplitListCreateView(APIView):
         return Response(
             ExpenseSplitSerializer(split).data, status=status.HTTP_201_CREATED
         )
+
+
+class FixedExpenseGenerationLogListView(APIView):
+    """
+    GET /api/v1/expenses/fixed-expenses/generation-log/
+
+    Returns the history of automatic fixed expense generation for the
+    current user.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedExpenseGenerationLog.objects.none()
+
+    def get(self, request):
+        logs = FixedExpenseGenerationLog.objects.filter(
+            generated_by=request.user
+        ).order_by("-month")[:24]
+        serializer = FixedExpenseGenerationLogSerializer(logs, many=True)
+        return Response(serializer.data)

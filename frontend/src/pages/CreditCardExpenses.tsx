@@ -54,6 +54,7 @@ import { creditCardInstallmentsService } from '@/services/credit-card-installmen
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { useAuthStore } from '@/stores/auth-store';
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type {
   CreditCardPurchase,
   CreditCardPurchaseFormData,
@@ -97,11 +98,23 @@ export default function CreditCardExpenses({
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
+  const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
 
   useEffect(() => {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (cardFilter === 'all') {
+      setExtraSubLabel(null);
+    } else {
+      const card = creditCards.find((c) => c.id.toString() === cardFilter);
+      setExtraSubLabel(card?.name ?? null);
+    }
+    return () => setExtraSubLabel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardFilter, creditCards]);
 
   // Mapeamento de abreviações de mês para número
   const MONTH_TO_NUMBER: Record<string, number> = {
