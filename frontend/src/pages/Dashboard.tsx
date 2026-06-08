@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -93,6 +94,7 @@ type CategoryStat = { category: string; name: string; value: number };
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
   const user = useAuthStore((s) => s.user);
 
@@ -781,6 +783,7 @@ export default function Dashboard() {
                 value={formatCurrency(stats?.total_revenues || 0)}
                 icon={<TrendingUp className="h-4 w-4" />}
                 accentColor="green"
+                onClick={() => navigate('/transactions')}
               />
             </motion.div>
 
@@ -790,6 +793,7 @@ export default function Dashboard() {
                 value={formatCurrency(stats?.total_expenses || 0)}
                 icon={<TrendingDown className="h-4 w-4" />}
                 accentColor="red"
+                onClick={() => navigate('/transactions')}
               />
             </motion.div>
 
@@ -799,6 +803,7 @@ export default function Dashboard() {
                 value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
                 icon={<CreditCard className="h-4 w-4" />}
                 accentColor="blue"
+                onClick={() => navigate('/credit-cards')}
               />
             </motion.div>
           </div>

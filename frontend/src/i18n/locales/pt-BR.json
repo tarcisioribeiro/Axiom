@@ -714,7 +714,8 @@
         "deleted": "Divisão excluída",
         "deleteTitle": "Excluir divisão",
         "deleteDesc": "Tem certeza que deseja excluir esta divisão?"
-      }
+      },
+      "byCategory": "Por categoria"
     },
     "revenues": {
       "title": "Receitas",
@@ -775,7 +776,8 @@
         "receivedLabel": "Recebido"
       },
       "entriesCount": "{{count}} lançamentos",
-      "statusReceived": "Recebido"
+      "statusReceived": "Recebido",
+      "byCategory": "Por categoria"
     },
     "transfers": {
       "title": "Transferências",
@@ -1001,7 +1003,19 @@
         "creditor": "Credor"
       },
       "receivedAmount": "{{value}} recebido",
-      "toReceiveAmount": "{{value}} a receber"
+      "toReceiveAmount": "{{value}} a receber",
+      "progress": {
+        "title": "Progresso de Quitação",
+        "paidInstallments": "Parcelas Pagas",
+        "remainingInstallments": "Parcelas Restantes",
+        "nextDueDate": "Próximo Vencimento",
+        "estimatedPayoff": "Previsão de Quitação",
+        "interestPaid": "Juros Pagos",
+        "outstandingBalance": "Saldo Devedor",
+        "balanceOverTime": "Evolução do Saldo Devedor",
+        "noInstallments": "Este empréstimo não possui parcelas geradas.",
+        "progressBtn": "Progresso"
+      }
     },
     "members": {
       "title": "Membros",
@@ -1144,6 +1158,16 @@
         "success": "Despesas lançadas com sucesso!",
         "successDesc": "{{count}} despesas foram criadas para {{month}}",
         "error": "Erro ao lançar despesas"
+      },
+      "generationLog": {
+        "title": "Histórico de Gerações",
+        "subtitle": "Registros de geração automática de despesas fixas",
+        "emptyState": "Nenhuma geração registrada.",
+        "month": "Mês",
+        "totalGenerated": "Lançamentos",
+        "generatedBy": "Gerado por",
+        "generatedAt": "Gerado em",
+        "viewLog": "Ver histórico"
       }
     },
     "creditCards": {
@@ -1387,17 +1411,20 @@
         "descriptionPlaceholder": "Ex: Compra no mercado",
         "totalValueLabel": "Valor Total *",
         "totalValueWarning": "Valor total não pode ser alterado após criação",
+        "totalValueLocked": "Valor total não pode ser alterado após criação",
         "categoryLabel": "Categoria *",
         "purchaseDateLabel": "Data da Compra *",
         "purchaseDatePlaceholder": "Selecione a data",
         "purchaseTimeLabel": "Horário *",
         "cardLabel": "Cartão de Crédito *",
         "cardWarning": "Cartão não pode ser alterado após criação",
+        "cardLocked": "Cartão não pode ser alterado após criação",
         "cardNotRegistered": "Não cadastrado",
         "availableLimit": "Limite disponível:",
         "exceedsLimit": "Valor excede o limite em {{value}}",
         "installmentsLabel": "Número de Parcelas *",
         "installmentsWarning": "Parcelas não podem ser alteradas após criação",
+        "installmentsLocked": "Parcelas não podem ser alteradas após criação",
         "paymentSight": "Pagamento à vista",
         "installmentsSummary": "{{total}} em {{count}}x de {{installmentValue}}",
         "merchantLabel": "Estabelecimento",
@@ -1406,8 +1433,12 @@
         "notesPlaceholder": "Informações adicionais...",
         "requiredCard": "Por favor, selecione um cartão de crédito",
         "requiredCategory": "Por favor, selecione uma categoria",
+        "selectCardRequired": "Por favor, selecione um cartão de crédito",
+        "selectCategoryRequired": "Por favor, selecione uma categoria",
         "limitInsufficient": "Limite insuficiente",
         "limitInsufficientDesc": "O valor de {{value}} excede o limite disponível de {{limit}} no cartão selecionado.",
+        "limitExceededTitle": "Limite insuficiente",
+        "limitExceededDesc": "O valor de {{value}} excede o limite disponível de {{limit}} no cartão selecionado.",
         "requiredField": "Campo obrigatório",
         "createBtn": "Criar Compra",
         "none": "Nenhum",
@@ -1583,7 +1614,6 @@
         "warning": "em alerta",
         "exceeded": "excedidos"
       },
-      "createError": "Erro ao criar orçamento.",
       "aiSuggestionsTitle": "Sugestões de Orçamento com IA",
       "aiSuggestionsDesc": "Baseado nos seus últimos 3 meses de despesas. Clique em \"Aplicar\" para criar o orçamento do mês atual.",
       "analyzing": "Analisando histórico...",
@@ -1689,7 +1719,9 @@
       "deletedDesc": "A tag foi excluída com sucesso.",
       "emptyState": "Nenhuma tag criada ainda.",
       "name": "Nome",
-      "color": "Cor"
+      "color": "Cor",
+      "expenseCount": "{{count}} despesa(s)",
+      "noExpenses": "Sem uso"
     },
     "vaults": {
       "title": "Cofres",
@@ -2739,7 +2771,7 @@
         "editTitle": "Editar meta",
         "deleteTitle": "Excluir meta",
         "newTitle": "Nova meta",
-        "achieved": "🎉 Meta atingida! Parabéns!",
+        "achieved": "Meta atingida! Parabéns!",
         "setGoalFor": "Defina uma meta de leitura para {{year}}",
         "setGoal": "Definir meta",
         "deleted": "Meta excluída com sucesso!",
@@ -2956,7 +2988,7 @@
         "tabHighlights": "Destaques",
         "dialogDesc": "Detalhes do livro {{title}}",
         "coverAlt": "Capa de {{title}}",
-        "hasSummary": "✓ Possui resumo",
+        "hasSummary": "Possui resumo",
         "metaPublisher": "Editora",
         "metaPages": "Páginas",
         "metaLanguage": "Idioma",
@@ -3342,7 +3374,8 @@
       "subtitle": "Meus Cursos Online",
       "newBtn": "Novo Curso",
       "searchPlaceholder": "Buscar cursos...",
-      "emptyState": "Nenhum curso cadastrado. Clique em \"Novo Curso\" para começar.",
+      "emptyState": "Nenhum curso cadastrado",
+      "emptyStateDesc": "Registre seus cursos online (Udemy, Coursera, YouTube e outros) para acompanhar seu progresso de aprendizado.",
       "emptySearch": "Nenhum curso encontrado para a pesquisa atual.",
       "newTitle": "Novo Curso",
       "editTitle": "Editar Curso",
@@ -3562,27 +3595,6 @@
         "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
       }
     },
-    "planningOnboarding": {
-      "skip": "Pular",
-      "next": "Próximo",
-      "start": "Começar agora",
-      "step0": {
-        "title": "Bem-vindo ao Planejamento Pessoal",
-        "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
-      },
-      "step1": {
-        "title": "Checklist Diário",
-        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
-      },
-      "step2": {
-        "title": "Objetivos e Metas",
-        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
-      },
-      "step3": {
-        "title": "Treino e Nutrição",
-        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
-      }
-    },
     "planningDashboard": {
       "title": "Dashboard de Planejamento Pessoal",
       "todayTasks": "Tarefas de Hoje",
@@ -3710,6 +3722,7 @@
       "deletedDesc": "A tarefa foi excluída com sucesso.",
       "emptyState": "Nenhuma tarefa encontrada",
       "emptyStateDesc": "Tarefas rotineiras geram consistência. Crie sua primeira rotina e acompanhe seu progresso diário com gráficos de consistência.",
+      "emptyStateAction": "Criar primeira tarefa",
       "viewHeatmap": "Ver heatmap",
       "viewConsistency": "Ver consistência",
       "heatmapTitle": "Consistência",
@@ -3902,6 +3915,13 @@
         "descriptionLabel": "Descrição",
         "descriptionPlaceholder": "Descrição do objetivo (opcional)",
         "goalTypeLabel": "Tipo de Objetivo *",
+        "goalSourceLabel": "Fonte do Progresso *",
+        "goalSourceOptions": {
+          "task_instances": "Tarefas de Rotina",
+          "workout_sessions": "Sessões de Treino",
+          "meal_logs": "Registros de Refeição",
+          "custom": "Manual"
+        },
         "relatedTaskLabel": "Tarefa Relacionada",
         "relatedTaskPlaceholder": "Nenhuma tarefa selecionada",
         "relatedTaskNone": "Nenhuma",
@@ -3982,7 +4002,8 @@
       "viewAllReflections": "Ver todas as reflexões →",
       "overdueBanner": "{{count}} tarefa(s) atrasada(s). Verifique o sino de notificações para detalhes.",
       "allDone": "Todas as tarefas concluídas! 🎉",
-      "reflectionPrompt": "Que tal registrar uma reflexão sobre o seu dia?"
+      "reflectionPrompt": "Que tal registrar uma reflexão sobre o seu dia?",
+      "level": "Nível {{level}}"
     },
     "activityLogs": {
       "title": "Logs de Atividade",
@@ -4493,7 +4514,8 @@
           "good": "Boa",
           "strong": "Forte"
         },
-        "irreversibleWarning": "Atenção: a senha mestre não é armazenada. Se perdida, não há recuperação automática — use a chave de recuperação."
+        "irreversibleWarning": "Atenção: a senha mestre não é armazenada. Se perdida, não há recuperação automática — use a chave de recuperação.",
+        "irreversibleAck": "Entendi que não há como recuperar a senha mestre automaticamente"
       },
       "expiry": {
         "hours": "Cofre expira em {{hours}}h {{minutes}}min",
@@ -5288,7 +5310,11 @@
       "optionNamePlaceholder": "Ex: Opção 1",
       "optionOrder": "Ordem",
       "ingredientsSection": "Ingredientes",
-      "addIngredient": "Adicionar Ingrediente",
+      "addIngredient": "Ingrediente simples",
+      "addAltGroup": "+ Alternativas",
+      "altGroupLabel": "Grupo de alternativas",
+      "addVariant": "+ Variante",
+      "variantLabel": "Opção",
       "food": "Alimento",
       "foodPlaceholder": "Selecione o alimento",
       "quantity": "Quantidade",
@@ -5364,6 +5390,8 @@
       "loading": "Carregando grafo...",
       "empty": "Grafo ainda vazio",
       "emptyHint": "Adicione livros, cursos ou habilidades à sua biblioteca para que eles apareçam aqui. Depois você poderá criar conexões entre os nós.",
+      "emptyCtaBooks": "Adicionar Livros",
+      "emptyCtaCourses": "Adicionar Cursos",
       "emptySearch": "Nenhum nó encontrado para esta busca",
       "explicitConnections": "Conexões explícitas",
       "createLink": "Criar conexão",
@@ -5512,6 +5540,8 @@
       "startSession": "Iniciar Sessão",
       "noActivePlan": "Nenhum plano de treino ativo",
       "createPlan": "Criar Plano",
+      "noTrainingToday": "Nenhum treino para hoje",
+      "noTrainingTodayDesc": "Nenhuma divisão do plano ativo está programada para o dia de hoje.",
       "managePlans": "Gerenciar Planos",
       "manageExercises": "Exercícios",
       "viewHistory": "Histórico",
@@ -6047,5 +6077,43 @@
     "creditCards": {
       "accountNotProvided": "Conta não informada"
     }
+  },
+  "planningLayout": {
+    "title": "Planejamento",
+    "navLabel": "Navegação do módulo de planejamento",
+    "groupOverview": "Visão Geral",
+    "groupDaily": "Diário",
+    "groupHabits": "Hábitos",
+    "groupHealth": "Saúde",
+    "dashboard": "Dashboard",
+    "checklist": "Checklist Diário",
+    "reflections": "Reflexões",
+    "tasksGoals": "Tarefas",
+    "goals": "Metas",
+    "workout": "Treinos",
+    "nutrition": "Nutrição"
+  },
+  "monthComparison": {
+    "title": "Comparação Mensal",
+    "subtitle": "Compare dois períodos financeiros lado a lado",
+    "monthA": "Período A",
+    "monthB": "Período B",
+    "selectMonthA": "Selecione o período A",
+    "selectMonthB": "Selecione o período B",
+    "compare": "Comparar",
+    "revenues": "Receitas",
+    "expenses": "Despesas",
+    "balance": "Saldo Líquido",
+    "variation": "Variação",
+    "improved": "Melhorou",
+    "worsened": "Piorou",
+    "noChange": "Igual",
+    "byCategory": "Por Categoria",
+    "expenseBreakdown": "Despesas por categoria",
+    "revenueBreakdown": "Receitas por categoria",
+    "loading": "Carregando comparação...",
+    "emptyState": "Selecione dois períodos para comparar",
+    "count": "{{count}} lançamento(s)",
+    "selectBoth": "Selecione os dois períodos para ver a comparação"
   }
 }

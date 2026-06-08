@@ -171,6 +171,52 @@ def award_xp_on_goal_completed(sender, instance, created, **kwargs):
         pass
 
 
+@receiver(post_save, sender="personal_planning.WorkoutSession")
+def update_goal_progress_on_workout_session(sender, instance, **kwargs):
+    """Verifica metas vinculadas a sessões de treino quando uma é salva."""
+    from personal_planning.models import Goal
+
+    if instance.is_deleted:
+        return
+
+    goals = Goal.objects.filter(
+        owner=instance.owner,
+        goal_source="workout_sessions",
+        status="active",
+        deleted_at__isnull=True,
+    )
+    for goal in goals:
+        current = goal.calculated_current_value
+        if current >= goal.target_value:
+            goal.status = "completed"
+            goal.end_date = timezone.now().date()
+            goal.save(update_fields=["status", "end_date", "updated_at"])
+            _notify_goal_completed(goal)
+
+
+@receiver(post_save, sender="personal_planning.MealLog")
+def update_goal_progress_on_meal_log(sender, instance, **kwargs):
+    """Verifica metas vinculadas a logs de refeição quando um é salvo."""
+    from personal_planning.models import Goal
+
+    if instance.is_deleted:
+        return
+
+    goals = Goal.objects.filter(
+        owner=instance.owner,
+        goal_source="meal_logs",
+        status="active",
+        deleted_at__isnull=True,
+    )
+    for goal in goals:
+        current = goal.calculated_current_value
+        if current >= goal.target_value:
+            goal.status = "completed"
+            goal.end_date = timezone.now().date()
+            goal.save(update_fields=["status", "end_date", "updated_at"])
+            _notify_goal_completed(goal)
+
+
 @receiver(post_save, sender="personal_planning.RoutineTask")
 def embed_routine_task(sender, instance, **kwargs):
     from agents.services.embedding_service import (

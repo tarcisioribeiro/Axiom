@@ -13,6 +13,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useQuery } from '@tanstack/react-query';
 import {
   Save,
   CheckCircle2,
@@ -20,6 +21,8 @@ import {
   RefreshCw,
   ExternalLink,
   AlertCircle,
+  Flame,
+  Zap,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -53,6 +56,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { appService } from '@/services/app-service';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
@@ -388,6 +392,19 @@ export default function DailyChecklist() {
 
   const completedTasks = cardsByStatus.done.length;
 
+  const { data: gamification } = useQuery<{
+    total_xp: number;
+    current_level: number;
+    current_streak: number;
+    level_progress_pct: number;
+    xp_in_level: number;
+    xp_needed_for_next_level: number;
+  }>({
+    queryKey: ['gamification-profile'],
+    queryFn: () => apiClient.get('/api/v1/personal-planning/gamification/'),
+    staleTime: 60_000,
+  });
+
   const { notifications } = useNotificationsStore();
   const overdueTaskNotifications = notifications.filter(
     (n) => n.notification_type === 'task_overdue' && !n.is_read
@@ -400,6 +417,47 @@ export default function DailyChecklist() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
+
+      {gamification && (
+        <div className="flex items-center gap-md rounded-lg border bg-muted/30 px-md py-sm">
+          <div className="flex items-center gap-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+              {gamification.current_level}
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-xs font-medium">
+                {t('pages.dailyChecklist.level', { level: gamification.current_level })}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {gamification.total_xp} XP
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col gap-0.5">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span className="flex items-center gap-xs">
+                <Zap className="h-3 w-3 text-warning" />
+                {gamification.xp_in_level}/{gamification.xp_needed_for_next_level} XP
+              </span>
+              <span>{gamification.level_progress_pct}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
+              />
+            </div>
+          </div>
+          {gamification.current_streak > 0 && (
+            <div className="flex items-center gap-xs rounded-full bg-orange-500/10 px-sm py-xs">
+              <Flame className="h-3.5 w-3.5 text-orange-500" />
+              <span className="text-sm font-bold text-orange-500">
+                {gamification.current_streak}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {overdueTaskNotifications.length > 0 && (
         <div className="flex items-center gap-sm rounded-lg border border-destructive/30 bg-destructive/10 px-md py-sm text-sm text-destructive">

@@ -20,9 +20,10 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -682,6 +683,24 @@ export function CourseDetailModal({
 
   const totalSessionHours = sessions.reduce((sum, s) => sum + s.duration_hours, 0);
 
+  const weeklyHoursData = useMemo(() => {
+    const weeks: Record<string, number> = {};
+    sessions.forEach((s) => {
+      const d = new Date(s.session_date);
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+      const key = monday.toISOString().slice(0, 10);
+      weeks[key] = (weeks[key] ?? 0) + s.duration_hours;
+    });
+    return Object.entries(weeks)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-8)
+      .map(([date, hours]) => ({
+        week: date.slice(5),
+        hours: Math.round(hours * 10) / 10,
+      }));
+  }, [sessions]);
+
   if (!displayCourse) return null;
 
   return (
@@ -908,6 +927,40 @@ export function CourseDetailModal({
           </TabsContent>
 
           <TabsContent value="sessions" className="mt-md space-y-sm">
+            {weeklyHoursData.length > 1 && (
+              <div className="rounded-lg border border-border p-sm">
+                <p className="mb-sm text-xs font-medium text-muted-foreground">
+                  {t('pages.courses.studyHours.title')}
+                </p>
+                <ResponsiveContainer width="100%" height={100}>
+                  <BarChart
+                    data={weeklyHoursData}
+                    margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
+                  >
+                    <XAxis
+                      dataKey="week"
+                      tick={{ fontSize: 9 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      formatter={(v: number) => [
+                        `${v}h`,
+                        t('pages.courses.studyHours.hours'),
+                      ]}
+                      labelStyle={{ fontSize: 11 }}
+                      contentStyle={{ fontSize: 11 }}
+                    />
+                    <Bar
+                      dataKey="hours"
+                      fill="hsl(var(--category-intellect))"
+                      radius={[3, 3, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 {t('pages.courses.sessions.totalHours', {

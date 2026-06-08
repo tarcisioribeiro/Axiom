@@ -6,6 +6,7 @@ import {
   DollarSign,
   Hash,
   Lock,
+  Loader2,
   Settings,
   User,
   Wallet,
@@ -433,11 +434,16 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading
-            ? t('common.actions.saving')
-            : creditCard
-              ? t('common.actions.update')
-              : t('common.actions.create')}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
+            </>
+          ) : creditCard ? (
+            t('common.actions.update')
+          ) : (
+            t('common.actions.create')
+          )}
         </Button>
       </div>
     </form>
