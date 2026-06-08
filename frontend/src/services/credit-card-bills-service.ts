@@ -5,6 +5,8 @@ import type {
   BillPaymentFormData,
   BillPaymentResponse,
   BillItemsResponse,
+  RenegotiateBillFormData,
+  RenegotiateBillResponse,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -43,6 +45,16 @@ class CreditCardBillsService extends BaseService<
     return apiClient.post<{ message: string; bill: CreditCardBill }>(
       `${this.endpoint}${billId}/reopen/`,
       {}
+    );
+  }
+
+  async renegotiateBill(
+    billId: number,
+    data: RenegotiateBillFormData
+  ): Promise<RenegotiateBillResponse> {
+    return apiClient.post<RenegotiateBillResponse>(
+      `${this.endpoint}${billId}/renegotiate/`,
+      data
     );
   }
 

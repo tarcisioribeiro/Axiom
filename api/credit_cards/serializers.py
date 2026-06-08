@@ -662,6 +662,55 @@ class CreditCardPurchaseUpdateSerializer(serializers.ModelSerializer):
         ]
 
 
+class RenegotiateBillSerializer(serializers.Serializer):
+    """
+    Serializer para renegociação de fatura de cartão de crédito.
+    O usuário informa o valor total com juros (já calculado pelo banco)
+    e a quantidade de parcelas. A fatura atual é marcada como paga e
+    o valor é distribuído em parcelas nas faturas futuras.
+    """
+
+    total_with_interest = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=True,
+        help_text="Valor total com juros informado pelo banco",
+    )
+    installments = serializers.IntegerField(
+        min_value=1,
+        max_value=48,
+        required=True,
+        help_text="Quantidade de parcelas",
+    )
+    start_date = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text=(
+            "Data de início das parcelas (opcional). "
+            "Padrão: dia seguinte ao fechamento da fatura atual."
+        ),
+    )
+
+    def validate_total_with_interest(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "O valor deve ser maior que zero"
+            )
+        return value
+
+    def validate(self, attrs):
+        bill = self.context.get("bill")
+        if bill:
+            remaining = Decimal(str(bill.total_amount)) - Decimal(
+                str(bill.paid_amount)
+            )
+            if remaining <= 0:
+                raise serializers.ValidationError(
+                    "Esta fatura não possui saldo restante para renegociar"
+                )
+        return attrs
+
+
 class PayCreditCardBillSerializer(serializers.Serializer):
     """
     Serializer para pagamento de fatura de cartão de crédito.
