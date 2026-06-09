@@ -248,6 +248,23 @@ export default function PersonalPlanningDashboard() {
       }))
     : [];
 
+  const reflectionCorrelation = useMemo(() => {
+    if (!stats?.recent_reflections || !stats?.weekly_progress) return [];
+    const progressByDate: Record<string, number> = {};
+    stats.weekly_progress.forEach((p) => {
+      progressByDate[p.date] = p.rate;
+    });
+    return stats.recent_reflections
+      .filter((r) => progressByDate[r.date] !== undefined)
+      .map((r) => ({
+        date: r.date,
+        mood: r.mood ?? '',
+        mood_display: r.mood_display ?? '',
+        rate: progressByDate[r.date],
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [stats]);
+
   const getCategoryColor = (category: string) =>
     categoryColors[category as keyof typeof categoryColors] || categoryColors.other;
 
@@ -881,6 +898,77 @@ export default function PersonalPlanningDashboard() {
               height={200}
               tooltipNameFormatter={() => null}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Linha 5b: Humor × Conclusão */}
+      {reflectionCorrelation.length > 0 && (
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-sm text-sm">
+                <Activity className="h-4 w-4 text-info" />
+                {t('pages.planningDashboard.reflectionCorrelationTitle', {
+                  defaultValue: 'Humor × Conclusão de Tarefas',
+                })}
+              </CardTitle>
+              <Link
+                to="/planning/reflections"
+                className="rounded-md bg-muted px-sm py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {t('pages.planningDashboard.ctaReflect')}
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-md">
+              {reflectionCorrelation.map((entry) => {
+                const parts = entry.date.split('-');
+                const dateLabel = `${parts[2]}/${parts[1]}`;
+                const moodColor =
+                  entry.mood === 'excellent'
+                    ? 'bg-success text-success-foreground'
+                    : entry.mood === 'good'
+                      ? 'bg-info text-info-foreground'
+                      : entry.mood === 'neutral'
+                        ? 'bg-warning text-warning-foreground'
+                        : entry.mood === 'bad'
+                          ? 'bg-orange-500 text-white'
+                          : entry.mood === 'terrible'
+                            ? 'bg-destructive text-destructive-foreground'
+                            : 'bg-muted text-muted-foreground';
+                const barWidth = Math.min(entry.rate, 100);
+                return (
+                  <div
+                    key={entry.date}
+                    className="flex min-w-[120px] flex-1 flex-col gap-xs rounded-lg border p-sm"
+                  >
+                    <div className="flex items-center justify-between gap-xs">
+                      <span className="text-xs text-muted-foreground">{dateLabel}</span>
+                      {entry.mood && (
+                        <span
+                          className={`rounded-full px-xs py-0.5 text-xs font-medium ${moodColor}`}
+                        >
+                          {entry.mood_display}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-xs">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                      <span className="w-9 text-right text-xs font-semibold">
+                        {entry.rate.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

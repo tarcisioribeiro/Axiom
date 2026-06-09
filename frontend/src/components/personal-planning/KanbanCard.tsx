@@ -1,7 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { AnimatePresence, motion } from 'framer-motion';
-import { GripVertical, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  GripVertical,
+  Clock,
+  CheckCircle2,
+  Flame,
+  AlertTriangle,
+  Minus,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +59,48 @@ export function KanbanCard({ card }: KanbanCardProps) {
     return colors[category] || 'bg-muted text-muted-foreground border-transparent';
   };
 
+  const getCategoryBorderColor = (category: string) => {
+    const borders: Record<string, string> = {
+      health: 'border-l-category-health',
+      intellect: 'border-l-category-studies',
+      studies: 'border-l-category-studies',
+      spiritual: 'border-l-category-spiritual',
+      exercise: 'border-l-category-exercise',
+      nutrition: 'border-l-category-nutrition',
+      meditation: 'border-l-category-spiritual',
+      reading: 'border-l-category-studies',
+      writing: 'border-l-category-work',
+      work: 'border-l-category-work',
+      leisure: 'border-l-category-leisure',
+      family: 'border-l-accent',
+      social: 'border-l-category-leisure',
+      finance: 'border-l-category-finance',
+      household: 'border-l-category-nutrition',
+      personal_care: 'border-l-category-health',
+      other: 'border-l-muted-foreground',
+    };
+    return borders[category] || 'border-l-muted-foreground';
+  };
+
+  const getPriorityIndicator = (priority?: string) => {
+    if (!priority || priority === 'low') return null;
+    if (priority === 'high')
+      return (
+        <Flame
+          className="h-3.5 w-3.5 shrink-0 text-destructive"
+          aria-label={t('pages.routineTasks.priorityHigh', { defaultValue: 'Alta' })}
+        />
+      );
+    if (priority === 'medium')
+      return (
+        <AlertTriangle
+          className="h-3.5 w-3.5 shrink-0 text-warning"
+          aria-label={t('pages.routineTasks.priorityMedium', { defaultValue: 'Média' })}
+        />
+      );
+    return <Minus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
+  };
+
   const isDone = card.status === 'done';
 
   return (
@@ -68,7 +117,10 @@ export function KanbanCard({ card }: KanbanCardProps) {
         scale: isDragging ? 1.03 : 1.01,
         boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
       }}
-      className="cursor-grab rounded-lg border-2 border-border bg-card p-md shadow-sm active:cursor-grabbing"
+      className={cn(
+        'cursor-grab rounded-lg border border-l-4 border-border bg-card p-md shadow-sm active:cursor-grabbing',
+        getCategoryBorderColor(card.category)
+      )}
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle / Done indicator */}
@@ -104,6 +156,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 )}
               >
                 <TaskIconDisplay icon={card.icon} />
+                {getPriorityIndicator(card.priority)}
                 <span>
                   {card.task_name}
                   {card.total_instances > 1 && (
