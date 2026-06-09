@@ -31,15 +31,17 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agent-service';
-import type { AgentMessage, AgentName } from '@/types';
+import type { AgentMessage, AgentName, IndexedSource } from '@/types';
 
 const SOURCE_PATTERN = /^\[Fonte: (.+)\]$/;
 
 function CitationLink({
   href,
+  title,
   children,
 }: {
   href?: string;
+  title?: string;
   children?: React.ReactNode;
 }) {
   const text = typeof children === 'string' ? children : '';
@@ -58,11 +60,35 @@ function CitationLink({
       </a>
     );
   }
+  // Numbered inline citation: [[1]](#cite-1 "Source Title")
+  if (href?.startsWith('#cite-') && title) {
+    const numMatch = /\[(\d+)\]/.exec(text);
+    const num = numMatch?.[1] ?? text;
+    return (
+      <span
+        title={title}
+        aria-label={`Fonte ${num}: ${title}`}
+        className="inline-flex cursor-help items-center rounded bg-primary/15 px-xs text-[10px] font-bold leading-5 text-primary"
+      >
+        {num}
+      </span>
+    );
+  }
   return (
     <a href={href} target="_blank" rel="noopener noreferrer">
       {children}
     </a>
   );
+}
+
+function transformCitations(text: string, sources: IndexedSource[]): string {
+  if (!sources.length) return text;
+  return text.replace(/\[(\d+)\]/g, (match, n: string) => {
+    const num = parseInt(n, 10);
+    const source = sources.find((s) => s.index === num);
+    if (!source) return match;
+    return `[[${n}]](#cite-${n} "${source.title.replace(/"/g, "'")}")`;
+  });
 }
 
 const markdownComponents: Components = {
@@ -266,12 +292,14 @@ function StreamingBubble({
   isStreaming,
   agentName,
   sources,
+  indexedSources,
   getAgentLabel,
 }: {
   text: string;
   isStreaming: boolean;
   agentName: string | null;
   sources: string[];
+  indexedSources: IndexedSource[];
   getAgentLabel: (name: string | null) => string;
 }) {
   const { t } = useTranslation();
@@ -312,7 +340,7 @@ function StreamingBubble({
                 remarkPlugins={[remarkGfm]}
                 components={markdownComponents}
               >
-                {text}
+                {transformCitations(text, indexedSources)}
               </ReactMarkdown>
               {isStreaming && (
                 <span
@@ -437,6 +465,7 @@ export default function Agents() {
     accumulatedText,
     currentAgent,
     sources,
+    indexedSources,
     error,
     send: sendStream,
     cancel: cancelStream,
@@ -664,6 +693,7 @@ export default function Agents() {
                       isStreaming={isStreaming}
                       agentName={currentAgent}
                       sources={sources}
+                      indexedSources={indexedSources}
                       getAgentLabel={getAgentLabel}
                     />
                   )}

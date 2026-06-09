@@ -109,6 +109,7 @@ export function StoredAccountForm({
       ? {
           name: account.name,
           institution_name: account.institution_name,
+          institution_code: account.institution_code || '',
           account_type:
             account.account_type as StoredBankAccountFormData['account_type'],
           account_number: account.account_number || '',
@@ -122,6 +123,7 @@ export function StoredAccountForm({
       : {
           name: '',
           institution_name: '',
+          institution_code: '',
           account_type: 'CC',
           account_number: '',
           agency: '',
@@ -209,6 +211,7 @@ export function StoredAccountForm({
                           className="flex w-full items-center gap-2 px-md py-sm text-sm hover:bg-muted"
                           onClick={() => {
                             setValue('institution_name', inst.value);
+                            setValue('institution_code', inst.ispb || '');
                             setBankSearch('');
                             setShowBankDropdown(false);
                           }}
@@ -237,6 +240,7 @@ export function StoredAccountForm({
                 {errors.institution_name.message}
               </p>
             )}
+            <input type="hidden" {...register('institution_code')} />
           </div>
 
           <div className="space-y-sm">

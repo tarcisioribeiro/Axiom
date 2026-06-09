@@ -367,7 +367,7 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 
 **Screen**: Financial Dashboard
 
-**Severity**: High  
+**Severity**: High
 
 ## Problems
 
@@ -403,7 +403,7 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 
   ![image.png](/uploads/b750233c0b61cbcd0fd4529ff3cb0477/image.png){width=900 height=454}
 
-  
+
 * The card 'Habit Consistency' have the hardcoded texts 'conclusões' and 'dias completos':
 
   ![image.png](/uploads/89abb2dc80ad0cc8a7cb1fa4ff97f3fa/image.png){width=""900"" height=""450""}
@@ -457,7 +457,7 @@ Severity: Low
 
 **Screen**: Today's Tasks
 
-**Severity**: Low   
+**Severity**: Low
 
 ## Problems
 
@@ -480,7 +480,7 @@ Severity: Low
 
 **Screen**: Routine Tasks
 
-**Severity**: Low  
+**Severity**: Low
 
 ## Problems
 
@@ -736,7 +736,7 @@ Atualmente as fontes RAG aparecem apenas como tags no rodapé da resposta (ex: '
 - [ ] Números de fonte aparecem inline no texto
 - [ ] Hover sobre o número mostra tooltip com título da fonte
 - [ ] Funciona durante o streaming (números aparecem à medida que chegam)
-- [ ] Fallback gracioso quando fonte não está numerada","❌ Pendente"
+- [ ] Fallback gracioso quando fonte não está numerada","✅ Feito"
 "feat: Histórico de evolução de proficiência por habilidade","## Contexto
 Quando o usuário atualiza uma skill de 'basic' para 'intermediate', essa mudança não é registrada em lugar nenhum. Não há como ver o histórico de crescimento, o que elimina o senso de progresso e conquista.
 
@@ -938,7 +938,7 @@ O fluxo ideal para 'perguntar sobre um livro' deveria acontecer dentro da própr
 - [ ] Aba 'Chat' visível em livros com highlights indexados
 - [ ] Contexto do livro pré-carregado sem que o usuário precise mencionar o título
 - [ ] Sessão isolada por livro (não mistura com outras conversas)
-- [ ] Interface compacta que não ocupa a tela toda","❌ Pendente"
+- [ ] Interface compacta que não ocupa a tela toda","✅ Feito"
 "feat: Busca semântica global no módulo Intelecto","## Contexto
 A busca atual em livros, cursos e habilidades usa `ILIKE` (match exato de texto). Isso significa que buscar 'independência financeira' não encontra um destaque que fala sobre 'liberdade financeira' ou 'renda passiva'. A busca semântica via embeddings resolve isso.
 
@@ -1931,7 +1931,7 @@ Adicionar autocomplete com a lista oficial de bancos brasileiros do Banco Centra
 ## Arquivos Relacionados
 - `api/security/models.py` — `StoredBankAccount`
 - `api/security/serializers.py`
-- `frontend/src/pages/StoredAccounts.tsx`","❌ Pendente"
+- `frontend/src/pages/StoredAccounts.tsx`","✅ Feito"
 "feat: Mapeamento de categorias customizável na importação de senhas","## Contexto
 O `PasswordImportConfirmView` realiza importação com mapeamento fixo de categorias por formato (Bitwarden, LastPass, etc.). Usuários que usavam categorias customizadas em outros gerenciadores têm todas as senhas importadas com categorias erradas, exigindo reorganização manual posterior.
 
@@ -1967,7 +1967,7 @@ O módulo Segurança não possui atalhos de teclado para ações frequentes. Usu
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `frontend/src/components/security/VaultGuard.tsx`
-- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`","❌ Pendente"
+- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`","🔄 Parcial"
 "feat: Alertas configuráveis de atividade suspeita no cofre","## Contexto
 O ActivityLog registra todas as ações do cofre, mas nenhum alerta é disparado quando padrões suspeitos são detectados (ex: múltiplos reveals em sequência, acesso de novo IP, volume anormal de operações). O usuário descobre atividade suspeita apenas se revisar os logs manualmente.
 
