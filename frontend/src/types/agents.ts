@@ -1,5 +1,10 @@
 export type AgentRole = 'user' | 'agent';
 
+export interface IndexedSource {
+  index: number;
+  title: string;
+}
+
 export interface AgentMessage {
   id: number;
   session_id: string;
@@ -24,12 +29,14 @@ export interface AgentAskRequest {
   forecast_days?: number;
   language?: string;
   agent_name?: AgentName | null;
+  book_id?: number | null;
 }
 
 export interface AgentAskResponse {
   answer: string;
   agent: string;
   sources: string[];
+  indexed_sources?: IndexedSource[];
   session_id: string;
 }
 
@@ -48,6 +55,7 @@ export interface AgentStreamDone {
   done: true;
   agent: string;
   sources: string[];
+  indexed_sources?: IndexedSource[];
   query_id: string;
   formatted_content?: string;
 }

@@ -236,6 +236,38 @@ class IntellectAgent(BaseAgent):
             else "recentes"
         )
 
+        # Maintain ordered sources (preserve chunk order, deduplicate)
+        seen: dict[str, bool] = {}
+        ordered_sources: list[str] = []
+        for c in chunks:
+            t = c["source_title"]
+            if t not in seen:
+                seen[t] = True
+                ordered_sources.append(t)
+
+        # Book context for contextual chat
+        book_context = ""
+        book_id = ctx.metadata.get("book_id")
+        if book_id:
+            try:
+                from library.models import Book
+
+                book_obj = (
+                    Book.objects.filter(
+                        pk=book_id, owner__user=user, is_deleted=False
+                    )
+                    .values("title")
+                    .first()
+                )
+                if book_obj:
+                    book_context = (
+                        "Foco desta conversa: livro "
+                        + f"'{safe_str(book_obj['title'])}'. "
+                        + "Priorize trechos e informações sobre esta obra.\n\n"
+                    )
+            except Exception:
+                pass
+
         return {
             "system_prompt": get_system_prompt(ctx.language),
             "chunks": chunks,
@@ -244,8 +276,9 @@ class IntellectAgent(BaseAgent):
             "skills": skills,
             "has_rag": bool(chunks),
             "period_label": period_label,
-            "sources": list({c["source_title"] for c in chunks})
+            "sources": ordered_sources
             or (["Intelecto"] if recent_books else []),
+            "book_context": book_context,
         }
 
     def _get_recent_books(
@@ -342,15 +375,16 @@ class IntellectAgent(BaseAgent):
             return []
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
-        # Bloco RAG (busca semântica)
+        # Bloco RAG (busca semântica) — chunks numerados para citações inline
         if data["chunks"]:
             chunk_block = "\n\n".join(
-                "[Fonte: {} — {}]\n{}".format(
+                "[{}] Fonte: {} — {}\n{}".format(
+                    i + 1,
                     safe_str(c["source_title"]),
                     safe_str(c["source_type"]),
                     c["content"],
                 )
-                for c in data["chunks"]
+                for i, c in enumerate(data["chunks"])
             )
             rag_section = (
                 f"Trechos encontrados via busca semântica:\n\n{chunk_block}"
@@ -411,12 +445,16 @@ class IntellectAgent(BaseAgent):
             or "  Nenhuma habilidade cadastrada."
         )
 
+        book_context = data.get("book_context", "")
+
         return (
             "Você é um assistente especializado na biblioteca pessoal "
             "e jornada de aprendizado do usuário.\n"
             "Use os trechos indexados para responder perguntas"
             " sobre livros lidos. "
-            f"Cite sempre a fonte quando usar informações de livros.\n\n"
+            "Ao usar informações dos trechos, cite o número do trecho "
+            "com [1], [2], etc. após a afirmação.\n\n"
+            f"{book_context}"
             f"{rag_section}\n\n"
             f"Livros ({data['period_label']}):\n{books_block}\n\n"
             f"Cursos:\n{courses_block}\n\n"

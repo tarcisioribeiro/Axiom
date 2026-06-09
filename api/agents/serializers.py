@@ -34,6 +34,11 @@ class AgentAskSerializer(serializers.Serializer):
         allow_blank=True,
         default=None,
     )
+    book_id = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        default=None,
+    )
 
     def validate_agent_name(self, value: str | None) -> str | None:
         if not value:

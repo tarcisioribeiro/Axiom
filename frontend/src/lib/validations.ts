@@ -483,6 +483,11 @@ export const storedAccountSchema = z.object({
     .string()
     .min(1, requiredError('Nome da instituição'))
     .max(255, maxError('Nome da instituição', 255)),
+  institution_code: z
+    .string()
+    .max(10, maxError('Código do banco', 10))
+    .optional()
+    .or(z.literal('')),
   account_type: z.enum(['CC', 'CS', 'CP', 'CI', 'OTHER'], {
     message: 'Selecione um tipo de conta válido',
   }),
