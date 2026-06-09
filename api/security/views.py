@@ -815,6 +815,57 @@ class PasswordFavoriteToggleView(VaultLockedMixin, APIView):
         return Response(PS(password).data)
 
 
+class StoredCreditCardFavoriteToggleView(VaultLockedMixin, APIView):
+    """PATCH /api/v1/security/stored-cards/<pk>/favorite/"""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def patch(self, request, pk):
+        card = get_object_or_404(
+            StoredCreditCard, pk=pk, owner__user=request.user, is_deleted=False
+        )
+        card.is_favorite = not card.is_favorite
+        card.save(update_fields=["is_favorite"])
+        from security.serializers import StoredCreditCardSerializer as SCS
+
+        return Response(SCS(card).data)
+
+
+class StoredBankAccountFavoriteToggleView(VaultLockedMixin, APIView):
+    """PATCH /api/v1/security/stored-accounts/<pk>/favorite/"""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def patch(self, request, pk):
+        account = get_object_or_404(
+            StoredBankAccount,
+            pk=pk,
+            owner__user=request.user,
+            is_deleted=False,
+        )
+        account.is_favorite = not account.is_favorite
+        account.save(update_fields=["is_favorite"])
+        from security.serializers import StoredBankAccountSerializer as SBAS
+
+        return Response(SBAS(account).data)
+
+
+class ArchiveFavoriteToggleView(VaultLockedMixin, APIView):
+    """PATCH /api/v1/security/archives/<pk>/favorite/"""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def patch(self, request, pk):
+        archive = get_object_or_404(
+            Archive, pk=pk, owner__user=request.user, is_deleted=False
+        )
+        archive.is_favorite = not archive.is_favorite
+        archive.save(update_fields=["is_favorite"])
+        from security.serializers import ArchiveSerializer as AS
+
+        return Response(AS(archive).data)
+
+
 class ActivityLogListView(generics.ListAPIView):
     """Lista logs de atividades (somente leitura)."""
 

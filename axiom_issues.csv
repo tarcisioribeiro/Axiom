@@ -714,7 +714,7 @@ O usuário pode salvar dezenas de destaques de um livro, mas criar o resumo aind
 - [ ] Botão visível apenas quando há highlights suficientes
 - [ ] Resumo gerado em formato Markdown estruturado
 - [ ] Usuário pode editar antes de salvar
-- [ ] Resumo salvo aparece na seção de resumos do livro","❌ Pendente"
+- [ ] Resumo salvo aparece na seção de resumos do livro","✅ Feito"
 "feat: Citações inline (fontes clicáveis) nas respostas do agente","## Contexto
 Atualmente as fontes RAG aparecem apenas como tags no rodapé da resposta (ex: 'Fontes: Pai Rico Pobre Rico'). Não há como saber qual parte do texto vem de qual fonte. O Perplexity mostra [1][2] inline no texto com tooltip na fonte.
 
@@ -888,7 +888,7 @@ Rota: `/library/today`
 - [ ] Carregamento < 2s (dados agregados em 1 request)
 - [ ] Ações inline (registrar leitura, marcar aula) sem navegar para outras páginas
 - [ ] Insight da IA carrega de forma assíncrona sem bloquear a tela
-- [ ] Link no menu lateral com badge de 'pendentes hoje'","❌ Pendente"
+- [ ] Link no menu lateral com badge de 'pendentes hoje'","✅ Feito"
 "feat: Sugestão automática de links no Grafo de Conhecimento por IA","## Contexto
 Os links explícitos no grafo são 100% manuais — o usuário precisa saber quais nós conectar. A IA tem acesso aos embeddings de todos os nós (livros, skills, cursos, destaques) e pode identificar conexões semânticas que o usuário não perceberia.
 
@@ -914,7 +914,7 @@ Lógica:
 - [ ] Análise executada em < 10s para grafos com até 100 nós
 - [ ] Máximo de 5 sugestões por análise (evitar sobrecarga)
 - [ ] Cada sugestão tem justificativa textual compreensível
-- [ ] Links criados via sugestão marcados com `source: ai_suggestion` para rastreabilidade","❌ Pendente"
+- [ ] Links criados via sugestão marcados com `source: ai_suggestion` para rastreabilidade","✅ Feito"
 "feat: Aba de chat contextual no detalhe de livro","## Contexto
 O fluxo ideal para 'perguntar sobre um livro' deveria acontecer dentro da própria página do livro, não em uma navegação separada para `/agents`. Isso cria uma experiência coesa onde o usuário vê o conteúdo e conversa sobre ele ao mesmo tempo.
 
@@ -962,7 +962,7 @@ A busca atual em livros, cursos e habilidades usa `ILIKE` (match exato de texto)
 - [ ] Latência < 1.5s incluindo geração de embedding
 - [ ] Resultados agrupados por tipo com ícone visual
 - [ ] Cache do embedding da query no Redis (TTL 5min) para buscas repetidas
-- [ ] Fallback para busca textual quando Ollama estiver offline","❌ Pendente"
+- [ ] Fallback para busca textual quando Ollama estiver offline","✅ Feito"
 "feat: Flash Cards com Spaced Repetition para highlights","## Contexto
 Os destaques salvos são lidos uma vez e depois esquecidos. O algoritmo de repetição espaçada (SM-2) é o método mais eficaz para converter highlights em memória de longo prazo. Isso também cria um motivo de retorno diário ao app.
 
@@ -1203,7 +1203,7 @@ O model `EmbeddingDocument` em `api/agents/models.py` está marcado como `DEPREC
 ## Critérios de aceite
 - [ ] Model removido sem quebrar nenhum teste
 - [ ] Migration criada e aplicável em produção
-- [ ] Nenhuma referência restante ao `EmbeddingDocument` no código (exceto migrations históricas)","❌ Pendente"
+- [ ] Nenhuma referência restante ao `EmbeddingDocument` no código (exceto migrations históricas)","✅ Feito"
 "feat: Gamificação com conquistas (badges) no módulo Intelecto","## Contexto
 O módulo não tem nenhum mecanismo de celebração de marcos. Quando o usuário lê o 10º livro, completa o 1º curso ou atinge 100 destaques, nada acontece. Conquistas (badges) criam senso de progresso e motivam comportamentos desejados.
 
@@ -1386,7 +1386,7 @@ A meta de leitura anual existe mas é passiva — o usuário só sabe que está 
 ## Critérios de aceite
 - [ ] Indicador de pace visível no `ReadingGoalCard`
 - [ ] Notificação enviada quando pace < 70% do necessário
-- [ ] Cálculo correto considerando meses já passados no ano","❌ Pendente"
+- [ ] Cálculo correto considerando meses já passados no ano","✅ Feito"
 "redesign: Vault Home — substituir dashboard por hub central de segurança","## Contexto
 O `SecurityDashboard.tsx` atual exibe três gráficos de pizza genéricos sem valor informacional acionável. O usuário não consegue identificar prioridades de segurança nem executar ações corretivas direto da home. O dashboard precisa comunicar estado e urgência, não apenas dados.
 
@@ -1482,7 +1482,7 @@ Exibir um badge persistente no cabeçalho do módulo Segurança mostrando o temp
 ## Arquivos Relacionados
 - `frontend/src/components/security/VaultGuard.tsx`
 - `frontend/src/services/security-vault-service.ts`
-- `api/security/vault_config.py` — `VaultStatusView`","❌ Pendente"
+- `api/security/vault_config.py` — `VaultStatusView`","✅ Feito"
 "feat: Copiar senha para clipboard sem revelar (nova action no ActivityLog)","## Contexto
 O único jeito de copiar uma senha é revelá-la na tela (botão de olho) e depois copiar. Isso expõe a senha visualmente mesmo quando o usuário só precisa colá-la em outro lugar. Em telas compartilhadas, esse comportamento é indesejável.
 
@@ -1501,7 +1501,7 @@ Adicionar um botão ""Copiar"" que descriptografa a senha no frontend via chamad
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `api/security/models.py` — `ActivityLog`
-- `api/security/views.py` — `PasswordRevealView`","❌ Pendente"
+- `api/security/views.py` — `PasswordRevealView`","✅ Feito"
 "feat: Alerta proativo de cartão armazenado vencendo em 30 e 60 dias","## Contexto
 Cartões armazenados em `StoredCreditCard` têm campos `expiration_month` e `expiration_year`, mas a aplicação não notifica o usuário quando um cartão está prestes a vencer. O usuário descobre o vencimento somente quando o cartão é recusado.
 
@@ -1520,7 +1520,7 @@ Criar uma Celery task periódica (diária) que verifica cartões com vencimento 
 ## Arquivos Relacionados
 - `api/security/models.py` — `StoredCreditCard`
 - `api/notifications/` — sistema de notificações existente
-- `api/app/settings.py` — configuração do Celery beat","❌ Pendente"
+- `api/app/settings.py` — configuração do Celery beat","✅ Feito"
 "feat: Exportação do cofre como ZIP criptografado com AES-256","## Contexto
 O endpoint `VaultExportZipView` já gera um ZIP com todos os dados do cofre em CSV, mas o arquivo exportado não tem criptografia própria. Se o arquivo for interceptado ou salvo em local inseguro, os dados ficam expostos em texto puro.
 
@@ -1538,7 +1538,7 @@ Adicionar opção de exportar ZIP criptografado com senha escolhida pelo usuári
 ## Arquivos Relacionados
 - `api/security/views.py` — `VaultExportZipView`
 - `frontend/src/pages/SecurityDashboard.tsx` — botão de exportação
-- `api/requirements.txt`","❌ Pendente"
+- `api/requirements.txt`","✅ Feito"
 "feat: Favoritos no cofre — acesso rápido a credenciais frequentes","## Contexto
 Não existe forma de marcar credenciais como favoritas para acesso rápido. Usuários com muitas senhas precisam sempre usar a busca ou scroll para encontrar as mais usadas. A Vault Home proposta terá uma seção de Favoritos que precisa deste campo.
 
@@ -1557,7 +1557,7 @@ Adicionar campo `is_favorite` (BooleanField, default=False) aos models `Password
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/security/serializers.py`
-- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`","🔄 Parcial"
+- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`","✅ Feito"
 "feat: TTL do vault configurável pelo usuário (15min a 4h)","## Contexto
 O TTL do cofre é fixo em 1 hora (`VAULT_UNLOCK_TTL`), sem possibilidade de configuração pelo usuário. Usuários com alta necessidade de segurança (sessões curtas) e usuários em uso intensivo (sessões longas) têm necessidades diferentes que não são atendidas.
 
@@ -1651,7 +1651,7 @@ Substituir o setup atual por um wizard de 3 etapas com transições animadas: (1
 
 ## Arquivos Relacionados
 - `frontend/src/components/security/VaultGuard.tsx`
-- `frontend/src/lib/animations/` — variantes existentes","❌ Pendente"
+- `frontend/src/lib/animations/` — variantes existentes","✅ Feito"
 "melhoria: VaultGuard — exibir tentativas restantes e feedback detalhado de erros","## Contexto
 Ao errar a senha mestre no desbloqueio, a mensagem de erro é genérica. O usuário não sabe quantas tentativas restam antes do lockout de 15 minutos. Após 5 erros, o lockout é ativado sem qualquer aviso prévio, causando confusão e bloqueio inesperado.
 
@@ -1866,7 +1866,7 @@ Estender o modelo `CredentialShareToken` para suportar `StoredCreditCard` e `Sto
 ## Arquivos Relacionados
 - `api/security/models.py` — `CredentialShareToken`
 - `api/security/views.py` — `ShareTokenListCreateView`, `RedeemShareTokenView`
-- `frontend/src/components/security/SharePasswordModal.tsx`","❌ Pendente"
+- `frontend/src/components/security/SharePasswordModal.tsx`","✅ Feito"
 "feat: Notificação por e-mail e in-app ao usar share token de credencial","## Contexto
 Quando alguém usa um share token para visualizar uma credencial compartilhada, o dono do token não recebe nenhuma notificação. Para ter visibilidade, precisa verificar manualmente os logs de atividade. Isso reduz a utilidade do ActivityLog e deixa o dono sem awareness de acesso às suas credenciais.
 
@@ -1881,7 +1881,7 @@ Quando alguém usa um share token para visualizar uma credencial compartilhada, 
 ## Arquivos Relacionados
 - `api/security/views.py` — `RedeemShareTokenView`
 - `api/notifications/`
-- `api/authentication/` — templates de e-mail existentes","❌ Pendente"
+- `api/authentication/` — templates de e-mail existentes","✅ Feito"
 "feat: Exportação do log de atividade em CSV com filtros","## Contexto
 Os logs de atividade do cofre são imutáveis e visíveis na UI, mas não podem ser exportados. Para auditorias, análises de segurança ou compliance, o usuário precisa exportar os logs para processamento externo.
 
@@ -1967,7 +1967,7 @@ O módulo Segurança não possui atalhos de teclado para ações frequentes. Usu
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `frontend/src/components/security/VaultGuard.tsx`
-- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`","🔄 Parcial"
+- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`","✅ Feito"
 "feat: Alertas configuráveis de atividade suspeita no cofre","## Contexto
 O ActivityLog registra todas as ações do cofre, mas nenhum alerta é disparado quando padrões suspeitos são detectados (ex: múltiplos reveals em sequência, acesso de novo IP, volume anormal de operações). O usuário descobre atividade suspeita apenas se revisar os logs manualmente.
 
@@ -2005,7 +2005,7 @@ Implementar classificação automática de categoria: ao inserir a URL/site, o s
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `api/agents/` — agente existente
-- `frontend/src/config/` — novo arquivo `vault-category-heuristics.ts`","❌ Pendente"
+- `frontend/src/config/` — novo arquivo `vault-category-heuristics.ts`","✅ Feito"
 "ia: Agente de segurança — análise conversacional do estado do cofre via chat","## Contexto
 A infraestrutura de agentes LLM do Axiom já suporta 6 domínios (finance, budget, forecast, insight, library, planning). O módulo Segurança não tem representação nessa infraestrutura. Um agente especializado em segurança permitiria ao usuário fazer perguntas como ""Quais senhas preciso trocar com mais urgência?"" ou ""Explique o que aconteceu no meu cofre ontem"".
 
@@ -2222,7 +2222,7 @@ O usuário não percebe o módulo como um sistema integrado de desenvolvimento p
 - [ ] Metas podem ser alimentadas por sessões de treino e/ou logs nutricionais além de instâncias de tarefas
 - [ ] Endpoint de recálculo de goal atualizado para aceitar fontes de progresso adicionais
 - [ ] Dashboard exibe progresso consolidado entre os domínios
-- [ ] Reflexão diária correlacionada com taxa de conclusão de tarefas no mesmo período","🔄 Parcial"
+- [ ] Reflexão diária correlacionada com taxa de conclusão de tarefas no mesmo período","✅ Feito"
 "[Problema] Sistema de gamificação (XP, badges, streaks) existe mas não é percebido pelo usuário","**Contexto**
 O backend possui sistema completo de gamificação: XP, níveis, badges por categoria, streaks e transações de XP. O `GamificationPanel.tsx` existe no frontend, mas a gamificação não está integrada ao fluxo diário de uso. Não há celebrações visíveis, progressão percebida nem momentos de recompensa.
 
@@ -2289,7 +2289,7 @@ Alta taxa de abandono na primeira sessão. O usuário não percebe o valor do m�
 - [ ] Wizard de onboarding de 4 etapas: objetivos, tempo disponível, dias preferidos, preview da rotina gerada
 - [ ] Importação de template sugerido com base nos objetivos declarados
 - [ ] Estado de dashboard vazio substitído por guia de primeiros passos
-- [ ] Conclusão do onboarding deve resultar em ao menos uma rotina ativa","🔄 Parcial"
+- [ ] Conclusão do onboarding deve resultar em ao menos uma rotina ativa","✅ Feito"
 "[Problema] Templates de rotina são somente leitura — usuário não pode criar ou salvar os próprios","**Contexto**
 O sistema de templates (`RoutineTemplate`) permite apenas importar templates pré-definidos pelo sistema. Não existe mecanismo para o usuário salvar suas próprias rotinas configuradas como template para reutilização futura ou compartilhamento com membros.
 
@@ -2339,7 +2339,7 @@ O modo Kanban das tarefas do dia (`TodayKanbanView.tsx`) é funcional mas visual
 - [ ] Indicador de prioridade com visual mais expressivo (não apenas texto)
 - [ ] Microtransição suave ao arrastar e soltar um card entre colunas (Framer Motion)
 - [ ] Cabeçalho de coluna com contador animado ao mudar status
-- [ ] Estado visual de coluna cheia ao completar todas as tarefas da coluna","🔄 Parcial"
+- [ ] Estado visual de coluna cheia ao completar todas as tarefas da coluna","✅ Feito"
 "[UX/UI] Ausência de feedback visual e celebração ao completar tarefas e marcos do dia","**Contexto**
 Ao completar uma tarefa, o único feedback visual é a mudança de status. Ao completar 100% das tarefas do dia, absolutamente nada acontece. O sistema não celebra conquistas nem reforça positivamente o comportamento desejado.
 
@@ -2385,7 +2385,7 @@ Usuários novos ou sem dados encontram tabelas e painéis vazios com o component
 - [ ] Texto explicativo sobre o valor da funcionalidade (por que isso importa?)
 - [ ] CTA direto e contextual: Criar primeira rotina / Importar template / Iniciar plano de treino
 - [ ] Empty states de dashboard com link para o onboarding wizard
-- [ ] Estado de primeiro acesso diferenciado do estado de zero dados após uso","🔄 Parcial"
+- [ ] Estado de primeiro acesso diferenciado do estado de zero dados após uso","✅ Feito"
 "[UX/UI] Heatmap de hábitos sem interatividade, tooltips ricos e opção de expansão","**Contexto**
 O componente `HabitHeatmap.tsx` exibe a consistência de hábitos de forma estática. Não há tooltip ao passar o mouse sobre uma célula, não é possível filtrar por categoria e o heatmap fica pequeno e ilegível quando o usuário tem muitos hábitos.
 
@@ -2394,7 +2394,7 @@ O componente `HabitHeatmap.tsx` exibe a consistência de hábitos de forma está
 - [ ] Filtro por categoria de tarefa (saúde, finanças, trabalho, etc.)
 - [ ] Opção de expandir o heatmap para tela cheia ou painel lateral
 - [ ] Heatmap anual (estilo GitHub contributions) como alternativa ao semanal
-- [ ] Legenda clara com escala de intensidade","🔄 Parcial"
+- [ ] Legenda clara com escala de intensidade","✅ Feito"
 "[Melhoria] Unificar navegação do módulo com sidebar contextual e agrupamento lógico por domínio","**Contexto**
 A navegação atual do módulo de Planejamento Pessoal usa o menu lateral global da aplicação sem hierarquia própria, expondo 6+ links de mesmo nível sem relacionamento visual entre eles.
 
@@ -2859,7 +2859,7 @@ Implementar pipeline de notificações proativas usando a infraestrutura existen
 - [ ] Notificação in-app criada e visível no sino da sidebar
 - [ ] Email enviado para vencimentos com menos de 24h
 - [ ] Configuração de preferências de notificação no perfil do usuário (ativar/desativar por tipo)
-- [ ] Não duplicar notificações para o mesmo evento","❌ Pendente"
+- [ ] Não duplicar notificações para o mesmo evento","✅ Feito"
 "[Problema] Conciliação bancária sem interface de matching visual completa","## Contexto
 
 A página `BankReconciliation` e `BankReconciliationDetail` têm infraestrutura de importação funcional (OFX, CSV, CNAB com matching automático e scoring de confiança), mas a interface de reconciliação manual está incompleta. Não existe uma tela onde o usuário possa confirmar, rejeitar ou criar manualmente os vínculos entre itens do extrato e transações do sistema.
@@ -2994,7 +2994,7 @@ Integrar a criação de `ExpenseSplit` diretamente no formulário de despesa (`E
 - [ ] Seleção de múltiplos membros com valor/percentual individual
 - [ ] Validação: soma dos percentuais = 100%
 - [ ] Ícone de compartilhamento visível na listagem de despesas divididas
-- [ ] Detalhes da divisão acessíveis via clique/hover","❌ Pendente"
+- [ ] Detalhes da divisão acessíveis via clique/hover","✅ Feito"
 "[Problema] Tags sem painel de gestão centralizado","## Contexto
 
 O modelo `Tag` existe com suporte a nome e cor (hex), mas não há uma tela dedicada para criar, editar e visualizar as tags criadas e seu uso. As tags só aparecem como campo nos formulários de despesa, sem nenhuma visibilidade sobre quais existem ou quantas despesas cada uma tem.
@@ -3259,7 +3259,7 @@ Criar `GET /api/v1/financial-calendar/?month=5&year=2026` que agrega eventos de 
 - [ ] Filtros por tipo de evento funcionando
 - [ ] Endpoint de calendário agregado criado
 - [ ] Responsivo em mobile (vista semanal como padrão em telas pequenas)
-- [ ] Acessível via menu lateral e via dashboard","❌ Pendente"
+- [ ] Acessível via menu lateral e via dashboard","✅ Feito"
 "[Feature] Patrimônio Líquido (Net Worth Tracker) — visão holística da saúde financeira","## Objetivo
 
 Exibir e acompanhar a evolução do patrimônio líquido do usuário ao longo do tempo, fornecendo o único número que resume toda a situação financeira.
@@ -3290,7 +3290,7 @@ Exibir e acompanhar a evolução do patrimônio líquido do usuário ao longo do
 - [ ] Variação mensal com indicador de crescimento/queda
 - [ ] Drill-down para cada componente
 - [ ] Endpoint de histórico criado e cacheado
-- [ ] Acessível via dashboard e menu lateral","❌ Pendente"
+- [ ] Acessível via dashboard e menu lateral","✅ Feito"
 "[Feature] Simulador de Parcelamento — impacto antes da compra","## Objetivo
 
 Antes de fazer uma compra parcelada no cartão, o usuário simula o impacto no orçamento pessoal, tornando a decisão de compra baseada em dados reais.
@@ -3362,7 +3362,7 @@ Identificar e organizar automaticamente as assinaturas e despesas recorrentes me
 - [ ] Histórico de variação de valor por assinatura
 - [ ] Alertas de aumento de preço
 - [ ] Ação de cancelar assinatura (desativa a despesa fixa associada)
-- [ ] Filtro por categoria e conta/cartão","❌ Pendente"
+- [ ] Filtro por categoria e conta/cartão","✅ Feito"
 "[Feature] Comparação Mês a Mês — análise visual de evolução financeira","## Objetivo
 
 Permitir ao usuário comparar dois períodos financeiros lado a lado, identificando tendências e mudanças de comportamento financeiro.

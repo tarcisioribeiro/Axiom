@@ -72,6 +72,10 @@ class ArchivesService extends BaseService<
       `${this.endpoint}${id}/download/`
     );
   }
+
+  async toggleFavorite(id: number): Promise<Archive> {
+    return apiClient.patch<Archive>(`${this.endpoint}${id}/favorite/`, {});
+  }
 }
 
 export const archivesService = new ArchivesService();
