@@ -13,7 +13,9 @@ import {
   Highlighter,
   Library,
   Loader2,
+  MessageSquare,
   Plus,
+  Send,
   Sparkles,
   Star,
   Tag,
@@ -22,8 +24,10 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
@@ -48,9 +52,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
+import { agentService } from '@/services/agent-service';
 import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { readingsService } from '@/services/readings-service';
@@ -228,7 +234,154 @@ function HighlightInlineForm({
   );
 }
 
-type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
+type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries' | 'chat';
+
+function BookChat({ book }: { book: Book }) {
+  const { t } = useTranslation();
+  const [sessionId] = useState(() => {
+    const key = `book-chat-${book.id}`;
+    const stored = localStorage.getItem(key);
+    if (stored) return stored;
+    const id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+    return id;
+  });
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ role: 'user' | 'agent'; content: string }>
+  >([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [chatInput, setChatInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isStreaming,
+    accumulatedText,
+    error: streamError,
+    send: sendStream,
+    reset: resetStream,
+  } = useAgentStream();
+
+  useEffect(() => {
+    agentService
+      .getHistory(sessionId)
+      .then((history) => {
+        setChatMessages(
+          history.results.map((m) => ({ role: m.role, content: m.content }))
+        );
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingHistory(false));
+  }, [sessionId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages, accumulatedText]);
+
+  const handleChatSend = async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || isStreaming) return;
+    setChatMessages((prev) => [...prev, { role: 'user', content: trimmed }]);
+    setChatInput('');
+    const finalText = await sendStream(trimmed, sessionId, {
+      agent_name: 'intellect',
+      book_id: book.id,
+    });
+    if (finalText && !streamError) {
+      setChatMessages((prev) => [...prev, { role: 'agent', content: finalText }]);
+      resetStream();
+    }
+  };
+
+  const showStreamBubble = isStreaming || (accumulatedText.length > 0 && !streamError);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="max-h-64 min-h-32 space-y-3 overflow-y-auto pr-xs">
+        {isLoadingHistory ? (
+          <p className="py-md text-center text-xs text-muted-foreground">
+            {t('common.actions.loading')}
+          </p>
+        ) : chatMessages.length === 0 && !showStreamBubble ? (
+          <p className="py-lg text-center text-sm text-muted-foreground">
+            {t('pages.books.detail.chat.empty')}
+          </p>
+        ) : (
+          <>
+            {chatMessages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              >
+                <div
+                  className={`max-w-[82%] rounded-lg px-3 py-2 text-sm ${
+                    msg.role === 'user'
+                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
+                      : 'rounded-tl-sm bg-muted text-foreground'
+                  }`}
+                >
+                  {msg.role === 'user' ? (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <div className="prose prose-sm dark:prose-invert prose-p:my-0.5 prose-ul:my-1 max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {showStreamBubble && (
+              <div className="flex gap-2">
+                <div className="max-w-[82%] rounded-lg rounded-tl-sm bg-muted px-3 py-2 text-sm">
+                  {!accumulatedText && isStreaming ? (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      {t('pages.books.detail.chat.thinking')}
+                    </span>
+                  ) : (
+                    <div className="prose prose-sm dark:prose-invert prose-p:my-0.5 max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {accumulatedText}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="flex gap-2">
+        <input
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              void handleChatSend();
+            }
+          }}
+          placeholder={t('pages.books.detail.chat.placeholder')}
+          disabled={isStreaming}
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+        />
+        <Button
+          size="sm"
+          onClick={() => void handleChatSend()}
+          disabled={!chatInput.trim() || isStreaming}
+        >
+          {isStreaming ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Send className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 interface BookDetailModalProps {
   book: Book | null;
@@ -238,6 +391,7 @@ interface BookDetailModalProps {
   onDelete: (id: number) => void;
   initialTab?: DetailTab;
   onAskIntellect?: (book: Book) => void;
+  defaultToChat?: boolean;
 }
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
@@ -618,6 +772,11 @@ export function BookDetailModal({
                 id: 'highlights',
                 label: t('pages.books.detail.tabHighlights'),
                 icon: <Highlighter className="h-3.5 w-3.5" />,
+              },
+              {
+                id: 'chat',
+                label: t('pages.books.detail.tabChat'),
+                icon: <MessageSquare className="h-3.5 w-3.5" />,
               },
             ] as const
           ).map((tab) => (
@@ -1197,6 +1356,22 @@ export function BookDetailModal({
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Chat tab */}
+          {activeTab === 'chat' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {t('pages.books.detail.chat.title')}
+                </span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {book.title}
+                </span>
+              </div>
+              <BookChat book={book} />
             </div>
           )}
 

@@ -2543,7 +2543,10 @@
         "sectionPasswords": "Passwords",
         "sectionLink": "Financial Link",
         "sectionNotes": "Notes",
-        "bankSearchPlaceholder": "Search bank by name or ISPB code..."
+        "bankSearchPlaceholder": "Search bank by name or ISPB code...",
+        "institutionCode": "Bank code",
+        "institutionSearch": "Search bank...",
+        "institutionNotFound": "Bank not found, enter the name"
       }
     },
     "archives": {
@@ -2997,7 +3000,14 @@
         "hlTypeLbl": "Type",
         "hlColorLbl": "Color",
         "hlPagePlaceholder": "Page",
-        "hlChapterPlaceholder": "Chapter"
+        "hlChapterPlaceholder": "Chapter",
+        "tabChat": "Chat",
+        "chat": {
+          "title": "Ask Intellect",
+          "empty": "No messages yet. Ask a question about this book.",
+          "placeholder": "Ask about this book...",
+          "thinking": "Processing..."
+        }
       },
       "genres": {
         "Philosophy": "Philosophy",
@@ -4480,6 +4490,12 @@
         "renewSuccess": "Session renewed",
         "renewSuccessDesc": "The vault session has been extended successfully.",
         "renewError": "Error renewing session"
+      },
+      "shortcuts": {
+        "title": "Keyboard shortcuts",
+        "lockVault": "Lock vault",
+        "showShortcuts": "Show shortcuts",
+        "button": "Shortcuts"
       }
     },
     "vaultHealth": {

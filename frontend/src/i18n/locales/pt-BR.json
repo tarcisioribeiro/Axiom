@@ -2607,7 +2607,10 @@
         "sectionPasswords": "Senhas",
         "sectionLink": "Vínculo Financeiro",
         "sectionNotes": "Notas",
-        "bankSearchPlaceholder": "Buscar banco por nome ou código ISPB..."
+        "bankSearchPlaceholder": "Buscar banco por nome ou código ISPB...",
+        "institutionCode": "Código do banco",
+        "institutionSearch": "Pesquisar banco...",
+        "institutionNotFound": "Banco não encontrado, digite o nome"
       }
     },
     "archives": {
@@ -3061,7 +3064,14 @@
         "hlTypeLbl": "Tipo",
         "hlColorLbl": "Cor",
         "hlPagePlaceholder": "Página",
-        "hlChapterPlaceholder": "Capítulo"
+        "hlChapterPlaceholder": "Capítulo",
+        "tabChat": "Chat",
+        "chat": {
+          "title": "Perguntar ao Intelecto",
+          "empty": "Nenhuma mensagem ainda. Faça uma pergunta sobre este livro.",
+          "placeholder": "Pergunte sobre este livro...",
+          "thinking": "Processando..."
+        }
       },
       "genres": {
         "Philosophy": "Filosofia",
@@ -4558,6 +4568,12 @@
         "renewSuccess": "Sessão renovada",
         "renewSuccessDesc": "A sessão do cofre foi estendida com sucesso.",
         "renewError": "Erro ao renovar sessão"
+      },
+      "shortcuts": {
+        "title": "Atalhos de teclado",
+        "lockVault": "Bloquear cofre",
+        "showShortcuts": "Mostrar atalhos",
+        "button": "Atalhos"
       }
     },
     "vaultHealth": {

@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Key,
   RefreshCw,
+  Keyboard,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
+import { useVaultKeyboardShortcuts } from '@/hooks/use-vault-keyboard-shortcuts';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -674,6 +676,61 @@ function VaultRecoveryKeyModalInline({
 }
 
 // ============================================================================
+// VaultKeyboardShortcutsPanel
+// ============================================================================
+
+interface VaultKeyboardShortcutsPanelProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+function VaultKeyboardShortcutsPanel({
+  open,
+  onClose,
+}: VaultKeyboardShortcutsPanelProps) {
+  const { t } = useTranslation();
+
+  if (!open) return null;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-sm">
+            <Keyboard className="h-4 w-4" />
+            {t('pages.vaultGuard.shortcuts.title')}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('pages.vaultGuard.shortcuts.title')}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-sm">
+          <div className="flex items-center justify-between rounded-md border px-sm py-xs">
+            <span className="text-sm text-muted-foreground">
+              {t('pages.vaultGuard.shortcuts.lockVault')}
+            </span>
+            <kbd className="rounded bg-muted px-xs py-0.5 font-mono text-xs">
+              Ctrl+L
+            </kbd>
+          </div>
+          <div className="flex items-center justify-between rounded-md border px-sm py-xs">
+            <span className="text-sm text-muted-foreground">
+              {t('pages.vaultGuard.shortcuts.showShortcuts')}
+            </span>
+            <kbd className="rounded bg-muted px-xs py-0.5 font-mono text-xs">?</kbd>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
 // VaultGuard
 // ============================================================================
 
@@ -686,11 +743,12 @@ interface VaultGuardProps {
  *
  * - Não configurado → mostra tela de configuração de senha mestre
  * - Configurado, bloqueado → mostra tela de desbloqueio
- * - Desbloqueado → renderiza children + badge de expiração
+ * - Desbloqueado → renderiza children + badge de expiração + atalhos de teclado
  */
 export function VaultGuard({ children }: VaultGuardProps) {
   const { t } = useTranslation();
   const { status, isLoading, refresh } = useVaultStatus();
+  const { showShortcuts, setShowShortcuts } = useVaultKeyboardShortcuts(refresh);
 
   if (isLoading) {
     return <LoadingState message={t('pages.vaultGuard.verifying')} />;
@@ -706,12 +764,24 @@ export function VaultGuard({ children }: VaultGuardProps) {
 
   return (
     <>
-      {status.expires_at && (
-        <div className="mb-sm flex justify-end">
-          <VaultExpiryBadge expiresAt={status.expires_at} />
-        </div>
-      )}
+      <div className="mb-sm flex items-center justify-end gap-sm">
+        {status.expires_at && <VaultExpiryBadge expiresAt={status.expires_at} />}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-xs px-sm text-xs text-muted-foreground"
+          onClick={() => setShowShortcuts(true)}
+          title={t('pages.vaultGuard.shortcuts.button')}
+        >
+          <Keyboard className="h-3.5 w-3.5" />
+          {t('pages.vaultGuard.shortcuts.button')}
+        </Button>
+      </div>
       {children}
+      <VaultKeyboardShortcutsPanel
+        open={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </>
   );
 }
