@@ -69,13 +69,22 @@ class LibraryAgent(BaseAgent):
             else None
         )
 
+        # Maintain ordered sources (preserve chunk order, deduplicate)
+        seen: dict[str, bool] = {}
+        ordered_sources: list[str] = []
+        for c in chunks:
+            t = c["source_title"]
+            if t not in seen:
+                seen[t] = True
+                ordered_sources.append(t)
+
         return {
             "system_prompt": get_system_prompt(ctx.language),
             "chunks": chunks,
             "recent_books": recent_books,
             "has_embeddings": bool(chunks),
             "period_label": period_label,
-            "sources": list({c["source_title"] for c in chunks}),
+            "sources": ordered_sources,
         }
 
     def _get_recent_books(
@@ -98,12 +107,13 @@ class LibraryAgent(BaseAgent):
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
         if data["chunks"]:
             chunk_block = "\n\n".join(
-                "[Fonte: {} — {}]\n{}".format(
+                "[{}] Fonte: {} — {}\n{}".format(
+                    i + 1,
                     safe_str(c["source_title"]),
                     safe_str(c["source_type"]),
                     c["content"],
                 )
-                for c in data["chunks"]
+                for i, c in enumerate(data["chunks"])
             )
             rag_section = f"Trechos relevantes encontrados:\n\n{chunk_block}"
         else:
@@ -131,8 +141,8 @@ class LibraryAgent(BaseAgent):
             " na biblioteca pessoal do usuário."
         )
         return f"""{_intro}
-Use os trechos indexados abaixo para responder. Cite o livro de origem quando
-possível.
+Use os trechos indexados abaixo para responder. Ao usar informações de um
+trecho, cite o número com [1], [2], etc. após a afirmação.
 Se não encontrar resposta nos trechos, informe e sugira uma leitura
 relacionada.
 

@@ -210,6 +210,12 @@ class StoredBankAccount(BaseModel):
     institution_name = models.CharField(
         max_length=200, verbose_name="Instituição Financeira"
     )
+    institution_code = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        verbose_name="Código ISPB/COMPE",
+    )
     account_type = models.CharField(max_length=50, choices=ACCOUNT_TYPES)
     _account_number = models.TextField(
         verbose_name="Número da Conta (Criptografado)"

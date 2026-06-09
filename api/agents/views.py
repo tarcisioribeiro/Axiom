@@ -228,12 +228,18 @@ class AgentAskView(APIView):
                     else None
                 ),
                 "forecast_days": data.get("forecast_days", 30),
+                "book_id": data.get("book_id"),
             },
         )
 
         agent_response = AgentRouter.route(
             ctx, agent_override=data.get("agent_name")
         )
+
+        indexed_sources = [
+            {"index": i + 1, "title": s}
+            for i, s in enumerate(agent_response.sources)
+        ]
 
         # Persistência assíncrona — não bloqueia o retorno da resposta
         _persist_conversation_async(
@@ -250,6 +256,7 @@ class AgentAskView(APIView):
                 "answer": agent_response.content,
                 "agent": agent_response.agent_name,
                 "sources": agent_response.sources,
+                "indexed_sources": indexed_sources,
                 "session_id": session_id,
                 "query_id": query_id,
             }
@@ -389,6 +396,7 @@ class AgentStreamView(APIView):
                     else None
                 ),
                 "forecast_days": data.get("forecast_days", 30),
+                "book_id": data.get("book_id"),
             },
         )
 
@@ -404,11 +412,15 @@ class AgentStreamView(APIView):
                     yield f"data: {json.dumps({'token': token})}\n\n"
 
                 sources = getattr(agent, "_stream_sources", [])
+                indexed_sources = [
+                    {"index": i + 1, "title": s} for i, s in enumerate(sources)
+                ]
                 done_payload = json.dumps(
                     {
                         "done": True,
                         "agent": agent.name,
                         "sources": sources,
+                        "indexed_sources": indexed_sources,
                         "query_id": query_id,
                         "formatted_content": format_response(full_content),
                     }

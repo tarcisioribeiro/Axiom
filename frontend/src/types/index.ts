@@ -22,6 +22,7 @@ export type {
   AgentStreamToken,
   AgentStreamDone,
   AgentStreamEvent,
+  IndexedSource,
 } from './agents';
 export type { Account, AccountFormData } from './accounts';
 export type { Tag, TagFormData } from './tags';
