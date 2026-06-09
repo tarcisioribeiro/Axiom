@@ -385,7 +385,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   if (isExpanded) {
     return createPortal(
       <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/95 p-lg backdrop-blur-sm">
-        <div className="w-full max-w-5xl rounded-xl border border-border bg-card p-lg shadow-2xl">
+        <div className="w-full max-w-5xl rounded-lg border border-border bg-card p-lg shadow-2xl">
           <div className="mb-md flex items-center justify-between">
             <span className="text-sm font-semibold text-foreground">
               {t('pages.planningDashboard.habitHeatmapTitle', {
