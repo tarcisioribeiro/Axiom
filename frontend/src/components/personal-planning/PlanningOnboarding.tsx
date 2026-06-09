@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
@@ -34,21 +35,25 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
   const [step, setStep] = useState(0);
   const [templates, setTemplates] = useState<RoutineTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [templatesFetched, setTemplatesFetched] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
 
   useEffect(() => {
-    if (step === 1 && templates.length === 0) {
-      setIsLoadingTemplates(true);
-      routineTemplatesService
-        .getAll()
-        .then(setTemplates)
-        .catch(() => {})
-        .finally(() => setIsLoadingTemplates(false));
-    }
-  }, [step, templates.length]);
+    if (step !== 1 || templatesFetched) return;
+    routineTemplatesService
+      .getAll()
+      .then((data) => {
+        setTemplates(data);
+        setTemplatesFetched(true);
+      })
+      .catch(() => {
+        setTemplatesFetched(true);
+      });
+  }, [step, templatesFetched]);
+
+  const isLoadingTemplates = step === 1 && !templatesFetched;
 
   const handleSkip = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true');
