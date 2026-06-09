@@ -142,6 +142,7 @@ export interface StoredBankAccount {
   uuid: string;
   name: string;
   institution_name: string;
+  institution_code?: string;
   account_type: string;
   account_type_display: string;
   account_number?: string;
@@ -159,6 +160,7 @@ export interface StoredBankAccount {
 export interface StoredBankAccountFormData {
   name: string;
   institution_name: string;
+  institution_code?: string;
   account_type: string;
   account_number: string;
   agency?: string;

@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { agentService } from '@/services/agent-service';
-import type { AgentAskRequest } from '@/types';
+import type { AgentAskRequest, IndexedSource } from '@/types';
 
 interface AgentStreamState {
   isStreaming: boolean;
   accumulatedText: string;
   currentAgent: string | null;
   sources: string[];
+  indexedSources: IndexedSource[];
   queryId: string | null;
   error: string | null;
 }
@@ -18,6 +19,7 @@ const INITIAL_STATE: AgentStreamState = {
   accumulatedText: '',
   currentAgent: null,
   sources: [],
+  indexedSources: [],
   queryId: null,
   error: null,
 };
@@ -47,7 +49,7 @@ export function useAgentStream() {
       query: string,
       sessionId: string,
       extra?: Omit<AgentAskRequest, 'query' | 'session_id'>
-    ) => {
+    ): Promise<string | null> => {
       cancel();
       const controller = new AbortController();
       abortRef.current = controller;
@@ -57,9 +59,13 @@ export function useAgentStream() {
         accumulatedText: '',
         currentAgent: null,
         sources: [],
+        indexedSources: [],
         queryId: null,
         error: null,
       });
+
+      let localAccumulated = '';
+      let finalText: string | null = null;
 
       try {
         const generator = agentService.stream(
@@ -71,15 +77,18 @@ export function useAgentStream() {
           if (controller.signal.aborted) break;
 
           if ('done' in event && event.done) {
+            finalText = event.formatted_content ?? localAccumulated;
             setState((prev) => ({
               ...prev,
               isStreaming: false,
-              accumulatedText: event.formatted_content ?? prev.accumulatedText,
+              accumulatedText: finalText ?? prev.accumulatedText,
               currentAgent: event.agent,
               sources: event.sources,
+              indexedSources: event.indexed_sources ?? [],
               queryId: event.query_id,
             }));
           } else if ('token' in event) {
+            localAccumulated += event.token;
             setState((prev) => ({
               ...prev,
               accumulatedText: prev.accumulatedText + event.token,
@@ -87,13 +96,16 @@ export function useAgentStream() {
           }
         }
       } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
+        if ((err as Error).name === 'AbortError') return null;
         setState((prev) => ({
           ...prev,
           isStreaming: false,
           error: (err as Error).message ?? 'Streaming error',
         }));
+        return null;
       }
+
+      return finalText;
     },
     [cancel, i18n.language]
   );
