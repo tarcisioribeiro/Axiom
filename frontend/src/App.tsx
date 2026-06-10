@@ -66,6 +66,7 @@ const PersonalPlanningDashboard = lazy(
   () => import('./pages/PersonalPlanningDashboard')
 );
 const TasksAndGoals = lazy(() => import('./pages/TasksAndGoals'));
+const Journey = lazy(() => import('./pages/Journey'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
@@ -104,12 +105,15 @@ const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
+const MyWeekPage = lazy(() => import('./pages/MyWeekPage'));
+const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
 
 // Finance extras
 const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
 const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
 const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
 const MonthComparison = lazy(() => import('./pages/MonthComparison'));
+const DebtPayoffPlanner = lazy(() => import('./pages/DebtPayoffPlanner'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -518,6 +522,30 @@ function AnimatedRoutes() {
                 </PageWrapper>
               }
             />
+            <Route
+              path="journey"
+              element={
+                <PageWrapper>
+                  <Journey />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="week"
+              element={
+                <PageWrapper>
+                  <MyWeekPage />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="analytics"
+              element={
+                <PageWrapper>
+                  <PersonalAnalytics />
+                </PageWrapper>
+              }
+            />
           </Route>
 
           {/* Budgets Module routes */}
@@ -622,6 +650,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <MonthComparison />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/debt-payoff"
+            element={
+              <PageWrapper>
+                <DebtPayoffPlanner />
               </PageWrapper>
             }
           />

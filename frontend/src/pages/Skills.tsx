@@ -2,9 +2,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  BookOpen,
   Brain,
   Clock,
   Edit,
+  GraduationCap,
   LayoutGrid,
   Plus,
   Radar,
@@ -118,6 +120,39 @@ function SkillCard({
 
       {skill.notes && (
         <p className="line-clamp-2 text-xs text-muted-foreground">{skill.notes}</p>
+      )}
+
+      {(skill.books.length > 0 || skill.courses.length > 0) && (
+        <div className="space-y-xs border-t border-border/40 pt-xs">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('pages.skills.developedWith')}
+          </p>
+          <div className="flex flex-wrap gap-xs">
+            {skill.books.slice(0, 2).map((b) => (
+              <span
+                key={b.id}
+                className="flex items-center gap-0.5 rounded-full bg-primary/10 px-xs py-0.5 text-[10px] text-primary"
+              >
+                <BookOpen className="h-2.5 w-2.5" />
+                {b.title.length > 18 ? b.title.slice(0, 18) + '…' : b.title}
+              </span>
+            ))}
+            {skill.courses.slice(0, 2).map((c) => (
+              <span
+                key={c.id}
+                className="flex items-center gap-0.5 rounded-full bg-info/10 px-xs py-0.5 text-[10px] text-info"
+              >
+                <GraduationCap className="h-2.5 w-2.5" />
+                {c.title.length > 18 ? c.title.slice(0, 18) + '…' : c.title}
+              </span>
+            ))}
+            {skill.books.length + skill.courses.length > 4 && (
+              <span className="rounded-full bg-muted px-xs py-0.5 text-[10px] text-muted-foreground">
+                +{skill.books.length + skill.courses.length - 4}
+              </span>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">

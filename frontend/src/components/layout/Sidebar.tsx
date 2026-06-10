@@ -1,7 +1,9 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
+  Flame,
   X,
   PanelLeftClose,
   PanelLeft,
@@ -32,6 +34,7 @@ import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { APP_ENV, APP_VERSION, IS_PRODUCTION } from '@/lib/app-info';
 import { cn } from '@/lib/utils';
+import { libraryDashboardService } from '@/services/library-dashboard-service';
 import { useAuthStore } from '@/stores/auth-store';
 
 // ── Accordion state via reducer ───────────────────────────────────────────────
@@ -151,6 +154,13 @@ export const Sidebar = () => {
     subModule: null,
   });
 
+  const { data: streakData } = useQuery({
+    queryKey: ['library', 'streak'],
+    queryFn: () => libraryDashboardService.getStreak(),
+    staleTime: 30_000,
+    retry: false,
+  });
+
   const filteredNavItems = navItems.filter(
     (item) =>
       !item.permission || hasPermission(item.permission.appName, item.permission.action)
@@ -228,23 +238,37 @@ export const Sidebar = () => {
       isPathActive(item.href, location.pathname)
     );
     const Icon = module.icon;
+    const streak =
+      module.id === 'library' && streakData && streakData.current > 0
+        ? streakData.current
+        : null;
 
     return (
       <div key={module.id} className="space-y-xs">
         {/* Module header button */}
         {isCollapsed ? (
-          <Tooltip content={t(module.titleKey)} side="right">
+          <Tooltip
+            content={
+              streak ? `${t(module.titleKey)} · ${streak} dias` : t(module.titleKey)
+            }
+            side="right"
+          >
             <button
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-150',
+                'relative flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-150',
                 hasActiveItem
                   ? 'font-medium text-primary'
                   : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
               )}
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              {streak && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-0.5 text-[9px] font-bold text-white">
+                  {streak}
+                </span>
+              )}
             </button>
           </Tooltip>
         ) : (
@@ -261,6 +285,12 @@ export const Sidebar = () => {
           >
             <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
             <span className="flex-1 text-left">{t(module.titleKey)}</span>
+            {streak && (
+              <span className="flex items-center gap-0.5 text-xs font-semibold text-orange-500">
+                <Flame className="h-3 w-3" aria-hidden="true" />
+                {streak}
+              </span>
+            )}
             <ChevronDown
               className={cn(
                 'h-4 w-4 shrink-0 transition-transform duration-200',

@@ -59,7 +59,8 @@
       "revealError": "Erro ao revelar dados",
       "invalidData": "Dados inválidos",
       "fillRequired": "Preencha todos os campos obrigatórios.",
-      "passwordCopied": "Senha copiada para a área de transferência."
+      "passwordCopied": "Senha copiada para a área de transferência.",
+      "loading": "Carregando..."
     },
     "fields": {
       "name": "Nome",
@@ -102,7 +103,8 @@
       "document": "Documento (CPF/CNPJ)",
       "phone": "Telefone",
       "email": "Email",
-      "selectDate": "Selecione a data"
+      "selectDate": "Selecione a data",
+      "value": "Valor"
     },
     "paymentMethods": {
       "pix": "PIX",
@@ -269,6 +271,7 @@
       "goals": "Objetivos",
       "bankReconciliation": "Conciliação Bancária",
       "receivables": "Valores a Receber",
+      "journey": "Jornada",
       "workout": "Treino",
       "exercises": "Exercícios",
       "nutrition": "Dieta",
@@ -1250,6 +1253,26 @@
       "billAmount": "Fatura: {{amount}}",
       "dueDayText": "• vence dia {{day}}"
     },
+    "creditCardHub": {
+      "openHub": "Ver detalhes do cartão",
+      "tabs": {
+        "summary": "Resumo",
+        "bills": "Faturas",
+        "purchases": "Compras",
+        "settings": "Configurações"
+      },
+      "usedCredit": "Crédito utilizado",
+      "currentBill": "Fatura atual",
+      "dueOn": "Vence em",
+      "recentBills": "Últimas faturas",
+      "billsFound": "fatura(s)",
+      "noBills": "Nenhuma fatura encontrada para este cartão.",
+      "noPurchases": "Nenhuma compra encontrada para este cartão.",
+      "purchasesFound": "compra(s)",
+      "installment": "parcela",
+      "dangerZone": "Zona de perigo",
+      "reopenConfirm": "Deseja reabrir a fatura de"
+    },
     "creditCardBills": {
       "title": "Faturas de Cartão",
       "newBtn": "Nova Fatura",
@@ -2193,7 +2216,9 @@
       "monthCompositionShort": "Este mês",
       "monthOverMonth": "Comparativo mês a mês",
       "vsPrevMonth": "vs mês anterior:",
-      "installmentSimulator": "Simulador de Parcelas"
+      "installmentSimulator": "Simulador de Parcelas",
+      "sectionMonthlyAnalysis": "Análise Mensal",
+      "sectionAdvancedAnalysis": "Análise Avançada"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -2900,7 +2925,22 @@
       "bestStreak": "melhor",
       "studyTimer": "Timer de estudo",
       "studyMode": "Modo estudo",
-      "breakMode": "Modo pausa"
+      "breakMode": "Modo pausa",
+      "studyTimerTitle": "Timer de Estudo",
+      "studyTimerStart": "Iniciar",
+      "studyTimerPause": "Pausar",
+      "studyTimerResume": "Retomar",
+      "studyTimerStop": "Encerrar",
+      "studyTimerReading": "Leitura",
+      "studyTimerCourse": "Curso",
+      "studyTimerSelectBook": "Selecionar livro...",
+      "studyTimerSelectCourse": "Selecionar curso...",
+      "studyTimerConfirmTitle": "Salvar sessão?",
+      "studyTimerDuration": "Duração",
+      "studyTimerSave": "Salvar",
+      "studyTimerCancel": "Descartar",
+      "studyTimerSaved": "Sessão salva!",
+      "studyTimerPagesRead": "Páginas lidas"
     },
     "books": {
       "title": "Obras",
@@ -3571,6 +3611,7 @@
       "updated": "Habilidade atualizada",
       "saved": "Habilidade salva",
       "deleteConfirm": "Deseja excluir a habilidade \"{{name}}\"? Esta ação não pode ser desfeita.",
+      "developedWith": "Como desenvolvi",
       "viewList": "Lista",
       "viewRadar": "Radar",
       "proficiency": {
@@ -3736,6 +3777,8 @@
       "insightCTAWorstDay": "Ajustar rotina",
       "insightCTAWorkout": "Registrar treino",
       "insightCTAGoals": "Ver metas",
+      "sectionWorkoutNutrition": "Treinos & Nutrição",
+      "sectionDetailedAnalysis": "Análise Detalhada",
       "moduleCards": {
         "workoutTitle": "Treino",
         "workoutSubtitle": "Sessões e exercícios",
@@ -3805,7 +3848,15 @@
         "saveBtn": "Salvar Template",
         "saveSuccess": "Template salvo!",
         "saveSuccessDesc": "O template \"{{name}}\" foi salvo com sucesso.",
-        "saved": "Template salvo localmente"
+        "saved": "Template salvo localmente",
+        "systemTab": "Templates do Sistema",
+        "myTab": "Meus Templates",
+        "taskCount": "tarefa(s)",
+        "noUserTemplates": "Nenhum template pessoal criado ainda.",
+        "noUserTemplatesHint": "Salve uma tarefa como template para começar.",
+        "deleteTitle": "Excluir Template",
+        "deleteDesc": "Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.",
+        "deleted": "Template excluído."
       },
       "export": {
         "btn": "Exportar Rotina",
@@ -4013,7 +4064,16 @@
       "restartConfirmBtn": "Reiniciar",
       "restartSuccess": "Tarefa reiniciada",
       "restartSuccessDesc": "O progresso foi zerado. Comece do zero!",
-      "restartError": "Erro ao reiniciar tarefa"
+      "restartError": "Erro ao reiniciar tarefa",
+      "pace": {
+        "onTrack": "No prazo",
+        "atRisk": "Em risco",
+        "late": "Atrasado"
+      },
+      "daysRemaining": "{{count}} dia restante",
+      "daysRemaining_plural": "{{count}} dias restantes",
+      "overdue": "Prazo expirado",
+      "completed": "Objetivo concluído!"
     },
     "dailyChecklist": {
       "title": "Checklist Diário",
@@ -4154,6 +4214,21 @@
         "reflectionPlaceholder": "Escreva sua reflexão do dia, pensamentos, aprendizados..."
       }
     },
+    "journey": {
+      "title": "Minha Jornada",
+      "badgesEarned": "Conquistas",
+      "goalsCompleted": "Objetivos Concluídos",
+      "currentStreak": "Sequência Atual",
+      "bestStreak": "Melhor Sequência",
+      "badgesTitle": "Conquistas",
+      "noBadges": "Nenhuma conquista ainda",
+      "noBadgesDesc": "Continue aprendendo para ganhar badges!",
+      "timelineTitle": "Linha do Tempo",
+      "noEvents": "Nenhum evento ainda",
+      "noEventsDesc": "Complete objetivos e ganhe badges para ver sua história.",
+      "badgeEarned": "Badge conquistada: {{name}}",
+      "goalCompleted": "Objetivo concluído: {{name}}"
+    },
     "todayTasks": {
       "title": "Tarefas de Hoje",
       "loadError": "Erro ao carregar tarefas",
@@ -4195,6 +4270,7 @@
       "pomodoroStart": "Iniciar",
       "pomodoroPause": "Pausar",
       "pomodoroReset": "Reiniciar",
+      "allDoneTitle": "🎉 Todas as tarefas concluídas! Incrível!",
       "pomodoroFocusDone": "Foco concluído! Faça uma pausa.",
       "pomodoroBreakDone": "Pausa encerrada! Hora de focar.",
       "pomodoroCycles_one": "{{count}} ciclo concluído",
@@ -4204,6 +4280,47 @@
         "shortBreak": "Pausa Curta",
         "longBreak": "Pausa Longa"
       }
+    },
+    "personalAnalytics": {
+      "title": "Analytics Pessoal",
+      "description": "Análise de consistência e padrões dos últimos 90 dias.",
+      "rate7d": "Taxa 7 dias",
+      "rate30d": "Taxa 30 dias",
+      "currentStreak": "Sequência Atual",
+      "bestStreak": "Melhor Sequência",
+      "days": "dias",
+      "weekdayChart": "Conclusão por Dia da Semana",
+      "avg90d": "Média 90d",
+      "heatmap": "Mapa de Hábitos",
+      "insightsTitle": "Insights Automáticos",
+      "byCategory": "Por Categoria",
+      "noData": "Dados insuficientes para análise.",
+      "noInsights": "Nenhum insight disponível ainda. Continue usando o app!",
+      "completionRate": "Taxa de conclusão",
+      "less": "Menos",
+      "more": "Mais",
+      "heatmapTooltip": "{{date}}: {{completed}}/{{expected}} concluídas",
+      "insights": {
+        "bestDay": "{{day}} é seu melhor dia ({{rate}}% de conclusão)",
+        "worstDay": "{{day}} tem taxa mais baixa ({{rate}}%)",
+        "weekendDrop": "Fins de semana caem {{weekday}}% → {{weekend}}%",
+        "weekendBetter": "Fins de semana são melhores ({{weekend}}% vs {{weekday}}%)",
+        "overallExcellent": "Excelente! Taxa global de {{rate}}%",
+        "overallLow": "Taxa global de apenas {{rate}}% — há espaço para melhorar"
+      }
+    },
+    "myWeekPage": {
+      "title": "Minha Semana",
+      "description": "Visualize e acompanhe suas tarefas ao longo da semana.",
+      "currentWeek": "Semana atual",
+      "goToToday": "Ir para hoje",
+      "completed": "concluídas",
+      "noTasks": "Sem tarefas",
+      "overloaded": "Dia sobrecarregado",
+      "legend": "Legenda",
+      "statusCompleted": "Concluída",
+      "statusInProgress": "Em andamento",
+      "statusPending": "Pendente"
     },
     "categorizationRules": {
       "title": "Regras de Categorização",
@@ -6171,5 +6288,40 @@
     "emptyState": "Selecione dois períodos para comparar",
     "count": "{{count}} lançamento(s)",
     "selectBoth": "Selecione os dois períodos para ver a comparação"
+  },
+  "debtPayoff": {
+    "title": "Planejador de Quitação de Dívidas",
+    "description": "Estratégia personalizada para sair das dívidas com menor custo",
+    "totalDebt": "Dívida Total",
+    "totalDebts": "Dívidas Ativas",
+    "minimumMonthly": "Mínimo Mensal",
+    "estimatedPayoff": "Quitação Estimada",
+    "controls": "Configurar Plano",
+    "strategy": "Estratégia de Pagamento",
+    "snowball": "Bola de Neve",
+    "snowballDesc": "Menor dívida primeiro — progresso rápido e motivação",
+    "avalanche": "Avalanche",
+    "avalancheDesc": "Maior juros primeiro — economiza mais no total",
+    "extraMonthly": "Extra Mensal Disponível",
+    "extraMonthlyHint": "Valor adicional além dos pagamentos mínimos",
+    "interestSavedWithAvalanche": "A avalanche economizaria {{amount}} em juros comparado à bola de neve.",
+    "plan": "Plano — {{strategy}}",
+    "month": "mês",
+    "payoffBy": "Quitação em",
+    "interest": "Juros totais:",
+    "comparison": "Comparativo entre Estratégias",
+    "totalInterest": "Total de Juros",
+    "payoffDate": "Data de Quitação",
+    "snowballBenefit": "Motiva pelo progresso rápido",
+    "avalancheBenefit": "Minimiza custo total",
+    "savesWith": "Economia de {{amount}} em juros",
+    "noDebts": "Sem dívidas ativas!",
+    "noDebtsDesc": "Parabéns! Você não possui dívidas ativas no momento.",
+    "creditCard": "Cartão de Crédito",
+    "types": {
+      "loan": "Empréstimo",
+      "bill": "Fatura",
+      "payable": "A Pagar"
+    }
   }
 }

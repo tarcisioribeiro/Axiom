@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from app.export_utils import build_csv_response, build_pdf_response
+from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
     DailyReflection,
@@ -24,6 +26,7 @@ from personal_planning.models import (
     RoutineTask,
     TaskInstance,
     UserBadge,
+    UserRoutineTemplate,
     WorkoutDay,
     WorkoutExercise,
     WorkoutPlan,
@@ -322,6 +325,139 @@ class RoutineTemplateImportView(APIView):
                 "created_ids": created_ids,
                 "skipped_names": skipped_names,
                 "template_name": template["name"],
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+# ============================================================================
+# USER ROUTINE TEMPLATE VIEWS
+# ============================================================================
+
+
+class UserRoutineTemplateListCreateView(BaseListCreateView):
+    """Lista os templates de rotina do usuário ou cria um novo."""
+
+    queryset = UserRoutineTemplate.objects.all()
+
+    def get_queryset(self):
+        return UserRoutineTemplate.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        from personal_planning.serializers import (
+            UserRoutineTemplateCreateUpdateSerializer,
+            UserRoutineTemplateSerializer,
+        )
+
+        if self.request.method == "POST":
+            return UserRoutineTemplateCreateUpdateSerializer
+        return UserRoutineTemplateSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+
+
+class UserRoutineTemplateDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um template de rotina do usuário."""
+
+    queryset = UserRoutineTemplate.objects.all()
+
+    def get_queryset(self):
+        return UserRoutineTemplate.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        from personal_planning.serializers import (
+            UserRoutineTemplateCreateUpdateSerializer,
+            UserRoutineTemplateSerializer,
+        )
+
+        if self.request.method in ["PUT", "PATCH"]:
+            return UserRoutineTemplateCreateUpdateSerializer
+        return UserRoutineTemplateSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.save()
+
+
+class UserRoutineTemplateImportView(APIView):
+    """Importa um template de rotina do usuário, criando RoutineTasks."""
+
+    permission_classes = (IsAuthenticated,)
+    queryset = UserRoutineTemplate.objects.none()
+
+    def post(self, request, pk: int):
+        try:
+            template = UserRoutineTemplate.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except UserRoutineTemplate.DoesNotExist:
+            return Response(
+                {"detail": "Template não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            owner = Member.objects.get(user=request.user)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing_names = set(
+            RoutineTask.objects.filter(
+                owner=owner, deleted_at__isnull=True
+            ).values_list("name", flat=True)
+        )
+
+        created_ids = []
+        skipped_names = []
+
+        for task_data in template.tasks:
+            task_name = task_data.get("name", "")
+            if task_name in existing_names:
+                skipped_names.append(task_name)
+                continue
+
+            task = RoutineTask(
+                name=task_name,
+                description=task_data.get("description", ""),
+                category=task_data.get("category", "other"),
+                icon=task_data.get("icon"),
+                periodicity=task_data.get("periodicity", "daily"),
+                weekday=task_data.get("weekday"),
+                day_of_month=task_data.get("day_of_month"),
+                custom_weekdays=task_data.get("custom_weekdays"),
+                custom_month_days=task_data.get("custom_month_days"),
+                times_per_week=task_data.get("times_per_week"),
+                times_per_month=task_data.get("times_per_month"),
+                interval_days=task_data.get("interval_days"),
+                target_quantity=task_data.get("target_quantity", 1),
+                unit=task_data.get("unit", "vez"),
+                default_time=task_data.get("default_time"),
+                priority=task_data.get("priority", "medium"),
+                owner=owner,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+            task.save()
+            created_ids.append(task.id)
+
+        return Response(
+            {
+                "created_ids": created_ids,
+                "skipped_names": skipped_names,
+                "template_name": template.name,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -1906,3 +2042,270 @@ class MealLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         instance.deleted_by = self.request.user
         instance.is_deleted = True
         instance.save()
+
+
+# ============================================================================
+# EXPORT VIEWS
+# ============================================================================
+
+PDF_ROW_LIMIT = 500
+
+
+class ExportWorkoutSessionsView(APIView):
+    """
+    Exporta sessões de treino do usuário em CSV ou PDF.
+
+    GET /api/v1/personal-planning/workout-sessions/export/
+    ?export_format=csv|pdf&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = [ExportRateThrottle]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        qs = (
+            WorkoutSession.objects.filter(
+                owner=member, deleted_at__isnull=True
+            )
+            .select_related("workout_day__plan")
+            .order_by("-date")
+        )
+
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+
+        export_format = request.query_params.get(
+            "export_format", "csv"
+        ).lower()
+        headers = [
+            "Data",
+            "Plano",
+            "Divisão",
+            "Início",
+            "Fim",
+            "Duração (min)",
+            "Notas",
+        ]
+
+        def rows():
+            for s in qs.iterator():
+                plan_name = (
+                    s.workout_day.plan.name
+                    if s.workout_day and s.workout_day.plan
+                    else ""
+                )
+                day_name = s.workout_day.name if s.workout_day else "Avulso"
+                yield [
+                    str(s.date),
+                    plan_name,
+                    day_name,
+                    str(s.started_at or ""),
+                    str(s.finished_at or ""),
+                    str(s.duration_minutes or ""),
+                    s.notes or "",
+                ]
+
+        if export_format == "pdf":
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "error": (
+                            f"Muitos registros ({count})." " Refine o período."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return build_pdf_response(
+                list(rows()), headers, "treinos", "Histórico de Treinos"
+            )
+        return build_csv_response(rows(), headers, "treinos")
+
+
+class ExportMealLogsView(APIView):
+    """
+    Exporta logs nutricionais do usuário em CSV ou PDF.
+
+    GET /api/v1/personal-planning/meal-logs/export/
+    ?export_format=csv|pdf&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = [ExportRateThrottle]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        qs = (
+            MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+            .select_related("meal_type", "menu_option")
+            .order_by("-date")
+        )
+
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+
+        export_format = request.query_params.get(
+            "export_format", "csv"
+        ).lower()
+        headers = [
+            "Data",
+            "Horário",
+            "Tipo de Refeição",
+            "Opção",
+            "Livre",
+            "Notas",
+        ]
+
+        def rows():
+            for log in qs.iterator():
+                option_name = (
+                    log.menu_option.name if log.menu_option else "Livre"
+                )
+                yield [
+                    str(log.date),
+                    str(log.time or ""),
+                    log.meal_type.name,
+                    option_name,
+                    "Sim" if log.is_free_meal else "Não",
+                    log.notes or "",
+                ]
+
+        if export_format == "pdf":
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "error": (
+                            f"Muitos registros ({count})." " Refine o período."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return build_pdf_response(
+                list(rows()), headers, "nutricao", "Registros Nutricionais"
+            )
+        return build_csv_response(rows(), headers, "nutricao")
+
+
+class ExportReflectionsView(APIView):
+    """
+    Exporta reflexões diárias do usuário em CSV ou PDF.
+
+    GET /api/v1/personal-planning/reflections/export/
+    ?export_format=csv|pdf&date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = [ExportRateThrottle]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        qs = DailyReflection.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).order_by("-date")
+
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+
+        export_format = request.query_params.get(
+            "export_format", "csv"
+        ).lower()
+        headers = ["Data", "Humor", "Reflexão"]
+
+        def rows():
+            for r in qs.iterator():
+                yield [str(r.date), r.mood or "", r.reflection]
+
+        if export_format == "pdf":
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "error": (
+                            f"Muitos registros ({count})." " Refine o período."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return build_pdf_response(
+                list(rows()), headers, "reflexoes", "Reflexões Diárias"
+            )
+        return build_csv_response(rows(), headers, "reflexoes")
+
+
+class ExportGoalsView(APIView):
+    """
+    Exporta metas do usuário em CSV ou PDF.
+
+    GET /api/v1/personal-planning/goals/export/
+    ?export_format=csv|pdf&status=active|completed|cancelled
+    """
+
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = [ExportRateThrottle]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        qs = Goal.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).order_by("-created_at")
+
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        export_format = request.query_params.get(
+            "export_format", "csv"
+        ).lower()
+        headers = [
+            "Título",
+            "Descrição",
+            "Status",
+            "Progresso (%)",
+            "Valor Atual",
+            "Valor Alvo",
+            "Início",
+            "Prazo",
+        ]
+
+        def rows():
+            for g in qs.iterator():
+                yield [
+                    g.title,
+                    g.description or "",
+                    g.status,
+                    str(g.progress_percentage),
+                    str(g.current_value),
+                    str(g.target_value),
+                    str(g.start_date),
+                    str(g.end_date or ""),
+                ]
+
+        if export_format == "pdf":
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "error": (
+                            f"Muitos registros ({count})." " Refine o período."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return build_pdf_response(
+                list(rows()), headers, "metas", "Progresso de Metas"
+            )
+        return build_csv_response(rows(), headers, "metas")

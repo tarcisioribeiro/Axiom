@@ -1,0 +1,422 @@
+/* eslint-disable max-lines */
+import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { formatLocalDate } from '@/lib/utils';
+import { booksService } from '@/services/books-service';
+import { coursesService, courseSessionsService } from '@/services/courses-service';
+import { membersService } from '@/services/members-service';
+import { readingsService } from '@/services/readings-service';
+import type { Book } from '@/types';
+import type { Course } from '@/types/intellect';
+import { getErrorMessage } from '@/utils/error-utils';
+
+const SESSION_KEY = 'studyTimer.state';
+
+type TimerMode = 'reading' | 'course';
+type TimerPhase = 'idle' | 'running' | 'paused';
+
+interface PersistedState {
+  mode: TimerMode;
+  bookId: number | null;
+  courseId: number | null;
+  elapsed: number;
+  phase: TimerPhase;
+  startedAt: number | null;
+}
+
+function loadState(): PersistedState {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) return JSON.parse(raw) as PersistedState;
+  } catch {
+    // ignore
+  }
+  return {
+    mode: 'reading',
+    bookId: null,
+    courseId: null,
+    elapsed: 0,
+    phase: 'idle',
+    startedAt: null,
+  };
+}
+
+function saveState(s: PersistedState) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+}
+
+function formatElapsed(seconds: number) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0)
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+export function StudyTimer() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+
+  const [state, setState] = useState<PersistedState>(loadState);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pagesRead, setPagesRead] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
+  // Recover elapsed time from startedAt when phase is 'running' (page reload)
+  useEffect(() => {
+    if (state.phase === 'running' && state.startedAt) {
+      const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
+      setState((s) => ({
+        ...s,
+        elapsed: s.elapsed + recovered,
+        startedAt: Date.now(),
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tick
+  useEffect(() => {
+    if (state.phase === 'running') {
+      intervalRef.current = setInterval(() => {
+        setState((s) => {
+          const next = { ...s, elapsed: s.elapsed + 1 };
+          saveState(next);
+          return next;
+        });
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [state.phase]);
+
+  // Persist non-elapsed state changes
+  useEffect(() => {
+    saveState(state);
+  }, [state]);
+
+  // Load books + courses when panel opens
+  useEffect(() => {
+    if (!isOpen) return;
+    void booksService
+      .getAll()
+      .then((items) => setBooks(items.filter((b) => b.read_status !== 'read')))
+      .catch(() => {});
+    void coursesService
+      .getAll()
+      .then((items) => setCourses(items))
+      .catch(() => {});
+  }, [isOpen]);
+
+  const updateState = useCallback((patch: Partial<PersistedState>) => {
+    setState((s) => {
+      const next = { ...s, ...patch };
+      saveState(next);
+      return next;
+    });
+  }, []);
+
+  const handleStart = () => {
+    updateState({ phase: 'running', startedAt: Date.now() });
+  };
+
+  const handlePause = () => {
+    updateState({ phase: 'paused', startedAt: null });
+  };
+
+  const handleStop = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    updateState({ phase: 'paused', startedAt: null });
+    setShowConfirm(true);
+  };
+
+  const handleReset = () => {
+    updateState({ phase: 'idle', elapsed: 0, startedAt: null });
+    setPagesRead('');
+  };
+
+  const handleSave = async () => {
+    const { mode, bookId, courseId, elapsed } = stateRef.current;
+    const durationMinutes = Math.max(1, Math.round(elapsed / 60));
+
+    try {
+      setIsSaving(true);
+      const member = await membersService.getCurrentUserMember();
+      const today = formatLocalDate(new Date());
+
+      if (mode === 'reading' && bookId) {
+        await readingsService.create({
+          book: bookId,
+          reading_date: today,
+          reading_time: durationMinutes,
+          pages_read: parseInt(pagesRead || '0', 10) || 1,
+          owner: member.id,
+        });
+      } else if (mode === 'course' && courseId) {
+        await courseSessionsService.create({
+          course: courseId,
+          session_date: today,
+          duration_minutes: durationMinutes,
+          owner: member.id,
+        });
+      }
+
+      toast({ title: t('intellect.studyTimerSaved') });
+      setShowConfirm(false);
+      handleReset();
+      setIsOpen(false);
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isActive = state.phase !== 'idle';
+  const selectedBook = books.find((b) => b.id === state.bookId);
+  const selectedCourse = courses.find((c) => c.id === state.courseId);
+  const canStart =
+    state.phase === 'idle' &&
+    ((state.mode === 'reading' && !!state.bookId) ||
+      (state.mode === 'course' && !!state.courseId));
+
+  return (
+    <>
+      {/* Floating trigger */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-sm">
+        {isOpen && (
+          <div className="mb-sm w-72 rounded-lg border bg-card shadow-lg">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b px-md py-sm">
+              <div className="flex items-center gap-sm">
+                <Timer className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">
+                  {t('intellect.studyTimerTitle')}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="rounded p-xs text-muted-foreground hover:text-foreground"
+                aria-label={t('common.close')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-sm p-md">
+              {/* Mode selector */}
+              <div className="flex gap-xs rounded-md border p-0.5">
+                {(['reading', 'course'] as TimerMode[]).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    disabled={isActive}
+                    onClick={() =>
+                      updateState({ mode: m, bookId: null, courseId: null })
+                    }
+                    className={`flex-1 rounded px-sm py-xs text-xs transition-colors ${
+                      state.mode === m
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {t(
+                      m === 'reading'
+                        ? 'intellect.studyTimerReading'
+                        : 'intellect.studyTimerCourse'
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Resource selector */}
+              {state.mode === 'reading' ? (
+                <Select
+                  disabled={isActive}
+                  value={state.bookId ? String(state.bookId) : ''}
+                  onValueChange={(v) => updateState({ bookId: parseInt(v, 10) })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder={t('intellect.studyTimerSelectBook')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {books.map((b) => (
+                      <SelectItem key={b.id} value={String(b.id)}>
+                        {b.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select
+                  disabled={isActive}
+                  value={state.courseId ? String(state.courseId) : ''}
+                  onValueChange={(v) => updateState({ courseId: parseInt(v, 10) })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder={t('intellect.studyTimerSelectCourse')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Timer display */}
+              <div className="text-center text-3xl font-bold tabular-nums tracking-tight">
+                {formatElapsed(state.elapsed)}
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-sm">
+                {state.phase === 'idle' && (
+                  <Button size="sm" disabled={!canStart} onClick={handleStart}>
+                    <Play className="mr-xs h-3.5 w-3.5" />
+                    {t('intellect.studyTimerStart')}
+                  </Button>
+                )}
+                {state.phase === 'running' && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={handlePause}>
+                      <Pause className="mr-xs h-3.5 w-3.5" />
+                      {t('intellect.studyTimerPause')}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={handleStop}>
+                      <Square className="mr-xs h-3.5 w-3.5" />
+                      {t('intellect.studyTimerStop')}
+                    </Button>
+                  </>
+                )}
+                {state.phase === 'paused' && (
+                  <>
+                    <Button size="sm" onClick={handleStart}>
+                      <Play className="mr-xs h-3.5 w-3.5" />
+                      {t('intellect.studyTimerResume')}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={handleStop}>
+                      <Square className="mr-xs h-3.5 w-3.5" />
+                      {t('intellect.studyTimerStop')}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* FAB button */}
+        <button
+          onClick={() => setIsOpen((o) => !o)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+          aria-label={t('intellect.studyTimerTitle')}
+        >
+          {state.phase === 'running' ? (
+            <span className="text-xs font-bold tabular-nums">
+              {formatElapsed(state.elapsed).split(':').slice(-2).join(':')}
+            </span>
+          ) : (
+            <BookOpen className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+
+      {/* Confirmation dialog */}
+      <Dialog
+        open={showConfirm}
+        onOpenChange={(open) => {
+          if (!open) setShowConfirm(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('intellect.studyTimerConfirmTitle')}</DialogTitle>
+            <DialogDescription>
+              {state.mode === 'reading' && selectedBook
+                ? selectedBook.title
+                : (selectedCourse?.title ?? '')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-md py-sm">
+            <div className="flex items-center justify-between rounded-lg bg-muted px-md py-sm">
+              <span className="text-sm text-muted-foreground">
+                {t('intellect.studyTimerDuration')}
+              </span>
+              <span className="text-sm font-bold">{formatElapsed(state.elapsed)}</span>
+            </div>
+            {state.mode === 'reading' && (
+              <div className="space-y-xs">
+                <Label htmlFor="pages-read" className="text-sm">
+                  {t('intellect.studyTimerPagesRead')}
+                </Label>
+                <Input
+                  id="pages-read"
+                  type="number"
+                  min={1}
+                  value={pagesRead}
+                  onChange={(e) => setPagesRead(e.target.value)}
+                  placeholder="0"
+                  className="h-8"
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowConfirm(false);
+                handleReset();
+              }}
+            >
+              {t('intellect.studyTimerCancel')}
+            </Button>
+            <Button size="sm" onClick={() => void handleSave()} disabled={isSaving}>
+              {t('intellect.studyTimerSave')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
