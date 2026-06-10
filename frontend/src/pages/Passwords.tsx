@@ -794,12 +794,27 @@ export default function Passwords() {
     setDetailPassword((prev) => (prev?.id === password.id ? null : password));
   };
 
-  const filteredPasswords = passwords.filter(
-    (pwd) =>
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      const updated = await passwordsService.toggleFavorite(id);
+      setPasswords((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredPasswords = passwords.filter((pwd) => {
+    if (showFavoritesOnly && !pwd.is_favorite) return false;
+    return (
       pwd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.site?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   if (isLoading) {
     return <LoadingState />;
@@ -1021,6 +1036,25 @@ export default function Passwords() {
                               ) : (
                                 <Copy className="h-3 w-3" aria-hidden="true" />
                               )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleToggleFavorite(password.id);
+                              }}
+                              title={t('common.actions.favorite')}
+                              aria-label={t('common.actions.favorite')}
+                              className={cn(password.is_favorite && 'text-warning')}
+                            >
+                              <Star
+                                className={cn(
+                                  'h-3 w-3',
+                                  password.is_favorite && 'fill-current'
+                                )}
+                                aria-hidden="true"
+                              />
                             </Button>
                             <Button
                               size="sm"

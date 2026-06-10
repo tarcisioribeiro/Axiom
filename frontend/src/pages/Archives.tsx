@@ -5,6 +5,7 @@ import {
   Trash2,
   Eye,
   Download,
+  Star,
   FileText,
   File,
   Archive as ArchiveIcon,
@@ -59,6 +60,7 @@ export default function Archives() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRevealing, setIsRevealing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   // #197 — inline preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<'image' | 'pdf' | null>(null);
@@ -291,12 +293,27 @@ export default function Archives() {
     }
   };
 
-  const filteredArchives = archives.filter(
-    (arc) =>
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      const updated = await archivesService.toggleFavorite(id);
+      setArchives((prev) => prev.map((a) => (a.id === id ? updated : a)));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredArchives = archives.filter((arc) => {
+    if (showFavoritesOnly && !arc.is_favorite) return false;
+    return (
       arc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       arc.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
       arc.file_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '-';
@@ -319,13 +336,29 @@ export default function Archives() {
           </Button>
         </PageHeader>
 
-        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <FilterBar
+          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          onClear={() => {
+            setSearchTerm('');
+            setShowFavoritesOnly(false);
+          }}
+        >
           <SearchInput
             placeholder={t('pages.archives.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Button
+            variant={showFavoritesOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFavoritesOnly((v) => !v)}
+            className="gap-xs"
+            title={t('common.actions.favorites')}
+          >
+            <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
+            {t('common.actions.favorites')}
+          </Button>
         </FilterBar>
 
         {filteredArchives.length === 0 ? (
@@ -424,6 +457,19 @@ export default function Archives() {
                             <Eye className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn('h-8 w-8', arc.is_favorite && 'text-warning')}
+                          onClick={() => void handleToggleFavorite(arc.id)}
+                          aria-label={t('common.actions.favorite')}
+                          title={t('common.actions.favorite')}
+                        >
+                          <Star
+                            className={cn('h-4 w-4', arc.is_favorite && 'fill-current')}
+                            aria-hidden="true"
+                          />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

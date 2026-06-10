@@ -422,7 +422,13 @@ export default function DailyReflections() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="h-12 w-12" />}
+          title={t('pages.dailyReflections.emptyStateTitle')}
           message={t('pages.dailyReflections.emptyState')}
+          action={{
+            label: t('pages.dailyReflections.newBtn'),
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleCreate,
+          }}
         />
       ) : (
         <div className="space-y-3">
