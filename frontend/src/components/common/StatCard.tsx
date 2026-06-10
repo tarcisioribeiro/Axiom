@@ -26,6 +26,12 @@ interface StatCardProps {
   prominent?: boolean;
   /** Optional click handler — adds cursor-pointer and hover ring */
   onClick?: () => void;
+  /** Inline progress bar shown below the value */
+  progressBar?: {
+    value: number;
+    max: number;
+    color?: 'success' | 'warning' | 'danger' | 'primary';
+  };
 }
 
 const extractNumber = (val: string | number): number => {
@@ -77,6 +83,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   accentColor,
   prominent = false,
   onClick,
+  progressBar,
 }) => {
   const { i18n } = useTranslation();
   const variantClasses = {
@@ -171,6 +178,29 @@ export const StatCard: React.FC<StatCardProps> = ({
           >
             {displayValue}
           </div>
+          {progressBar && (
+            <div className="mt-sm">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  className={cn(
+                    'h-full rounded-full',
+                    progressBar.color === 'warning'
+                      ? 'bg-warning'
+                      : progressBar.color === 'danger'
+                        ? 'bg-destructive'
+                        : progressBar.color === 'primary'
+                          ? 'bg-primary'
+                          : 'bg-success'
+                  )}
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${Math.min((progressBar.value / (progressBar.max || 1)) * 100, 100)}%`,
+                  }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+          )}
           {description && (
             <p className="mt-xs text-xs text-muted-foreground">{description}</p>
           )}

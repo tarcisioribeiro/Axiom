@@ -59,7 +59,8 @@
       "revealError": "Error revealing data",
       "invalidData": "Invalid data",
       "fillRequired": "Please fill in all required fields.",
-      "passwordCopied": "Password copied to clipboard."
+      "passwordCopied": "Password copied to clipboard.",
+      "loading": "Loading..."
     },
     "fields": {
       "name": "Name",
@@ -102,7 +103,8 @@
       "document": "Document (CPF/CNPJ)",
       "phone": "Phone",
       "email": "Email",
-      "selectDate": "Select date"
+      "selectDate": "Select date",
+      "value": "Value"
     },
     "paymentMethods": {
       "pix": "PIX",
@@ -269,6 +271,7 @@
       "goals": "Goals",
       "bankReconciliation": "Bank Reconciliation",
       "receivables": "Receivables",
+      "journey": "Journey",
       "workout": "Workout",
       "exercises": "Exercises",
       "nutrition": "Diet",
@@ -1250,6 +1253,26 @@
       "billAmount": "Bill: {{amount}}",
       "dueDayText": "• due day {{day}}"
     },
+    "creditCardHub": {
+      "openHub": "View card details",
+      "tabs": {
+        "summary": "Summary",
+        "bills": "Bills",
+        "purchases": "Purchases",
+        "settings": "Settings"
+      },
+      "usedCredit": "Used credit",
+      "currentBill": "Current bill",
+      "dueOn": "Due on",
+      "recentBills": "Recent bills",
+      "billsFound": "bill(s)",
+      "noBills": "No bills found for this card.",
+      "noPurchases": "No purchases found for this card.",
+      "purchasesFound": "purchase(s)",
+      "installment": "installment",
+      "dangerZone": "Danger zone",
+      "reopenConfirm": "Reopen the bill for"
+    },
     "creditCardBills": {
       "title": "Card Bills",
       "newBtn": "New Bill",
@@ -2135,7 +2158,9 @@
       "monthCompositionShort": "This month",
       "monthOverMonth": "Month over month",
       "vsPrevMonth": "vs prev. month:",
-      "installmentSimulator": "Installment Simulator"
+      "installmentSimulator": "Installment Simulator",
+      "sectionMonthlyAnalysis": "Monthly Analysis",
+      "sectionAdvancedAnalysis": "Advanced Analysis"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -2836,7 +2861,22 @@
       "bestStreak": "best",
       "studyTimer": "Study timer",
       "studyMode": "Study mode",
-      "breakMode": "Break mode"
+      "breakMode": "Break mode",
+      "studyTimerTitle": "Study Timer",
+      "studyTimerStart": "Start",
+      "studyTimerPause": "Pause",
+      "studyTimerResume": "Resume",
+      "studyTimerStop": "Stop",
+      "studyTimerReading": "Reading",
+      "studyTimerCourse": "Course",
+      "studyTimerSelectBook": "Select book...",
+      "studyTimerSelectCourse": "Select course...",
+      "studyTimerConfirmTitle": "Save session?",
+      "studyTimerDuration": "Duration",
+      "studyTimerSave": "Save",
+      "studyTimerCancel": "Discard",
+      "studyTimerSaved": "Session saved!",
+      "studyTimerPagesRead": "Pages read"
     },
     "books": {
       "title": "Works",
@@ -3493,6 +3533,7 @@
       "updated": "Skill updated",
       "saved": "Skill saved",
       "deleteConfirm": "Delete skill \"{{name}}\"? This action cannot be undone.",
+      "developedWith": "Developed with",
       "viewList": "List",
       "viewRadar": "Radar",
       "proficiency": {
@@ -3658,6 +3699,8 @@
       "insightCTAWorstDay": "Adjust routine",
       "insightCTAWorkout": "Log workout",
       "insightCTAGoals": "See goals",
+      "sectionWorkoutNutrition": "Workouts & Nutrition",
+      "sectionDetailedAnalysis": "Detailed Analysis",
       "moduleCards": {
         "workoutTitle": "Workout",
         "workoutSubtitle": "Sessions and exercises",
@@ -3727,7 +3770,15 @@
         "saveBtn": "Save Template",
         "saveSuccess": "Template saved!",
         "saveSuccessDesc": "The template \"{{name}}\" was saved successfully.",
-        "saved": "Template saved locally"
+        "saved": "Template saved locally",
+        "systemTab": "System Templates",
+        "myTab": "My Templates",
+        "taskCount": "task(s)",
+        "noUserTemplates": "No personal templates created yet.",
+        "noUserTemplatesHint": "Save a task as a template to get started.",
+        "deleteTitle": "Delete Template",
+        "deleteDesc": "Are you sure you want to delete this template? This action cannot be undone.",
+        "deleted": "Template deleted."
       },
       "export": {
         "btn": "Export Routine",
@@ -3935,7 +3986,16 @@
       "restartConfirmBtn": "Restart",
       "restartSuccess": "Task restarted",
       "restartSuccessDesc": "Progress has been zeroed. Start from scratch!",
-      "restartError": "Error restarting task"
+      "restartError": "Error restarting task",
+      "pace": {
+        "onTrack": "On track",
+        "atRisk": "At risk",
+        "late": "Behind"
+      },
+      "daysRemaining": "{{count}} day left",
+      "daysRemaining_plural": "{{count}} days left",
+      "overdue": "Deadline passed",
+      "completed": "Goal completed!"
     },
     "dailyChecklist": {
       "title": "Daily Checklist",
@@ -4076,6 +4136,21 @@
         "reflectionPlaceholder": "Write your daily reflection, thoughts, learnings..."
       }
     },
+    "journey": {
+      "title": "My Journey",
+      "badgesEarned": "Badges Earned",
+      "goalsCompleted": "Goals Completed",
+      "currentStreak": "Current Streak",
+      "bestStreak": "Best Streak",
+      "badgesTitle": "Badges",
+      "noBadges": "No badges yet",
+      "noBadgesDesc": "Keep learning to earn badges!",
+      "timelineTitle": "Timeline",
+      "noEvents": "No events yet",
+      "noEventsDesc": "Complete goals and earn badges to see your story.",
+      "badgeEarned": "Badge earned: {{name}}",
+      "goalCompleted": "Goal completed: {{name}}"
+    },
     "todayTasks": {
       "title": "Today's Tasks",
       "loadError": "Error loading tasks",
@@ -4117,6 +4192,7 @@
       "pomodoroStart": "Start",
       "pomodoroPause": "Pause",
       "pomodoroReset": "Reset",
+      "allDoneTitle": "🎉 All tasks completed! Amazing!",
       "pomodoroFocusDone": "Focus session complete! Take a break.",
       "pomodoroBreakDone": "Break over! Time to focus.",
       "pomodoroCycles_one": "{{count}} cycle completed",
@@ -4126,6 +4202,47 @@
         "shortBreak": "Short Break",
         "longBreak": "Long Break"
       }
+    },
+    "personalAnalytics": {
+      "title": "Personal Analytics",
+      "description": "Consistency analysis and patterns from the last 90 days.",
+      "rate7d": "7-day Rate",
+      "rate30d": "30-day Rate",
+      "currentStreak": "Current Streak",
+      "bestStreak": "Best Streak",
+      "days": "days",
+      "weekdayChart": "Completion by Day of Week",
+      "avg90d": "90d avg",
+      "heatmap": "Habit Map",
+      "insightsTitle": "Automatic Insights",
+      "byCategory": "By Category",
+      "noData": "Insufficient data for analysis.",
+      "noInsights": "No insights available yet. Keep using the app!",
+      "completionRate": "Completion rate",
+      "less": "Less",
+      "more": "More",
+      "heatmapTooltip": "{{date}}: {{completed}}/{{expected}} completed",
+      "insights": {
+        "bestDay": "{{day}} is your best day ({{rate}}% completion)",
+        "worstDay": "{{day}} has the lowest rate ({{rate}}%)",
+        "weekendDrop": "Weekends drop {{weekday}}% → {{weekend}}%",
+        "weekendBetter": "Weekends are better ({{weekend}}% vs {{weekday}}%)",
+        "overallExcellent": "Excellent! Overall rate of {{rate}}%",
+        "overallLow": "Overall rate of only {{rate}}% — room to improve"
+      }
+    },
+    "myWeekPage": {
+      "title": "My Week",
+      "description": "View and track your tasks throughout the week.",
+      "currentWeek": "Current week",
+      "goToToday": "Go to today",
+      "completed": "completed",
+      "noTasks": "No tasks",
+      "overloaded": "Overloaded day",
+      "legend": "Legend",
+      "statusCompleted": "Completed",
+      "statusInProgress": "In progress",
+      "statusPending": "Pending"
     },
     "categorizationRules": {
       "title": "Categorization Rules",
@@ -6082,5 +6199,40 @@
     "emptyState": "Select two periods to compare",
     "count": "{{count}} entry(ies)",
     "selectBoth": "Select both periods to see the comparison"
+  },
+  "debtPayoff": {
+    "title": "Debt Payoff Planner",
+    "description": "Personalized strategy to pay off debts at minimum cost",
+    "totalDebt": "Total Debt",
+    "totalDebts": "Active Debts",
+    "minimumMonthly": "Monthly Minimum",
+    "estimatedPayoff": "Estimated Payoff",
+    "controls": "Configure Plan",
+    "strategy": "Payoff Strategy",
+    "snowball": "Snowball",
+    "snowballDesc": "Smallest debt first — quick wins and motivation",
+    "avalanche": "Avalanche",
+    "avalancheDesc": "Highest interest first — saves more overall",
+    "extraMonthly": "Extra Monthly Amount",
+    "extraMonthlyHint": "Extra amount beyond minimum payments",
+    "interestSavedWithAvalanche": "Avalanche would save {{amount}} in interest vs. snowball.",
+    "plan": "Plan — {{strategy}}",
+    "month": "month",
+    "payoffBy": "Paid off by",
+    "interest": "Total interest:",
+    "comparison": "Strategy Comparison",
+    "totalInterest": "Total Interest",
+    "payoffDate": "Payoff Date",
+    "snowballBenefit": "Motivates through quick wins",
+    "avalancheBenefit": "Minimizes total cost",
+    "savesWith": "Saves {{amount}} in interest",
+    "noDebts": "No active debts!",
+    "noDebtsDesc": "Congratulations! You have no active debts at the moment.",
+    "creditCard": "Credit Card",
+    "types": {
+      "loan": "Loan",
+      "bill": "Bill",
+      "payable": "Payable"
+    }
   }
 }

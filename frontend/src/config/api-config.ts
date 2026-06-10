@@ -113,6 +113,7 @@ export const API_CONFIG = {
     BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
     LITERARY_TYPE_GOALS: '/api/v1/library/literary-type-goals/',
     LIBRARY_DASHBOARD_STATS: '/api/v1/library/dashboard/stats/',
+    LIBRARY_STREAK: '/api/v1/library/streak/',
     // Intellect — Courses & Skills
     COURSES: '/api/v1/library/courses/',
     COURSE_MODULES: '/api/v1/library/course-modules/',
@@ -137,6 +138,7 @@ export const API_CONFIG = {
     ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
     ROUTINE_TEMPLATES: '/api/v1/personal-planning/routine-templates/',
     ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
+    USER_ROUTINE_TEMPLATES: '/api/v1/personal-planning/user-routine-templates/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',

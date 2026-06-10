@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
-import { motion } from 'framer-motion';
+import { differenceInDays, parseISO } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   Trophy,
@@ -16,6 +17,8 @@ import {
   TrendingUp,
   TrendingDown,
   Download,
+  CheckCircle2,
+  Clock,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -99,21 +102,69 @@ function GoalCard({
   const typeMeta = GOAL_TYPE_META[goal.goal_type] ?? GOAL_TYPE_META.custom;
   const TypeIcon = typeMeta.icon;
   const isAutoType = AUTO_GOAL_TYPES.includes(goal.goal_type);
+  const isCompleted = goal.status === 'completed';
 
-  const ringColor =
-    goal.status === 'completed'
+  const ringColor = isCompleted
+    ? 'hsl(var(--chart-2))'
+    : pct >= 80
       ? 'hsl(var(--chart-2))'
-      : pct >= 80
-        ? 'hsl(var(--chart-2))'
-        : 'hsl(var(--primary))';
+      : 'hsl(var(--primary))';
 
   const displayValue =
     goal.calculated_current_value !== undefined
       ? goal.calculated_current_value
       : goal.current_value;
 
+  // Pace indicator and days remaining
+  const today = new Date();
+  let paceStatus: 'on_track' | 'at_risk' | 'late' | null = null;
+  let daysRemaining: number | null = null;
+
+  if (goal.end_date && goal.status === 'active') {
+    const endDate = parseISO(goal.end_date);
+    const startDate = parseISO(goal.start_date);
+    const totalDays = differenceInDays(endDate, startDate);
+    const daysElapsed = differenceInDays(today, startDate);
+    daysRemaining = differenceInDays(endDate, today);
+
+    if (totalDays > 0) {
+      const expectedPct = Math.min((daysElapsed / totalDays) * 100, 100);
+      if (pct >= expectedPct * 0.9) paceStatus = 'on_track';
+      else if (pct >= expectedPct * 0.7) paceStatus = 'at_risk';
+      else paceStatus = 'late';
+    }
+  }
+
+  const paceConfig = {
+    on_track: {
+      label: t('pages.goals.pace.onTrack'),
+      className: 'text-success bg-success/10',
+    },
+    at_risk: {
+      label: t('pages.goals.pace.atRisk'),
+      className: 'text-warning bg-warning/10',
+    },
+    late: {
+      label: t('pages.goals.pace.late'),
+      className: 'text-destructive bg-destructive/10',
+    },
+  };
+
   return (
     <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
+      {/* Completion glow animation */}
+      <AnimatePresence>
+        {isCompleted && (
+          <motion.div
+            key="completion-glow"
+            className="bg-success/8 pointer-events-none absolute inset-0 rounded-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          />
+        )}
+      </AnimatePresence>
       <CardContent className="p-5">
         <div className="mb-md flex items-start gap-3">
           <div
@@ -173,6 +224,57 @@ function GoalCard({
             </div>
           </div>
         </div>
+
+        {/* Pace indicator + days remaining */}
+        {(paceStatus || daysRemaining !== null) && (
+          <div className="mb-3 flex flex-wrap items-center gap-xs">
+            {paceStatus && (
+              <span
+                className={cn(
+                  'flex items-center gap-xs rounded px-sm py-0.5 text-xs font-medium',
+                  paceConfig[paceStatus].className
+                )}
+              >
+                {paceStatus === 'on_track' ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <AlertTriangle className="h-3 w-3" />
+                )}
+                {paceConfig[paceStatus].label}
+              </span>
+            )}
+            {daysRemaining !== null && (
+              <span
+                className={cn(
+                  'flex items-center gap-xs rounded px-sm py-0.5 text-xs font-medium',
+                  daysRemaining < 7
+                    ? 'bg-destructive/10 text-destructive'
+                    : daysRemaining < 14
+                      ? 'bg-warning/10 text-warning'
+                      : 'bg-muted text-muted-foreground'
+                )}
+              >
+                <Clock className="h-3 w-3" />
+                {daysRemaining > 0
+                  ? t('pages.goals.daysRemaining', { count: daysRemaining })
+                  : t('pages.goals.overdue')}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Completion badge */}
+        {isCompleted && (
+          <motion.div
+            className="mb-3 flex items-center gap-sm text-success"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <Trophy className="h-4 w-4" />
+            <span className="text-sm font-semibold">{t('pages.goals.completed')}</span>
+          </motion.div>
+        )}
 
         <div className="flex items-center justify-between border-t pt-3">
           <Badge
