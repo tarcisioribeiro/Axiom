@@ -5,6 +5,10 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     DailyReflectionListCreateView,
     ExerciseListCreateView,
     ExerciseRetrieveUpdateDestroyView,
+    ExportGoalsView,
+    ExportMealLogsView,
+    ExportReflectionsView,
+    ExportWorkoutSessionsView,
     FoodListCreateView,
     FoodRetrieveUpdateDestroyView,
     GamificationProfileView,
@@ -33,6 +37,9 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     TaskInstanceDetailView,
     TaskInstanceListCreateView,
     TaskInstanceStatusUpdateView,
+    UserRoutineTemplateDetailView,
+    UserRoutineTemplateImportView,
+    UserRoutineTemplateListCreateView,
     WorkoutDayListCreateView,
     WorkoutDayRetrieveUpdateDestroyView,
     WorkoutExerciseListCreateView,
@@ -86,6 +93,22 @@ urlpatterns = [
         "routine-templates/import/",
         RoutineTemplateImportView.as_view(),
         name="routine-template-import",
+    ),
+    # User Routine Templates (user-created)
+    path(
+        "user-routine-templates/",
+        UserRoutineTemplateListCreateView.as_view(),
+        name="user-routine-template-list-create",
+    ),
+    path(
+        "user-routine-templates/<int:pk>/",
+        UserRoutineTemplateDetailView.as_view(),
+        name="user-routine-template-detail",
+    ),
+    path(
+        "user-routine-templates/<int:pk>/import/",
+        UserRoutineTemplateImportView.as_view(),
+        name="user-routine-template-import",
     ),
     # Goals
     path("goals/", GoalListCreateView.as_view(), name="goal-list-create"),
@@ -274,5 +297,26 @@ urlpatterns = [
         "meal-logs/<int:pk>/",
         MealLogRetrieveUpdateDestroyView.as_view(),
         name="meal-log-detail",
+    ),
+    # Export endpoints
+    path(
+        "workout-sessions/export/",
+        ExportWorkoutSessionsView.as_view(),
+        name="workout-sessions-export",
+    ),
+    path(
+        "meal-logs/export/",
+        ExportMealLogsView.as_view(),
+        name="meal-logs-export",
+    ),
+    path(
+        "reflections/export/",
+        ExportReflectionsView.as_view(),
+        name="reflections-export",
+    ),
+    path(
+        "goals/export/",
+        ExportGoalsView.as_view(),
+        name="goals-export",
     ),
 ]

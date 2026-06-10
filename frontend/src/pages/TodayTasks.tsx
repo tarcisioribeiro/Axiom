@@ -26,6 +26,7 @@ import { TodayKanbanView } from '@/components/today-tasks/TodayKanbanView';
 import { TodayListView } from '@/components/today-tasks/TodayListView';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { SuccessAnimation } from '@/components/ui/success-animation';
 import { useToast } from '@/hooks/use-toast';
 import { useTodayTasks } from '@/hooks/use-today-tasks';
 import { cn } from '@/lib/utils';
@@ -181,6 +182,9 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 
 export default function TodayTasks({ embedded = false }: TodayTasksProps) {
   const { t, i18n } = useTranslation();
+  const { toast } = useToast();
+  const [showCelebration, setShowCelebration] = useState(false);
+  const prevDayRateRef = useRef<number>(0);
 
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'kanban'
@@ -215,10 +219,6 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  if (isLoading) return <LoadingState />;
-
-  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
-
   const todayTasksCount = viewMode === 'kanban' ? cards.length : todayTasks.length;
   const doneCount =
     viewMode === 'kanban'
@@ -231,6 +231,22 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
       : dayRate >= 40
         ? 'hsl(var(--warning))'
         : 'hsl(var(--primary))';
+
+  useEffect(() => {
+    if (todayTasksCount > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
+      const timer = setTimeout(() => {
+        setShowCelebration(true);
+        toast({ title: t('pages.todayTasks.allDoneTitle') });
+      }, 0);
+      prevDayRateRef.current = dayRate;
+      return () => clearTimeout(timer);
+    }
+    prevDayRateRef.current = dayRate;
+  }, [dayRate, todayTasksCount, toast, t]);
+
+  if (isLoading) return <LoadingState />;
+
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   const changeViewMode = (mode: ViewMode) => {
     setViewMode(mode);
@@ -298,6 +314,13 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
 
   return (
     <Wrapper>
+      <SuccessAnimation
+        show={showCelebration}
+        variant="celebration"
+        size="lg"
+        onComplete={() => setShowCelebration(false)}
+        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+      />
       <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />}>
         {viewToggle}
       </PageHeader>

@@ -50,6 +50,7 @@ from library.views import (
     SkillRetrieveUpdateDestroyView,
     SummaryDetailView,
     SummaryListCreateView,
+    UnifiedStreakView,
 )
 
 urlpatterns = [
@@ -59,6 +60,7 @@ urlpatterns = [
         LibraryDashboardStatsView.as_view(),
         name="library-dashboard-stats",
     ),
+    path("streak/", UnifiedStreakView.as_view(), name="library-streak"),
     # Authors
     path(
         "authors/", AuthorListCreateView.as_view(), name="author-list-create"

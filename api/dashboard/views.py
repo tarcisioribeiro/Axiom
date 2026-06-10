@@ -1830,20 +1830,24 @@ class DashboardSummaryView(APIView):
     """
     GET /api/v1/dashboard/summary/
 
-    Agrega stats + saldos de contas + alertas financeiros em uma única
-    requisição, reduzindo round-trips do frontend.
+    Agrega stats + saldos de contas + alertas financeiros + status de
+    orçamentos do mês atual em uma única requisição, reduzindo round-trips
+    do frontend.
 
     Response:
     {
         "stats": { ...DashboardStatsView response... },
         "account_balances": [ ...AccountBalancesView response... ],
-        "financial_alerts": [ ...FinancialAlertsView response... ]
+        "financial_alerts": [ ...FinancialAlertsView response... ],
+        "budget_status": [ ...BudgetStatusView response (mês atual)... ]
     }
     """
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from budgets.views import BudgetStatusView
+
         cache_key = get_cache_key("dashboard_summary", request.user.id)
         cached = cache.get(cache_key)
         if cached is not None:
@@ -1852,15 +1856,18 @@ class DashboardSummaryView(APIView):
         stats_view = DashboardStatsView()
         balances_view = AccountBalancesView()
         alerts_view = FinancialAlertsView()
+        budget_view = BudgetStatusView()
 
         stats_resp = stats_view.get(request)
         balances_resp = balances_view.get(request)
         alerts_resp = alerts_view.get(request)
+        budget_resp = budget_view.get(request)
 
         result = {
             "stats": stats_resp.data,
             "account_balances": balances_resp.data,
             "financial_alerts": alerts_resp.data,
+            "budget_status": budget_resp.data,
         }
 
         cache_ttl = getattr(settings, "CACHE_TTL_ACCOUNT_BALANCES", 30)

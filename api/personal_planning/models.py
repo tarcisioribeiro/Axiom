@@ -488,6 +488,58 @@ class RoutineTask(BaseModel):
 
 
 # ============================================================================
+# USER ROUTINE TEMPLATE MODEL
+# ============================================================================
+
+
+class UserRoutineTemplate(BaseModel):
+    """
+    Template de rotina criado pelo próprio usuário.
+
+    Permite salvar um conjunto de RoutineTasks como template reutilizável,
+    para importar rapidamente em outros momentos.
+    """
+
+    name = models.CharField(
+        max_length=200,
+        verbose_name="Nome do Template",
+    )
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Descrição",
+    )
+    icon = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Ícone",
+        help_text="Nome do ícone do Lucide (ex: Heart, BookOpen, Dumbbell)",
+    )
+    tasks = models.JSONField(
+        default=list,
+        verbose_name="Tarefas",
+        help_text=(
+            "Lista de tarefas no mesmo formato do RoutineTemplateImportView"
+        ),
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="routine_templates",
+        verbose_name="Dono",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Template de Rotina do Usuário"
+        verbose_name_plural = "Templates de Rotina do Usuário"
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.owner})"
+
+
+# ============================================================================
 # GOAL MODEL
 # ============================================================================
 
