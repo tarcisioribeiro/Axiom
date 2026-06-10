@@ -59,7 +59,8 @@
       "revealError": "Erro ao revelar dados",
       "invalidData": "Dados inválidos",
       "fillRequired": "Preencha todos os campos obrigatórios.",
-      "passwordCopied": "Senha copiada para a área de transferência."
+      "passwordCopied": "Senha copiada para a área de transferência.",
+      "loading": "Carregando..."
     },
     "fields": {
       "name": "Nome",
@@ -102,7 +103,8 @@
       "document": "Documento (CPF/CNPJ)",
       "phone": "Telefone",
       "email": "Email",
-      "selectDate": "Selecione a data"
+      "selectDate": "Selecione a data",
+      "value": "Valor"
     },
     "paymentMethods": {
       "pix": "PIX",

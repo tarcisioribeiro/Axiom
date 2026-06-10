@@ -59,7 +59,8 @@
       "revealError": "Error revealing data",
       "invalidData": "Invalid data",
       "fillRequired": "Please fill in all required fields.",
-      "passwordCopied": "Password copied to clipboard."
+      "passwordCopied": "Password copied to clipboard.",
+      "loading": "Loading..."
     },
     "fields": {
       "name": "Name",
@@ -102,7 +103,8 @@
       "document": "Document (CPF/CNPJ)",
       "phone": "Phone",
       "email": "Email",
-      "selectDate": "Select date"
+      "selectDate": "Select date",
+      "value": "Value"
     },
     "paymentMethods": {
       "pix": "PIX",
