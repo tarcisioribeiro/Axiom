@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Target,
   CheckCircle2,
@@ -22,8 +22,9 @@ import {
   Zap,
   Star,
   Trophy,
+  ChevronDown,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -100,6 +101,28 @@ export default function PersonalPlanningDashboard() {
   const categoryColors = useTaskCategoryColors();
   const { shouldShow: showOnboarding } = usePlanningOnboarding();
   const [onboardingDone, setOnboardingDone] = useState(false);
+
+  // Collapsible section state — persisted to localStorage
+  const [workoutNutritionOpen, setWorkoutNutritionOpen] = useState(
+    () => localStorage.getItem('planning-workout-nutrition') !== 'false'
+  );
+  const [detailedAnalysisOpen, setDetailedAnalysisOpen] = useState(
+    () => localStorage.getItem('planning-detailed-analysis') === 'true'
+  );
+
+  useEffect(() => {
+    localStorage.setItem(
+      'planning-workout-nutrition',
+      workoutNutritionOpen ? 'true' : 'false'
+    );
+  }, [workoutNutritionOpen]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'planning-detailed-analysis',
+      detailedAnalysisOpen ? 'true' : 'false'
+    );
+  }, [detailedAnalysisOpen]);
 
   const today = format(new Date(), 'yyyy-MM-dd');
   const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
@@ -552,544 +575,637 @@ export default function PersonalPlanningDashboard() {
         </CardContent>
       </Card>
 
-      {/* Linha 3: Treinos */}
-      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
-        {/* Card: Resumo de Treinos */}
-        <Card>
-          <CardHeader className="pb-sm">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <Dumbbell className="h-4 w-4 text-category-health" />
-                {t('pages.planningDashboard.workoutsTitle')}
-              </CardTitle>
-              <Link
-                to="/planning/workout"
-                className="rounded-md bg-primary/10 px-sm py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-              >
-                {t('pages.planningDashboard.ctaLogWorkout')}
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Dumbbell className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.sessions30d')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">{workoutStats.sessions30d}</span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Activity className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.thisWeek')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-info">
-                  {workoutStats.sessionsWeek}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Timer className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.totalTime30d')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">
-                  {workoutStats.totalMinutes30d > 0
-                    ? `${Math.round(workoutStats.totalMinutes30d / 60)}h`
-                    : '—'}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <ClipboardList className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.activeWorkoutPlan')}
-                  </span>
-                </div>
-                {workoutStats.activePlanName ? (
-                  <span
-                    className="truncate text-sm font-bold"
-                    title={workoutStats.activePlanName}
-                  >
-                    {workoutStats.activePlanName}
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">
-                    {t('common.actions.none')}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {workoutStats.activePlanName && (
-              <div className="mt-md flex items-center gap-lg border-t pt-md text-sm text-muted-foreground">
-                <span>
-                  <span className="font-semibold text-foreground">
-                    {workoutStats.activePlanDays}
-                  </span>{' '}
-                  {t('pages.planningDashboard.days')}
-                </span>
-                <span>
-                  <span className="font-semibold text-foreground">
-                    {workoutStats.activePlanExercises}
-                  </span>{' '}
-                  {t('pages.planningDashboard.planExercises')}
-                </span>
-              </div>
+      {/* ── Seção Treinos & Nutrição (colapsável) ─────────────────────────── */}
+      <button
+        type="button"
+        onClick={() => setWorkoutNutritionOpen((v) => !v)}
+        className="flex w-full items-center gap-3 py-sm text-left"
+        aria-expanded={workoutNutritionOpen}
+      >
+        <div className="h-px flex-1 bg-border" />
+        <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {t('pages.planningDashboard.sectionWorkoutNutrition')}
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 transition-transform duration-200',
+              workoutNutritionOpen && 'rotate-180'
             )}
-          </CardContent>
-        </Card>
+          />
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </button>
 
-        {/* Card: Nutrição */}
-        <Card>
-          <CardHeader className="pb-sm">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <UtensilsCrossed className="h-4 w-4 text-category-health" />
-                {t('pages.planningDashboard.nutritionTitle')}
-              </CardTitle>
-              <Link
-                to="/planning/nutrition"
-                className="rounded-md bg-success/10 px-sm py-0.5 text-xs font-medium text-success transition-colors hover:bg-success/20"
-              >
-                {t('pages.planningDashboard.ctaLogMeal')}
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-md">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Utensils className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.mealsToday')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-success">
-                  {nutritionStats.todayMeals}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.thisWeek')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">{nutritionStats.weekMeals}</span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <ClipboardList className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.planningDashboard.activeMealTypes')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">
-                  {nutritionStats.activeMealTypes}
-                </span>
-              </div>
-            </div>
-
-            {nutritionStats.byMealTypeData.length > 0 && (
-              <div className="mt-md space-y-sm border-t pt-md">
-                {nutritionStats.byMealTypeData
-                  .sort((a, b) => b.count - a.count)
-                  .slice(0, 4)
-                  .map((item, i) => {
-                    const max = nutritionStats.byMealTypeData[0]?.count ?? 1;
-                    const pct = Math.round((item.count / max) * 100);
-                    return (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
-                          {item.name}
-                        </span>
-                        <div className="flex flex-1 items-center gap-sm">
-                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary/70 transition-all"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span className="w-6 text-right text-xs font-medium">
-                            {item.count}
+      <AnimatePresence initial={false}>
+        {workoutNutritionOpen && (
+          <motion.div
+            key="workout-nutrition"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-lg">
+              {/* Linha 3: Treinos */}
+              <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+                {/* Card: Resumo de Treinos */}
+                <Card>
+                  <CardHeader className="pb-sm">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-sm text-sm">
+                        <Dumbbell className="h-4 w-4 text-category-health" />
+                        {t('pages.planningDashboard.workoutsTitle')}
+                      </CardTitle>
+                      <Link
+                        to="/planning/workout"
+                        className="rounded-md bg-primary/10 px-sm py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                      >
+                        {t('pages.planningDashboard.ctaLogWorkout')}
+                      </Link>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <Dumbbell className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.sessions30d')}
                           </span>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Linha 4: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência | Treinos/dia */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-4">
-        {weeklyProgressData.length > 0 && (
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-sm">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <TrendingUp className="h-4 w-4" />
-                {t('pages.planningDashboard.weeklyProgress')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="planning-weekly-progress"
-                data={weeklyProgressData}
-                dataKey="total"
-                nameKey="date"
-                formatter={(value) => value.toString()}
-                colors={COLORS}
-                emptyMessage={t('pages.planningDashboard.noProgressData')}
-                lockChartType="line"
-                dualYAxis={{
-                  left: {
-                    dataKey: 'total',
-                    label: t('pages.planningDashboard.total'),
-                    color: COLORS[0],
-                  },
-                  right: {
-                    dataKey: 'taxa',
-                    label: t('pages.planningDashboard.rate'),
-                    color: COLORS[1],
-                  },
-                }}
-                lines={[
-                  {
-                    dataKey: 'total',
-                    stroke: COLORS[0],
-                    yAxisId: 'left',
-                    name: t('pages.planningDashboard.total'),
-                  },
-                  {
-                    dataKey: 'completadas',
-                    stroke: COLORS[3],
-                    yAxisId: 'left',
-                    name: t('pages.planningDashboard.completed'),
-                  },
-                  {
-                    dataKey: 'taxa',
-                    stroke: COLORS[1],
-                    yAxisId: 'right',
-                    name: t('pages.planningDashboard.rate'),
-                  },
-                ]}
-                height={280}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {tasksByCategoryData.length > 0 && (
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-sm">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <ListTodo className="h-4 w-4" />
-                {t('pages.planningDashboard.tasksByCategory')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="planning-tasks-category"
-                data={tasksByCategoryData}
-                dataKey="count"
-                nameKey="name"
-                formatter={(value) => {
-                  const count: number = Number(value);
-                  return t('pages.planningDashboard.taskCount', { count });
-                }}
-                colors={COLORS}
-                customColors={(entry) =>
-                  getCategoryColor(String(entry.category || 'other'))
-                }
-                emptyMessage={t('pages.planningDashboard.noTasks')}
-                lockChartType="pie"
-                layout="horizontal"
-                height={280}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {stats.active_goals_progress && stats.active_goals_progress.length > 0 && (
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-sm">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <Flag className="h-4 w-4" />
-                {t('pages.planningDashboard.activeGoalsProgress')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {stats.active_goals_progress.slice(0, 4).map((goal, index) => {
-                  const pct = goal.progress_percentage;
-                  const ringColor =
-                    pct >= 80
-                      ? 'hsl(var(--chart-2))'
-                      : pct >= 40
-                        ? 'hsl(var(--warning))'
-                        : 'hsl(var(--primary))';
-                  return (
-                    <div key={index} className="flex items-center gap-3">
-                      <CircularProgress
-                        value={pct}
-                        size={48}
-                        strokeWidth={5}
-                        color={ringColor}
-                      >
-                        <span className="text-xs font-bold">{pct.toFixed(0)}%</span>
-                      </CircularProgress>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{goal.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {goal.current_value} / {goal.target_value}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <Activity className="h-4 w-4" />
-              {t('pages.planningDashboard.habitConsistency')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HabitHeatmap />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Linha 5: Treinos por dia (30d) */}
-      {workoutByDayData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <Dumbbell className="h-4 w-4" />
-              {t('pages.planningDashboard.workoutsByDayTitle')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              chartId="planning-workout-by-day"
-              data={workoutByDayData}
-              dataKey="count"
-              nameKey="day"
-              formatter={(value) =>
-                t('pages.planningDashboard.sessionCount', { count: Number(value) })
-              }
-              colors={COLORS}
-              emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
-              lockChartType="bar"
-              height={200}
-              tooltipNameFormatter={() => null}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Linha 5b: Humor × Conclusão */}
-      {reflectionCorrelation.length > 0 && (
-        <Card>
-          <CardHeader className="pb-sm">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-sm text-sm">
-                <Activity className="h-4 w-4 text-info" />
-                {t('pages.planningDashboard.reflectionCorrelationTitle', {
-                  defaultValue: 'Humor × Conclusão de Tarefas',
-                })}
-              </CardTitle>
-              <Link
-                to="/planning/reflections"
-                className="rounded-md bg-muted px-sm py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {t('pages.planningDashboard.ctaReflect')}
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-md">
-              {reflectionCorrelation.map((entry) => {
-                const parts = entry.date.split('-');
-                const dateLabel = `${parts[2]}/${parts[1]}`;
-                const moodColor =
-                  entry.mood === 'excellent'
-                    ? 'bg-success text-success-foreground'
-                    : entry.mood === 'good'
-                      ? 'bg-info text-info-foreground'
-                      : entry.mood === 'neutral'
-                        ? 'bg-warning text-warning-foreground'
-                        : entry.mood === 'bad'
-                          ? 'bg-orange-500 text-white'
-                          : entry.mood === 'terrible'
-                            ? 'bg-destructive text-destructive-foreground'
-                            : 'bg-muted text-muted-foreground';
-                const barWidth = Math.min(entry.rate, 100);
-                return (
-                  <div
-                    key={entry.date}
-                    className="flex min-w-[120px] flex-1 flex-col gap-xs rounded-lg border p-sm"
-                  >
-                    <div className="flex items-center justify-between gap-xs">
-                      <span className="text-xs text-muted-foreground">{dateLabel}</span>
-                      {entry.mood && (
-                        <span
-                          className={`rounded-full px-xs py-0.5 text-xs font-medium ${moodColor}`}
-                        >
-                          {entry.mood_display}
+                        <span className="text-2xl font-bold">
+                          {workoutStats.sessions30d}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-xs">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${barWidth}%` }}
-                        />
                       </div>
-                      <span className="w-9 text-right text-xs font-semibold">
-                        {entry.rate.toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Linha 6: Desempenho Dia Por Semana | Insight de Hábitos */}
-      {analytics && (
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
-                <BarChart3 className="h-5 w-5" />
-                {t('pages.planningDashboard.weekdayAnalytics')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-sm">
-                {analytics.completion_by_weekday.map((day) => (
-                  <div key={day.weekday} className="flex items-center gap-3">
-                    <span className="w-28 shrink-0 text-sm text-muted-foreground">
-                      {t(`pages.planningDashboard.weekdayShort.${day.weekday}`)}
-                    </span>
-                    <div className="flex flex-1 items-center gap-sm">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${day.rate ?? 0}%` }}
-                        />
-                      </div>
-                      <span className="w-10 text-right text-sm font-medium">
-                        {day.rate !== null ? `${day.rate.toFixed(0)}%` : '—'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                {t('pages.planningDashboard.analyticsPeriod', {
-                  days: analytics.period_days,
-                })}
-              </p>
-            </CardContent>
-          </Card>
-
-          {analytics.insights.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-sm">
-                  <Lightbulb className="h-5 w-5" />
-                  {t('pages.planningDashboard.insights')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-md">
-                <ul className="space-y-3">
-                  {analytics.insights.map((insight, i) => {
-                    const insightCTA =
-                      insight.type === 'worst_day'
-                        ? {
-                            label: t('pages.planningDashboard.insightCTAWorstDay'),
-                            onClick: () => navigate('/planning/routine-tasks'),
-                          }
-                        : insight.type === 'overall_low'
-                          ? {
-                              label: t('pages.planningDashboard.insightCTAWorkout'),
-                              onClick: () => navigate('/planning/workout'),
-                            }
-                          : insight.type === 'overall_excellent' ||
-                              insight.type === 'best_day'
-                            ? {
-                                label: t('pages.planningDashboard.insightCTAGoals'),
-                                onClick: () => navigate('/planning/goals'),
-                              }
-                            : null;
-
-                    return (
-                      <li
-                        key={i}
-                        className="flex items-start justify-between gap-sm text-sm leading-relaxed"
-                      >
-                        <div className="flex gap-sm">
-                          <span className="mt-0.5 shrink-0 text-primary">•</span>
-                          <span>{renderInsight(insight, t)}</span>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <Activity className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.thisWeek')}
+                          </span>
                         </div>
-                        {insightCTA && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto shrink-0 px-sm py-xs text-xs text-primary hover:text-primary"
-                            onClick={insightCTA.onClick}
+                        <span className="text-2xl font-bold text-info">
+                          {workoutStats.sessionsWeek}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <Timer className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.totalTime30d')}
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold">
+                          {workoutStats.totalMinutes30d > 0
+                            ? `${Math.round(workoutStats.totalMinutes30d / 60)}h`
+                            : '—'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <ClipboardList className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.activeWorkoutPlan')}
+                          </span>
+                        </div>
+                        {workoutStats.activePlanName ? (
+                          <span
+                            className="truncate text-sm font-bold"
+                            title={workoutStats.activePlanName}
                           >
-                            {insightCTA.label}
-                          </Button>
+                            {workoutStats.activePlanName}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            {t('common.actions.none')}
+                          </span>
                         )}
-                      </li>
-                    );
-                  })}
-                </ul>
-                <div className="flex flex-wrap gap-sm border-t pt-sm">
-                  <Link
-                    to="/planning/daily-checklist"
-                    className="rounded-md bg-primary/10 px-sm py-xs text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-                  >
-                    {t('pages.planningDashboard.ctaChecklist')}
-                  </Link>
-                  <Link
-                    to="/planning/tasks-goals"
-                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
-                  >
-                    {t('pages.planningDashboard.ctaTasks')}
-                  </Link>
-                  <Link
-                    to="/planning/reflections"
-                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
-                  >
-                    {t('pages.planningDashboard.ctaReflect')}
-                  </Link>
+                      </div>
+                    </div>
+
+                    {workoutStats.activePlanName && (
+                      <div className="mt-md flex items-center gap-lg border-t pt-md text-sm text-muted-foreground">
+                        <span>
+                          <span className="font-semibold text-foreground">
+                            {workoutStats.activePlanDays}
+                          </span>{' '}
+                          {t('pages.planningDashboard.days')}
+                        </span>
+                        <span>
+                          <span className="font-semibold text-foreground">
+                            {workoutStats.activePlanExercises}
+                          </span>{' '}
+                          {t('pages.planningDashboard.planExercises')}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Card: Nutrição */}
+                <Card>
+                  <CardHeader className="pb-sm">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-sm text-sm">
+                        <UtensilsCrossed className="h-4 w-4 text-category-health" />
+                        {t('pages.planningDashboard.nutritionTitle')}
+                      </CardTitle>
+                      <Link
+                        to="/planning/nutrition"
+                        className="rounded-md bg-success/10 px-sm py-0.5 text-xs font-medium text-success transition-colors hover:bg-success/20"
+                      >
+                        {t('pages.planningDashboard.ctaLogMeal')}
+                      </Link>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-md">
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <Utensils className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.mealsToday')}
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold text-success">
+                          {nutritionStats.todayMeals}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.thisWeek')}
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold">
+                          {nutritionStats.weekMeals}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-xs">
+                        <div className="flex items-center gap-sm text-muted-foreground">
+                          <ClipboardList className="h-4 w-4" />
+                          <span className="text-xs">
+                            {t('pages.planningDashboard.activeMealTypes')}
+                          </span>
+                        </div>
+                        <span className="text-2xl font-bold">
+                          {nutritionStats.activeMealTypes}
+                        </span>
+                      </div>
+                    </div>
+
+                    {nutritionStats.byMealTypeData.length > 0 && (
+                      <div className="mt-md space-y-sm border-t pt-md">
+                        {nutritionStats.byMealTypeData
+                          .sort((a, b) => b.count - a.count)
+                          .slice(0, 4)
+                          .map((item, i) => {
+                            const max = nutritionStats.byMealTypeData[0]?.count ?? 1;
+                            const pct = Math.round((item.count / max) * 100);
+                            return (
+                              <div key={i} className="flex items-center gap-3">
+                                <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
+                                  {item.name}
+                                </span>
+                                <div className="flex flex-1 items-center gap-sm">
+                                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                                    <div
+                                      className="h-full rounded-full bg-primary/70 transition-all"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                  <span className="w-6 text-right text-xs font-medium">
+                                    {item.count}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Seção Análise Detalhada (colapsável, lazy) ──────────────────────── */}
+      <button
+        type="button"
+        onClick={() => setDetailedAnalysisOpen((v) => !v)}
+        className="flex w-full items-center gap-3 py-sm text-left"
+        aria-expanded={detailedAnalysisOpen}
+      >
+        <div className="h-px flex-1 bg-border" />
+        <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {t('pages.planningDashboard.sectionDetailedAnalysis')}
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 transition-transform duration-200',
+              detailedAnalysisOpen && 'rotate-180'
+            )}
+          />
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {detailedAnalysisOpen && (
+          <motion.div
+            key="detailed-analysis"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-lg">
+              {/* Linha 4: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência | Treinos/dia */}
+              <div className="grid grid-cols-1 gap-lg lg:grid-cols-4">
+                {weeklyProgressData.length > 0 && (
+                  <Card className="lg:col-span-1">
+                    <CardHeader className="pb-sm">
+                      <CardTitle className="flex items-center gap-sm text-sm">
+                        <TrendingUp className="h-4 w-4" />
+                        {t('pages.planningDashboard.weeklyProgress')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="planning-weekly-progress"
+                        data={weeklyProgressData}
+                        dataKey="total"
+                        nameKey="date"
+                        formatter={(value) => value.toString()}
+                        colors={COLORS}
+                        emptyMessage={t('pages.planningDashboard.noProgressData')}
+                        lockChartType="line"
+                        dualYAxis={{
+                          left: {
+                            dataKey: 'total',
+                            label: t('pages.planningDashboard.total'),
+                            color: COLORS[0],
+                          },
+                          right: {
+                            dataKey: 'taxa',
+                            label: t('pages.planningDashboard.rate'),
+                            color: COLORS[1],
+                          },
+                        }}
+                        lines={[
+                          {
+                            dataKey: 'total',
+                            stroke: COLORS[0],
+                            yAxisId: 'left',
+                            name: t('pages.planningDashboard.total'),
+                          },
+                          {
+                            dataKey: 'completadas',
+                            stroke: COLORS[3],
+                            yAxisId: 'left',
+                            name: t('pages.planningDashboard.completed'),
+                          },
+                          {
+                            dataKey: 'taxa',
+                            stroke: COLORS[1],
+                            yAxisId: 'right',
+                            name: t('pages.planningDashboard.rate'),
+                          },
+                        ]}
+                        height={280}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {tasksByCategoryData.length > 0 && (
+                  <Card className="lg:col-span-1">
+                    <CardHeader className="pb-sm">
+                      <CardTitle className="flex items-center gap-sm text-sm">
+                        <ListTodo className="h-4 w-4" />
+                        {t('pages.planningDashboard.tasksByCategory')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="planning-tasks-category"
+                        data={tasksByCategoryData}
+                        dataKey="count"
+                        nameKey="name"
+                        formatter={(value) => {
+                          const count: number = Number(value);
+                          return t('pages.planningDashboard.taskCount', { count });
+                        }}
+                        colors={COLORS}
+                        customColors={(entry) =>
+                          getCategoryColor(String(entry.category || 'other'))
+                        }
+                        emptyMessage={t('pages.planningDashboard.noTasks')}
+                        lockChartType="pie"
+                        layout="horizontal"
+                        height={280}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {stats.active_goals_progress &&
+                  stats.active_goals_progress.length > 0 && (
+                    <Card className="lg:col-span-1">
+                      <CardHeader className="pb-sm">
+                        <CardTitle className="flex items-center gap-sm text-sm">
+                          <Flag className="h-4 w-4" />
+                          {t('pages.planningDashboard.activeGoalsProgress')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {stats.active_goals_progress
+                            .slice(0, 4)
+                            .map((goal, index) => {
+                              const pct = goal.progress_percentage;
+                              const ringColor =
+                                pct >= 80
+                                  ? 'hsl(var(--chart-2))'
+                                  : pct >= 40
+                                    ? 'hsl(var(--warning))'
+                                    : 'hsl(var(--primary))';
+                              return (
+                                <div key={index} className="flex items-center gap-3">
+                                  <CircularProgress
+                                    value={pct}
+                                    size={48}
+                                    strokeWidth={5}
+                                    color={ringColor}
+                                  >
+                                    <span className="text-xs font-bold">
+                                      {pct.toFixed(0)}%
+                                    </span>
+                                  </CircularProgress>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium">
+                                      {goal.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {goal.current_value} / {goal.target_value}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                <Card className="lg:col-span-1">
+                  <CardHeader className="pb-sm">
+                    <CardTitle className="flex items-center gap-sm text-sm">
+                      <Activity className="h-4 w-4" />
+                      {t('pages.planningDashboard.habitConsistency')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <HabitHeatmap />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Linha 5: Treinos por dia (30d) */}
+              {workoutByDayData.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-sm">
+                    <CardTitle className="flex items-center gap-sm text-sm">
+                      <Dumbbell className="h-4 w-4" />
+                      {t('pages.planningDashboard.workoutsByDayTitle')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer
+                      chartId="planning-workout-by-day"
+                      data={workoutByDayData}
+                      dataKey="count"
+                      nameKey="day"
+                      formatter={(value) =>
+                        t('pages.planningDashboard.sessionCount', {
+                          count: Number(value),
+                        })
+                      }
+                      colors={COLORS}
+                      emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
+                      lockChartType="bar"
+                      height={200}
+                      tooltipNameFormatter={() => null}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Linha 5b: Humor × Conclusão */}
+              {reflectionCorrelation.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-sm">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-sm text-sm">
+                        <Activity className="h-4 w-4 text-info" />
+                        {t('pages.planningDashboard.reflectionCorrelationTitle', {
+                          defaultValue: 'Humor × Conclusão de Tarefas',
+                        })}
+                      </CardTitle>
+                      <Link
+                        to="/planning/reflections"
+                        className="rounded-md bg-muted px-sm py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {t('pages.planningDashboard.ctaReflect')}
+                      </Link>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-md">
+                      {reflectionCorrelation.map((entry) => {
+                        const parts = entry.date.split('-');
+                        const dateLabel = `${parts[2]}/${parts[1]}`;
+                        const moodColor =
+                          entry.mood === 'excellent'
+                            ? 'bg-success text-success-foreground'
+                            : entry.mood === 'good'
+                              ? 'bg-info text-info-foreground'
+                              : entry.mood === 'neutral'
+                                ? 'bg-warning text-warning-foreground'
+                                : entry.mood === 'bad'
+                                  ? 'bg-orange-500 text-white'
+                                  : entry.mood === 'terrible'
+                                    ? 'bg-destructive text-destructive-foreground'
+                                    : 'bg-muted text-muted-foreground';
+                        const barWidth = Math.min(entry.rate, 100);
+                        return (
+                          <div
+                            key={entry.date}
+                            className="flex min-w-[120px] flex-1 flex-col gap-xs rounded-lg border p-sm"
+                          >
+                            <div className="flex items-center justify-between gap-xs">
+                              <span className="text-xs text-muted-foreground">
+                                {dateLabel}
+                              </span>
+                              {entry.mood && (
+                                <span
+                                  className={`rounded-full px-xs py-0.5 text-xs font-medium ${moodColor}`}
+                                >
+                                  {entry.mood_display}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-xs">
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all"
+                                  style={{ width: `${barWidth}%` }}
+                                />
+                              </div>
+                              <span className="w-9 text-right text-xs font-semibold">
+                                {entry.rate.toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Linha 6: Desempenho Dia Por Semana | Insight de Hábitos */}
+              {analytics && (
+                <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-sm">
+                        <BarChart3 className="h-5 w-5" />
+                        {t('pages.planningDashboard.weekdayAnalytics')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-sm">
+                        {analytics.completion_by_weekday.map((day) => (
+                          <div key={day.weekday} className="flex items-center gap-3">
+                            <span className="w-28 shrink-0 text-sm text-muted-foreground">
+                              {t(`pages.planningDashboard.weekdayShort.${day.weekday}`)}
+                            </span>
+                            <div className="flex flex-1 items-center gap-sm">
+                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all"
+                                  style={{ width: `${day.rate ?? 0}%` }}
+                                />
+                              </div>
+                              <span className="w-10 text-right text-sm font-medium">
+                                {day.rate !== null ? `${day.rate.toFixed(0)}%` : '—'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {t('pages.planningDashboard.analyticsPeriod', {
+                          days: analytics.period_days,
+                        })}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {analytics.insights.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-sm">
+                          <Lightbulb className="h-5 w-5" />
+                          {t('pages.planningDashboard.insights')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-md">
+                        <ul className="space-y-3">
+                          {analytics.insights.map((insight, i) => {
+                            const insightCTA =
+                              insight.type === 'worst_day'
+                                ? {
+                                    label: t(
+                                      'pages.planningDashboard.insightCTAWorstDay'
+                                    ),
+                                    onClick: () => navigate('/planning/routine-tasks'),
+                                  }
+                                : insight.type === 'overall_low'
+                                  ? {
+                                      label: t(
+                                        'pages.planningDashboard.insightCTAWorkout'
+                                      ),
+                                      onClick: () => navigate('/planning/workout'),
+                                    }
+                                  : insight.type === 'overall_excellent' ||
+                                      insight.type === 'best_day'
+                                    ? {
+                                        label: t(
+                                          'pages.planningDashboard.insightCTAGoals'
+                                        ),
+                                        onClick: () => navigate('/planning/goals'),
+                                      }
+                                    : null;
+
+                            return (
+                              <li
+                                key={i}
+                                className="flex items-start justify-between gap-sm text-sm leading-relaxed"
+                              >
+                                <div className="flex gap-sm">
+                                  <span className="mt-0.5 shrink-0 text-primary">
+                                    •
+                                  </span>
+                                  <span>{renderInsight(insight, t)}</span>
+                                </div>
+                                {insightCTA && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-auto shrink-0 px-sm py-xs text-xs text-primary hover:text-primary"
+                                    onClick={insightCTA.onClick}
+                                  >
+                                    {insightCTA.label}
+                                  </Button>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        <div className="flex flex-wrap gap-sm border-t pt-sm">
+                          <Link
+                            to="/planning/daily-checklist"
+                            className="rounded-md bg-primary/10 px-sm py-xs text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                          >
+                            {t('pages.planningDashboard.ctaChecklist')}
+                          </Link>
+                          <Link
+                            to="/planning/tasks-goals"
+                            className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                          >
+                            {t('pages.planningDashboard.ctaTasks')}
+                          </Link>
+                          <Link
+                            to="/planning/reflections"
+                            className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                          >
+                            {t('pages.planningDashboard.ctaReflect')}
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </PageContainer>
   );
 }

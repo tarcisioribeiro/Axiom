@@ -1,0 +1,590 @@
+/* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  TrendingDown,
+  Snowflake,
+  Flame,
+  CalendarDays,
+  DollarSign,
+  Target,
+  Trophy,
+  ArrowRight,
+  Info,
+} from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CurrencyInput } from '@/components/ui/currency-input';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { loansService } from '@/services/loans-service';
+import { payablesService } from '@/services/payables-service';
+
+type Strategy = 'snowball' | 'avalanche';
+
+interface Debt {
+  id: string;
+  name: string;
+  balance: number;
+  interestRate: number;
+  minimumPayment: number;
+  type: 'loan' | 'bill' | 'payable';
+  dueDate?: string;
+}
+
+interface DebtPlan {
+  debt: Debt;
+  payoffDate: Date;
+  totalPaid: number;
+  totalInterest: number;
+  monthlyPayment: number;
+  priority: number;
+}
+
+function computePayoffPlan(
+  debts: Debt[],
+  monthlyExtra: number,
+  strategy: Strategy
+): DebtPlan[] {
+  if (debts.length === 0) return [];
+
+  const sorted = [...debts].sort((a, b) => {
+    if (strategy === 'snowball') return a.balance - b.balance;
+    return b.interestRate - a.interestRate;
+  });
+
+  const today = new Date();
+  const state = sorted.map((d) => ({
+    debt: d,
+    remaining: d.balance,
+    totalPaid: 0,
+    totalInterest: 0,
+    payoffDate: null as Date | null,
+    priority: 0,
+  }));
+
+  let extraPool = monthlyExtra;
+
+  let month = 0;
+  const MAX_MONTHS = 600;
+
+  while (state.some((s) => s.remaining > 0) && month < MAX_MONTHS) {
+    month++;
+    const date = new Date(today);
+    date.setMonth(date.getMonth() + month);
+
+    let currentExtra = extraPool;
+    for (let i = 0; i < state.length; i++) {
+      const s = state[i];
+      if (s.remaining <= 0) continue;
+
+      const monthlyRate = s.debt.interestRate / 100 / 12;
+      const interest = s.remaining * monthlyRate;
+      s.totalInterest += interest;
+      s.remaining += interest;
+
+      let payment = s.debt.minimumPayment;
+      if (i === state.findIndex((x) => x.remaining > 0)) {
+        payment += currentExtra;
+        currentExtra = 0;
+      }
+
+      payment = Math.min(payment, s.remaining);
+      s.remaining -= payment;
+      s.totalPaid += payment;
+
+      if (s.remaining <= 0.01) {
+        s.remaining = 0;
+        if (!s.payoffDate) {
+          s.payoffDate = date;
+          s.priority = state.filter((x) => x.payoffDate !== null).length;
+          extraPool += s.debt.minimumPayment;
+        }
+      }
+    }
+  }
+
+  return state.map((s, idx) => ({
+    debt: s.debt,
+    payoffDate: s.payoffDate ?? new Date(today.setMonth(today.getMonth() + MAX_MONTHS)),
+    totalPaid: s.totalPaid,
+    totalInterest: s.totalInterest,
+    monthlyPayment:
+      s.debt.minimumPayment +
+      (idx === state.findIndex((x) => x.payoffDate === null || x.remaining === 0)
+        ? monthlyExtra
+        : 0),
+    priority: s.priority || idx + 1,
+  }));
+}
+
+export default function DebtPayoffPlanner() {
+  const { t } = useTranslation();
+  const [strategy, setStrategy] = useState<Strategy>('snowball');
+  const [monthlyExtra, setMonthlyExtra] = useState(0);
+
+  const loansQuery = useQuery({
+    queryKey: ['loans', 'active'],
+    queryFn: () => loansService.getAll({ payed: false }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const billsQuery = useQuery({
+    queryKey: ['creditCardBills', 'open'],
+    queryFn: () => creditCardBillsService.getAll({ status: 'open' }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const payablesQuery = useQuery({
+    queryKey: ['payables', 'active'],
+    queryFn: () => payablesService.getAll({ status: 'active' }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const isLoading =
+    loansQuery.isLoading || billsQuery.isLoading || payablesQuery.isLoading;
+
+  const debts = useMemo((): Debt[] => {
+    const result: Debt[] = [];
+
+    for (const loan of loansQuery.data ?? []) {
+      const balance = parseFloat(loan.value) - parseFloat(loan.payed_value || '0');
+      if (balance <= 0) continue;
+      result.push({
+        id: `loan-${loan.id}`,
+        name: loan.description,
+        balance,
+        interestRate: parseFloat(loan.interest_rate ?? '0') || 0,
+        minimumPayment: balance / Math.max(loan.installments, 1),
+        type: 'loan',
+        dueDate: loan.due_date,
+      });
+    }
+
+    for (const bill of billsQuery.data ?? []) {
+      const balance =
+        parseFloat(bill.total_amount) - parseFloat(bill.paid_amount ?? '0');
+      if (balance <= 0) continue;
+      result.push({
+        id: `bill-${bill.id}`,
+        name: `${bill.credit_card_name ?? t('pages.debtPayoff.creditCard')} — ${bill.month}/${bill.year}`,
+        balance,
+        interestRate: 0,
+        minimumPayment: parseFloat(bill.minimum_payment ?? String(balance)),
+        type: 'bill',
+        dueDate: bill.due_date ?? undefined,
+      });
+    }
+
+    for (const payable of payablesQuery.data ?? []) {
+      if (payable.status !== 'active' && payable.status !== 'overdue') continue;
+      const remaining =
+        parseFloat(payable.remaining_value ?? payable.value) -
+        parseFloat(payable.paid_value || '0');
+      if (remaining <= 0) continue;
+      result.push({
+        id: `payable-${payable.id}`,
+        name: payable.description,
+        balance: remaining,
+        interestRate: 0,
+        minimumPayment: remaining / Math.max(payable.installments ?? 1, 1),
+        type: 'payable',
+        dueDate: payable.due_date,
+      });
+    }
+
+    return result;
+  }, [loansQuery.data, billsQuery.data, payablesQuery.data, t]);
+
+  const snowballPlan = useMemo(
+    () => computePayoffPlan(debts, monthlyExtra, 'snowball'),
+    [debts, monthlyExtra]
+  );
+
+  const avalanchePlan = useMemo(
+    () => computePayoffPlan(debts, monthlyExtra, 'avalanche'),
+    [debts, monthlyExtra]
+  );
+
+  const activePlan = strategy === 'snowball' ? snowballPlan : avalanchePlan;
+
+  const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
+  const totalMinimum = debts.reduce((s, d) => s + d.minimumPayment, 0);
+  const snowballInterest = snowballPlan.reduce((s, p) => s + p.totalInterest, 0);
+  const avalancheInterest = avalanchePlan.reduce((s, p) => s + p.totalInterest, 0);
+  const interestSaved = snowballInterest - avalancheInterest;
+  const lastPayoff =
+    activePlan.length > 0
+      ? new Date(
+          Math.max(
+            ...activePlan.map((p) => (p.payoffDate ? p.payoffDate.getTime() : 0))
+          )
+        )
+      : null;
+
+  const typeColors: Record<Debt['type'], string> = {
+    loan: 'bg-primary/10 text-primary',
+    bill: 'bg-warning/10 text-warning',
+    payable: 'bg-destructive/10 text-destructive',
+  };
+
+  const typeLabels: Record<Debt['type'], string> = {
+    loan: t('pages.debtPayoff.types.loan'),
+    bill: t('pages.debtPayoff.types.bill'),
+    payable: t('pages.debtPayoff.types.payable'),
+  };
+
+  return (
+    <AnimatedPage>
+      <PageContainer>
+        <PageHeader
+          title={t('pages.debtPayoff.title')}
+          description={t('pages.debtPayoff.description')}
+          icon={<TrendingDown className="h-6 w-6 text-destructive" />}
+        />
+
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center text-muted-foreground">
+            {t('common.loading')}
+          </div>
+        ) : debts.length === 0 ? (
+          <div className="flex h-64 flex-col items-center justify-center gap-md text-center">
+            <Trophy className="h-16 w-16 text-success opacity-60" />
+            <div>
+              <p className="text-lg font-semibold text-success">
+                {t('pages.debtPayoff.noDebts')}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.debtPayoff.noDebtsDesc')}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-lg">
+            {/* Summary stats */}
+            <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                title={t('pages.debtPayoff.totalDebt')}
+                value={formatCurrency(totalDebt)}
+                icon={<TrendingDown className="h-4 w-4" />}
+                variant="danger"
+              />
+              <StatCard
+                title={t('pages.debtPayoff.totalDebts')}
+                value={String(debts.length)}
+                icon={<Target className="h-4 w-4" />}
+              />
+              <StatCard
+                title={t('pages.debtPayoff.minimumMonthly')}
+                value={formatCurrency(totalMinimum)}
+                icon={<DollarSign className="h-4 w-4" />}
+              />
+              {lastPayoff && (
+                <StatCard
+                  title={t('pages.debtPayoff.estimatedPayoff')}
+                  value={formatDate(lastPayoff.toISOString())}
+                  icon={<CalendarDays className="h-4 w-4" />}
+                  variant="success"
+                />
+              )}
+            </div>
+
+            {/* Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {t('pages.debtPayoff.controls')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-lg">
+                <div className="grid gap-lg sm:grid-cols-2">
+                  {/* Strategy selector */}
+                  <div className="space-y-sm">
+                    <p className="text-sm font-medium">
+                      {t('pages.debtPayoff.strategy')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-sm">
+                      <button
+                        onClick={() => setStrategy('snowball')}
+                        className={cn(
+                          'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                          strategy === 'snowball'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-border hover:border-primary/40'
+                        )}
+                      >
+                        <Snowflake className="h-6 w-6" />
+                        <p className="text-sm font-medium">
+                          {t('pages.debtPayoff.snowball')}
+                        </p>
+                        <p className="text-center text-xs text-muted-foreground">
+                          {t('pages.debtPayoff.snowballDesc')}
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => setStrategy('avalanche')}
+                        className={cn(
+                          'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                          strategy === 'avalanche'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-border hover:border-primary/40'
+                        )}
+                      >
+                        <Flame className="h-6 w-6" />
+                        <p className="text-sm font-medium">
+                          {t('pages.debtPayoff.avalanche')}
+                        </p>
+                        <p className="text-center text-xs text-muted-foreground">
+                          {t('pages.debtPayoff.avalancheDesc')}
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Monthly extra */}
+                  <div className="space-y-sm">
+                    <p className="text-sm font-medium">
+                      {t('pages.debtPayoff.extraMonthly')}
+                    </p>
+                    <CurrencyInput
+                      value={monthlyExtra || ''}
+                      onChange={(e) =>
+                        setMonthlyExtra(
+                          parseFloat((e.target as HTMLInputElement).value) || 0
+                        )
+                      }
+                      placeholder="0,00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.debtPayoff.extraMonthlyHint')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Strategy comparison */}
+                {interestSaved > 0 && (
+                  <div className="flex items-start gap-sm rounded-lg border border-success/30 bg-success/5 p-md">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                    <p className="text-sm text-success">
+                      {t('pages.debtPayoff.interestSavedWithAvalanche', {
+                        amount: formatCurrency(interestSaved),
+                      })}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Payoff plan */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-sm text-base">
+                  {strategy === 'snowball' ? (
+                    <Snowflake className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Flame className="h-4 w-4 text-primary" />
+                  )}
+                  {t('pages.debtPayoff.plan', {
+                    strategy:
+                      strategy === 'snowball'
+                        ? t('pages.debtPayoff.snowball')
+                        : t('pages.debtPayoff.avalanche'),
+                  })}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-sm">
+                  <AnimatePresence mode="sync">
+                    {activePlan.map((plan, idx) => {
+                      const debtBalancePct =
+                        totalDebt > 0 ? (plan.debt.balance / totalDebt) * 100 : 0;
+
+                      return (
+                        <motion.div
+                          key={plan.debt.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="rounded-lg border bg-card p-md"
+                        >
+                          <div className="flex items-start justify-between gap-sm">
+                            <div className="flex items-start gap-sm">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                                {plan.priority}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-xs">
+                                  <p className="truncate text-sm font-semibold">
+                                    {plan.debt.name}
+                                  </p>
+                                  <span
+                                    className={cn(
+                                      'rounded-full px-xs py-0.5 text-xs font-medium',
+                                      typeColors[plan.debt.type]
+                                    )}
+                                  >
+                                    {typeLabels[plan.debt.type]}
+                                  </span>
+                                </div>
+                                <div className="mt-xs flex flex-wrap gap-sm text-xs text-muted-foreground">
+                                  {plan.debt.interestRate > 0 && (
+                                    <span>{plan.debt.interestRate}% a.a.</span>
+                                  )}
+                                  {plan.debt.dueDate && (
+                                    <span className="flex items-center gap-xs">
+                                      <CalendarDays className="h-3 w-3" />
+                                      {formatDate(plan.debt.dueDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-sm font-bold text-destructive">
+                                {formatCurrency(plan.debt.balance)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatCurrency(plan.monthlyPayment)}/
+                                {t('pages.debtPayoff.month')}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-sm h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-destructive/60 transition-all"
+                              style={{ width: `${debtBalancePct}%` }}
+                            />
+                          </div>
+
+                          <div className="mt-sm flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-xs">
+                              <ArrowRight className="h-3 w-3" />
+                              {t('pages.debtPayoff.payoffBy')}{' '}
+                              <strong className="text-foreground">
+                                {plan.payoffDate.toLocaleDateString('pt-BR', {
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </strong>
+                            </span>
+                            {plan.totalInterest > 0 && (
+                              <span>
+                                {t('pages.debtPayoff.interest')}{' '}
+                                {formatCurrency(plan.totalInterest)}
+                              </span>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Comparison table */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {t('pages.debtPayoff.comparison')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-md sm:grid-cols-2">
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-md">
+                    <div className="mb-sm flex items-center gap-sm">
+                      <Snowflake className="h-4 w-4 text-primary" />
+                      <p className="font-medium">{t('pages.debtPayoff.snowball')}</p>
+                    </div>
+                    <div className="space-y-xs text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.debtPayoff.totalInterest')}
+                        </span>
+                        <span className="font-semibold">
+                          {formatCurrency(snowballInterest)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.debtPayoff.payoffDate')}
+                        </span>
+                        <span className="font-semibold">
+                          {snowballPlan.length > 0 &&
+                          snowballPlan[snowballPlan.length - 1]?.payoffDate
+                            ? snowballPlan[
+                                snowballPlan.length - 1
+                              ].payoffDate.toLocaleDateString('pt-BR', {
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="mt-sm text-xs">
+                      {t('pages.debtPayoff.snowballBenefit')}
+                    </Badge>
+                  </div>
+                  <div className="rounded-lg border border-warning/20 bg-warning/5 p-md">
+                    <div className="mb-sm flex items-center gap-sm">
+                      <Flame className="h-4 w-4 text-warning" />
+                      <p className="font-medium">{t('pages.debtPayoff.avalanche')}</p>
+                    </div>
+                    <div className="space-y-xs text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.debtPayoff.totalInterest')}
+                        </span>
+                        <span className="font-semibold">
+                          {formatCurrency(avalancheInterest)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.debtPayoff.payoffDate')}
+                        </span>
+                        <span className="font-semibold">
+                          {avalanchePlan.length > 0 &&
+                          avalanchePlan[avalanchePlan.length - 1]?.payoffDate
+                            ? avalanchePlan[
+                                avalanchePlan.length - 1
+                              ].payoffDate.toLocaleDateString('pt-BR', {
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : '-'}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={interestSaved > 0 ? 'default' : 'secondary'}
+                      className="mt-sm text-xs"
+                    >
+                      {interestSaved > 0
+                        ? t('pages.debtPayoff.savesWith', {
+                            amount: formatCurrency(interestSaved),
+                          })
+                        : t('pages.debtPayoff.avalancheBenefit')}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </PageContainer>
+    </AnimatedPage>
+  );
+}

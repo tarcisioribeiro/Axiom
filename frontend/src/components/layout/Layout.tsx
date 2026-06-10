@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import { CommandPalette } from './CommandPalette';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { StudyTimer } from './StudyTimer';
 
 export const Layout = () => {
   const { t } = useTranslation();
@@ -31,6 +32,9 @@ export const Layout = () => {
 
       {/* Command Palette (Ctrl+K / Cmd+K) */}
       <CommandPalette />
+
+      {/* Floating study timer */}
+      <StudyTimer />
     </div>
   );
 };

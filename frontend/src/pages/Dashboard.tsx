@@ -20,7 +20,7 @@ import {
 } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Wallet,
   TrendingDown,
@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   Download,
   FileText,
+  ChevronDown,
 } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -82,7 +83,6 @@ import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { budgetsService } from '@/services/budgets-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { dashboardService, type IRReport } from '@/services/dashboard-service';
@@ -128,6 +128,28 @@ export default function Dashboard() {
   const [showIrReport, setShowIrReport] = useState(false);
   const [installmentSimOpen, setInstallmentSimOpen] = useState(false);
   const { toast } = useToast();
+
+  // Collapsible section state — persisted to localStorage
+  const [monthlyAnalysisOpen, setMonthlyAnalysisOpen] = useState(
+    () => localStorage.getItem('dashboard-monthly-analysis') !== 'false'
+  );
+  const [advancedAnalysisOpen, setAdvancedAnalysisOpen] = useState(
+    () => localStorage.getItem('dashboard-advanced-analysis') === 'true'
+  );
+
+  useEffect(() => {
+    localStorage.setItem(
+      'dashboard-monthly-analysis',
+      monthlyAnalysisOpen ? 'true' : 'false'
+    );
+  }, [monthlyAnalysisOpen]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'dashboard-advanced-analysis',
+      advancedAnalysisOpen ? 'true' : 'false'
+    );
+  }, [advancedAnalysisOpen]);
 
   const now = useMemo(() => new Date(), []);
 
@@ -202,12 +224,41 @@ export default function Dashboard() {
     staleTime: STALE_TIMES.BALANCE_FORECAST,
   });
 
-  const budgetStatusQuery = useQuery({
-    queryKey: ['budgets', 'status', now.getMonth() + 1, now.getFullYear()],
-    queryFn: () =>
-      budgetsService.getStatus({ month: now.getMonth() + 1, year: now.getFullYear() }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
+  // Lazy-load refs: anomalias e projeção de fluxo só disparam quando visíveis
+  const anomaliesSectionRef = useRef<HTMLDivElement>(null);
+  const cashFlowSectionRef = useRef<HTMLDivElement>(null);
+  const [anomaliesInView, setAnomaliesInView] = useState(false);
+  const [cashFlowInView, setCashFlowInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setAnomaliesInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    const el = anomaliesSectionRef.current;
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCashFlowInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    const el = cashFlowSectionRef.current;
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // forecastDays is in the key — changing it transparently fetches a new result
   // while the previous period's data stays cached (no loading flash when switching back).
@@ -216,6 +267,7 @@ export default function Dashboard() {
     queryFn: () => dashboardService.getCashFlowForecast(forecastDays),
     staleTime: STALE_TIMES.CASH_FLOW_FORECAST,
     refetchOnWindowFocus: false,
+    enabled: cashFlowInView,
   });
 
   const anomaliesQuery = useQuery({
@@ -223,6 +275,7 @@ export default function Dashboard() {
     queryFn: () => dashboardService.getAnomalies(),
     staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
     refetchOnWindowFocus: false,
+    enabled: anomaliesInView,
   });
 
   const lgpdMutation = useMutation({
@@ -281,8 +334,11 @@ export default function Dashboard() {
   );
   const balanceForecast = balanceForecastQuery.data ?? null;
   const budgetStatus = useMemo(
-    () => (Array.isArray(budgetStatusQuery.data) ? budgetStatusQuery.data : []),
-    [budgetStatusQuery.data]
+    () =>
+      Array.isArray(summaryQuery.data?.budget_status)
+        ? summaryQuery.data.budget_status
+        : [],
+    [summaryQuery.data]
   );
   const cashFlowForecast = cashFlowForecastQuery.data ?? null;
   const financialAlerts = useMemo(
@@ -802,874 +858,1039 @@ export default function Dashboard() {
           <HealthScore />
         </motion.div>
 
-        {/* 8. Anomalias de Gastos */}
-        {anomalies.length > 0 && (
-          <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-sm">
-                  <AlertTriangle className="h-5 w-5 text-warning" />
-                  <CardTitle as="h2">{t('pages.dashboard.anomalies.title')}</CardTitle>
-                </div>
-                <p className="text-sm">{t('pages.dashboard.anomalies.subtitle')}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-sm">
-                  {anomalies.map((anomaly) => (
-                    <div
-                      key={anomaly.category}
-                      className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/5 p-3"
-                    >
-                      <div className="flex items-start gap-3">
-                        <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                        <div>
-                          <p className="font-medium">
-                            {translate('expenseCategories', anomaly.category)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {anomaly.message}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="ml-md flex flex-col items-end gap-xs">
-                        <p className="font-semibold">
-                          {formatCurrency(anomaly.current_amount)}
-                        </p>
-                        <span className="rounded bg-destructive/10 px-sm py-0.5 text-xs font-bold text-destructive">
-                          +
-                          {anomaly.average > 0
-                            ? (
-                                ((anomaly.current_amount - anomaly.average) /
-                                  anomaly.average) *
-                                100
-                              ).toFixed(0)
-                            : '0'}
-                          % {t('pages.dashboard.anomalies.aboveAverage')}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        {/* ── Nível 3: Análise Avançada (colapsável, lazy) ────────────────── */}
+        <button
+          type="button"
+          onClick={() => setAdvancedAnalysisOpen((v) => !v)}
+          className="flex w-full items-center gap-3 py-sm text-left"
+          aria-expanded={advancedAnalysisOpen}
+        >
+          <div className="h-px flex-1 bg-border" />
+          <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.dashboard.sectionAdvancedAnalysis')}
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 transition-transform duration-200',
+                advancedAnalysisOpen && 'rotate-180'
+              )}
+            />
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </button>
 
-        {/* 9. Balanço de Contas | Previsão de Saldo (2 cols) */}
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-          {/* Balanço de Contas */}
-          <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-sm">
-                  <Building2 className="h-5 w-5" />
-                  <CardTitle as="h2">{t('pages.dashboard.accountBalance')}</CardTitle>
-                </div>
-                <p className="text-sm">{t('pages.dashboard.accountBalanceDesc')}</p>
-              </CardHeader>
-              <CardContent>
-                {accountBalances.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t('pages.dashboard.columns.account')}</TableHead>
-                          <TableHead className="text-right">
-                            {t('pages.dashboard.columns.currentBalance')}
-                          </TableHead>
-                          <TableHead className="text-right">
-                            {t('pages.dashboard.columns.futureBalance')}
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {accountBalances.map((account) => (
-                          <TableRow key={account.id}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center gap-sm">
-                                <div
-                                  className={cn(
-                                    'h-2 w-2 shrink-0 rounded-full',
-                                    account.current_balance >= 0
-                                      ? 'bg-success'
-                                      : 'bg-destructive'
-                                  )}
-                                />
+        <AnimatePresence initial={false}>
+          {advancedAnalysisOpen && (
+            <motion.div
+              key="advanced-analysis"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-lg">
+                {/* 8. Anomalias de Gastos */}
+                <div ref={anomaliesSectionRef} />
+                {anomalies.length > 0 && (
+                  <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-sm">
+                          <AlertTriangle className="h-5 w-5 text-warning" />
+                          <CardTitle as="h2">
+                            {t('pages.dashboard.anomalies.title')}
+                          </CardTitle>
+                        </div>
+                        <p className="text-sm">
+                          {t('pages.dashboard.anomalies.subtitle')}
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-sm">
+                          {anomalies.map((anomaly) => (
+                            <div
+                              key={anomaly.category}
+                              className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/5 p-3"
+                            >
+                              <div className="flex items-start gap-3">
+                                <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                                 <div>
-                                  <div>{account.account_name}</div>
-                                  <div className="text-xs">
-                                    {translate(
-                                      'institutions',
-                                      account.institution_name
-                                    )}
-                                  </div>
+                                  <p className="font-medium">
+                                    {translate('expenseCategories', anomaly.category)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {anomaly.message}
+                                  </p>
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <span
+                              <div className="ml-md flex flex-col items-end gap-xs">
+                                <p className="font-semibold">
+                                  {formatCurrency(anomaly.current_amount)}
+                                </p>
+                                <span className="rounded bg-destructive/10 px-sm py-0.5 text-xs font-bold text-destructive">
+                                  +
+                                  {anomaly.average > 0
+                                    ? (
+                                        ((anomaly.current_amount - anomaly.average) /
+                                          anomaly.average) *
+                                        100
+                                      ).toFixed(0)
+                                    : '0'}
+                                  % {t('pages.dashboard.anomalies.aboveAverage')}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+                {/* 9. Balanço de Contas | Previsão de Saldo (2 cols) */}
+                <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+                  {/* Balanço de Contas */}
+                  <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Card className="h-full">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-sm">
+                          <Building2 className="h-5 w-5" />
+                          <CardTitle as="h2">
+                            {t('pages.dashboard.accountBalance')}
+                          </CardTitle>
+                        </div>
+                        <p className="text-sm">
+                          {t('pages.dashboard.accountBalanceDesc')}
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        {accountBalances.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>
+                                    {t('pages.dashboard.columns.account')}
+                                  </TableHead>
+                                  <TableHead className="text-right">
+                                    {t('pages.dashboard.columns.currentBalance')}
+                                  </TableHead>
+                                  <TableHead className="text-right">
+                                    {t('pages.dashboard.columns.futureBalance')}
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {accountBalances.map((account) => (
+                                  <TableRow key={account.id}>
+                                    <TableCell className="font-medium">
+                                      <div className="flex items-center gap-sm">
+                                        <div
+                                          className={cn(
+                                            'h-2 w-2 shrink-0 rounded-full',
+                                            account.current_balance >= 0
+                                              ? 'bg-success'
+                                              : 'bg-destructive'
+                                          )}
+                                        />
+                                        <div>
+                                          <div>{account.account_name}</div>
+                                          <div className="text-xs">
+                                            {translate(
+                                              'institutions',
+                                              account.institution_name
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <span
+                                        className={cn(
+                                          'font-semibold',
+                                          account.current_balance >= 0
+                                            ? 'text-success'
+                                            : 'text-destructive'
+                                        )}
+                                      >
+                                        {formatCurrency(account.current_balance)}
+                                      </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div>
+                                        <span
+                                          className={cn(
+                                            'font-semibold',
+                                            account.future_balance >= 0
+                                              ? 'text-success'
+                                              : 'text-destructive'
+                                          )}
+                                        >
+                                          {formatCurrency(account.future_balance)}
+                                        </span>
+                                        {(account.pending_revenues > 0 ||
+                                          account.pending_expenses > 0 ||
+                                          account.pending_transfers_in > 0 ||
+                                          account.pending_transfers_out > 0) && (
+                                          <div className="mt-xs flex flex-wrap gap-x-1 text-xs">
+                                            {account.pending_revenues > 0 && (
+                                              <span
+                                                className="text-success"
+                                                title={t(
+                                                  'pages.dashboard.pendingRevenues'
+                                                )}
+                                              >
+                                                +
+                                                {formatCurrency(
+                                                  account.pending_revenues
+                                                )}
+                                              </span>
+                                            )}
+                                            {account.pending_transfers_in > 0 && (
+                                              <span
+                                                className="text-success"
+                                                title={t(
+                                                  'pages.dashboard.pendingTransfersIn'
+                                                )}
+                                              >
+                                                ↓+
+                                                {formatCurrency(
+                                                  account.pending_transfers_in
+                                                )}
+                                              </span>
+                                            )}
+                                            {account.pending_expenses > 0 && (
+                                              <span
+                                                className="text-destructive"
+                                                title={t(
+                                                  'pages.dashboard.pendingExpenses'
+                                                )}
+                                              >
+                                                -
+                                                {formatCurrency(
+                                                  account.pending_expenses
+                                                )}
+                                              </span>
+                                            )}
+                                            {account.pending_transfers_out > 0 && (
+                                              <span
+                                                className="text-destructive"
+                                                title={t(
+                                                  'pages.dashboard.pendingTransfersOut'
+                                                )}
+                                              >
+                                                ↑-
+                                                {formatCurrency(
+                                                  account.pending_transfers_out
+                                                )}
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <div className="py-xl text-center">
+                            {t('pages.dashboard.noAccounts')}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  {/* Previsão de Saldo */}
+                  {balanceForecast && (
+                    <motion.div
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      <Card className="h-full">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-sm">
+                            <Calculator className="h-5 w-5" />
+                            <CardTitle as="h2">
+                              {t('pages.dashboard.balanceForecast')}
+                            </CardTitle>
+                          </div>
+                          <p className="text-sm">
+                            {t('pages.dashboard.balanceForecastDesc')}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+                            <div className="rounded-lg bg-muted/50 p-md text-center">
+                              <p className="mb-xs text-xs text-muted-foreground">
+                                {t('pages.dashboard.currentBalance')}
+                              </p>
+                              <p
                                 className={cn(
-                                  'font-semibold',
-                                  account.current_balance >= 0
+                                  'text-xl font-bold',
+                                  balanceForecast.current_total_balance >= 0
                                     ? 'text-success'
                                     : 'text-destructive'
                                 )}
                               >
-                                {formatCurrency(account.current_balance)}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div>
-                                <span
-                                  className={cn(
-                                    'font-semibold',
-                                    account.future_balance >= 0
-                                      ? 'text-success'
-                                      : 'text-destructive'
-                                  )}
-                                >
-                                  {formatCurrency(account.future_balance)}
-                                </span>
-                                {(account.pending_revenues > 0 ||
-                                  account.pending_expenses > 0 ||
-                                  account.pending_transfers_in > 0 ||
-                                  account.pending_transfers_out > 0) && (
-                                  <div className="mt-xs flex flex-wrap gap-x-1 text-xs">
-                                    {account.pending_revenues > 0 && (
-                                      <span
-                                        className="text-success"
-                                        title={t('pages.dashboard.pendingRevenues')}
-                                      >
-                                        +{formatCurrency(account.pending_revenues)}
-                                      </span>
-                                    )}
-                                    {account.pending_transfers_in > 0 && (
-                                      <span
-                                        className="text-success"
-                                        title={t('pages.dashboard.pendingTransfersIn')}
-                                      >
-                                        ↓+{formatCurrency(account.pending_transfers_in)}
-                                      </span>
-                                    )}
-                                    {account.pending_expenses > 0 && (
-                                      <span
-                                        className="text-destructive"
-                                        title={t('pages.dashboard.pendingExpenses')}
-                                      >
-                                        -{formatCurrency(account.pending_expenses)}
-                                      </span>
-                                    )}
-                                    {account.pending_transfers_out > 0 && (
-                                      <span
-                                        className="text-destructive"
-                                        title={t('pages.dashboard.pendingTransfersOut')}
-                                      >
-                                        ↑-
-                                        {formatCurrency(account.pending_transfers_out)}
-                                      </span>
-                                    )}
-                                  </div>
+                                {formatCurrency(balanceForecast.current_total_balance)}
+                              </p>
+                            </div>
+                            <div className="rounded-lg bg-muted/50 p-md text-center">
+                              <p className="mb-xs text-xs text-muted-foreground">
+                                {t('pages.dashboard.expectedChange')}
+                              </p>
+                              <p
+                                className={cn(
+                                  'flex items-center justify-center gap-xs text-xl font-bold',
+                                  balanceForecast.summary.net_change >= 0
+                                    ? 'text-success'
+                                    : 'text-destructive'
                                 )}
+                              >
+                                {balanceForecast.summary.net_change >= 0 ? (
+                                  <ArrowUpRight className="h-5 w-5" />
+                                ) : (
+                                  <ArrowDownRight className="h-5 w-5" />
+                                )}
+                                {formatCurrency(
+                                  Math.abs(balanceForecast.summary.net_change)
+                                )}
+                              </p>
+                            </div>
+                            <div className="col-span-1 rounded-lg bg-muted/50 p-md text-center md:col-span-2">
+                              <p className="mb-xs text-xs text-muted-foreground">
+                                {t('pages.dashboard.expectedBalance')}
+                              </p>
+                              <p
+                                className={cn(
+                                  'text-2xl font-bold',
+                                  balanceForecast.forecast_balance >= 0
+                                    ? 'text-success'
+                                    : 'text-destructive'
+                                )}
+                              >
+                                {formatCurrency(balanceForecast.forecast_balance)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-lg md:grid-cols-2">
+                            {/* Entradas Previstas */}
+                            <div className="space-y-3">
+                              <h3 className="flex items-center gap-sm text-sm font-semibold text-success">
+                                <ArrowUpRight className="h-4 w-4" />
+                                {t('pages.dashboard.inflows')}
+                              </h3>
+                              <div className="space-y-sm">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.pendingRevenues')}
+                                  </span>
+                                  <span className="font-medium text-success">
+                                    +{formatCurrency(balanceForecast.pending_revenues)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.loansReceivable')}
+                                  </span>
+                                  <span className="font-medium text-success">
+                                    +{formatCurrency(balanceForecast.loans_to_receive)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between border-t pt-sm text-sm">
+                                  <span className="font-semibold">
+                                    {t('pages.dashboard.totalInflows')}
+                                  </span>
+                                  <span className="font-bold text-success">
+                                    +
+                                    {formatCurrency(
+                                      balanceForecast.summary.total_income
+                                    )}
+                                  </span>
+                                </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="py-xl text-center">
-                    {t('pages.dashboard.noAccounts')}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+                            </div>
 
-          {/* Previsão de Saldo */}
-          {balanceForecast && (
-            <motion.div variants={itemVariants} initial="hidden" animate="visible">
-              <Card className="h-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-sm">
-                    <Calculator className="h-5 w-5" />
-                    <CardTitle as="h2">
-                      {t('pages.dashboard.balanceForecast')}
-                    </CardTitle>
-                  </div>
-                  <p className="text-sm">{t('pages.dashboard.balanceForecastDesc')}</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-lg bg-muted/50 p-md text-center">
-                      <p className="mb-xs text-xs text-muted-foreground">
-                        {t('pages.dashboard.currentBalance')}
-                      </p>
-                      <p
-                        className={cn(
-                          'text-xl font-bold',
-                          balanceForecast.current_total_balance >= 0
-                            ? 'text-success'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {formatCurrency(balanceForecast.current_total_balance)}
-                      </p>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-md text-center">
-                      <p className="mb-xs text-xs text-muted-foreground">
-                        {t('pages.dashboard.expectedChange')}
-                      </p>
-                      <p
-                        className={cn(
-                          'flex items-center justify-center gap-xs text-xl font-bold',
-                          balanceForecast.summary.net_change >= 0
-                            ? 'text-success'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {balanceForecast.summary.net_change >= 0 ? (
-                          <ArrowUpRight className="h-5 w-5" />
-                        ) : (
-                          <ArrowDownRight className="h-5 w-5" />
-                        )}
-                        {formatCurrency(Math.abs(balanceForecast.summary.net_change))}
-                      </p>
-                    </div>
-                    <div className="col-span-1 rounded-lg bg-muted/50 p-md text-center md:col-span-2">
-                      <p className="mb-xs text-xs text-muted-foreground">
-                        {t('pages.dashboard.expectedBalance')}
-                      </p>
-                      <p
-                        className={cn(
-                          'text-2xl font-bold',
-                          balanceForecast.forecast_balance >= 0
-                            ? 'text-success'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {formatCurrency(balanceForecast.forecast_balance)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-lg md:grid-cols-2">
-                    {/* Entradas Previstas */}
-                    <div className="space-y-3">
-                      <h3 className="flex items-center gap-sm text-sm font-semibold text-success">
-                        <ArrowUpRight className="h-4 w-4" />
-                        {t('pages.dashboard.inflows')}
-                      </h3>
-                      <div className="space-y-sm">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.pendingRevenues')}
-                          </span>
-                          <span className="font-medium text-success">
-                            +{formatCurrency(balanceForecast.pending_revenues)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.loansReceivable')}
-                          </span>
-                          <span className="font-medium text-success">
-                            +{formatCurrency(balanceForecast.loans_to_receive)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-t pt-sm text-sm">
-                          <span className="font-semibold">
-                            {t('pages.dashboard.totalInflows')}
-                          </span>
-                          <span className="font-bold text-success">
-                            +{formatCurrency(balanceForecast.summary.total_income)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Saídas Previstas */}
-                    <div className="space-y-3">
-                      <h3 className="flex items-center gap-sm text-sm font-semibold text-destructive">
-                        <ArrowDownRight className="h-4 w-4" />
-                        {t('pages.dashboard.outflows')}
-                      </h3>
-                      <div className="space-y-sm">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.pendingExpenses')}
-                          </span>
-                          <span className="font-medium text-destructive">
-                            -{formatCurrency(balanceForecast.pending_expenses)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.creditCardBills')}
-                          </span>
-                          <span className="font-medium text-destructive">
-                            -{formatCurrency(balanceForecast.pending_card_bills)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.loansToPay')}
-                          </span>
-                          <span className="font-medium text-destructive">
-                            -{formatCurrency(balanceForecast.loans_to_pay)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            {t('pages.dashboard.valuesToPay')}
-                          </span>
-                          <span className="font-medium text-destructive">
-                            -{formatCurrency(balanceForecast.pending_payables)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between border-t pt-sm text-sm">
-                          <span className="font-semibold">
-                            {t('pages.dashboard.totalOutflows')}
-                          </span>
-                          <span className="font-bold text-destructive">
-                            -{formatCurrency(balanceForecast.summary.total_outcome)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </div>
-
-        {/* 9. Projeção de Fluxo de Caixa | Evolução Diária (2 cols) */}
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-          {/* Projeção de Fluxo de Caixa */}
-          <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-sm">
-                    <Calculator className="h-5 w-5" />
-                    <CardTitle as="h2">
-                      {t('pages.dashboard.cashFlowProjection')}
-                    </CardTitle>
-                  </div>
-                  <Select
-                    value={String(forecastDays)}
-                    onValueChange={(v) => setForecastDays(Number(v) as 30 | 60 | 90)}
-                  >
-                    <SelectTrigger
-                      className="w-[140px]"
-                      aria-label={t('pages.dashboard.selectForecastPeriod')}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="30">
-                        {t('pages.dashboard.period30')}
-                      </SelectItem>
-                      <SelectItem value="60">
-                        {t('pages.dashboard.period60')}
-                      </SelectItem>
-                      <SelectItem value="90">
-                        {t('pages.dashboard.period90')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                            {/* Saídas Previstas */}
+                            <div className="space-y-3">
+                              <h3 className="flex items-center gap-sm text-sm font-semibold text-destructive">
+                                <ArrowDownRight className="h-4 w-4" />
+                                {t('pages.dashboard.outflows')}
+                              </h3>
+                              <div className="space-y-sm">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.pendingExpenses')}
+                                  </span>
+                                  <span className="font-medium text-destructive">
+                                    -{formatCurrency(balanceForecast.pending_expenses)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.creditCardBills')}
+                                  </span>
+                                  <span className="font-medium text-destructive">
+                                    -
+                                    {formatCurrency(balanceForecast.pending_card_bills)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.loansToPay')}
+                                  </span>
+                                  <span className="font-medium text-destructive">
+                                    -{formatCurrency(balanceForecast.loans_to_pay)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    {t('pages.dashboard.valuesToPay')}
+                                  </span>
+                                  <span className="font-medium text-destructive">
+                                    -{formatCurrency(balanceForecast.pending_payables)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between border-t pt-sm text-sm">
+                                  <span className="font-semibold">
+                                    {t('pages.dashboard.totalOutflows')}
+                                  </span>
+                                  <span className="font-bold text-destructive">
+                                    -
+                                    {formatCurrency(
+                                      balanceForecast.summary.total_outcome
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
                 </div>
-                {cashFlowForecast && (
-                  <div className="flex flex-wrap gap-md pt-xs text-sm">
-                    <div>
-                      <span className="text-muted-foreground">
-                        {t('pages.dashboard.startBalance')}:{' '}
-                      </span>
-                      <span className="font-semibold">
-                        {formatCurrency(cashFlowForecast.start_balance)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        {t('pages.dashboard.endBalance')}:{' '}
-                      </span>
-                      <span
-                        className={cn(
-                          'font-semibold',
-                          cashFlowForecast.net_change >= 0
-                            ? 'text-success'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {formatCurrency(cashFlowForecast.end_balance)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        {t('pages.dashboard.variation')}:{' '}
-                      </span>
-                      <span
-                        className={cn(
-                          'font-semibold',
-                          cashFlowForecast.net_change >= 0
-                            ? 'text-success'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {cashFlowForecast.net_change >= 0 ? '+' : ''}
-                        {formatCurrency(cashFlowForecast.net_change)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">
-                        {t('pages.dashboard.minBalance')}:{' '}
-                      </span>
-                      <span className="font-semibold text-destructive">
-                        {formatCurrency(cashFlowForecast.min_balance)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                {isForecastLoading ? (
-                  <LoadingState />
-                ) : (
-                  <ChartContainer
-                    chartId="cash-flow-forecast"
-                    data={cashFlowChartData}
-                    dataKey="saldo"
-                    nameKey="date"
-                    formatter={formatCurrency}
-                    colors={COLORS}
-                    lockChartType="line"
-                    lines={[
-                      {
-                        dataKey: 'despesas',
-                        stroke: COLORS[5],
-                        name: t('pages.dashboard.expenses'),
-                      },
-                      {
-                        dataKey: 'receitas',
-                        stroke: COLORS[3],
-                        name: t('pages.dashboard.revenues'),
-                      },
-                      {
-                        dataKey: 'saldo',
-                        stroke: COLORS[0],
-                        name: t('pages.dashboard.balance'),
-                      },
-                    ]}
-                    xAxisTickFormatter={(d) =>
-                      format(parseISO(d), 'dd/MM', { locale: dateFnsLocale })
-                    }
-                    tooltipLabelFormatter={(d) =>
-                      format(parseISO(String(d)), "dd 'de' MMMM", {
-                        locale: dateFnsLocale,
-                      })
-                    }
-                    emptyMessage={t('pages.dashboard.noProjection')}
-                    height={350}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          {/* Evolução Diária/Semanal/Mensal/Anual */}
-          <motion.div variants={itemVariants} initial="hidden" animate="visible">
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
-                  <CardTitle as="h2">
-                    {evolutionPeriod === 'daily'
-                      ? t('pages.dashboard.evolutionDaily')
-                      : evolutionPeriod === 'weekly'
-                        ? t('pages.dashboard.evolutionWeekly')
-                        : evolutionPeriod === 'yearly'
-                          ? t('pages.dashboard.evolutionYearly')
-                          : t('pages.dashboard.evolutionMonthly')}
-                  </CardTitle>
-                  <Select
-                    value={evolutionPeriod}
-                    onValueChange={(v) =>
-                      setEvolutionPeriod(v as 'daily' | 'weekly' | 'monthly' | 'yearly')
-                    }
-                  >
-                    <SelectTrigger
-                      className="w-[160px]"
-                      aria-label={t('pages.dashboard.selectEvolutionPeriod')}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">
-                        {t('pages.dashboard.daily')}
-                      </SelectItem>
-                      <SelectItem value="weekly">
-                        {t('pages.dashboard.weekly')}
-                      </SelectItem>
-                      <SelectItem value="monthly">
-                        {t('pages.dashboard.monthly')}
-                      </SelectItem>
-                      <SelectItem value="yearly">
-                        {t('pages.dashboard.annual')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  chartId="financial-monthly-evolution"
-                  data={evolutionData}
-                  dataKey="saldo"
-                  nameKey="month"
-                  formatter={formatCurrency}
-                  colors={COLORS}
-                  emptyMessage={t('pages.dashboard.noData')}
-                  lockChartType="line"
-                  lines={[
-                    {
-                      dataKey: 'despesas',
-                      stroke: COLORS[5],
-                      name: t('pages.dashboard.expenses'),
-                    },
-                    {
-                      dataKey: 'receitas',
-                      stroke: COLORS[3],
-                      name: t('pages.dashboard.revenues'),
-                    },
-                    {
-                      dataKey: 'saldo',
-                      stroke: COLORS[0],
-                      name: t('pages.dashboard.balance'),
-                    },
-                  ]}
-                  height={400}
-                />
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* 9b. Comparativo Mês a Mês */}
-        <div className="flex items-center gap-3 py-sm">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {t('pages.dashboard.monthOverMonth')}
-          </span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-          {(
-            [
-              {
-                label: t('pages.dashboard.expenses'),
-                data: monthOverMonth.expenses,
-                color: 'text-destructive',
-                positiveIsBad: true,
-              },
-              {
-                label: t('pages.dashboard.revenues'),
-                data: monthOverMonth.revenues,
-                color: 'text-success',
-                positiveIsBad: false,
-              },
-              {
-                label: t('pages.dashboard.balance'),
-                data: monthOverMonth.balance,
-                color:
-                  monthOverMonth.balance.current >= 0
-                    ? 'text-success'
-                    : 'text-destructive',
-                positiveIsBad: false,
-              },
-            ] as const
-          ).map(({ label, data, color, positiveIsBad }) => {
-            const isUp = data.delta >= 0;
-            const deltaColor = positiveIsBad
-              ? isUp
-                ? 'text-destructive'
-                : 'text-success'
-              : isUp
-                ? 'text-success'
-                : 'text-destructive';
-
-            return (
-              <Card key={label} className="overflow-hidden">
-                <CardContent className="pt-md">
-                  <p className="mb-xs text-sm font-medium text-muted-foreground">
-                    {label}
-                  </p>
-                  <p className={cn('text-2xl font-bold', color)}>
-                    {formatCurrency(data.current)}
-                  </p>
-                  <div className="mt-sm flex items-center gap-xs text-xs">
-                    {isUp ? (
-                      <ArrowUpRight className={cn('h-3.5 w-3.5', deltaColor)} />
-                    ) : (
-                      <ArrowDownRight className={cn('h-3.5 w-3.5', deltaColor)} />
-                    )}
-                    <span className={cn('font-medium', deltaColor)}>
-                      {Math.abs(data.delta).toFixed(1)}%
-                    </span>
-                    <span className="text-muted-foreground">
-                      {t('pages.dashboard.vsPrevMonth')} {formatCurrency(data.prev)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* 10. Separador: Composição do mês */}
-        <div className="flex items-center gap-3 py-sm">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {t('pages.dashboard.monthComposition')}
-          </span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        {/* 11. Despesas por Cat | Receitas por Cat | Cartão por Cat | Orçamentos (4 cols) */}
-        <div className="grid grid-cols-1 gap-md sm:grid-cols-2 xl:grid-cols-4">
-          {/* Despesas por Categoria */}
-          <Card>
-            <CardHeader>
-              <CardTitle as="h2">{t('pages.dashboard.expensesByCategory')}</CardTitle>
-              <p className="text-sm">{t('pages.dashboard.expensesByCategoryDesc')}</p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="financial-expenses-category"
-                data={expensesByCategory}
-                dataKey="value"
-                nameKey="name"
-                formatter={formatCurrency}
-                colors={COLORS}
-                emptyMessage={t('pages.dashboard.noExpenses')}
-                lockChartType="pie"
-                height={280}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Receitas por Categoria */}
-          <Card>
-            <CardHeader>
-              <CardTitle as="h2">{t('pages.dashboard.revenuesByCategory')}</CardTitle>
-              <p className="text-sm">{t('pages.dashboard.revenuesByCategoryDesc')}</p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="financial-revenues-category"
-                data={revenuesByCategory}
-                dataKey="value"
-                nameKey="name"
-                formatter={formatCurrency}
-                colors={COLORS}
-                emptyMessage={t('pages.dashboard.noRevenues')}
-                lockChartType="pie"
-                height={280}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Despesas de Cartão por Categoria */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle as="h2" className="flex items-center gap-sm">
-                <CreditCard className="h-4 w-4" />
-                {t('pages.dashboard.cardExpensesByCategory')}
-              </CardTitle>
-              <p className="text-sm">
-                {t('pages.dashboard.cardExpensesByCategoryDesc')}
-              </p>
-              <div className="flex flex-wrap gap-sm pt-sm">
-                <Select
-                  value={selectedCard}
-                  onValueChange={(v) => {
-                    setSelectedCard(v);
-                    setSelectedBill('all');
-                  }}
+                {/* 9. Projeção de Fluxo de Caixa | Evolução Diária (2 cols) */}
+                <div
+                  ref={cashFlowSectionRef}
+                  className="grid grid-cols-1 gap-lg lg:grid-cols-2"
                 >
-                  <SelectTrigger
-                    className="h-8 flex-1 text-xs"
-                    aria-label={t('pages.dashboard.selectCard')}
+                  {/* Projeção de Fluxo de Caixa */}
+                  <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
                   >
-                    <SelectValue placeholder={t('pages.dashboard.allCards')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('pages.dashboard.allCards')}</SelectItem>
-                    {creditCards.map((card) => (
-                      <SelectItem key={card.id} value={card.id.toString()}>
-                        {card.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={selectedBill}
-                  onValueChange={setSelectedBill}
-                  disabled={filteredBills.length === 0}
-                >
-                  <SelectTrigger
-                    className="h-8 flex-1 text-xs"
-                    aria-label={t('pages.dashboard.selectBill')}
-                  >
-                    <SelectValue
-                      placeholder={
-                        filteredBills.length === 0
-                          ? t('pages.dashboard.noBills')
-                          : t('pages.dashboard.allBills')
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('pages.dashboard.allBills')}</SelectItem>
-                    {filteredBills.map((bill) => (
-                      <SelectItem key={bill.id} value={bill.id.toString()}>
-                        {
-                          TRANSLATIONS.months[
-                            bill.month as keyof typeof TRANSLATIONS.months
-                          ]
-                        }
-                        /{bill.year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="credit-card-expenses-category"
-                data={creditCardExpensesChartData}
-                dataKey="value"
-                nameKey="name"
-                formatter={formatCurrency}
-                colors={COLORS}
-                emptyMessage={t('pages.dashboard.noCardExpenses')}
-                lockChartType="pie"
-                height={280}
-              />
-              {creditCardExpensesChartData.length > 0 && (
-                <div className="mt-3 space-y-sm">
-                  <div className="flex items-center justify-between border-b pb-xs text-sm">
-                    <span className="font-semibold">{t('pages.dashboard.total')}</span>
-                    <span className="font-bold text-destructive">
-                      {formatCurrency(creditCardExpensesTotal)}
-                    </span>
-                  </div>
-                  {creditCardExpensesChartData.map((category, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-sm">
-                        <div
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span>{category.name}</span>
-                        <span className="text-muted-foreground">
-                          ({category.count})
-                        </span>
-                      </div>
-                      <span className="font-semibold text-destructive">
-                        {formatCurrency(category.value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Orçamentos do mês */}
-          {budgetStatus.length > 0 ? (
-            <motion.div variants={itemVariants} initial="hidden" animate="visible">
-              <Card className="h-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-sm">
-                    <PiggyBank className="h-4 w-4" />
-                    <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('pages.dashboard.monthBudgetsDesc')}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-md">
-                    {budgetStatus.map((item) => {
-                      const pct = Math.min(item.percentage, 100);
-                      const barColor =
-                        item.status === 'exceeded'
-                          ? 'bg-destructive'
-                          : item.status === 'warning'
-                            ? 'bg-warning'
-                            : 'bg-success';
-                      return (
-                        <div key={item.id} className="space-y-xs">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="font-medium">
-                              {translate('expenseCategories', item.category)}
-                            </span>
-                            <div className="flex items-center gap-sm">
+                    <Card className="h-full">
+                      <CardHeader>
+                        <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
+                          <div className="flex items-center gap-sm">
+                            <Calculator className="h-5 w-5" />
+                            <CardTitle as="h2">
+                              {t('pages.dashboard.cashFlowProjection')}
+                            </CardTitle>
+                          </div>
+                          <Select
+                            value={String(forecastDays)}
+                            onValueChange={(v) =>
+                              setForecastDays(Number(v) as 30 | 60 | 90)
+                            }
+                          >
+                            <SelectTrigger
+                              className="w-[140px]"
+                              aria-label={t('pages.dashboard.selectForecastPeriod')}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="30">
+                                {t('pages.dashboard.period30')}
+                              </SelectItem>
+                              <SelectItem value="60">
+                                {t('pages.dashboard.period60')}
+                              </SelectItem>
+                              <SelectItem value="90">
+                                {t('pages.dashboard.period90')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {cashFlowForecast && (
+                          <div className="flex flex-wrap gap-md pt-xs text-sm">
+                            <div>
                               <span className="text-muted-foreground">
-                                {formatCurrency(item.actual_spent)} /{' '}
-                                {formatCurrency(item.limit_amount)}
+                                {t('pages.dashboard.startBalance')}:{' '}
+                              </span>
+                              <span className="font-semibold">
+                                {formatCurrency(cashFlowForecast.start_balance)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                {t('pages.dashboard.endBalance')}:{' '}
                               </span>
                               <span
                                 className={cn(
-                                  'rounded px-sm py-0.5 text-xs font-semibold',
-                                  item.status === 'exceeded'
-                                    ? 'bg-destructive/10 text-destructive'
-                                    : item.status === 'warning'
-                                      ? 'bg-warning/10 text-warning'
-                                      : 'bg-success/10 text-success'
+                                  'font-semibold',
+                                  cashFlowForecast.net_change >= 0
+                                    ? 'text-success'
+                                    : 'text-destructive'
                                 )}
                               >
-                                {item.percentage.toFixed(0)}%
+                                {formatCurrency(cashFlowForecast.end_balance)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                {t('pages.dashboard.variation')}:{' '}
+                              </span>
+                              <span
+                                className={cn(
+                                  'font-semibold',
+                                  cashFlowForecast.net_change >= 0
+                                    ? 'text-success'
+                                    : 'text-destructive'
+                                )}
+                              >
+                                {cashFlowForecast.net_change >= 0 ? '+' : ''}
+                                {formatCurrency(cashFlowForecast.net_change)}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                {t('pages.dashboard.minBalance')}:{' '}
+                              </span>
+                              <span className="font-semibold text-destructive">
+                                {formatCurrency(cashFlowForecast.min_balance)}
                               </span>
                             </div>
                           </div>
-                          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={cn(
-                                'h-full rounded-full transition-all',
-                                barColor
-                              )}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        {isForecastLoading ? (
+                          <LoadingState />
+                        ) : (
+                          <ChartContainer
+                            chartId="cash-flow-forecast"
+                            data={cashFlowChartData}
+                            dataKey="saldo"
+                            nameKey="date"
+                            formatter={formatCurrency}
+                            colors={COLORS}
+                            lockChartType="line"
+                            lines={[
+                              {
+                                dataKey: 'despesas',
+                                stroke: COLORS[5],
+                                name: t('pages.dashboard.expenses'),
+                              },
+                              {
+                                dataKey: 'receitas',
+                                stroke: COLORS[3],
+                                name: t('pages.dashboard.revenues'),
+                              },
+                              {
+                                dataKey: 'saldo',
+                                stroke: COLORS[0],
+                                name: t('pages.dashboard.balance'),
+                              },
+                            ]}
+                            xAxisTickFormatter={(d) =>
+                              format(parseISO(d), 'dd/MM', { locale: dateFnsLocale })
+                            }
+                            tooltipLabelFormatter={(d) =>
+                              format(parseISO(String(d)), "dd 'de' MMMM", {
+                                locale: dateFnsLocale,
+                              })
+                            }
+                            emptyMessage={t('pages.dashboard.noProjection')}
+                            height={350}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  {/* Evolução Diária/Semanal/Mensal/Anual */}
+                  <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <Card className="h-full">
+                      <CardHeader>
+                        <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
+                          <CardTitle as="h2">
+                            {evolutionPeriod === 'daily'
+                              ? t('pages.dashboard.evolutionDaily')
+                              : evolutionPeriod === 'weekly'
+                                ? t('pages.dashboard.evolutionWeekly')
+                                : evolutionPeriod === 'yearly'
+                                  ? t('pages.dashboard.evolutionYearly')
+                                  : t('pages.dashboard.evolutionMonthly')}
+                          </CardTitle>
+                          <Select
+                            value={evolutionPeriod}
+                            onValueChange={(v) =>
+                              setEvolutionPeriod(
+                                v as 'daily' | 'weekly' | 'monthly' | 'yearly'
+                              )
+                            }
+                          >
+                            <SelectTrigger
+                              className="w-[160px]"
+                              aria-label={t('pages.dashboard.selectEvolutionPeriod')}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">
+                                {t('pages.dashboard.daily')}
+                              </SelectItem>
+                              <SelectItem value="weekly">
+                                {t('pages.dashboard.weekly')}
+                              </SelectItem>
+                              <SelectItem value="monthly">
+                                {t('pages.dashboard.monthly')}
+                              </SelectItem>
+                              <SelectItem value="yearly">
+                                {t('pages.dashboard.annual')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
+                      </CardHeader>
+                      <CardContent>
+                        <ChartContainer
+                          chartId="financial-monthly-evolution"
+                          data={evolutionData}
+                          dataKey="saldo"
+                          nameKey="month"
+                          formatter={formatCurrency}
+                          colors={COLORS}
+                          emptyMessage={t('pages.dashboard.noData')}
+                          lockChartType="line"
+                          lines={[
+                            {
+                              dataKey: 'despesas',
+                              stroke: COLORS[5],
+                              name: t('pages.dashboard.expenses'),
+                            },
+                            {
+                              dataKey: 'receitas',
+                              stroke: COLORS[3],
+                              name: t('pages.dashboard.revenues'),
+                            },
+                            {
+                              dataKey: 'saldo',
+                              stroke: COLORS[0],
+                              name: t('pages.dashboard.balance'),
+                            },
+                          ]}
+                          height={400}
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </div>
+              </div>
             </motion.div>
-          ) : (
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-sm">
-                  <PiggyBank className="h-4 w-4" />
-                  <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="py-xl text-center text-sm text-muted-foreground">
-                  {t('pages.dashboard.monthBudgetsDesc')}
-                </div>
-              </CardContent>
-            </Card>
           )}
-        </div>
+        </AnimatePresence>
+
+        {/* ── Nível 2: Análise Mensal (colapsável) ─────────────────────────── */}
+        <button
+          type="button"
+          onClick={() => setMonthlyAnalysisOpen((v) => !v)}
+          className="flex w-full items-center gap-3 py-sm text-left"
+          aria-expanded={monthlyAnalysisOpen}
+        >
+          <div className="h-px flex-1 bg-border" />
+          <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.dashboard.sectionMonthlyAnalysis')}
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 transition-transform duration-200',
+                monthlyAnalysisOpen && 'rotate-180'
+              )}
+            />
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </button>
+
+        <AnimatePresence initial={false}>
+          {monthlyAnalysisOpen && (
+            <motion.div
+              key="monthly-analysis"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="space-y-lg">
+                {/* 9b. Comparativo Mês a Mês */}
+                <div className="flex items-center gap-3 py-sm">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('pages.dashboard.monthOverMonth')}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+                  {(
+                    [
+                      {
+                        label: t('pages.dashboard.expenses'),
+                        data: monthOverMonth.expenses,
+                        color: 'text-destructive',
+                        positiveIsBad: true,
+                      },
+                      {
+                        label: t('pages.dashboard.revenues'),
+                        data: monthOverMonth.revenues,
+                        color: 'text-success',
+                        positiveIsBad: false,
+                      },
+                      {
+                        label: t('pages.dashboard.balance'),
+                        data: monthOverMonth.balance,
+                        color:
+                          monthOverMonth.balance.current >= 0
+                            ? 'text-success'
+                            : 'text-destructive',
+                        positiveIsBad: false,
+                      },
+                    ] as const
+                  ).map(({ label, data, color, positiveIsBad }) => {
+                    const isUp = data.delta >= 0;
+                    const deltaColor = positiveIsBad
+                      ? isUp
+                        ? 'text-destructive'
+                        : 'text-success'
+                      : isUp
+                        ? 'text-success'
+                        : 'text-destructive';
+
+                    return (
+                      <Card key={label} className="overflow-hidden">
+                        <CardContent className="pt-md">
+                          <p className="mb-xs text-sm font-medium text-muted-foreground">
+                            {label}
+                          </p>
+                          <p className={cn('text-2xl font-bold', color)}>
+                            {formatCurrency(data.current)}
+                          </p>
+                          <div className="mt-sm flex items-center gap-xs text-xs">
+                            {isUp ? (
+                              <ArrowUpRight className={cn('h-3.5 w-3.5', deltaColor)} />
+                            ) : (
+                              <ArrowDownRight
+                                className={cn('h-3.5 w-3.5', deltaColor)}
+                              />
+                            )}
+                            <span className={cn('font-medium', deltaColor)}>
+                              {Math.abs(data.delta).toFixed(1)}%
+                            </span>
+                            <span className="text-muted-foreground">
+                              {t('pages.dashboard.vsPrevMonth')}{' '}
+                              {formatCurrency(data.prev)}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* 10. Separador: Composição do mês */}
+                <div className="flex items-center gap-3 py-sm">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t('pages.dashboard.monthComposition')}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                {/* 11. Despesas por Cat | Receitas por Cat | Cartão por Cat | Orçamentos (4 cols) */}
+                <div className="grid grid-cols-1 gap-md sm:grid-cols-2 xl:grid-cols-4">
+                  {/* Despesas por Categoria */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle as="h2">
+                        {t('pages.dashboard.expensesByCategory')}
+                      </CardTitle>
+                      <p className="text-sm">
+                        {t('pages.dashboard.expensesByCategoryDesc')}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="financial-expenses-category"
+                        data={expensesByCategory}
+                        dataKey="value"
+                        nameKey="name"
+                        formatter={formatCurrency}
+                        colors={COLORS}
+                        emptyMessage={t('pages.dashboard.noExpenses')}
+                        lockChartType="pie"
+                        height={280}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Receitas por Categoria */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle as="h2">
+                        {t('pages.dashboard.revenuesByCategory')}
+                      </CardTitle>
+                      <p className="text-sm">
+                        {t('pages.dashboard.revenuesByCategoryDesc')}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="financial-revenues-category"
+                        data={revenuesByCategory}
+                        dataKey="value"
+                        nameKey="name"
+                        formatter={formatCurrency}
+                        colors={COLORS}
+                        emptyMessage={t('pages.dashboard.noRevenues')}
+                        lockChartType="pie"
+                        height={280}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Despesas de Cartão por Categoria */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle as="h2" className="flex items-center gap-sm">
+                        <CreditCard className="h-4 w-4" />
+                        {t('pages.dashboard.cardExpensesByCategory')}
+                      </CardTitle>
+                      <p className="text-sm">
+                        {t('pages.dashboard.cardExpensesByCategoryDesc')}
+                      </p>
+                      <div className="flex flex-wrap gap-sm pt-sm">
+                        <Select
+                          value={selectedCard}
+                          onValueChange={(v) => {
+                            setSelectedCard(v);
+                            setSelectedBill('all');
+                          }}
+                        >
+                          <SelectTrigger
+                            className="h-8 flex-1 text-xs"
+                            aria-label={t('pages.dashboard.selectCard')}
+                          >
+                            <SelectValue placeholder={t('pages.dashboard.allCards')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {t('pages.dashboard.allCards')}
+                            </SelectItem>
+                            {creditCards.map((card) => (
+                              <SelectItem key={card.id} value={card.id.toString()}>
+                                {card.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={selectedBill}
+                          onValueChange={setSelectedBill}
+                          disabled={filteredBills.length === 0}
+                        >
+                          <SelectTrigger
+                            className="h-8 flex-1 text-xs"
+                            aria-label={t('pages.dashboard.selectBill')}
+                          >
+                            <SelectValue
+                              placeholder={
+                                filteredBills.length === 0
+                                  ? t('pages.dashboard.noBills')
+                                  : t('pages.dashboard.allBills')
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">
+                              {t('pages.dashboard.allBills')}
+                            </SelectItem>
+                            {filteredBills.map((bill) => (
+                              <SelectItem key={bill.id} value={bill.id.toString()}>
+                                {
+                                  TRANSLATIONS.months[
+                                    bill.month as keyof typeof TRANSLATIONS.months
+                                  ]
+                                }
+                                /{bill.year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="credit-card-expenses-category"
+                        data={creditCardExpensesChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        formatter={formatCurrency}
+                        colors={COLORS}
+                        emptyMessage={t('pages.dashboard.noCardExpenses')}
+                        lockChartType="pie"
+                        height={280}
+                      />
+                      {creditCardExpensesChartData.length > 0 && (
+                        <div className="mt-3 space-y-sm">
+                          <div className="flex items-center justify-between border-b pb-xs text-sm">
+                            <span className="font-semibold">
+                              {t('pages.dashboard.total')}
+                            </span>
+                            <span className="font-bold text-destructive">
+                              {formatCurrency(creditCardExpensesTotal)}
+                            </span>
+                          </div>
+                          {creditCardExpensesChartData.map((category, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between text-xs"
+                            >
+                              <div className="flex items-center gap-sm">
+                                <div
+                                  className="h-2.5 w-2.5 rounded-full"
+                                  style={{
+                                    backgroundColor: COLORS[index % COLORS.length],
+                                  }}
+                                />
+                                <span>{category.name}</span>
+                                <span className="text-muted-foreground">
+                                  ({category.count})
+                                </span>
+                              </div>
+                              <span className="font-semibold text-destructive">
+                                {formatCurrency(category.value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Orçamentos do mês */}
+                  {budgetStatus.length > 0 ? (
+                    <motion.div
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      <Card className="h-full">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-sm">
+                            <PiggyBank className="h-4 w-4" />
+                            <CardTitle as="h2">
+                              {t('pages.dashboard.monthBudgets')}
+                            </CardTitle>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {t('pages.dashboard.monthBudgetsDesc')}
+                          </p>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-md">
+                            {budgetStatus.map((item) => {
+                              const pct = Math.min(item.percentage, 100);
+                              const barColor =
+                                item.status === 'exceeded'
+                                  ? 'bg-destructive'
+                                  : item.status === 'warning'
+                                    ? 'bg-warning'
+                                    : 'bg-success';
+                              return (
+                                <div key={item.id} className="space-y-xs">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="font-medium">
+                                      {translate('expenseCategories', item.category)}
+                                    </span>
+                                    <div className="flex items-center gap-sm">
+                                      <span className="text-muted-foreground">
+                                        {formatCurrency(item.actual_spent)} /{' '}
+                                        {formatCurrency(item.limit_amount)}
+                                      </span>
+                                      <span
+                                        className={cn(
+                                          'rounded px-sm py-0.5 text-xs font-semibold',
+                                          item.status === 'exceeded'
+                                            ? 'bg-destructive/10 text-destructive'
+                                            : item.status === 'warning'
+                                              ? 'bg-warning/10 text-warning'
+                                              : 'bg-success/10 text-success'
+                                        )}
+                                      >
+                                        {item.percentage.toFixed(0)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                                    <div
+                                      className={cn(
+                                        'h-full rounded-full transition-all',
+                                        barColor
+                                      )}
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ) : (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-sm">
+                          <PiggyBank className="h-4 w-4" />
+                          <CardTitle as="h2">
+                            {t('pages.dashboard.monthBudgets')}
+                          </CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="py-xl text-center text-sm text-muted-foreground">
+                          {t('pages.dashboard.monthBudgetsDesc')}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modal de Alertas Financeiros */}
