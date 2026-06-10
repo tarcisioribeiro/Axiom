@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { format, subMonths } from 'date-fns';
 import type { Locale } from 'date-fns';

@@ -6,6 +6,7 @@ import { apiClient } from './api-client';
 interface HeatmapParams {
   task_id?: string | number;
   year?: number;
+  category?: string;
 }
 
 class HabitHeatmapService {
@@ -16,6 +17,9 @@ class HabitHeatmapService {
     }
     if (params.year !== undefined) {
       searchParams.set('year', String(params.year));
+    }
+    if (params.category) {
+      searchParams.set('category', params.category);
     }
     const query = searchParams.toString();
     const url = `${API_CONFIG.ENDPOINTS.ROUTINE_TASK_HEATMAP}${query ? `?${query}` : ''}`;

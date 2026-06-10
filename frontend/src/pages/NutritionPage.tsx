@@ -810,6 +810,11 @@ export default function NutritionPage() {
                 title={t('pages.nutritionMealTypes.emptyMealTypes')}
                 description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
                 icon={<UtensilsCrossed className="h-8 w-8" />}
+                action={{
+                  label: t('pages.nutritionMealTypes.newMealTypeBtn'),
+                  icon: <Plus className="h-4 w-4" />,
+                  onClick: () => setDialog({ type: 'new-meal-type' }),
+                }}
               />
             ) : (
               <div className="space-y-sm">
@@ -873,6 +878,11 @@ export default function NutritionPage() {
                 title={t('pages.nutritionFoods.emptyFoods')}
                 description={t('pages.nutritionFoods.emptyFoodsDesc')}
                 icon={<Salad className="h-8 w-8" />}
+                action={{
+                  label: t('pages.nutritionFoods.newFoodBtn'),
+                  icon: <Plus className="h-4 w-4" />,
+                  onClick: () => setDialog({ type: 'new-food' }),
+                }}
               />
             ) : (
               <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
