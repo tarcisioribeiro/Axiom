@@ -23,6 +23,10 @@ class StoredCardsService extends BaseService<
   async copy(id: number): Promise<StoredCreditCardReveal> {
     return apiClient.get<StoredCreditCardReveal>(`${this.endpoint}${id}/copy/`);
   }
+
+  async toggleFavorite(id: number): Promise<StoredCreditCard> {
+    return apiClient.patch<StoredCreditCard>(`${this.endpoint}${id}/favorite/`, {});
+  }
 }
 
 export const storedCardsService = new StoredCardsService();

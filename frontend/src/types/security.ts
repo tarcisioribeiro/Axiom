@@ -106,6 +106,7 @@ export interface StoredCreditCard {
   flag: string;
   flag_display: string;
   notes?: string;
+  is_favorite: boolean;
   owner: number;
   owner_name: string;
   finance_card?: number | null;
@@ -149,6 +150,7 @@ export interface StoredBankAccount {
   account_number_masked: string;
   agency?: string;
   notes?: string;
+  is_favorite: boolean;
   owner: number;
   owner_name: string;
   finance_account?: number | null;
@@ -194,6 +196,7 @@ export interface Archive {
   file_name?: string;
   file_size?: number;
   notes?: string;
+  is_favorite: boolean;
   tags?: string[];
   has_text: boolean;
   has_file: boolean;

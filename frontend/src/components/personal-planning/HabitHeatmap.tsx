@@ -1,9 +1,17 @@
 /* eslint-disable max-lines */
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { habitHeatmapService } from '@/services/habit-heatmap-service';
 import type { HeatmapDay } from '@/types';
 
@@ -66,6 +74,20 @@ function monthLabels(data: HeatmapDay[], jan1Weekday: number, monthNames: string
 
 // ─── component ──────────────────────────────────────────────────────────────
 
+const TASK_CATEGORIES = [
+  { value: 'health', label: 'Saúde' },
+  { value: 'intellect', label: 'Intelecto' },
+  { value: 'spiritual', label: 'Espiritual' },
+  { value: 'exercise', label: 'Exercício Físico' },
+  { value: 'nutrition', label: 'Nutrição' },
+  { value: 'work', label: 'Trabalho' },
+  { value: 'social', label: 'Social' },
+  { value: 'finance', label: 'Finanças' },
+  { value: 'household', label: 'Casa' },
+  { value: 'personal_care', label: 'Cuidado Pessoal' },
+  { value: 'other', label: 'Outros' },
+];
+
 interface HabitHeatmapProps {
   taskId?: string | number;
   taskName?: string;
@@ -84,6 +106,8 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   const [data, setData] = useState<HeatmapDay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -91,12 +115,13 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       const result = await habitHeatmapService.getHeatmap({
         year,
         ...(taskId !== undefined ? { task_id: taskId } : {}),
+        ...(selectedCategory ? { category: selectedCategory } : {}),
       });
       setData(result.data);
     } finally {
       setIsLoading(false);
     }
-  }, [year, taskId]);
+  }, [year, taskId, selectedCategory]);
 
   useEffect(() => {
     void loadData();
@@ -143,10 +168,10 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   const CELL = 13; // px per cell
   const GAP = 2; // px gap
 
-  return (
+  const heatmapContent = (
     <div className="space-y-3">
-      {/* Header: year selector + task label */}
-      <div className="flex items-center justify-between">
+      {/* Header: year selector + filters + expand */}
+      <div className="flex flex-wrap items-center justify-between gap-sm">
         <div className="flex items-center gap-xs">
           <Button
             variant="ghost"
@@ -168,22 +193,68 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
           </Button>
         </div>
 
+        {!taskId && (
+          <Select
+            value={selectedCategory}
+            onValueChange={(val) => setSelectedCategory(val === 'all' ? '' : val)}
+          >
+            <SelectTrigger className="h-7 w-44 text-xs">
+              <SelectValue
+                placeholder={t('pages.planningDashboard.allCategories', {
+                  defaultValue: 'Todas as categorias',
+                })}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.planningDashboard.allCategories', {
+                  defaultValue: 'Todas as categorias',
+                })}
+              </SelectItem>
+              {TASK_CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         {taskName && <span className="text-xs text-muted-foreground">{taskName}</span>}
 
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>
-            {t('pages.planningDashboard.heatmapTotalCompletions', {
-              count: totalCompleted,
-            })}
-          </span>
-          {scheduledDays > 0 && (
+        <div className="flex items-center gap-sm">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>
-              {t('pages.planningDashboard.heatmapCompletedDays', {
-                completed: completedDays,
-                scheduled: scheduledDays,
+              {t('pages.planningDashboard.heatmapTotalCompletions', {
+                count: totalCompleted,
               })}
             </span>
-          )}
+            {scheduledDays > 0 && (
+              <span>
+                {t('pages.planningDashboard.heatmapCompletedDays', {
+                  completed: completedDays,
+                  scheduled: scheduledDays,
+                })}
+              </span>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={() => setIsExpanded((v) => !v)}
+            title={
+              isExpanded
+                ? t('common.actions.hide')
+                : t('pages.planningDashboard.expand', { defaultValue: 'Expandir' })
+            }
+          >
+            {isExpanded ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -310,4 +381,33 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       </div>
     </div>
   );
+
+  if (isExpanded) {
+    return createPortal(
+      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/95 p-lg backdrop-blur-sm">
+        <div className="w-full max-w-5xl rounded-lg border border-border bg-card p-lg shadow-2xl">
+          <div className="mb-md flex items-center justify-between">
+            <span className="text-sm font-semibold text-foreground">
+              {t('pages.planningDashboard.habitHeatmapTitle', {
+                defaultValue: 'Mapa de Hábitos',
+              })}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setIsExpanded(false)}
+              title={t('common.actions.close')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          {heatmapContent}
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  return heatmapContent;
 }

@@ -15,6 +15,7 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     ActivityLogListView,
     ArchiveDetailView,
     ArchiveDownloadView,
+    ArchiveFavoriteToggleView,
     ArchiveListCreateView,
     ArchiveRevealView,
     HibpCheckView,
@@ -34,11 +35,13 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     StoredAccountShareTokenView,
     StoredBankAccountCopyView,
     StoredBankAccountDetailView,
+    StoredBankAccountFavoriteToggleView,
     StoredBankAccountListCreateView,
     StoredBankAccountRevealView,
     StoredCardShareTokenView,
     StoredCreditCardCopyView,
     StoredCreditCardDetailView,
+    StoredCreditCardFavoriteToggleView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
     TOTPVerifyView,
@@ -150,6 +153,11 @@ urlpatterns = [
         StoredCreditCardCopyView.as_view(),
         name="stored-card-copy",
     ),
+    path(
+        "stored-cards/<int:pk>/favorite/",
+        StoredCreditCardFavoriteToggleView.as_view(),
+        name="stored-card-favorite-toggle",
+    ),
     # Stored Bank Accounts
     path(
         "stored-accounts/",
@@ -171,6 +179,11 @@ urlpatterns = [
         StoredBankAccountCopyView.as_view(),
         name="stored-account-copy",
     ),
+    path(
+        "stored-accounts/<int:pk>/favorite/",
+        StoredBankAccountFavoriteToggleView.as_view(),
+        name="stored-account-favorite-toggle",
+    ),
     # Archives
     path(
         "archives/",
@@ -191,6 +204,11 @@ urlpatterns = [
         "archives/<int:pk>/download/",
         ArchiveDownloadView.as_view(),
         name="archive-download",
+    ),
+    path(
+        "archives/<int:pk>/favorite/",
+        ArchiveFavoriteToggleView.as_view(),
+        name="archive-favorite-toggle",
     ),
     # Activity Logs
     path(

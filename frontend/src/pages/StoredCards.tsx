@@ -9,6 +9,7 @@ import {
   Loader2,
   Copy,
   Check,
+  Star,
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -96,6 +97,7 @@ export default function StoredCards() {
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -252,12 +254,27 @@ export default function StoredCards() {
     }
   };
 
-  const filteredCards = cards.filter(
-    (card) =>
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      const updated = await storedCardsService.toggleFavorite(id);
+      setCards((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredCards = cards.filter((card) => {
+    if (showFavoritesOnly && !card.is_favorite) return false;
+    return (
       card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.cardholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.last_four_digits?.includes(searchTerm)
-  );
+    );
+  });
 
   return (
     <VaultGuard>
@@ -269,13 +286,29 @@ export default function StoredCards() {
           </Button>
         </PageHeader>
 
-        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <FilterBar
+          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          onClear={() => {
+            setSearchTerm('');
+            setShowFavoritesOnly(false);
+          }}
+        >
           <SearchInput
             placeholder={t('pages.storedCards.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Button
+            variant={showFavoritesOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFavoritesOnly((v) => !v)}
+            className="gap-xs"
+            title={t('common.actions.favorites')}
+          >
+            <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
+            {t('common.actions.favorites')}
+          </Button>
         </FilterBar>
 
         {!isLoading && filteredCards.length === 0 ? (
@@ -395,6 +428,25 @@ export default function StoredCards() {
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={cn(
+                          'h-8 w-8 p-0',
+                          card.is_favorite && 'text-warning'
+                        )}
+                        onClick={() => void handleToggleFavorite(card.id)}
+                        title={t('common.actions.favorite')}
+                        aria-label={t('common.actions.favorite')}
+                      >
+                        <Star
+                          className={cn(
+                            'h-3.5 w-3.5',
+                            card.is_favorite && 'fill-current'
+                          )}
+                          aria-hidden="true"
+                        />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
