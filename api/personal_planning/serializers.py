@@ -11,6 +11,7 @@ from personal_planning.models import (
     MenuOptionIngredient,
     RoutineTask,
     TaskInstance,
+    UserRoutineTemplate,
     WorkoutDay,
     WorkoutExercise,
     WorkoutPlan,
@@ -900,3 +901,39 @@ class MealLogCreateUpdateSerializer(serializers.ModelSerializer):
             "notes",
             "owner",
         ]
+
+
+# ============================================================================
+# USER ROUTINE TEMPLATE SERIALIZERS
+# ============================================================================
+
+
+class UserRoutineTemplateSerializer(serializers.ModelSerializer):
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    task_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserRoutineTemplate
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "description",
+            "icon",
+            "tasks",
+            "task_count",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_task_count(self, obj: UserRoutineTemplate) -> int:
+        return len(obj.tasks) if isinstance(obj.tasks, list) else 0
+
+
+class UserRoutineTemplateCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserRoutineTemplate
+        fields = ["id", "name", "description", "icon", "tasks", "owner"]

@@ -71,4 +71,14 @@ app.conf.beat_schedule = {
         "task": "library.tasks.send_weekly_learning_recommendations",
         "schedule": crontab(hour=10, minute=0, day_of_week=1),
     },
+    # Detecta metas em risco (pace atrasado) diariamente às 07h.
+    "detect-goal-risk-daily": {
+        "task": "personal_planning.tasks.detect_goal_risk",
+        "schedule": crontab(hour=7, minute=0),
+    },
+    # Síntese semanal de planejamento pessoal — segunda às 08h.
+    "generate-weekly-planning-synthesis-monday": {
+        "task": "personal_planning.tasks.generate_weekly_planning_synthesis",
+        "schedule": crontab(hour=8, minute=0, day_of_week=1),
+    },
 }

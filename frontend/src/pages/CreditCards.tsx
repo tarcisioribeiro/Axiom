@@ -21,6 +21,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
+import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
@@ -161,6 +162,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
   const { user } = useAuthStore();
 
   const [allBills, setAllBills] = useState<CreditCardBill[]>([]);
+  const [hubCard, setHubCard] = useState<CreditCard | undefined>();
 
   // Bills dialog state
   const [billsCard, setBillsCard] = useState<CreditCard | undefined>();
@@ -696,7 +698,13 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                 <CardContent className="space-y-sm pt-md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold">{card.name}</p>
+                      <button
+                        className="cursor-pointer text-left font-semibold hover:underline"
+                        onClick={() => setHubCard(card)}
+                        title={t('pages.creditCardHub.openHub')}
+                      >
+                        {card.name}
+                      </button>
                       {cardNumber && (
                         <p className="font-mono text-xs text-muted-foreground">
                           {cardNumber}
@@ -938,6 +946,19 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
           )}
         </DialogContent>
       </Dialog>
+
+      <CreditCardDetailSheet
+        card={hubCard ?? null}
+        accounts={accounts}
+        onClose={() => setHubCard(undefined)}
+        onCardUpdated={() => {
+          void loadData();
+          setHubCard(undefined);
+        }}
+        onCardDeleted={() => {
+          void loadData();
+        }}
+      />
     </Wrapper>
   );
 }
