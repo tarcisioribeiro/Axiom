@@ -1,3 +1,5 @@
+import type { BudgetStatus } from './budgets';
+
 export interface FinancialAlert {
   type:
     | 'budget_limit'
@@ -38,6 +40,7 @@ export interface DashboardSummary {
   stats: DashboardStats;
   account_balances: AccountBalance[];
   financial_alerts: FinancialAlert[];
+  budget_status: BudgetStatus[];
 }
 
 export interface BalanceForecast {

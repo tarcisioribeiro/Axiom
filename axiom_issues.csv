@@ -2311,7 +2311,7 @@ Usuários avançados que querem consolidar dados de saúde e progresso ficam sem
 - [ ] Exportação de histórico de sessões de treino (PDF/Excel)
 - [ ] Exportação de logs nutricionais por período
 - [ ] Exportação de reflexões diárias com humor
-- [ ] Exportação consolidada de progresso de metas","❌ Pendente"
+- [ ] Exportação consolidada de progresso de metas","✅ Feito"
 "[UX/UI] Dashboard sobrecarregado de informações sem hierarquia visual clara","**Contexto**
 O `PersonalPlanningDashboard.tsx` apresenta em uma única tela: heatmap, gráfico de barras semanal, gráfico de pizza por categoria, múltiplos cards de stats, progresso de metas ativas, weekday analytics e insights automáticos. A hierarquia visual não guia o olhar do usuário para o que importa.
 
@@ -2322,7 +2322,7 @@ Sobrecarga cognitiva. O usuário não sabe onde focar, demora para encontrar a i
 - [ ] Aplicar progressive disclosure: exibir 3-4 KPIs principais em destaque no topo
 - [ ] Seções secundárias (heatmap, weekday, analytics) colapsadas por padrão
 - [ ] A primeira leitura da tela deve responder: Estou indo bem hoje?
-- [ ] Hierarquia clara: Hero stats → Progresso do dia → Tendências → Analytics","❌ Pendente"
+- [ ] Hierarquia clara: Hero stats → Progresso do dia → Tendências → Analytics","✅ Feito"
 "[UX/UI] Cards de estatísticas do dashboard são genéricos e sem identidade visual","**Contexto**
 Os `StatCard`s que exibem streak, taxa de conclusão, metas ativas e dados de treino seguem um padrão visual de template de dashboard sem diferenciação ou personalidade. Não comunicam estado (bom/neutro/ruim) sem exigir leitura dos números.
 
@@ -2368,7 +2368,7 @@ As metas são gerenciadas em tabela padrão (`DataTable`), adequada para CRUD ma
 - [ ] Exibir dias restantes para a meta em destaque com cor urgência
 - [ ] Linha do tempo de progresso mostrando a evolução histórica do percentual
 - [ ] Indicador visual de ritmo: no caminho certo / em risco / em atraso
-- [ ] Animação de conclusão ao atingir 100% de uma meta","❌ Pendente"
+- [ ] Animação de conclusão ao atingir 100% de uma meta","✅ Feito"
 "[UX/UI] Telas de Treino e Nutrição usam gerenciamento CRUD como ponto de entrada principal","**Contexto**
 As telas de Workout e Nutrition apresentam como ponto de entrada listas de gerenciamento (planos, alimentos, tipos de refeição). O usuário que quer simplesmente registrar o treino de hoje ou as refeições do dia precisa navegar por estruturas de gestão antes de qualquer valor imediato.
 
@@ -2565,7 +2565,7 @@ Permitir que usuários preservem e reutilizem configurações de rotina elaborad
 - [ ] Campo `is_system` booleano separa templates do sistema dos pessoais
 - [ ] Frontend: modal de seleção de tarefas para compor o template
 
-**Complexidade:** Média-Baixa","❌ Pendente"
+**Complexidade:** Média-Baixa","✅ Feito"
 "[Feature] Correlação visual entre humor diário e produtividade com análise de padrões","**Objetivo**
 Mostrar ao usuário como seu estado emocional impacta sua produtividade e vice-versa, gerando auto-conhecimento profundo com dados que já existem no sistema.
 
@@ -2593,7 +2593,7 @@ Oferecer visão completa da semana para planejamento antecipado, controle de car
 **Fluxo Principal**
 Usuário acessa no domingo ou segunda-feira → visualiza distribuição da semana → adiciona tarefas extras → reorganiza tarefas flexíveis via drag-and-drop → monitora progresso ao longo da semana.
 
-**Rota Proposta:** `/planning/week`","❌ Pendente"
+**Rota Proposta:** `/planning/week`","✅ Feito"
 "[Nova Tela] Jornada — timeline de conquistas, badges e evolução pessoal do usuário","**Objetivo**
 Criar narrativa pessoal do usuário que comunica sua evolução ao longo do tempo, gerando conexão emocional com o produto e antídoto para o churn em momentos de desmotivação.
 
@@ -2652,7 +2652,7 @@ Oferecer análise avançada para usuários que querem entender seus padrões em 
 **Fluxo Principal**
 Usuário acessa mensalmente para revisão estratégica. Dados ricos alimentam conversas com o agente de IA.
 
-**Rota Proposta:** `/planning/analytics` (substituindo a seção de analytics do dashboard)","❌ Pendente"
+**Rota Proposta:** `/planning/analytics` (substituindo a seção de analytics do dashboard)","✅ Feito"
 "[IA] Agente especializado em planejamento pessoal com contexto completo do usuário","**Objetivo**
 Criar um agente de IA dentro do módulo `agents/` especializado em planejamento pessoal, com acesso ao contexto completo de rotinas, metas, humor e progresso do usuário para conversas naturais e orientação personalizada.
 
@@ -2695,7 +2695,7 @@ Identificar quando uma meta está em risco antes que a falha aconteça, permitin
 **Critérios de Aceite**
 - [ ] Task Celery periódica avaliando metas ativas diariamente
 - [ ] Threshold configurável de risco (padrão: 30% abaixo do ritmo necessário)
-- [ ] Notificação in-app e/ou e-mail (via sistema de notificações existente)","❌ Pendente"
+- [ ] Notificação in-app e/ou e-mail (via sistema de notificações existente)","✅ Feito"
 "[IA] Otimização inteligente de horários baseada em padrões reais de conclusão","**Objetivo**
 Aprender quando o usuário realmente executa cada tipo de tarefa com sucesso e sugerir realocações que aumentem a taxa de conclusão.
 
@@ -2758,7 +2758,7 @@ Toda segunda-feira, gerar automaticamente uma síntese da semana anterior com hi
 - Histórico de sínteses semanais acessível na tela de Analytics
 
 **Benefício**
-Cria ritual semanal de reflexão automática. Aumenta o valor percebido do produto sem esforço do usuário.","❌ Pendente"
+Cria ritual semanal de reflexão automática. Aumenta o valor percebido do produto sem esforço do usuário.","✅ Feito"
 "[IA] Coach adaptativo com sistema de nudge inteligente e contextualizado","**Objetivo**
 Substituir lembretes genéricos por mensagens contextualizadas que aprendem o comportamento de cada usuário e comunicam no momento e formato mais eficaz.
 
@@ -2794,7 +2794,7 @@ O usuário experimenta uma tela que ""vai montando aos poucos"", criando sensaç
 - [ ] Dashboard carrega com no máximo 4 requisições paralelas na carga inicial
 - [ ] Tempo de carregamento percebido reduzido em ≥ 50% em conexão 4G simulada
 - [ ] Cache Redis preservado para o novo endpoint agregado
-- [ ] Testes unitários para o novo endpoint","❌ Pendente"
+- [ ] Testes unitários para o novo endpoint","✅ Feito"
 "[Problema] Gestão de cartões de crédito fragmentada em 4 páginas separadas","## Contexto
 
 A jornada do usuário para gerenciar um cartão de crédito exige navegar por quatro telas distintas sem navegação contextual entre elas:
@@ -2827,7 +2827,7 @@ Manter rotas individuais como deep links para acesso direto.
 - [ ] Tabs Resumo | Faturas | Compras | Configurações funcionando dentro do hub
 - [ ] Navegação com breadcrumb: `Cartões > [Nome do Cartão] > Faturas`
 - [ ] Rotas diretas (`/credit-cards/bills`, `/credit-cards/expenses`) preservadas como deep links
-- [ ] Responsivo em mobile","❌ Pendente"
+- [ ] Responsivo em mobile","✅ Feito"
 "[Problema] Ausência de notificações proativas para vencimentos e alertas financeiros","## Contexto
 
 O backend possui `FinancialAlertsView`, detecção de anomalias e o modelo `Notification` com infraestrutura de entrega — mas nenhuma notificação proativa é enviada ao usuário. O usuário só descobre vencimentos próximos, orçamentos no limite ou faturas em aberto quando entra manualmente na plataforma.
@@ -3052,7 +3052,7 @@ Estabelecer hierarquia em três níveis claros:
 - [ ] Nível 1 visível sem scroll em telas 1080p
 - [ ] Alertas críticos com destaque visual diferenciado (borda colorida + ícone animado)
 - [ ] Seções de Nível 3 colapsáveis com estado salvo em localStorage
-- [ ] Mobile: hierarquia preservada em ordem vertical","❌ Pendente"
+- [ ] Mobile: hierarquia preservada em ordem vertical","✅ Feito"
 "[Melhoria UX] StatCards com aparência genérica — sem distinção visual por tipo de dado","## Contexto
 
 Os `StatCard` do dashboard usam layout idêntico para todos os tipos de dado (ícone + valor + variação percentual). Um card de ""Despesas do Mês"" parece visualmente idêntico a um de ""Health Score"" ou ""Saldo Disponível"", sem distinção semântica.
@@ -3073,7 +3073,7 @@ Aplicar design específico por categoria de dado:
 - [ ] Cards de alerta com animação sutil quando em estado crítico
 - [ ] Barra de progresso inline nos cards de orçamento
 - [ ] Consistência com o design system existente (CSS variables, Tailwind tokens)
-- [ ] Dark/light mode funcionando em todos os variantes","❌ Pendente"
+- [ ] Dark/light mode funcionando em todos os variantes","✅ Feito"
 "[Melhoria UX] Tabelas de transações sem diferenciação visual entre itens pagos e pendentes","## Contexto
 
 Nas listagens de despesas e receitas, linhas de transações pagas/recebidas e pendentes são visualmente quase idênticas. Apenas um badge de status no final da linha diferencia os dois estados, exigindo leitura de cada linha para entender o estado.
@@ -3434,7 +3434,7 @@ Ajudar o usuário a desenvolver uma estratégia concreta para quitar múltiplas 
 - [ ] Plano de quitação gerado com datas e valores por dívida
 - [ ] Comparativo entre as duas estratégias
 - [ ] Total de juros economizados calculado
-- [ ] Exportação do plano em PDF","❌ Pendente"
+- [ ] Exportação do plano em PDF","✅ Feito"
 "[Feature] Relatório Mensal Financeiro em PDF","## Objetivo
 
 Gerar automaticamente um relatório financeiro mensal estruturado em PDF, pronto para arquivo pessoal ou compartilhamento com um contador/assessor.

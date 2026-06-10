@@ -222,48 +222,50 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
 
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     if (!saveTemplateTask || !templateName.trim()) return;
     setIsSavingTemplate(true);
-    const stored = localStorage.getItem('axiom.userTemplates');
-    const templates = stored ? (JSON.parse(stored) as object[]) : [];
-    const newTemplate = {
-      id: `user-${Date.now()}`,
-      name: templateName.trim(),
-      description: saveTemplateTask.description || '',
-      icon: saveTemplateTask.icon || '',
-      task_count: 1,
-      tasks: [
-        {
-          name: saveTemplateTask.name,
-          description: saveTemplateTask.description,
-          category: saveTemplateTask.category,
-          icon: saveTemplateTask.icon,
-          periodicity: saveTemplateTask.periodicity,
-          weekday: saveTemplateTask.weekday,
-          day_of_month: saveTemplateTask.day_of_month,
-          custom_weekdays: saveTemplateTask.custom_weekdays,
-          target_quantity: saveTemplateTask.target_quantity,
-          unit: saveTemplateTask.unit,
-          default_time: saveTemplateTask.default_time,
-          daily_occurrences: saveTemplateTask.daily_occurrences,
-          is_active: true,
-        },
-      ],
-    };
-    localStorage.setItem(
-      'axiom.userTemplates',
-      JSON.stringify([...templates, newTemplate])
-    );
-    setIsSavingTemplate(false);
-    setSaveTemplateTask(null);
-    setTemplateName('');
-    toast({
-      title: t('pages.routineTasks.templates.saveSuccess'),
-      description: t('pages.routineTasks.templates.saveSuccessDesc', {
-        name: newTemplate.name,
-      }),
-    });
+    try {
+      const { userRoutineTemplatesService } =
+        await import('@/services/user-routine-templates-service');
+      const name = templateName.trim();
+      await userRoutineTemplatesService.create({
+        name,
+        description: saveTemplateTask.description || '',
+        icon: saveTemplateTask.icon || '',
+        tasks: [
+          {
+            name: saveTemplateTask.name,
+            description: saveTemplateTask.description,
+            category: saveTemplateTask.category,
+            icon: saveTemplateTask.icon,
+            periodicity: saveTemplateTask.periodicity,
+            weekday: saveTemplateTask.weekday,
+            day_of_month: saveTemplateTask.day_of_month,
+            custom_weekdays: saveTemplateTask.custom_weekdays,
+            target_quantity: saveTemplateTask.target_quantity,
+            unit: saveTemplateTask.unit,
+            default_time: saveTemplateTask.default_time,
+            daily_occurrences: saveTemplateTask.daily_occurrences,
+            is_active: true,
+          },
+        ],
+      });
+      setSaveTemplateTask(null);
+      setTemplateName('');
+      toast({
+        title: t('pages.routineTasks.templates.saveSuccess'),
+        description: t('pages.routineTasks.templates.saveSuccessDesc', { name }),
+      });
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingTemplate(false);
+    }
   };
 
   // Retorna os índices dos dias ativos para a tarefa (0=Seg, 1=Ter, ... 6=Dom)
@@ -618,7 +620,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
               placeholder={t('pages.routineTasks.templates.templateNamePlaceholder')}
               className="mt-sm"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveTemplate();
+                if (e.key === 'Enter') void handleSaveTemplate();
               }}
             />
           </div>
@@ -633,7 +635,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
               {t('common.actions.cancel')}
             </Button>
             <Button
-              onClick={handleSaveTemplate}
+              onClick={() => void handleSaveTemplate()}
               disabled={!templateName.trim() || isSavingTemplate}
             >
               <Save className="mr-sm h-4 w-4" />

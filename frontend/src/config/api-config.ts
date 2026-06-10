@@ -138,6 +138,7 @@ export const API_CONFIG = {
     ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
     ROUTINE_TEMPLATES: '/api/v1/personal-planning/routine-templates/',
     ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
+    USER_ROUTINE_TEMPLATES: '/api/v1/personal-planning/user-routine-templates/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
