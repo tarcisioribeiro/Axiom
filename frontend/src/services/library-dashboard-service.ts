@@ -1,3 +1,5 @@
+import { API_CONFIG } from '@/config/api-config';
+
 import { apiClient } from './api-client';
 
 export interface LibraryDashboardStats {
@@ -134,11 +136,21 @@ export interface LibraryDashboardStats {
   }>;
 }
 
+export interface LibraryStreak {
+  current: number;
+  longest: number;
+  today_completed: boolean;
+}
+
 class LibraryDashboardService {
   async getStats(): Promise<LibraryDashboardStats> {
     return await apiClient.get<LibraryDashboardStats>(
       '/api/v1/library/dashboard/stats/'
     );
+  }
+
+  async getStreak(): Promise<LibraryStreak> {
+    return await apiClient.get<LibraryStreak>(API_CONFIG.ENDPOINTS.LIBRARY_STREAK);
   }
 }
 

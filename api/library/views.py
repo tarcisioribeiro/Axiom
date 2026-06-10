@@ -1938,6 +1938,74 @@ class LibraryDashboardStatsView(APIView):
         return Response(stats)
 
 
+class UnifiedStreakView(APIView):
+    """
+    GET /api/v1/library/streak/
+
+    Retorna o streak unificado de leitura + estudo do usuário.
+
+    Response:
+    {
+        "current": 5,
+        "longest": 12,
+        "today_completed": true
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+    CACHE_TTL = 60  # 1 minuto
+
+    def get(self, request):
+        user = request.user
+        cache_key = f"library_streak_{user.id}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        reading_dates = set(
+            Reading.objects.filter(
+                owner__user=user, deleted_at__isnull=True
+            ).values_list("reading_date", flat=True)
+        )
+        session_dates = set(
+            CourseSession.objects.filter(
+                owner__user=user, deleted_at__isnull=True
+            ).values_list("session_date", flat=True)
+        )
+        all_dates = reading_dates | session_dates
+
+        today = timezone.now().date()
+        today_completed = today in all_dates
+
+        current_streak = 0
+        check_date = today
+        while check_date in all_dates:
+            current_streak += 1
+            check_date -= timedelta(days=1)
+
+        longest_streak = 0
+        if all_dates:
+            sorted_dates = sorted(all_dates)
+            streak = 1
+            max_streak = 1
+            for i in range(1, len(sorted_dates)):
+                delta = (sorted_dates[i] - sorted_dates[i - 1]).days
+                if delta == 1:
+                    streak += 1
+                    max_streak = max(max_streak, streak)
+                elif delta > 1:
+                    streak = 1
+            longest_streak = max_streak
+
+        result = {
+            "current": current_streak,
+            "longest": longest_streak,
+            "today_completed": today_completed,
+        }
+        cache.set(cache_key, result, self.CACHE_TTL)
+        return Response(result)
+
+
 # ============================================================================
 # BOOK HIGHLIGHT VIEWS
 # ============================================================================
@@ -2573,9 +2641,13 @@ class SkillListCreateView(BaseListCreateView):
     queryset = Skill.objects.all()
 
     def get_queryset(self):
-        qs = Skill.objects.filter(
-            owner__user=self.request.user, deleted_at__isnull=True
-        ).select_related("owner")
+        qs = (
+            Skill.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
+            .select_related("owner")
+            .prefetch_related("books", "courses")
+        )
         params = self.request.query_params
         if category := params.get("category"):
             qs = qs.filter(category=category)

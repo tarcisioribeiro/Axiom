@@ -269,6 +269,7 @@
       "goals": "Goals",
       "bankReconciliation": "Bank Reconciliation",
       "receivables": "Receivables",
+      "journey": "Journey",
       "workout": "Workout",
       "exercises": "Exercises",
       "nutrition": "Diet",
@@ -2836,7 +2837,22 @@
       "bestStreak": "best",
       "studyTimer": "Study timer",
       "studyMode": "Study mode",
-      "breakMode": "Break mode"
+      "breakMode": "Break mode",
+      "studyTimerTitle": "Study Timer",
+      "studyTimerStart": "Start",
+      "studyTimerPause": "Pause",
+      "studyTimerResume": "Resume",
+      "studyTimerStop": "Stop",
+      "studyTimerReading": "Reading",
+      "studyTimerCourse": "Course",
+      "studyTimerSelectBook": "Select book...",
+      "studyTimerSelectCourse": "Select course...",
+      "studyTimerConfirmTitle": "Save session?",
+      "studyTimerDuration": "Duration",
+      "studyTimerSave": "Save",
+      "studyTimerCancel": "Discard",
+      "studyTimerSaved": "Session saved!",
+      "studyTimerPagesRead": "Pages read"
     },
     "books": {
       "title": "Works",
@@ -3493,6 +3509,7 @@
       "updated": "Skill updated",
       "saved": "Skill saved",
       "deleteConfirm": "Delete skill \"{{name}}\"? This action cannot be undone.",
+      "developedWith": "Developed with",
       "viewList": "List",
       "viewRadar": "Radar",
       "proficiency": {
@@ -4076,6 +4093,21 @@
         "reflectionPlaceholder": "Write your daily reflection, thoughts, learnings..."
       }
     },
+    "journey": {
+      "title": "My Journey",
+      "badgesEarned": "Badges Earned",
+      "goalsCompleted": "Goals Completed",
+      "currentStreak": "Current Streak",
+      "bestStreak": "Best Streak",
+      "badgesTitle": "Badges",
+      "noBadges": "No badges yet",
+      "noBadgesDesc": "Keep learning to earn badges!",
+      "timelineTitle": "Timeline",
+      "noEvents": "No events yet",
+      "noEventsDesc": "Complete goals and earn badges to see your story.",
+      "badgeEarned": "Badge earned: {{name}}",
+      "goalCompleted": "Goal completed: {{name}}"
+    },
     "todayTasks": {
       "title": "Today's Tasks",
       "loadError": "Error loading tasks",
@@ -4117,6 +4149,7 @@
       "pomodoroStart": "Start",
       "pomodoroPause": "Pause",
       "pomodoroReset": "Reset",
+      "allDoneTitle": "🎉 All tasks completed! Amazing!",
       "pomodoroFocusDone": "Focus session complete! Take a break.",
       "pomodoroBreakDone": "Break over! Time to focus.",
       "pomodoroCycles_one": "{{count}} cycle completed",

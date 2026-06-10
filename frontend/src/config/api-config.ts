@@ -113,6 +113,7 @@ export const API_CONFIG = {
     BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
     LITERARY_TYPE_GOALS: '/api/v1/library/literary-type-goals/',
     LIBRARY_DASHBOARD_STATS: '/api/v1/library/dashboard/stats/',
+    LIBRARY_STREAK: '/api/v1/library/streak/',
     // Intellect — Courses & Skills
     COURSES: '/api/v1/library/courses/',
     COURSE_MODULES: '/api/v1/library/course-modules/',
