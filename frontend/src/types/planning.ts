@@ -135,4 +135,6 @@ export interface TaskCard {
   record_id?: number;
   scheduled_time?: string;
   closing_time?: string;
+  priority?: string;
+  priority_display?: string;
 }

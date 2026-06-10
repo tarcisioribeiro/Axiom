@@ -263,16 +263,19 @@ export function TodayKanbanView({
               status="todo"
               title={t('pages.dailyChecklist.todo')}
               cards={cardsByStatus.todo}
+              totalCards={cards.length}
             />
             <KanbanColumn
               status="doing"
               title={t('pages.dailyChecklist.inProgress')}
               cards={cardsByStatus.doing}
+              totalCards={cards.length}
             />
             <KanbanColumn
               status="done"
               title={t('pages.dailyChecklist.done')}
               cards={cardsByStatus.done}
+              totalCards={cards.length}
             />
           </div>
           <DragOverlay>

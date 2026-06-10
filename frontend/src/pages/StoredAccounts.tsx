@@ -9,6 +9,7 @@ import {
   Loader2,
   Copy,
   Check,
+  Star,
   Wallet,
   Building2,
 } from 'lucide-react';
@@ -106,6 +107,7 @@ export default function StoredAccounts() {
   const [copyingId, setCopyingId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -270,12 +272,27 @@ export default function StoredAccounts() {
     }
   };
 
-  const filteredAccounts = accounts.filter(
-    (acc) =>
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      const updated = await storedAccountsService.toggleFavorite(id);
+      setAccounts((prev) => prev.map((a) => (a.id === id ? updated : a)));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredAccounts = accounts.filter((acc) => {
+    if (showFavoritesOnly && !acc.is_favorite) return false;
+    return (
       acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.institution_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.account_number_masked?.includes(searchTerm)
-  );
+    );
+  });
 
   return (
     <VaultGuard>
@@ -287,13 +304,29 @@ export default function StoredAccounts() {
           </Button>
         </PageHeader>
 
-        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <FilterBar
+          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          onClear={() => {
+            setSearchTerm('');
+            setShowFavoritesOnly(false);
+          }}
+        >
           <SearchInput
             placeholder={t('pages.storedAccounts.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Button
+            variant={showFavoritesOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFavoritesOnly((v) => !v)}
+            className="gap-xs"
+            title={t('common.actions.favorites')}
+          >
+            <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
+            {t('common.actions.favorites')}
+          </Button>
         </FilterBar>
 
         {!isLoading && filteredAccounts.length === 0 ? (
@@ -493,6 +526,25 @@ export default function StoredAccounts() {
                           ) : (
                             <Copy className="h-3.5 w-3.5" />
                           )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={cn(
+                            'h-8 w-8 p-0',
+                            acc.is_favorite && 'text-warning'
+                          )}
+                          onClick={() => void handleToggleFavorite(acc.id)}
+                          title={t('common.actions.favorite')}
+                          aria-label={t('common.actions.favorite')}
+                        >
+                          <Star
+                            className={cn(
+                              'h-3.5 w-3.5',
+                              acc.is_favorite && 'fill-current'
+                            )}
+                            aria-hidden="true"
+                          />
                         </Button>
                         <Button
                           size="sm"

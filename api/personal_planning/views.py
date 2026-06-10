@@ -1185,6 +1185,7 @@ class RoutineTaskHeatmapView(APIView):
     def get(self, request):
         task_id = request.query_params.get("task_id")
         year_param = request.query_params.get("year")
+        category = request.query_params.get("category")
         today = timezone.now().date()
 
         try:
@@ -1225,7 +1226,9 @@ class RoutineTaskHeatmapView(APIView):
                 }
             )
 
-        data = self._build_general_heatmap(member, start_date, end_date)
+        data = self._build_general_heatmap(
+            member, start_date, end_date, category=category
+        )
         return Response(
             {"year": year, "task_id": None, "task_name": None, "data": data}
         )
@@ -1260,27 +1263,26 @@ class RoutineTaskHeatmapView(APIView):
             current += timedelta(days=1)
         return data
 
-    def _build_general_heatmap(self, member, start_date, end_date):
+    def _build_general_heatmap(
+        self, member, start_date, end_date, category=None
+    ):
+        base_qs = TaskInstance.objects.filter(
+            owner=member,
+            scheduled_date__gte=start_date,
+            scheduled_date__lte=end_date,
+            deleted_at__isnull=True,
+        )
+        if category:
+            base_qs = base_qs.filter(template__category=category)
+
         completions_by_date = dict(
-            TaskInstance.objects.filter(
-                owner=member,
-                scheduled_date__gte=start_date,
-                scheduled_date__lte=end_date,
-                status="completed",
-                deleted_at__isnull=True,
-            )
+            base_qs.filter(status="completed")
             .values("scheduled_date")
             .annotate(count=Count("id"))
             .values_list("scheduled_date", "count")
         )
         totals_by_date = dict(
-            TaskInstance.objects.filter(
-                owner=member,
-                scheduled_date__gte=start_date,
-                scheduled_date__lte=end_date,
-                deleted_at__isnull=True,
-            )
-            .values("scheduled_date")
+            base_qs.values("scheduled_date")
             .annotate(count=Count("id"))
             .values_list("scheduled_date", "count")
         )

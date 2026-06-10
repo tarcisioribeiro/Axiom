@@ -1,6 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<RenegotiateBillFormData>({
     defaultValues: {
@@ -47,15 +46,13 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
     },
   });
 
-  const watchedTotal = watch('total_with_interest');
-  const watchedInstallments = watch('installments');
+  const watchedTotal = useWatch({ control, name: 'total_with_interest' });
+  const watchedInstallments = useWatch({ control, name: 'installments' });
 
-  const installmentValue = useMemo(() => {
-    const total = parseFloat(String(watchedTotal));
-    const n = parseInt(String(watchedInstallments));
-    if (!total || !n || n <= 0 || total <= 0) return null;
-    return total / n;
-  }, [watchedTotal, watchedInstallments]);
+  const totalVal = parseFloat(String(watchedTotal));
+  const nVal = parseInt(String(watchedInstallments));
+  const installmentValue =
+    !totalVal || !nVal || nVal <= 0 || totalVal <= 0 ? null : totalVal / nVal;
 
   const handleFormSubmit = (data: RenegotiateBillFormData) => {
     onSubmit(data);

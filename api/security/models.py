@@ -156,6 +156,7 @@ class StoredCreditCard(BaseModel):
         max_length=50, choices=FLAGS, verbose_name="Bandeira"
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Observações")
+    is_favorite = models.BooleanField(default=False, verbose_name="Favorito")
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -228,6 +229,7 @@ class StoredBankAccount(BaseModel):
         verbose_name="Senha Digital (Criptografada)", blank=True, null=True
     )
     notes = models.TextField(blank=True, null=True)
+    is_favorite = models.BooleanField(default=False, verbose_name="Favorito")
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -299,6 +301,7 @@ class Archive(BaseModel):
     )
     file_size = models.BigIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    is_favorite = models.BooleanField(default=False, verbose_name="Favorito")
     tags = models.JSONField(
         blank=True,
         default=list,

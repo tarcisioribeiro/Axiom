@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useCounter } from '@/lib/animations';
@@ -17,13 +18,17 @@ interface KanbanColumnProps {
   status: KanbanStatus;
   title: string;
   cards: TaskCard[];
+  totalCards?: number;
 }
 
-export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
+export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnProps) {
   const { t } = useTranslation();
-  const { setNodeRef, isOver } = useDroppable({
-    id: status,
-  });
+  const { setNodeRef, isOver } = useDroppable({ id: status });
+  const isComplete =
+    status === 'done' &&
+    totalCards !== undefined &&
+    totalCards > 0 &&
+    cards.length >= totalCards;
 
   const getColorClasses = () => {
     const colors = {
@@ -49,7 +54,18 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
         className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-md py-3 text-white`}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{title}</h3>
+          <div className="flex items-center gap-sm">
+            <h3 className="text-lg font-semibold">{title}</h3>
+            {isComplete && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+              >
+                <CheckCircle2 className="h-5 w-5 text-white" aria-hidden="true" />
+              </motion.div>
+            )}
+          </div>
           <motion.span
             key={cards.length}
             initial={{ scale: 1.4, opacity: 0.6 }}
