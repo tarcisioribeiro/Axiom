@@ -40,6 +40,7 @@ import {
   NotebookPen,
   ListTodo,
   HeartPulse,
+  Trophy,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -84,6 +85,7 @@ export const navModules: NavModule[] = [
     icon: Calendar,
     topItems: [
       { titleKey: 'nav.dashboard', href: '/planning/dashboard', icon: LayoutDashboard },
+      { titleKey: 'nav.items.journey', href: '/planning/journey', icon: Trophy },
     ],
     subModules: [
       {

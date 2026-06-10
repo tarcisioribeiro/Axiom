@@ -130,6 +130,18 @@ export interface CourseSessionFormData {
   owner: number;
 }
 
+export interface SkillRelatedBook {
+  id: number;
+  title: string;
+  genre: string;
+}
+
+export interface SkillRelatedCourse {
+  id: number;
+  title: string;
+  platform: string;
+}
+
 export interface Skill {
   id: number;
   uuid: string;
@@ -142,6 +154,8 @@ export interface Skill {
   status: SkillStatus;
   status_display: string;
   notes?: string | null;
+  books: SkillRelatedBook[];
+  courses: SkillRelatedCourse[];
   owner: number;
   owner_name: string;
   created_at: string;

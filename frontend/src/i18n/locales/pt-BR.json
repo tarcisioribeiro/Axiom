@@ -269,6 +269,7 @@
       "goals": "Objetivos",
       "bankReconciliation": "Conciliação Bancária",
       "receivables": "Valores a Receber",
+      "journey": "Jornada",
       "workout": "Treino",
       "exercises": "Exercícios",
       "nutrition": "Dieta",
@@ -2900,7 +2901,22 @@
       "bestStreak": "melhor",
       "studyTimer": "Timer de estudo",
       "studyMode": "Modo estudo",
-      "breakMode": "Modo pausa"
+      "breakMode": "Modo pausa",
+      "studyTimerTitle": "Timer de Estudo",
+      "studyTimerStart": "Iniciar",
+      "studyTimerPause": "Pausar",
+      "studyTimerResume": "Retomar",
+      "studyTimerStop": "Encerrar",
+      "studyTimerReading": "Leitura",
+      "studyTimerCourse": "Curso",
+      "studyTimerSelectBook": "Selecionar livro...",
+      "studyTimerSelectCourse": "Selecionar curso...",
+      "studyTimerConfirmTitle": "Salvar sessão?",
+      "studyTimerDuration": "Duração",
+      "studyTimerSave": "Salvar",
+      "studyTimerCancel": "Descartar",
+      "studyTimerSaved": "Sessão salva!",
+      "studyTimerPagesRead": "Páginas lidas"
     },
     "books": {
       "title": "Obras",
@@ -3571,6 +3587,7 @@
       "updated": "Habilidade atualizada",
       "saved": "Habilidade salva",
       "deleteConfirm": "Deseja excluir a habilidade \"{{name}}\"? Esta ação não pode ser desfeita.",
+      "developedWith": "Como desenvolvi",
       "viewList": "Lista",
       "viewRadar": "Radar",
       "proficiency": {
@@ -4154,6 +4171,21 @@
         "reflectionPlaceholder": "Escreva sua reflexão do dia, pensamentos, aprendizados..."
       }
     },
+    "journey": {
+      "title": "Minha Jornada",
+      "badgesEarned": "Conquistas",
+      "goalsCompleted": "Objetivos Concluídos",
+      "currentStreak": "Sequência Atual",
+      "bestStreak": "Melhor Sequência",
+      "badgesTitle": "Conquistas",
+      "noBadges": "Nenhuma conquista ainda",
+      "noBadgesDesc": "Continue aprendendo para ganhar badges!",
+      "timelineTitle": "Linha do Tempo",
+      "noEvents": "Nenhum evento ainda",
+      "noEventsDesc": "Complete objetivos e ganhe badges para ver sua história.",
+      "badgeEarned": "Badge conquistada: {{name}}",
+      "goalCompleted": "Objetivo concluído: {{name}}"
+    },
     "todayTasks": {
       "title": "Tarefas de Hoje",
       "loadError": "Erro ao carregar tarefas",
@@ -4195,6 +4227,7 @@
       "pomodoroStart": "Iniciar",
       "pomodoroPause": "Pausar",
       "pomodoroReset": "Reiniciar",
+      "allDoneTitle": "🎉 Todas as tarefas concluídas! Incrível!",
       "pomodoroFocusDone": "Foco concluído! Faça uma pausa.",
       "pomodoroBreakDone": "Pausa encerrada! Hora de focar.",
       "pomodoroCycles_one": "{{count}} ciclo concluído",

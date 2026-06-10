@@ -66,6 +66,7 @@ const PersonalPlanningDashboard = lazy(
   () => import('./pages/PersonalPlanningDashboard')
 );
 const TasksAndGoals = lazy(() => import('./pages/TasksAndGoals'));
+const Journey = lazy(() => import('./pages/Journey'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
@@ -515,6 +516,14 @@ function AnimatedRoutes() {
               element={
                 <PageWrapper>
                   <NutritionPage />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="journey"
+              element={
+                <PageWrapper>
+                  <Journey />
                 </PageWrapper>
               }
             />
