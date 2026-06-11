@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   ListTodo,
   NotebookPen,
+  Sun,
   UtensilsCrossed,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +24,12 @@ export function PlanningLayout() {
   const location = useLocation();
 
   const navItems: NavItem[] = [
+    {
+      label: t('planningLayout.today'),
+      to: '/planning/today',
+      icon: Sun,
+      group: t('planningLayout.groupToday'),
+    },
     {
       label: t('planningLayout.dashboard'),
       to: '/planning/dashboard',
@@ -74,6 +81,11 @@ export function PlanningLayout() {
         location.pathname === '/planning/tasks-goals' ||
         location.pathname === '/planning/goals' ||
         location.pathname === '/planning/routine-tasks'
+      );
+    }
+    if (to === '/planning/today') {
+      return (
+        location.pathname === '/planning/today' || location.pathname === '/planning'
       );
     }
     return location.pathname === to;
