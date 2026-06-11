@@ -772,9 +772,9 @@ export default function PlanningToday() {
             <WorkoutSessionForm
               workoutDays={activePlan?.days ?? []}
               ownerId={ownerId}
-              onSubmit={(data: SessionFormData) =>
-                createSessionMutation.mutateAsync(data)
-              }
+              onSubmit={async (data: SessionFormData) => {
+                await createSessionMutation.mutateAsync(data);
+              }}
               onCancel={() => setDialog(null)}
               isLoading={createSessionMutation.isPending}
             />
@@ -800,7 +800,9 @@ export default function PlanningToday() {
               prefillMealTypeId={
                 dialog?.type === 'log-meal' ? dialog.prefillMealTypeId : undefined
               }
-              onSubmit={(data: MealLogFormData) => createMealMutation.mutateAsync(data)}
+              onSubmit={async (data: MealLogFormData) => {
+                await createMealMutation.mutateAsync(data);
+              }}
               onCancel={() => setDialog(null)}
               isLoading={createMealMutation.isPending}
             />
