@@ -2309,7 +2309,8 @@
       "alertOnFailedUnlock": "Alerta por tentativas falhas",
       "alertOnFailedUnlockDesc": "Notificar após múltiplas tentativas de desbloqueio incorretas.",
       "alertOnReveal": "Alerta ao revelar senha",
-      "alertOnRevealDesc": "Notificar cada vez que uma senha for revelada."
+      "alertOnRevealDesc": "Notificar cada vez que uma senha for revelada.",
+      "noRecentActivity": "Nenhuma atividade registrada ainda."
     },
     "passwords": {
       "title": "Senhas",
@@ -3853,10 +3854,22 @@
         "myTab": "Meus Templates",
         "taskCount": "tarefa(s)",
         "noUserTemplates": "Nenhum template pessoal criado ainda.",
-        "noUserTemplatesHint": "Salve uma tarefa como template para começar.",
+        "noUserTemplatesHint": "Crie um template a partir das suas tarefas de rotina.",
         "deleteTitle": "Excluir Template",
         "deleteDesc": "Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.",
-        "deleted": "Template excluído."
+        "deleted": "Template excluído.",
+        "createBtn": "Criar Novo Template",
+        "createTitle": "Criar Novo Template",
+        "createDesc": "Selecione tarefas existentes para incluir neste template.",
+        "templateDescLabel": "Descrição (opcional)",
+        "templateDescPlaceholder": "Descreva o objetivo deste template",
+        "selectTasksLabel": "Tarefas para Incluir",
+        "searchTasksPlaceholder": "Buscar tarefas...",
+        "noTasksAvailable": "Nenhuma tarefa de rotina encontrada.",
+        "noTasksSelectedError": "Selecione ao menos uma tarefa.",
+        "createSuccess": "Template criado!",
+        "createSuccessDesc": "Template \"{{name}}\" criado com {{count}} tarefa(s).",
+        "createError": "Erro ao criar template"
       },
       "export": {
         "btn": "Exportar Rotina",
@@ -5763,6 +5776,47 @@
       "removeError": "Erro ao remover webhook.",
       "testQueuedSuccess": "Teste enfileirado com sucesso.",
       "testQueueError": "Erro ao enfileirar teste."
+    },
+    "planningToday": {
+      "title": "Hoje",
+      "greetingMorning": "Bom dia!",
+      "greetingAfternoon": "Boa tarde!",
+      "greetingEvening": "Boa noite!",
+      "progress": "Progresso do dia",
+      "streak_one": "{{count}} dia de sequência",
+      "streak_other": "{{count}} dias de sequência",
+      "sectionTasks": "Rotinas do Dia",
+      "sectionWorkout": "Treino de Hoje",
+      "sectionNutrition": "Refeições de Hoje",
+      "sectionReflection": "Reflexão do Dia",
+      "tasksLabel": "tarefas concluídas",
+      "noTasks": "Nenhuma tarefa para hoje",
+      "viewAll": "Ver tudo →",
+      "logWorkout": "Registrar Treino",
+      "logWorkoutTitle": "Registrar Sessão de Treino",
+      "logWorkoutDesc": "Registre os detalhes do seu treino de hoje",
+      "workoutLogged": "Treino registrado com sucesso!",
+      "freeWorkout": "Treino livre",
+      "done": "Feito",
+      "activePlan": "Plano ativo",
+      "exercises": "exercícios",
+      "restDay": "Dia de descanso no plano",
+      "noWorkoutPlan": "Nenhum plano de treino ativo",
+      "createPlan": "Criar plano de treino",
+      "logMeal": "Registrar Refeição",
+      "logMealTitle": "Registrar Refeição",
+      "logMealDesc": "Registre o que você comeu hoje",
+      "mealLogged": "Refeição registrada com sucesso!",
+      "noMeals": "Nenhuma refeição registrada hoje",
+      "moodLabel": "Como você está?",
+      "moodPlaceholder": "Selecionar humor",
+      "noMood": "Sem humor",
+      "reflectionPlaceholder": "Como está sendo o seu dia? Registre pensamentos, conquistas e aprendizados...",
+      "reflectionMinLength": "A reflexão deve ter no mínimo 10 caracteres",
+      "reflectionSaved": "Reflexão salva!",
+      "editReflection": "Editar",
+      "saveReflection": "Salvar reflexão",
+      "saving": "Salvando..."
     }
   },
   "userProfile": {
@@ -6264,7 +6318,9 @@
     "tasksGoals": "Tarefas",
     "goals": "Metas",
     "workout": "Treinos",
-    "nutrition": "Nutrição"
+    "nutrition": "Nutrição",
+    "today": "Hoje",
+    "groupToday": "Início"
   },
   "monthComparison": {
     "title": "Comparação Mensal",
