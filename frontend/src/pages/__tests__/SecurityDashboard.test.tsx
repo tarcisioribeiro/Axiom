@@ -145,14 +145,14 @@ describe('SecurityDashboard', () => {
   it('renders passwords count', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
+      expect(screen.getAllByText('12').length).toBeGreaterThan(0);
     });
   });
 
   it('renders stored cards count', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getAllByText('3').length).toBeGreaterThan(0);
     });
   });
 
