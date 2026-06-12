@@ -59,6 +59,8 @@ describe('ThemeToggle', () => {
     expect(screen.getByText('Gruvbox Dark')).toBeInTheDocument();
     expect(screen.getByText('Cyberpunk')).toBeInTheDocument();
     expect(screen.getByText('Flat Remix Blue Darkest')).toBeInTheDocument();
+    expect(screen.getByText('Ubuntu Dark')).toBeInTheDocument();
+    expect(screen.getByText('Ubuntu Light')).toBeInTheDocument();
   });
 
   it('calls setLightVariant("alucard") when Alucard option is clicked', async () => {
