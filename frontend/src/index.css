@@ -552,8 +552,8 @@
   .dark[data-dark-theme='flat-remix-blue-darkest'] {
     color-scheme: dark;
 
-    /* Background — #1A1C23 */
-    --background: 227 15% 12%;
+    /* Background — #0D0F16 */
+    --background: 227 26% 7%;
     /* Foreground — #D3DAE3 */
     --foreground: 214 22% 86%;
 
@@ -574,7 +574,7 @@
     --secondary-foreground: 214 22% 86%;
 
     /* Muted — entre background e card */
-    --muted: 226 15% 14%;
+    --muted: 226 15% 10%;
     /* Muted foreground — #7C818C ajustado para WCAG AA no fundo escuro */
     --muted-foreground: 221 9% 60%;
 
@@ -620,7 +620,7 @@
     --on-destructive: 227 15% 12%;
     --on-info: 227 15% 12%;
 
-    --border-subtle: 226 15% 10%;
+    --border-subtle: 226 20% 8%;
     --star: 42 93% 58%;
 
     /* Heatmap dark overrides */
@@ -708,6 +708,168 @@
     --shadow-opacity-soft: 0.35;
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.55;
+  }
+
+  /* ── Ubuntu Dark (Dark Variant) ── */
+  .dark[data-dark-theme='ubuntu'] {
+    color-scheme: dark;
+
+    /* Background — #300A24 */
+    --background: 319 66% 11%;
+    /* Foreground — #FFFFFF */
+    --foreground: 0 0% 100%;
+
+    /* Card — aubergine levemente mais clara que o background */
+    --card: 319 45% 17%;
+    --card-foreground: 0 0% 100%;
+
+    /* Popover */
+    --popover: 319 45% 17%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary — Orange (#E95420) */
+    --primary: 16 82% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary — aubergine médio */
+    --secondary: 319 30% 22%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 319 35% 14%;
+    --muted-foreground: 32 8% 65%; /* Comment #AEA79F */
+
+    /* Accent — Aubergine (#77216F) médio para visibilidade */
+    --accent: 306 50% 44%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive — Red (#CC0000) */
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success — Green (#4E9A06) */
+    --success: 91 92% 31%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning — Yellow (#C4A000) */
+    --warning: 49 100% 38%;
+    --warning-foreground: 319 66% 11%;
+
+    /* Info — Cyan (#06989A) */
+    --info: 181 92% 31%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 319 30% 26%;
+    --input: 319 30% 26%;
+    --ring: 16 82% 52%;
+
+    --category-finance: 91 92% 31%; /* green  #4E9A06 */
+    --category-health: 181 92% 31%; /* cyan   #06989A */
+    --category-studies: 16 82% 52%; /* orange #E95420 */
+    --category-spiritual: 306 50% 44%; /* aubergine médio */
+    --category-exercise: 16 70% 62%; /* orange clareado */
+    --category-nutrition: 49 100% 38%; /* yellow #C4A000 */
+    --category-work: 32 8% 65%; /* comment #AEA79F */
+    --category-leisure: 0 100% 40%; /* red #CC0000 */
+    --category-intellect: 292 21% 55%; /* magenta #75507B clareado */
+
+    --on-primary: 0 0% 100%;
+    --on-secondary: 0 0% 100%;
+    --on-accent: 0 0% 100%;
+    --on-success: 0 0% 100%;
+    --on-warning: 319 66% 11%;
+    --on-destructive: 0 0% 100%;
+    --on-info: 0 0% 100%;
+
+    --border-subtle: 319 35% 14%;
+    --star: 49 100% 50%;
+
+    --heatmap-missed: hsl(var(--destructive) / 0.28);
+    --heatmap-low: hsl(var(--success) / 0.15);
+    --heatmap-medium-low: hsl(var(--success) / 0.3);
+    --heatmap-medium: hsl(var(--success) / 0.55);
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.7);
+    --shadow-opacity-soft: 0.45;
+    --shadow-opacity-medium: 0.55;
+    --shadow-opacity-strong: 0.7;
+  }
+
+  /* ── Ubuntu Light (Light Variant) ── */
+  :root[data-light-theme='ubuntu-light'] {
+    color-scheme: light;
+
+    /* Background — #FFFFFF */
+    --background: 0 0% 100%;
+    /* Foreground — #300A24 */
+    --foreground: 319 66% 11%;
+
+    /* Card — levemente off-white púrpura */
+    --card: 306 15% 98%;
+    --card-foreground: 319 66% 11%;
+
+    --popover: 306 15% 98%;
+    --popover-foreground: 319 66% 11%;
+
+    /* Primary — Orange (#E95420) */
+    --primary: 16 82% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary — Selection (#D9D0D8) */
+    --secondary: 307 11% 83%;
+    --secondary-foreground: 319 66% 11%;
+
+    --muted: 307 11% 92%;
+    --muted-foreground: 32 8% 35%;
+
+    /* Accent — Aubergine (#77216F) */
+    --accent: 306 57% 30%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive — Red (#CC0000) */
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success — Green (#4E9A06) */
+    --success: 91 92% 31%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning — Yellow (#C4A000) */
+    --warning: 49 100% 38%;
+    --warning-foreground: 319 66% 11%;
+
+    /* Info — Cyan (#06989A) */
+    --info: 181 92% 31%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 307 11% 75%;
+    --input: 307 11% 50%;
+    --ring: 16 82% 52%;
+
+    --category-finance: 91 92% 31%;
+    --category-health: 181 92% 31%;
+    --category-studies: 16 82% 46%;
+    --category-spiritual: 306 57% 28%;
+    --category-exercise: 16 72% 42%;
+    --category-nutrition: 49 100% 34%;
+    --category-work: 32 8% 38%;
+    --category-leisure: 0 100% 38%;
+    --category-intellect: 292 21% 36%;
+
+    --on-primary: 0 0% 100%;
+    --on-secondary: 319 66% 11%;
+    --on-accent: 0 0% 100%;
+    --on-success: 0 0% 100%;
+    --on-warning: 319 66% 11%;
+    --on-destructive: 0 0% 100%;
+    --on-info: 0 0% 100%;
+
+    --border-subtle: 307 11% 90%;
+    --star: 49 100% 38%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.09;
+    --shadow-opacity-strong: 0.14;
   }
 
   /* ── Catppuccin Latte (Light Variant) ── */
