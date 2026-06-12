@@ -11,12 +11,13 @@ import {
   X,
   Bell,
   Loader2,
+  Clock,
+  ArrowRight,
 } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -30,9 +31,7 @@ import { VaultRecoveryKeyModal } from '@/components/security/VaultRecoveryKeyMod
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
-import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { archivesService } from '@/services/archives-service';
 import { passwordsService } from '@/services/passwords-service';
@@ -47,8 +46,6 @@ import type {
   Archive as ArchiveType,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-type PasswordStrength = 'weak' | 'medium' | 'strong';
 
 type SearchResultType = 'password' | 'card' | 'account' | 'archive';
 
@@ -422,8 +419,9 @@ function VaultAlertConfigPanel() {
 }
 
 export default function SecurityDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
   const [recoveryKeyModal, setRecoveryKeyModal] = useState<'generate' | 'use' | null>(
     null
@@ -444,46 +442,6 @@ export default function SecurityDashboard() {
     queryFn: () => securityDashboardService.getStats(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
-
-  const COLORS = useChartColors();
-  const strengthColors = usePasswordStrengthColors();
-
-  const ITEM_TYPE_LABELS: Record<string, string> = {
-    passwords: t('pages.securityDashboard.passwords'),
-    cards: t('pages.securityDashboard.storedCards'),
-    accounts: t('pages.securityDashboard.storedAccounts'),
-    archives: t('pages.securityDashboard.archives'),
-  };
-
-  const translatedItemsDistribution = useMemo(
-    () =>
-      (stats?.items_distribution || []).map((item) => ({
-        ...item,
-        type_display: ITEM_TYPE_LABELS[item.type] ?? item.type_display,
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stats?.items_distribution, t]
-  );
-
-  const translatedPasswordsByCategory = useMemo(
-    () =>
-      (stats?.passwords_by_category || []).map((item) => ({
-        ...item,
-        category_display: translate('passwordCategories', item.category),
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stats?.passwords_by_category, t]
-  );
-
-  const translatedStrengthDistribution = useMemo(
-    () =>
-      (stats?.password_strength_distribution || []).map((item) => ({
-        ...item,
-        strength_display: translate('passwordStrength', item.strength),
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stats?.password_strength_distribution, t]
-  );
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -612,84 +570,104 @@ export default function SecurityDashboard() {
           <VaultHealthSection />
         </div>
 
-        {/* Gráficos lado a lado */}
+        {/* Atividade Recente + Ações Rápidas */}
         <div className="grid grid-cols-1 gap-lg lg:grid-cols-3">
-          {/* Distribuição de Itens */}
-          <Card>
+          {/* Feed de Atividade Recente */}
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>{t('pages.securityDashboard.itemDistribution')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.securityDashboard.itemDistributionDesc')}
-              </p>
+              <CardTitle className="flex items-center gap-sm">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                {t('pages.securityDashboard.vaultHub.recentActivity')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                chartId="security-items-distribution"
-                data={translatedItemsDistribution}
-                dataKey="count"
-                nameKey="type_display"
-                formatter={(value) =>
-                  t('pages.securityDashboard.itemCount', { count: Number(value) })
-                }
-                colors={COLORS}
-                emptyMessage={t('pages.securityDashboard.noItems')}
-                lockChartType="pie"
-                height={300}
-              />
+              {!stats?.recent_activity?.length ? (
+                <p className="py-md text-center text-sm text-muted-foreground">
+                  {t('pages.securityDashboard.noRecentActivity')}
+                </p>
+              ) : (
+                <div className="flex flex-col divide-y">
+                  {stats.recent_activity.slice(0, 8).map((entry, i) => (
+                    <div key={i} className="flex items-start gap-sm py-sm">
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm">{entry.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(entry.created_at).toLocaleString(i18n.language, {
+                            day: '2-digit',
+                            month: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-muted/60 px-xs py-0.5 text-xs text-muted-foreground">
+                        {entry.action_display}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Senhas por Categoria */}
+          {/* Ações Rápidas */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.securityDashboard.passwordsByCategory')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.securityDashboard.passwordsByCategoryDesc')}
-              </p>
+              <CardTitle className="flex items-center gap-sm">
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                {t('pages.securityDashboard.vaultHub.quickActions')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                chartId="security-passwords-category"
-                data={translatedPasswordsByCategory}
-                dataKey="count"
-                nameKey="category_display"
-                formatter={(value) =>
-                  t('pages.securityDashboard.passwordCount', { count: Number(value) })
-                }
-                colors={COLORS}
-                emptyMessage={t('pages.securityDashboard.noPasswords')}
-                lockChartType="pie"
-                height={300}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Força das Senhas */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('pages.securityDashboard.securityAnalysis')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.securityDashboard.securityAnalysisDesc')}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="security-password-strength"
-                data={translatedStrengthDistribution}
-                dataKey="count"
-                nameKey="strength_display"
-                formatter={(value) =>
-                  t('pages.securityDashboard.passwordCount', { count: Number(value) })
-                }
-                colors={COLORS}
-                customColors={(entry) =>
-                  strengthColors[(entry as { strength: PasswordStrength }).strength] ||
-                  COLORS[0]
-                }
-                emptyMessage={t('pages.securityDashboard.noPasswords')}
-                lockChartType="pie"
-                height={300}
-              />
+              <div className="flex flex-col gap-sm">
+                {(
+                  [
+                    {
+                      label: t('pages.securityDashboard.passwords'),
+                      count: stats?.total_passwords ?? 0,
+                      icon: Key,
+                      route: '/security/passwords',
+                      colorClass: 'text-info',
+                    },
+                    {
+                      label: t('pages.securityDashboard.storedCards'),
+                      count: stats?.total_stored_cards ?? 0,
+                      icon: CreditCard,
+                      route: '/security/stored-cards',
+                      colorClass: 'text-warning',
+                    },
+                    {
+                      label: t('pages.securityDashboard.storedAccounts'),
+                      count: stats?.total_stored_accounts ?? 0,
+                      icon: Wallet,
+                      route: '/security/stored-accounts',
+                      colorClass: 'text-success',
+                    },
+                    {
+                      label: t('pages.securityDashboard.archives'),
+                      count: stats?.total_archives ?? 0,
+                      icon: Archive,
+                      route: '/security/archives',
+                      colorClass: 'text-accent',
+                    },
+                  ] as const
+                ).map(({ label, count, icon: Icon, route, colorClass }) => (
+                  <button
+                    key={route}
+                    type="button"
+                    onClick={() => void navigate(route)}
+                    className="flex items-center gap-sm rounded-lg border bg-card p-sm text-left transition-colors hover:bg-accent/10"
+                  >
+                    <Icon className={`h-4 w-4 shrink-0 ${colorClass}`} />
+                    <span className="flex-1 text-sm">{label}</span>
+                    <span className={`text-sm font-bold ${colorClass}`}>{count}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>

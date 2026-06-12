@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
-import { Download, Loader2, Trash2, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -13,12 +13,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { routineTasksService } from '@/services/routine-tasks-service';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import { userRoutineTemplatesService } from '@/services/user-routine-templates-service';
-import type { RoutineTemplate, UserRoutineTemplate } from '@/types';
+import type { RoutineTask, RoutineTemplate, UserRoutineTemplate } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 interface RoutineTemplateModalProps {
@@ -314,6 +316,16 @@ export function RoutineTemplateModal({
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [importingUserId, setImportingUserId] = useState<number | null>(null);
 
+  // Create template state
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
+  const [allTasks, setAllTasks] = useState<RoutineTask[]>([]);
+  const [isLoadingAllTasks, setIsLoadingAllTasks] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [taskSearch, setTaskSearch] = useState('');
+
   useEffect(() => {
     if (open) {
       void loadSystemTemplates();
@@ -422,6 +434,84 @@ export function RoutineTemplateModal({
     }
   };
 
+  const loadAllTasks = async () => {
+    if (allTasks.length > 0) return;
+    setIsLoadingAllTasks(true);
+    try {
+      const data = await routineTasksService.getAll();
+      setAllTasks(data);
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.routineTasks.templates.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingAllTasks(false);
+    }
+  };
+
+  const openCreateDialog = () => {
+    setNewName('');
+    setNewDesc('');
+    setSelectedTaskIds(new Set());
+    setTaskSearch('');
+    setShowCreateDialog(true);
+    void loadAllTasks();
+  };
+
+  const handleCreateTemplate = async () => {
+    if (selectedTaskIds.size === 0) {
+      toast({
+        title: t('pages.routineTasks.templates.noTasksSelectedError'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsSavingTemplate(true);
+    try {
+      const tasks = allTasks
+        .filter((task) => selectedTaskIds.has(task.id))
+        .map((task) => ({
+          name: task.name,
+          description: task.description,
+          category: task.category,
+          icon: task.icon,
+          periodicity: task.periodicity,
+          weekday: task.weekday,
+          day_of_month: task.day_of_month,
+          custom_weekdays: task.custom_weekdays,
+          target_quantity: task.target_quantity,
+          unit: task.unit,
+          default_time: task.default_time,
+          daily_occurrences: task.daily_occurrences,
+          is_active: task.is_active,
+        }));
+      const created = await userRoutineTemplatesService.create({
+        name: newName.trim(),
+        description: newDesc.trim() || undefined,
+        tasks,
+      });
+      setUserTemplates((prev) => [created, ...prev]);
+      setShowCreateDialog(false);
+      toast({
+        title: t('pages.routineTasks.templates.createSuccess'),
+        description: t('pages.routineTasks.templates.createSuccessDesc', {
+          name: created.name,
+          count: tasks.length,
+        }),
+      });
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.routineTasks.templates.createError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
   const handleDeleteUserTemplate = async (id: number) => {
     const confirmed = await showConfirm({
       title: t('pages.routineTasks.templates.deleteTitle'),
@@ -444,49 +534,195 @@ export function RoutineTemplateModal({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('pages.routineTasks.templates.title')}</DialogTitle>
-          <DialogDescription>
-            {t('pages.routineTasks.templates.description')}
-          </DialogDescription>
-        </DialogHeader>
+  const filteredTasks = useMemo(() => {
+    const q = taskSearch.toLowerCase().trim();
+    if (!q) return allTasks;
+    return allTasks.filter(
+      (task) =>
+        task.name.toLowerCase().includes(q) ||
+        task.category_display.toLowerCase().includes(q)
+    );
+  }, [allTasks, taskSearch]);
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="system" className="flex-1">
-              {t('pages.routineTasks.templates.systemTab')}
-            </TabsTrigger>
-            <TabsTrigger value="user" className="flex-1">
-              {t('pages.routineTasks.templates.myTab')}
-              {userTemplates.length > 0 && (
-                <span className="ml-xs rounded-full bg-primary/15 px-xs text-xs text-primary">
-                  {userTemplates.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="system" className="mt-md">
-            <SystemTemplateList
-              templates={templates}
-              isLoading={isLoadingSystem}
-              onImport={(t) => void handleImportSystem(t)}
-              importingId={importingSystemId}
-            />
-          </TabsContent>
-          <TabsContent value="user" className="mt-md">
-            <UserTemplateList
-              templates={userTemplates}
-              isLoading={isLoadingUser}
-              onImport={(t) => void handleImportUser(t)}
-              onDelete={(id) => void handleDeleteUserTemplate(id)}
-              importingId={importingUserId}
-            />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+  const toggleTaskSelection = (id: number) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.routineTasks.templates.title')}</DialogTitle>
+            <DialogDescription>
+              {t('pages.routineTasks.templates.description')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="system" className="flex-1">
+                {t('pages.routineTasks.templates.systemTab')}
+              </TabsTrigger>
+              <TabsTrigger value="user" className="flex-1">
+                {t('pages.routineTasks.templates.myTab')}
+                {userTemplates.length > 0 && (
+                  <span className="ml-xs rounded-full bg-primary/15 px-xs text-xs text-primary">
+                    {userTemplates.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="system" className="mt-md">
+              <SystemTemplateList
+                templates={templates}
+                isLoading={isLoadingSystem}
+                onImport={(t) => void handleImportSystem(t)}
+                importingId={importingSystemId}
+              />
+            </TabsContent>
+            <TabsContent value="user" className="mt-md">
+              <div className="mb-md flex justify-end">
+                <Button size="sm" onClick={openCreateDialog}>
+                  <Plus className="mr-xs h-4 w-4" />
+                  {t('pages.routineTasks.templates.createBtn')}
+                </Button>
+              </div>
+              <UserTemplateList
+                templates={userTemplates}
+                isLoading={isLoadingUser}
+                onImport={(t) => void handleImportUser(t)}
+                onDelete={(id) => void handleDeleteUserTemplate(id)}
+                importingId={importingUserId}
+              />
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create template dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.routineTasks.templates.createTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('pages.routineTasks.templates.createDesc')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-md">
+            {/* Name */}
+            <div className="flex flex-col gap-xs">
+              <label className="text-sm font-medium">
+                {t('pages.routineTasks.templates.templateNameLabel')}
+              </label>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder={t('pages.routineTasks.templates.templateNamePlaceholder')}
+                maxLength={100}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="flex flex-col gap-xs">
+              <label className="text-sm font-medium">
+                {t('pages.routineTasks.templates.templateDescLabel')}
+              </label>
+              <Input
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder={t('pages.routineTasks.templates.templateDescPlaceholder')}
+                maxLength={255}
+              />
+            </div>
+
+            {/* Task selection */}
+            <div className="flex flex-col gap-xs">
+              <label className="text-sm font-medium">
+                {t('pages.routineTasks.templates.selectTasksLabel')}
+                {selectedTaskIds.size > 0 && (
+                  <span className="ml-sm text-xs font-normal text-muted-foreground">
+                    ({selectedTaskIds.size}{' '}
+                    {t('pages.routineTasks.templates.taskCount')})
+                  </span>
+                )}
+              </label>
+              <Input
+                value={taskSearch}
+                onChange={(e) => setTaskSearch(e.target.value)}
+                placeholder={t('pages.routineTasks.templates.searchTasksPlaceholder')}
+              />
+              <div className="custom-scrollbar max-h-52 overflow-y-auto rounded-lg border bg-muted/20 p-sm">
+                {isLoadingAllTasks ? (
+                  <div className="flex items-center justify-center py-md">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredTasks.length === 0 ? (
+                  <p className="py-md text-center text-sm text-muted-foreground">
+                    {t('pages.routineTasks.templates.noTasksAvailable')}
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-xs">
+                    {filteredTasks.map((task) => {
+                      const TaskIcon = getIconByName(task.icon ?? '');
+                      return (
+                        <label
+                          key={task.id}
+                          className="flex cursor-pointer items-center gap-sm rounded-md px-sm py-xs transition-colors hover:bg-accent/20"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTaskIds.has(task.id)}
+                            onChange={() => toggleTaskSelection(task.id)}
+                            className="h-4 w-4 rounded border-input accent-primary"
+                          />
+                          {TaskIcon ? (
+                            <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <span className="h-4 w-4 shrink-0" />
+                          )}
+                          <span className="flex-1 text-sm">{task.name}</span>
+                          <Badge
+                            className={`text-xs ${CATEGORY_COLORS[task.category] ?? 'bg-muted'}`}
+                          >
+                            {task.category_display}
+                          </Badge>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-sm pt-sm">
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+              disabled={isSavingTemplate}
+            >
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              onClick={() => void handleCreateTemplate()}
+              disabled={isSavingTemplate || !newName.trim()}
+            >
+              {isSavingTemplate && <Loader2 className="mr-xs h-4 w-4 animate-spin" />}
+              {t('common.actions.save')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
