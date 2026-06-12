@@ -193,7 +193,7 @@ export function StudyTimer() {
         });
       }
 
-      toast({ title: t('intellect.studyTimerSaved') });
+      toast({ title: t('pages.libraryDashboard.studyTimerSaved') });
       setShowConfirm(false);
       handleReset();
       setIsOpen(false);
@@ -227,7 +227,7 @@ export function StudyTimer() {
               <div className="flex items-center gap-sm">
                 <Timer className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold">
-                  {t('intellect.studyTimerTitle')}
+                  {t('pages.libraryDashboard.studyTimerTitle')}
                 </span>
               </div>
               <button
@@ -258,8 +258,8 @@ export function StudyTimer() {
                   >
                     {t(
                       m === 'reading'
-                        ? 'intellect.studyTimerReading'
-                        : 'intellect.studyTimerCourse'
+                        ? 'pages.libraryDashboard.studyTimerReading'
+                        : 'pages.libraryDashboard.studyTimerCourse'
                     )}
                   </button>
                 ))}
@@ -273,7 +273,9 @@ export function StudyTimer() {
                   onValueChange={(v) => updateState({ bookId: parseInt(v, 10) })}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder={t('intellect.studyTimerSelectBook')} />
+                    <SelectValue
+                      placeholder={t('pages.libraryDashboard.studyTimerSelectBook')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {books.map((b) => (
@@ -290,7 +292,9 @@ export function StudyTimer() {
                   onValueChange={(v) => updateState({ courseId: parseInt(v, 10) })}
                 >
                   <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder={t('intellect.studyTimerSelectCourse')} />
+                    <SelectValue
+                      placeholder={t('pages.libraryDashboard.studyTimerSelectCourse')}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {courses.map((c) => (
@@ -312,18 +316,18 @@ export function StudyTimer() {
                 {state.phase === 'idle' && (
                   <Button size="sm" disabled={!canStart} onClick={handleStart}>
                     <Play className="mr-xs h-3.5 w-3.5" />
-                    {t('intellect.studyTimerStart')}
+                    {t('pages.libraryDashboard.studyTimerStart')}
                   </Button>
                 )}
                 {state.phase === 'running' && (
                   <>
                     <Button size="sm" variant="outline" onClick={handlePause}>
                       <Pause className="mr-xs h-3.5 w-3.5" />
-                      {t('intellect.studyTimerPause')}
+                      {t('pages.libraryDashboard.studyTimerPause')}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={handleStop}>
                       <Square className="mr-xs h-3.5 w-3.5" />
-                      {t('intellect.studyTimerStop')}
+                      {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
                   </>
                 )}
@@ -331,11 +335,11 @@ export function StudyTimer() {
                   <>
                     <Button size="sm" onClick={handleStart}>
                       <Play className="mr-xs h-3.5 w-3.5" />
-                      {t('intellect.studyTimerResume')}
+                      {t('pages.libraryDashboard.studyTimerResume')}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={handleStop}>
                       <Square className="mr-xs h-3.5 w-3.5" />
-                      {t('intellect.studyTimerStop')}
+                      {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
                   </>
                 )}
@@ -348,7 +352,7 @@ export function StudyTimer() {
         <button
           onClick={() => setIsOpen((o) => !o)}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
-          aria-label={t('intellect.studyTimerTitle')}
+          aria-label={t('pages.libraryDashboard.studyTimerTitle')}
         >
           {state.phase === 'running' ? (
             <span className="text-xs font-bold tabular-nums">
@@ -369,7 +373,9 @@ export function StudyTimer() {
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t('intellect.studyTimerConfirmTitle')}</DialogTitle>
+            <DialogTitle>
+              {t('pages.libraryDashboard.studyTimerConfirmTitle')}
+            </DialogTitle>
             <DialogDescription>
               {state.mode === 'reading' && selectedBook
                 ? selectedBook.title
@@ -379,14 +385,14 @@ export function StudyTimer() {
           <div className="space-y-md py-sm">
             <div className="flex items-center justify-between rounded-lg bg-muted px-md py-sm">
               <span className="text-sm text-muted-foreground">
-                {t('intellect.studyTimerDuration')}
+                {t('pages.libraryDashboard.studyTimerDuration')}
               </span>
               <span className="text-sm font-bold">{formatElapsed(state.elapsed)}</span>
             </div>
             {state.mode === 'reading' && (
               <div className="space-y-xs">
                 <Label htmlFor="pages-read" className="text-sm">
-                  {t('intellect.studyTimerPagesRead')}
+                  {t('pages.libraryDashboard.studyTimerPagesRead')}
                 </Label>
                 <Input
                   id="pages-read"
@@ -409,10 +415,10 @@ export function StudyTimer() {
                 handleReset();
               }}
             >
-              {t('intellect.studyTimerCancel')}
+              {t('pages.libraryDashboard.studyTimerCancel')}
             </Button>
             <Button size="sm" onClick={() => void handleSave()} disabled={isSaving}>
-              {t('intellect.studyTimerSave')}
+              {t('pages.libraryDashboard.studyTimerSave')}
             </Button>
           </div>
         </DialogContent>
