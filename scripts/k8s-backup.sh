@@ -20,6 +20,20 @@ WORK_DIR="${BACKUP_BASE}/backup_${TIMESTAMP}"
 ARCHIVE="${BACKUP_BASE}/backup_${TIMESTAMP}.tar.gz"
 MINIO_PF_PORT=19000  # porta local para port-forward (diferente do MinIO local: 39105)
 
+# MinIO Client pode colidir com o Midnight Commander (/usr/bin/mc).
+# Procura em ~/bin/mc primeiro; depois mcli; depois mc no PATH verificando a versão.
+resolve_mc() {
+    local candidates=("$HOME/bin/mc" "$HOME/.local/bin/mc" "/usr/local/bin/mc" "$(command -v mcli 2>/dev/null || true)" "$(command -v mc 2>/dev/null || true)")
+    for bin in "${candidates[@]}"; do
+        [[ -z "$bin" || ! -x "$bin" ]] && continue
+        if "$bin" --version 2>/dev/null | grep -q 'MinIO'; then
+            echo "$bin"; return 0
+        fi
+    done
+    return 1
+}
+MC="$(resolve_mc)" || err "MinIO Client (mc/mcli) não encontrado. Instale de https://min.io/docs/minio/linux/reference/minio-mc.html"
+
 # ── Funções auxiliares ────────────────────────────────────────────────────────
 log()  { echo "[$(date '+%H:%M:%S')] $*"; }
 err()  { echo "[$(date '+%H:%M:%S')] ERRO: $*" >&2; exit 1; }
@@ -47,7 +61,7 @@ cleanup() {
 trap cleanup EXIT
 
 # ── Verificação de dependências ───────────────────────────────────────────────
-for cmd in kubectl mc; do
+for cmd in kubectl; do
     command -v "$cmd" &>/dev/null || err "Dependência não encontrada: '$cmd'. Instale antes de continuar."
 done
 
@@ -125,14 +139,14 @@ wait_port "$MINIO_PF_PORT" \
 
 # MinIO no K8s usa TLS auto-assinado; --insecure ignora validação do certificado
 log "Configurando alias mc 'k8s-minio' (HTTPS com cert auto-assinado)..."
-mc --insecure alias set k8s-minio \
+"$MC" --insecure alias set k8s-minio \
     "https://localhost:${MINIO_PF_PORT}" \
     "$MINIO_USER" "$MINIO_PASS" \
     --api S3v4 \
     >/dev/null
 
 log "Espelhando bucket '${MINIO_BUCKET}' → ${WORK_DIR}/minio/ ..."
-mc --insecure mirror --preserve "k8s-minio/${MINIO_BUCKET}" "${WORK_DIR}/minio/"
+"$MC" --insecure mirror --preserve "k8s-minio/${MINIO_BUCKET}" "${WORK_DIR}/minio/"
 
 MINIO_SIZE="$(du -sh "${WORK_DIR}/minio" | cut -f1)"
 log "Mirror MinIO concluído — tamanho: ${MINIO_SIZE}"
