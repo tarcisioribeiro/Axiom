@@ -2251,7 +2251,8 @@
       "alertOnFailedUnlock": "Alert on failed unlock attempts",
       "alertOnFailedUnlockDesc": "Notify after multiple incorrect unlock attempts.",
       "alertOnReveal": "Alert on password reveal",
-      "alertOnRevealDesc": "Notify each time a password is revealed."
+      "alertOnRevealDesc": "Notify each time a password is revealed.",
+      "noRecentActivity": "No activity recorded yet."
     },
     "passwords": {
       "title": "Passwords",
@@ -3775,10 +3776,22 @@
         "myTab": "My Templates",
         "taskCount": "task(s)",
         "noUserTemplates": "No personal templates created yet.",
-        "noUserTemplatesHint": "Save a task as a template to get started.",
+        "noUserTemplatesHint": "Create a template from your existing routine tasks.",
         "deleteTitle": "Delete Template",
         "deleteDesc": "Are you sure you want to delete this template? This action cannot be undone.",
-        "deleted": "Template deleted."
+        "deleted": "Template deleted.",
+        "createBtn": "Create New Template",
+        "createTitle": "Create New Template",
+        "createDesc": "Select existing tasks to include in this template.",
+        "templateDescLabel": "Description (optional)",
+        "templateDescPlaceholder": "Describe the goal of this template",
+        "selectTasksLabel": "Tasks to Include",
+        "searchTasksPlaceholder": "Search tasks...",
+        "noTasksAvailable": "No routine tasks found.",
+        "noTasksSelectedError": "Select at least one task.",
+        "createSuccess": "Template created!",
+        "createSuccessDesc": "Template \"{{name}}\" created with {{count}} task(s).",
+        "createError": "Error creating template"
       },
       "export": {
         "btn": "Export Routine",
@@ -5674,6 +5687,47 @@
       "manageMeals": "Meals",
       "noMealsToday": "No meals logged today",
       "addMeal": "Add Meal"
+    },
+    "planningToday": {
+      "title": "Today",
+      "greetingMorning": "Good morning!",
+      "greetingAfternoon": "Good afternoon!",
+      "greetingEvening": "Good evening!",
+      "progress": "Day progress",
+      "streak_one": "{{count}} day streak",
+      "streak_other": "{{count}} day streak",
+      "sectionTasks": "Daily Routines",
+      "sectionWorkout": "Today's Workout",
+      "sectionNutrition": "Today's Meals",
+      "sectionReflection": "Daily Reflection",
+      "tasksLabel": "tasks completed",
+      "noTasks": "No tasks for today",
+      "viewAll": "View all →",
+      "logWorkout": "Log Workout",
+      "logWorkoutTitle": "Log Workout Session",
+      "logWorkoutDesc": "Record the details of today's workout",
+      "workoutLogged": "Workout logged successfully!",
+      "freeWorkout": "Free workout",
+      "done": "Done",
+      "activePlan": "Active plan",
+      "exercises": "exercises",
+      "restDay": "Rest day in plan",
+      "noWorkoutPlan": "No active workout plan",
+      "createPlan": "Create workout plan",
+      "logMeal": "Log Meal",
+      "logMealTitle": "Log Meal",
+      "logMealDesc": "Record what you ate today",
+      "mealLogged": "Meal logged successfully!",
+      "noMeals": "No meals logged today",
+      "moodLabel": "How are you feeling?",
+      "moodPlaceholder": "Select mood",
+      "noMood": "No mood",
+      "reflectionPlaceholder": "How is your day going? Record thoughts, achievements, and learnings...",
+      "reflectionMinLength": "Reflection must be at least 10 characters",
+      "reflectionSaved": "Reflection saved!",
+      "editReflection": "Edit",
+      "saveReflection": "Save reflection",
+      "saving": "Saving..."
     }
   },
   "userProfile": {
@@ -6175,7 +6229,9 @@
     "tasksGoals": "Tasks",
     "goals": "Goals",
     "workout": "Workouts",
-    "nutrition": "Nutrition"
+    "nutrition": "Nutrition",
+    "today": "Today",
+    "groupToday": "Start"
   },
   "monthComparison": {
     "title": "Monthly Comparison",
