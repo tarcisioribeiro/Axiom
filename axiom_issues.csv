@@ -1408,7 +1408,7 @@ Substituir os gráficos por um hub central com: score de saúde em destaque (0�
 - `api/security/views.py` — `SecurityDashboardStatsView`
 
 ## Notas Técnicas
-O endpoint `/api/v1/security/dashboard/stats/` já retorna dados agregados. Adicionar `recent_activity` (últimas 5 entradas do ActivityLog) ao response do `SecurityDashboardStatsView`.","❌ Pendente"
+O endpoint `/api/v1/security/dashboard/stats/` já retorna dados agregados. Adicionar `recent_activity` (últimas 5 entradas do ActivityLog) ao response do `SecurityDashboardStatsView`.","✅ Feito"
 "melhoria: Setup do cofre — warning explícito sobre irreversibilidade de perda da senha mestre","## Contexto
 O fluxo de configuração do cofre (`VaultSetupView`) não apresenta nenhum aviso claro de que a perda da senha mestre implica perda **irrecuperável** de todos os dados armazenados. O usuário define sua senha mestre sem entender as consequências. Este é o maior risco de produto do módulo atualmente.
 
@@ -2300,7 +2300,7 @@ Usuários avançados que constroem rotinas bem elaboradas não podem preservá-l
 - [ ] Botão Salvar como Template ao selecionar um conjunto de tarefas de rotina
 - [ ] Templates pessoais listados separadamente dos templates do sistema
 - [ ] Templates pessoais podem ser importados em outros contextos (reset, novo período)
-- [ ] Opção de compartilhar template com membros do workspace","❌ Pendente"
+- [ ] Opção de compartilhar template com membros do workspace","✅ Feito"
 "[Problema] Exportação de dados disponível apenas para tarefas de rotina","**Contexto**
 O módulo implementa exportação em PDF e Excel apenas para `RoutineTasks` via `use-routine-export.ts`. Metas, histórico de treinos, logs nutricionais, reflexões diárias e dados de gamificação não possuem opção de exportação.
 
@@ -2622,7 +2622,7 @@ Eliminar a necessidade de navegar entre 4 telas diferentes para registrar o dia 
 **Fluxo Principal**
 Usuário abre esta tela pela manhã → vê tudo que tem para o dia → registra cada atividade no contexto correto → encerra o dia com a reflexão.
 
-**Rota Proposta:** `/planning/today` (substituindo `/planning/today-tasks`)","❌ Pendente"
+**Rota Proposta:** `/planning/today` (substituindo `/planning/today-tasks`)","✅ Feito"
 "[Nova Tela] Onboarding Wizard — configuração guiada da semana ideal para novos usuários","**Objetivo**
 Transformar a primeira experiência no módulo de um dashboard vazio para uma rotina personalizada configurada em 5 minutos, resolvendo o problema de onboarding completamente.
 
