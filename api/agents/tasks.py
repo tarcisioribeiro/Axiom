@@ -20,19 +20,23 @@ def generate_weekly_insights_all_users(self) -> dict:
 def generate_weekly_insight_for_user(self, user_id: int) -> dict:
     """Gera um insight semanal para um usuário e salva como Notification."""
     try:
+        import logging
+        from datetime import timedelta
+
         from django.contrib.auth.models import User
         from django.utils import timezone
 
         from agents.core.base_agent import AgentContext
         from members.models import Member
         from notifications.models import Notification
+        from notifications.services import dispatch_notification
 
+        logger = logging.getLogger("axiom")
         user = User.objects.get(pk=user_id)
 
-        week_start = timezone.now().date()
-        week_start = week_start.replace(
-            day=week_start.day - week_start.weekday()
-        )
+        today = timezone.now().date()
+        week_start = today - timedelta(days=today.weekday())
+
         already_exists = Notification.objects.filter(
             owner__user=user,
             notification_type="agent_insight",
@@ -56,14 +60,21 @@ def generate_weekly_insight_for_user(self, user_id: int) -> dict:
             metadata={},
         )
 
-        from agents.agents.insight_agent import InsightAgent
+        try:
+            from agents.agents.insight_agent import InsightAgent
 
-        agent = InsightAgent()
-        response = agent.run(ctx)
+            agent = InsightAgent()
+            response = agent.run(ctx)
+            content = response.content[:2000]
+        except Exception:
+            logger.exception(
+                "LLM unavailable for weekly insight (user_id=%s)"
+                " — using fallback",
+                user_id,
+            )
+            content = _build_fallback_insight(user)
 
-        content = response.content[:2000]
-
-        Notification.objects.create(
+        notification = Notification.objects.create(
             owner=member,
             notification_type="agent_insight",
             content_type="agent_insight",
@@ -73,9 +84,38 @@ def generate_weekly_insight_for_user(self, user_id: int) -> dict:
             due_date=None,
             created_by=user,
         )
+        dispatch_notification(notification)
         return {"status": "ok", "user_id": user_id}
     except Exception as exc:
         raise self.retry(exc=exc)
+
+
+def _build_fallback_insight(user: object) -> str:
+    """Texto de fallback quando o LLM não está disponível."""
+    try:
+        from django.utils import timezone
+
+        from agents.tools.financial_tools import (
+            get_current_month_totals,
+            get_total_balances,
+        )
+
+        now = timezone.now()
+        balances = get_total_balances(user)  # type: ignore[arg-type]
+        total_balance = sum(float(b["current_balance"]) for b in balances)
+        month_totals = get_current_month_totals(user)  # type: ignore[arg-type]
+        period = now.strftime("%B/%Y")
+        return (
+            f"Resumo financeiro — {period}:\n"
+            f"Receitas: R$ {month_totals['revenues']:.2f} | "
+            f"Despesas: R$ {month_totals['expenses']:.2f} | "
+            f"Saldo total: R$ {total_balance:.2f}"
+        )
+    except Exception:
+        return (
+            "Resumo semanal indisponível no momento."
+            " Acesse o app para ver seus dados financeiros."
+        )
 
 
 @shared_task(bind=True, max_retries=1, default_retry_delay=5)

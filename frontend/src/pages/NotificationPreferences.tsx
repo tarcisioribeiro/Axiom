@@ -45,6 +45,7 @@ const NOTIFICATION_TYPE_KEYS: NotificationType[] = [
   'budget_exceeded',
   'financial_goal_reached',
   'financial_goal_approaching',
+  'agent_insight',
 ];
 
 const CHANNEL_OPTION_KEYS: { value: NotificationChannel; icon: React.ReactNode }[] = [
