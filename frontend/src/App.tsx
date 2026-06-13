@@ -34,7 +34,7 @@ const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
-const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
+const CreditCards = lazy(() => import('./pages/CreditCards'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Members = lazy(() => import('./pages/Members'));
@@ -115,6 +115,7 @@ const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
 const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
 const MonthComparison = lazy(() => import('./pages/MonthComparison'));
 const DebtPayoffPlanner = lazy(() => import('./pages/DebtPayoffPlanner'));
+const MonthlyPlanner = lazy(() => import('./pages/MonthlyPlanner'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -256,7 +257,7 @@ function AnimatedRoutes() {
             path="/credit-cards"
             element={
               <PageWrapper>
-                <CreditCardManagement />
+                <CreditCards />
               </PageWrapper>
             }
           />
@@ -668,6 +669,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <DebtPayoffPlanner />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/monthly-planner"
+            element={
+              <PageWrapper>
+                <MonthlyPlanner />
               </PageWrapper>
             }
           />

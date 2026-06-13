@@ -212,20 +212,16 @@ class AuthService {
    * @param permissions - Lista de permissoes
    */
   savePermissions(permissions: Permission[]): void {
-    Cookies.set('user_permissions', JSON.stringify(permissions), {
-      expires: TOKEN_CONFIG.COOKIE_EXPIRE_DAYS,
-      sameSite: 'Lax',
-      secure: false,
-    });
+    localStorage.setItem('user_permissions', JSON.stringify(permissions));
   }
 
   /**
-   * Recupera permissoes do usuario do cookie.
+   * Recupera permissoes do usuario do localStorage.
    *
    * @returns Lista de permissoes ou array vazio
    */
   getPermissions(): Permission[] {
-    const permsData = Cookies.get('user_permissions');
+    const permsData = localStorage.getItem('user_permissions');
     if (!permsData) return [];
 
     try {

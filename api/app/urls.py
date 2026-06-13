@@ -71,6 +71,8 @@ urlpatterns = [
     path("api/v1/agents/", include("agents.urls")),
     # Admin Panel Module
     path("api/v1/admin/", include("admin_panel.urls")),
+    # Monthly Planning Module
+    path("api/v1/", include("monthly_planning.urls")),
     # Webhooks outbound
     path("api/v1/", include("webhooks.urls")),
     # Exchange Rates (multi-currency)

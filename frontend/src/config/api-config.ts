@@ -183,6 +183,10 @@ export const API_CONFIG = {
     BUDGET_HISTORY: '/api/v1/budgets/history/',
     BUDGET_SUGGEST: '/api/v1/budgets/suggest/',
 
+    // Monthly Planning
+    MONTHLY_PLAN_SUMMARY: '/api/v1/monthly-plan/summary/',
+    MONTHLY_PLAN: '/api/v1/monthly-plan/',
+
     // Categorization Rules
     CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
     CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',

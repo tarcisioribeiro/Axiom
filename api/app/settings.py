@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -103,6 +104,8 @@ INSTALLED_APPS = [
     "budgets",
     # Bank Reconciliation Module
     "bank_reconciliation",
+    # Monthly Planning Module
+    "monthly_planning",
     # Agents Module
     "agents",
     # Admin Panel Module
@@ -505,6 +508,13 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "America/Sao_Paulo"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    "weekly-financial-insights": {
+        "task": "agents.tasks.generate_weekly_insights_all_users",
+        "schedule": crontab(hour=9, minute=0, day_of_week="sunday"),
+        "options": {"expires": 3600},
+    },
+}
 # Tasks retry policy
 CELERY_TASK_ACKS_LATE = True
 CELERY_TASK_REJECT_ON_WORKER_LOST = True

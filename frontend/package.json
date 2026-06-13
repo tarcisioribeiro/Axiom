@@ -132,5 +132,9 @@
     "vite": "6.4.2",
     "vite-plugin-compression": "0.5.1",
     "vitest": "4.1.8"
+  },
+  "overrides": {
+    "esbuild": "0.28.1",
+    "@xmldom/xmldom": "0.8.13"
   }
 }
