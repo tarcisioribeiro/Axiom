@@ -22,8 +22,11 @@ COPY package*.json ./
 # Install dependencies with BuildKit cache mount
 # npm ci is faster than npm install (skips dependency resolution)
 # Cache mount preserves npm cache between builds
+# --legacy-peer-deps: skip auto-install of optional peer deps (e.g. aframe,
+# three-bmfont-text) that have git+ssh resolved URLs incompatible with CI
+# runners that block port 22. Matches the .node_base CI template behaviour.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+    npm ci --legacy-peer-deps
 
 # Manually install rollup binary for Alpine (fixes optional dependency issue)
 RUN --mount=type=cache,target=/root/.npm \
