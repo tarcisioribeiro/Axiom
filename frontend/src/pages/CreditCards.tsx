@@ -52,6 +52,7 @@ import { accountsService } from '@/services/accounts-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { useAuthStore } from '@/stores/auth-store';
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type {
   CreditCard,
   CreditCardFormData,
@@ -163,6 +164,12 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
   const [allBills, setAllBills] = useState<CreditCardBill[]>([]);
   const [hubCard, setHubCard] = useState<CreditCard | undefined>();
+  const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
+
+  useEffect(() => {
+    setExtraLabel(hubCard?.name ?? null);
+    return () => setExtraLabel(null);
+  }, [hubCard, setExtraLabel]);
 
   // Bills dialog state
   const [billsCard, setBillsCard] = useState<CreditCard | undefined>();

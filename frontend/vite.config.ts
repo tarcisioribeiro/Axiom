@@ -97,6 +97,7 @@ export default defineConfig({
   },
   build: {
     // Otimizacoes de build
+    target: 'es2020',
     sourcemap: false, // Desabilitar sourcemaps em producao
     minify: 'terser',
     terserOptions: {

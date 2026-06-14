@@ -3696,7 +3696,7 @@ Gerar e entregar automaticamente um resumo financeiro semanal com insights relev
 - [ ] Email semanal com template HTML enviado
 - [ ] Card de insight visível no dashboard na semana seguinte
 - [ ] Opção de desativar nos settings do perfil
-- [ ] Fallback quando LLM não está disponível (resumo simples sem texto gerado)","❌ Pendente"
+- [ ] Fallback quando LLM não está disponível (resumo simples sem texto gerado)","✅ Feito"
 "[Feature IA] Previsão de gastos por categoria com machine learning","## Objetivo
 
 Com base no histórico de gastos, prever quanto o usuário vai gastar em cada categoria nos próximos 30 dias, exibindo a previsão junto aos orçamentos para antecipação de problemas.
@@ -3757,7 +3757,7 @@ Expandir o módulo de agentes IA existente com uma interface conversacional proe
 - [ ] Perguntas sobre dados financeiros respondidas corretamente
 - [ ] Sugestões de perguntas para onboarding
 - [ ] Ações financeiras via linguagem natural com confirmação obrigatória
-- [ ] Histórico de sessões acessível","❌ Pendente"
+- [ ] Histórico de sessões acessível","✅ Feito"
 "[Tela] Central de Cartões — hub unificado para gestão de cartões de crédito","## Objetivo
 
 Criar uma experiência hub que unifica as 4 páginas fragmentadas de cartão de crédito em uma única jornada coesa, sem necessidade de navegar entre telas distintas.
@@ -3886,7 +3886,7 @@ Criar uma tela de planejamento mensal que permite ao usuário planejar o mês an
 - [ ] Botão ""Aplicar Plano"" gera lançamentos e orçamentos com confirmação
 - [ ] Vista de realizado vs planejado disponível após aplicar o plano
 - [ ] Navegação entre meses (planejamento de meses futuros)
-- [ ] Persistência do plano sem necessidade de aplicar imediatamente","❌ Pendente"
+- [ ] Persistência do plano sem necessidade de aplicar imediatamente","✅ Feito"
 "[Melhoria] Empréstimos — adicionar visualização de progresso de quitação","## Contexto
 
 A página de empréstimos exibe valor total e valor pago, mas não oferece visualização da trajetória de quitação ao longo do tempo. O endpoint de amortização (`GET /api/v1/loans/{id}/amortization/`) já existe e retorna o schedule completo.

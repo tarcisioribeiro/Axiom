@@ -179,7 +179,7 @@ class ApiClient {
 
   public clearTokens(): void {
     Cookies.remove('user_data');
-    Cookies.remove('user_permissions');
+    localStorage.removeItem('user_permissions');
     this.tokenValidationCache = null;
   }
 

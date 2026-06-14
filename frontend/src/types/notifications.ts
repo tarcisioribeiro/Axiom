@@ -10,7 +10,8 @@ export type NotificationType =
   | 'budget_warning'
   | 'budget_exceeded'
   | 'financial_goal_reached'
-  | 'financial_goal_approaching';
+  | 'financial_goal_approaching'
+  | 'agent_insight';
 
 export interface Notification {
   id: number;
