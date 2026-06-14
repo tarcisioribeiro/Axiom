@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router-dom';
 
+import { AgentChatWidget } from '@/components/agents/AgentChatWidget';
+
 import { CommandPalette } from './CommandPalette';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -35,6 +37,9 @@ export const Layout = () => {
 
       {/* Floating study timer */}
       <StudyTimer />
+
+      {/* Floating AI chat widget */}
+      <AgentChatWidget />
     </div>
   );
 };
