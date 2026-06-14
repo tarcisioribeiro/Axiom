@@ -17,7 +17,7 @@ import {
   RotateCcw,
   Plus,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
 import { creditCardsService } from '@/services/credit-cards-service';
+import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type {
   Account,
   CreditCard,
@@ -158,6 +159,22 @@ export function CreditCardDetailSheet({
   const [selectedBill, setSelectedBill] = useState<CreditCardBill | undefined>();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [billToPay, setBillToPay] = useState<CreditCardBill | undefined>();
+  const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
+
+  useEffect(() => {
+    if (!card) {
+      setExtraSubLabel(null);
+      return () => setExtraSubLabel(null);
+    }
+    const TAB_LABELS: Record<string, string> = {
+      summary: t('pages.creditCardHub.tabs.summary'),
+      bills: t('pages.creditCardHub.tabs.bills'),
+      purchases: t('pages.creditCardHub.tabs.purchases'),
+      settings: t('pages.creditCardHub.tabs.settings'),
+    };
+    setExtraSubLabel(TAB_LABELS[activeTab] ?? null);
+    return () => setExtraSubLabel(null);
+  }, [activeTab, card, setExtraSubLabel, t]);
 
   const cardId = card?.id;
 

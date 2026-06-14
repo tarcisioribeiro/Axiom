@@ -37,6 +37,7 @@ import {
   Download,
   FileText,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -87,6 +88,7 @@ import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { dashboardService, type IRReport } from '@/services/dashboard-service';
 import { expensesService } from '@/services/expenses-service';
+import { notificationsService } from '@/services/notifications-service';
 import { revenuesService } from '@/services/revenues-service';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -276,6 +278,17 @@ export default function Dashboard() {
     staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
     refetchOnWindowFocus: false,
     enabled: anomaliesInView,
+  });
+
+  const weeklyInsightQuery = useQuery({
+    queryKey: ['dashboard', 'weeklyInsight'],
+    queryFn: async () => {
+      const all = await notificationsService.getAll();
+      const insights = all.filter((n) => n.notification_type === 'agent_insight');
+      return insights.length > 0 ? insights[0] : null;
+    },
+    staleTime: STALE_TIMES.DASHBOARD_STATS,
+    refetchOnWindowFocus: false,
   });
 
   const lgpdMutation = useMutation({
@@ -857,6 +870,48 @@ export default function Dashboard() {
         <motion.div variants={itemVariants} initial="hidden" animate="visible">
           <HealthScore />
         </motion.div>
+
+        {/* 8. Insight Semanal do Assistente */}
+        {weeklyInsightQuery.data && (
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader className="pb-sm">
+                <div className="flex items-center justify-between gap-sm">
+                  <div className="flex items-center gap-sm">
+                    <div className="rounded-lg bg-primary/10 p-sm">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </div>
+                    <CardTitle as="h2" className="text-base">
+                      {t('pages.dashboard.weeklyInsight.title')}
+                    </CardTitle>
+                    {!weeklyInsightQuery.data.is_read && (
+                      <span className="h-2 w-2 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/agents')}
+                    className="gap-xs text-xs text-primary hover:text-primary"
+                  >
+                    {t('pages.dashboard.weeklyInsight.openAssistant')}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {weeklyInsightQuery.data.message}
+                </p>
+                <p className="mt-sm text-xs text-muted-foreground">
+                  {new Date(weeklyInsightQuery.data.created_at).toLocaleDateString(
+                    undefined,
+                    { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* ── Nível 3: Análise Avançada (colapsável, lazy) ────────────────── */}
         <button
