@@ -286,6 +286,7 @@
       "financialCalendar": "Calendário Financeiro",
       "netWorth": "Patrimônio Líquido",
       "subscriptions": "Assinaturas",
+      "monthlyPlanner": "Planejador Mensal",
       "reflections": "Reflexões Diárias",
       "tags": "Tags"
     },
@@ -486,6 +487,15 @@
       "successDesc": "Você já pode fazer login com suas credenciais.",
       "errorDesc": "Ocorreu um erro ao tentar cadastrar. Tente novamente."
     }
+  },
+  "agentWidget": {
+    "title": "Assistente Financeiro",
+    "openLabel": "Abrir assistente de IA",
+    "openFull": "Abrir completo",
+    "emptyHint": "Olá! Como posso ajudar com suas finanças?",
+    "inputPlaceholder": "Pergunte algo...",
+    "sendLabel": "Enviar mensagem",
+    "cancelLabel": "Cancelar resposta"
   },
   "pages": {
     "home": {
@@ -2120,6 +2130,10 @@
       "selectEvolutionPeriod": "Selecionar período de evolução",
       "selectCard": "Selecionar cartão",
       "selectBill": "Selecionar fatura",
+      "weeklyInsight": {
+        "title": "Insight Semanal",
+        "openAssistant": "Perguntar ao Assistente"
+      },
       "anomalies": {
         "title": "Gastos Anômalos",
         "subtitle": "Categorias com gastos acima da média histórica",
@@ -4811,7 +4825,9 @@
         "financial_goal_reached_label": "Meta Financeira Atingida",
         "financial_goal_reached_desc": "Meta financeira concluída: valor atual atingiu o valor alvo.",
         "financial_goal_approaching_label": "Meta Financeira Próxima do Prazo",
-        "financial_goal_approaching_desc": "Meta financeira com prazo vencendo nos próximos 30 dias."
+        "financial_goal_approaching_desc": "Meta financeira com prazo vencendo nos próximos 30 dias.",
+        "agent_insight_label": "Insight Semanal do Assistente",
+        "agent_insight_desc": "Resumo financeiro semanal gerado automaticamente pelo assistente de IA toda segunda-feira."
       }
     },
     "memberFinancialReport": {
@@ -6379,5 +6395,48 @@
       "bill": "Fatura",
       "payable": "A Pagar"
     }
+  },
+  "monthlyPlanner": {
+    "title": "Planejador Financeiro Mensal",
+    "description": "Planeje seu mês antes de ele acontecer",
+    "projectedRevenues": "Receitas Previstas",
+    "projectedExpenses": "Despesas Previstas",
+    "projectedBalance": "Saldo Projetado",
+    "fixedRevenues": "Receitas Fixas",
+    "fixedExpenses": "Despesas Fixas",
+    "creditCardBills": "Faturas de Cartão",
+    "extraRevenues": "Receitas Avulsas",
+    "extraExpenses": "Despesas Avulsas",
+    "budgetByCategory": "Orçamentos por Categoria",
+    "applyPlan": "Aplicar Plano",
+    "applyingPlan": "Aplicando...",
+    "planApplied": "Plano Aplicado",
+    "planAppliedAt": "Aplicado em {{date}}",
+    "compareTitle": "Planejado vs. Realizado",
+    "planned": "Planejado",
+    "actual": "Realizado",
+    "addItem": "Adicionar item",
+    "removeItem": "Remover",
+    "suggested": "Sugerido",
+    "dueDay": "Vence dia {{day}}",
+    "noFixedRevenues": "Nenhuma receita fixa cadastrada",
+    "noFixedExpenses": "Nenhuma despesa fixa cadastrada",
+    "noBills": "Nenhuma fatura para este mês",
+    "noBudgetSuggestions": "Sem histórico suficiente para sugestões",
+    "applyConfirmTitle": "Aplicar Plano Mensal?",
+    "applyConfirmDescription": "Isso irá gerar os lançamentos fixos e criar os orçamentos definidos para {{month}}. Esta ação não pode ser desfeita.",
+    "applySuccess": "Plano aplicado com sucesso!",
+    "applyError": "Erro ao aplicar o plano. Tente novamente.",
+    "saveSuccess": "Plano salvo",
+    "overrideHint": "Sugestão: {{value}}",
+    "totalRevenues": "Total Receitas",
+    "totalExpenses": "Total Despesas",
+    "balance": "Saldo",
+    "positive": "Superávit",
+    "negative": "Déficit",
+    "planningMode": "Planejamento",
+    "realizedMode": "Realizado",
+    "executionPercent": "{{percent}}% executado",
+    "withOverdraft": "Com cheque especial"
   }
 }
