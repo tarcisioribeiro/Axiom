@@ -6349,6 +6349,7 @@
     "overrideHint": "Suggestion: {{value}}",
     "totalRevenues": "Total Revenues",
     "totalExpenses": "Total Expenses",
+    "budgets": "Budgets",
     "balance": "Balance",
     "positive": "Surplus",
     "negative": "Deficit",
@@ -6356,5 +6357,34 @@
     "realizedMode": "Actual",
     "executionPercent": "{{percent}}% completed",
     "withOverdraft": "With overdraft"
+  },
+  "spendingInsights": {
+    "title": "Spending Insights",
+    "description": "Spending analysis — {{month}}",
+    "unavailable": "Data Unavailable",
+    "unavailableDesc": "Could not load spending insights. Please try again.",
+    "totalMonth": "Total — {{month}}",
+    "vsPriorAvg": "vs. prior average {{value}}",
+    "stable": "Stable",
+    "risingCategories": "Rising Categories",
+    "aboveAverage": "categories above average",
+    "topCategories": "Top Categories",
+    "noCategories": "No categories found.",
+    "monthlyEvolution": "Monthly Evolution",
+    "noHistoryData": "No historical data.",
+    "highestGrowthCategories": "Highest Growth Categories",
+    "current": "Current",
+    "average": "Average"
+  },
+  "weeklyPlanning": {
+    "title": "Weekly Planning",
+    "thisWeek": "This week",
+    "tasks": "Tasks",
+    "completed": "Completed",
+    "estimatedLoad": "Estimated Load",
+    "overloadedDay": "Overloaded day",
+    "noTasks": "No tasks",
+    "overloadWarningTitle": "Warning",
+    "overloadWarning": "One or more days this week have a load exceeding {{time}}. Consider redistributing tasks to balance your week."
   }
 }

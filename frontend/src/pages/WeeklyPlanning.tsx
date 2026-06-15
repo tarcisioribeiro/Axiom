@@ -9,6 +9,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -67,9 +68,8 @@ function formatMinutes(minutes: number): string {
   return `${h}h ${m}min`;
 }
 
-const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-
 export default function WeeklyPlanning() {
+  const { t, i18n } = useTranslation();
   const [weekOffset, setWeekOffset] = useState(0);
   const weekStart = getWeekStart(weekOffset);
   const weekEnd = getWeekDays(weekStart)[6];
@@ -101,11 +101,12 @@ export default function WeeklyPlanning() {
   const today = formatLocalDate(new Date());
 
   const weekLabel = (() => {
-    const start = weekStart.toLocaleDateString('pt-BR', {
+    const locale = i18n.language;
+    const start = weekStart.toLocaleDateString(locale, {
       day: '2-digit',
       month: 'short',
     });
-    const end = weekEnd.toLocaleDateString('pt-BR', {
+    const end = weekEnd.toLocaleDateString(locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -122,7 +123,7 @@ export default function WeeklyPlanning() {
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title="Planejamento Semanal"
+          title={t('weeklyPlanning.title')}
           icon={<Calendar />}
           subtitle={weekLabel}
         >
@@ -140,7 +141,7 @@ export default function WeeklyPlanning() {
               onClick={() => setWeekOffset(0)}
               disabled={weekOffset === 0}
             >
-              Esta semana
+              {t('weeklyPlanning.thisWeek')}
             </Button>
             <Button
               variant="outline"
@@ -159,7 +160,9 @@ export default function WeeklyPlanning() {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-lg font-bold">{totalTasks}</p>
-                <p className="text-xs text-muted-foreground">Tarefas</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('weeklyPlanning.tasks')}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -168,7 +171,9 @@ export default function WeeklyPlanning() {
               <CheckCircle2 className="h-5 w-5 text-success" />
               <div>
                 <p className="text-lg font-bold">{completedTasks}</p>
-                <p className="text-xs text-muted-foreground">Concluídas</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('weeklyPlanning.completed')}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -179,7 +184,9 @@ export default function WeeklyPlanning() {
                 <p className="text-lg font-bold">
                   {formatMinutes(Object.values(loadByDate).reduce((s, v) => s + v, 0))}
                 </p>
-                <p className="text-xs text-muted-foreground">Carga estimada</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('weeklyPlanning.estimatedLoad')}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -187,7 +194,7 @@ export default function WeeklyPlanning() {
 
         {/* 7-day grid */}
         <div className="grid grid-cols-1 gap-md sm:grid-cols-7">
-          {days.map((day, idx) => {
+          {days.map((day) => {
             const key = formatLocalDate(day);
             const dayInsts = instancesByDate[key] ?? [];
             const load = loadByDate[key] ?? 0;
@@ -212,7 +219,7 @@ export default function WeeklyPlanning() {
                           isToday ? 'text-primary' : 'text-muted-foreground'
                         )}
                       >
-                        {WEEKDAY_LABELS[idx]}
+                        {day.toLocaleDateString(i18n.language, { weekday: 'short' })}
                       </p>
                       <p
                         className={cn('text-base font-bold', isToday && 'text-primary')}
@@ -223,7 +230,7 @@ export default function WeeklyPlanning() {
                     {isOverloaded && (
                       <AlertTriangle
                         className="h-4 w-4 text-warning"
-                        aria-label="Dia sobrecarregado"
+                        aria-label={t('weeklyPlanning.overloadedDay')}
                       />
                     )}
                   </div>
@@ -252,7 +259,7 @@ export default function WeeklyPlanning() {
                 <CardContent className="flex flex-1 flex-col gap-xs p-sm pt-0">
                   {dayInsts.length === 0 ? (
                     <p className="text-center text-xs text-muted-foreground/50">
-                      Sem tarefas
+                      {t('weeklyPlanning.noTasks')}
                     </p>
                   ) : (
                     dayInsts.map((inst) => <TaskPill key={inst.id} instance={inst} />)
@@ -268,9 +275,10 @@ export default function WeeklyPlanning() {
             <div className="flex items-center gap-sm">
               <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
               <p className="text-sm text-warning">
-                <strong>Atenção:</strong> Um ou mais dias desta semana têm carga
-                superior a {formatMinutes(OVERLOAD_MINUTES)}. Considere redistribuir
-                tarefas para equilibrar sua semana.
+                <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
+                {t('weeklyPlanning.overloadWarning', {
+                  time: formatMinutes(OVERLOAD_MINUTES),
+                })}
               </p>
             </div>
           </div>
