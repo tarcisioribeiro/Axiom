@@ -514,6 +514,21 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(hour=9, minute=0, day_of_week="sunday"),
         "options": {"expires": 3600},
     },
+    "smart-financial-notifications": {
+        "task": "dashboard.tasks.send_smart_financial_notifications",
+        "schedule": crontab(hour=6, minute=0),
+        "options": {"expires": 3600},
+    },
+    "weekly-intellect-recommendations": {
+        "task": "agents.tasks.send_weekly_intellect_recommendations",
+        "schedule": crontab(hour=9, minute=0, day_of_week="sunday"),
+        "options": {"expires": 3600},
+    },
+    "check-vault-alert-rules": {
+        "task": "security.tasks.check_vault_alert_rules",
+        "schedule": crontab(minute="*/15"),
+        "options": {"expires": 900},
+    },
 }
 # Tasks retry policy
 CELERY_TASK_ACKS_LATE = True

@@ -3160,3 +3160,356 @@ class KnowledgeGraphSuggestLinksView(APIView):
         except Exception:
             logger.exception("Erro ao sugerir links de conhecimento")
             return Response({"suggestions": []})
+
+
+class GoodreadsImportView(APIView):
+    """
+    POST /library/goodreads-import/
+    Recebe CSV exportado do Goodreads e importa livros para a biblioteca do
+    usuário. Usa difflib para fuzzy-match (evita duplicatas, ratio >= 0.85).
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    parser_classes = (MultiPartParser, FormParser)
+
+    SHELF_MAP = {
+        "read": "read",
+        "currently-reading": "reading",
+        "to-read": "to_read",
+    }
+
+    def post(self, request):
+        import difflib
+
+        csv_file = request.FILES.get("file")
+        if not csv_file:
+            return Response(
+                {"detail": "Arquivo CSV obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            text = csv_file.read().decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = csv_file.read().decode("latin-1")
+
+        reader = csv.DictReader(io.StringIO(text))
+        rows = list(reader)
+
+        existing_titles = list(
+            Book.objects.filter(
+                owner=request.user, is_deleted=False
+            ).values_list("title", flat=True)
+        )
+
+        imported, skipped, errors = [], [], []
+
+        for row in rows:
+            title = (row.get("Title") or "").strip()
+            if not title:
+                continue
+
+            # Fuzzy-match contra livros existentes (ratio >= 0.85 = duplicata)
+            close = difflib.get_close_matches(
+                title, existing_titles, n=1, cutoff=0.85
+            )
+            if close:
+                skipped.append({"title": title, "reason": "já existe"})
+                continue
+
+            shelf = (row.get("Exclusive Shelf") or "to-read").strip().lower()
+            read_status = self.SHELF_MAP.get(shelf, "to_read")
+
+            try:
+                pages = int(row.get("Number of Pages") or 1) or 1
+            except (ValueError, TypeError):
+                pages = 1
+
+            try:
+                rating_raw = row.get("My Rating") or "0"
+                rating = int(float(rating_raw)) or None
+                if rating == 0:
+                    rating = None
+            except (ValueError, TypeError):
+                rating = None
+
+            # Resolve publisher padrão para importação Goodreads
+            publisher, _ = Publisher.objects.get_or_create(
+                name="Desconhecida",
+                defaults={
+                    "created_by": request.user,
+                    "updated_by": request.user,
+                },
+            )
+
+            # Resolve ou cria Author
+            author_name = (row.get("Author") or "").strip() or "Desconhecido"
+            author, _ = Author.objects.get_or_create(
+                name=author_name,
+                owner=request.user,
+                defaults={
+                    "created_by": request.user,
+                    "updated_by": request.user,
+                },
+            )
+
+            isbn = (
+                row.get("ISBN") or row.get("ISBN13") or ""
+            ).strip().replace('"', "") or None
+
+            try:
+                book = Book.objects.create(
+                    title=title,
+                    pages=pages,
+                    rating=rating,
+                    read_status=read_status,
+                    isbn=isbn,
+                    genre="non_fiction",
+                    literarytype="book",
+                    publisher=publisher,
+                    synopsis="Importado do Goodreads.",
+                    owner=request.user,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                book.authors.add(author)
+                existing_titles.append(title)
+                imported.append({"title": title, "read_status": read_status})
+            except Exception as exc:
+                errors.append({"title": title, "error": str(exc)})
+
+        return Response(
+            {
+                "imported": len(imported),
+                "skipped": len(skipped),
+                "errors": len(errors),
+                "details": {
+                    "imported": imported,
+                    "skipped": skipped,
+                    "errors": errors,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MentorPlanView(APIView):
+    """
+    POST /library/mentor-plan/
+    Gera um plano de mentoria personalizado usando o LLM, considerando
+    as habilidades atuais, livros lidos e metas de leitura do usuário.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request):
+        try:
+            from agents.core.llm_client import LLMClient
+        except ImportError:
+            return Response(
+                {"detail": "Módulo de IA não disponível."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        objective = (request.data.get("objective") or "").strip()
+        focus_skills = request.data.get("focus_skills") or []
+        weeks = int(request.data.get("weeks") or 8)
+
+        if not objective:
+            return Response(
+                {"detail": "Campo 'objective' obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Agrega contexto do usuário
+        skills = list(
+            Skill.objects.filter(owner=request.user, is_deleted=False).values(
+                "name", "level", "xp_points"
+            )
+        )
+        recent_books = list(
+            Book.objects.filter(
+                owner=request.user, read_status="read", is_deleted=False
+            )
+            .order_by("-updated_at")
+            .values("title")[:10]
+        )
+        to_read = list(
+            Book.objects.filter(
+                owner=request.user, read_status="to_read", is_deleted=False
+            )
+            .order_by("reading_priority")
+            .values("title")[:5]
+        )
+
+        skills_text = (
+            ", ".join(f"{s['name']} (nível {s['level']})" for s in skills)
+            or "nenhuma"
+        )
+        books_read_text = (
+            ", ".join(b["title"] for b in recent_books) or "nenhum"
+        )
+        to_read_text = ", ".join(b["title"] for b in to_read) or "nenhum"
+        focus_text = ", ".join(focus_skills) if focus_skills else "livre"
+
+        json_schema = (
+            '{"summary": "...", "weekly_plan": [{"week": 1, "focus": "...",'
+            ' "activities": ["..."], "books": ["..."]}],'
+            ' "key_milestones": ["..."], "success_metrics": ["..."]}'
+        )
+        prompt = (
+            "Você é um mentor especialista em aprendizado contínuo e"
+            " desenvolvimento de carreira.\n\n"
+            f"Contexto do estudante:\n"
+            f"- Objetivo: {objective}\n"
+            f"- Foco em habilidades: {focus_text}\n"
+            f"- Habilidades atuais: {skills_text}\n"
+            f"- Livros lidos recentemente: {books_read_text}\n"
+            f"- Fila de leitura: {to_read_text}\n"
+            f"- Duração do plano: {weeks} semanas\n\n"
+            "Crie um plano de mentoria estruturado em JSON com o formato:\n"
+            f"{json_schema}\n\n"
+            "Responda APENAS com o JSON, sem texto adicional."
+        )
+
+        try:
+            llm = LLMClient.get_instance()
+            raw = llm.chat(prompt, timeout=30)
+            # Extrai JSON da resposta
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start >= 0 and end > start:
+                plan = json.loads(raw[start:end])
+            else:
+                plan = {
+                    "summary": raw,
+                    "weekly_plan": [],
+                    "key_milestones": [],
+                    "success_metrics": [],
+                }
+        except json.JSONDecodeError:
+            plan = {
+                "summary": raw,
+                "weekly_plan": [],
+                "key_milestones": [],
+                "success_metrics": [],
+            }
+        except Exception as exc:
+            logger.warning("MentorPlanView LLM error: %s", exc)
+            return Response(
+                {"detail": "IA temporariamente indisponível."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({"objective": objective, "weeks": weeks, "plan": plan})
+
+
+class MonthlyLearningReportView(APIView):
+    """
+    GET /library/monthly-report/?month=6&year=2026
+    Agrega métricas de leitura e cursos do mês e gera relatório via LLM.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def get(self, request):
+        from django.db.models import Count, Sum
+
+        today = timezone.now().date()
+        try:
+            month = int(request.query_params.get("month") or today.month)
+            year = int(request.query_params.get("year") or today.year)
+        except (ValueError, TypeError):
+            return Response(
+                {"detail": "Parâmetros 'month' e 'year' devem ser inteiros."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Leituras do mês
+        readings = Reading.objects.filter(
+            owner=request.user,
+            reading_date__month=month,
+            reading_date__year=year,
+            is_deleted=False,
+        )
+        reading_stats = readings.aggregate(
+            total_sessions=Count("id"),
+            total_minutes=Sum("reading_time"),
+            total_pages=Sum("pages_read"),
+        )
+
+        books_completed = Book.objects.filter(
+            owner=request.user,
+            read_status="read",
+            updated_at__month=month,
+            updated_at__year=year,
+            is_deleted=False,
+        ).count()
+
+        # Sessões de curso do mês
+        course_sessions = CourseSession.objects.filter(
+            owner=request.user,
+            session_date__month=month,
+            session_date__year=year,
+            is_deleted=False,
+        )
+        course_stats = course_sessions.aggregate(
+            total_sessions=Count("id"),
+            total_minutes=Sum("duration_minutes"),
+        )
+
+        # Skills com maior progressão no mês (aproximação: mais atualizado)
+        top_skills = list(
+            Skill.objects.filter(
+                owner=request.user,
+                is_deleted=False,
+                updated_at__month=month,
+                updated_at__year=year,
+            )
+            .order_by("-xp_points")
+            .values("name", "level", "xp_points")[:5]
+        )
+
+        metrics = {
+            "period": {"month": month, "year": year},
+            "reading": {
+                "sessions": reading_stats["total_sessions"] or 0,
+                "total_minutes": reading_stats["total_minutes"] or 0,
+                "total_pages": reading_stats["total_pages"] or 0,
+                "books_completed": books_completed,
+            },
+            "courses": {
+                "sessions": course_stats["total_sessions"] or 0,
+                "total_minutes": course_stats["total_minutes"] or 0,
+            },
+            "top_skills": top_skills,
+        }
+
+        # Gera texto de resumo via LLM (opcional — degradação graciosa)
+        summary_text = None
+        try:
+            from agents.core.llm_client import LLMClient
+
+            r = metrics["reading"]
+            c = metrics["courses"]
+            hours_reading = round(r["total_minutes"] / 60, 1)
+            hours_courses = round(c["total_minutes"] / 60, 1)
+            skills_text = ", ".join(s["name"] for s in top_skills) or "nenhuma"
+
+            prompt = (
+                "Gere um parágrafo motivacional e objetivo (máx. 3 frases)"
+                " resumindo o desempenho de aprendizado do"
+                f" mês {month}/{year}:\n"
+                f"- {r['sessions']} sessões de leitura ({hours_reading}h),"
+                f" {r['total_pages']} páginas,"
+                f" {r['books_completed']} livros concluídos\n"
+                f"- {c['sessions']} sessões de curso ({hours_courses}h)\n"
+                f"- Habilidades em destaque: {skills_text}\n"
+                "Escreva em português brasileiro, tom encorajador."
+            )
+            llm = LLMClient.get_instance()
+            summary_text = llm.chat(prompt, timeout=15)
+        except Exception:
+            pass
+
+        return Response({**metrics, "summary": summary_text})

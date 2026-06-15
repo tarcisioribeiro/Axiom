@@ -40,7 +40,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
-import { formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
@@ -71,6 +71,7 @@ export function RoutineTaskForm({
 }: RoutineTaskFormProps) {
   const { t } = useTranslation();
   const [linksOpen, setLinksOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const {
     register,
@@ -394,24 +395,29 @@ export function RoutineTaskForm({
                 <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
                 {t('pages.routineTasks.form.weekdayLabel')}
               </Label>
-              <Select
-                value={watch('weekday')?.toString()}
-                onValueChange={(value) => setValue('weekday', parseInt(value))}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {WEEKDAY_CHOICES.map((day) => (
-                    <SelectItem key={day.value} value={day.value.toString()}>
-                      {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-xs">
+                {WEEKDAY_CHOICES.map((day) => {
+                  const isSelected = watch('weekday') === day.value;
+                  return (
+                    <button
+                      key={day.value}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => setValue('weekday', day.value)}
+                      className={cn(
+                        'flex-1 rounded-md border py-1.5 text-xs font-medium transition-colors',
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                      )}
+                    >
+                      {t(
+                        `pages.routineTasks.form.weekdayOptions.${day.value}`
+                      ).substring(0, 3)}
+                    </button>
+                  );
+                })}
+              </div>
               {errors.weekday && (
                 <p className="mt-xs text-sm text-destructive">
                   {errors.weekday.message}
@@ -684,201 +690,231 @@ export function RoutineTaskForm({
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="daily_occurrences" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                {t('pages.routineTasks.form.dailyOccurrencesLabel')}
+              <Label className="flex items-center gap-xs">
+                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.priorityLabel')}
               </Label>
-              <Input
-                id="daily_occurrences"
-                type="number"
-                min="1"
-                max="24"
-                {...register('daily_occurrences', {
-                  setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-                })}
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('pages.routineTasks.form.dailyOccurrencesHint')}
-              </p>
-            </div>
-
-            <div className="space-y-sm">
-              <Label htmlFor="interval_hours" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                {t('pages.routineTasks.form.intervalHoursLabel')}
-              </Label>
-              <Input
-                id="interval_hours"
-                type="number"
-                min="1"
-                max="23"
-                value={watch('interval_hours') || ''}
-                onChange={(e) =>
-                  setValue(
-                    'interval_hours',
-                    e.target.value ? parseInt(e.target.value) : null
-                  )
+              <Select
+                value={watch('priority') ?? 'medium'}
+                onValueChange={(value) =>
+                  setValue('priority', value as 'low' | 'medium' | 'high' | 'critical')
                 }
-                placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
                 disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('pages.routineTasks.form.intervalHoursHint')}
-              </p>
-              {errors.interval_hours && (
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITY_CHOICES.map((p) => {
+                    const PriorIcon = PRIORITY_ICONS[p.value];
+                    return (
+                      <SelectItem key={p.value} value={p.value}>
+                        <span className="flex items-center gap-2">
+                          {PriorIcon && <PriorIcon className="h-4 w-4" />}
+                          {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {errors.priority && (
                 <p className="mt-xs text-sm text-destructive">
-                  {errors.interval_hours.message}
+                  {errors.priority.message}
                 </p>
               )}
             </div>
 
-            {(dailyOccurrences ?? 1) === 1 && (
+            <div className="space-y-sm md:col-span-2">
+              <Label className="flex items-center gap-xs">
+                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.isActiveLabel')}
+              </Label>
+              <StatusToggle
+                value={isActive ? 'true' : 'false'}
+                options={[
+                  {
+                    value: 'false',
+                    label: t('common.status.inactive'),
+                    activeClass: 'bg-background text-foreground shadow-sm',
+                  },
+                  {
+                    value: 'true',
+                    label: t('common.status.active'),
+                    activeClass: 'bg-success/15 text-success shadow-sm',
+                  },
+                ]}
+                onChange={(v) => setValue('is_active', v === 'true')}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          {/* Advanced settings toggle */}
+          <button
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            className="flex w-full items-center gap-xs text-left"
+          >
+            <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('pages.routineTasks.form.advancedSettings')}
+            </span>
+            <div className="h-px flex-1 bg-border/50" />
+            {advancedOpen ? (
+              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+
+          {advancedOpen && (
+            <div className="grid grid-cols-1 gap-md rounded-lg border bg-muted/20 p-md md:grid-cols-2">
               <div className="space-y-sm">
-                <Label htmlFor="closing_time" className="flex items-center gap-xs">
+                <Label htmlFor="daily_occurrences" className="flex items-center gap-xs">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  {t('pages.routineTasks.form.closingTimeLabel')}
+                  {t('pages.routineTasks.form.dailyOccurrencesLabel')}
+                  <Tooltip
+                    content={t('pages.routineTasks.form.dailyOccurrencesHint')}
+                    side="right"
+                  >
+                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                  </Tooltip>
                 </Label>
-                <TimePicker
-                  value={watch('closing_time') ?? undefined}
-                  onChange={(t) => setValue('closing_time', t ?? null)}
+                <Input
+                  id="daily_occurrences"
+                  type="number"
+                  min="1"
+                  max="24"
+                  {...register('daily_occurrences', {
+                    setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
+                  })}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {t('pages.routineTasks.form.closingTimeHint')}
-                </p>
-                {errors.closing_time && (
+              </div>
+
+              <div className="space-y-sm">
+                <Label htmlFor="interval_hours" className="flex items-center gap-xs">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.routineTasks.form.intervalHoursLabel')}
+                  <Tooltip
+                    content={t('pages.routineTasks.form.intervalHoursHint')}
+                    side="right"
+                  >
+                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="interval_hours"
+                  type="number"
+                  min="1"
+                  max="23"
+                  value={watch('interval_hours') || ''}
+                  onChange={(e) =>
+                    setValue(
+                      'interval_hours',
+                      e.target.value ? parseInt(e.target.value) : null
+                    )
+                  }
+                  placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
+                  disabled={isLoading}
+                />
+                {errors.interval_hours && (
                   <p className="mt-xs text-sm text-destructive">
-                    {errors.closing_time.message}
+                    {errors.interval_hours.message}
                   </p>
                 )}
               </div>
-            )}
 
-            <div className="space-y-sm md:col-span-2">
-              <Label htmlFor="scheduled_times" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                {t('pages.routineTasks.form.scheduledTimesLabel')}
-              </Label>
-              <Input
-                id="scheduled_times"
-                type="text"
-                placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
-                value={watch('scheduled_times')?.join(', ') || ''}
-                onChange={(e) => {
-                  const times = e.target.value
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter((t) => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t));
-                  setValue('scheduled_times', times.length > 0 ? times : null);
-                }}
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('pages.routineTasks.form.scheduledTimesHint')}
-              </p>
-              {errors.scheduled_times && (
-                <p className="mt-xs text-sm text-destructive">
-                  {errors.scheduled_times.message}
-                </p>
+              {(dailyOccurrences ?? 1) === 1 && (
+                <div className="space-y-sm">
+                  <Label htmlFor="closing_time" className="flex items-center gap-xs">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.routineTasks.form.closingTimeLabel')}
+                    <Tooltip
+                      content={t('pages.routineTasks.form.closingTimeHint')}
+                      side="right"
+                    >
+                      <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                    </Tooltip>
+                  </Label>
+                  <TimePicker
+                    value={watch('closing_time') ?? undefined}
+                    onChange={(t) => setValue('closing_time', t ?? null)}
+                    disabled={isLoading}
+                  />
+                  {errors.closing_time && (
+                    <p className="mt-xs text-sm text-destructive">
+                      {errors.closing_time.message}
+                    </p>
+                  )}
+                </div>
               )}
+
+              <div className="space-y-sm">
+                <Label
+                  htmlFor="allowed_skips_per_month"
+                  className="flex items-center gap-xs"
+                >
+                  <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.routineTasks.form.allowedSkipsLabel')}
+                  <Tooltip
+                    content={t('pages.routineTasks.form.allowedSkipsHint')}
+                    side="right"
+                  >
+                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="allowed_skips_per_month"
+                  type="number"
+                  min="0"
+                  max="31"
+                  {...register('allowed_skips_per_month', {
+                    setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+                  })}
+                  disabled={isLoading}
+                />
+                {errors.allowed_skips_per_month && (
+                  <p className="mt-xs text-sm text-destructive">
+                    {errors.allowed_skips_per_month.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-sm md:col-span-2">
+                <Label htmlFor="scheduled_times" className="flex items-center gap-xs">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.routineTasks.form.scheduledTimesLabel')}
+                  <Tooltip
+                    content={t('pages.routineTasks.form.scheduledTimesHint')}
+                    side="right"
+                  >
+                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                  </Tooltip>
+                </Label>
+                <Input
+                  id="scheduled_times"
+                  type="text"
+                  placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
+                  value={watch('scheduled_times')?.join(', ') || ''}
+                  onChange={(e) => {
+                    const times = e.target.value
+                      .split(',')
+                      .map((t) => t.trim())
+                      .filter((t) => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t));
+                    setValue('scheduled_times', times.length > 0 ? times : null);
+                  }}
+                  disabled={isLoading}
+                />
+                {errors.scheduled_times && (
+                  <p className="mt-xs text-sm text-destructive">
+                    {errors.scheduled_times.message}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      </FormSection>
-
-      <FormSection
-        title={t('pages.routineTasks.form.sectionBehavior')}
-        icon={Settings2}
-      >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
-          <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-              {t('pages.routineTasks.form.priorityLabel')}
-            </Label>
-            <Select
-              value={watch('priority') ?? 'medium'}
-              onValueChange={(value) =>
-                setValue('priority', value as 'low' | 'medium' | 'high' | 'critical')
-              }
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRIORITY_CHOICES.map((p) => {
-                  const PriorIcon = PRIORITY_ICONS[p.value];
-                  return (
-                    <SelectItem key={p.value} value={p.value}>
-                      <span className="flex items-center gap-2">
-                        {PriorIcon && <PriorIcon className="h-4 w-4" />}
-                        {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            {errors.priority && (
-              <p className="mt-xs text-sm text-destructive">
-                {errors.priority.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-sm">
-            <Label
-              htmlFor="allowed_skips_per_month"
-              className="flex items-center gap-xs"
-            >
-              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-              {t('pages.routineTasks.form.allowedSkipsLabel')}
-            </Label>
-            <Input
-              id="allowed_skips_per_month"
-              type="number"
-              min="0"
-              max="31"
-              {...register('allowed_skips_per_month', {
-                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-              })}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              {t('pages.routineTasks.form.allowedSkipsHint')}
-            </p>
-            {errors.allowed_skips_per_month && (
-              <p className="mt-xs text-sm text-destructive">
-                {errors.allowed_skips_per_month.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-              {t('pages.routineTasks.form.isActiveLabel')}
-            </Label>
-            <StatusToggle
-              value={isActive ? 'true' : 'false'}
-              options={[
-                {
-                  value: 'false',
-                  label: t('common.status.inactive'),
-                  activeClass: 'bg-background text-foreground shadow-sm',
-                },
-                {
-                  value: 'true',
-                  label: t('common.status.active'),
-                  activeClass: 'bg-success/15 text-success shadow-sm',
-                },
-              ]}
-              onChange={(v) => setValue('is_active', v === 'true')}
-              disabled={isLoading}
-            />
-          </div>
+          )}
         </div>
       </FormSection>
 

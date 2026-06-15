@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from app.export_utils import build_csv_response, build_pdf_response
 from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
+    BodyMetric,
+    Challenge,
     DailyReflection,
     Exercise,
     Food,
@@ -35,6 +38,10 @@ from personal_planning.models import (
     WorkoutSessionSet,
 )
 from personal_planning.serializers import (
+    BodyMetricCreateUpdateSerializer,
+    BodyMetricSerializer,
+    ChallengeCreateUpdateSerializer,
+    ChallengeSerializer,
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
     ExerciseCreateUpdateSerializer,
@@ -70,6 +77,8 @@ from personal_planning.serializers import (
     WorkoutSessionSetCreateUpdateSerializer,
     WorkoutSessionSetSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def log_activity(
@@ -1088,12 +1097,26 @@ class TaskInstanceListCreateView(BaseListCreateView):
             owner__user=self.request.user, deleted_at__isnull=True
         ).select_related("owner", "template")
 
-        # Filtro por data
+        # Filtro por data (exata ou intervalo)
         date_param = self.request.query_params.get("date")
+        date_from = self.request.query_params.get("date_from")
+        date_to = self.request.query_params.get("date_to")
         if date_param:
             try:
                 filter_date = date.fromisoformat(date_param)
                 qs = qs.filter(scheduled_date=filter_date)
+            except ValueError:
+                pass
+        elif date_from or date_to:
+            try:
+                if date_from:
+                    qs = qs.filter(
+                        scheduled_date__gte=date.fromisoformat(date_from)
+                    )
+                if date_to:
+                    qs = qs.filter(
+                        scheduled_date__lte=date.fromisoformat(date_to)
+                    )
             except ValueError:
                 pass
 
@@ -2309,3 +2332,463 @@ class ExportGoalsView(APIView):
                 list(rows()), headers, "metas", "Progresso de Metas"
             )
         return build_csv_response(rows(), headers, "metas")
+
+
+# ============================================================================
+# CHALLENGE VIEWS
+# ============================================================================
+
+
+class ChallengeListCreateView(BaseListCreateView):
+    serializer_class = ChallengeSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ("POST",):
+            return ChallengeCreateUpdateSerializer
+        return ChallengeSerializer
+
+    def get_queryset(self):
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return Challenge.objects.none()
+        qs = Challenge.objects.filter(
+            owner=member, is_deleted=False
+        ).select_related("owner", "template_task")
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+
+class ChallengeRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = ChallengeSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return ChallengeCreateUpdateSerializer
+        return ChallengeSerializer
+
+    def get_queryset(self):
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return Challenge.objects.none()
+        return Challenge.objects.filter(owner=member, is_deleted=False)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+# ============================================================================
+# BODY METRIC VIEWS
+# ============================================================================
+
+
+class BodyMetricListCreateView(BaseListCreateView):
+    serializer_class = BodyMetricSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ("POST",):
+            return BodyMetricCreateUpdateSerializer
+        return BodyMetricSerializer
+
+    def get_queryset(self):
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return BodyMetric.objects.none()
+        return BodyMetric.objects.filter(
+            owner=member, is_deleted=False
+        ).select_related("owner")
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+
+class BodyMetricRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = BodyMetricSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return BodyMetricCreateUpdateSerializer
+        return BodyMetricSerializer
+
+    def get_queryset(self):
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return BodyMetric.objects.none()
+        return BodyMetric.objects.filter(owner=member, is_deleted=False)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+# ============================================================================
+# AI ROUTINE SUGGESTION VIEW
+# ============================================================================
+
+
+class AIRoutineSuggestionView(APIView):
+    """POST /api/v1/personal-planning/ai-routine/ — sugestões via LLM."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        objective = request.data.get("objective", "")
+        available_hours = request.data.get("available_hours", 1)
+        focus_areas = request.data.get("focus_areas", [])
+
+        if not objective:
+            return Response(
+                {"error": "O campo 'objetivo' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            import json as _json
+
+            from agents.core.llm_client import LLMClient
+
+            client = LLMClient.get_instance()
+            areas_str = ", ".join(focus_areas) if focus_areas else "geral"
+            prompt = (
+                "Crie sugestões de tarefas de rotina diária para alcançar:"
+                f' "{objective}".\n'
+                f"Áreas de foco: {areas_str}.\n"
+                f"Tempo disponível por dia: {available_hours} hora(s).\n\n"
+                "Responda SOMENTE com JSON válido neste formato"
+                " (sem markdown):\n"
+                '{"tasks": [{"name": "...", "description": "...", '
+                '"frequency": "daily|weekly", "duration_minutes": N, '
+                '"category": "health|work|learning|finance|wellbeing", '
+                '"time_of_day": "morning|afternoon|evening"}]}\n\n'
+                "Máximo 5 tarefas. Seja prático e específico."
+            )
+            resp = client.chat([{"role": "user", "content": prompt}])
+            start = resp.find("{")
+            end = resp.rfind("}") + 1
+            if start != -1 and end > start:
+                result = _json.loads(resp[start:end])
+            else:
+                result = {
+                    "tasks": [],
+                    "error": "Formato inválido retornado pelo LLM",
+                }
+        except Exception as exc:
+            result = {"tasks": [], "error": str(exc)}
+
+        return Response(result)
+
+
+class AIWorkoutPlanGenerationView(APIView):
+    """POST /api/v1/personal-planning/ai-workout-plan/ — gera plano."""
+
+    permission_classes = (IsAuthenticated,)
+
+    _PROMPT_TEMPLATE = """Crie um plano de treino completo em JSON para:
+- Objetivo: {goal}
+- Nível: {level}
+- Equipamentos: {equipment}
+- Dias por semana: {days_per_week}
+
+Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações):
+{{
+  "name": "Nome do plano",
+  "description": "Descrição curta do plano",
+  "days": [
+    {{
+      "name": "Treino A",
+      "muscle_groups": "Peito / Tríceps",
+      "day_of_week": 0,
+      "order": 0,
+      "exercises": [
+        {{
+          "name": "Supino Reto",
+          "sets": 4,
+          "reps_min": 8,
+          "reps_max": 12,
+          "rest_seconds": 90,
+          "notes": "Dica de execução"
+        }}
+      ]
+    }}
+  ]
+}}
+
+Gere exatamente {days_per_week} dias de treino.
+Use day_of_week de 0 (Seg) a 6 (Dom).
+Seja específico e prático para o nível informado."""
+
+    def post(self, request):
+        import json as _json
+
+        goal = (request.data.get("goal") or "").strip()
+        level = (request.data.get("level") or "iniciante").strip()
+        equipment = (
+            request.data.get("equipment") or "academia completa"
+        ).strip()
+        try:
+            days_per_week = int(request.data.get("days_per_week", 3))
+            days_per_week = max(1, min(days_per_week, 7))
+        except (TypeError, ValueError):
+            days_per_week = 3
+
+        if not goal:
+            return Response(
+                {"error": "O campo 'goal' (objetivo) é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            member = Member.objects.get(user=request.user)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        prompt = self._PROMPT_TEMPLATE.format(
+            goal=goal,
+            level=level,
+            equipment=equipment,
+            days_per_week=days_per_week,
+        )
+
+        try:
+            from agents.core.llm_client import LLMClient
+
+            client = LLMClient.get_instance()
+            raw = client.chat([{"role": "user", "content": prompt}])
+
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end <= start:
+                return Response(
+                    {"error": "LLM retornou formato inválido."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+            plan_data = _json.loads(raw[start:end])
+        except Exception as exc:
+            logger.exception("ai-workout-plan LLM call failed")
+            return Response(
+                {"error": f"Não foi possível gerar o plano: {exc}"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        # Persist the generated plan
+        try:
+            plan = WorkoutPlan.objects.create(
+                name=plan_data.get("name", f"Plano {goal[:30]}"),
+                description=plan_data.get("description", ""),
+                is_active=True,
+                owner=member,
+                created_by=request.user,
+            )
+
+            days_payload = plan_data.get("days", [])
+            for order, day_data in enumerate(days_payload):
+                day = WorkoutDay.objects.create(
+                    plan=plan,
+                    name=day_data.get("name", f"Treino {chr(65 + order)}"),
+                    muscle_groups=day_data.get("muscle_groups", ""),
+                    day_of_week=day_data.get("day_of_week"),
+                    order=day_data.get("order", order),
+                    owner=member,
+                    created_by=request.user,
+                )
+                for ex_order, ex_data in enumerate(
+                    day_data.get("exercises", [])
+                ):
+                    WorkoutExercise.objects.create(
+                        workout_day=day,
+                        name=ex_data.get("name", "Exercício"),
+                        sets=ex_data.get("sets", 3),
+                        reps_min=ex_data.get("reps_min", 8),
+                        reps_max=ex_data.get("reps_max", 12),
+                        rest_seconds=ex_data.get("rest_seconds"),
+                        notes=ex_data.get("notes", ""),
+                        order=ex_order,
+                        owner=member,
+                        created_by=request.user,
+                    )
+
+            return Response(
+                {
+                    "plan_id": plan.pk,
+                    "name": plan.name,
+                    "description": plan.description,
+                    "days_created": len(days_payload),
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as exc:
+            logger.exception("ai-workout-plan persistence failed")
+            return Response(
+                {"error": f"Erro ao salvar o plano: {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class AIMenuPlanGenerationView(APIView):
+    """POST /api/v1/personal-planning/ai-menu-plan/ — gera cardápio via LLM."""
+
+    permission_classes = (IsAuthenticated,)
+
+    _PROMPT_TEMPLATE = """Crie um cardápio semanal personalizado em JSON para:
+- Objetivo calórico diário: {calories} kcal
+- Preferências: {preferences}
+- Restrições alimentares: {restrictions}
+- Número de refeições por dia: {meals_per_day}
+
+Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações):
+{{
+  "meal_types": [
+    {{
+      "name": "Café da Manhã",
+      "suggested_time": "07:00",
+      "order": 0,
+      "options": [
+        {{
+          "name": "Aveia com banana e mel",
+          "estimated_calories": 350,
+          "macros_note": "Carboidratos complexos + potássio"
+        }},
+        {{
+          "name": "Iogurte grego com granola e frutas vermelhas",
+          "estimated_calories": 280,
+          "macros_note": "Proteína + fibras"
+        }}
+      ]
+    }}
+  ]
+}}
+
+Gere exatamente {meals_per_day} tipos de refeição.
+Cada tipo deve ter 2 opções variadas.
+Seja prático, saboroso e alinhado com o objetivo calórico."""
+
+    def post(self, request):
+        import json as _json
+
+        try:
+            calories = int(request.data.get("calories", 2000))
+        except (TypeError, ValueError):
+            calories = 2000
+
+        preferences = (
+            request.data.get("preferences") or "sem preferência específica"
+        ).strip()
+        restrictions = (request.data.get("restrictions") or "nenhuma").strip()
+        try:
+            meals_per_day = int(request.data.get("meals_per_day", 3))
+            meals_per_day = max(2, min(meals_per_day, 6))
+        except (TypeError, ValueError):
+            meals_per_day = 3
+
+        try:
+            member = Member.objects.get(user=request.user)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        prompt = self._PROMPT_TEMPLATE.format(
+            calories=calories,
+            preferences=preferences,
+            restrictions=restrictions,
+            meals_per_day=meals_per_day,
+        )
+
+        try:
+            from agents.core.llm_client import LLMClient
+
+            client = LLMClient.get_instance()
+            raw = client.chat([{"role": "user", "content": prompt}])
+
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start == -1 or end <= start:
+                return Response(
+                    {"error": "LLM retornou formato inválido."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+            menu_data = _json.loads(raw[start:end])
+        except Exception as exc:
+            logger.exception("ai-menu-plan LLM call failed")
+            return Response(
+                {"error": f"Não foi possível gerar o cardápio: {exc}"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            meal_types_created = 0
+            options_created = 0
+
+            for order, mt_data in enumerate(menu_data.get("meal_types", [])):
+                suggested_time = mt_data.get("suggested_time")
+                meal_type = MealType.objects.create(
+                    name=mt_data.get("name", f"Refeição {order + 1}"),
+                    suggested_time=suggested_time or None,
+                    order=mt_data.get("order", order),
+                    is_active=True,
+                    owner=member,
+                    created_by=request.user,
+                )
+                meal_types_created += 1
+
+                for opt_order, opt_data in enumerate(
+                    mt_data.get("options", [])
+                ):
+                    opt_name = opt_data.get("name", "Opção")
+                    kcal = opt_data.get("estimated_calories")
+                    note = opt_data.get("macros_note", "")
+                    display_name = opt_name
+                    if kcal:
+                        display_name += f" (~{kcal} kcal)"
+                    if note:
+                        display_name += f" — {note}"
+
+                    MenuOption.objects.create(
+                        meal_type=meal_type,
+                        name=display_name[:100],
+                        order=opt_order,
+                        owner=member,
+                        created_by=request.user,
+                    )
+                    options_created += 1
+
+            return Response(
+                {
+                    "meal_types_created": meal_types_created,
+                    "options_created": options_created,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as exc:
+            logger.exception("ai-menu-plan persistence failed")
+            return Response(
+                {"error": f"Erro ao salvar o cardápio: {exc}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

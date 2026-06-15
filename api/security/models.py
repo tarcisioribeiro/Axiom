@@ -823,6 +823,22 @@ class VaultAlertConfig(BaseModel):
     failed_unlock_threshold = models.IntegerField(
         default=3, verbose_name="Threshold de falhas de desbloqueio"
     )
+    alert_on_excessive_reveals = models.BooleanField(
+        default=True,
+        verbose_name="Alertar em volume excessivo de revelações",
+    )
+    excessive_reveals_threshold = models.IntegerField(
+        default=5,
+        verbose_name="Threshold de revelações em 1 hora",
+    )
+    alert_on_card_reveal = models.BooleanField(
+        default=False,
+        verbose_name="Alertar ao revelar cartão bancário",
+    )
+    notify_email = models.BooleanField(
+        default=False,
+        verbose_name="Enviar alertas por e-mail",
+    )
 
     class Meta:
         verbose_name = "Configuração de Alertas do Cofre"
