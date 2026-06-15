@@ -553,27 +553,6 @@ export default function MonthlyPlanner() {
   const totalExtra = sumValues(extraRevenues);
   const totalRevenues = totalFixed + totalExtra;
 
-  const totalFixedExp = (data?.fixed_expenses ?? []).reduce((acc, e) => {
-    const ov = fixedExpenseOverrides[String(e.id)];
-    if (ov?.enabled === false) return acc;
-    const v = parseFloat(ov?.value ?? e.default_value ?? '0');
-    return acc + (isNaN(v) ? 0 : v);
-  }, 0);
-  const totalBills = (data?.credit_card_bills ?? []).reduce(
-    (acc, b) => acc + parseFloat(b.total_amount || '0'),
-    0
-  );
-  const totalExtraExp = sumValues(extraExpenses);
-  const totalExpenses = totalFixedExp + totalBills + totalExtraExp;
-
-  const projectedBalance = totalRevenues - totalExpenses;
-  const totalOverdraft = parseFloat(data?.total_overdraft_limit ?? '0');
-  const projectedBalanceWithOverdraft = projectedBalance + totalOverdraft;
-
-  const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
-  const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
-  const actualBalance = actualRevenues - actualExpenses;
-
   const allCategories = [
     ...new Set([
       ...(data?.budget_suggestions.map((s) => s.category) ?? []),
@@ -587,6 +566,32 @@ export default function MonthlyPlanner() {
   const existingBudgetMap = Object.fromEntries(
     (data?.existing_budgets ?? []).map((b) => [b.category, b.limit_amount])
   );
+
+  const totalFixedExp = (data?.fixed_expenses ?? []).reduce((acc, e) => {
+    const ov = fixedExpenseOverrides[String(e.id)];
+    if (ov?.enabled === false) return acc;
+    const v = parseFloat(ov?.value ?? e.default_value ?? '0');
+    return acc + (isNaN(v) ? 0 : v);
+  }, 0);
+  const totalBills = (data?.credit_card_bills ?? []).reduce(
+    (acc, b) => acc + parseFloat(b.total_amount || '0'),
+    0
+  );
+  const totalExtraExp = sumValues(extraExpenses);
+  const totalBudgets = allCategories.reduce((acc, cat) => {
+    const override = budgetOverrides[cat] ?? existingBudgetMap[cat];
+    const v = parseFloat(override ?? '0');
+    return acc + (isNaN(v) ? 0 : v);
+  }, 0);
+  const totalExpenses = totalFixedExp + totalBills + totalExtraExp + totalBudgets;
+
+  const projectedBalance = totalRevenues - totalExpenses;
+  const totalOverdraft = parseFloat(data?.total_overdraft_limit ?? '0');
+  const projectedBalanceWithOverdraft = projectedBalance + totalOverdraft;
+
+  const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
+  const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
+  const actualBalance = actualRevenues - actualExpenses;
 
   return (
     <PageContainer>
@@ -662,6 +667,11 @@ export default function MonthlyPlanner() {
               <p className="mt-xs text-lg font-bold text-destructive">
                 {formatCurrency(totalExpenses)}
               </p>
+              {totalBudgets > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
+                </p>
+              )}
               {isApplied && (
                 <p className="text-xs text-muted-foreground">
                   {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
