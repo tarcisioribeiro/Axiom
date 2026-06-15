@@ -287,7 +287,9 @@
       "netWorth": "Patrimônio Líquido",
       "subscriptions": "Assinaturas",
       "monthlyPlanner": "Planejador Mensal",
+      "spendingInsights": "Insights de Gastos",
       "reflections": "Reflexões Diárias",
+      "weeklyPlanning": "Planejamento Semanal",
       "tags": "Tags"
     },
     "agents": "Agentes IA"
@@ -2491,6 +2493,10 @@
       "selectAll": "Selecionar tudo",
       "deselectAll": "Desmarcar tudo",
       "importBtn": "Importar selecionadas",
+      "nextMappingBtn": "Próximo: Mapear categorias",
+      "mappingTitle": "Mapeamento de categorias",
+      "mappingDesc": "Mapeie cada categoria do arquivo de origem para uma categoria do Axiom.",
+      "noCategoriesToMap": "Nenhuma categoria para mapear.",
       "importing": "Importando...",
       "colTitle": "Título",
       "colUsername": "Usuário",
@@ -3932,6 +3938,7 @@
         "priorityLabel": "Prioridade",
         "allowedSkipsLabel": "Faltas Toleradas/Mês",
         "allowedSkipsHint": "Quantas faltas são toleradas por mês sem quebrar o streak",
+        "advancedSettings": "Configurações avançadas",
         "isActiveLabel": "Tarefa Ativa",
         "linkedFinancialGoalLabel": "Meta Financeira Vinculada",
         "linkedFinancialGoalPlaceholder": "Selecione uma meta financeira (opcional)",

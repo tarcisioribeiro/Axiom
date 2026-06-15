@@ -34,13 +34,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { summariesService } from '@/services/summaries-service';
 import type { BookHighlight, Summary, SummaryFormData, Book } from '@/types';
+
+import { GhostTextarea } from './GhostTextarea';
 
 interface SummariesTabProps {
   isCreateOpen: boolean;
@@ -335,12 +336,12 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               </div>
               <div className="space-y-sm">
                 <Label htmlFor="text">{t('pages.summaries.contentField')}</Label>
-                <Textarea
+                <GhostTextarea
                   id="text"
                   value={formData.text}
-                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  onChange={(val) => setFormData({ ...formData, text: val })}
+                  bookId={formData.book || null}
                   rows={10}
-                  required
                 />
               </div>
             </div>
@@ -389,12 +390,12 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               </div>
               <div className="space-y-sm">
                 <Label htmlFor="edit-text">{t('pages.summaries.contentField')}</Label>
-                <Textarea
+                <GhostTextarea
                   id="edit-text"
                   value={formData.text}
-                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  onChange={(val) => setFormData({ ...formData, text: val })}
+                  bookId={formData.book || null}
                   rows={10}
-                  required
                 />
               </div>
             </div>

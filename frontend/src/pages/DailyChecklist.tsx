@@ -34,6 +34,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
+import { XPFloating, useXPTrigger } from '@/components/personal-planning/XPFloating';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
@@ -54,6 +55,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -109,6 +111,8 @@ export default function DailyChecklist() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(0);
+  const xp = useXPTrigger();
+  useTaskReminders(cards);
   const [summary, setSummary] = useState({
     total: 0,
     completed: 0,
@@ -304,6 +308,16 @@ export default function DailyChecklist() {
 
       if (!finalStatus) return prevCards;
 
+      // Fire XP animation when card moves to done
+      if (finalStatus === 'done' && activeCard.status !== 'done') {
+        const vpW = window.innerWidth;
+        const vpH = window.innerHeight;
+        xp.fire(
+          vpW * 0.5 + (Math.random() - 0.5) * 120,
+          vpH * 0.45 + (Math.random() - 0.5) * 60
+        );
+      }
+
       // Reordena apenas se estiver na mesma coluna e sobre outro card
       if (activeCard.status === finalStatus && overCard) {
         const activeIndex = prevCards.findIndex((c) => c.id === activeId);
@@ -416,6 +430,7 @@ export default function DailyChecklist() {
 
   return (
     <PageContainer>
+      <XPFloating onMount={xp.register} />
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
 
       {gamification && (

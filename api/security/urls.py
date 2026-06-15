@@ -31,6 +31,7 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     RedeemShareTokenView,
     RevokeShareTokenView,
     SecurityDashboardStatsView,
+    SecuritySearchView,
     ShareTokenListCreateView,
     StoredAccountShareTokenView,
     StoredBankAccountCopyView,
@@ -277,5 +278,11 @@ urlpatterns = [
         "alert-config/",
         VaultAlertConfigView.as_view(),
         name="vault-alert-config",
+    ),
+    # Global vault search
+    path(
+        "search/",
+        SecuritySearchView.as_view(),
+        name="security-search",
     ),
 ]

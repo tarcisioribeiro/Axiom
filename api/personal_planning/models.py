@@ -276,6 +276,18 @@ class RoutineTask(BaseModel):
         verbose_name="Livro Vinculado",
         help_text="Livro em andamento vinculado a esta rotina de leitura",
     )
+    chained_task = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="triggered_by",
+        verbose_name="Tarefa Encadeada",
+        help_text=(
+            "Tarefa que será ativada automaticamente"
+            " quando esta for concluída (habit stacking)"
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1918,3 +1930,137 @@ class MealLog(BaseModel):
     def __str__(self):
         option_str = self.menu_option.name if self.menu_option else "Livre"
         return f"{self.meal_type.name} ({option_str}) — {self.date}"
+
+
+# ============================================================================
+# CHALLENGE MODEL
+# ============================================================================
+
+
+class Challenge(BaseModel):
+    """Desafio por período — ex: 30 dias sem açúcar, 100 dias de exercício."""
+
+    DURATION_CHOICES = [
+        (7, "7 dias"),
+        (21, "21 dias"),
+        (30, "30 dias"),
+        (66, "66 dias"),
+        (100, "100 dias"),
+    ]
+    STATUS_CHOICES = [
+        ("active", "Ativo"),
+        ("completed", "Concluído"),
+        ("failed", "Falhado"),
+        ("cancelled", "Cancelado"),
+    ]
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="challenges",
+        verbose_name="Proprietário",
+    )
+    title = models.CharField(max_length=255, verbose_name="Título")
+    description = models.TextField(blank=True, verbose_name="Descrição")
+    duration_days = models.IntegerField(
+        choices=DURATION_CHOICES, verbose_name="Duração (dias)"
+    )
+    start_date = models.DateField(verbose_name="Data de Início")
+    end_date = models.DateField(verbose_name="Data de Término")
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="active",
+        verbose_name="Status",
+    )
+    template_task = models.ForeignKey(
+        "RoutineTask",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="challenges",
+        verbose_name="Tarefa de Referência",
+        help_text="Tarefa rotineira que serve de base para o desafio",
+    )
+    completion_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name="Taxa de Conclusão (%)",
+    )
+
+    class Meta:
+        verbose_name = "Desafio"
+        verbose_name_plural = "Desafios"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["owner", "status"]),
+            models.Index(fields=["start_date", "end_date"]),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.duration_days} dias)"
+
+
+# ============================================================================
+# BODY METRIC MODEL
+# ============================================================================
+
+
+class BodyMetric(BaseModel):
+    """Registro de métricas corporais para acompanhamento de progresso."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="body_metrics",
+        verbose_name="Proprietário",
+    )
+    measured_at = models.DateField(verbose_name="Data da Medição")
+    weight_kg = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Peso (kg)",
+    )
+    waist_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Cintura (cm)",
+    )
+    arm_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Braço (cm)",
+    )
+    hip_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Quadril (cm)",
+    )
+    body_fat_pct = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Gordura Corporal (%)",
+    )
+    notes = models.TextField(blank=True, verbose_name="Observações")
+
+    class Meta:
+        verbose_name = "Métrica Corporal"
+        verbose_name_plural = "Métricas Corporais"
+        ordering = ["-measured_at"]
+        indexes = [
+            models.Index(fields=["owner", "-measured_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.owner} — {self.measured_at}"
