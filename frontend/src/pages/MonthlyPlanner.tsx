@@ -24,11 +24,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -154,11 +154,6 @@ function sumValues(items: Array<{ value?: string; default_value?: string }>): nu
     const v = parseFloat(item.value ?? item.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
-}
-
-function categoryLabel(key: string): string {
-  const found = EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === key);
-  return found ? found.label : key;
 }
 
 function formatDueDate(isoDate: string | null | undefined): string | undefined {
@@ -881,7 +876,9 @@ export default function MonthlyPlanner() {
                     className="space-y-xs rounded-lg border bg-muted/20 p-sm"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium">{categoryLabel(cat)}</span>
+                      <span className="text-xs font-medium">
+                        {translateCategory(cat, 'expense')}
+                      </span>
                       {suggested !== undefined && (
                         <span className="text-xs text-muted-foreground">
                           {t('monthlyPlanner.overrideHint', {

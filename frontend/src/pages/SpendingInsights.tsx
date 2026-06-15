@@ -9,6 +9,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   Bar,
   BarChart,
@@ -40,11 +41,12 @@ import { dashboardService } from '@/services/dashboard-service';
 type TrendDirection = 'up' | 'down' | 'stable';
 
 function TrendBadge({ direction, pct }: { direction: TrendDirection; pct: number }) {
+  const { t } = useTranslation();
   if (direction === 'stable' || Math.abs(pct) < 0.5) {
     return (
       <span className="inline-flex items-center gap-xs text-xs text-muted-foreground">
         <Minus className="h-3 w-3" />
-        Estável
+        {t('spendingInsights.stable')}
       </span>
     );
   }
@@ -91,6 +93,7 @@ function CurrencyTooltip({
 }
 
 export default function SpendingInsights() {
+  const { t, i18n } = useTranslation();
   const chartColors = useChartColors();
   const semanticColors = useSemanticColors();
 
@@ -106,10 +109,10 @@ export default function SpendingInsights() {
     return (
       <AnimatedPage>
         <PageContainer>
-          <PageHeader title="Insights de Gastos" />
+          <PageHeader title={t('spendingInsights.title')} />
           <EmptyState
-            title="Dados indisponíveis"
-            description="Não foi possível carregar os insights de gastos. Tente novamente."
+            title={t('spendingInsights.unavailable')}
+            description={t('spendingInsights.unavailableDesc')}
             icon={<BarChart3 className="h-8 w-8" />}
           />
         </PageContainer>
@@ -138,14 +141,14 @@ export default function SpendingInsights() {
   const monthName = new Date(
     current_month.year,
     current_month.month - 1
-  ).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+  ).toLocaleString(i18n.language, { month: 'long', year: 'numeric' });
 
   return (
     <AnimatedPage>
       <PageContainer>
         <PageHeader
-          title="Insights de Gastos"
-          description={`Análise de gastos — ${monthName}`}
+          title={t('spendingInsights.title')}
+          description={t('spendingInsights.description', { month: monthName })}
         />
 
         {/* Trend summary row */}
@@ -154,7 +157,7 @@ export default function SpendingInsights() {
           <Card className="sm:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between pb-sm">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total — {monthName}
+                {t('spendingInsights.totalMonth', { month: monthName })}
               </CardTitle>
               <div
                 className={cn(
@@ -185,7 +188,9 @@ export default function SpendingInsights() {
               <div className="flex items-center gap-md">
                 <TrendBadge direction={trendDirection} pct={trend.pct_change} />
                 <span className="text-xs text-muted-foreground">
-                  vs. média anterior {formatCurrency(trend.prior_avg)}
+                  {t('spendingInsights.vsPriorAvg', {
+                    value: formatCurrency(trend.prior_avg),
+                  })}
                 </span>
               </div>
             </CardContent>
@@ -195,7 +200,7 @@ export default function SpendingInsights() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-sm">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Categorias em Alta
+                {t('spendingInsights.risingCategories')}
               </CardTitle>
               <div className="rounded-lg bg-destructive/10 p-sm">
                 <Flame className="h-4 w-4 text-destructive" />
@@ -206,7 +211,7 @@ export default function SpendingInsights() {
                 {growing_categories.length}
               </p>
               <p className="mt-xs text-xs text-muted-foreground">
-                categorias acima da média
+                {t('spendingInsights.aboveAverage')}
               </p>
             </CardContent>
           </Card>
@@ -217,12 +222,14 @@ export default function SpendingInsights() {
           {/* Top categories bar chart */}
           <Card>
             <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">Top Categorias</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t('spendingInsights.topCategories')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {top_categories.length === 0 ? (
                 <p className="py-lg text-center text-sm text-muted-foreground">
-                  Nenhuma categoria encontrada.
+                  {t('spendingInsights.noCategories')}
                 </p>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -269,12 +276,14 @@ export default function SpendingInsights() {
           {/* Monthly breakdown line chart */}
           <Card>
             <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">Evolução Mensal</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t('spendingInsights.monthlyEvolution')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {monthly_breakdown.length === 0 ? (
                 <p className="py-lg text-center text-sm text-muted-foreground">
-                  Sem dados de histórico.
+                  {t('spendingInsights.noHistoryData')}
                 </p>
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
@@ -317,7 +326,7 @@ export default function SpendingInsights() {
           <Card>
             <CardHeader className="pb-sm">
               <CardTitle className="text-sm font-medium">
-                Categorias com Maior Crescimento
+                {t('spendingInsights.highestGrowthCategories')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -343,10 +352,12 @@ export default function SpendingInsights() {
                     <div className="flex items-center gap-md text-right">
                       <div className="hidden sm:block">
                         <p className="text-xs text-muted-foreground">
-                          Atual: {formatCurrency(item.current)}
+                          {t('spendingInsights.current')}:{' '}
+                          {formatCurrency(item.current)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Média: {formatCurrency(item.prior_avg)}
+                          {t('spendingInsights.average')}:{' '}
+                          {formatCurrency(item.prior_avg)}
                         </p>
                       </div>
                       <Badge
