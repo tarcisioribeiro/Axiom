@@ -6349,6 +6349,7 @@
     "overrideHint": "Suggestion: {{value}}",
     "totalRevenues": "Total Revenues",
     "totalExpenses": "Total Expenses",
+    "budgets": "Budgets",
     "balance": "Balance",
     "positive": "Surplus",
     "negative": "Deficit",

@@ -425,7 +425,7 @@ export default function Dashboard() {
   // Filtra apenas despesas pagas e receitas recebidas para os gráficos
   const expensesByCategory = useMemo(() => {
     return expenses
-      .filter((exp) => exp.payed) // Apenas despesas pagas
+      .filter((exp) => exp.payed && !exp.related_transfer)
       .reduce((acc: CategoryStat[], exp) => {
         const existing = acc.find((item) => item.category === exp.category);
         if (existing) {
@@ -484,7 +484,7 @@ export default function Dashboard() {
       // Últimos 30 dias
       return eachDayOfInterval({ start: subDays(now, 29), end: now }).map((day) => {
         const dayExpenses = expenses
-          .filter((e) => e.payed && isDateOnDay(e.date, day))
+          .filter((e) => e.payed && !e.related_transfer && isDateOnDay(e.date, day))
           .reduce((sum, e) => sum + parseFloat(e.value), 0);
         const dayRevenues = revenues
           .filter(
@@ -507,7 +507,12 @@ export default function Dashboard() {
         const weekStart = startOfWeek(week, { weekStartsOn: 0 });
         const weekEnd = endOfWeek(week, { weekStartsOn: 0 });
         const weekExpenses = expenses
-          .filter((e) => e.payed && isDateInRange(e.date, weekStart, weekEnd))
+          .filter(
+            (e) =>
+              e.payed &&
+              !e.related_transfer &&
+              isDateInRange(e.date, weekStart, weekEnd)
+          )
           .reduce((sum, e) => sum + parseFloat(e.value), 0);
         const weekRevenues = revenues
           .filter(
@@ -530,7 +535,12 @@ export default function Dashboard() {
         const yearStart = startOfYear(year);
         const yearEnd = endOfYear(year);
         const yearExpenses = expenses
-          .filter((e) => e.payed && isDateInRange(e.date, yearStart, yearEnd))
+          .filter(
+            (e) =>
+              e.payed &&
+              !e.related_transfer &&
+              isDateInRange(e.date, yearStart, yearEnd)
+          )
           .reduce((sum, e) => sum + parseFloat(e.value), 0);
         const yearRevenues = revenues
           .filter(
@@ -554,7 +564,12 @@ export default function Dashboard() {
           const monthStart = startOfMonth(month);
           const monthEnd = endOfMonth(month);
           const monthExpenses = expenses
-            .filter((e) => e.payed && isDateInRange(e.date, monthStart, monthEnd))
+            .filter(
+              (e) =>
+                e.payed &&
+                !e.related_transfer &&
+                isDateInRange(e.date, monthStart, monthEnd)
+            )
             .reduce((sum, e) => sum + parseFloat(e.value), 0);
           const monthRevenues = revenues
             .filter(
@@ -590,8 +605,12 @@ export default function Dashboard() {
         .filter((e) => e.date.startsWith(monthStr) && filterFn(e))
         .reduce((s, e) => s + parseFloat(e.value), 0);
 
-    const currExp = sum(expenses, currentMonthStr, (e) => e.payed);
-    const prevExp = sum(expenses, prevMonthStr, (e) => e.payed);
+    const currExp = sum(
+      expenses,
+      currentMonthStr,
+      (e) => e.payed && !e.related_transfer
+    );
+    const prevExp = sum(expenses, prevMonthStr, (e) => e.payed && !e.related_transfer);
     const currRev = sum(
       revenues,
       currentMonthStr,
