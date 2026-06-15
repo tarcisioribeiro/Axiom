@@ -108,12 +108,15 @@ const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 const MyWeekPage = lazy(() => import('./pages/MyWeekPage'));
 const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
+const WeeklyPlanning = lazy(() => import('./pages/WeeklyPlanning'));
+const OnboardingWizard = lazy(() => import('./pages/OnboardingWizard'));
 
 // Finance extras
 const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
 const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
 const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
 const MonthComparison = lazy(() => import('./pages/MonthComparison'));
+const SpendingInsights = lazy(() => import('./pages/SpendingInsights'));
 const DebtPayoffPlanner = lazy(() => import('./pages/DebtPayoffPlanner'));
 const MonthlyPlanner = lazy(() => import('./pages/MonthlyPlanner'));
 
@@ -557,6 +560,22 @@ function AnimatedRoutes() {
                 </PageWrapper>
               }
             />
+            <Route
+              path="weekly-planning"
+              element={
+                <PageWrapper>
+                  <WeeklyPlanning />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="setup"
+              element={
+                <PageWrapper>
+                  <OnboardingWizard />
+                </PageWrapper>
+              }
+            />
           </Route>
 
           {/* Budgets Module routes */}
@@ -661,6 +680,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <MonthComparison />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/spending-insights"
+            element={
+              <PageWrapper>
+                <SpendingInsights />
               </PageWrapper>
             }
           />

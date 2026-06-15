@@ -1,4 +1,5 @@
 import { API_CONFIG } from '@/config/api-config';
+import type { SecuritySearchResults } from '@/types/security';
 
 import { apiClient } from './api-client';
 
@@ -82,6 +83,10 @@ export interface VaultAlertConfig {
   alert_on_failed_unlock: boolean;
   alert_on_reveal: boolean;
   failed_unlock_threshold: number;
+  alert_on_excessive_reveals: boolean;
+  excessive_reveals_threshold: number;
+  alert_on_card_reveal: boolean;
+  notify_email: boolean;
 }
 
 export interface PasswordHistoryEntry {
@@ -133,6 +138,12 @@ class SecurityDashboardService {
     return await apiClient.put<VaultAlertConfig>(
       '/api/v1/security/alert-config/',
       data
+    );
+  }
+
+  async globalSearch(q: string): Promise<SecuritySearchResults> {
+    return await apiClient.get<SecuritySearchResults>(
+      `${API_CONFIG.ENDPOINTS.SECURITY_SEARCH}?q=${encodeURIComponent(q)}`
     );
   }
 }

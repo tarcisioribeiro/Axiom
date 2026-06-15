@@ -67,12 +67,12 @@ def check_storage() -> dict[str, str]:
         }
     except EndpointConnectionError:
         return {
-            "status": "unhealthy",
+            "status": "degraded",
             "message": "Storage endpoint unreachable",
             "message_key": "storage_unreachable",
         }
     except Exception as e:
-        return {"status": "unhealthy", "message": f"Storage error: {str(e)}"}
+        return {"status": "degraded", "message": f"Storage error: {str(e)}"}
 
 
 def health_check(request: HttpRequest) -> JsonResponse:

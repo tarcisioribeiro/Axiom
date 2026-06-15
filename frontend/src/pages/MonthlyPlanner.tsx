@@ -698,7 +698,7 @@ export default function MonthlyPlanner() {
                 </p>
               )}
               {totalOverdraft > 0 && (
-                <div className="mt-xs flex items-center gap-xs rounded-md border border-yellow-500/30 bg-yellow-500/10 px-xs py-1">
+                <div className="mt-xs flex items-center gap-xs rounded-md border border-yellow-500/30 bg-yellow-500/10 px-xs py-xs">
                   <AlertTriangle className="h-3 w-3 shrink-0 text-yellow-500" />
                   <span className="text-xs text-yellow-600 dark:text-yellow-400">
                     {t('monthlyPlanner.withOverdraft')}:{' '}

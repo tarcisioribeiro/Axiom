@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { PomodoroTriggerButton } from '@/components/personal-planning/PomodoroTimer';
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { cn } from '@/lib/utils';
@@ -181,11 +182,17 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 </div>
               )}
             </div>
-            <Badge className={`${getCategoryColor(card.category)} shrink-0 text-xs`}>
-              {t(`pages.todayTasks.categories.${card.category}`, {
-                defaultValue: card.category_display,
-              })}
-            </Badge>
+            <div
+              className="flex shrink-0 items-center gap-xs"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
+              <Badge className={`${getCategoryColor(card.category)} text-xs`}>
+                {t(`pages.todayTasks.categories.${card.category}`, {
+                  defaultValue: card.category_display,
+                })}
+              </Badge>
+            </div>
           </div>
 
           {/* Task Description */}

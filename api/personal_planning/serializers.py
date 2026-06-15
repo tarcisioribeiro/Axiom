@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from personal_planning.models import (
+    BodyMetric,
+    Challenge,
     DailyReflection,
     Exercise,
     Food,
@@ -94,6 +96,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "linked_financial_goal_description",
             "linked_book",
             "linked_book_title",
+            "chained_task",
             "owner",
             "owner_name",
             "created_at",
@@ -158,6 +161,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "scheduled_times",
             "linked_financial_goal",
             "linked_book",
+            "chained_task",
         ]
 
     def validate(self, data):
@@ -931,6 +935,129 @@ class UserRoutineTemplateSerializer(serializers.ModelSerializer):
 
     def get_task_count(self, obj: UserRoutineTemplate) -> int:
         return len(obj.tasks) if isinstance(obj.tasks, list) else 0
+
+
+# ============================================================================
+# CHALLENGE SERIALIZERS
+# ============================================================================
+
+
+class ChallengeSerializer(serializers.ModelSerializer):
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
+    days_elapsed = serializers.SerializerMethodField()
+    days_remaining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Challenge
+        fields = [
+            "id",
+            "uuid",
+            "title",
+            "description",
+            "duration_days",
+            "start_date",
+            "end_date",
+            "status",
+            "status_display",
+            "template_task",
+            "completion_rate",
+            "days_elapsed",
+            "days_remaining",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_days_elapsed(self, obj) -> int:
+        from django.utils import timezone
+
+        today = timezone.now().date()
+        if today < obj.start_date:
+            return 0
+        return min((today - obj.start_date).days + 1, obj.duration_days)
+
+    def get_days_remaining(self, obj) -> int:
+        from django.utils import timezone
+
+        today = timezone.now().date()
+        if today > obj.end_date:
+            return 0
+        return (obj.end_date - today).days
+
+
+class ChallengeCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Challenge
+        fields = [
+            "id",
+            "title",
+            "description",
+            "duration_days",
+            "start_date",
+            "end_date",
+            "status",
+            "template_task",
+            "completion_rate",
+            "owner",
+        ]
+
+    def validate(self, data):
+        start = data.get("start_date")
+        end = data.get("end_date")
+        if start and end and end <= start:
+            raise serializers.ValidationError(
+                {"end_date": "Data de fim deve ser posterior ao início."}
+            )
+        return data
+
+
+# ============================================================================
+# BODY METRIC SERIALIZERS
+# ============================================================================
+
+
+class BodyMetricSerializer(serializers.ModelSerializer):
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+
+    class Meta:
+        model = BodyMetric
+        fields = [
+            "id",
+            "uuid",
+            "measured_at",
+            "weight_kg",
+            "waist_cm",
+            "arm_cm",
+            "hip_cm",
+            "body_fat_pct",
+            "notes",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class BodyMetricCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BodyMetric
+        fields = [
+            "id",
+            "measured_at",
+            "weight_kg",
+            "waist_cm",
+            "arm_cm",
+            "hip_cm",
+            "body_fat_pct",
+            "notes",
+            "owner",
+        ]
 
 
 class UserRoutineTemplateCreateUpdateSerializer(serializers.ModelSerializer):

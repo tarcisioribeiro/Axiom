@@ -726,3 +726,70 @@ class CategoryClassifyView(APIView):
         except Exception:
             logger.exception("LLM classify failed, fallback to other")
             return Response({"category": "other", "confidence": "fallback"})
+
+
+class SuggestContinuationView(APIView):
+    """
+    POST /api/v1/agents/suggest-continuation/
+
+    Recebe { text, book_id? } e retorna uma sugestão de continuação
+    do texto usando o IntellectAgent com prompt especializado.
+    Timeout agressivo de 8s para garantir latência < 2s ao usuário.
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
+
+    _SYSTEM = (
+        "Você é um co-autor especialista. Sua função é continuar o texto"
+        " que o usuário está escrevendo, mantendo exatamente o estilo,"
+        " voz e fluxo de pensamento dele. Responda APENAS com o trecho"
+        " de continuação — sem explicações, sem aspas, sem prefixo."
+        " O trecho deve ser conciso (1-2 frases) e fluir naturalmente"
+        " a partir do último ponto de parada do texto."
+    )
+
+    def post(self, request: Request) -> Response:
+        text = (request.data.get("text") or "").strip()
+        book_id = request.data.get("book_id")
+
+        if len(text) < 10:
+            return Response(
+                {"detail": "Texto muito curto para sugestão."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        context_suffix = ""
+        if book_id:
+            try:
+                from library.models import Book
+
+                book = Book.objects.filter(
+                    pk=book_id, is_deleted=False
+                ).first()
+                if book:
+                    context_suffix = (
+                        f"\n\n[Contexto: o usuário está escrevendo"
+                        f" sobre o livro '{book.title}'.]"
+                    )
+            except Exception:
+                pass
+
+        prompt = f"{text}{context_suffix}"
+
+        try:
+            from agents.core.llm_client import LLMClient
+
+            suggestion = LLMClient.chat(
+                [
+                    {"role": "system", "content": self._SYSTEM},
+                    {"role": "user", "content": prompt},
+                ]
+            ).strip()
+            return Response({"suggestion": suggestion})
+        except Exception:
+            logger.exception("suggest-continuation LLM call failed")
+            return Response(
+                {"detail": "Não foi possível gerar sugestão."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )

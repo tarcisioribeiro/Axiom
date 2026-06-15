@@ -111,4 +111,35 @@ export interface AnomalyAlert {
   std_dev: number;
   z_score: number;
   message: string;
+  severity?: 'info' | 'warning' | 'critical';
+  explanation?: string;
+  suggested_action?: string;
+  suggested_action_type?: string;
+}
+
+export interface SpendingInsightCategory {
+  category: string;
+  total: number;
+  percentage: number;
+}
+
+export interface SpendingInsightGrowing {
+  category: string;
+  current: number;
+  prior_avg: number;
+  pct_change: number;
+}
+
+export interface SpendingInsightMonthly {
+  month: string;
+  total: number;
+}
+
+export interface SpendingInsights {
+  period: { month: number; year: number };
+  current_month: { month: number; year: number; total_expenses: number };
+  trend: { direction: string; pct_change: number; prior_avg: number };
+  top_categories: SpendingInsightCategory[];
+  growing_categories: SpendingInsightGrowing[];
+  monthly_breakdown: SpendingInsightMonthly[];
 }

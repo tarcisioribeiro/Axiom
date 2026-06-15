@@ -8,6 +8,7 @@ from agents.views import (
     AgentStreamView,
     CategoryClassifyView,
     SemanticSearchView,
+    SuggestContinuationView,
 )
 
 urlpatterns = [
@@ -27,5 +28,10 @@ urlpatterns = [
         "classify-category/",
         CategoryClassifyView.as_view(),
         name="agent-classify-category",
+    ),
+    path(
+        "suggest-continuation/",
+        SuggestContinuationView.as_view(),
+        name="agent-suggest-continuation",
     ),
 ]
