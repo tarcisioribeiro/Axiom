@@ -42,6 +42,8 @@ import {
   ListTodo,
   HeartPulse,
   Trophy,
+  BarChart3,
+  CalendarRange,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -108,6 +110,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.reflections',
             href: '/planning/reflections',
             icon: NotebookPen,
+          },
+          {
+            titleKey: 'nav.items.weeklyPlanning',
+            href: '/planning/weekly-planning',
+            icon: CalendarRange,
           },
         ],
       },
@@ -211,6 +218,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.monthlyPlanner',
             href: '/finance/monthly-planner',
             icon: CalendarCheck,
+          },
+          {
+            titleKey: 'nav.items.spendingInsights',
+            href: '/finance/spending-insights',
+            icon: BarChart3,
           },
         ],
       },

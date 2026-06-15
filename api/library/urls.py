@@ -30,6 +30,7 @@ from library.views import (
     FlashCardFromHighlightView,
     FlashCardListCreateView,
     FlashCardReviewView,
+    GoodreadsImportView,
     IntellectBadgeListView,
     KindleImportView,
     KnowledgeGraphSuggestLinksView,
@@ -39,6 +40,8 @@ from library.views import (
     LibraryDashboardStatsView,
     LiteraryTypeGoalDetailView,
     LiteraryTypeGoalListCreateView,
+    MentorPlanView,
+    MonthlyLearningReportView,
     PublisherDetailView,
     PublisherListCreateView,
     ReadingDetailView,
@@ -294,5 +297,23 @@ urlpatterns = [
         "knowledge-links/<int:pk>/",
         KnowledgeLinkRetrieveUpdateDestroyView.as_view(),
         name="knowledge-link-detail",
+    ),
+    # Goodreads Import
+    path(
+        "goodreads-import/",
+        GoodreadsImportView.as_view(),
+        name="goodreads-import",
+    ),
+    # Mentor Plan
+    path(
+        "mentor-plan/",
+        MentorPlanView.as_view(),
+        name="mentor-plan",
+    ),
+    # Monthly Learning Report
+    path(
+        "monthly-report/",
+        MonthlyLearningReportView.as_view(),
+        name="monthly-learning-report",
     ),
 ]

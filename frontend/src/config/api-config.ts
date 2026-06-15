@@ -92,6 +92,7 @@ export const API_CONFIG = {
     SECURITY_VAULT_PREFERENCES: '/api/v1/security/vault/preferences/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
     SECURITY_VAULT_EXPORT: '/api/v1/security/vault/export/',
+    SECURITY_SEARCH: '/api/v1/security/search/',
     PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
     PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
     PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',
@@ -129,6 +130,10 @@ export const API_CONFIG = {
     BOOK_FLASHCARDS_GENERATE: '/api/v1/library/books/', // + /:id/flashcards/generate/
     SKILL_HISTORY: '/api/v1/library/skills/', // + /:id/history/
     KNOWLEDGE_GRAPH_SUGGEST_LINKS: '/api/v1/library/knowledge-graph/suggest-links/',
+    KINDLE_IMPORT: '/api/v1/library/highlights/kindle-import/',
+    GOODREADS_IMPORT: '/api/v1/library/goodreads-import/',
+    LIBRARY_MENTOR_PLAN: '/api/v1/library/mentor-plan/',
+    LIBRARY_MONTHLY_REPORT: '/api/v1/library/monthly-report/',
     AGENTS_CLASSIFY_CATEGORY: '/api/v1/agents/classify-category/',
     HIBP_CHECK: '/api/v1/security/hibp-check/',
 
@@ -151,6 +156,12 @@ export const API_CONFIG = {
     WORKOUT_SESSIONS: '/api/v1/personal-planning/workout-sessions/',
     WORKOUT_SESSION_EXERCISES: '/api/v1/personal-planning/workout-session-exercises/',
     WORKOUT_SESSION_SETS: '/api/v1/personal-planning/workout-session-sets/',
+    // Challenges & Body Metrics
+    CHALLENGES: '/api/v1/personal-planning/challenges/',
+    BODY_METRICS: '/api/v1/personal-planning/body-metrics/',
+    AI_ROUTINE_SUGGESTION: '/api/v1/personal-planning/ai-routine/',
+    AI_WORKOUT_PLAN: '/api/v1/personal-planning/ai-workout-plan/',
+    AI_MENU_PLAN: '/api/v1/personal-planning/ai-menu-plan/',
     // Nutrition
     FOODS: '/api/v1/personal-planning/foods/',
     MEAL_TYPES: '/api/v1/personal-planning/meal-types/',
@@ -199,6 +210,7 @@ export const API_CONFIG = {
     // Dashboard
     FINANCIAL_ALERTS: '/api/v1/dashboard/financial-alerts/',
     DASHBOARD_ANOMALIES: '/api/v1/dashboard/anomalies/',
+    DASHBOARD_SPENDING_INSIGHTS: '/api/v1/dashboard/spending-insights/',
     DASHBOARD_LGPD_EXPORT: '/api/v1/dashboard/lgpd-export/',
     DASHBOARD_IR_REPORT: '/api/v1/dashboard/ir-report/',
     DASHBOARD_ALERTS_STREAM: '/api/v1/dashboard/alerts/stream/',

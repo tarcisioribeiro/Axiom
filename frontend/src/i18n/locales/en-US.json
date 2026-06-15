@@ -287,7 +287,9 @@
       "netWorth": "Net Worth",
       "subscriptions": "Subscriptions",
       "monthlyPlanner": "Monthly Planner",
+      "spendingInsights": "Spending Insights",
       "reflections": "Daily Reflections",
+      "weeklyPlanning": "Weekly Planning",
       "tags": "Tags"
     },
     "agents": "AI Agents"
@@ -2429,6 +2431,10 @@
       "selectAll": "Select all",
       "deselectAll": "Deselect all",
       "importBtn": "Import selected",
+      "nextMappingBtn": "Next: Map categories",
+      "mappingTitle": "Category mapping",
+      "mappingDesc": "Map each category from the source file to an Axiom category.",
+      "noCategoriesToMap": "No categories to map.",
       "importing": "Importing...",
       "colTitle": "Title",
       "colUsername": "Username",
@@ -3854,6 +3860,7 @@
         "priorityLabel": "Priority",
         "allowedSkipsLabel": "Allowed Skips/Month",
         "allowedSkipsHint": "How many skips are allowed per month without breaking the streak",
+        "advancedSettings": "Advanced settings",
         "isActiveLabel": "Active Task",
         "linkedFinancialGoalLabel": "Linked Financial Goal",
         "linkedFinancialGoalPlaceholder": "Select a financial goal (optional)",

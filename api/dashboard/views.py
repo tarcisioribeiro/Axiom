@@ -1258,6 +1258,49 @@ class FinancialAlertsView(APIView):
         return alerts
 
 
+def _anomaly_severity(z_score: float) -> str:
+    if z_score >= 3.0:
+        return "critical"
+    if z_score >= 2.0:
+        return "warning"
+    return "info"
+
+
+def _enrich_anomaly_with_llm(
+    category: str,
+    current_amount: float,
+    avg: float,
+    z_score: float,
+) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    """Returns (explanation, suggested_action, suggested_action_type)."""
+    try:
+        import json as _json
+
+        from agents.core.llm_client import LLMClient
+
+        prompt = (
+            f"Gasto em '{category}' este mês: R$ {current_amount:.2f} "
+            f"(média histórica: R$ {avg:.2f}, {z_score:.1f}σ acima).\n"
+            "Em 1 frase curta: (1) explique por que isso pode ter acontecido. "
+            "Em outra frase: (2) sugira uma ação concreta.\n"
+            "Responda SOMENTE com JSON: "
+            '{"explanation": "...", "action": "...", '
+            '"action_type": "create_budget|create_alert|view_expenses"}'
+        )
+        resp = LLMClient.chat([{"role": "user", "content": prompt}])
+        start, end = resp.find("{"), resp.rfind("}") + 1
+        if start != -1 and end > start:
+            data = _json.loads(resp[start:end])
+            return (
+                data.get("explanation"),
+                data.get("action"),
+                data.get("action_type", "view_expenses"),
+            )
+    except Exception:
+        pass
+    return None, None, "view_expenses"
+
+
 class AnomalyDetectionView(APIView):
     """Detects spending anomalies using statistical z-score per category."""
 
@@ -1270,6 +1313,9 @@ class AnomalyDetectionView(APIView):
         today = timezone.now().date()
         current_month = today.month
         current_year = today.year
+        enrich = (
+            request.query_params.get("enrich_llm", "false").lower() == "true"
+        )
 
         # Current month spending per category
         current_spending = (
@@ -1329,6 +1375,16 @@ class AnomalyDetectionView(APIView):
 
             z_score = (current_amount - avg) / std
             if z_score > 1.5:
+                severity = _anomaly_severity(z_score)
+                explanation: Optional[str] = None
+                suggested_action: Optional[str] = None
+                suggested_action_type: Optional[str] = "view_expenses"
+                if enrich:
+                    explanation, suggested_action, suggested_action_type = (
+                        _enrich_anomaly_with_llm(
+                            category, current_amount, avg, z_score
+                        )
+                    )
                 anomalies.append(
                     {
                         "category": category,
@@ -1336,14 +1392,146 @@ class AnomalyDetectionView(APIView):
                         "average": round(avg, 2),
                         "std_dev": round(std, 2),
                         "z_score": round(z_score, 2),
+                        "severity": severity,
                         "message": (
                             f"Gasto em '{category}' está"
                             f" {round(z_score, 1)}σ acima da média."
                         ),
+                        "explanation": explanation,
+                        "suggested_action": suggested_action,
+                        "suggested_action_type": suggested_action_type,
                     }
                 )
 
         return Response({"anomalies": anomalies})
+
+
+class SpendingInsightsView(APIView):
+    """
+    GET /api/v1/dashboard/spending-insights/
+
+    Analisa padrões de gastos dos últimos 6 meses e retorna insights
+    estruturados sobre tendências, categorias problemáticas e oportunidades
+    de economia.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        today = timezone.now().date()
+
+        months_data = []
+        for offset in range(6):
+            d = today.replace(day=1)
+            total_months = d.month - offset
+            if total_months <= 0:
+                year = d.year - 1
+                month = 12 + total_months
+            else:
+                year = d.year
+                month = total_months
+
+            month_expenses = (
+                Expense.objects.filter(
+                    created_by=user,
+                    date__month=month,
+                    date__year=year,
+                    payed=True,
+                    is_deleted=False,
+                )
+                .values("category")
+                .annotate(total=Sum("value"))
+            )
+            months_data.append(
+                {
+                    "month": month,
+                    "year": year,
+                    "period": f"{year:04d}-{month:02d}",
+                    "categories": {
+                        row["category"]: float(row["total"])
+                        for row in month_expenses
+                    },
+                }
+            )
+
+        # Calculate total per month
+        for m in months_data:
+            m["total"] = sum(m["categories"].values())
+
+        # Trend: compare last month vs average of prior 5
+        current = months_data[0]
+        prior = months_data[1:]
+        prior_avg = sum(m["total"] for m in prior) / len(prior) if prior else 0
+        trend_pct = (
+            ((current["total"] - prior_avg) / prior_avg * 100)
+            if prior_avg > 0
+            else 0
+        )
+
+        # Top categories this month
+        top_categories = sorted(
+            current["categories"].items(), key=lambda x: x[1], reverse=True
+        )[:5]
+
+        # Categories growing fastest (current vs prior avg)
+        all_cats = set()
+        for m in months_data:
+            all_cats.update(m["categories"].keys())
+
+        growing = []
+        for cat in all_cats:
+            curr_val = current["categories"].get(cat, 0)
+            prior_vals = [m["categories"].get(cat, 0) for m in prior]
+            p_avg = sum(prior_vals) / len(prior_vals) if prior_vals else 0
+            if p_avg > 0 and curr_val > p_avg * 1.1:
+                growth = (curr_val - p_avg) / p_avg * 100
+                growing.append(
+                    {
+                        "category": cat,
+                        "current": round(curr_val, 2),
+                        "prior_avg": round(p_avg, 2),
+                        "growth_pct": round(growth, 1),
+                    }
+                )
+        growing.sort(key=lambda x: x["growth_pct"], reverse=True)
+
+        return Response(
+            {
+                "period": {
+                    "start": months_data[-1]["period"],
+                    "end": months_data[0]["period"],
+                },
+                "current_month": {
+                    "total": round(current["total"], 2),
+                    "period": current["period"],
+                },
+                "trend": {
+                    "direction": (
+                        "up"
+                        if trend_pct > 5
+                        else "down" if trend_pct < -5 else "stable"
+                    ),
+                    "pct_change": round(trend_pct, 1),
+                    "prior_avg": round(prior_avg, 2),
+                },
+                "top_categories": [
+                    {"category": cat, "total": round(val, 2)}
+                    for cat, val in top_categories
+                ],
+                "growing_categories": growing[:5],
+                "monthly_breakdown": [
+                    {
+                        "period": m["period"],
+                        "total": round(m["total"], 2),
+                        "categories": {
+                            k: round(v, 2) for k, v in m["categories"].items()
+                        },
+                    }
+                    for m in months_data
+                ],
+            }
+        )
 
 
 class AccountReconciliationView(APIView):

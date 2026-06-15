@@ -259,6 +259,10 @@ export type {
   BankStatementEntry,
   BankStatementImport,
   AnomalyAlert,
+  SpendingInsights,
+  SpendingInsightCategory,
+  SpendingInsightGrowing,
+  SpendingInsightMonthly,
 } from './budgets';
 export type {
   Webhook,

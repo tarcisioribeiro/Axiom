@@ -8,6 +8,7 @@ import type {
   CashFlowForecast,
   FinancialAlert,
   AnomalyAlert,
+  SpendingInsights,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -84,6 +85,12 @@ class DashboardService {
 
   async getAnomalies(): Promise<AnomalyAlert[]> {
     return apiClient.get<AnomalyAlert[]>('/api/v1/dashboard/anomalies/');
+  }
+
+  async getSpendingInsights(): Promise<SpendingInsights> {
+    return apiClient.get<SpendingInsights>(
+      API_CONFIG.ENDPOINTS.DASHBOARD_SPENDING_INSIGHTS
+    );
   }
 
   async getIRReport(year: number): Promise<IRReport> {
