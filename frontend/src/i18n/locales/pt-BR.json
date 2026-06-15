@@ -6438,6 +6438,7 @@
     "overrideHint": "Sugestão: {{value}}",
     "totalRevenues": "Total Receitas",
     "totalExpenses": "Total Despesas",
+    "budgets": "Orçamentos",
     "balance": "Saldo",
     "positive": "Superávit",
     "negative": "Déficit",
@@ -6445,5 +6446,34 @@
     "realizedMode": "Realizado",
     "executionPercent": "{{percent}}% executado",
     "withOverdraft": "Com cheque especial"
+  },
+  "spendingInsights": {
+    "title": "Insights de Gastos",
+    "description": "Análise de gastos — {{month}}",
+    "unavailable": "Dados indisponíveis",
+    "unavailableDesc": "Não foi possível carregar os insights de gastos. Tente novamente.",
+    "totalMonth": "Total — {{month}}",
+    "vsPriorAvg": "vs. média anterior {{value}}",
+    "stable": "Estável",
+    "risingCategories": "Categorias em Alta",
+    "aboveAverage": "categorias acima da média",
+    "topCategories": "Top Categorias",
+    "noCategories": "Nenhuma categoria encontrada.",
+    "monthlyEvolution": "Evolução Mensal",
+    "noHistoryData": "Sem dados de histórico.",
+    "highestGrowthCategories": "Categorias com Maior Crescimento",
+    "current": "Atual",
+    "average": "Média"
+  },
+  "weeklyPlanning": {
+    "title": "Planejamento Semanal",
+    "thisWeek": "Esta semana",
+    "tasks": "Tarefas",
+    "completed": "Concluídas",
+    "estimatedLoad": "Carga estimada",
+    "overloadedDay": "Dia sobrecarregado",
+    "noTasks": "Sem tarefas",
+    "overloadWarningTitle": "Atenção",
+    "overloadWarning": "Um ou mais dias desta semana têm carga superior a {{time}}. Considere redistribuir tarefas para equilibrar sua semana."
   }
 }
