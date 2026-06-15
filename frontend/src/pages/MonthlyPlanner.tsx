@@ -24,11 +24,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -154,11 +154,6 @@ function sumValues(items: Array<{ value?: string; default_value?: string }>): nu
     const v = parseFloat(item.value ?? item.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
-}
-
-function categoryLabel(key: string): string {
-  const found = EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === key);
-  return found ? found.label : key;
 }
 
 function formatDueDate(isoDate: string | null | undefined): string | undefined {
@@ -553,27 +548,6 @@ export default function MonthlyPlanner() {
   const totalExtra = sumValues(extraRevenues);
   const totalRevenues = totalFixed + totalExtra;
 
-  const totalFixedExp = (data?.fixed_expenses ?? []).reduce((acc, e) => {
-    const ov = fixedExpenseOverrides[String(e.id)];
-    if (ov?.enabled === false) return acc;
-    const v = parseFloat(ov?.value ?? e.default_value ?? '0');
-    return acc + (isNaN(v) ? 0 : v);
-  }, 0);
-  const totalBills = (data?.credit_card_bills ?? []).reduce(
-    (acc, b) => acc + parseFloat(b.total_amount || '0'),
-    0
-  );
-  const totalExtraExp = sumValues(extraExpenses);
-  const totalExpenses = totalFixedExp + totalBills + totalExtraExp;
-
-  const projectedBalance = totalRevenues - totalExpenses;
-  const totalOverdraft = parseFloat(data?.total_overdraft_limit ?? '0');
-  const projectedBalanceWithOverdraft = projectedBalance + totalOverdraft;
-
-  const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
-  const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
-  const actualBalance = actualRevenues - actualExpenses;
-
   const allCategories = [
     ...new Set([
       ...(data?.budget_suggestions.map((s) => s.category) ?? []),
@@ -587,6 +561,32 @@ export default function MonthlyPlanner() {
   const existingBudgetMap = Object.fromEntries(
     (data?.existing_budgets ?? []).map((b) => [b.category, b.limit_amount])
   );
+
+  const totalFixedExp = (data?.fixed_expenses ?? []).reduce((acc, e) => {
+    const ov = fixedExpenseOverrides[String(e.id)];
+    if (ov?.enabled === false) return acc;
+    const v = parseFloat(ov?.value ?? e.default_value ?? '0');
+    return acc + (isNaN(v) ? 0 : v);
+  }, 0);
+  const totalBills = (data?.credit_card_bills ?? []).reduce(
+    (acc, b) => acc + parseFloat(b.total_amount || '0'),
+    0
+  );
+  const totalExtraExp = sumValues(extraExpenses);
+  const totalBudgets = allCategories.reduce((acc, cat) => {
+    const override = budgetOverrides[cat] ?? existingBudgetMap[cat];
+    const v = parseFloat(override ?? '0');
+    return acc + (isNaN(v) ? 0 : v);
+  }, 0);
+  const totalExpenses = totalFixedExp + totalBills + totalExtraExp + totalBudgets;
+
+  const projectedBalance = totalRevenues - totalExpenses;
+  const totalOverdraft = parseFloat(data?.total_overdraft_limit ?? '0');
+  const projectedBalanceWithOverdraft = projectedBalance + totalOverdraft;
+
+  const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
+  const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
+  const actualBalance = actualRevenues - actualExpenses;
 
   return (
     <PageContainer>
@@ -662,6 +662,11 @@ export default function MonthlyPlanner() {
               <p className="mt-xs text-lg font-bold text-destructive">
                 {formatCurrency(totalExpenses)}
               </p>
+              {totalBudgets > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
+                </p>
+              )}
               {isApplied && (
                 <p className="text-xs text-muted-foreground">
                   {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
@@ -871,7 +876,9 @@ export default function MonthlyPlanner() {
                     className="space-y-xs rounded-lg border bg-muted/20 p-sm"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium">{categoryLabel(cat)}</span>
+                      <span className="text-xs font-medium">
+                        {translateCategory(cat, 'expense')}
+                      </span>
                       {suggested !== undefined && (
                         <span className="text-xs text-muted-foreground">
                           {t('monthlyPlanner.overrideHint', {
