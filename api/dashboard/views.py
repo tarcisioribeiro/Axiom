@@ -255,16 +255,21 @@ class DashboardStatsView(APIView):
             return Response(cached_result)
 
         # Apenas dados do usuário autenticado
+        today = timezone.now().date()
         accounts_qs = Account.objects.filter(created_by=request.user)
         expenses_qs = Expense.objects.filter(
             created_by=request.user,
             related_transfer__isnull=True,
             payed=True,
+            date__year=today.year,
+            date__month=today.month,
         )
         revenues_qs = Revenue.objects.filter(
             created_by=request.user,
             related_transfer__isnull=True,
             received=True,
+            date__year=today.year,
+            date__month=today.month,
         )
         credit_cards_qs = CreditCard.objects.filter(created_by=request.user)
 
@@ -1439,6 +1444,7 @@ class SpendingInsightsView(APIView):
                     date__year=year,
                     payed=True,
                     is_deleted=False,
+                    related_transfer__isnull=True,
                 )
                 .values("category")
                 .annotate(total=Sum("value"))
@@ -1491,20 +1497,21 @@ class SpendingInsightsView(APIView):
                         "category": cat,
                         "current": round(curr_val, 2),
                         "prior_avg": round(p_avg, 2),
-                        "growth_pct": round(growth, 1),
+                        "pct_change": round(growth, 1),
                     }
                 )
-        growing.sort(key=lambda x: x["growth_pct"], reverse=True)
+        growing.sort(key=lambda x: x["pct_change"], reverse=True)
 
         return Response(
             {
                 "period": {
-                    "start": months_data[-1]["period"],
-                    "end": months_data[0]["period"],
+                    "month": current["month"],
+                    "year": current["year"],
                 },
                 "current_month": {
-                    "total": round(current["total"], 2),
-                    "period": current["period"],
+                    "total_expenses": round(current["total"], 2),
+                    "month": current["month"],
+                    "year": current["year"],
                 },
                 "trend": {
                     "direction": (
@@ -1522,7 +1529,7 @@ class SpendingInsightsView(APIView):
                 "growing_categories": growing[:5],
                 "monthly_breakdown": [
                     {
-                        "period": m["period"],
+                        "month": m["period"],
                         "total": round(m["total"], 2),
                         "categories": {
                             k: round(v, 2) for k, v in m["categories"].items()
