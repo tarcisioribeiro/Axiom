@@ -16,6 +16,7 @@ from .views import (
     IRReportView,
     LGPDExportView,
     MonthlyStatementView,
+    SpendingInsightsView,
 )
 
 urlpatterns = [
@@ -69,5 +70,10 @@ urlpatterns = [
         "health-score/",
         FinancialHealthScoreView.as_view(),
         name="health-score",
+    ),
+    path(
+        "spending-insights/",
+        SpendingInsightsView.as_view(),
+        name="spending-insights",
     ),
 ]

@@ -62,6 +62,10 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True, required=True, style={"input_type": "password"}
     )
 
+    totp_secret = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = Password
         fields = [
@@ -73,19 +77,26 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
             "category",
             "notes",
             "is_favorite",
+            "totp_enabled",
+            "totp_secret",
             "owner",
         ]
 
     def create(self, validated_data):
         password_text = validated_data.pop("password")
+        totp_secret_text = validated_data.pop("totp_secret", None)
         instance = Password(**validated_data)
         instance.password = password_text  # Property setter criptografa
         instance.strength_score = Password.calculate_strength(password_text)
+        if totp_secret_text:
+            instance.totp_secret = totp_secret_text
+            instance.totp_enabled = True
         instance.save()
         return instance
 
     def update(self, instance, validated_data):
         password_text = validated_data.pop("password", None)
+        totp_secret_text = validated_data.pop("totp_secret", None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -95,6 +106,14 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
             instance.strength_score = Password.calculate_strength(
                 password_text
             )
+
+        if totp_secret_text is not None:
+            if totp_secret_text:
+                instance.totp_secret = totp_secret_text
+                instance.totp_enabled = True
+            else:
+                instance._totp_secret = None
+                instance.totp_enabled = False
 
         instance.save()
         return instance
@@ -107,10 +126,34 @@ class PasswordRevealSerializer(serializers.Serializer):
     title = serializers.CharField(read_only=True)
     username = serializers.CharField(read_only=True)
     password = serializers.SerializerMethodField()
+    totp_enabled = serializers.BooleanField(read_only=True)
+    totp_code = serializers.SerializerMethodField()
+    totp_seconds_remaining = serializers.SerializerMethodField()
 
     def get_password(self, obj):
         """Retorna a senha descriptografada."""
         return obj.password  # Property getter descriptografa
+
+    def get_totp_code(self, obj):
+        if not obj.totp_enabled or not obj._totp_secret:
+            return None
+        try:
+            import pyotp
+
+            secret = obj.totp_secret
+            return pyotp.TOTP(secret).now() if secret else None
+        except Exception:
+            return None
+
+    def get_totp_seconds_remaining(self, obj):
+        if not obj.totp_enabled or not obj._totp_secret:
+            return None
+        try:
+            import time
+
+            return 30 - (int(time.time()) % 30)
+        except Exception:
+            return None
 
 
 # ============================================================================
@@ -831,4 +874,8 @@ class VaultAlertConfigSerializer(serializers.ModelSerializer):
             "alert_on_failed_unlock",
             "alert_on_reveal",
             "failed_unlock_threshold",
+            "alert_on_excessive_reveals",
+            "excessive_reveals_threshold",
+            "alert_on_card_reveal",
+            "notify_email",
         ]

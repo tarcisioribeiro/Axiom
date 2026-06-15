@@ -1,8 +1,8 @@
-"Título","Descrição","Status"
-"Implementar feature de Inteligência Artificial","# Agents AI — Plano de Implementação
+Título,Descrição,Status
+Implementar feature de Inteligência Artificial,"# Agents AI — Plano de Implementação
 
-> Referência: conversa de planejamento em 2026-04-30. Cada seção é um issue GitLab independente, implementável em sessões separadas. Ordem sugerida: Fase 1 → Fase 4 → Fase 3 → Fase 2 → Fase 5 → Fase 6.","❌ Pendente"
-"feat(agents): schema vetorial pgvector + model AgentEmbedding + command vectorize_existing","**Labels**: `feat`, `agents`, `backend`, `database`
+> Referência: conversa de planejamento em 2026-04-30. Cada seção é um issue GitLab independente, implementável em sessões separadas. Ordem sugerida: Fase 1 → Fase 4 → Fase 3 → Fase 2 → Fase 5 → Fase 6.",❌ Pendente
+feat(agents): schema vetorial pgvector + model AgentEmbedding + command vectorize_existing,"**Labels**: `feat`, `agents`, `backend`, `database`
 
 **Milestone**: MS1AI
 
@@ -74,8 +74,8 @@ Substituir o campo `embedding_json` (texto JSON) do modelo `EmbeddingDocument` p
 
 - [ ] Testes unitários do command `vectorize_existing` com mock do `LLMClient.embed`
 - [ ] Teste de `search_embeddings` com Python fallback (SQLite)
-- [ ] `ci-check.sh` passa sem erros","✅ Feito"
-"feat(agents): auto-vetorização de novos registros via Django signals","**Labels**: `feat`, `agents`, `backend`
+- [ ] `ci-check.sh` passa sem erros",✅ Feito
+feat(agents): auto-vetorização de novos registros via Django signals,"**Labels**: `feat`, `agents`, `backend`
 
 **Milestone**: MS1AI
 
@@ -123,8 +123,8 @@ Cada novo registro criado ou atualizado no sistema deve gerar automaticamente um
 
 - [ ] Teste de integração: criar um `Expense` → verificar que `AgentEmbedding` é criado (mock do LLMClient.embed)
 - [ ] Teste de soft-delete: setar `is_deleted=True` → verificar que embedding é marcado como deletado
-- [ ] `ci-check.sh` passa","✅ Feito"
-"feat(agents): modelo LLM específico por agente","**Labels**: `feat`, `agents`, `backend`
+- [ ] `ci-check.sh` passa",✅ Feito
+feat(agents): modelo LLM específico por agente,"**Labels**: `feat`, `agents`, `backend`
 
 **Milestone**: MS1AI
 
@@ -178,8 +178,8 @@ Cada agente declara o modelo LLM mais adequado à sua natureza. `LLMClient` pass
 
 - [ ] Teste unitário: `FinanceAgent.get_model()` retorna `qwen2.5:7b` quando provider=ollama
 - [ ] Teste unitário: `LLMClient.chat(messages, model=""custom-model"")` envia `""model"": ""custom-model""` no payload
-- [ ] `ci-check.sh` passa","✅ Feito"
-"feat(agents): streaming SSE no backend","**Labels**: `feat`, `agents`, `backend`
+- [ ] `ci-check.sh` passa",✅ Feito
+feat(agents): streaming SSE no backend,"**Labels**: `feat`, `agents`, `backend`
 
 **Milestone**: MS1AI
 
@@ -233,8 +233,8 @@ Criar endpoint de streaming `POST /api/v1/agents/stream/` que retorna `Streaming
 - [ ] Teste do endpoint `/stream/`: resposta é `text/event-stream`, contém eventos `token` e evento `done`
 - [ ] Teste de mock do LLMClient: tokens chegam na ordem correta
 - [ ] Teste de desconexão: sem exceção não tratada
-- [ ] `ci-check.sh` passa","✅ Feito"
-"feat(agents): query_id + roteamento aprimorado com vetor semântico","**Labels**: `feat`, `agents`, `backend`
+- [ ] `ci-check.sh` passa",✅ Feito
+feat(agents): query_id + roteamento aprimorado com vetor semântico,"**Labels**: `feat`, `agents`, `backend`
 
 **Milestone**: MS1AI
 
@@ -282,8 +282,8 @@ Adicionar `query_id` rastreável em toda a pipeline. Melhorar o roteamento combi
 - [ ] Teste: `query_id` presente no response do `/ask/`
 - [ ] Teste: roteamento semântico com mock de embeddings seleciona domínio correto
 - [ ] Teste: roteamento degrada graciosamente quando embed falha (só keywords)
-- [ ] `ci-check.sh` passa","✅ Feito"
-"feat(agents): frontend streaming UI + bloqueio de input","**Labels**: `feat`, `agents`, `frontend`
+- [ ] `ci-check.sh` passa",✅ Feito
+feat(agents): frontend streaming UI + bloqueio de input,"**Labels**: `feat`, `agents`, `frontend`
 
 **Milestone**: MS1AI
 
@@ -348,8 +348,8 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 - [ ] Teste do hook `useAgentStream`: mock do `agentService.stream`, verifica acumulação de tokens
 - [ ] Teste: input desabilitado durante `isStreaming=true`
 - [ ] Teste: input habilitado após evento `done`
-- [ ] `npm run test -- --run` passa","✅ Feito"
-"Checklist de conclusão","- [x] Issue 1 concluída e merged;
+- [ ] `npm run test -- --run` passa",✅ Feito
+Checklist de conclusão,"- [x] Issue 1 concluída e merged;
 - [x] Issue 2 concluída e merged;
 - [x] Issue 3 concluída e merged;
 - [x] Issue 4 concluída e merged;
@@ -359,9 +359,9 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 - [ ] `vectorize_existing --domain all` executa com sucesso em produção;
 - [ ] Modelos Ollama adicionais baixados no container (`qwen2.5:7b`, `qwen2.5:14b`, `llama3.1:8b`);
 - [ ] Streaming testado manualmente no browser (tokens aparecem em tempo real);
-- [ ] Input bloqueado durante resposta verificado manualmente.","❌ Pendente"
-"Complete translation of the app","","❌ Pendente"
-"fix: Translate export financial statement modal and financial statement document.","## Localization
+- [ ] Input bloqueado durante resposta verificado manualmente.",❌ Pendente
+Complete translation of the app,,❌ Pendente
+fix: Translate export financial statement modal and financial statement document.,"## Localization
 
 **Module**: Financial Control
 
@@ -388,8 +388,8 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 ## Acception Criteries
 
 * Frontend lint commands passing (npm run format --write, eslint .);
-* Backend lint commands passing (mypy, black and flake8).","✅ Feito"
-"fix: Translate fixed portuguese texts on Personal Planning Dashboard","## Localization
+* Backend lint commands passing (mypy, black and flake8).",✅ Feito
+fix: Translate fixed portuguese texts on Personal Planning Dashboard,"## Localization
 
 **Module**: Personal Planning
 
@@ -421,7 +421,7 @@ Consumir o endpoint SSE `/api/v1/agents/stream/` no frontend. Texto da resposta 
 ## Acception Criteries
 
 * Frontend lint commands passing (npm run format --write, eslint .);
-* Focused tests passing (vitest, pytest if necessary).","✅ Feito"
+* Focused tests passing (vitest, pytest if necessary).",✅ Feito
 "fix: Kanban showing hardcoded subtitle, categories and units.","## Localization
 
 **Module**: Personal Planning
@@ -450,8 +450,8 @@ Severity: Low
 
 ## Acception Criteries
 
-* Frontend lint commands passing (npm run format --write, eslint .).","✅ Feito"
-"fix: Tasks list mode showing hardcoded conclusion category","## Localization
+* Frontend lint commands passing (npm run format --write, eslint .).",✅ Feito
+fix: Tasks list mode showing hardcoded conclusion category,"## Localization
 
 **Module**: Personal Planning
 
@@ -473,7 +473,7 @@ Severity: Low
 
 ## Acception Criteries
 
-* Frontend lint commands passing (npm run format --write, eslint .).","✅ Feito"
+* Frontend lint commands passing (npm run format --write, eslint .).",✅ Feito
 "fix: Routine Tasks screen without translation for frequency, calendar and goal.","## Localization
 
 **Module**: Personal Planning
@@ -499,8 +499,8 @@ Severity: Low
 
 ## Acception Criteries
 
-* Frontend lint commands passing (npm run format --write, eslint .).","✅ Feito"
-"fix: Persistir sessionId do agente no localStorage","## Contexto
+* Frontend lint commands passing (npm run format --write, eslint .).",✅ Feito
+fix: Persistir sessionId do agente no localStorage,"## Contexto
 A cada vez que o usuário navega para outra página e volta para `/agents`, um novo `crypto.randomUUID()` é gerado, zerando completamente a conversa anterior. Isso destrói a continuidade que é o maior valor de um assistente conversacional.
 
 ## Arquivo afetado
@@ -526,8 +526,8 @@ const [sessionId] = useState(() => {
 ## Critérios de aceite
 - [ ] Navegar para outra página e voltar preserva a conversa
 - [ ] Limpar histórico via botão apaga o localStorage também
-- [ ] Cada agente tem sua própria sessão persistida","✅ Feito"
-"fix: Remover etapa dupla de confirmação na seleção de agente","## Contexto
+- [ ] Cada agente tem sua própria sessão persistida",✅ Feito
+fix: Remover etapa dupla de confirmação na seleção de agente,"## Contexto
 O fluxo atual exige dois cliques para iniciar qualquer conversa: (1) clicar no card do agente e (2) clicar no botão de confirmação. Isso cria fricção desnecessária, especialmente para usuários recorrentes que sempre escolhem o mesmo agente.
 
 ## Arquivo afetado
@@ -541,8 +541,8 @@ O fluxo atual exige dois cliques para iniciar qualquer conversa: (1) clicar no c
 ## Critérios de aceite
 - [ ] Um único clique no card inicia a conversa
 - [ ] O último agente usado fica pré-selecionado na próxima visita
-- [ ] Ainda é possível trocar de agente durante/após uma conversa","✅ Feito"
-"feat: Botão Stop para cancelar stream do agente","## Contexto
+- [ ] Ainda é possível trocar de agente durante/após uma conversa",✅ Feito
+feat: Botão Stop para cancelar stream do agente,"## Contexto
 Após enviar uma mensagem, não há como interromper a geração de resposta. O usuário fica preso esperando uma resposta longa ou incorreta até que ela termine naturalmente.
 
 ## O que fazer
@@ -560,8 +560,8 @@ Após enviar uma mensagem, não há como interromper a geração de resposta. O 
 - [ ] Durante streaming, o botão de envio exibe ícone de stop (quadrado)
 - [ ] Clicar em stop interrompe o stream imediatamente
 - [ ] A resposta parcial acumulada é mantida no chat (não some)
-- [ ] Após cancelar, o input fica habilitado para nova mensagem","✅ Feito"
-"fix: Salvar posição dos nós do Grafo de Conhecimento no localStorage","## Contexto
+- [ ] Após cancelar, o input fica habilitado para nova mensagem",✅ Feito
+fix: Salvar posição dos nós do Grafo de Conhecimento no localStorage,"## Contexto
 A cada carregamento da página `/library/knowledge-graph`, o `react-force-graph` redistribui os nós aleatoriamente. O usuário que organizou mentalmente onde cada cluster está precisa reexplorar o grafo do zero a cada visita.
 
 ## Arquivo afetado
@@ -575,8 +575,8 @@ A cada carregamento da página `/library/knowledge-graph`, o `react-force-graph`
 ## Critérios de aceite
 - [ ] Ao recarregar a página, os nós estão nas mesmas posições da visita anterior
 - [ ] Botão 'Resetar layout' redistribui os nós com física
-- [ ] Posições são salvas por usuário (não globalmente)","✅ Feito"
-"feat: Quick Capture de progresso de leitura (bottom sheet)","## Contexto
+- [ ] Posições são salvas por usuário (não globalmente)",✅ Feito
+feat: Quick Capture de progresso de leitura (bottom sheet),"## Contexto
 Registrar uma sessão de leitura hoje requer: abrir o livro → ir na aba sessões → clicar em 'Nova sessão' → preencher formulário com data/páginas/duração/período do dia → salvar. São 6+ interações para algo que deveria ser instantâneo.
 
 ## O que fazer
@@ -596,8 +596,8 @@ Nenhuma mudança necessária — endpoint existente suporta todos os campos.
 - [ ] FAB visível na listagem de livros
 - [ ] Bottom sheet abre em menos de 300ms
 - [ ] Livros com status `reading` aparecem primeiro na busca
-- [ ] Registro concluído em menos de 5 segundos (2 toques + número)","✅ Feito"
-"feat: Botão 'Perguntar ao Intellect' contextual em livros e cursos","## Contexto
+- [ ] Registro concluído em menos de 5 segundos (2 toques + número)",✅ Feito
+feat: Botão 'Perguntar ao Intellect' contextual em livros e cursos,"## Contexto
 O Agente Intellect e a Biblioteca são módulos completamente desconexos. Um usuário lendo um livro não tem nenhum caminho visual para conversar com a IA sobre aquele livro. O fluxo atual requer navegar para `/agents`, selecionar o agente e digitar o nome do livro manualmente.
 
 ## O que fazer
@@ -620,8 +620,8 @@ navigate('/agents', {
 - [ ] Botão visível em detalhe de livro e na listagem de cursos
 - [ ] Ao clicar, o agente Intellect é pré-selecionado automaticamente
 - [ ] Campo de input tem sugestão de pergunta contextualizada
-- [ ] Funciona em livros e em cursos","✅ Feito"
-"feat: Timeline de horas de estudo por semana em cursos","## Contexto
+- [ ] Funciona em livros e em cursos",✅ Feito
+feat: Timeline de horas de estudo por semana em cursos,"## Contexto
 A página de detalhe de curso mostra o total de horas investidas mas não há visualização temporal. O usuário não consegue ver se está estudando consistentemente ou se ficou semanas sem progresso.
 
 ## O que fazer
@@ -639,8 +639,8 @@ A página de detalhe de curso mostra o total de horas investidas mas não há vi
 - [ ] Gráfico visível no modal de detalhe do curso
 - [ ] Barras com as 8 semanas mais recentes
 - [ ] Tooltip mostrando horas e número de sessões na semana
-- [ ] Estado vazio elegante quando não há sessões registradas","✅ Feito"
-"feat: Bulk actions para marcar múltiplas aulas como concluídas","## Contexto
+- [ ] Estado vazio elegante quando não há sessões registradas",✅ Feito
+feat: Bulk actions para marcar múltiplas aulas como concluídas,"## Contexto
 Ao cadastrar um curso que já está em andamento, o usuário precisa marcar cada aula concluída individualmente, uma por vez. Com cursos de 50+ aulas, isso é uma tarefa frustrante que pode levar 10+ minutos.
 
 ## O que fazer
@@ -655,8 +655,8 @@ Ao cadastrar um curso que já está em andamento, o usuário precisa marcar cada
 - [ ] Modo de seleção ativado com um clique em qualquer checkbox
 - [ ] Header flutuante com contador de selecionadas e ações
 - [ ] Operação em batch com feedback de progresso
-- [ ] Atualização do progresso do curso após conclusão","✅ Feito"
-"feat: Indexação automática de conteúdo no pgvector via signal","## Contexto
+- [ ] Atualização do progresso do curso após conclusão",✅ Feito
+feat: Indexação automática de conteúdo no pgvector via signal,"## Contexto
 Atualmente, para que o Agente Intellect possa buscar semanticamente em livros, resumos e destaques recém-adicionados, é necessário executar manualmente o comando `docker compose exec api python manage.py index_library`. Isso torna o RAG invisível para usuários que não sabem do comando.
 
 ## O que fazer
@@ -692,8 +692,8 @@ def index_on_save(sender, instance, created, **kwargs):
 - [ ] Salvar um highlight indexa automaticamente em background
 - [ ] Salvar um resumo indexa automaticamente em background
 - [ ] Falha na indexação não impede o save do objeto
-- [ ] Log de indexação visível nos logs do worker Celery","✅ Feito"
-"feat: Geração de resumo de livro com IA a partir dos destaques","## Contexto
+- [ ] Log de indexação visível nos logs do worker Celery",✅ Feito
+feat: Geração de resumo de livro com IA a partir dos destaques,"## Contexto
 O usuário pode salvar dezenas de destaques de um livro, mas criar o resumo ainda é manual. A IA já tem acesso a todos esses destaques via RAG — falta apenas expor esse poder na interface.
 
 ## O que fazer
@@ -714,8 +714,8 @@ O usuário pode salvar dezenas de destaques de um livro, mas criar o resumo aind
 - [ ] Botão visível apenas quando há highlights suficientes
 - [ ] Resumo gerado em formato Markdown estruturado
 - [ ] Usuário pode editar antes de salvar
-- [ ] Resumo salvo aparece na seção de resumos do livro","✅ Feito"
-"feat: Citações inline (fontes clicáveis) nas respostas do agente","## Contexto
+- [ ] Resumo salvo aparece na seção de resumos do livro",✅ Feito
+feat: Citações inline (fontes clicáveis) nas respostas do agente,"## Contexto
 Atualmente as fontes RAG aparecem apenas como tags no rodapé da resposta (ex: 'Fontes: Pai Rico Pobre Rico'). Não há como saber qual parte do texto vem de qual fonte. O Perplexity mostra [1][2] inline no texto com tooltip na fonte.
 
 ## O que fazer
@@ -736,8 +736,8 @@ Atualmente as fontes RAG aparecem apenas como tags no rodapé da resposta (ex: '
 - [ ] Números de fonte aparecem inline no texto
 - [ ] Hover sobre o número mostra tooltip com título da fonte
 - [ ] Funciona durante o streaming (números aparecem à medida que chegam)
-- [ ] Fallback gracioso quando fonte não está numerada","✅ Feito"
-"feat: Histórico de evolução de proficiência por habilidade","## Contexto
+- [ ] Fallback gracioso quando fonte não está numerada",✅ Feito
+feat: Histórico de evolução de proficiência por habilidade,"## Contexto
 Quando o usuário atualiza uma skill de 'basic' para 'intermediate', essa mudança não é registrada em lugar nenhum. Não há como ver o histórico de crescimento, o que elimina o senso de progresso e conquista.
 
 ## O que fazer
@@ -763,8 +763,8 @@ class SkillProgressHistory(BaseModel):
 - [ ] Toda mudança de proficiência gera um registro histórico
 - [ ] Timeline visível no detalhe da skill
 - [ ] Primeiro registro criado ao criar a skill
-- [ ] Migration criada e testada","✅ Feito"
-"feat: Importação de highlights do Kindle (My Clippings.txt)","## Contexto
+- [ ] Migration criada e testada",✅ Feito
+feat: Importação de highlights do Kindle (My Clippings.txt),"## Contexto
 Usuários com Kindle têm anos de destaques acumulados no arquivo `My Clippings.txt`. Permitir a importação desse arquivo transforma o histórico de leituras passadas em conhecimento pesquisável via RAG, criando valor imediato e tornando o usuário permanentemente dependente da plataforma.
 
 ## Formato do arquivo Kindle
@@ -796,8 +796,8 @@ Os ricos não trabalham por dinheiro — fazem o dinheiro trabalhar por eles.
 - [ ] Livros existentes são vinculados por título (case-insensitive)
 - [ ] Duplicatas não são criadas (hash do conteúdo)
 - [ ] Highlights importados são automaticamente indexados no pgvector (via task da issue #9)
-- [ ] Suporte a arquivos em português e inglês","✅ Feito"
-"refactor: Dashboard de Leitura com seções hierárquicas colapsáveis","## Contexto
+- [ ] Suporte a arquivos em português e inglês",✅ Feito
+refactor: Dashboard de Leitura com seções hierárquicas colapsáveis,"## Contexto
 O `LibraryDashboard.tsx` tem 1.570 linhas e exibe ~25 cards/métricas com o mesmo peso visual em scroll infinito. Usuários novos ficam sobrecarregados; usuários avançados perdem tempo scrollando até o que precisam.
 
 ## O que fazer
@@ -833,8 +833,8 @@ Reorganizar em 3 seções colapsáveis com estado persistido no localStorage:
 - [ ] Seção 1 sempre visível e compacta
 - [ ] Seções 2 e 3 colapsadas por padrão para novos usuários
 - [ ] Estado de abertura persistido no localStorage
-- [ ] Transição suave de abertura/fechamento (Framer Motion)","✅ Feito"
-"feat: Histórico de sessões de conversa com o agente (lista pesquisável)","## Contexto
+- [ ] Transição suave de abertura/fechamento (Framer Motion)",✅ Feito
+feat: Histórico de sessões de conversa com o agente (lista pesquisável),"## Contexto
 Toda conversa com o agente se perde se o usuário não lembrar o sessionId. Não há uma lista de conversas passadas para retomar, o que impede o uso do agente como ferramenta de reflexão a longo prazo.
 
 ## O que fazer
@@ -862,8 +862,8 @@ Toda conversa com o agente se perde se o usuário não lembrar o sessionId. Não
 - [ ] Lista de sessões paginada (mais recente primeiro)
 - [ ] Título gerado automaticamente após cada conversa
 - [ ] Busca por título funcional
-- [ ] Clicar numa sessão retoma a conversa exata","✅ Feito"
-"feat: Tela 'Hoje no Intelecto' — Daily Learning Hub","## Contexto
+- [ ] Clicar numa sessão retoma a conversa exata",✅ Feito
+feat: Tela 'Hoje no Intelecto' — Daily Learning Hub,"## Contexto
 Não existe um ponto de entrada diário no módulo. O usuário precisa navegar para diferentes sub-módulos para saber o que precisa fazer. Isso cria atrito que reduz o engajamento diário — o principal motor de retenção de longo prazo.
 
 ## O que fazer
@@ -888,8 +888,8 @@ Rota: `/library/today`
 - [ ] Carregamento < 2s (dados agregados em 1 request)
 - [ ] Ações inline (registrar leitura, marcar aula) sem navegar para outras páginas
 - [ ] Insight da IA carrega de forma assíncrona sem bloquear a tela
-- [ ] Link no menu lateral com badge de 'pendentes hoje'","✅ Feito"
-"feat: Sugestão automática de links no Grafo de Conhecimento por IA","## Contexto
+- [ ] Link no menu lateral com badge de 'pendentes hoje'",✅ Feito
+feat: Sugestão automática de links no Grafo de Conhecimento por IA,"## Contexto
 Os links explícitos no grafo são 100% manuais — o usuário precisa saber quais nós conectar. A IA tem acesso aos embeddings de todos os nós (livros, skills, cursos, destaques) e pode identificar conexões semânticas que o usuário não perceberia.
 
 ## O que fazer
@@ -914,8 +914,8 @@ Lógica:
 - [ ] Análise executada em < 10s para grafos com até 100 nós
 - [ ] Máximo de 5 sugestões por análise (evitar sobrecarga)
 - [ ] Cada sugestão tem justificativa textual compreensível
-- [ ] Links criados via sugestão marcados com `source: ai_suggestion` para rastreabilidade","✅ Feito"
-"feat: Aba de chat contextual no detalhe de livro","## Contexto
+- [ ] Links criados via sugestão marcados com `source: ai_suggestion` para rastreabilidade",✅ Feito
+feat: Aba de chat contextual no detalhe de livro,"## Contexto
 O fluxo ideal para 'perguntar sobre um livro' deveria acontecer dentro da própria página do livro, não em uma navegação separada para `/agents`. Isso cria uma experiência coesa onde o usuário vê o conteúdo e conversa sobre ele ao mesmo tempo.
 
 ## O que fazer
@@ -938,8 +938,8 @@ O fluxo ideal para 'perguntar sobre um livro' deveria acontecer dentro da própr
 - [ ] Aba 'Chat' visível em livros com highlights indexados
 - [ ] Contexto do livro pré-carregado sem que o usuário precise mencionar o título
 - [ ] Sessão isolada por livro (não mistura com outras conversas)
-- [ ] Interface compacta que não ocupa a tela toda","✅ Feito"
-"feat: Busca semântica global no módulo Intelecto","## Contexto
+- [ ] Interface compacta que não ocupa a tela toda",✅ Feito
+feat: Busca semântica global no módulo Intelecto,"## Contexto
 A busca atual em livros, cursos e habilidades usa `ILIKE` (match exato de texto). Isso significa que buscar 'independência financeira' não encontra um destaque que fala sobre 'liberdade financeira' ou 'renda passiva'. A busca semântica via embeddings resolve isso.
 
 ## O que fazer
@@ -962,8 +962,8 @@ A busca atual em livros, cursos e habilidades usa `ILIKE` (match exato de texto)
 - [ ] Latência < 1.5s incluindo geração de embedding
 - [ ] Resultados agrupados por tipo com ícone visual
 - [ ] Cache do embedding da query no Redis (TTL 5min) para buscas repetidas
-- [ ] Fallback para busca textual quando Ollama estiver offline","✅ Feito"
-"feat: Flash Cards com Spaced Repetition para highlights","## Contexto
+- [ ] Fallback para busca textual quando Ollama estiver offline",✅ Feito
+feat: Flash Cards com Spaced Repetition para highlights,"## Contexto
 Os destaques salvos são lidos uma vez e depois esquecidos. O algoritmo de repetição espaçada (SM-2) é o método mais eficaz para converter highlights em memória de longo prazo. Isso também cria um motivo de retorno diário ao app.
 
 ## O que fazer
@@ -996,8 +996,8 @@ class FlashCard(BaseModel):
 - [ ] FlashCard criado automaticamente ao salvar highlight
 - [ ] Algoritmo SM-2 implementado corretamente
 - [ ] Interface de revisão funcional com animação de virada
-- [ ] Badge no menu lateral com quantidade de cards devidos hoje","✅ Feito"
-"feat: Perguntas sugeridas contextuais no agente por item ativo","## Contexto
+- [ ] Badge no menu lateral com quantidade de cards devidos hoje",✅ Feito
+feat: Perguntas sugeridas contextuais no agente por item ativo,"## Contexto
 Quando o usuário chega ao agente vindo de um livro ou curso (via botão contextual), o campo de input fica vazio. Sugerir 3 perguntas relevantes pré-definidas acelera o início da conversa e educa o usuário sobre o que é possível perguntar.
 
 ## O que fazer
@@ -1015,8 +1015,8 @@ Quando o usuário chega ao agente vindo de um livro ou curso (via botão context
 - [ ] Chips de sugestão visíveis quando contexto está presente
 - [ ] Clicar no chip envia a mensagem imediatamente
 - [ ] Exemplos nos cards do AgentSelector são clicáveis
-- [ ] Chips desaparecem após primeira mensagem enviada","✅ Feito"
-"feat: Mentor de Aprendizado Personalizado (plano trimestral)","## Contexto
+- [ ] Chips desaparecem após primeira mensagem enviada",✅ Feito
+feat: Mentor de Aprendizado Personalizado (plano trimestral),"## Contexto
 O agente Intellect responde perguntas mas não toma iniciativa. O próximo nível é um agente que analisa o perfil completo do usuário (livros lidos, cursos, habilidades, metas financeiras/pessoais) e propõe um plano de aprendizado para os próximos 3 meses.
 
 ## O que fazer
@@ -1035,8 +1035,8 @@ O agente Intellect responde perguntas mas não toma iniciativa. O próximo níve
 - [ ] Plano considera tanto o que o usuário já sabe quanto gaps identificados
 - [ ] Recomendações de livros incluem justificativa ('por que este livro agora')
 - [ ] Plano salvo pode ser revisitado a qualquer momento
-- [ ] Usuário pode refinar: 'prefiro foco em tecnologia' e plano é regenerado","❌ Pendente"
-"feat: Integração com Goodreads (importação do histórico de leitura)","## Contexto
+- [ ] Usuário pode refinar: 'prefiro foco em tecnologia' e plano é regenerado",✅ Feito
+feat: Integração com Goodreads (importação do histórico de leitura),"## Contexto
 Muitos usuários têm anos de histórico de leitura no Goodreads. Permitir a importação via export CSV do Goodreads (disponível em goodreads.com/review/import) traria o acervo completo de leituras passadas automaticamente.
 
 ## Formato do export Goodreads
@@ -1062,8 +1062,8 @@ CSV com colunas: Title, Author, ISBN, My Rating, Average Rating, Publisher, Bind
 - [ ] Livros já existentes não são duplicados (match por ISBN ou título+autor)
 - [ ] Autores criados automaticamente
 - [ ] Status de leitura mapeado corretamente
-- [ ] Livros importados disparam indexação no pgvector (issue #9)","❌ Pendente"
-"feat: Modo co-autor de notas com IA (assistência inline)","## Contexto
+- [ ] Livros importados disparam indexação no pgvector (issue #9)",✅ Feito
+feat: Modo co-autor de notas com IA (assistência inline),"## Contexto
 Ao escrever resumos ou notas sobre um livro, o usuário poderia se beneficiar da IA como co-autora — sugerindo continuações, reformulações ou conexões com outros conteúdos da biblioteca pessoal.
 
 ## O que fazer
@@ -1082,8 +1082,8 @@ Ao escrever resumos ou notas sobre um livro, o usuário poderia se beneficiar da
 - [ ] Ghost text aparece sem bloquear a digitação
 - [ ] Latência < 2s para exibir sugestão
 - [ ] Tab aceita, Escape cancela sem efeito colateral
-- [ ] Sugestões contextualmente relevantes ao livro sendo anotado","❌ Pendente"
-"feat: Recomendações proativas semanais via notificação","## Contexto
+- [ ] Sugestões contextualmente relevantes ao livro sendo anotado",✅ Feito
+feat: Recomendações proativas semanais via notificação,"## Contexto
 O agente Intellect nunca toma iniciativa — só responde quando perguntado. Um sistema de recomendações proativas semanal criaria engajamento recorrente mesmo sem o usuário abrir ativamente o módulo.
 
 ## O que fazer
@@ -1106,8 +1106,8 @@ O agente Intellect nunca toma iniciativa — só responde quando perguntado. Um 
 - [ ] Task executada todo domingo (configurada no django-celery-beat via fixture)
 - [ ] Apenas usuários com atividade nos últimos 30 dias recebem notificação
 - [ ] Mensagem personalizada (não genérica)
-- [ ] Deep link abre o agente com contexto carregado","❌ Pendente"
-"feat: Análise mensal de padrões de aprendizado (relatório de crescimento)","## Contexto
+- [ ] Deep link abre o agente com contexto carregado",✅ Feito
+feat: Análise mensal de padrões de aprendizado (relatório de crescimento),"## Contexto
 Não há visibilidade sobre a evolução intelectual ao longo do tempo. Um relatório mensal gerado por IA, cruzando livros, cursos, habilidades e até dados financeiros, seria um diferencial único da plataforma.
 
 ## O que fazer
@@ -1129,8 +1129,8 @@ Não há visibilidade sobre a evolução intelectual ao longo do tempo. Um relat
 - [ ] Relatório gerado em < 30s
 - [ ] Inclui métricas quantitativas e análise qualitativa
 - [ ] Cita conquistas específicas (não genérico)
-- [ ] Comparação com mês anterior quando disponível","❌ Pendente"
-"fix: Remover debug print() esquecido em AgentStreamView","## Contexto
+- [ ] Comparação com mês anterior quando disponível",✅ Feito
+fix: Remover debug print() esquecido em AgentStreamView,"## Contexto
 Existe um `print(persisted)` na linha de produção do `AgentStreamView` que imprime no stdout do servidor a cada resposta do agente. Isso polui os logs e é um código de debug esquecido.
 
 ## Arquivo afetado
@@ -1147,8 +1147,8 @@ print(persisted)  # ← remover
 ## Critérios de aceite
 - [ ] Linha removida
 - [ ] Nenhum outro print() de debug no módulo agents
-- [ ] Testes passando","✅ Feito"
-"fix: Tooltip e onboarding do modo de linking no Grafo de Conhecimento","## Contexto
+- [ ] Testes passando",✅ Feito
+fix: Tooltip e onboarding do modo de linking no Grafo de Conhecimento,"## Contexto
 O modo de criação de links no grafo é ativado clicando em 'Criar Link' no painel de detalhe de um nó. Isso ativa um modo interativo onde o usuário precisa clicar em outro nó para criar a conexão — mas isso não está documentado em lugar algum. Usuários frequentemente clicam no botão e ficam confusos sem saber que precisam clicar em outro nó.
 
 ## O que fazer
@@ -1163,8 +1163,8 @@ O modo de criação de links no grafo é ativado clicando em 'Criar Link' no pai
 - [ ] Tooltip descritivo no botão 'Criar Link'
 - [ ] Banner de linking mode com texto mais claro e animação de atenção
 - [ ] Cursor muda para crosshair no modo de linking
-- [ ] Clicar no fundo (background) do grafo cancela o modo de linking com feedback visual","✅ Feito"
-"fix: Estado vazio do Grafo com onboarding para novos usuários","## Contexto
+- [ ] Clicar no fundo (background) do grafo cancela o modo de linking com feedback visual",✅ Feito
+fix: Estado vazio do Grafo com onboarding para novos usuários,"## Contexto
 Quando o usuário acessa `/library/knowledge-graph` sem ter livros/cursos/skills cadastrados, vê apenas uma mensagem 'Seu grafo está vazio' com um ícone Sparkles. Não há nenhuma indicação de como começar ou por que o grafo existe.
 
 ## O que fazer
@@ -1189,8 +1189,8 @@ cursos da mesma categoria e habilidades relacionadas.
 ## Critérios de aceite
 - [ ] Estado vazio com CTAs acionáveis
 - [ ] Diferencia entre 'grafo vazio' (sem nenhum conteúdo) e 'filtro não encontrou nada'
-- [ ] Texto explicativo sobre o propósito do grafo","✅ Feito"
-"fix: Remover modelo EmbeddingDocument legado do codebase","## Contexto
+- [ ] Texto explicativo sobre o propósito do grafo",✅ Feito
+fix: Remover modelo EmbeddingDocument legado do codebase,"## Contexto
 O model `EmbeddingDocument` em `api/agents/models.py` está marcado como `DEPRECATED` no docstring. O código usa `AgentEmbedding` (com `VectorField` real do pgvector) em todos os fluxos novos. O modelo legado polui o código, gera confusion e tem uma migration pendente de remoção.
 
 ## O que fazer
@@ -1203,8 +1203,8 @@ O model `EmbeddingDocument` em `api/agents/models.py` está marcado como `DEPREC
 ## Critérios de aceite
 - [ ] Model removido sem quebrar nenhum teste
 - [ ] Migration criada e aplicável em produção
-- [ ] Nenhuma referência restante ao `EmbeddingDocument` no código (exceto migrations históricas)","✅ Feito"
-"feat: Gamificação com conquistas (badges) no módulo Intelecto","## Contexto
+- [ ] Nenhuma referência restante ao `EmbeddingDocument` no código (exceto migrations históricas)",✅ Feito
+feat: Gamificação com conquistas (badges) no módulo Intelecto,"## Contexto
 O módulo não tem nenhum mecanismo de celebração de marcos. Quando o usuário lê o 10º livro, completa o 1º curso ou atinge 100 destaques, nada acontece. Conquistas (badges) criam senso de progresso e motivam comportamentos desejados.
 
 ## O que fazer
@@ -1240,8 +1240,8 @@ class Achievement(BaseModel):
 - [ ] 7 tipos de conquistas implementadas
 - [ ] Verificação eficiente (não recalcula tudo, só verifica delta)
 - [ ] Notificação de desbloqueio com animação
-- [ ] Lista de conquistas visível no perfil","✅ Feito"
-"feat: Widget de Grafo de Conhecimento miniatura na Home","## Contexto
+- [ ] Lista de conquistas visível no perfil",✅ Feito
+feat: Widget de Grafo de Conhecimento miniatura na Home,"## Contexto
 O Grafo de Conhecimento é o recurso mais visualmente diferenciado da plataforma, mas poucos usuários o descobrem. Ter um widget miniatura na tela Home mostrando os nós mais recentes e o número de conexões aumentaria a descoberta e o engajamento.
 
 ## O que fazer
@@ -1261,8 +1261,8 @@ O Grafo de Conhecimento é o recurso mais visualmente diferenciado da plataforma
 - [ ] Widget visível na Home sem degradar performance
 - [ ] Grafo miniatura renderiza em < 500ms
 - [ ] Contadores corretos de nós e conexões
-- [ ] Link para o grafo completo funcional","✅ Feito"
-"feat: Exportação do Grafo de Conhecimento como imagem PNG","## Contexto
+- [ ] Link para o grafo completo funcional",✅ Feito
+feat: Exportação do Grafo de Conhecimento como imagem PNG,"## Contexto
 Usuários que queiram compartilhar seu mapa de conhecimento (em redes sociais, apresentações, etc.) não têm como exportar o grafo. O canvas 2D do `react-force-graph` permite exportação trivial via `toDataURL()`.
 
 ## O que fazer
@@ -1285,8 +1285,8 @@ a.click();
 - [ ] Botão de exportação visível na toolbar
 - [ ] PNG exportado com resolução adequada (1920x1080 mínimo)
 - [ ] Sidebar oculta na imagem exportada
-- [ ] Nome do arquivo inclui data","✅ Feito"
-"feat: Streak unificado de aprendizado (leitura + cursos) na navegação global","## Contexto
+- [ ] Nome do arquivo inclui data",✅ Feito
+feat: Streak unificado de aprendizado (leitura + cursos) na navegação global,"## Contexto
 O streak de leitura existe apenas dentro do Dashboard de Leitura, escondido entre dezenas de métricas. Para criar o hábito de aprendizado diário, o streak precisa estar visível constantemente — idealmente na barra de navegação global, como o Duolingo faz.
 
 ## O que fazer
@@ -1305,8 +1305,8 @@ O streak de leitura existe apenas dentro do Dashboard de Leitura, escondido entr
 - [ ] Badge visível na sidebar com streak atual
 - [ ] Badge muda de cor ao completar atividade do dia
 - [ ] Streak calculado corretamente considerando leitura E estudo
-- [ ] Cache de 30s para não impactar performance da navegação","✅ Feito"
-"feat: Timer integrado de leitura e estudo","## Contexto
+- [ ] Cache de 30s para não impactar performance da navegação",✅ Feito
+feat: Timer integrado de leitura e estudo,"## Contexto
 Tanto sessões de leitura quanto sessões de estudo de cursos são registradas manualmente com o tempo estimado. Isso gera dados imprecisos. Um timer integrado no app registraria o tempo real e criaria a entrada automaticamente ao finalizar.
 
 ## O que fazer
@@ -1324,8 +1324,8 @@ Tanto sessões de leitura quanto sessões de estudo de cursos são registradas m
 - [ ] Timer funciona em background enquanto o usuário navega por outras páginas do app
 - [ ] Pausa automática quando a aba perde foco (opcional, configurável)
 - [ ] Integração com Quick Capture (issue #5) — timer preenchimento automático
-- [ ] Não interfere com outros elementos da interface","✅ Feito"
-"feat: Painel de Skills com conexões para livros e cursos relacionados","## Contexto
+- [ ] Não interfere com outros elementos da interface",✅ Feito
+feat: Painel de Skills com conexões para livros e cursos relacionados,"## Contexto
 As habilidades estão isoladas — não há nenhuma conexão visual entre uma skill (ex: 'Python') e os livros/cursos que desenvolveram essa habilidade. Essa conexão existe implicitamente no grafo mas não é exposta na página de Skills.
 
 ## O que fazer
@@ -1343,8 +1343,8 @@ As habilidades estão isoladas — não há nenhuma conexão visual entre uma sk
 - [ ] Seção 'Como desenvolvi' visível no detalhe da skill
 - [ ] Lista de cursos e livros relacionados (via links explícitos do grafo ou semânticos)
 - [ ] Link para o grafo com o nó da skill em destaque
-- [ ] Estado vazio elegante quando não há conteúdo relacionado","✅ Feito"
-"fix: Estado vazio genérico na página de Cursos sem call-to-action relevante","## Contexto
+- [ ] Estado vazio elegante quando não há conteúdo relacionado",✅ Feito
+fix: Estado vazio genérico na página de Cursos sem call-to-action relevante,"## Contexto
 A página de Cursos (`/library/courses`) sem nenhum curso cadastrado exibe um `EmptyState` genérico. Não há sugestão de plataformas, não há exemplo de como criar um curso, e não há contexto sobre o valor desta funcionalidade.
 
 ## O que fazer
@@ -1369,8 +1369,8 @@ Udemy, Coursera, YouTube, Alura, Rocketseat e outras.
 ## Critérios de aceite
 - [ ] Estado vazio com texto contextual e CTAs
 - [ ] Ícones de plataformas visíveis
-- [ ] Botão de criação funcional a partir do estado vazio","✅ Feito"
-"feat: Meta de leitura com notificação de atraso","## Contexto
+- [ ] Botão de criação funcional a partir do estado vazio",✅ Feito
+feat: Meta de leitura com notificação de atraso,"## Contexto
 A meta de leitura anual existe mas é passiva — o usuário só sabe que está atrasado se abrir o Dashboard. Não há nenhum alerta proativo quando o ritmo atual não é suficiente para atingir a meta.
 
 ## O que fazer
@@ -1386,8 +1386,8 @@ A meta de leitura anual existe mas é passiva — o usuário só sabe que está 
 ## Critérios de aceite
 - [ ] Indicador de pace visível no `ReadingGoalCard`
 - [ ] Notificação enviada quando pace < 70% do necessário
-- [ ] Cálculo correto considerando meses já passados no ano","✅ Feito"
-"redesign: Vault Home — substituir dashboard por hub central de segurança","## Contexto
+- [ ] Cálculo correto considerando meses já passados no ano",✅ Feito
+redesign: Vault Home — substituir dashboard por hub central de segurança,"## Contexto
 O `SecurityDashboard.tsx` atual exibe três gráficos de pizza genéricos sem valor informacional acionável. O usuário não consegue identificar prioridades de segurança nem executar ações corretivas direto da home. O dashboard precisa comunicar estado e urgência, não apenas dados.
 
 ## Proposta
@@ -1408,8 +1408,8 @@ Substituir os gráficos por um hub central com: score de saúde em destaque (0�
 - `api/security/views.py` — `SecurityDashboardStatsView`
 
 ## Notas Técnicas
-O endpoint `/api/v1/security/dashboard/stats/` já retorna dados agregados. Adicionar `recent_activity` (últimas 5 entradas do ActivityLog) ao response do `SecurityDashboardStatsView`.","✅ Feito"
-"melhoria: Setup do cofre — warning explícito sobre irreversibilidade de perda da senha mestre","## Contexto
+O endpoint `/api/v1/security/dashboard/stats/` já retorna dados agregados. Adicionar `recent_activity` (últimas 5 entradas do ActivityLog) ao response do `SecurityDashboardStatsView`.",✅ Feito
+melhoria: Setup do cofre — warning explícito sobre irreversibilidade de perda da senha mestre,"## Contexto
 O fluxo de configuração do cofre (`VaultSetupView`) não apresenta nenhum aviso claro de que a perda da senha mestre implica perda **irrecuperável** de todos os dados armazenados. O usuário define sua senha mestre sem entender as consequências. Este é o maior risco de produto do módulo atualmente.
 
 ## Proposta
@@ -1424,8 +1424,8 @@ Adicionar no `VaultGuard.tsx`, durante o fluxo de setup, um bloco de aviso expl�
 
 ## Arquivos Relacionados
 - `frontend/src/components/security/VaultGuard.tsx`
-- `api/security/vault_config.py` — `VaultSetupView`","✅ Feito"
-"feat: Indicador de força de senha na listagem de senhas","## Contexto
+- `api/security/vault_config.py` — `VaultSetupView`",✅ Feito
+feat: Indicador de força de senha na listagem de senhas,"## Contexto
 A listagem de senhas (`Passwords.tsx`) não exibe a força de cada senha nas rows da tabela. Para ver quais senhas estão fracas, o usuário precisa navegar para o VaultHealthReport em uma página separada. Isso reduz a visibilidade do problema e a probabilidade de ação corretiva.
 
 ## Proposta
@@ -1445,8 +1445,8 @@ Adicionar um badge de força (Fraca / Média / Forte / Excelente) com cor semân
 - `api/security/serializers.py` — `PasswordSerializer`
 
 ## Notas Técnicas
-A listagem já usa `defer('_password')` no queryset. O score de força pode ser calculado no serializer durante o `create`/`update` e armazenado em campo separado `strength_score` (Integer 0–100), sem necessidade de descriptografar a senha na listagem.","✅ Feito"
-"feat: Auto-ocultar senha revelada com countdown de 30 segundos","## Contexto
+A listagem já usa `defer('_password')` no queryset. O score de força pode ser calculado no serializer durante o `create`/`update` e armazenado em campo separado `strength_score` (Integer 0–100), sem necessidade de descriptografar a senha na listagem.",✅ Feito
+feat: Auto-ocultar senha revelada com countdown de 30 segundos,"## Contexto
 Ao revelar uma senha (botão de olho), ela fica visível indefinidamente até o usuário clicar novamente para ocultar. Isso cria uma janela de exposição acidental, especialmente em ambientes compartilhados ou ao deixar a tela aberta.
 
 ## Proposta
@@ -1463,8 +1463,8 @@ Implementar auto-ocultamento automático após 30 segundos com um contador regre
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `frontend/src/pages/StoredCards.tsx`
-- `frontend/src/pages/StoredAccounts.tsx`","✅ Feito"
-"feat: Badge de expiração do vault no header com botão de renovação de sessão","## Contexto
+- `frontend/src/pages/StoredAccounts.tsx`",✅ Feito
+feat: Badge de expiração do vault no header com botão de renovação de sessão,"## Contexto
 O cofre tem TTL de 1 hora no Redis (`VAULT_UNLOCK_TTL`), mas a UI não informa ao usuário quanto tempo resta. Quando o vault expira durante uma tarefa, o usuário é surpreendido com um erro 423 sem contexto. Isso causa frustração e perda de trabalho em formulários abertos.
 
 ## Proposta
@@ -1482,8 +1482,8 @@ Exibir um badge persistente no cabeçalho do módulo Segurança mostrando o temp
 ## Arquivos Relacionados
 - `frontend/src/components/security/VaultGuard.tsx`
 - `frontend/src/services/security-vault-service.ts`
-- `api/security/vault_config.py` — `VaultStatusView`","✅ Feito"
-"feat: Copiar senha para clipboard sem revelar (nova action no ActivityLog)","## Contexto
+- `api/security/vault_config.py` — `VaultStatusView`",✅ Feito
+feat: Copiar senha para clipboard sem revelar (nova action no ActivityLog),"## Contexto
 O único jeito de copiar uma senha é revelá-la na tela (botão de olho) e depois copiar. Isso expõe a senha visualmente mesmo quando o usuário só precisa colá-la em outro lugar. Em telas compartilhadas, esse comportamento é indesejável.
 
 ## Proposta
@@ -1501,8 +1501,8 @@ Adicionar um botão ""Copiar"" que descriptografa a senha no frontend via chamad
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `api/security/models.py` — `ActivityLog`
-- `api/security/views.py` — `PasswordRevealView`","✅ Feito"
-"feat: Alerta proativo de cartão armazenado vencendo em 30 e 60 dias","## Contexto
+- `api/security/views.py` — `PasswordRevealView`",✅ Feito
+feat: Alerta proativo de cartão armazenado vencendo em 30 e 60 dias,"## Contexto
 Cartões armazenados em `StoredCreditCard` têm campos `expiration_month` e `expiration_year`, mas a aplicação não notifica o usuário quando um cartão está prestes a vencer. O usuário descobre o vencimento somente quando o cartão é recusado.
 
 ## Proposta
@@ -1520,8 +1520,8 @@ Criar uma Celery task periódica (diária) que verifica cartões com vencimento 
 ## Arquivos Relacionados
 - `api/security/models.py` — `StoredCreditCard`
 - `api/notifications/` — sistema de notificações existente
-- `api/app/settings.py` — configuração do Celery beat","✅ Feito"
-"feat: Exportação do cofre como ZIP criptografado com AES-256","## Contexto
+- `api/app/settings.py` — configuração do Celery beat",✅ Feito
+feat: Exportação do cofre como ZIP criptografado com AES-256,"## Contexto
 O endpoint `VaultExportZipView` já gera um ZIP com todos os dados do cofre em CSV, mas o arquivo exportado não tem criptografia própria. Se o arquivo for interceptado ou salvo em local inseguro, os dados ficam expostos em texto puro.
 
 ## Proposta
@@ -1538,8 +1538,8 @@ Adicionar opção de exportar ZIP criptografado com senha escolhida pelo usuári
 ## Arquivos Relacionados
 - `api/security/views.py` — `VaultExportZipView`
 - `frontend/src/pages/SecurityDashboard.tsx` — botão de exportação
-- `api/requirements.txt`","✅ Feito"
-"feat: Favoritos no cofre — acesso rápido a credenciais frequentes","## Contexto
+- `api/requirements.txt`",✅ Feito
+feat: Favoritos no cofre — acesso rápido a credenciais frequentes,"## Contexto
 Não existe forma de marcar credenciais como favoritas para acesso rápido. Usuários com muitas senhas precisam sempre usar a busca ou scroll para encontrar as mais usadas. A Vault Home proposta terá uma seção de Favoritos que precisa deste campo.
 
 ## Proposta
@@ -1557,8 +1557,8 @@ Adicionar campo `is_favorite` (BooleanField, default=False) aos models `Password
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/security/serializers.py`
-- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`","✅ Feito"
-"feat: TTL do vault configurável pelo usuário (15min a 4h)","## Contexto
+- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`",✅ Feito
+feat: TTL do vault configurável pelo usuário (15min a 4h),"## Contexto
 O TTL do cofre é fixo em 1 hora (`VAULT_UNLOCK_TTL`), sem possibilidade de configuração pelo usuário. Usuários com alta necessidade de segurança (sessões curtas) e usuários em uso intensivo (sessões longas) têm necessidades diferentes que não são atendidas.
 
 ## Proposta
@@ -1575,8 +1575,8 @@ Adicionar seletor de TTL nas configurações do vault. O valor escolhido é arma
 ## Arquivos Relacionados
 - `api/security/models.py` — `VaultConfig`
 - `api/security/vault_config.py` — `VaultUnlockView`
-- `frontend/src/components/security/VaultGuard.tsx`","✅ Feito"
-"feat: VaultHealthSnapshot — persistência do histórico do score de saúde","## Contexto
+- `frontend/src/components/security/VaultGuard.tsx`",✅ Feito
+feat: VaultHealthSnapshot — persistência do histórico do score de saúde,"## Contexto
 O `VaultHealthReport` calcula o score de saúde do cofre sob demanda, mas não persiste histórico. O usuário não consegue ver se seu score melhorou ou piorou ao longo do tempo, o que reduz o engajamento com as melhorias de segurança.
 
 ## Proposta
@@ -1594,8 +1594,8 @@ Criar model `VaultHealthSnapshot` para armazenar o score calculado diariamente p
 - `api/security/models.py`
 - `api/security/views.py` — `VaultHealthReportView`
 - `frontend/src/pages/VaultHealthReport.tsx`
-- `api/app/settings.py` — Celery beat schedule","✅ Feito"
-"melhoria: Feedback visual ao copiar para clipboard — toast e estado temporário no botão","## Contexto
+- `api/app/settings.py` — Celery beat schedule",✅ Feito
+melhoria: Feedback visual ao copiar para clipboard — toast e estado temporário no botão,"## Contexto
 Ao copiar username, URL ou outros campos não-senha, não há nenhum feedback visual confirmando que a cópia foi bem-sucedida. O usuário não sabe se o clipboard foi atualizado ou se houve falha silenciosa (ex: permissão de clipboard negada pelo browser).
 
 ## Critérios de Aceite
@@ -1607,8 +1607,8 @@ Ao copiar username, URL ou outros campos não-senha, não há nenhum feedback vi
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `frontend/src/pages/StoredCards.tsx`
-- `frontend/src/pages/StoredAccounts.tsx`","✅ Feito"
-"critico: Recovery Key — chave de emergência para recuperação do cofre","## Contexto
+- `frontend/src/pages/StoredAccounts.tsx`",✅ Feito
+critico: Recovery Key — chave de emergência para recuperação do cofre,"## Contexto
 A perda da senha mestre é atualmente catastrófica e irreversível. Não existe nenhum mecanismo de recuperação. Esta é a vulnerabilidade de produto mais grave do módulo — um único evento (esquecimento de senha) destrói todos os dados armazenados, sem aviso prévio e sem solução.
 
 ## Proposta
@@ -1632,8 +1632,8 @@ Implementar chave de recuperação de emergência: no setup, gerar uma passphras
 - `frontend/src/components/security/VaultGuard.tsx`
 
 ## Notas Técnicas
-A wordlist pode usar a lista BIP39 em inglês (2048 palavras) ou uma adaptação em português. A recovery key deriva um `vault_key` temporário via PBKDF2 da mesma forma que a senha mestre, garantindo que o modelo criptográfico não precise de alterações. O `recovery_key_hash` é SHA-256(palavras_concatenadas_com_espaco).","✅ Feito"
-"feat: Onboarding wizard do cofre — configuração guiada em 3 etapas","## Contexto
+A wordlist pode usar a lista BIP39 em inglês (2048 palavras) ou uma adaptação em português. A recovery key deriva um `vault_key` temporário via PBKDF2 da mesma forma que a senha mestre, garantindo que o modelo criptográfico não precise de alterações. O `recovery_key_hash` é SHA-256(palavras_concatenadas_com_espaco).",✅ Feito
+feat: Onboarding wizard do cofre — configuração guiada em 3 etapas,"## Contexto
 O primeiro acesso ao módulo Segurança apresenta imediatamente um formulário de senha mestre sem nenhuma orientação. O usuário não recebe contexto sobre o que é o cofre, como ele funciona, por que a senha mestre é separada do login, ou o que acontece se a esquecer.
 
 ## Proposta
@@ -1651,8 +1651,8 @@ Substituir o setup atual por um wizard de 3 etapas com transições animadas: (1
 
 ## Arquivos Relacionados
 - `frontend/src/components/security/VaultGuard.tsx`
-- `frontend/src/lib/animations/` — variantes existentes","✅ Feito"
-"melhoria: VaultGuard — exibir tentativas restantes e feedback detalhado de erros","## Contexto
+- `frontend/src/lib/animations/` — variantes existentes",✅ Feito
+melhoria: VaultGuard — exibir tentativas restantes e feedback detalhado de erros,"## Contexto
 Ao errar a senha mestre no desbloqueio, a mensagem de erro é genérica. O usuário não sabe quantas tentativas restam antes do lockout de 15 minutos. Após 5 erros, o lockout é ativado sem qualquer aviso prévio, causando confusão e bloqueio inesperado.
 
 ## Critérios de Aceite
@@ -1667,8 +1667,8 @@ Ao errar a senha mestre no desbloqueio, a mensagem de erro é genérica. O usuá
 - `frontend/src/components/security/VaultGuard.tsx`
 
 ## Notas Técnicas
-O backend já usa Redis para contar tentativas (`vault_attempts:{user_id}`). Incluir `attempts_remaining` e `locked_until` no response de erro 401 da `VaultUnlockView`.","✅ Feito"
-"ux: Master-detail layout — painel lateral de detalhes para listagem de senhas","## Contexto
+O backend já usa Redis para contar tentativas (`vault_attempts:{user_id}`). Incluir `attempts_remaining` e `locked_until` no response de erro 401 da `VaultUnlockView`.",✅ Feito
+ux: Master-detail layout — painel lateral de detalhes para listagem de senhas,"## Contexto
 Para ver os detalhes de uma senha, o usuário precisa abrir um modal ou navegar para outra tela, perdendo o contexto da listagem. Produtos de referência como 1Password e Linear usam master-detail layout onde o painel de detalhes abre ao lado da lista, mantendo o contexto.
 
 ## Proposta
@@ -1686,7 +1686,7 @@ Implementar layout master-detail na tela de Senhas: ao clicar em um item, o pain
 
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
-- `frontend/src/components/ui/` — componentes de layout existentes","✅ Feito"
+- `frontend/src/components/ui/` — componentes de layout existentes",✅ Feito
 "feat: Busca global no cofre — senhas, cartões, contas e arquivos em uma única pesquisa","## Contexto
 Cada seção do cofre tem sua própria busca local. Para encontrar uma credencial sem saber em qual seção ela está, o usuário precisa buscar em cada aba separadamente. Não existe busca unificada que retorne resultados de todas as seções.
 
@@ -1709,8 +1709,8 @@ Adicionar barra de busca global no topo do módulo Segurança (e integrar ao com
 - `api/security/views.py` — novo `SecuritySearchView`
 - `api/security/urls.py`
 - `frontend/src/components/command-palette/` ou novo componente de busca
-- `frontend/src/stores/command-palette-store.ts`","❌ Pendente"
-"feat: TOTP integrado como campo nativo em senhas (autenticador 2FA no cofre)","## Contexto
+- `frontend/src/stores/command-palette-store.ts`",✅ Feito
+feat: TOTP integrado como campo nativo em senhas (autenticador 2FA no cofre),"## Contexto
 Usuários precisam de um app separado (Google Authenticator, Authy) para gerar códigos 2FA das suas contas. Gerenciadores de senha premium como 1Password já integram TOTP nativamente. Esta funcionalidade aumentaria drasticamente a frequência de uso diário do cofre.
 
 ## Proposta
@@ -1734,8 +1734,8 @@ Adicionar campo opcional `_totp_secret` (criptografado com vault_key) ao model `
 - `frontend/src/pages/Passwords.tsx`
 
 ## Notas Técnicas
-`pyotp` já está instalado no backend (usado pela autenticação 2FA). A geração do TOTP usa `pyotp.TOTP(secret).now()`.","❌ Pendente"
-"feat: Histórico de versões de senha — PasswordHistory com restauração","## Contexto
+`pyotp` já está instalado no backend (usado pela autenticação 2FA). A geração do TOTP usa `pyotp.TOTP(secret).now()`.",✅ Feito
+feat: Histórico de versões de senha — PasswordHistory com restauração,"## Contexto
 Ao atualizar uma senha, o valor anterior é sobrescrito e perdido. Se a troca foi acidental ou se a nova senha não funcionar (ex: site rejeitou), não há como recuperar a versão anterior. Isso obriga o usuário a lembrar da senha antiga ou redefinir no site.
 
 ## Proposta
@@ -1753,8 +1753,8 @@ Criar model `PasswordHistory` que armazena versões anteriores de senhas (até 1
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/security/views.py`
-- `frontend/src/pages/Passwords.tsx`","✅ Feito"
-"feat: Preview inline de imagens e PDFs nos Arquivos criptografados","## Contexto
+- `frontend/src/pages/Passwords.tsx`",✅ Feito
+feat: Preview inline de imagens e PDFs nos Arquivos criptografados,"## Contexto
 Para visualizar qualquer arquivo armazenado em `Archive`, o usuário precisa fazer download, abrir o arquivo localmente e então descartá-lo. Não existe preview inline. Para imagens e PDFs — os tipos mais comuns — isso cria fricção desnecessária.
 
 ## Proposta
@@ -1771,8 +1771,8 @@ Implementar preview inline para imagens (JPG, PNG, GIF, WEBP) e PDFs após descr
 
 ## Arquivos Relacionados
 - `frontend/src/pages/Archives.tsx`
-- `api/security/views.py` — `ArchiveRevealView`, `ArchiveDownloadView`","✅ Feito"
-"redesign: VaultHealthReport — redesenho com priorização de problemas e ações inline","## Contexto
+- `api/security/views.py` — `ArchiveRevealView`, `ArchiveDownloadView`",✅ Feito
+redesign: VaultHealthReport — redesenho com priorização de problemas e ações inline,"## Contexto
 O `VaultHealthReport` atual lista problemas como uma tabela plana sem hierarquia de prioridade e sem ações diretas. O usuário vê os problemas mas não tem como corrigi-los sem navegar para outra seção e encontrar o item manualmente.
 
 ## Proposta
@@ -1790,8 +1790,8 @@ Redesenhar o relatório em cards de problema com severidade visual clara (Críti
 ## Arquivos Relacionados
 - `frontend/src/pages/VaultHealthReport.tsx`
 - `frontend/src/components/security/VaultHealthSection.tsx`
-- `api/security/views.py` — `VaultHealthReportView`","✅ Feito"
-"feat: Integração HaveIBeenPwned — verificação de senhas em vazamentos (k-anonymity)","## Contexto
+- `api/security/views.py` — `VaultHealthReportView`",✅ Feito
+feat: Integração HaveIBeenPwned — verificação de senhas em vazamentos (k-anonymity),"## Contexto
 O VaultHealthReport detecta senhas fracas e duplicadas, mas não verifica se as senhas armazenadas aparecem em vazamentos de dados conhecidos. A API pública do HaveIBeenPwned oferece verificação de senhas via k-anonymity: apenas os 5 primeiros caracteres do hash SHA-1 são enviados, preservando privacidade completa.
 
 ## Proposta
@@ -1811,7 +1811,7 @@ Adicionar funcionalidade ""Verificar Vazamentos"" no VaultHealthReport que consu
 ## Arquivos Relacionados
 - `api/security/views.py` — novo `HIBPCheckView`
 - `api/security/models.py` — `Password`
-- `frontend/src/pages/VaultHealthReport.tsx`","✅ Feito"
+- `frontend/src/pages/VaultHealthReport.tsx`",✅ Feito
 "test: Testes E2E para fluxo crítico de setup, unlock e operações do cofre","## Contexto
 O módulo Segurança não possui testes E2E cobrindo os fluxos críticos. Falhas no fluxo de setup/unlock podem causar perda de acesso ao cofre ou exposição de dados. A configuração de Playwright já existe no projeto (`npm run test:e2e`), mas sem casos de teste implementados para o módulo de segurança.
 
@@ -1827,8 +1827,8 @@ O módulo Segurança não possui testes E2E cobrindo os fluxos críticos. Falhas
 
 ## Arquivos Relacionados
 - `frontend/e2e/` — diretório de testes Playwright
-- `frontend/playwright.config.ts`","❌ Pendente"
-"feat: Pastas e coleções hierárquicas no cofre com drag-and-drop","## Contexto
+- `frontend/playwright.config.ts`",❌ Pendente
+feat: Pastas e coleções hierárquicas no cofre com drag-and-drop,"## Contexto
 Todos os itens do cofre vivem em listas planas com organização apenas por categoria. Usuários com muitos itens (50+ senhas) precisam de hierarquia real — pastas aninhadas — para organizar por contexto (ex: ""Trabalho > AWS"", ""Pessoal > Banco"").
 
 ## Proposta
@@ -1847,8 +1847,8 @@ Criar model `VaultFolder` com suporte a hierarquia aninhada (parent nullable). T
 
 ## Arquivos Relacionados
 - `api/security/models.py`
-- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`","❌ Pendente"
-"feat: Compartilhamento estendido — share tokens para cartões e contas bancárias","## Contexto
+- `frontend/src/pages/Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`",❌ Pendente
+feat: Compartilhamento estendido — share tokens para cartões e contas bancárias,"## Contexto
 O sistema de `CredentialShareToken` funciona apenas para senhas (`Password`). Compartilhar dados de cartão ou conta bancária com alguém (ex: número de cartão com colaborador que precisa fazer uma compra) requer comunicação fora do sistema, sem as garantias de segurança do share token.
 
 ## Proposta
@@ -1866,8 +1866,8 @@ Estender o modelo `CredentialShareToken` para suportar `StoredCreditCard` e `Sto
 ## Arquivos Relacionados
 - `api/security/models.py` — `CredentialShareToken`
 - `api/security/views.py` — `ShareTokenListCreateView`, `RedeemShareTokenView`
-- `frontend/src/components/security/SharePasswordModal.tsx`","✅ Feito"
-"feat: Notificação por e-mail e in-app ao usar share token de credencial","## Contexto
+- `frontend/src/components/security/SharePasswordModal.tsx`",✅ Feito
+feat: Notificação por e-mail e in-app ao usar share token de credencial,"## Contexto
 Quando alguém usa um share token para visualizar uma credencial compartilhada, o dono do token não recebe nenhuma notificação. Para ter visibilidade, precisa verificar manualmente os logs de atividade. Isso reduz a utilidade do ActivityLog e deixa o dono sem awareness de acesso às suas credenciais.
 
 ## Critérios de Aceite
@@ -1881,8 +1881,8 @@ Quando alguém usa um share token para visualizar uma credencial compartilhada, 
 ## Arquivos Relacionados
 - `api/security/views.py` — `RedeemShareTokenView`
 - `api/notifications/`
-- `api/authentication/` — templates de e-mail existentes","✅ Feito"
-"feat: Exportação do log de atividade em CSV com filtros","## Contexto
+- `api/authentication/` — templates de e-mail existentes",✅ Feito
+feat: Exportação do log de atividade em CSV com filtros,"## Contexto
 Os logs de atividade do cofre são imutáveis e visíveis na UI, mas não podem ser exportados. Para auditorias, análises de segurança ou compliance, o usuário precisa exportar os logs para processamento externo.
 
 ## Critérios de Aceite
@@ -1896,8 +1896,8 @@ Os logs de atividade do cofre são imutáveis e visíveis na UI, mas não podem 
 ## Arquivos Relacionados
 - `api/security/views.py` — `ActivityLogListView`
 - `api/security/urls.py`
-- `frontend/src/pages/ActivityLogs.tsx`","✅ Feito"
-"melhoria: Modal de compartilhamento de credencial — refatorar para fluxo em steps","## Contexto
+- `frontend/src/pages/ActivityLogs.tsx`",✅ Feito
+melhoria: Modal de compartilhamento de credencial — refatorar para fluxo em steps,"## Contexto
 O `SharePasswordModal.tsx` atual comprime três ações distintas em um único modal: criar token, listar tokens existentes e copiar URL. O resultado é uma interface sobrecarregada sem hierarquia clara de ação principal vs. secundária.
 
 ## Proposta
@@ -1913,8 +1913,8 @@ Refatorar para um fluxo em 3 etapas com transições animadas: (1) Configurar ac
 - [ ] Indicador de progresso (1/3, 2/3, 3/3)
 
 ## Arquivos Relacionados
-- `frontend/src/components/security/SharePasswordModal.tsx`","✅ Feito"
-"feat: Autocomplete de banco brasileiro por nome ou código ISPB","## Contexto
+- `frontend/src/components/security/SharePasswordModal.tsx`",✅ Feito
+feat: Autocomplete de banco brasileiro por nome ou código ISPB,"## Contexto
 O campo ""Nome da Instituição"" em `StoredBankAccount` é texto livre, sem validação ou sugestões. O usuário pode digitar ""Nubank"", ""Nu Bank"", ""Nu Pagamentos"" para o mesmo banco, criando inconsistências na organização e busca.
 
 ## Proposta
@@ -1931,8 +1931,8 @@ Adicionar autocomplete com a lista oficial de bancos brasileiros do Banco Centra
 ## Arquivos Relacionados
 - `api/security/models.py` — `StoredBankAccount`
 - `api/security/serializers.py`
-- `frontend/src/pages/StoredAccounts.tsx`","✅ Feito"
-"feat: Mapeamento de categorias customizável na importação de senhas","## Contexto
+- `frontend/src/pages/StoredAccounts.tsx`",✅ Feito
+feat: Mapeamento de categorias customizável na importação de senhas,"## Contexto
 O `PasswordImportConfirmView` realiza importação com mapeamento fixo de categorias por formato (Bitwarden, LastPass, etc.). Usuários que usavam categorias customizadas em outros gerenciadores têm todas as senhas importadas com categorias erradas, exigindo reorganização manual posterior.
 
 ## Proposta
@@ -1949,7 +1949,7 @@ Adicionar tela de mapeamento de campos entre a preview de importação e a confi
 ## Arquivos Relacionados
 - `frontend/src/components/security/PasswordImportContent.tsx`
 - `api/security/views.py` — `PasswordImportConfirmView`
-- `api/security/importers.py`","❌ Pendente"
+- `api/security/importers.py`",✅ Feito
 "feat: Atalhos de teclado para ações do cofre (reveal, copy, navigate, lock)","## Contexto
 O módulo Segurança não possui atalhos de teclado para ações frequentes. Usuários avançados que usam o cofre diariamente precisam de mouse para todas as operações. Isso aumenta o tempo médio de execução de tarefas e reduz a percepção de produto premium.
 
@@ -1967,8 +1967,8 @@ O módulo Segurança não possui atalhos de teclado para ações frequentes. Usu
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `frontend/src/components/security/VaultGuard.tsx`
-- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`","✅ Feito"
-"feat: Alertas configuráveis de atividade suspeita no cofre","## Contexto
+- `frontend/src/hooks/` — possível novo hook `use-vault-keyboard-shortcuts.ts`",✅ Feito
+feat: Alertas configuráveis de atividade suspeita no cofre,"## Contexto
 O ActivityLog registra todas as ações do cofre, mas nenhum alerta é disparado quando padrões suspeitos são detectados (ex: múltiplos reveals em sequência, acesso de novo IP, volume anormal de operações). O usuário descobre atividade suspeita apenas se revisar os logs manualmente.
 
 ## Proposta
@@ -1986,8 +1986,8 @@ Adicionar sistema de regras de alerta configuráveis pelo usuário. Quando uma r
 - `api/security/models.py`
 - `api/security/views.py`
 - `api/notifications/`
-- `frontend/src/pages/ActivityLogs.tsx`","❌ Pendente"
-"ia: Classificação automática de categoria via heurística + LLM fallback","## Contexto
+- `frontend/src/pages/ActivityLogs.tsx`",✅ Feito
+ia: Classificação automática de categoria via heurística + LLM fallback,"## Contexto
 Ao criar uma nova senha, o campo de categoria é preenchido manualmente pelo usuário. Para sites conhecidos (gmail.com, github.com, nubank.com.br), a categoria é óbvia mas o usuário ainda precisa selecionar. Isso cria fricção desnecessária e resulta em itens sem categoria ou com categorias inconsistentes.
 
 ## Proposta
@@ -2005,8 +2005,8 @@ Implementar classificação automática de categoria: ao inserir a URL/site, o s
 ## Arquivos Relacionados
 - `frontend/src/pages/Passwords.tsx`
 - `api/agents/` — agente existente
-- `frontend/src/config/` — novo arquivo `vault-category-heuristics.ts`","✅ Feito"
-"ia: Agente de segurança — análise conversacional do estado do cofre via chat","## Contexto
+- `frontend/src/config/` — novo arquivo `vault-category-heuristics.ts`",✅ Feito
+ia: Agente de segurança — análise conversacional do estado do cofre via chat,"## Contexto
 A infraestrutura de agentes LLM do Axiom já suporta 6 domínios (finance, budget, forecast, insight, library, planning). O módulo Segurança não tem representação nessa infraestrutura. Um agente especializado em segurança permitiria ao usuário fazer perguntas como ""Quais senhas preciso trocar com mais urgência?"" ou ""Explique o que aconteceu no meu cofre ontem"".
 
 ## Proposta
@@ -2023,8 +2023,8 @@ Criar o domínio `security` no `core/router.py` dos agentes, com tools especiali
 ## Arquivos Relacionados
 - `api/agents/core/router.py`
 - `api/agents/` — estrutura de domínios existente
-- `api/security/views.py` — endpoints de health e activity logs (já existentes)","✅ Feito"
-"ia: Busca semântica no cofre com pgvector e embeddings locais","## Contexto
+- `api/security/views.py` — endpoints de health e activity logs (já existentes)",✅ Feito
+ia: Busca semântica no cofre com pgvector e embeddings locais,"## Contexto
 A busca atual no cofre é exata (match de substring em título, site, username). Buscas semânticas como ""email do trabalho relacionado à AWS"" ou ""conta de streaming que uso no computador"" não retornam resultados mesmo quando o item existe com descrição diferente. pgvector já está disponível no stack.
 
 ## Proposta
@@ -2042,8 +2042,8 @@ Indexar metadados de itens do cofre (título, site, notas, categoria) com embedd
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/agents/core/llm_client.py` — cliente de embeddings existente
-- `api/security/views.py` — novo `SecuritySearchView`","❌ Pendente"
-"ia: Detecção de anomalias no ActivityLog com análise de padrões","## Contexto
+- `api/security/views.py` — novo `SecuritySearchView`",❌ Pendente
+ia: Detecção de anomalias no ActivityLog com análise de padrões,"## Contexto
 O ActivityLog registra todas as ações do cofre, mas sem análise de padrões. Comportamentos como reveal de 10+ itens em 5 minutos, acesso de IPs novos às 3h da manhã, ou tentativas de unlock repetidas em sequência não geram alertas automáticos baseados em inteligência.
 
 ## Proposta
@@ -2061,8 +2061,8 @@ Implementar análise periódica do ActivityLog com regras + LLM para detectar an
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/agents/core/llm_client.py`
-- `api/notifications/`","❌ Pendente"
-"ia: Resumo semanal de segurança por e-mail com insights personalizados","## Contexto
+- `api/notifications/`",❌ Pendente
+ia: Resumo semanal de segurança por e-mail com insights personalizados,"## Contexto
 O usuário não tem visibilidade passiva do estado de segurança do seu cofre. Para manter awareness, precisa navegar ativamente para o VaultHealthReport. Um resumo semanal automatizado manteria o usuário informado sem ação proativa.
 
 ## Proposta
@@ -2079,8 +2079,8 @@ Celery beat task semanal (toda segunda-feira às 9h) gera e envia e-mail com res
 ## Arquivos Relacionados
 - `api/security/` — nova task
 - `api/agents/` — chamada ao agente para gerar recomendações
-- `api/authentication/` — templates de e-mail existentes","❌ Pendente"
-"feat: Cofre compartilhado entre membros da equipe (criptografia assimétrica)","## Contexto
+- `api/authentication/` — templates de e-mail existentes",❌ Pendente
+feat: Cofre compartilhado entre membros da equipe (criptografia assimétrica),"## Contexto
 O Axiom suporta múltiplos usuários via o módulo `members`. Atualmente não há forma de compartilhar um conjunto de credenciais entre membros de uma mesma organização de forma segura e persistente. Share tokens são temporários e individuais.
 
 ## Proposta
@@ -2101,8 +2101,8 @@ Implementar pastas compartilhadas: o dono da pasta re-criptografa o vault_key da
 - `frontend/src/pages/` — nova tela de gestão de pastas compartilhadas
 
 ## Notas Técnicas
-Esta é a funcionalidade de maior complexidade criptográfica do módulo. Requer cuidado especial com key rotation e revogação.","❌ Pendente"
-"feat: Múltiplos perfis de cofre por usuário (Pessoal e Empresa)","## Contexto
+Esta é a funcionalidade de maior complexidade criptográfica do módulo. Requer cuidado especial com key rotation e revogação.",❌ Pendente
+feat: Múltiplos perfis de cofre por usuário (Pessoal e Empresa),"## Contexto
 Usuários que usam o Axiom tanto para gestão pessoal quanto profissional precisam misturar credenciais dos dois contextos no mesmo cofre, ou usar contas separadas. Múltiplos perfis de cofre isolados, com master passwords distintas opcionalmente, permitiriam separação de contexto sem múltiplas contas.
 
 ## Proposta
@@ -2120,8 +2120,8 @@ Permitir múltiplos `VaultConfig` por usuário, cada um com `profile_name` e `sa
 ## Arquivos Relacionados
 - `api/security/models.py` — `VaultConfig` e todos os models de item
 - `api/security/vault_config.py`
-- `frontend/src/components/security/VaultGuard.tsx`","❌ Pendente"
-"ia: Breach notification automatizada — monitoramento passivo via HIBP","## Contexto
+- `frontend/src/components/security/VaultGuard.tsx`",❌ Pendente
+ia: Breach notification automatizada — monitoramento passivo via HIBP,"## Contexto
 A verificação de vazamentos proposta na Fase 2 é manual (usuário aciona). Para uma proteção completa, o sistema deveria monitorar automaticamente novos vazamentos que contenham o e-mail do usuário e notificar proativamente, sem necessidade de ação.
 
 ## Proposta
@@ -2139,8 +2139,8 @@ Integrar com HIBP Breach API (requer subscription) para monitoramento do e-mail 
 ## Arquivos Relacionados
 - `api/security/models.py` — `Password` (campo `breach_detected`)
 - `api/app/settings.py` — nova variável `HIBP_API_KEY`
-- `api/notifications/`","❌ Pendente"
-"feat: API pública do cofre para integrações externas","## Contexto
+- `api/notifications/`",❌ Pendente
+feat: API pública do cofre para integrações externas,"## Contexto
 Usuários avançados e desenvolvedores podem querer integrar o cofre do Axiom com scripts, CI/CD pipelines, ou outras ferramentas. Sem uma API pública documentada e com autenticação por API key, isso não é possível.
 
 ## Proposta
@@ -2159,8 +2159,8 @@ Criar API keys de cofre (escopo limitado) que permitem acesso programático às 
 ## Arquivos Relacionados
 - `api/security/models.py`
 - `api/security/views.py`
-- `app/authentication/` — sistema de autenticação existente","❌ Pendente"
-"feat: Mobile PWA com cache local criptografado para acesso offline","## Contexto
+- `app/authentication/` — sistema de autenticação existente",❌ Pendente
+feat: Mobile PWA com cache local criptografado para acesso offline,"## Contexto
 O Axiom é uma aplicação web sem app mobile. Em situações sem conectividade, o usuário não consegue acessar credenciais do cofre. Um PWA com cache local criptografado permitiria acesso de emergência às credenciais mais importantes mesmo sem internet.
 
 ## Proposta
@@ -2179,8 +2179,8 @@ Implementar Progressive Web App com Service Worker que mantém cache criptografa
 ## Arquivos Relacionados
 - `frontend/src/` — novo `service-worker.ts`
 - `frontend/vite.config.ts` — configuração de PWA (plugin `vite-plugin-pwa`)
-- `frontend/public/manifest.json`","❌ Pendente"
-"feat: Integração vertical cofre ↔ módulo financeiro (cartões e contas)","## Contexto
+- `frontend/public/manifest.json`",❌ Pendente
+feat: Integração vertical cofre ↔ módulo financeiro (cartões e contas),"## Contexto
 As FKs entre `StoredCreditCard` ↔ `CreditCard` e `StoredBankAccount` ↔ `Account` existem no model, mas não são materializadas em nenhum fluxo de UI. O usuário gerencia credenciais financeiras no módulo financeiro e suas senhas separadamente no cofre, sem conexão entre os dois contextos.
 
 ## Proposta
@@ -2199,8 +2199,8 @@ Criar fluxos bidirecionais: (1) ao criar um cartão no módulo financeiro, suger
 - `api/security/models.py` — `StoredCreditCard`, `StoredBankAccount`
 - `api/credit_cards/` — módulo de cartões financeiros
 - `api/accounts/` — módulo de contas financeiras
-- `frontend/src/pages/` — detalhes de cartões e contas","❌ Pendente"
-"[Problema] Navegação do módulo de Planejamento Pessoal fragmentada em 6+ rotas sem hierarquia","**Contexto**
+- `frontend/src/pages/` — detalhes de cartões e contas",❌ Pendente
+[Problema] Navegação do módulo de Planejamento Pessoal fragmentada em 6+ rotas sem hierarquia,"**Contexto**
 O módulo possui 6+ rotas separadas sem hierarquia clara: `/planning/dashboard`, `/planning/routine-tasks`, `/planning/daily-checklist`, `/planning/today-tasks`, `/planning/workout` e `/planning/nutrition`. A rota `/planning/tasks-goals` apenas redireciona para outra, gerando confusão adicional.
 
 **Impacto**
@@ -2211,7 +2211,7 @@ O usuário não encontra funcionalidades com facilidade, abandona áreas que des
 - [ ] Agrupar rotas em seções lógicas: Hoje / Rotinas & Metas / Corpo / Progresso
 - [ ] Consolidar ou remover a rota `/planning/tasks-goals`
 - [ ] Adicionar breadcrumb contextual em cada subpágina
-- [ ] Navegação entre qualquer domínio possível em até 2 cliques","✅ Feito"
+- [ ] Navegação entre qualquer domínio possível em até 2 cliques",✅ Feito
 "[Problema] Domínios de Treino, Nutrição, Rotinas e Metas funcionam como ilhas sem integração real","**Contexto**
 Os cinco domínios (rotinas, metas, treinos, nutrição e reflexão) coexistem sem integração real entre si. Um treino concluído não alimenta uma meta de saúde. Um log nutricional não impacta os objetivos do usuário. As reflexões diárias existem isoladas sem conexão com padrões de comportamento ou produtividade.
 
@@ -2222,7 +2222,7 @@ O usuário não percebe o módulo como um sistema integrado de desenvolvimento p
 - [ ] Metas podem ser alimentadas por sessões de treino e/ou logs nutricionais além de instâncias de tarefas
 - [ ] Endpoint de recálculo de goal atualizado para aceitar fontes de progresso adicionais
 - [ ] Dashboard exibe progresso consolidado entre os domínios
-- [ ] Reflexão diária correlacionada com taxa de conclusão de tarefas no mesmo período","✅ Feito"
+- [ ] Reflexão diária correlacionada com taxa de conclusão de tarefas no mesmo período",✅ Feito
 "[Problema] Sistema de gamificação (XP, badges, streaks) existe mas não é percebido pelo usuário","**Contexto**
 O backend possui sistema completo de gamificação: XP, níveis, badges por categoria, streaks e transações de XP. O `GamificationPanel.tsx` existe no frontend, mas a gamificação não está integrada ao fluxo diário de uso. Não há celebrações visíveis, progressão percebida nem momentos de recompensa.
 
@@ -2234,8 +2234,8 @@ Um sistema de retenção tecnicamente completo é desperdiçado. O usuário não
 - [ ] Animação de celebração ao completar cada tarefa (check satisfatório)
 - [ ] Notificação in-app ao ganhar um novo badge
 - [ ] Modal/overlay ao subir de nível com resumo das conquistas
-- [ ] Indicador de streak visível e proeminente na tela principal","✅ Feito"
-"[Problema] Fluxo de registro de sessão de treino exige 4 a 5 níveis de navegação","**Contexto**
+- [ ] Indicador de streak visível e proeminente na tela principal",✅ Feito
+[Problema] Fluxo de registro de sessão de treino exige 4 a 5 níveis de navegação,"**Contexto**
 Para registrar um treino, o usuário precisa: criar Plano → criar Dias dentro do plano → adicionar Exercícios por Dia → iniciar uma Sessão → registrar Séries com carga e repetições. São 4-5 passos hierárquicos antes de qualquer valor ser percebido.
 
 **Impacto**
@@ -2245,8 +2245,8 @@ Alta taxa de abandono na funcionalidade de treino. A maioria dos usuários nunca
 - [ ] Criar tela Quick Log que detecta o plano ativo e exibe o treino do dia diretamente
 - [ ] Registro de série (carga + reps) em campos inline sem navegação extra
 - [ ] Conclusão da sessão em no máximo 3 interações a partir da tela principal
-- [ ] Manter o fluxo completo de gerenciamento acessível para usuários avançados","✅ Feito"
-"[Problema] Reflexão diária existe como rota separada e não tem conexão com o checklist do dia","**Contexto**
+- [ ] Manter o fluxo completo de gerenciamento acessível para usuários avançados",✅ Feito
+[Problema] Reflexão diária existe como rota separada e não tem conexão com o checklist do dia,"**Contexto**
 O `DailyReflection` com humor e notas de texto tem rota própria em `/planning/reflections`, completamente separada da tela de checklist diário. Não há nenhum estímulo natural para o usuário registrar a reflexão após completar suas tarefas.
 
 **Impacto**
@@ -2256,7 +2256,7 @@ Baixíssima adesão à funcionalidade de reflexão. O dado de humor fica sub-uti
 - [ ] Componente de reflexão integrado ao final da tela Hoje
 - [ ] Card de reflexão aparece quando todas as tarefas do dia foram processadas (ou às 20h)
 - [ ] Seletor de humor e campo de notas acessíveis inline, sem mudança de rota
-- [ ] Manter a rota /planning/reflections para histórico e consulta","✅ Feito"
+- [ ] Manter a rota /planning/reflections para histórico e consulta",✅ Feito
 "[Problema] Insights do dashboard são passivos, descritivos e não sugerem nenhuma ação","**Contexto**
 O dashboard exibe insights gerados pelo analytics de 90 dias como  'Terça-feira é seu melhor dia' e 'Fins de semana têm 23% menos conclusão', mas nenhum deles vem acompanhado de uma ação sugerida ou de um próximo passo claro.
 
@@ -2267,8 +2267,8 @@ O usuário lê o insight, acha interessante e não sabe o que fazer com a inform
 - [ ] Cada insight passa a ter um CTA (call to action) acionável
 - [ ] Adicionar card de Recomendação da Semana no dashboard com sugestão personalizada
 - [ ] Insights negativos sugerem ajustes específicos (ex: reduzir tarefas em dias ruins)
-- [ ] Insights positivos sugerem próximos desafios (ex: adicionar nova rotina após streak alto)","✅ Feito"
-"[Problema] Sistema de notificações e lembretes de tarefas não está implementado no frontend","**Contexto**
+- [ ] Insights positivos sugerem próximos desafios (ex: adicionar nova rotina após streak alto)",✅ Feito
+[Problema] Sistema de notificações e lembretes de tarefas não está implementado no frontend,"**Contexto**
 O modelo `RoutineTask` no backend possui campos `default_time`, `closing_time` e `scheduled_times` que definem quando as tarefas devem ser executadas. No entanto, o frontend não implementa nenhum mecanismo de notificação, lembrete ou alerta baseado nesses horários.
 
 **Impacto**
@@ -2278,8 +2278,8 @@ O usuário precisa se lembrar de abrir o aplicativo para ver suas tarefas. A tax
 - [ ] Configuração de notificações in-app por tarefa (usar campos já existentes no modelo)
 - [ ] Notificações via Web Push API para usuários com permissão concedida
 - [ ] Centro de notificações com histórico de lembretes do dia
-- [ ] Opção de silenciar notificações por período (modo foco)","❌ Pendente"
-"[Problema] Módulo não possui fluxo de onboarding para novos usuários","**Contexto**
+- [ ] Opção de silenciar notificações por período (modo foco)",✅ Feito
+[Problema] Módulo não possui fluxo de onboarding para novos usuários,"**Contexto**
 Um novo usuário que acessa o módulo de Planejamento Pessoal pela primeira vez encontra um dashboard com métricas zeradas, tabelas vazias e nenhuma orientação sobre por onde começar ou qual é o valor que o módulo entrega.
 
 **Impacto**
@@ -2289,8 +2289,8 @@ Alta taxa de abandono na primeira sessão. O usuário não percebe o valor do m�
 - [ ] Wizard de onboarding de 4 etapas: objetivos, tempo disponível, dias preferidos, preview da rotina gerada
 - [ ] Importação de template sugerido com base nos objetivos declarados
 - [ ] Estado de dashboard vazio substitído por guia de primeiros passos
-- [ ] Conclusão do onboarding deve resultar em ao menos uma rotina ativa","✅ Feito"
-"[Problema] Templates de rotina são somente leitura — usuário não pode criar ou salvar os próprios","**Contexto**
+- [ ] Conclusão do onboarding deve resultar em ao menos uma rotina ativa",✅ Feito
+[Problema] Templates de rotina são somente leitura — usuário não pode criar ou salvar os próprios,"**Contexto**
 O sistema de templates (`RoutineTemplate`) permite apenas importar templates pré-definidos pelo sistema. Não existe mecanismo para o usuário salvar suas próprias rotinas configuradas como template para reutilização futura ou compartilhamento com membros.
 
 **Impacto**
@@ -2300,8 +2300,8 @@ Usuários avançados que constroem rotinas bem elaboradas não podem preservá-l
 - [ ] Botão Salvar como Template ao selecionar um conjunto de tarefas de rotina
 - [ ] Templates pessoais listados separadamente dos templates do sistema
 - [ ] Templates pessoais podem ser importados em outros contextos (reset, novo período)
-- [ ] Opção de compartilhar template com membros do workspace","✅ Feito"
-"[Problema] Exportação de dados disponível apenas para tarefas de rotina","**Contexto**
+- [ ] Opção de compartilhar template com membros do workspace",✅ Feito
+[Problema] Exportação de dados disponível apenas para tarefas de rotina,"**Contexto**
 O módulo implementa exportação em PDF e Excel apenas para `RoutineTasks` via `use-routine-export.ts`. Metas, histórico de treinos, logs nutricionais, reflexões diárias e dados de gamificação não possuem opção de exportação.
 
 **Impacto**
@@ -2311,8 +2311,8 @@ Usuários avançados que querem consolidar dados de saúde e progresso ficam sem
 - [ ] Exportação de histórico de sessões de treino (PDF/Excel)
 - [ ] Exportação de logs nutricionais por período
 - [ ] Exportação de reflexões diárias com humor
-- [ ] Exportação consolidada de progresso de metas","✅ Feito"
-"[UX/UI] Dashboard sobrecarregado de informações sem hierarquia visual clara","**Contexto**
+- [ ] Exportação consolidada de progresso de metas",✅ Feito
+[UX/UI] Dashboard sobrecarregado de informações sem hierarquia visual clara,"**Contexto**
 O `PersonalPlanningDashboard.tsx` apresenta em uma única tela: heatmap, gráfico de barras semanal, gráfico de pizza por categoria, múltiplos cards de stats, progresso de metas ativas, weekday analytics e insights automáticos. A hierarquia visual não guia o olhar do usuário para o que importa.
 
 **Impacto**
@@ -2322,16 +2322,16 @@ Sobrecarga cognitiva. O usuário não sabe onde focar, demora para encontrar a i
 - [ ] Aplicar progressive disclosure: exibir 3-4 KPIs principais em destaque no topo
 - [ ] Seções secundárias (heatmap, weekday, analytics) colapsadas por padrão
 - [ ] A primeira leitura da tela deve responder: Estou indo bem hoje?
-- [ ] Hierarquia clara: Hero stats → Progresso do dia → Tendências → Analytics","✅ Feito"
-"[UX/UI] Cards de estatísticas do dashboard são genéricos e sem identidade visual","**Contexto**
+- [ ] Hierarquia clara: Hero stats → Progresso do dia → Tendências → Analytics",✅ Feito
+[UX/UI] Cards de estatísticas do dashboard são genéricos e sem identidade visual,"**Contexto**
 Os `StatCard`s que exibem streak, taxa de conclusão, metas ativas e dados de treino seguem um padrão visual de template de dashboard sem diferenciação ou personalidade. Não comunicam estado (bom/neutro/ruim) sem exigir leitura dos números.
 
 **Proposta de Melhoria**
 - [ ] Adicionar sparklines inline nos cards de streak e taxa de conclusão
 - [ ] Animação de counter ao carregar os valores (usando `useCounter` já disponível em `lib/animations`)
 - [ ] Cores contextuais dinâmicas: verde para acima da média, amarelo para neutro, vermelho para abaixo
-- [ ] Ícones e micro-ilustrações específicas por tipo de métrica em vez de ícones genéricos","✅ Feito"
-"[UX/UI] Vista Kanban de tarefas sem identidade visual e sem microinterações","**Contexto**
+- [ ] Ícones e micro-ilustrações específicas por tipo de métrica em vez de ícones genéricos",✅ Feito
+[UX/UI] Vista Kanban de tarefas sem identidade visual e sem microinterações,"**Contexto**
 O modo Kanban das tarefas do dia (`TodayKanbanView.tsx`) é funcional mas visualmente genérico. As colunas não têm personalidade, os cards não comunicam urgência ou contexto de forma imediata, e não há microinterações ao mover tarefas entre colunas.
 
 **Proposta de Melhoria**
@@ -2339,8 +2339,8 @@ O modo Kanban das tarefas do dia (`TodayKanbanView.tsx`) é funcional mas visual
 - [ ] Indicador de prioridade com visual mais expressivo (não apenas texto)
 - [ ] Microtransição suave ao arrastar e soltar um card entre colunas (Framer Motion)
 - [ ] Cabeçalho de coluna com contador animado ao mudar status
-- [ ] Estado visual de coluna cheia ao completar todas as tarefas da coluna","✅ Feito"
-"[UX/UI] Ausência de feedback visual e celebração ao completar tarefas e marcos do dia","**Contexto**
+- [ ] Estado visual de coluna cheia ao completar todas as tarefas da coluna",✅ Feito
+[UX/UI] Ausência de feedback visual e celebração ao completar tarefas e marcos do dia,"**Contexto**
 Ao completar uma tarefa, o único feedback visual é a mudança de status. Ao completar 100% das tarefas do dia, absolutamente nada acontece. O sistema não celebra conquistas nem reforça positivamente o comportamento desejado.
 
 **Impacto**
@@ -2350,8 +2350,8 @@ A ausência de reforço positivo reduz a satisfação de uso. O usuário não se
 - [ ] Animação de check satisfatória ao completar uma tarefa individual
 - [ ] Efeito de confetti ou barra de progresso animada ao atingir 100% no dia
 - [ ] Toast de celebração de streak ao manter consistência por 3, 7, 14, 30 dias
-- [ ] Micro-animação de XP flutuando ao ganhar pontos","❌ Pendente"
-"[UX/UI] Formulário de criação de tarefa de rotina expõe campos técnicos sem contextualização","**Contexto**
+- [ ] Micro-animação de XP flutuando ao ganhar pontos",✅ Feito
+[UX/UI] Formulário de criação de tarefa de rotina expõe campos técnicos sem contextualização,"**Contexto**
 O `RoutineTaskForm.tsx` expõe diretamente campos como `skip_tolerance`, `interval_hours`, `target_quantity` e `unit` sem contextualização de linguagem natural. Um usuário leigo não compreende a diferença entre intervalo em horas e periodicidade, nem a função de tolerância de pulo.
 
 **Proposta de Melhoria**
@@ -2359,8 +2359,8 @@ O `RoutineTaskForm.tsx` expõe diretamente campos como `skip_tolerance`, `interv
 - [ ] Substituir seletor de dias da semana por ícones clicáveis (seg, ter, qua...)
 - [ ] Campos avançados (skip_tolerance, interval_hours) colapsados em Configurações avançadas
 - [ ] Tooltips explicativos em cada campo não óbvio
-- [ ] Preview de como a tarefa aparecerá no checklist antes de salvar","❌ Pendente"
-"[UX/UI] Tela de metas exibe dados em tabela sem progressão visual expressiva","**Contexto**
+- [ ] Preview de como a tarefa aparecerá no checklist antes de salvar",✅ Feito
+[UX/UI] Tela de metas exibe dados em tabela sem progressão visual expressiva,"**Contexto**
 As metas são gerenciadas em tabela padrão (`DataTable`), adequada para CRUD mas sem conexão emocional com o progresso do usuário. Não há visualização de jornada, linha do tempo ou indicadores que transmitam motivação.
 
 **Proposta de Melhoria**
@@ -2368,16 +2368,16 @@ As metas são gerenciadas em tabela padrão (`DataTable`), adequada para CRUD ma
 - [ ] Exibir dias restantes para a meta em destaque com cor urgência
 - [ ] Linha do tempo de progresso mostrando a evolução histórica do percentual
 - [ ] Indicador visual de ritmo: no caminho certo / em risco / em atraso
-- [ ] Animação de conclusão ao atingir 100% de uma meta","✅ Feito"
-"[UX/UI] Telas de Treino e Nutrição usam gerenciamento CRUD como ponto de entrada principal","**Contexto**
+- [ ] Animação de conclusão ao atingir 100% de uma meta",✅ Feito
+[UX/UI] Telas de Treino e Nutrição usam gerenciamento CRUD como ponto de entrada principal,"**Contexto**
 As telas de Workout e Nutrition apresentam como ponto de entrada listas de gerenciamento (planos, alimentos, tipos de refeição). O usuário que quer simplesmente registrar o treino de hoje ou as refeições do dia precisa navegar por estruturas de gestão antes de qualquer valor imediato.
 
 **Proposta de Melhoria**
 - [ ] Primeira visualização de cada tela deve ser o estado atual do dia: plano ativo com próxima sessão / refeições planejadas vs. consumidas hoje
 - [ ] Ação principal de cada tela é o registro rápido, não o gerenciamento
 - [ ] Gerenciamento de planos, alimentos e configurações movido para aba/seção secundária
-- [ ] Card de Hoje no topo com CTA direto para registro","❌ Pendente"
-"[UX/UI] Empty states não orientam o usuário sobre o que fazer e qual é o valor da funcionalidade","**Contexto**
+- [ ] Card de Hoje no topo com CTA direto para registro",✅ Feito
+[UX/UI] Empty states não orientam o usuário sobre o que fazer e qual é o valor da funcionalidade,"**Contexto**
 Usuários novos ou sem dados encontram tabelas e painéis vazios com o componente `EmptyState` genérico. Não há orientação sobre como começar, qual é o benefício esperado, nem sugestão de primeiro passo.
 
 **Proposta de Melhoria**
@@ -2385,7 +2385,7 @@ Usuários novos ou sem dados encontram tabelas e painéis vazios com o component
 - [ ] Texto explicativo sobre o valor da funcionalidade (por que isso importa?)
 - [ ] CTA direto e contextual: Criar primeira rotina / Importar template / Iniciar plano de treino
 - [ ] Empty states de dashboard com link para o onboarding wizard
-- [ ] Estado de primeiro acesso diferenciado do estado de zero dados após uso","✅ Feito"
+- [ ] Estado de primeiro acesso diferenciado do estado de zero dados após uso",✅ Feito
 "[UX/UI] Heatmap de hábitos sem interatividade, tooltips ricos e opção de expansão","**Contexto**
 O componente `HabitHeatmap.tsx` exibe a consistência de hábitos de forma estática. Não há tooltip ao passar o mouse sobre uma célula, não é possível filtrar por categoria e o heatmap fica pequeno e ilegível quando o usuário tem muitos hábitos.
 
@@ -2394,8 +2394,8 @@ O componente `HabitHeatmap.tsx` exibe a consistência de hábitos de forma está
 - [ ] Filtro por categoria de tarefa (saúde, finanças, trabalho, etc.)
 - [ ] Opção de expandir o heatmap para tela cheia ou painel lateral
 - [ ] Heatmap anual (estilo GitHub contributions) como alternativa ao semanal
-- [ ] Legenda clara com escala de intensidade","✅ Feito"
-"[Melhoria] Unificar navegação do módulo com sidebar contextual e agrupamento lógico por domínio","**Contexto**
+- [ ] Legenda clara com escala de intensidade",✅ Feito
+[Melhoria] Unificar navegação do módulo com sidebar contextual e agrupamento lógico por domínio,"**Contexto**
 A navegação atual do módulo de Planejamento Pessoal usa o menu lateral global da aplicação sem hierarquia própria, expondo 6+ links de mesmo nível sem relacionamento visual entre eles.
 
 **Proposta**
@@ -2406,8 +2406,8 @@ Criar um layout wrapper para o módulo `/planning/*` com sidebar secundária org
 - **Progresso**: Dashboard + Analytics
 
 **Benefício Esperado**
-Redução de 60%+ no tempo de navegação para encontrar funcionalidades. Sensação de produto coeso em vez de ferramentas soltas.","✅ Feito"
-"[Melhoria] Conectar progresso de Metas a sessões de treino e logs nutricionais","**Contexto**
+Redução de 60%+ no tempo de navegação para encontrar funcionalidades. Sensação de produto coeso em vez de ferramentas soltas.",✅ Feito
+[Melhoria] Conectar progresso de Metas a sessões de treino e logs nutricionais,"**Contexto**
 Atualmente, o progresso de `Goal` é calculado exclusivamente a partir de `TaskInstance`. Metas de saúde como Treinar 4x por semana não podem ser alimentadas automaticamente pelas sessões de `WorkoutSession` existentes no banco.
 
 **Proposta Técnica**
@@ -2416,8 +2416,8 @@ Atualmente, o progresso de `Goal` é calculado exclusivamente a partir de `TaskI
 - Atualizar `GoalForm` para exibir configuração de fonte de progresso condicionalmente
 
 **Benefício Esperado**
-O usuário finalmente vê valor integrado: a meta de saúde avança automaticamente quando ele malha ou se alimenta bem.","✅ Feito"
-"[Melhoria] Tornar gamificação emocional com celebrações visuais e barra de XP na tela principal","**Contexto**
+O usuário finalmente vê valor integrado: a meta de saúde avança automaticamente quando ele malha ou se alimenta bem.",✅ Feito
+[Melhoria] Tornar gamificação emocional com celebrações visuais e barra de XP na tela principal,"**Contexto**
 O sistema de gamificação existe no backend com lógica completa. O `GamificationPanel.tsx` existe mas está posicionado como componente consultivo. A gamificação não é vivenciada emocionalmente durante o uso diário.
 
 **Proposta**
@@ -2428,8 +2428,8 @@ O sistema de gamificação existe no backend com lógica completa. O `Gamificati
 - Ícone de streak visível e animado ao manter dias consecutivos
 
 **Benefício Esperado**
-Aumento mensurável de retenção diária. O usuário tem razão emocional para abrir o app amanhã.","✅ Feito"
-"[Melhoria] Criar Quick Log de treino para registro de sessão em até 3 interações","**Contexto**
+Aumento mensurável de retenção diária. O usuário tem razão emocional para abrir o app amanhã.",✅ Feito
+[Melhoria] Criar Quick Log de treino para registro de sessão em até 3 interações,"**Contexto**
 O fluxo atual de registro de sessão de treino exige criação de plano, dias, exercícios, sessão e séries — fluxo hierárquico de 4-5 passos. Isso impede adoção do módulo de workout pela maioria dos usuários.
 
 **Proposta**
@@ -2442,8 +2442,8 @@ Criar tela/modal Quick Log que:
 **Critérios de Aceite**
 - [ ] Registro completo de sessão em menos de 60 segundos de interação
 - [ ] Sugestão automática de carga baseada na última sessão (progressão automática)
-- [ ] Fluxo completo de gerenciamento mantido para configuração inicial","✅ Feito"
-"[Melhoria] Integrar reflexão diária como encerramento natural do checklist de tarefas","**Contexto**
+- [ ] Fluxo completo de gerenciamento mantido para configuração inicial",✅ Feito
+[Melhoria] Integrar reflexão diária como encerramento natural do checklist de tarefas,"**Contexto**
 `DailyReflection` tem rota separada em `/planning/reflections`. Não existe nenhum estímulo contextual para o usuário registrar como foi seu dia após concluir as tarefas.
 
 **Proposta**
@@ -2454,8 +2454,8 @@ Criar tela/modal Quick Log que:
 - Rota `/planning/reflections` mantida apenas para histórico
 
 **Benefício Esperado**
-Taxa de preenchimento de reflexões aumenta organicamente. Dados de humor se tornam consistentes e úteis para analytics e IA.","✅ Feito"
-"[Melhoria] Transformar insights do dashboard em recomendações acionáveis com CTAs","**Contexto**
+Taxa de preenchimento de reflexões aumenta organicamente. Dados de humor se tornam consistentes e úteis para analytics e IA.",✅ Feito
+[Melhoria] Transformar insights do dashboard em recomendações acionáveis com CTAs,"**Contexto**
 Os insights gerados pelo analytics de 90 dias descrevem padrões mas não sugerem ações. O usuário consome a informação passivamente sem saber o que fazer com ela.
 
 **Proposta**
@@ -2468,8 +2468,8 @@ Os insights gerados pelo analytics de 90 dias descrevem padrões mas não sugere
 **Critérios de Aceite**
 - [ ] Todo insight possui ao menos uma ação sugerida
 - [ ] Card de destaque com recomendação semanal personalizada
-- [ ] CTA direto leva ao fluxo de edição correto sem navegação extra","✅ Feito"
-"[Melhoria] Adicionar visualização semanal e mensal de planejamento com controle de carga","**Contexto**
+- [ ] CTA direto leva ao fluxo de edição correto sem navegação extra",✅ Feito
+[Melhoria] Adicionar visualização semanal e mensal de planejamento com controle de carga,"**Contexto**
 O módulo oferece apenas visão diária (tela Hoje) e dashboard agregado (stats e gráficos). Não existe uma tela de planejamento semanal ou mensal onde o usuário possa ver sua carga distribuída e planejar com antecedência.
 
 **Proposta**
@@ -2480,8 +2480,8 @@ O módulo oferece apenas visão diária (tela Hoje) e dashboard agregado (stats 
 - Alternância entre visão semanal e mensal
 
 **Benefício Esperado**
-Aumenta o valor para usuários com mentalidade de planejamento estratégico. Transforma o app de reativo (o que faço hoje?) para proativo (como será minha semana?).","❌ Pendente"
-"[Feature] Modo Foco com timer Pomodoro integrado às tarefas de rotina","**Objetivo**
+Aumenta o valor para usuários com mentalidade de planejamento estratégico. Transforma o app de reativo (o que faço hoje?) para proativo (como será minha semana?).",✅ Feito
+[Feature] Modo Foco com timer Pomodoro integrado às tarefas de rotina,"**Objetivo**
 Ajudar o usuário a executar tarefas cognitivas com concentração ativa, agregando dimensão de qualidade além do simples check.
 
 **Como Funcionaria**
@@ -2494,8 +2494,8 @@ Ajudar o usuário a executar tarefas cognitivas com concentração ativa, agrega
 **Benefícios**
 Diferencial em relação a simples checklist. Integra gestão de tempo ao gerenciamento de tarefas. Gera dados de tempo efetivo por categoria de atividade.
 
-**Complexidade:** Média","❌ Pendente"
-"[Feature] Habit Stacking — encadeamento automático de hábitos sequenciais","**Objetivo**
+**Complexidade:** Média",✅ Feito
+[Feature] Habit Stacking — encadeamento automático de hábitos sequenciais,"**Objetivo**
 Permitir que o usuário defina sequências de tarefas baseadas em ciência comportamental (habit stacking), aumentando a taxa de adesão a rotinas encadeadas.
 
 **Como Funcionaria**
@@ -2508,8 +2508,8 @@ Permitir que o usuário defina sequências de tarefas baseadas em ciência compo
 **Benefícios**
 Baseado em neurociência comportamental. Aumenta a taxa de conclusão de rotinas que normalmente são negligenciadas. Cria senso de momentum diário.
 
-**Complexidade:** Média","❌ Pendente"
-"[Feature] Desafios por período com metas cronometradas e acompanhamento diário","**Objetivo**
+**Complexidade:** Média",✅ Feito
+[Feature] Desafios por período com metas cronometradas e acompanhamento diário,"**Objetivo**
 Criar desafios com prazo definido (7, 30 ou 100 dias) que gerem engajamento intensificado por urgência e comprometimento.
 
 **Como Funcionaria**
@@ -2523,8 +2523,8 @@ Criar desafios com prazo definido (7, 30 ou 100 dias) que gerem engajamento inte
 **Benefícios**
 Gamificação com prazo aumenta urgência e comprometimento. Estrutura clara de início e fim cria narrativa pessoal de conquista.
 
-**Complexidade:** Média","❌ Pendente"
-"[Feature] Planejamento semanal inteligente com alertas de sobrecarga e sugestão de redistribuição","**Objetivo**
+**Complexidade:** Média",✅ Feito
+[Feature] Planejamento semanal inteligente com alertas de sobrecarga e sugestão de redistribuição,"**Objetivo**
 Transformar o módulo de reativo (o que faço hoje?) para proativo (como será minha semana?).
 
 **Como Funcionaria**
@@ -2535,8 +2535,8 @@ Transformar o módulo de reativo (o que faço hoje?) para proativo (como será m
 - Sugestão automática de redistribuição: Você tem 4h planejadas para quinta. Mover [tarefa] para sexta?
 - Drag-and-drop para ajuste manual
 
-**Complexidade:** Alta","❌ Pendente"
-"[Feature] Registro de progresso físico com métricas corporais e gráfico de evolução","**Objetivo**
+**Complexidade:** Alta",✅ Feito
+[Feature] Registro de progresso físico com métricas corporais e gráfico de evolução,"**Objetivo**
 Complementar o módulo de treino com rastreamento de métricas corporais ao longo do tempo, fechando o loop de valor para usuários fitness.
 
 **Como Funcionaria**
@@ -2549,8 +2549,8 @@ Complementar o módulo de treino com rastreamento de métricas corporais ao long
 **Benefícios**
 Aumenta retenção do módulo de workout ao mostrar progresso tangível. Fecha o loop entre esforço (treinos) e resultado (corpo).
 
-**Complexidade:** Média","❌ Pendente"
-"[Feature] Templates pessoais de rotina criados e salvos pelo próprio usuário","**Objetivo**
+**Complexidade:** Média",✅ Feito
+[Feature] Templates pessoais de rotina criados e salvos pelo próprio usuário,"**Objetivo**
 Permitir que usuários preservem e reutilizem configurações de rotina elaboradas, sem depender apenas dos templates do sistema.
 
 **Como Funcionaria**
@@ -2565,8 +2565,8 @@ Permitir que usuários preservem e reutilizem configurações de rotina elaborad
 - [ ] Campo `is_system` booleano separa templates do sistema dos pessoais
 - [ ] Frontend: modal de seleção de tarefas para compor o template
 
-**Complexidade:** Média-Baixa","✅ Feito"
-"[Feature] Correlação visual entre humor diário e produtividade com análise de padrões","**Objetivo**
+**Complexidade:** Média-Baixa",✅ Feito
+[Feature] Correlação visual entre humor diário e produtividade com análise de padrões,"**Objetivo**
 Mostrar ao usuário como seu estado emocional impacta sua produtividade e vice-versa, gerando auto-conhecimento profundo com dados que já existem no sistema.
 
 **Como Funcionaria**
@@ -2578,8 +2578,8 @@ Mostrar ao usuário como seu estado emocional impacta sua produtividade e vice-v
 
 **Nota:** Os dados de `DailyReflection` (mood) e `TaskInstance` (completed_at) já existem. Trata-se principalmente de uma tela de analytics nova.
 
-**Complexidade:** Baixa (dados existentes)","✅ Feito"
-"[Nova Tela] Minha Semana — visão semanal de tarefas e rotinas para planejamento proativo","**Objetivo**
+**Complexidade:** Baixa (dados existentes)",✅ Feito
+[Nova Tela] Minha Semana — visão semanal de tarefas e rotinas para planejamento proativo,"**Objetivo**
 Oferecer visão completa da semana para planejamento antecipado, controle de carga diária e identificação de gaps antes que aconteçam.
 
 **Principais Elementos**
@@ -2593,7 +2593,7 @@ Oferecer visão completa da semana para planejamento antecipado, controle de car
 **Fluxo Principal**
 Usuário acessa no domingo ou segunda-feira → visualiza distribuição da semana → adiciona tarefas extras → reorganiza tarefas flexíveis via drag-and-drop → monitora progresso ao longo da semana.
 
-**Rota Proposta:** `/planning/week`","✅ Feito"
+**Rota Proposta:** `/planning/week`",✅ Feito
 "[Nova Tela] Jornada — timeline de conquistas, badges e evolução pessoal do usuário","**Objetivo**
 Criar narrativa pessoal do usuário que comunica sua evolução ao longo do tempo, gerando conexão emocional com o produto e antídoto para o churn em momentos de desmotivação.
 
@@ -2607,7 +2607,7 @@ Criar narrativa pessoal do usuário que comunica sua evolução ao longo do temp
 **Fluxo Principal**
 Usuário acessa quando busca motivação ou quer compartilhar conquistas. Serve como prova tangível de evolução pessoal.
 
-**Rota Proposta:** `/planning/journey`","✅ Feito"
+**Rota Proposta:** `/planning/journey`",✅ Feito
 "[Nova Tela] Hoje — visão integrada de tarefas, treino, nutrição e reflexão em uma única tela","**Objetivo**
 Eliminar a necessidade de navegar entre 4 telas diferentes para registrar o dia completo. Tornar esta a tela de entrada padrão do módulo.
 
@@ -2622,8 +2622,8 @@ Eliminar a necessidade de navegar entre 4 telas diferentes para registrar o dia 
 **Fluxo Principal**
 Usuário abre esta tela pela manhã → vê tudo que tem para o dia → registra cada atividade no contexto correto → encerra o dia com a reflexão.
 
-**Rota Proposta:** `/planning/today` (substituindo `/planning/today-tasks`)","✅ Feito"
-"[Nova Tela] Onboarding Wizard — configuração guiada da semana ideal para novos usuários","**Objetivo**
+**Rota Proposta:** `/planning/today` (substituindo `/planning/today-tasks`)",✅ Feito
+[Nova Tela] Onboarding Wizard — configuração guiada da semana ideal para novos usuários,"**Objetivo**
 Transformar a primeira experiência no módulo de um dashboard vazio para uma rotina personalizada configurada em 5 minutos, resolvendo o problema de onboarding completamente.
 
 **Principais Elementos**
@@ -2636,8 +2636,8 @@ Wizard de 4 etapas:
 **Fluxo Principal**
 Usuário novo é direcionado ao wizard no primeiro acesso → completa 4 etapas em ~5 min → rotina base é criada com tasks importadas de templates relevantes → redirecionado para tela Hoje com a primeira rotina ativa.
 
-**Rota Proposta:** `/planning/setup` (disparado apenas para usuários sem rotinas)","❌ Pendente"
-"[Nova Tela] Analytics Pessoal — análise profunda de padrões e tendências de longo prazo","**Objetivo**
+**Rota Proposta:** `/planning/setup` (disparado apenas para usuários sem rotinas)",✅ Feito
+[Nova Tela] Analytics Pessoal — análise profunda de padrões e tendências de longo prazo,"**Objetivo**
 Oferecer análise avançada para usuários que querem entender seus padrões em profundidade além do dashboard principal.
 
 **Principais Elementos**
@@ -2652,8 +2652,8 @@ Oferecer análise avançada para usuários que querem entender seus padrões em 
 **Fluxo Principal**
 Usuário acessa mensalmente para revisão estratégica. Dados ricos alimentam conversas com o agente de IA.
 
-**Rota Proposta:** `/planning/analytics` (substituindo a seção de analytics do dashboard)","✅ Feito"
-"[IA] Agente especializado em planejamento pessoal com contexto completo do usuário","**Objetivo**
+**Rota Proposta:** `/planning/analytics` (substituindo a seção de analytics do dashboard)",✅ Feito
+[IA] Agente especializado em planejamento pessoal com contexto completo do usuário,"**Objetivo**
 Criar um agente de IA dentro do módulo `agents/` especializado em planejamento pessoal, com acesso ao contexto completo de rotinas, metas, humor e progresso do usuário para conversas naturais e orientação personalizada.
 
 **Como Funcionaria**
@@ -2665,8 +2665,8 @@ Criar um agente de IA dentro do módulo `agents/` especializado em planejamento 
 **Benefício**
 Coach pessoal digital disponível 24h com contexto real do usuário. Diferencial competitivo significativo em relação a apps de planejamento sem IA.
 
-**Dependências:** Agente `planning` em `api/agents/`, RAG tools existentes, dados de analytics","✅ Feito"
-"[IA] Geração automática de rotina personalizada a partir de objetivo declarado","**Objetivo**
+**Dependências:** Agente `planning` em `api/agents/`, RAG tools existentes, dados de analytics",✅ Feito
+[IA] Geração automática de rotina personalizada a partir de objetivo declarado,"**Objetivo**
 Permitir que o usuário descreva um objetivo e a IA gere automaticamente um conjunto de tarefas de rotina alinhadas, eliminando a barreira de configuração inicial.
 
 **Como Funcionaria**
@@ -2681,8 +2681,8 @@ Permitir que o usuário descreva um objetivo e a IA gere automaticamente um conj
 - [ ] Parsing estruturado da resposta do LLM para criação de RoutineTask
 - [ ] Interface de revisão com cards de tarefas sugeridas + aceitar/rejeitar
 
-**Complexidade:** Alta","❌ Pendente"
-"[IA] Detecção preditiva de risco de falha em metas com alerta proativo 5-7 dias antes","**Objetivo**
+**Complexidade:** Alta",✅ Feito
+[IA] Detecção preditiva de risco de falha em metas com alerta proativo 5-7 dias antes,"**Objetivo**
 Identificar quando uma meta está em risco antes que a falha aconteça, permitindo intervenção a tempo com sugestões de ajuste.
 
 **Como Funcionaria**
@@ -2695,8 +2695,8 @@ Identificar quando uma meta está em risco antes que a falha aconteça, permitin
 **Critérios de Aceite**
 - [ ] Task Celery periódica avaliando metas ativas diariamente
 - [ ] Threshold configurável de risco (padrão: 30% abaixo do ritmo necessário)
-- [ ] Notificação in-app e/ou e-mail (via sistema de notificações existente)","✅ Feito"
-"[IA] Otimização inteligente de horários baseada em padrões reais de conclusão","**Objetivo**
+- [ ] Notificação in-app e/ou e-mail (via sistema de notificações existente)",✅ Feito
+[IA] Otimização inteligente de horários baseada em padrões reais de conclusão,"**Objetivo**
 Aprender quando o usuário realmente executa cada tipo de tarefa com sucesso e sugerir realocações que aumentem a taxa de conclusão.
 
 **Como Funcionaria**
@@ -2707,8 +2707,8 @@ Aprender quando o usuário realmente executa cada tipo de tarefa com sucesso e s
 - Análise por dia da semana: horários ideais podem variar entre dias úteis e fins de semana
 
 **Benefício**
-O sistema se adapta ao comportamento real do usuário, não ao comportamento ideal declarado. Aumenta taxa de conclusão sem esforço adicional do usuário.","❌ Pendente"
-"[IA] Geração de plano de treino personalizado por IA com progressão semanal","**Objetivo**
+O sistema se adapta ao comportamento real do usuário, não ao comportamento ideal declarado. Aumenta taxa de conclusão sem esforço adicional do usuário.",❌ Pendente
+[IA] Geração de plano de treino personalizado por IA com progressão semanal,"**Objetivo**
 Permitir que usuários sem conhecimento técnico de treino gerem um WorkoutPlan completo e estruturado através de uma conversa com a IA.
 
 **Como Funcionaria**
@@ -2720,8 +2720,8 @@ Permitir que usuários sem conhecimento técnico de treino gerem um WorkoutPlan 
 
 **Dependências**
 - Geração estruturada via `structured outputs` do LLM provider configurado
-- Parsing para criar WorkoutPlan, WorkoutDays e WorkoutExercises via API existente","❌ Pendente"
-"[IA] Geração de cardápio semanal personalizado com base em preferências e restrições","**Objetivo**
+- Parsing para criar WorkoutPlan, WorkoutDays e WorkoutExercises via API existente",✅ Feito
+[IA] Geração de cardápio semanal personalizado com base em preferências e restrições,"**Objetivo**
 Permitir que usuários gerem um plano alimentar semanal completo através de uma conversa com a IA, eliminando a complexidade de configuração manual de MealTypes, MenuOptions e ingredientes.
 
 **Como Funcionaria**
@@ -2732,7 +2732,7 @@ Permitir que usuários gerem um plano alimentar semanal completo através de uma
 - Cálculo automático de macros estimados por refeição (quando dados nutricionais disponíveis)
 
 **Benefício**
-Remove a principal barreira do módulo de nutrição: a configuração manual extensa. Usuário chega ao primeiro log de refeição em minutos.","❌ Pendente"
+Remove a principal barreira do módulo de nutrição: a configuração manual extensa. Usuário chega ao primeiro log de refeição em minutos.",✅ Feito
 "[IA] Busca semântica em toda a jornada do usuário: tarefas, reflexões e histórico","**Contexto**
 O embedding de `RoutineTask` e `Goal` já está implementado via sinais em `signals.py`. O sistema de RAG existe em `tools/rag_tools.py`. A oportunidade é expandir os embeddings para reflexões diárias, logs de treino e notas nutricionais.
 
@@ -2745,8 +2745,8 @@ O embedding de `RoutineTask` e `Goal` já está implementado via sinais em `sign
 **Dependências**
 - pgvector já configurado
 - RAG tools existentes reutilizáveis
-- Novo campo `embedding` nos modelos DailyReflection, WorkoutSession","❌ Pendente"
-"[IA] Síntese semanal automática gerada por IA com destaques e sugestões para a próxima semana","**Objetivo**
+- Novo campo `embedding` nos modelos DailyReflection, WorkoutSession",❌ Pendente
+[IA] Síntese semanal automática gerada por IA com destaques e sugestões para a próxima semana,"**Objetivo**
 Toda segunda-feira, gerar automaticamente uma síntese da semana anterior com highlights, padrões identificados e 3 sugestões para a semana atual.
 
 **Como Funcionaria**
@@ -2758,8 +2758,8 @@ Toda segunda-feira, gerar automaticamente uma síntese da semana anterior com hi
 - Histórico de sínteses semanais acessível na tela de Analytics
 
 **Benefício**
-Cria ritual semanal de reflexão automática. Aumenta o valor percebido do produto sem esforço do usuário.","✅ Feito"
-"[IA] Coach adaptativo com sistema de nudge inteligente e contextualizado","**Objetivo**
+Cria ritual semanal de reflexão automática. Aumenta o valor percebido do produto sem esforço do usuário.",✅ Feito
+[IA] Coach adaptativo com sistema de nudge inteligente e contextualizado,"**Objetivo**
 Substituir lembretes genéricos por mensagens contextualizadas que aprendem o comportamento de cada usuário e comunicam no momento e formato mais eficaz.
 
 **Como Funcionaria**
@@ -2771,8 +2771,8 @@ Substituir lembretes genéricos por mensagens contextualizadas que aprendem o co
 
 **Dependências**
 - Sistema de notificações in-app existente
-- Histórico de engajamento por notificação (requer nova tabela de analytics)","❌ Pendente"
-"[Problema] Dashboard dispara 10+ requisições simultâneas a cada acesso","## Contexto
+- Histórico de engajamento por notificação (requer nova tabela de analytics)",❌ Pendente
+[Problema] Dashboard dispara 10+ requisições simultâneas a cada acesso,"## Contexto
 
 A página inicial do módulo de Controle Financeiro (`Dashboard.tsx`) dispara 10+ chamadas de API independentes e paralelas a cada acesso: `stats`, `accountBalances`, `expenses`, `revenues`, `creditCards`, `creditCardBills`, `budgetStatus`, `cashFlowForecast`, `financialAlerts` e `anomalies`.
 
@@ -2794,8 +2794,8 @@ O usuário experimenta uma tela que ""vai montando aos poucos"", criando sensaç
 - [ ] Dashboard carrega com no máximo 4 requisições paralelas na carga inicial
 - [ ] Tempo de carregamento percebido reduzido em ≥ 50% em conexão 4G simulada
 - [ ] Cache Redis preservado para o novo endpoint agregado
-- [ ] Testes unitários para o novo endpoint","✅ Feito"
-"[Problema] Gestão de cartões de crédito fragmentada em 4 páginas separadas","## Contexto
+- [ ] Testes unitários para o novo endpoint",✅ Feito
+[Problema] Gestão de cartões de crédito fragmentada em 4 páginas separadas,"## Contexto
 
 A jornada do usuário para gerenciar um cartão de crédito exige navegar por quatro telas distintas sem navegação contextual entre elas:
 
@@ -2827,8 +2827,8 @@ Manter rotas individuais como deep links para acesso direto.
 - [ ] Tabs Resumo | Faturas | Compras | Configurações funcionando dentro do hub
 - [ ] Navegação com breadcrumb: `Cartões > [Nome do Cartão] > Faturas`
 - [ ] Rotas diretas (`/credit-cards/bills`, `/credit-cards/expenses`) preservadas como deep links
-- [ ] Responsivo em mobile","✅ Feito"
-"[Problema] Ausência de notificações proativas para vencimentos e alertas financeiros","## Contexto
+- [ ] Responsivo em mobile",✅ Feito
+[Problema] Ausência de notificações proativas para vencimentos e alertas financeiros,"## Contexto
 
 O backend possui `FinancialAlertsView`, detecção de anomalias e o modelo `Notification` com infraestrutura de entrega — mas nenhuma notificação proativa é enviada ao usuário. O usuário só descobre vencimentos próximos, orçamentos no limite ou faturas em aberto quando entra manualmente na plataforma.
 
@@ -2859,8 +2859,8 @@ Implementar pipeline de notificações proativas usando a infraestrutura existen
 - [ ] Notificação in-app criada e visível no sino da sidebar
 - [ ] Email enviado para vencimentos com menos de 24h
 - [ ] Configuração de preferências de notificação no perfil do usuário (ativar/desativar por tipo)
-- [ ] Não duplicar notificações para o mesmo evento","✅ Feito"
-"[Problema] Conciliação bancária sem interface de matching visual completa","## Contexto
+- [ ] Não duplicar notificações para o mesmo evento",✅ Feito
+[Problema] Conciliação bancária sem interface de matching visual completa,"## Contexto
 
 A página `BankReconciliation` e `BankReconciliationDetail` têm infraestrutura de importação funcional (OFX, CSV, CNAB com matching automático e scoring de confiança), mas a interface de reconciliação manual está incompleta. Não existe uma tela onde o usuário possa confirmar, rejeitar ou criar manualmente os vínculos entre itens do extrato e transações do sistema.
 
@@ -2893,8 +2893,8 @@ Implementar interface de reconciliação visual na `BankReconciliationDetail`:
 - [ ] Ações de confirmar, rejeitar, criar e ignorar funcionando
 - [ ] Barra de progresso da reconciliação
 - [ ] Resumo ao concluir a reconciliação
-- [ ] Estado salvo no banco (status atualizado por item)","✅ Feito"
-"[Problema] Página de Orçamentos usa padrão legado (useState/useEffect) em vez de TanStack Query","## Contexto
+- [ ] Estado salvo no banco (status atualizado por item)",✅ Feito
+[Problema] Página de Orçamentos usa padrão legado (useState/useEffect) em vez de TanStack Query,"## Contexto
 
 Enquanto todo o restante do módulo de Controle Financeiro migrou para TanStack Query v5, o arquivo `Budgets.tsx` ainda utiliza o padrão antigo de gerenciamento de estado com `useState` para dados, `useEffect` para buscar dados, e controle manual de loading/error. Isso cria inconsistência de codebase e comportamento diferente de cache entre Orçamentos e as demais páginas.
 
@@ -2918,8 +2918,8 @@ Refatorar `Budgets.tsx` seguindo o padrão já estabelecido nas demais páginas:
 - [ ] `useMutation` para create, update e delete com invalidação de cache
 - [ ] Hook `use-budgets-page.ts` criado seguindo padrão de `use-expenses-page.ts`
 - [ ] Comportamento de loading e error equivalente aos demais módulos
-- [ ] Testes unitários atualizados","✅ Feito"
-"[Problema] Dashboard sem drill-down para transações filtradas","## Contexto
+- [ ] Testes unitários atualizados",✅ Feito
+[Problema] Dashboard sem drill-down para transações filtradas,"## Contexto
 
 Os cards e gráficos do dashboard (ex: ""R$ 3.200 em despesas este mês"", ""R$ 890 em Alimentação"") não são clicáveis. O usuário vê os números mas não consegue navegar para a lista de transações correspondentes sem aplicar filtros manualmente.
 
@@ -2944,8 +2944,8 @@ As páginas de Despesas e Receitas já suportam filtros por URL — basta adicio
 - [ ] Clique em card navega para página correta com filtros pré-aplicados
 - [ ] Barras e slices de gráficos clicáveis com navegação contextual
 - [ ] Páginas de destino leem query params e aplicam filtros automaticamente
-- [ ] Tooltip nos elementos clicáveis indicando a ação (""Ver despesas de Alimentação"")","✅ Feito"
-"[Problema] Geração de lançamentos fixos sem histórico visível ao usuário","## Contexto
+- [ ] Tooltip nos elementos clicáveis indicando a ação (""Ver despesas de Alimentação"")",✅ Feito
+[Problema] Geração de lançamentos fixos sem histórico visível ao usuário,"## Contexto
 
 Os modelos `FixedExpenseGenerationLog` e `FixedRevenueGenerationLog` já existem no backend e registram cada execução de geração mensal, mas a interface não exibe esse histórico. O usuário não sabe se o mês atual já foi gerado, quantos lançamentos foram criados ou se alguma geração falhou.
 
@@ -2969,8 +2969,8 @@ Adicionar seção de histórico em `FixedExpenses.tsx` e `FixedRevenues.tsx`:
 - [ ] Seção de histórico nos últimos 6 meses visível nas páginas de lançamentos fixos
 - [ ] Status visual: mês gerado vs não gerado
 - [ ] Botão de geração manual para meses não gerados
-- [ ] Quantidade de lançamentos criados por geração exibida","✅ Feito"
-"[Problema] Divisão de despesas (ExpenseSplit) invisível na interface","## Contexto
+- [ ] Quantidade de lançamentos criados por geração exibida",✅ Feito
+[Problema] Divisão de despesas (ExpenseSplit) invisível na interface,"## Contexto
 
 O modelo `ExpenseSplit` está implementado no backend com campos de membro, percentual e valor, mas não há interface proeminente para criar e acompanhar divisões de despesas. A funcionalidade existe no serializer mas é praticamente inacessível ao usuário comum.
 
@@ -2994,8 +2994,8 @@ Integrar a criação de `ExpenseSplit` diretamente no formulário de despesa (`E
 - [ ] Seleção de múltiplos membros com valor/percentual individual
 - [ ] Validação: soma dos percentuais = 100%
 - [ ] Ícone de compartilhamento visível na listagem de despesas divididas
-- [ ] Detalhes da divisão acessíveis via clique/hover","✅ Feito"
-"[Problema] Tags sem painel de gestão centralizado","## Contexto
+- [ ] Detalhes da divisão acessíveis via clique/hover",✅ Feito
+[Problema] Tags sem painel de gestão centralizado,"## Contexto
 
 O modelo `Tag` existe com suporte a nome e cor (hex), mas não há uma tela dedicada para criar, editar e visualizar as tags criadas e seu uso. As tags só aparecem como campo nos formulários de despesa, sem nenhuma visibilidade sobre quais existem ou quantas despesas cada uma tem.
 
@@ -3018,8 +3018,8 @@ Criar página `Tags` acessível em `Configurações > Tags`:
 - [ ] CRUD completo de tags
 - [ ] Contador de uso por tag
 - [ ] Seletor de cor funcional
-- [ ] Link para ver despesas da tag","✅ Feito"
-"[Melhoria UX] Dashboard com hierarquia visual inadequada — todas as seções com mesmo peso","## Contexto
+- [ ] Link para ver despesas da tag",✅ Feito
+[Melhoria UX] Dashboard com hierarquia visual inadequada — todas as seções com mesmo peso,"## Contexto
 
 O dashboard atual apresenta health score, gráficos, alertas, forecast e relatório IR todos com o mesmo peso visual e destaque. O usuário não tem guia visual de onde olhar primeiro e precisa processar toda a tela para entender o estado financeiro atual.
 
@@ -3052,8 +3052,8 @@ Estabelecer hierarquia em três níveis claros:
 - [ ] Nível 1 visível sem scroll em telas 1080p
 - [ ] Alertas críticos com destaque visual diferenciado (borda colorida + ícone animado)
 - [ ] Seções de Nível 3 colapsáveis com estado salvo em localStorage
-- [ ] Mobile: hierarquia preservada em ordem vertical","✅ Feito"
-"[Melhoria UX] StatCards com aparência genérica — sem distinção visual por tipo de dado","## Contexto
+- [ ] Mobile: hierarquia preservada em ordem vertical",✅ Feito
+[Melhoria UX] StatCards com aparência genérica — sem distinção visual por tipo de dado,"## Contexto
 
 Os `StatCard` do dashboard usam layout idêntico para todos os tipos de dado (ícone + valor + variação percentual). Um card de ""Despesas do Mês"" parece visualmente idêntico a um de ""Health Score"" ou ""Saldo Disponível"", sem distinção semântica.
 
@@ -3073,8 +3073,8 @@ Aplicar design específico por categoria de dado:
 - [ ] Cards de alerta com animação sutil quando em estado crítico
 - [ ] Barra de progresso inline nos cards de orçamento
 - [ ] Consistência com o design system existente (CSS variables, Tailwind tokens)
-- [ ] Dark/light mode funcionando em todos os variantes","✅ Feito"
-"[Melhoria UX] Tabelas de transações sem diferenciação visual entre itens pagos e pendentes","## Contexto
+- [ ] Dark/light mode funcionando em todos os variantes",✅ Feito
+[Melhoria UX] Tabelas de transações sem diferenciação visual entre itens pagos e pendentes,"## Contexto
 
 Nas listagens de despesas e receitas, linhas de transações pagas/recebidas e pendentes são visualmente quase idênticas. Apenas um badge de status no final da linha diferencia os dois estados, exigindo leitura de cada linha para entender o estado.
 
@@ -3096,8 +3096,8 @@ Adicionalmente, ícone de status clicável para marcar como pago diretamente da 
 - [ ] Transição visual suave ao marcar item como pago (fade para opacidade reduzida)
 - [ ] Ícone de status clicável para toggle pago/pendente diretamente na tabela
 - [ ] Tooltip no ícone de status indicando ação disponível
-- [ ] Consistência entre tabela de despesas e receitas","✅ Feito"
-"[Melhoria UX] Ações em tabelas inconsistentes entre páginas do módulo","## Contexto
+- [ ] Consistência entre tabela de despesas e receitas",✅ Feito
+[Melhoria UX] Ações em tabelas inconsistentes entre páginas do módulo,"## Contexto
 
 Existem pelo menos 3 padrões diferentes de exibição de ações em tabelas no módulo: (1) ícones sempre visíveis, (2) ícones aparecendo em hover, (3) dropdown de ações. Essa inconsistência aumenta o esforço cognitivo ao mudar de seção.
 
@@ -3119,8 +3119,8 @@ Padronizar para um único padrão em todas as tabelas do módulo:
 - [ ] Todas as tabelas do módulo usando o mesmo padrão
 - [ ] Hover state consistente (fundo sutil na linha ao hover)
 - [ ] Tooltips em todos os IconButton de ação
-- [ ] Testes de acessibilidade (tab navigation nas ações)","✅ Feito"
-"[Melhoria UX] Formulários sem feedback visual adequado durante operações assíncronas","## Contexto
+- [ ] Testes de acessibilidade (tab navigation nas ações)",✅ Feito
+[Melhoria UX] Formulários sem feedback visual adequado durante operações assíncronas,"## Contexto
 
 Em vários formulários do módulo (criação de despesa, empréstimo, cartão), o botão de submit não comunica claramente o estado de carregamento durante o envio. O estado `isSubmitting` existe no código mas é aplicado de forma inconsistente.
 
@@ -3148,8 +3148,8 @@ Padronizar o feedback de operações assíncronas em todos os formulários:
 - [ ] `SuccessAnimation` usado na confirmação de criação
 - [ ] Erros de validação do backend exibidos por campo (não apenas toast genérico)
 - [ ] Botão de delete com loading state
-- [ ] Consistência em todos os dialogs de formulário do módulo","✅ Feito"
-"[Melhoria UX] Filtros ativos sem comunicação clara de estado para o usuário","## Contexto
+- [ ] Consistência em todos os dialogs de formulário do módulo",✅ Feito
+[Melhoria UX] Filtros ativos sem comunicação clara de estado para o usuário,"## Contexto
 
 Quando filtros estão ativos em páginas como Despesas, Receitas e Transferências, a lista exibe resultados filtrados mas não há indicação clara e persistente de que a visualização está filtrada. O usuário pode voltar para a página e não perceber que ainda há filtros aplicados.
 
@@ -3172,8 +3172,8 @@ Adicionar banner/chip persistente abaixo da barra de filtros quando há filtros 
 - [ ] Chips individuais por filtro com botão X para remover
 - [ ] Contador de resultados ""Mostrando N itens""
 - [ ] localStorage com estado de filtros por página
-- [ ] Banner ausente quando não há filtros (sem ocupar espaço desnecessário)","✅ Feito"
-"[Melhoria UX] Gráficos do dashboard sem estado vazio definido","## Contexto
+- [ ] Banner ausente quando não há filtros (sem ocupar espaço desnecessário)",✅ Feito
+[Melhoria UX] Gráficos do dashboard sem estado vazio definido,"## Contexto
 
 Quando não há dados para o período selecionado (ex: usuário novo, mês sem lançamentos), os gráficos do dashboard exibem uma área vazia sem orientação visual ou mensagem. O componente `EmptyState` existe no projeto mas não é aplicado nas seções de gráficos.
 
@@ -3194,8 +3194,8 @@ Cada estado vazio deve ter ícone relevante e CTA direcional.
 - [ ] Cada EmptyState com ícone, mensagem e CTA específicos ao gráfico
 - [ ] CTA navega para a ação correta
 - [ ] EmptyState respeitando dark/light mode
-- [ ] Loading skeleton mantido durante carregamento (EmptyState só após dados chegarem)","✅ Feito"
-"[Melhoria UX] Página de conciliação bancária sem orientação de fluxo para o usuário","## Contexto
+- [ ] Loading skeleton mantido durante carregamento (EmptyState só após dados chegarem)",✅ Feito
+[Melhoria UX] Página de conciliação bancária sem orientação de fluxo para o usuário,"## Contexto
 
 A página `BankReconciliation` não tem onboarding nem orientação de steps para um usuário que a acessa pela primeira vez. Sem saber o que fazer, o usuário vê uma página com um botão ""Importar extrato"" e uma lista vazia — sem contexto do fluxo completo.
 
@@ -3221,8 +3221,8 @@ Implementar wizard de onboarding para novos usuários e fluxo guiado:
 - [ ] Steps visuais numerados explicando o processo
 - [ ] Dicas sobre formatos de arquivo suportados
 - [ ] Tooltips nos badges de confiança de matching
-- [ ] Link para documentação/ajuda sobre conciliação","✅ Feito"
-"[Feature] Calendário Financeiro — visão temporal unificada de todos os vencimentos","## Objetivo
+- [ ] Link para documentação/ajuda sobre conciliação",✅ Feito
+[Feature] Calendário Financeiro — visão temporal unificada de todos os vencimentos,"## Objetivo
 
 Criar uma tela de calendário mensal que consolida todos os eventos financeiros do usuário em uma única visão temporal, eliminando a necessidade de checar 5+ páginas separadas para entender o que vence no mês.
 
@@ -3259,8 +3259,8 @@ Criar `GET /api/v1/financial-calendar/?month=5&year=2026` que agrega eventos de 
 - [ ] Filtros por tipo de evento funcionando
 - [ ] Endpoint de calendário agregado criado
 - [ ] Responsivo em mobile (vista semanal como padrão em telas pequenas)
-- [ ] Acessível via menu lateral e via dashboard","✅ Feito"
-"[Feature] Patrimônio Líquido (Net Worth Tracker) — visão holística da saúde financeira","## Objetivo
+- [ ] Acessível via menu lateral e via dashboard",✅ Feito
+[Feature] Patrimônio Líquido (Net Worth Tracker) — visão holística da saúde financeira,"## Objetivo
 
 Exibir e acompanhar a evolução do patrimônio líquido do usuário ao longo do tempo, fornecendo o único número que resume toda a situação financeira.
 
@@ -3290,8 +3290,8 @@ Exibir e acompanhar a evolução do patrimônio líquido do usuário ao longo do
 - [ ] Variação mensal com indicador de crescimento/queda
 - [ ] Drill-down para cada componente
 - [ ] Endpoint de histórico criado e cacheado
-- [ ] Acessível via dashboard e menu lateral","✅ Feito"
-"[Feature] Simulador de Parcelamento — impacto antes da compra","## Objetivo
+- [ ] Acessível via dashboard e menu lateral",✅ Feito
+[Feature] Simulador de Parcelamento — impacto antes da compra,"## Objetivo
 
 Antes de fazer uma compra parcelada no cartão, o usuário simula o impacto no orçamento pessoal, tornando a decisão de compra baseada em dados reais.
 
@@ -3322,8 +3322,8 @@ Antes de fazer uma compra parcelada no cartão, o usuário simula o impacto no o
 - [ ] Comparação com orçamento da categoria
 - [ ] Alertas visuais para limite insuficiente ou orçamento ultrapassado
 - [ ] Botão ""Registrar esta compra"" que pré-preenche o formulário de compra do cartão
-- [ ] Acessível sem navegação (modal/sheet)","✅ Feito"
-"[Feature] Rastreador de Assinaturas — controle de gastos recorrentes mensais","## Objetivo
+- [ ] Acessível sem navegação (modal/sheet)",✅ Feito
+[Feature] Rastreador de Assinaturas — controle de gastos recorrentes mensais,"## Objetivo
 
 Identificar e organizar automaticamente as assinaturas e despesas recorrentes mensais do usuário, permitindo visibilidade total sobre quanto é gasto com serviços fixos.
 
@@ -3362,8 +3362,8 @@ Identificar e organizar automaticamente as assinaturas e despesas recorrentes me
 - [ ] Histórico de variação de valor por assinatura
 - [ ] Alertas de aumento de preço
 - [ ] Ação de cancelar assinatura (desativa a despesa fixa associada)
-- [ ] Filtro por categoria e conta/cartão","✅ Feito"
-"[Feature] Comparação Mês a Mês — análise visual de evolução financeira","## Objetivo
+- [ ] Filtro por categoria e conta/cartão",✅ Feito
+[Feature] Comparação Mês a Mês — análise visual de evolução financeira,"## Objetivo
 
 Permitir ao usuário comparar dois períodos financeiros lado a lado, identificando tendências e mudanças de comportamento financeiro.
 
@@ -3397,8 +3397,8 @@ Permitir ao usuário comparar dois períodos financeiros lado a lado, identifica
 - [ ] Highlights automáticos de maiores variações
 - [ ] Cards de resumo (receitas, despesas, saldo por período)
 - [ ] Endpoint de comparação criado com aggregations no banco
-- [ ] Exportação do comparativo em PDF","✅ Feito"
-"[Feature] Planejador de Quitação de Dívidas — estratégia otimizada para sair das dívidas","## Objetivo
+- [ ] Exportação do comparativo em PDF",✅ Feito
+[Feature] Planejador de Quitação de Dívidas — estratégia otimizada para sair das dívidas,"## Objetivo
 
 Ajudar o usuário a desenvolver uma estratégia concreta para quitar múltiplas dívidas (cartões de crédito, empréstimos, contas a pagar), calculando o plano ótimo baseado na renda disponível.
 
@@ -3434,8 +3434,8 @@ Ajudar o usuário a desenvolver uma estratégia concreta para quitar múltiplas 
 - [ ] Plano de quitação gerado com datas e valores por dívida
 - [ ] Comparativo entre as duas estratégias
 - [ ] Total de juros economizados calculado
-- [ ] Exportação do plano em PDF","✅ Feito"
-"[Feature] Relatório Mensal Financeiro em PDF","## Objetivo
+- [ ] Exportação do plano em PDF",✅ Feito
+[Feature] Relatório Mensal Financeiro em PDF,"## Objetivo
 
 Gerar automaticamente um relatório financeiro mensal estruturado em PDF, pronto para arquivo pessoal ou compartilhamento com um contador/assessor.
 
@@ -3468,8 +3468,8 @@ Gerar automaticamente um relatório financeiro mensal estruturado em PDF, pronto
 - [ ] Notificação in-app quando PDF estiver pronto
 - [ ] Download via URL temporária (expira em 24h)
 - [ ] Opção de email automático mensal configurável no perfil
-- [ ] Relatório com branding do Axiom (logo, cores)","❌ Pendente"
-"[Feature] Regras de Automação Financeira (If This → Then That)","## Objetivo
+- [ ] Relatório com branding do Axiom (logo, cores)",❌ Pendente
+[Feature] Regras de Automação Financeira (If This → Then That),"## Objetivo
 
 Permitir que usuários avançados criem regras de automação personalizadas para classificação e organização automática de transações, expandindo o conceito das `CategorizationRules` existentes.
 
@@ -3501,8 +3501,8 @@ Permitir que usuários avançados criem regras de automação personalizadas par
 - [ ] Toggle ativo/inativo
 - [ ] Histórico de aplicações
 - [ ] Aplicação automática ao criar/editar despesas
-- [ ] Aplicação retroativa em lote (opcional)","❌ Pendente"
-"[Feature IA] OCR de Comprovantes para auto-preenchimento de despesas","## Objetivo
+- [ ] Aplicação retroativa em lote (opcional)",❌ Pendente
+[Feature IA] OCR de Comprovantes para auto-preenchimento de despesas,"## Objetivo
 
 Quando o usuário fotografa ou faz upload de um comprovante (nota fiscal, recibo, comprovante de transferência), a IA extrai automaticamente os dados relevantes e pré-preenche o formulário de despesa.
 
@@ -3538,8 +3538,8 @@ Quando o usuário fotografa ou faz upload de um comprovante (nota fiscal, recibo
 - [ ] Indicação visual de quais campos foram auto-preenchidos (badge ""Auto-preenchido"")
 - [ ] Usuário pode corrigir qualquer campo antes de salvar
 - [ ] Fallback gracioso quando OCR não consegue extrair dados
-- [ ] Imagem salva automaticamente como comprovante","❌ Pendente"
-"[Feature IA] Categorização automática por aprendizado com correções do usuário","## Objetivo
+- [ ] Imagem salva automaticamente como comprovante",❌ Pendente
+[Feature IA] Categorização automática por aprendizado com correções do usuário,"## Objetivo
 
 Substituir o sistema de categorização por regras estáticas por um modelo que aprende progressivamente com as correções do usuário, aumentando a precisão de auto-categorização ao longo do tempo.
 
@@ -3570,8 +3570,8 @@ Substituir o sistema de categorização por regras estáticas por um modelo que 
 - [ ] Aplicação automática após threshold de confirmações
 - [ ] Indicação visual quando categoria foi auto-aplicada
 - [ ] Possibilidade de o usuário desativar o aprendizado por merchant
-- [ ] Dados de histórico separados por usuário (sem cross-contamination)","❌ Pendente"
-"[Feature IA] Detecção de anomalias com explicação e ação sugerida","## Objetivo
+- [ ] Dados de histórico separados por usuário (sem cross-contamination)",❌ Pendente
+[Feature IA] Detecção de anomalias com explicação e ação sugerida,"## Objetivo
 
 Expandir a detecção de anomalias já existente no backend para que cada anomalia identificada venha acompanhada de uma explicação em linguagem natural e uma sugestão de ação concreta.
 
@@ -3598,8 +3598,8 @@ Expandir a detecção de anomalias já existente no backend para que cada anomal
 - [ ] Botão de ação inline na UI (ex: ""Criar orçamento"" em 1 clique)
 - [ ] Três níveis de severidade com cores
 - [ ] Cache da explicação gerada (não regerar a cada acesso)
-- [ ] Fallback quando LLM não está disponível (exibe anomalia sem explicação)","❌ Pendente"
-"[Feature IA] Notificações inteligentes com contexto financeiro completo","## Objetivo
+- [ ] Fallback quando LLM não está disponível (exibe anomalia sem explicação)",✅ Feito
+[Feature IA] Notificações inteligentes com contexto financeiro completo,"## Objetivo
 
 Implementar notificações proativas que não apenas alertam sobre vencimentos, mas contextualizam a situação financeira no momento do alerta — tornando cada notificação acionável.
 
@@ -3632,8 +3632,8 @@ Implementar notificações proativas que não apenas alertam sobre vencimentos, 
 - [ ] Entrega por email funcionando
 - [ ] Página de configuração de preferências de notificação no perfil
 - [ ] Não duplicar notificações para o mesmo evento no mesmo dia
-- [ ] Notificação com link direto para ação (pagar fatura, ver orçamento)","❌ Pendente"
-"[Feature IA] Sugestão inteligente de orçamentos com contexto sazonal","## Objetivo
+- [ ] Notificação com link direto para ação (pagar fatura, ver orçamento)",✅ Feito
+[Feature IA] Sugestão inteligente de orçamentos com contexto sazonal,"## Objetivo
 
 Expandir a funcionalidade de sugestão de orçamentos (`/api/v1/budgets/suggest/`) para incluir contextualização sazonal, análise de tendência e alertas quando o limite sugerido é muito conservador.
 
@@ -3661,8 +3661,8 @@ Expandir a funcionalidade de sugestão de orçamentos (`/api/v1/budgets/suggest/
 - [ ] Análise de tendência (últimos 3 meses) incorporada
 - [ ] Alerta quando sugestão é muito conservadora
 - [ ] Badge de sazonalidade visível no card de sugestão
-- [ ] Sugestão proativa para categorias sem orçamento mas com histórico de gasto","❌ Pendente"
-"[Feature IA] Insights financeiros semanais automáticos","## Objetivo
+- [ ] Sugestão proativa para categorias sem orçamento mas com histórico de gasto",❌ Pendente
+[Feature IA] Insights financeiros semanais automáticos,"## Objetivo
 
 Gerar e entregar automaticamente um resumo financeiro semanal com insights relevantes, mantendo o usuário engajado com a plataforma mesmo sem acessá-la diariamente.
 
@@ -3696,8 +3696,8 @@ Gerar e entregar automaticamente um resumo financeiro semanal com insights relev
 - [ ] Email semanal com template HTML enviado
 - [ ] Card de insight visível no dashboard na semana seguinte
 - [ ] Opção de desativar nos settings do perfil
-- [ ] Fallback quando LLM não está disponível (resumo simples sem texto gerado)","✅ Feito"
-"[Feature IA] Previsão de gastos por categoria com machine learning","## Objetivo
+- [ ] Fallback quando LLM não está disponível (resumo simples sem texto gerado)",✅ Feito
+[Feature IA] Previsão de gastos por categoria com machine learning,"## Objetivo
 
 Com base no histórico de gastos, prever quanto o usuário vai gastar em cada categoria nos próximos 30 dias, exibindo a previsão junto aos orçamentos para antecipação de problemas.
 
@@ -3727,8 +3727,8 @@ Com base no histórico de gastos, prever quanto o usuário vai gastar em cada ca
 - [ ] Alerta visual quando previsão supera o orçamento definido
 - [ ] Intervalo de confiança exibido
 - [ ] Aviso quando histórico insuficiente (< 3 meses)
-- [ ] Cache do forecast por usuário/mês (recalcular apenas quando novos dados chegam)","❌ Pendente"
-"[Feature IA] Assistente conversacional financeiro com memória contextual","## Objetivo
+- [ ] Cache do forecast por usuário/mês (recalcular apenas quando novos dados chegam)",❌ Pendente
+[Feature IA] Assistente conversacional financeiro com memória contextual,"## Objetivo
 
 Expandir o módulo de agentes IA existente com uma interface conversacional proeminente e memória de contexto persistente, permitindo que o usuário interaja com seus dados financeiros em linguagem natural.
 
@@ -3757,8 +3757,8 @@ Expandir o módulo de agentes IA existente com uma interface conversacional proe
 - [ ] Perguntas sobre dados financeiros respondidas corretamente
 - [ ] Sugestões de perguntas para onboarding
 - [ ] Ações financeiras via linguagem natural com confirmação obrigatória
-- [ ] Histórico de sessões acessível","✅ Feito"
-"[Tela] Central de Cartões — hub unificado para gestão de cartões de crédito","## Objetivo
+- [ ] Histórico de sessões acessível",✅ Feito
+[Tela] Central de Cartões — hub unificado para gestão de cartões de crédito,"## Objetivo
 
 Criar uma experiência hub que unifica as 4 páginas fragmentadas de cartão de crédito em uma única jornada coesa, sem necessidade de navegar entre telas distintas.
 
@@ -3803,8 +3803,8 @@ Criar uma experiência hub que unifica as 4 páginas fragmentadas de cartão de 
 - [ ] Navegação por breadcrumb: `Cartões > [Nome] > [Tab]`
 - [ ] Rotas diretas preservadas como deep links
 - [ ] Mobile: navegação full-screen com tabs no topo
-- [ ] Animação de transição ao selecionar cartão","❌ Pendente"
-"[Tela] Análise de Gastos (Spending Insights) — padrões e tendências financeiras","## Objetivo
+- [ ] Animação de transição ao selecionar cartão",❌ Pendente
+[Tela] Análise de Gastos (Spending Insights) — padrões e tendências financeiras,"## Objetivo
 
 Criar uma tela analítica dedicada que transforma dados financeiros em narrativa interpretada, indo além das tabelas e mostrando padrões reais de comportamento financeiro.
 
@@ -3844,8 +3844,8 @@ Criar uma tela analítica dedicada que transforma dados financeiros em narrativa
 - [ ] Ranking de merchants com frequência e ticket médio
 - [ ] Projeção de gasto para o mês atual
 - [ ] Todos os elementos clicáveis com drill-down para transações
-- [ ] Exportação do relatório de insights em PDF","❌ Pendente"
-"[Tela] Planejador Financeiro Mensal — planejamento proativo antes do mês começar","## Objetivo
+- [ ] Exportação do relatório de insights em PDF",✅ Feito
+[Tela] Planejador Financeiro Mensal — planejamento proativo antes do mês começar,"## Objetivo
 
 Criar uma tela de planejamento mensal que permite ao usuário planejar o mês antes que ele aconteça, mudando o comportamento de reativo (registra o que passou) para proativo (planeja antes de gastar).
 
@@ -3886,8 +3886,8 @@ Criar uma tela de planejamento mensal que permite ao usuário planejar o mês an
 - [ ] Botão ""Aplicar Plano"" gera lançamentos e orçamentos com confirmação
 - [ ] Vista de realizado vs planejado disponível após aplicar o plano
 - [ ] Navegação entre meses (planejamento de meses futuros)
-- [ ] Persistência do plano sem necessidade de aplicar imediatamente","✅ Feito"
-"[Melhoria] Empréstimos — adicionar visualização de progresso de quitação","## Contexto
+- [ ] Persistência do plano sem necessidade de aplicar imediatamente",✅ Feito
+[Melhoria] Empréstimos — adicionar visualização de progresso de quitação,"## Contexto
 
 A página de empréstimos exibe valor total e valor pago, mas não oferece visualização da trajetória de quitação ao longo do tempo. O endpoint de amortização (`GET /api/v1/loans/{id}/amortization/`) já existe e retorna o schedule completo.
 
@@ -3911,8 +3911,8 @@ Enriquecer o dialog de detalhes do empréstimo com:
 - [ ] Data estimada de quitação em destaque
 - [ ] Cards de resumo: parcelas pagas, restantes, próximo vencimento
 - [ ] Gráfico usa dados reais de pagamentos + projeção de parcelas futuras
-- [ ] Responsivo no dialog","✅ Feito"
-"[Melhoria] Formulários do módulo — padronizar uso de FormSection em todos os formulários","## Contexto
+- [ ] Responsivo no dialog",✅ Feito
+[Melhoria] Formulários do módulo — padronizar uso de FormSection em todos os formulários,"## Contexto
 
 O componente `FormSection` (divider visual com título e ícone para agrupar campos) existe no projeto e está documentado no CLAUDE.md, mas é usado de forma irregular nos formulários do módulo financeiro. Alguns formulários agrupam campos logicamente, outros listam tudo em sequência sem estrutura visual.
 
@@ -3935,8 +3935,8 @@ Padronizar o uso de `FormSection` em todos os formulários do módulo:
 - [ ] `FormSection` aplicado em todos os formulários do módulo com grupos lógicos
 - [ ] Campos obrigatórios vs opcionais claramente identificados
 - [ ] Consistência visual entre todos os formulários (mesma estrutura de agrupamento)
-- [ ] Documentação da convenção de agrupamento no CLAUDE.md","✅ Feito"
-"[Melhoria] Cartões de crédito — breadcrumb dinâmico por cartão selecionado","## Contexto
+- [ ] Documentação da convenção de agrupamento no CLAUDE.md",✅ Feito
+[Melhoria] Cartões de crédito — breadcrumb dinâmico por cartão selecionado,"## Contexto
 
 Ao navegar de `CreditCards` para `CreditCardBills` filtrado por um cartão específico, o usuário perde o contexto visual de qual cartão está visualizando. O `useBreadcrumb` hook existe no projeto mas não é aplicado dinamicamente com base no cartão selecionado.
 
@@ -3960,4 +3960,4 @@ Implementar breadcrumb contextual dinâmico nas páginas de cartão:
 - [ ] Breadcrumb dinâmico com nome do cartão em todas as sub-páginas de cartão
 - [ ] Clique no breadcrumb navega para o nível correto
 - [ ] Breadcrumb funciona com navegação direta via URL (deep link)
-- [ ] Atualizado ao trocar de cartão","✅ Feito"
+- [ ] Atualizado ao trocar de cartão",✅ Feito

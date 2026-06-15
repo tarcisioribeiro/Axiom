@@ -47,9 +47,10 @@ import type {
   ImportConfirmResponse,
 } from '@/services/password-import-service';
 import { passwordImportService } from '@/services/password-import-service';
+import { PASSWORD_CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-type Step = 'upload' | 'preview' | 'summary';
+type Step = 'upload' | 'preview' | 'mapping' | 'summary';
 
 export function PasswordImportContent() {
   const { t } = useTranslation();
@@ -63,6 +64,7 @@ export function PasswordImportContent() {
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [summary, setSummary] = useState<ImportConfirmResponse | null>(null);
+  const [categoryMapping, setCategoryMapping] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +119,27 @@ export function PasswordImportContent() {
 
   const deselectAll = () => setSelected(new Set());
 
+  const handleGoToMapping = () => {
+    if (!preview || selected.size === 0) {
+      toast({ title: t('pages.passwordImport.noSelection'), variant: 'destructive' });
+      return;
+    }
+    const uniqueCategories = [
+      ...new Set(
+        preview.entries
+          .filter((e) => selected.has(e.index))
+          .map((e) => e.category || 'other')
+      ),
+    ];
+    const initialMapping: Record<string, string> = {};
+    for (const cat of uniqueCategories) {
+      const isValid = PASSWORD_CATEGORIES.some((c) => c.value === cat);
+      initialMapping[cat] = isValid ? cat : 'other';
+    }
+    setCategoryMapping(initialMapping);
+    setStep('mapping');
+  };
+
   const handleImport = async () => {
     if (!preview || selected.size === 0) {
       toast({ title: t('pages.passwordImport.noSelection'), variant: 'destructive' });
@@ -130,7 +153,7 @@ export function PasswordImportContent() {
         username: e.username,
         password: e.password,
         site: e.site,
-        category: e.category,
+        category: categoryMapping[e.category || 'other'] ?? e.category ?? 'other',
         notes: e.notes,
       }));
 
@@ -165,6 +188,7 @@ export function PasswordImportContent() {
     setPreview(null);
     setSelected(new Set());
     setSummary(null);
+    setCategoryMapping({});
   };
 
   return (
@@ -374,15 +398,76 @@ export function PasswordImportContent() {
               <span className="text-sm text-muted-foreground">
                 {t('pages.passwordImport.selectedCount', { count: selected.size })}
               </span>
-              <Button
-                disabled={selected.size === 0 || isLoading}
-                onClick={() => void handleImport()}
-              >
-                {isLoading
-                  ? t('pages.passwordImport.importing')
-                  : t('pages.passwordImport.importBtn')}
+              <Button disabled={selected.size === 0} onClick={handleGoToMapping}>
+                {t('pages.passwordImport.nextMappingBtn')}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mapping step */}
+      {step === 'mapping' && (
+        <div className="space-y-lg">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-sm">
+                <CheckSquare className="h-5 w-5" />
+                {t('pages.passwordImport.mappingTitle')}
+              </CardTitle>
+              <CardDescription>{t('pages.passwordImport.mappingDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-md">
+              {Object.keys(categoryMapping).length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {t('pages.passwordImport.noCategoriesToMap')}
+                </p>
+              ) : (
+                Object.entries(categoryMapping).map(
+                  ([sourceCategory, targetCategory]) => (
+                    <div key={sourceCategory} className="flex items-center gap-md">
+                      <div className="w-40 shrink-0">
+                        <Badge variant="secondary" className="font-mono">
+                          {sourceCategory}
+                        </Badge>
+                      </div>
+                      <span className="text-muted-foreground">→</span>
+                      <Select
+                        value={targetCategory}
+                        onValueChange={(val) =>
+                          setCategoryMapping((prev) => ({
+                            ...prev,
+                            [sourceCategory]: val,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PASSWORD_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )
+                )
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => setStep('preview')}>
+              {t('common.back')}
+            </Button>
+            <Button disabled={isLoading} onClick={() => void handleImport()}>
+              {isLoading
+                ? t('pages.passwordImport.importing')
+                : t('pages.passwordImport.importBtn')}
+            </Button>
           </div>
         </div>
       )}

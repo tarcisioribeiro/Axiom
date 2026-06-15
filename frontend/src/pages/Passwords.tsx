@@ -173,9 +173,70 @@ const CATEGORY_CONFIG_DETAIL: Record<string, { badge: string; avatar: string }> 
   },
 };
 
+interface TOTPRevealData {
+  code: string;
+  expiresAt: number;
+}
+
+function TOTPBlock({ code, expiresAt }: TOTPRevealData) {
+  const { toast } = useToast();
+  const [secsLeft, setSecsLeft] = useState(() =>
+    Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
+  );
+  const [isExpired, setIsExpired] = useState(secsLeft === 0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setSecsLeft(remaining);
+      if (remaining === 0) setIsExpired(true);
+    }, 500);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  const handleCopy = () => {
+    void copyToClipboard(code).then(() => toast({ title: 'Código TOTP copiado!' }));
+  };
+
+  if (isExpired) {
+    return (
+      <p className="mt-xs text-xs text-warning">
+        Código expirado — revele novamente para atualizar.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-sm flex items-center justify-between gap-sm">
+      <code className="font-mono text-xl font-bold tracking-[0.25em]">
+        {code.slice(0, 3)} {code.slice(3)}
+      </code>
+      <div className="flex items-center gap-xs">
+        <span
+          className={cn(
+            'font-mono text-sm',
+            secsLeft <= 5 ? 'text-destructive' : 'text-muted-foreground'
+          )}
+        >
+          {secsLeft}s
+        </span>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleCopy}
+          aria-label="Copiar código TOTP"
+        >
+          <Copy className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 interface DetailPanelProps {
   password: Password;
   revealedPassword: string | undefined;
+  revealedTotpData?: TOTPRevealData | null;
   revealingId: number | null;
   onReveal: (id: number) => void;
   onCopy: (id: number) => void;
@@ -188,6 +249,7 @@ interface DetailPanelProps {
 function DetailPanel({
   password,
   revealedPassword,
+  revealedTotpData,
   revealingId,
   onReveal,
   onCopy,
@@ -401,13 +463,21 @@ function DetailPanel({
             </div>
 
             {password.totp_enabled && (
-              <div className="flex items-center gap-sm rounded-lg border border-success/30 bg-success/5 px-md py-sm">
-                <Shield className="h-4 w-4 shrink-0 text-success" />
-                <span className="text-sm text-success">
-                  {t('pages.passwords.totpEnabled', {
-                    defaultValue: 'TOTP (2FA) habilitado',
-                  })}
-                </span>
+              <div className="rounded-lg border border-success/30 bg-success/5 p-md">
+                <div className="flex items-center gap-sm">
+                  <Shield className="h-4 w-4 shrink-0 text-success" />
+                  <span className="text-sm font-medium text-success">TOTP (2FA)</span>
+                </div>
+                {revealedTotpData ? (
+                  <TOTPBlock
+                    code={revealedTotpData.code}
+                    expiresAt={revealedTotpData.expiresAt}
+                  />
+                ) : (
+                  <p className="mt-xs text-xs text-muted-foreground">
+                    Revele a senha para ver o código TOTP atual.
+                  </p>
+                )}
               </div>
             )}
 
@@ -529,6 +599,9 @@ export default function Passwords() {
   const [revealedPasswords, setRevealedPasswords] = useState<Map<number, string>>(
     new Map()
   );
+  const [revealedTotpData, setRevealedTotpData] = useState<
+    Map<number, TOTPRevealData | null>
+  >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
@@ -604,6 +677,11 @@ export default function Passwords() {
           return next;
         });
         setRevealedAt((prev) => {
+          const next = new Map(prev);
+          toRemove.forEach((id) => next.delete(id));
+          return next;
+        });
+        setRevealedTotpData((prev) => {
           const next = new Map(prev);
           toRemove.forEach((id) => next.delete(id));
           return next;
@@ -716,6 +794,11 @@ export default function Passwords() {
         next.delete(id);
         return next;
       });
+      setRevealedTotpData((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
       return;
     }
 
@@ -724,6 +807,14 @@ export default function Passwords() {
       const revealData = await passwordsService.reveal(id);
       setRevealedPasswords((prev) => new Map(prev).set(id, revealData.password));
       setRevealedAt((prev) => new Map(prev).set(id, Date.now()));
+      if (revealData.totp_enabled && revealData.totp_code) {
+        setRevealedTotpData((prev) =>
+          new Map(prev).set(id, {
+            code: revealData.totp_code!,
+            expiresAt: Date.now() + (revealData.totp_seconds_remaining ?? 30) * 1000,
+          })
+        );
+      }
     } catch (error: unknown) {
       toast({
         title: t('pages.passwords.revealError'),
@@ -1135,6 +1226,7 @@ export default function Passwords() {
                   <DetailPanel
                     password={detailPassword}
                     revealedPassword={revealedPasswords.get(detailPassword.id)}
+                    revealedTotpData={revealedTotpData.get(detailPassword.id)}
                     revealingId={revealingId}
                     onReveal={(id) => void handleReveal(id)}
                     onCopy={(id) => void handleCopyPassword(id)}
@@ -1160,6 +1252,7 @@ export default function Passwords() {
               <DetailPanel
                 password={detailPassword}
                 revealedPassword={revealedPasswords.get(detailPassword.id)}
+                revealedTotpData={revealedTotpData.get(detailPassword.id)}
                 revealingId={revealingId}
                 onReveal={(id) => void handleReveal(id)}
                 onCopy={(id) => void handleCopyPassword(id)}
