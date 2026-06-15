@@ -30,6 +30,7 @@ import {
   Layers,
   Loader2,
   Plus,
+  Sparkles,
   Target,
   Trash2,
   Zap,
@@ -64,6 +65,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { membersService } from '@/services/members-service';
 import {
   exerciseService,
@@ -97,7 +99,15 @@ type DialogMode =
   | { type: 'new-catalog-exercise' }
   | { type: 'edit-catalog-exercise'; exercise: Exercise }
   | { type: 'quick-log' }
+  | { type: 'ai-generate-plan' }
   | null;
+
+interface AIWorkoutFormValues {
+  goal: string;
+  level: 'iniciante' | 'intermediário' | 'avançado';
+  equipment: string;
+  days_per_week: number;
+}
 
 interface ExerciseCatalogFormValues {
   name: string;
@@ -160,6 +170,12 @@ export default function WorkoutPage() {
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
+  const [aiForm, setAiForm] = useState<AIWorkoutFormValues>({
+    goal: '',
+    level: 'iniciante',
+    equipment: 'academia completa',
+    days_per_week: 3,
+  });
   const [selectedDayByPlan, setSelectedDayByPlan] = useState<
     Record<number, number | null>
   >({});
@@ -215,6 +231,36 @@ export default function WorkoutPage() {
     queryClient.invalidateQueries({ queryKey: ['workout-days'] });
   const invalidateSessions = () =>
     queryClient.invalidateQueries({ queryKey: ['workout-sessions'] });
+
+  const aiGeneratePlanMutation = useMutation({
+    mutationFn: (data: AIWorkoutFormValues) =>
+      apiClient.post<{ plan_id: number; name: string; days_created: number }>(
+        '/api/v1/personal-planning/ai-workout-plan/',
+        data
+      ),
+    onSuccess: (result) => {
+      void invalidatePlans();
+      void invalidateDays();
+      toast({
+        title: 'Plano gerado com sucesso!',
+        description: `"${result.name}" com ${result.days_created} dias de treino foi criado.`,
+      });
+      setAiForm({
+        goal: '',
+        level: 'iniciante',
+        equipment: 'academia completa',
+        days_per_week: 3,
+      });
+      setDialog(null);
+    },
+    onError: () => {
+      toast({
+        title: 'Erro ao gerar plano',
+        description: 'Não foi possível gerar o plano. Tente novamente.',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const createPlanMutation = useMutation({
     mutationFn: (data: WorkoutPlanFormData) => workoutPlanService.create(data),
@@ -584,6 +630,8 @@ export default function WorkoutPage() {
         return t('pages.exercises.editTitle');
       case 'quick-log':
         return t('pages.workoutSessions.quickLogTitle');
+      case 'ai-generate-plan':
+        return 'Gerar Plano com IA';
     }
   };
 
@@ -612,6 +660,8 @@ export default function WorkoutPage() {
         return t('pages.exercises.editDesc');
       case 'quick-log':
         return t('pages.workoutSessions.quickLogDesc');
+      case 'ai-generate-plan':
+        return 'Descreva seu objetivo e a IA criará um plano completo com divisões e exercícios.';
     }
   };
 
@@ -700,7 +750,14 @@ export default function WorkoutPage() {
 
           {/* ── Planos ──────────────────────────────────────────────────── */}
           <TabsContent value="plans" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end">
+            <div className="mb-md flex justify-end gap-sm">
+              <Button
+                variant="outline"
+                onClick={() => setDialog({ type: 'ai-generate-plan' })}
+              >
+                <Sparkles className="mr-sm h-4 w-4 text-primary" />
+                Gerar com IA
+              </Button>
               <Button onClick={() => setDialog({ type: 'new-plan' })}>
                 <Plus className="mr-sm h-4 w-4" />
                 {t('pages.workoutPlans.newPlanBtn')}
@@ -1130,6 +1187,105 @@ export default function WorkoutPage() {
                 onCancel={() => setDialog(null)}
                 t={t}
               />
+            )}
+
+            {dialog?.type === 'ai-generate-plan' && (
+              <div className="space-y-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="ai-goal">Objetivo *</Label>
+                  <Input
+                    id="ai-goal"
+                    placeholder="Ex: hipertrofia muscular, perda de gordura, resistência…"
+                    value={aiForm.goal}
+                    onChange={(e) => setAiForm((f) => ({ ...f, goal: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-sm">
+                  <Label>Nível</Label>
+                  <div className="flex gap-sm">
+                    {(['iniciante', 'intermediário', 'avançado'] as const).map(
+                      (lvl) => (
+                        <button
+                          key={lvl}
+                          type="button"
+                          onClick={() => setAiForm((f) => ({ ...f, level: lvl }))}
+                          className={cn(
+                            // eslint-disable-next-line no-restricted-syntax
+                            'flex-1 rounded-md border py-1.5 text-xs font-medium capitalize transition-colors',
+                            aiForm.level === lvl
+                              ? 'border-primary bg-primary/10 text-primary'
+                              : 'border-input bg-background text-muted-foreground hover:bg-muted'
+                          )}
+                        >
+                          {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <Label htmlFor="ai-equipment">Equipamentos disponíveis</Label>
+                  <Input
+                    id="ai-equipment"
+                    placeholder="Ex: academia completa, halteres em casa, barra fixa…"
+                    value={aiForm.equipment}
+                    onChange={(e) =>
+                      setAiForm((f) => ({ ...f, equipment: e.target.value }))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-sm">
+                  <Label>Dias por semana: {aiForm.days_per_week}</Label>
+                  <div className="flex gap-xs">
+                    {[2, 3, 4, 5, 6].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setAiForm((f) => ({ ...f, days_per_week: d }))}
+                        className={cn(
+                          'flex h-8 w-8 items-center justify-center rounded-md border text-xs font-bold transition-colors',
+                          aiForm.days_per_week === d
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-input bg-background text-muted-foreground hover:bg-muted'
+                        )}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-sm pt-sm">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setDialog(null)}
+                    disabled={aiGeneratePlanMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    disabled={!aiForm.goal.trim() || aiGeneratePlanMutation.isPending}
+                    onClick={() => aiGeneratePlanMutation.mutate(aiForm)}
+                  >
+                    {aiGeneratePlanMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                        Gerando…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-sm h-4 w-4" />
+                        Gerar Plano
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             )}
           </DialogContent>
         </Dialog>

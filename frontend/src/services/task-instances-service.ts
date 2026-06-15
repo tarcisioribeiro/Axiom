@@ -28,11 +28,15 @@ class TaskInstancesService extends BaseService<
    */
   async getAll(params?: {
     date?: string;
+    date_from?: string;
+    date_to?: string;
     status?: InstanceStatus;
     template?: number;
   }): Promise<TaskInstance[]> {
     const queryParams = new URLSearchParams();
     if (params?.date) queryParams.append('date', params.date);
+    if (params?.date_from) queryParams.append('date_from', params.date_from);
+    if (params?.date_to) queryParams.append('date_to', params.date_to);
     if (params?.status) queryParams.append('status', params.status);
     if (params?.template) queryParams.append('template', params.template.toString());
 

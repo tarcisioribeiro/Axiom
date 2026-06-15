@@ -33,18 +33,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
-import { archivesService } from '@/services/archives-service';
-import { passwordsService } from '@/services/passwords-service';
 import { securityDashboardService } from '@/services/security-dashboard-service';
 import { vaultConfigService } from '@/services/security-vault-service';
-import { storedAccountsService } from '@/services/stored-accounts-service';
-import { storedCardsService } from '@/services/stored-cards-service';
-import type {
-  Password,
-  StoredCreditCard,
-  StoredBankAccount,
-  Archive as ArchiveType,
-} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type SearchResultType = 'password' | 'card' | 'account' | 'archive';
@@ -76,97 +66,56 @@ function VaultSearch() {
 
   const enabled = debouncedQuery.trim().length >= 2;
 
-  const { data: passwords = [] } = useQuery<Password[]>({
-    queryKey: ['vault-search', 'passwords'],
-    queryFn: () => passwordsService.getAll(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: true,
-  });
-
-  const { data: cards = [] } = useQuery<StoredCreditCard[]>({
-    queryKey: ['vault-search', 'cards'],
-    queryFn: () => storedCardsService.getAll(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: true,
-  });
-
-  const { data: accounts = [] } = useQuery<StoredBankAccount[]>({
-    queryKey: ['vault-search', 'accounts'],
-    queryFn: () => storedAccountsService.getAll(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: true,
-  });
-
-  const { data: archives = [] } = useQuery<ArchiveType[]>({
-    queryKey: ['vault-search', 'archives'],
-    queryFn: () => archivesService.getAll(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: true,
+  const { data: searchData, isFetching } = useQuery({
+    queryKey: ['vault-search', debouncedQuery],
+    queryFn: () => securityDashboardService.globalSearch(debouncedQuery),
+    enabled,
+    staleTime: 15_000,
   });
 
   const results = useMemo<SearchResultItem[]>(() => {
-    if (!enabled) return [];
-    const q = debouncedQuery.toLowerCase();
+    if (!enabled || !searchData) return [];
 
-    const passwordResults: SearchResultItem[] = passwords
-      .filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.username.toLowerCase().includes(q) ||
-          p.site?.toLowerCase().includes(q)
-      )
-      .map((p) => ({
+    const passwordResults: SearchResultItem[] = (searchData.passwords ?? []).map(
+      (p) => ({
         id: p.id,
         type: 'password' as const,
         label: p.title,
-        sublabel: p.username,
+        sublabel: p.site ?? p.username,
         route: '/security/passwords',
-      }));
+      })
+    );
 
-    const cardResults: SearchResultItem[] = cards
-      .filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.cardholder_name.toLowerCase().includes(q) ||
-          c.last_four_digits?.includes(q)
-      )
-      .map((c) => ({
+    const cardResults: SearchResultItem[] = (searchData.stored_cards ?? []).map(
+      (c) => ({
         id: c.id,
         type: 'card' as const,
         label: c.name,
         sublabel: c.cardholder_name,
         route: '/security/stored-cards',
-      }));
+      })
+    );
 
-    const accountResults: SearchResultItem[] = accounts
-      .filter(
-        (a) =>
-          a.name.toLowerCase().includes(q) ||
-          a.institution_name.toLowerCase().includes(q) ||
-          a.account_number_masked?.includes(q)
-      )
-      .map((a) => ({
+    const accountResults: SearchResultItem[] = (searchData.stored_accounts ?? []).map(
+      (a) => ({
         id: a.id,
         type: 'account' as const,
         label: a.name,
         sublabel: a.institution_name,
         route: '/security/stored-accounts',
-      }));
+      })
+    );
 
-    const archiveResults: SearchResultItem[] = archives
-      .filter(
-        (a) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)
-      )
-      .map((a) => ({
-        id: a.id,
-        type: 'archive' as const,
-        label: a.title,
-        sublabel: a.category_display,
-        route: '/security/archives',
-      }));
+    const archiveResults: SearchResultItem[] = (searchData.archives ?? []).map((a) => ({
+      id: a.id,
+      type: 'archive' as const,
+      label: a.title,
+      sublabel: a.file_name ?? a.category,
+      route: '/security/archives',
+    }));
 
     return [...passwordResults, ...cardResults, ...accountResults, ...archiveResults];
-  }, [debouncedQuery, enabled, passwords, cards, accounts, archives]);
+  }, [enabled, searchData]);
 
   const grouped = useMemo(() => {
     const groups: Record<SearchResultType, SearchResultItem[]> = {
@@ -261,7 +210,12 @@ function VaultSearch() {
 
       {isOpen && enabled && (
         <div className="absolute left-0 right-0 top-full z-50 mt-xs max-h-96 overflow-y-auto rounded-lg border bg-popover shadow-lg">
-          {!hasResults ? (
+          {isFetching ? (
+            <div className="flex items-center justify-center gap-sm py-lg">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Buscando...</span>
+            </div>
+          ) : !hasResults ? (
             <div className="flex flex-col items-center justify-center gap-sm py-lg text-center">
               <Search className="h-8 w-8 text-muted-foreground/40" />
               <p className="text-sm font-medium">
@@ -377,6 +331,24 @@ function VaultAlertConfigPanel() {
       label: t('pages.securityDashboard.alertOnReveal'),
       desc: t('pages.securityDashboard.alertOnRevealDesc'),
       value: alertConfig?.alert_on_reveal ?? false,
+    },
+    {
+      field: 'alert_on_excessive_reveals',
+      label: 'Alerta de volume excessivo de revelações',
+      desc: `Notifica quando há mais de ${alertConfig?.excessive_reveals_threshold ?? 5} revelações em 1 hora`,
+      value: alertConfig?.alert_on_excessive_reveals ?? true,
+    },
+    {
+      field: 'alert_on_card_reveal',
+      label: 'Alerta ao revelar cartão bancário',
+      desc: 'Notifica sempre que um cartão armazenado é revelado',
+      value: alertConfig?.alert_on_card_reveal ?? false,
+    },
+    {
+      field: 'notify_email',
+      label: 'Enviar alertas por e-mail',
+      desc: 'Envia cópia das notificações de segurança para seu e-mail',
+      value: alertConfig?.notify_email ?? false,
     },
   ];
 

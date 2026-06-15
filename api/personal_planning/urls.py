@@ -1,6 +1,13 @@
 from django.urls import path
 
 from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances
+    AIMenuPlanGenerationView,
+    AIRoutineSuggestionView,
+    AIWorkoutPlanGenerationView,
+    BodyMetricListCreateView,
+    BodyMetricRetrieveUpdateDestroyView,
+    ChallengeListCreateView,
+    ChallengeRetrieveUpdateDestroyView,
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
     ExerciseListCreateView,
@@ -318,5 +325,45 @@ urlpatterns = [
         "goals/export/",
         ExportGoalsView.as_view(),
         name="goals-export",
+    ),
+    # Challenges
+    path(
+        "challenges/",
+        ChallengeListCreateView.as_view(),
+        name="challenge-list-create",
+    ),
+    path(
+        "challenges/<int:pk>/",
+        ChallengeRetrieveUpdateDestroyView.as_view(),
+        name="challenge-detail",
+    ),
+    # Body Metrics
+    path(
+        "body-metrics/",
+        BodyMetricListCreateView.as_view(),
+        name="body-metric-list-create",
+    ),
+    path(
+        "body-metrics/<int:pk>/",
+        BodyMetricRetrieveUpdateDestroyView.as_view(),
+        name="body-metric-detail",
+    ),
+    # AI Routine Suggestion
+    path(
+        "ai-routine/",
+        AIRoutineSuggestionView.as_view(),
+        name="ai-routine-suggestion",
+    ),
+    # AI Workout Plan Generation
+    path(
+        "ai-workout-plan/",
+        AIWorkoutPlanGenerationView.as_view(),
+        name="ai-workout-plan-generation",
+    ),
+    # AI Menu Plan Generation
+    path(
+        "ai-menu-plan/",
+        AIMenuPlanGenerationView.as_view(),
+        name="ai-menu-plan-generation",
     ),
 ]

@@ -282,3 +282,164 @@ def detect_activity_anomalies() -> dict:
         )
 
     return {"flagged": flagged}
+
+
+@shared_task
+def check_vault_alert_rules() -> dict:
+    """
+    Verifica regras de alerta do cofre configuradas por usuário.
+
+    Executada a cada 15 minutos via beat_schedule.
+    Regras verificadas:
+    - alert_on_excessive_reveals: > N reveals em 1 hora
+    - alert_on_card_reveal: qualquer reveal de cartão bancário
+    - alert_on_failed_unlock: N+ falhas de desbloqueio desde última hora
+    """
+    from notifications.models import Notification
+    from security.models import ActivityLog, VaultAlertConfig
+
+    now = timezone.now()
+    one_hour_ago = now - timedelta(hours=1)
+    triggered = 0
+
+    for config in VaultAlertConfig.objects.filter(
+        is_deleted=False
+    ).select_related("owner", "owner__user"):
+        member = config.owner
+        user = member.user
+
+        # Rule 1: excessive reveals in 1 hour
+        if config.alert_on_excessive_reveals:
+            reveal_actions = [
+                "password_reveal",
+                "card_reveal",
+                "account_reveal",
+            ]
+            reveal_count = ActivityLog.objects.filter(
+                user=user,
+                action__in=reveal_actions,
+                created_at__gte=one_hour_ago,
+            ).count()
+            threshold = config.excessive_reveals_threshold or 5
+            if reveal_count >= threshold:
+                already = Notification.objects.filter(
+                    owner=member,
+                    notification_type="vault_anomaly_detected",
+                    title__icontains="volume",
+                    created_at__gte=one_hour_ago,
+                    is_deleted=False,
+                ).exists()
+                if not already:
+                    _create_vault_alert(
+                        member,
+                        user,
+                        "Volume excessivo de revelações detectado",
+                        (
+                            f"Foram detectadas {reveal_count} revelações"
+                            f" nas últimas 60 minutos"
+                            f" (limite: {threshold})."
+                            " Verifique os logs para mais detalhes."
+                        ),
+                        config.notify_email,
+                    )
+                    triggered += 1
+
+        # Rule 2: bank card reveal
+        if config.alert_on_card_reveal:
+            card_reveals = ActivityLog.objects.filter(
+                user=user,
+                action="card_reveal",
+                created_at__gte=one_hour_ago,
+            ).count()
+            if card_reveals > 0:
+                already = Notification.objects.filter(
+                    owner=member,
+                    notification_type="vault_anomaly_detected",
+                    title__icontains="cartão",
+                    created_at__gte=one_hour_ago,
+                    is_deleted=False,
+                ).exists()
+                if not already:
+                    _create_vault_alert(
+                        member,
+                        user,
+                        "Cartão bancário revelado no Cofre",
+                        (
+                            f"Um ou mais cartões bancários foram revelados"
+                            f" recentemente ({card_reveals}x na última hora)."
+                            " Se não foi você, revogue o acesso imediatamente."
+                        ),
+                        config.notify_email,
+                    )
+                    triggered += 1
+
+        # Rule 3: failed unlock attempts
+        if config.alert_on_failed_unlock:
+            threshold = config.failed_unlock_threshold or 3
+            failed = ActivityLog.objects.filter(
+                user=user,
+                action="failed_vault_unlock",
+                created_at__gte=one_hour_ago,
+            ).count()
+            if failed >= threshold:
+                already = Notification.objects.filter(
+                    owner=member,
+                    notification_type="vault_anomaly_detected",
+                    title__icontains="desbloqueio",
+                    created_at__gte=one_hour_ago,
+                    is_deleted=False,
+                ).exists()
+                if not already:
+                    _create_vault_alert(
+                        member,
+                        user,
+                        "Tentativas de desbloqueio do Cofre com falha",
+                        (
+                            f"Foram detectadas {failed} tentativas"
+                            f" de desbloqueio com falha na última hora"
+                            f" (limite: {threshold})."
+                            " Verifique se sua conta foi comprometida."
+                        ),
+                        config.notify_email,
+                    )
+                    triggered += 1
+
+    logger.info("check_vault_alert_rules: %d regras disparadas", triggered)
+    return {"triggered": triggered}
+
+
+def _create_vault_alert(
+    member, user, title: str, message: str, notify_email: bool
+):
+    """Cria notificação in-app e opcionalmente envia e-mail."""
+    from notifications.models import Notification
+
+    notif = Notification.objects.create(
+        owner=member,
+        notification_type="vault_anomaly_detected",
+        title=title,
+        message=message,
+        content_type="ActivityLog",
+        object_id=0,
+        created_by=user,
+        updated_by=user,
+    )
+    if notify_email and user.email:
+        try:
+            from django.core.mail import send_mail
+
+            send_mail(
+                subject=f"[Axiom Cofre] {title}",
+                message=(
+                    f"Olá {user.first_name or user.username},\n\n"
+                    f"{message}\n\n"
+                    "Acesse o Cofre de Segurança para mais detalhes.\n\n"
+                    "— Axiom Security"
+                ),
+                from_email=None,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+    return notif

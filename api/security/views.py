@@ -2885,3 +2885,134 @@ class VaultAlertConfigView(APIView):
         s.is_valid(raise_exception=True)
         s.save()
         return Response(s.data)
+
+
+# ===========================================================================
+# SECURITY GLOBAL SEARCH VIEW
+# ===========================================================================
+
+
+class SecuritySearchView(VaultLockedMixin, APIView):
+    """
+    GET /api/v1/security/search/?q=<term>
+
+    Busca em metadados (sem campos criptografados) de senhas, cartões,
+    contas bancárias e arquivos do cofre. Retorna resultados agrupados.
+    Requer vault desbloqueado (VaultLockedMixin retorna 423 se bloqueado).
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request):
+        from members.models import Member
+
+        q = (request.query_params.get("q") or "").strip()
+        if len(q) < 2:
+            return Response(
+                {
+                    "passwords": [],
+                    "stored_cards": [],
+                    "stored_accounts": [],
+                    "archives": [],
+                    "total": 0,
+                }
+            )
+
+        try:
+            member = Member.objects.get(user=request.user)
+        except Member.DoesNotExist:
+            return Response(
+                {
+                    "passwords": [],
+                    "stored_cards": [],
+                    "stored_accounts": [],
+                    "archives": [],
+                    "total": 0,
+                }
+            )
+
+        from django.db.models import Q
+
+        passwords = list(
+            Password.objects.filter(
+                owner=member,
+                is_deleted=False,
+            )
+            .filter(
+                Q(title__icontains=q)
+                | Q(site__icontains=q)
+                | Q(username__icontains=q)
+            )
+            .values(
+                "id",
+                "title",
+                "site",
+                "username",
+                "category",
+                "is_favorite",
+                "totp_enabled",
+            )[:20]
+        )
+
+        stored_cards = list(
+            StoredCreditCard.objects.filter(
+                owner=member,
+                is_deleted=False,
+            )
+            .filter(Q(name__icontains=q) | Q(cardholder_name__icontains=q))
+            .values(
+                "id",
+                "name",
+                "cardholder_name",
+                "flag",
+                "card_number_masked",
+                "is_favorite",
+            )[:20]
+        )
+
+        stored_accounts = list(
+            StoredBankAccount.objects.filter(
+                owner=member,
+                is_deleted=False,
+            )
+            .filter(Q(name__icontains=q) | Q(institution_name__icontains=q))
+            .values(
+                "id",
+                "name",
+                "institution_name",
+                "institution_code",
+                "is_favorite",
+            )[:20]
+        )
+
+        archives = list(
+            Archive.objects.filter(
+                owner=member,
+                is_deleted=False,
+            )
+            .filter(Q(title__icontains=q) | Q(file_name__icontains=q))
+            .values(
+                "id",
+                "title",
+                "category",
+                "file_name",
+                "is_favorite",
+            )[:20]
+        )
+
+        total = (
+            len(passwords)
+            + len(stored_cards)
+            + len(stored_accounts)
+            + len(archives)
+        )
+
+        return Response(
+            {
+                "passwords": passwords,
+                "stored_cards": stored_cards,
+                "stored_accounts": stored_accounts,
+                "archives": archives,
+                "total": total,
+            }
+        )
