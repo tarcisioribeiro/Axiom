@@ -36,6 +36,7 @@ const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
+const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Members = lazy(() => import('./pages/Members'));
@@ -280,7 +281,11 @@ function AnimatedRoutes() {
           />
           <Route
             path="/credit-card-expenses"
-            element={<Navigate to="/credit-cards" replace />}
+            element={
+              <PageWrapper>
+                <CreditCardExpenses />
+              </PageWrapper>
+            }
           />
           <Route
             path="/transfers"

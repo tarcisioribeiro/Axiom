@@ -45,6 +45,7 @@ import {
   BarChart3,
   CalendarRange,
   Zap,
+  ShoppingCart,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -196,6 +197,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.transactions',
             href: '/transactions',
             icon: TrendingDown,
+          },
+          {
+            titleKey: 'nav.items.creditCardExpenses',
+            href: '/credit-card-expenses',
+            icon: ShoppingCart,
           },
           { titleKey: 'nav.items.transfers', href: '/transfers', icon: ArrowLeftRight },
           {
