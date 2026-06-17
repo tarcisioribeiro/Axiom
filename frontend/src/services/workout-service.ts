@@ -1,5 +1,7 @@
 import { API_CONFIG } from '@/config/api-config';
 import type {
+  BodyMetric,
+  BodyMetricFormData,
   Exercise,
   ExerciseFormData,
   WorkoutDay,
@@ -92,6 +94,12 @@ class WorkoutSessionSetService extends BaseService<
   }
 }
 
+class BodyMetricService extends BaseService<BodyMetric, BodyMetricFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.BODY_METRICS);
+  }
+}
+
 export const exerciseService = new ExerciseService();
 export const workoutPlanService = new WorkoutPlanService();
 export const workoutDayService = new WorkoutDayService();
@@ -99,3 +107,4 @@ export const workoutExerciseService = new WorkoutExerciseService();
 export const workoutSessionService = new WorkoutSessionService();
 export const workoutSessionExerciseService = new WorkoutSessionExerciseService();
 export const workoutSessionSetService = new WorkoutSessionSetService();
+export const bodyMetricService = new BodyMetricService();
