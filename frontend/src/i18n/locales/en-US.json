@@ -38,7 +38,8 @@
       "select": "Select",
       "none": "None",
       "total": "Total",
-      "test": "Test"
+      "test": "Test",
+      "exportCSV": "Export CSV"
     },
     "messages": {
       "loadError": "Error loading data",
@@ -290,7 +291,8 @@
       "spendingInsights": "Spending Insights",
       "reflections": "Daily Reflections",
       "weeklyPlanning": "Weekly Planning",
-      "tags": "Tags"
+      "tags": "Tags",
+      "automationRules": "Automation Rules"
     },
     "agents": "AI Agents"
   },
@@ -5751,6 +5753,86 @@
       "editReflection": "Edit",
       "saveReflection": "Save reflection",
       "saving": "Saving..."
+    },
+    "expenseOCR": {
+      "buttonLabel": "Import Receipt",
+      "uploading": "Processing image...",
+      "success": "Receipt read successfully",
+      "successDesc": "Fields were auto-filled. Review and confirm.",
+      "failed": "Could not read the receipt",
+      "unavailable": "OCR not available on server",
+      "noImage": "Select an image",
+      "autoFilled": "Auto-filled",
+      "clearHint": "Click to change",
+      "dragHint": "Drag a photo or click to select",
+      "accepts": "JPG, PNG or PDF",
+      "modalTitle": "Import Receipt",
+      "modalDesc": "Upload a photo of the receipt. Data will be extracted automatically."
+    },
+    "automationRules": {
+      "title": "Automation Rules",
+      "subtitle": "Create IF → THEN rules to automatically classify expenses",
+      "newRule": "New Rule",
+      "empty": "No rules created",
+      "emptyDesc": "Create rules to automate the classification of your expenses.",
+      "applyAll": "Apply Rules",
+      "applySuccess": "Rules applied",
+      "applySuccessDesc": "{count} expense(s) updated by rules.",
+      "applied": "applications",
+      "priority": "Priority",
+      "active": "Active",
+      "inactive": "Inactive",
+      "conditions": "Conditions (IF)",
+      "actions": "Actions (THEN)",
+      "logic": "Logic",
+      "logicAll": "All (AND)",
+      "logicAny": "Any (OR)",
+      "addCondition": "Add condition",
+      "addAction": "Add action",
+      "removeCondition": "Remove condition",
+      "removeAction": "Remove action",
+      "conditionField": "Field",
+      "conditionOperator": "Operator",
+      "conditionValue": "Value",
+      "actionType": "Action",
+      "actionValue": "Action value",
+      "logsTitle": "History",
+      "noLogs": "No applications recorded",
+      "fields": {
+        "merchant": "Merchant",
+        "description": "Description",
+        "category": "Category",
+        "value": "Value",
+        "account": "Account",
+        "payment_method": "Payment method"
+      },
+      "operators": {
+        "contains": "contains",
+        "not_contains": "does not contain",
+        "eq": "equals",
+        "neq": "not equal to",
+        "gt": "greater than",
+        "gte": "greater than or equal to",
+        "lt": "less than",
+        "lte": "less than or equal to"
+      },
+      "actionTypes": {
+        "set_category": "Set category",
+        "add_tag": "Add tag",
+        "create_alert": "Create alert"
+      },
+      "form": {
+        "nameLabel": "Rule name",
+        "namePlaceholder": "e.g. iFood = Food",
+        "descLabel": "Description (optional)",
+        "descPlaceholder": "Describe what this rule does",
+        "priorityLabel": "Priority (lower = higher priority)",
+        "isActiveLabel": "Active"
+      },
+      "deleteConfirm": "Are you sure you want to delete this rule?",
+      "createSuccess": "Rule created successfully",
+      "updateSuccess": "Rule updated successfully",
+      "deleteSuccess": "Rule deleted successfully"
     }
   },
   "userProfile": {
