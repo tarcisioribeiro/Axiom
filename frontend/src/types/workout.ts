@@ -176,3 +176,33 @@ export interface WorkoutSessionSetFormData {
   notes?: string | null;
   owner: number;
 }
+
+export interface BodyMetric {
+  id: number;
+  uuid: string;
+  measured_at: string;
+  weight_kg: string | null;
+  height_cm: string | null;
+  waist_cm: string | null;
+  neck_cm: string | null;
+  arm_cm: string | null;
+  hip_cm: string | null;
+  body_fat_pct: string | null;
+  notes: string;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BodyMetricFormData {
+  measured_at: string;
+  weight_kg?: string | null;
+  height_cm?: string | null;
+  waist_cm?: string | null;
+  neck_cm?: string | null;
+  arm_cm?: string | null;
+  hip_cm?: string | null;
+  body_fat_pct?: string | null;
+  notes?: string;
+  owner: number;
+}

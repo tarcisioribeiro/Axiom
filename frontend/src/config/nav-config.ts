@@ -130,6 +130,11 @@ export const navModules: NavModule[] = [
             href: '/planning/nutrition',
             icon: UtensilsCrossed,
           },
+          {
+            titleKey: 'nav.items.bodyMetrics',
+            href: '/planning/body-metrics',
+            icon: Scale,
+          },
         ],
       },
     ],
