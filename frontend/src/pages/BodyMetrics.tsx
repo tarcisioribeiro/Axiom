@@ -3,19 +3,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  Activity,
+  Dumbbell,
   Edit,
-  Minus,
+  Percent,
   Plus,
+  Ruler,
   Scale,
   Trash2,
-  TrendingDown,
-  TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -24,11 +24,13 @@ import {
   YAxis,
 } from 'recharts';
 
+import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,8 +55,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
+import { useSemanticColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
@@ -65,16 +67,16 @@ import type { BodyMetric, BodyMetricFormData } from '@/types/workout';
 
 type PeriodKey = '30' | '90' | '180' | 'all';
 
-const CHART_METRICS = [
-  { key: 'weight_kg', labelKey: 'weight', color: '#8b5cf6', unit: 'kg' },
-  { key: 'bmi', labelKey: 'bmi', color: '#f59e0b', unit: '' },
-  { key: 'waist_cm', labelKey: 'waist', color: '#f97316', unit: 'cm' },
-  { key: 'arm_cm', labelKey: 'arm', color: '#10b981', unit: 'cm' },
-  { key: 'hip_cm', labelKey: 'hip', color: '#ef4444', unit: 'cm' },
-  { key: 'body_fat_pct', labelKey: 'bodyFat', color: '#3b82f6', unit: '%' },
+const METRIC_META = [
+  { key: 'weight_kg', labelKey: 'weight', unit: 'kg' },
+  { key: 'bmi', labelKey: 'bmi', unit: '' },
+  { key: 'waist_cm', labelKey: 'waist', unit: 'cm' },
+  { key: 'arm_cm', labelKey: 'arm', unit: 'cm' },
+  { key: 'hip_cm', labelKey: 'hip', unit: 'cm' },
+  { key: 'body_fat_pct', labelKey: 'bodyFat', unit: '%' },
 ] as const;
 
-type MetricKey = (typeof CHART_METRICS)[number]['key'];
+type MetricKey = (typeof METRIC_META)[number]['key'];
 
 // ── Cálculos ──────────────────────────────────────────────────────────────────
 
@@ -134,6 +136,13 @@ function bmiCategory(
   return { label: t('pages.bodyMetrics.bmiObesity3'), variant: 'destructive' };
 }
 
+function bmiStatVariant(bmi: number): 'success' | 'warning' | 'danger' | 'default' {
+  if (bmi < 18.5) return 'warning';
+  if (bmi < 25) return 'success';
+  if (bmi < 30) return 'warning';
+  return 'danger';
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(
@@ -147,39 +156,15 @@ function fmt(
   return `${n.toLocaleString('pt-BR', { maximumFractionDigits: decimals })}${unit ? ` ${unit}` : ''}`;
 }
 
-function VariationBadge({
-  current,
-  previous,
-}: {
-  current: string | null;
-  previous: string | null;
-}) {
-  if (!current || !previous) return null;
+function varDesc(
+  current: string | null,
+  previous: string | null,
+  unit: string
+): string | undefined {
+  if (!current || !previous) return undefined;
   const diff = parseFloat(current) - parseFloat(previous);
-  if (Math.abs(diff) < 0.01) {
-    return (
-      <span className="inline-flex items-center gap-xs text-xs text-muted-foreground">
-        <Minus className="h-3 w-3" /> 0
-      </span>
-    );
-  }
-  const positive = diff > 0;
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-xs text-xs font-medium',
-        positive ? 'text-destructive' : 'text-success'
-      )}
-    >
-      {positive ? (
-        <TrendingUp className="h-3 w-3" />
-      ) : (
-        <TrendingDown className="h-3 w-3" />
-      )}
-      {positive ? '+' : ''}
-      {diff.toFixed(1)}
-    </span>
-  );
+  if (Math.abs(diff) < 0.01) return undefined;
+  return `${diff > 0 ? '↑' : '↓'} ${Math.abs(diff).toFixed(1)} ${unit} vs. anterior`;
 }
 
 // ── Form state ────────────────────────────────────────────────────────────────
@@ -226,8 +211,7 @@ export default function BodyMetrics() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const semanticColors = useSemanticColors();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BodyMetric | null>(null);
@@ -236,6 +220,15 @@ export default function BodyMetrics() {
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
     new Set<MetricKey>(['weight_kg', 'bmi', 'body_fat_pct'])
   );
+
+  const chartMetrics = [
+    { ...METRIC_META[0], color: semanticColors.primary },
+    { ...METRIC_META[1], color: semanticColors.caution },
+    { ...METRIC_META[2], color: semanticColors.warning },
+    { ...METRIC_META[3], color: semanticColors.success },
+    { ...METRIC_META[4], color: semanticColors.danger },
+    { ...METRIC_META[5], color: semanticColors.info },
+  ];
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -403,11 +396,6 @@ export default function BodyMetrics() {
       ? calcBmi(parseFloat(latest.weight_kg), parseFloat(latest.height_cm))
       : null;
 
-  const axisColor = isDark ? '#6b7280' : '#9ca3af';
-  const gridColor = isDark ? '#374151' : '#f3f4f6';
-  const tooltipBg = isDark ? '#1f2937' : '#ffffff';
-  const tooltipBorder = isDark ? '#374151' : '#e5e7eb';
-
   const locale = i18n.language === 'pt-BR' ? ptBR : undefined;
 
   function toggleMetric(key: MetricKey) {
@@ -460,94 +448,48 @@ export default function BodyMetrics() {
             {/* ── Cards de resumo ── */}
             {latest && (
               <div className="mb-lg grid grid-cols-2 gap-md sm:grid-cols-3 lg:grid-cols-6">
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.weight')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {fmt(latest.weight_kg, 'kg')}
-                    </span>
-                    <VariationBadge
-                      current={latest.weight_kg}
-                      previous={previous?.weight_kg ?? null}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.bmiLabel')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {latestBmi !== null ? latestBmi.toFixed(1) : '—'}
-                    </span>
-                    {latestBmi !== null && (
-                      <Badge
-                        variant={bmiCategory(latestBmi, t).variant}
-                        className="w-fit text-xs"
-                      >
-                        {bmiCategory(latestBmi, t).label}
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.bodyFat')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {fmt(latest.body_fat_pct, '%')}
-                    </span>
-                    <VariationBadge
-                      current={latest.body_fat_pct}
-                      previous={previous?.body_fat_pct ?? null}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.waist')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {fmt(latest.waist_cm, 'cm')}
-                    </span>
-                    <VariationBadge
-                      current={latest.waist_cm}
-                      previous={previous?.waist_cm ?? null}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.arm')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {fmt(latest.arm_cm, 'cm')}
-                    </span>
-                    <VariationBadge
-                      current={latest.arm_cm}
-                      previous={previous?.arm_cm ?? null}
-                    />
-                  </CardContent>
-                </Card>
-                <Card className="p-0">
-                  <CardContent className="flex flex-col gap-xs p-md">
-                    <span className="text-xs text-muted-foreground">
-                      {t('pages.bodyMetrics.hip')}
-                    </span>
-                    <span className="text-lg font-semibold tabular-nums">
-                      {fmt(latest.hip_cm, 'cm')}
-                    </span>
-                    <VariationBadge
-                      current={latest.hip_cm}
-                      previous={previous?.hip_cm ?? null}
-                    />
-                  </CardContent>
-                </Card>
+                <StatCard
+                  title={t('pages.bodyMetrics.weight')}
+                  value={fmt(latest.weight_kg, 'kg')}
+                  icon={<Scale className="h-4 w-4" />}
+                  accentColor="purple"
+                  description={varDesc(latest.weight_kg, previous?.weight_kg ?? null, 'kg')}
+                />
+                <StatCard
+                  title={t('pages.bodyMetrics.bmiLabel')}
+                  value={latestBmi !== null ? latestBmi.toFixed(1) : '—'}
+                  icon={<Activity className="h-4 w-4" />}
+                  variant={latestBmi !== null ? bmiStatVariant(latestBmi) : 'default'}
+                  description={latestBmi !== null ? bmiCategory(latestBmi, t).label : undefined}
+                />
+                <StatCard
+                  title={t('pages.bodyMetrics.bodyFat')}
+                  value={fmt(latest.body_fat_pct, '%')}
+                  icon={<Percent className="h-4 w-4" />}
+                  accentColor="blue"
+                  description={varDesc(latest.body_fat_pct, previous?.body_fat_pct ?? null, '%')}
+                />
+                <StatCard
+                  title={t('pages.bodyMetrics.waist')}
+                  value={fmt(latest.waist_cm, 'cm')}
+                  icon={<Ruler className="h-4 w-4" />}
+                  accentColor="orange"
+                  description={varDesc(latest.waist_cm, previous?.waist_cm ?? null, 'cm')}
+                />
+                <StatCard
+                  title={t('pages.bodyMetrics.arm')}
+                  value={fmt(latest.arm_cm, 'cm')}
+                  icon={<Dumbbell className="h-4 w-4" />}
+                  accentColor="green"
+                  description={varDesc(latest.arm_cm, previous?.arm_cm ?? null, 'cm')}
+                />
+                <StatCard
+                  title={t('pages.bodyMetrics.hip')}
+                  value={fmt(latest.hip_cm, 'cm')}
+                  icon={<Ruler className="h-4 w-4" />}
+                  accentColor="red"
+                  description={varDesc(latest.hip_cm, previous?.hip_cm ?? null, 'cm')}
+                />
               </div>
             )}
 
@@ -598,7 +540,7 @@ export default function BodyMetrics() {
                   </CardHeader>
                   <CardContent>
                     <div className="mb-md flex flex-wrap gap-sm">
-                      {CHART_METRICS.map(({ key, labelKey, color, unit }) => (
+                      {chartMetrics.map(({ key, labelKey, color, unit }) => (
                         <button
                           key={key}
                           onClick={() => toggleMetric(key)}
@@ -626,39 +568,66 @@ export default function BodyMetrics() {
                       <ResponsiveContainer width="100%" height={320}>
                         <LineChart
                           data={chartData}
-                          margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
+                          margin={{ top: 4, right: 8, left: -10, bottom: 4 }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="hsl(var(--border))"
+                            opacity={0.4}
+                            vertical={false}
+                          />
                           <XAxis
                             dataKey="date"
-                            tick={{ fontSize: 11, fill: axisColor }}
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            tickLine={false}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            dy={8}
                           />
-                          <YAxis tick={{ fontSize: 11, fill: axisColor }} width={40} />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            tickLine={false}
+                            axisLine={false}
+                            width={40}
+                          />
                           <Tooltip
-                            contentStyle={{
-                              backgroundColor: tooltipBg,
-                              border: `1px solid ${tooltipBorder}`,
-                              borderRadius: '8px',
-                              fontSize: '12px',
+                            content={
+                              <EnhancedTooltip
+                                formatter={(v) => Number(v).toFixed(1)}
+                              />
+                            }
+                            cursor={{
+                              stroke: 'hsl(var(--muted-foreground))',
+                              strokeWidth: 1,
+                              strokeDasharray: '4 4',
                             }}
                           />
-                          <Legend wrapperStyle={{ fontSize: '12px' }} />
-                          {CHART_METRICS.filter(({ key }) =>
-                            activeMetrics.has(key)
-                          ).map(({ key, labelKey, color, unit }) => (
-                            <Line
-                              key={key}
-                              type="monotone"
-                              dataKey={key}
-                              stroke={color}
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              connectNulls
-                              name={String(
-                                `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
-                              )}
-                            />
-                          ))}
+                          {chartMetrics
+                            .filter(({ key }) => activeMetrics.has(key))
+                            .map(({ key, labelKey, color, unit }) => (
+                              <Line
+                                key={key}
+                                type="monotone"
+                                dataKey={key}
+                                stroke={color}
+                                strokeWidth={2.5}
+                                dot={{
+                                  r: 3,
+                                  strokeWidth: 2,
+                                  fill: 'hsl(var(--background))',
+                                  stroke: color,
+                                }}
+                                activeDot={{
+                                  r: 6,
+                                  strokeWidth: 2,
+                                  fill: color,
+                                  stroke: 'hsl(var(--background))',
+                                }}
+                                connectNulls
+                                name={String(
+                                  `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
+                                )}
+                              />
+                            ))}
                         </LineChart>
                       </ResponsiveContainer>
                     )}
