@@ -36,6 +36,7 @@ import {
   GraduationCap,
   Brain,
   Network,
+  Scale,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -101,6 +102,12 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/planning/nutrition': {
     labelKey: 'breadcrumb.nutrition',
     icon: UtensilsCrossed,
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
+  },
+  '/planning/body-metrics': {
+    labelKey: 'breadcrumb.bodyMetrics',
+    icon: Scale,
     moduleKey: 'breadcrumb.planning',
     moduleIcon: Calendar,
   },

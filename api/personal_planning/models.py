@@ -2024,12 +2024,26 @@ class BodyMetric(BaseModel):
         blank=True,
         verbose_name="Peso (kg)",
     )
+    height_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Altura (cm)",
+    )
     waist_cm = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True,
         verbose_name="Cintura (cm)",
+    )
+    neck_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Pescoço (cm)",
     )
     arm_cm = models.DecimalField(
         max_digits=5,
@@ -2050,7 +2064,7 @@ class BodyMetric(BaseModel):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Gordura Corporal (%)",
+        verbose_name="Gordura Corporal (%) — calculado pelo método da Marinha",
     )
     notes = models.TextField(blank=True, verbose_name="Observações")
 

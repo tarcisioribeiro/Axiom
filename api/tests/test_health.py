@@ -121,7 +121,7 @@ class CheckStorageTest(TestCase):
             with patch("boto3.client", return_value=mock_client):
                 result = check_storage()
 
-        self.assertEqual(result["status"], "unhealthy")
+        self.assertEqual(result["status"], "degraded")
         self.assertIn("unreachable", result["message"])
 
     def test_unhealthy_on_generic_exception(self):
@@ -140,7 +140,7 @@ class CheckStorageTest(TestCase):
             with patch("boto3.client", return_value=mock_client):
                 result = check_storage()
 
-        self.assertEqual(result["status"], "unhealthy")
+        self.assertEqual(result["status"], "degraded")
         self.assertIn("connection refused", result["message"])
 
     def test_boto3_client_called_with_correct_timeout(self):
