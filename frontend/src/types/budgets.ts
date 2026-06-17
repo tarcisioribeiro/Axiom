@@ -63,6 +63,74 @@ export interface CategorizationRuleFormData {
   priority: number;
 }
 
+export type AutomationConditionField =
+  | 'merchant'
+  | 'description'
+  | 'category'
+  | 'value'
+  | 'account'
+  | 'payment_method';
+
+export type AutomationOperator =
+  | 'contains'
+  | 'not_contains'
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte';
+
+export type AutomationActionType = 'set_category' | 'add_tag' | 'create_alert';
+
+export interface AutomationCondition {
+  field: AutomationConditionField;
+  operator: AutomationOperator;
+  value: string;
+}
+
+export interface AutomationAction {
+  type: AutomationActionType;
+  value: string;
+}
+
+export interface AutomationRule {
+  id: number;
+  uuid: string;
+  name: string;
+  description: string | null;
+  logic: 'all' | 'any';
+  conditions: AutomationCondition[];
+  actions: AutomationAction[];
+  is_active: boolean;
+  priority: number;
+  apply_count: number;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutomationRuleFormData {
+  name: string;
+  description?: string;
+  logic: 'all' | 'any';
+  conditions: AutomationCondition[];
+  actions: AutomationAction[];
+  is_active: boolean;
+  priority: number;
+}
+
+export interface AutomationRuleLog {
+  id: number;
+  uuid: string;
+  rule: number;
+  rule_name: string;
+  expense: number;
+  expense_description: string;
+  actions_applied: string[];
+  created_at: string;
+}
+
 export interface BankStatementEntry {
   id: number;
   uuid: string;

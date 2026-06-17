@@ -21,6 +21,8 @@ from app.throttles import CategorizationSuggestThrottle, ExportRateThrottle
 from expenses.filters import ExpenseFilter
 from expenses.models import (
     EXPENSES_CATEGORIES,
+    AutomationRule,
+    AutomationRuleLog,
     CategorizationRule,
     Expense,
     ExpenseSplit,
@@ -29,6 +31,8 @@ from expenses.models import (
     Tag,
 )
 from expenses.serializers import (
+    AutomationRuleLogSerializer,
+    AutomationRuleSerializer,
     BulkGenerateRequestSerializer,
     BulkGenerateResponseSerializer,
     BulkMarkPaidSerializer,
@@ -676,4 +680,203 @@ class FixedExpenseGenerationLogListView(APIView):
             generated_by=request.user
         ).order_by("-month")[:24]
         serializer = FixedExpenseGenerationLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+
+class ExpenseOCRView(APIView):
+    """
+    POST /api/v1/expenses/ocr/
+
+    Receives an image (multipart/form-data, field `image`), runs OCR via
+    pytesseract and returns structured data for pre-filling the expense form.
+    Returns an empty payload (all null) if OCR is unavailable or fails.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Expense.objects.none()
+
+    _MERCHANT_PATTERNS = [
+        r"(?:estabelecimento|loja|cnpj)[:\s]+([A-Za-zÀ-ÿ\s&\-'\.]{3,60})",
+        r"^([A-Z][A-Za-zÀ-ÿ\s&\-'\.]{2,40})\s*$",
+    ]
+    _AMOUNT_PATTERNS = [
+        r"(?:total|valor|v\.total|vlr\.?total)[:\s]*r?\$?\s*([\d\.,]+)",
+        r"r\$\s*([\d\.,]+)",
+    ]
+    _DATE_PATTERNS = [
+        r"(\d{2}/\d{2}/\d{4})",
+        r"(\d{2}-\d{2}-\d{4})",
+        r"(\d{4}-\d{2}-\d{2})",
+    ]
+
+    def _extract_amount(self, text: str) -> str | None:
+        import re
+
+        lower = text.lower()
+        for pattern in self._AMOUNT_PATTERNS:
+            match = re.search(pattern, lower)
+            if match:
+                raw = match.group(1).replace(".", "").replace(",", ".")
+                try:
+                    return str(round(float(raw), 2))
+                except ValueError:
+                    continue
+        return None
+
+    def _extract_date(self, text: str) -> str | None:
+        import re
+
+        for pattern in self._DATE_PATTERNS:
+            match = re.search(pattern, text)
+            if match:
+                raw = match.group(1)
+                for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"):
+                    try:
+                        from datetime import datetime
+
+                        return datetime.strptime(raw, fmt).strftime("%Y-%m-%d")
+                    except ValueError:
+                        continue
+        return None
+
+    def _extract_merchant(self, text: str) -> str | None:
+        import re
+
+        for pattern in self._MERCHANT_PATTERNS:
+            match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                merchant = match.group(1).strip()
+                if len(merchant) >= 3:
+                    return merchant[:80]
+        lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+        for line in lines[:5]:
+            if len(line) >= 3 and not any(c.isdigit() for c in line[:3]):
+                return line[:80]
+        return None
+
+    def post(self, request):
+        empty = {"value": None, "date": None, "merchant": None, "error": None}
+        image_file = request.FILES.get("image")
+        if not image_file:
+            return Response(
+                {
+                    "value": None,
+                    "date": None,
+                    "merchant": None,
+                    "error": "no_image",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            import pytesseract  # type: ignore[import-not-found]
+            from PIL import Image  # type: ignore[import-not-found]
+
+            image = Image.open(image_file).convert("RGB")
+            text = pytesseract.image_to_string(
+                image, lang="por+eng", config="--psm 6"
+            )
+        except ImportError:
+            return Response({**empty, "error": "ocr_unavailable"})
+        except Exception:
+            return Response({**empty, "error": "ocr_failed"})
+
+        return Response(
+            {
+                "value": self._extract_amount(text),
+                "date": self._extract_date(text),
+                "merchant": self._extract_merchant(text),
+                "error": None,
+            }
+        )
+
+
+class AutomationRuleListCreateView(BaseListCreateView):
+    queryset = AutomationRule.objects.all()
+    serializer_class = AutomationRuleSerializer
+
+    def get_queryset(self):
+        return AutomationRule.objects.filter(
+            owner=self.request.user, is_deleted=False
+        ).order_by("priority", "created_at")
+
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=self.request.user,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+
+class AutomationRuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    queryset = AutomationRule.objects.all()
+    serializer_class = AutomationRuleSerializer
+
+    def get_queryset(self):
+        return AutomationRule.objects.filter(
+            owner=self.request.user, is_deleted=False
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+class AutomationRuleApplyView(APIView):
+    """Aplica manualmente as regras de automação às despesas."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = AutomationRule.objects.none()
+
+    def post(self, request):
+        rules = AutomationRule.objects.filter(
+            owner=request.user, is_active=True, is_deleted=False
+        ).order_by("priority", "created_at")
+
+        expenses = Expense.objects.filter(
+            account__owner=request.user, is_deleted=False
+        ).select_related("account")
+
+        total_applied = 0
+        for expense in expenses:
+            for rule in rules:
+                if rule.matches(expense):
+                    applied = rule.apply(expense)
+                    if applied:
+                        expense.save(update_fields=["category"])
+                        AutomationRuleLog.objects.create(
+                            rule=rule,
+                            expense=expense,
+                            actions_applied=applied,
+                            created_by=request.user,
+                            updated_by=request.user,
+                        )
+                        AutomationRule.objects.filter(pk=rule.pk).update(
+                            apply_count=rule.apply_count + 1
+                        )
+                        total_applied += 1
+
+        return Response({"applied": total_applied}, status=status.HTTP_200_OK)
+
+
+class AutomationRuleLogListView(APIView):
+    """Retorna o histórico de aplicações das regras de automação."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = AutomationRuleLog.objects.none()
+
+    def get(self, request, pk):
+        rule = AutomationRule.objects.filter(
+            pk=pk, owner=request.user, is_deleted=False
+        ).first()
+        if not rule:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        logs = AutomationRuleLog.objects.filter(rule=rule).order_by(
+            "-created_at"
+        )[:50]
+        serializer = AutomationRuleLogSerializer(logs, many=True)
         return Response(serializer.data)
