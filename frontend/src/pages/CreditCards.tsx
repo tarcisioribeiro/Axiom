@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { motion } from 'framer-motion';
 import {
   Plus,
   Pencil,
@@ -637,126 +638,146 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                 : '';
 
             return (
-              <Card key={card.id} className={cn('overflow-hidden', urgencyBorder)}>
-                {/* Card hero — gradient background simulating a bank card */}
-                <div
-                  className={cn(
-                    'relative bg-gradient-to-br px-md pb-lg pt-md',
-                    brandGradient
-                  )}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">
-                        {t('pages.creditCards.limit')}
-                      </p>
-                      <p className="text-xl font-bold">{formatCurrency(available)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t('pages.creditCards.ofLimit', {
-                          value: formatCurrency(limit),
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-xs">
-                      <UsageArc pct={usagePct} size={48} />
-                      <div className="flex flex-col">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => void openBillsDialog(card)}
-                          title={t('pages.creditCards.viewBills')}
-                          aria-label={t('pages.creditCards.viewBills')}
-                        >
-                          <Receipt className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(card)}
-                          title={t('common.actions.edit')}
-                          aria-label={t('common.actions.edit')}
-                        >
-                          <Pencil className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleDelete(card.id)}
-                          title={t('common.actions.delete')}
-                          aria-label={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="h-4 w-4 text-destructive"
-                            aria-hidden="true"
-                          />
-                        </Button>
+              <motion.div
+                key={card.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: creditCards.indexOf(card) * 0.05 }}
+                whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+                onClick={() => setHubCard(card)}
+                className="cursor-pointer"
+                title={t('pages.creditCardHub.openHub')}
+              >
+                <Card className={cn('overflow-hidden', urgencyBorder)}>
+                  {/* Card hero — gradient background simulating a bank card */}
+                  <div
+                    className={cn(
+                      'relative bg-gradient-to-br px-md pb-lg pt-md',
+                      brandGradient
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">
+                          {t('pages.creditCards.limit')}
+                        </p>
+                        <p className="text-xl font-bold">{formatCurrency(available)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('pages.creditCards.ofLimit', {
+                            value: formatCurrency(limit),
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-xs">
+                        <UsageArc pct={usagePct} size={48} />
+                        <div className="flex flex-col">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void openBillsDialog(card);
+                            }}
+                            title={t('pages.creditCards.viewBills')}
+                            aria-label={t('pages.creditCards.viewBills')}
+                          >
+                            <Receipt className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(card);
+                            }}
+                            title={t('common.actions.edit')}
+                            aria-label={t('common.actions.edit')}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleDelete(card.id);
+                            }}
+                            title={t('common.actions.delete')}
+                            aria-label={t('common.actions.delete')}
+                          >
+                            <Trash2
+                              className="h-4 w-4 text-destructive"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </div>
                       </div>
                     </div>
+                    {/* Card chip */}
+                    <div className="absolute bottom-3 left-md h-5 w-7 rounded bg-warning/40 ring-1 ring-warning/30" />
+                    {/* Bottom accent strip */}
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
                   </div>
-                  {/* Card chip */}
-                  <div className="absolute bottom-3 left-md h-5 w-7 rounded bg-warning/40 ring-1 ring-warning/30" />
-                  {/* Bottom accent strip */}
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-                </div>
 
-                <CardContent className="space-y-sm pt-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <button
-                        className="cursor-pointer text-left font-semibold hover:underline"
-                        onClick={() => setHubCard(card)}
-                        title={t('pages.creditCardHub.openHub')}
-                      >
-                        {card.name}
-                      </button>
-                      {cardNumber && (
-                        <p className="font-mono text-xs text-muted-foreground">
-                          {cardNumber}
-                        </p>
-                      )}
-                      {openBill && (
-                        <p
-                          className={cn(
-                            'mt-0.5 text-xs font-medium',
-                            daysUntilDue !== null && daysUntilDue <= 5
-                              ? 'text-destructive'
-                              : 'text-muted-foreground'
-                          )}
+                  <CardContent className="space-y-sm pt-md">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <button
+                          className="cursor-pointer text-left font-semibold hover:underline"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {t('pages.creditCards.billAmount', {
-                            amount: formatCurrency(openBill.total_amount),
-                          })}
-                          {openBill.due_date &&
-                            ` • ${t('pages.creditCards.dueDayText', { day: new Date(openBill.due_date).getUTCDate() })}`}
-                        </p>
-                      )}
+                          {card.name}
+                        </button>
+                        {cardNumber && (
+                          <p className="font-mono text-xs text-muted-foreground">
+                            {cardNumber}
+                          </p>
+                        )}
+                        {openBill && (
+                          <p
+                            className={cn(
+                              'mt-0.5 text-xs font-medium',
+                              daysUntilDue !== null && daysUntilDue <= 5
+                                ? 'text-destructive'
+                                : 'text-muted-foreground'
+                            )}
+                          >
+                            {t('pages.creditCards.billAmount', {
+                              amount: formatCurrency(openBill.total_amount),
+                            })}
+                            {openBill.due_date &&
+                              ` • ${t('pages.creditCards.dueDayText', { day: new Date(openBill.due_date).getUTCDate() })}`}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="secondary">
+                        {translate('cardBrands', card.flag)}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary">
-                      {translate('cardBrands', card.flag)}
-                    </Badge>
-                  </div>
 
-                  <div className="flex items-center justify-between border-t pt-sm text-sm">
-                    <div className="flex items-center gap-xs text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>{t('pages.creditCards.dueDay')}</span>
+                    <div className="flex items-center justify-between border-t pt-sm text-sm">
+                      <div className="flex items-center gap-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>{t('pages.creditCards.dueDay')}</span>
+                      </div>
+                      <span className="font-medium">
+                        {t('pages.creditCards.dueDayValue', { day: card.due_day })}
+                      </span>
                     </div>
-                    <span className="font-medium">
-                      {t('pages.creditCards.dueDayValue', { day: card.due_day })}
-                    </span>
-                  </div>
 
-                  {card.associated_account_name && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.creditCards.associatedAccount')}{' '}
-                      {card.associated_account_name}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+                    {card.associated_account_name && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('pages.creditCards.associatedAccount')}{' '}
+                        {card.associated_account_name}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
         </div>

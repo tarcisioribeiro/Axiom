@@ -20,6 +20,10 @@ import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import {
+  ExpenseOCRUpload,
+  type OCRResult,
+} from '@/components/expenses/ExpenseOCRUpload';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -329,8 +333,23 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const selectedAccount = accounts.find((a) => a.id === watchedAccount);
   const hasEligibleLinks = eligibleLoans.length > 0 || eligiblePayables.length > 0;
 
+  const handleOCRResult = (result: OCRResult) => {
+    if (result.merchant) setValue('description', result.merchant);
+    if (result.value) {
+      const num = parseFloat(result.value.replace(',', '.'));
+      if (!isNaN(num)) setValue('value', num);
+    }
+    if (result.date) setValue('date', result.date);
+    if (result.merchant) handleMerchantChange(result.merchant);
+  };
+
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg" noValidate>
+      {!expense && (
+        <div className="flex items-center justify-end">
+          <ExpenseOCRUpload onResult={handleOCRResult} />
+        </div>
+      )}
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
