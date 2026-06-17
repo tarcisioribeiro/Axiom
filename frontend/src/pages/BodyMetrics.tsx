@@ -453,28 +453,42 @@ export default function BodyMetrics() {
                   value={fmt(latest.weight_kg, 'kg')}
                   icon={<Scale className="h-4 w-4" />}
                   accentColor="purple"
-                  description={varDesc(latest.weight_kg, previous?.weight_kg ?? null, 'kg')}
+                  description={varDesc(
+                    latest.weight_kg,
+                    previous?.weight_kg ?? null,
+                    'kg'
+                  )}
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.bmiLabel')}
                   value={latestBmi !== null ? latestBmi.toFixed(1) : '—'}
                   icon={<Activity className="h-4 w-4" />}
                   variant={latestBmi !== null ? bmiStatVariant(latestBmi) : 'default'}
-                  description={latestBmi !== null ? bmiCategory(latestBmi, t).label : undefined}
+                  description={
+                    latestBmi !== null ? bmiCategory(latestBmi, t).label : undefined
+                  }
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.bodyFat')}
                   value={fmt(latest.body_fat_pct, '%')}
                   icon={<Percent className="h-4 w-4" />}
                   accentColor="blue"
-                  description={varDesc(latest.body_fat_pct, previous?.body_fat_pct ?? null, '%')}
+                  description={varDesc(
+                    latest.body_fat_pct,
+                    previous?.body_fat_pct ?? null,
+                    '%'
+                  )}
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.waist')}
                   value={fmt(latest.waist_cm, 'cm')}
                   icon={<Ruler className="h-4 w-4" />}
                   accentColor="orange"
-                  description={varDesc(latest.waist_cm, previous?.waist_cm ?? null, 'cm')}
+                  description={varDesc(
+                    latest.waist_cm,
+                    previous?.waist_cm ?? null,
+                    'cm'
+                  )}
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.arm')}
@@ -578,13 +592,19 @@ export default function BodyMetrics() {
                           />
                           <XAxis
                             dataKey="date"
-                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            tick={{
+                              fontSize: 11,
+                              fill: 'hsl(var(--muted-foreground))',
+                            }}
                             tickLine={false}
                             axisLine={{ stroke: 'hsl(var(--border))' }}
                             dy={8}
                           />
                           <YAxis
-                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            tick={{
+                              fontSize: 11,
+                              fill: 'hsl(var(--muted-foreground))',
+                            }}
                             tickLine={false}
                             axisLine={false}
                             width={40}
