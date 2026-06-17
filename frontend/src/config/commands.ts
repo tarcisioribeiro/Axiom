@@ -159,7 +159,7 @@ export const navigationCommands: Command[] = [
     title: 'Gastos do Cartão',
     description: 'Ver gastos no cartão de crédito',
     icon: ShoppingCart,
-    href: '/credit-cards',
+    href: '/credit-card-expenses',
     keywords: ['gastos', 'cartao', 'compras', 'parcelas'],
     section: 'navigation',
   },
