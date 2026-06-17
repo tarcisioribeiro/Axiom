@@ -44,6 +44,7 @@ import {
   Trophy,
   BarChart3,
   CalendarRange,
+  Zap,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -168,6 +169,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.categorizationRules',
             href: '/categorization-rules',
             icon: Tag,
+          },
+          {
+            titleKey: 'nav.items.automationRules',
+            href: '/automation-rules',
+            icon: Zap,
           },
           {
             titleKey: 'nav.items.tags',

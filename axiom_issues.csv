@@ -3501,7 +3501,7 @@ Permitir que usuários avançados criem regras de automação personalizadas par
 - [ ] Toggle ativo/inativo
 - [ ] Histórico de aplicações
 - [ ] Aplicação automática ao criar/editar despesas
-- [ ] Aplicação retroativa em lote (opcional)",❌ Pendente
+- [ ] Aplicação retroativa em lote (opcional)",✅ Feito
 [Feature IA] OCR de Comprovantes para auto-preenchimento de despesas,"## Objetivo
 
 Quando o usuário fotografa ou faz upload de um comprovante (nota fiscal, recibo, comprovante de transferência), a IA extrai automaticamente os dados relevantes e pré-preenche o formulário de despesa.
@@ -3538,7 +3538,7 @@ Quando o usuário fotografa ou faz upload de um comprovante (nota fiscal, recibo
 - [ ] Indicação visual de quais campos foram auto-preenchidos (badge ""Auto-preenchido"")
 - [ ] Usuário pode corrigir qualquer campo antes de salvar
 - [ ] Fallback gracioso quando OCR não consegue extrair dados
-- [ ] Imagem salva automaticamente como comprovante",❌ Pendente
+- [ ] Imagem salva automaticamente como comprovante",✅ Feito
 [Feature IA] Categorização automática por aprendizado com correções do usuário,"## Objetivo
 
 Substituir o sistema de categorização por regras estáticas por um modelo que aprende progressivamente com as correções do usuário, aumentando a precisão de auto-categorização ao longo do tempo.
@@ -3803,7 +3803,7 @@ Criar uma experiência hub que unifica as 4 páginas fragmentadas de cartão de 
 - [ ] Navegação por breadcrumb: `Cartões > [Nome] > [Tab]`
 - [ ] Rotas diretas preservadas como deep links
 - [ ] Mobile: navegação full-screen com tabs no topo
-- [ ] Animação de transição ao selecionar cartão",❌ Pendente
+- [ ] Animação de transição ao selecionar cartão",✅ Feito
 [Tela] Análise de Gastos (Spending Insights) — padrões e tendências financeiras,"## Objetivo
 
 Criar uma tela analítica dedicada que transforma dados financeiros em narrativa interpretada, indo além das tabelas e mostrando padrões reais de comportamento financeiro.

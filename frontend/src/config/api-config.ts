@@ -57,6 +57,7 @@ export const API_CONFIG = {
     ACCOUNTS: '/api/v1/accounts/',
     EXPENSES: '/api/v1/expenses/',
     EXPENSE_SUGGEST_CATEGORY: '/api/v1/expenses/suggest-category/',
+    EXPENSE_OCR: '/api/v1/expenses/ocr/',
     FIXED_EXPENSES: '/api/v1/fixed-expenses/',
     REVENUES: '/api/v1/revenues/',
     CREDIT_CARDS: '/api/v1/credit-cards/',
@@ -201,6 +202,11 @@ export const API_CONFIG = {
     // Categorization Rules
     CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
     CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',
+
+    // Automation Rules
+    AUTOMATION_RULES: '/api/v1/automation-rules/',
+    AUTOMATION_RULES_APPLY: '/api/v1/automation-rules/apply/',
+    AUTOMATION_RULE_LOGS: (id: number) => `/api/v1/automation-rules/${id}/logs/`,
 
     // Bank Reconciliation
     BANK_RECONCILIATION_IMPORTS: '/api/v1/bank-reconciliation/imports/',
