@@ -107,6 +107,7 @@ const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
+const BodyMetrics = lazy(() => import('./pages/BodyMetrics'));
 const MyWeekPage = lazy(() => import('./pages/MyWeekPage'));
 const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
 const WeeklyPlanning = lazy(() => import('./pages/WeeklyPlanning'));
@@ -566,6 +567,14 @@ function AnimatedRoutes() {
               element={
                 <PageWrapper>
                   <PersonalAnalytics />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="body-metrics"
+              element={
+                <PageWrapper>
+                  <BodyMetrics />
                 </PageWrapper>
               }
             />
