@@ -38,7 +38,8 @@
       "select": "Selecione",
       "none": "Nenhum",
       "total": "Total",
-      "test": "Testar"
+      "test": "Testar",
+      "exportCSV": "Exportar CSV"
     },
     "messages": {
       "loadError": "Erro ao carregar dados",
@@ -290,7 +291,8 @@
       "spendingInsights": "Insights de Gastos",
       "reflections": "Reflexões Diárias",
       "weeklyPlanning": "Planejamento Semanal",
-      "tags": "Tags"
+      "tags": "Tags",
+      "automationRules": "Regras de Automação"
     },
     "agents": "Agentes IA"
   },
@@ -5840,6 +5842,86 @@
       "editReflection": "Editar",
       "saveReflection": "Salvar reflexão",
       "saving": "Salvando..."
+    },
+    "expenseOCR": {
+      "buttonLabel": "Importar Comprovante",
+      "uploading": "Processando imagem...",
+      "success": "Comprovante lido com sucesso",
+      "successDesc": "Os campos foram preenchidos automaticamente. Revise e confirme.",
+      "failed": "Não foi possível ler o comprovante",
+      "unavailable": "OCR não disponível no servidor",
+      "noImage": "Selecione uma imagem",
+      "autoFilled": "Preenchido automaticamente",
+      "clearHint": "Clique para alterar",
+      "dragHint": "Arraste uma foto ou clique para selecionar",
+      "accepts": "JPG, PNG ou PDF",
+      "modalTitle": "Importar Comprovante",
+      "modalDesc": "Faça upload de uma foto do comprovante. Os dados serão extraídos automaticamente."
+    },
+    "automationRules": {
+      "title": "Regras de Automação",
+      "subtitle": "Crie regras SE → ENTÃO para classificar despesas automaticamente",
+      "newRule": "Nova Regra",
+      "empty": "Nenhuma regra criada",
+      "emptyDesc": "Crie regras para automatizar a classificação das suas despesas.",
+      "applyAll": "Aplicar Regras",
+      "applySuccess": "Regras aplicadas",
+      "applySuccessDesc": "{count} despesa(s) atualizada(s) pelas regras.",
+      "applied": "aplicações",
+      "priority": "Prioridade",
+      "active": "Ativa",
+      "inactive": "Inativa",
+      "conditions": "Condições (SE)",
+      "actions": "Ações (ENTÃO)",
+      "logic": "Lógica",
+      "logicAll": "Todas (AND)",
+      "logicAny": "Qualquer (OR)",
+      "addCondition": "Adicionar condição",
+      "addAction": "Adicionar ação",
+      "removeCondition": "Remover condição",
+      "removeAction": "Remover ação",
+      "conditionField": "Campo",
+      "conditionOperator": "Operador",
+      "conditionValue": "Valor",
+      "actionType": "Ação",
+      "actionValue": "Valor da ação",
+      "logsTitle": "Histórico",
+      "noLogs": "Nenhuma aplicação registrada",
+      "fields": {
+        "merchant": "Estabelecimento",
+        "description": "Descrição",
+        "category": "Categoria",
+        "value": "Valor",
+        "account": "Conta",
+        "payment_method": "Forma de pagamento"
+      },
+      "operators": {
+        "contains": "contém",
+        "not_contains": "não contém",
+        "eq": "igual a",
+        "neq": "diferente de",
+        "gt": "maior que",
+        "gte": "maior ou igual a",
+        "lt": "menor que",
+        "lte": "menor ou igual a"
+      },
+      "actionTypes": {
+        "set_category": "Definir categoria",
+        "add_tag": "Adicionar tag",
+        "create_alert": "Criar alerta"
+      },
+      "form": {
+        "nameLabel": "Nome da regra",
+        "namePlaceholder": "Ex: iFood = Alimentação",
+        "descLabel": "Descrição (opcional)",
+        "descPlaceholder": "Descreva o que esta regra faz",
+        "priorityLabel": "Prioridade (menor = maior prioridade)",
+        "isActiveLabel": "Ativa"
+      },
+      "deleteConfirm": "Tem certeza que deseja excluir esta regra?",
+      "createSuccess": "Regra criada com sucesso",
+      "updateSuccess": "Regra atualizada com sucesso",
+      "deleteSuccess": "Regra excluída com sucesso"
     }
   },
   "userProfile": {

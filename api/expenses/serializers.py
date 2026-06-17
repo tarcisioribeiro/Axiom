@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from expenses.models import (
+    AutomationRule,
+    AutomationRuleLog,
     CategorizationRule,
     Expense,
     ExpenseSplit,
@@ -363,6 +365,55 @@ class CategorizationRuleSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class AutomationRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AutomationRule
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "description",
+            "logic",
+            "conditions",
+            "actions",
+            "is_active",
+            "priority",
+            "apply_count",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "apply_count",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class AutomationRuleLogSerializer(serializers.ModelSerializer):
+    rule_name = serializers.CharField(source="rule.name", read_only=True)
+    expense_description = serializers.CharField(
+        source="expense.description", read_only=True
+    )
+
+    class Meta:
+        model = AutomationRuleLog
+        fields = [
+            "id",
+            "uuid",
+            "rule",
+            "rule_name",
+            "expense",
+            "expense_description",
+            "actions_applied",
+            "created_at",
+        ]
+        read_only_fields = fields
 
 
 class FixedExpenseGenerationLogSerializer(serializers.ModelSerializer):
