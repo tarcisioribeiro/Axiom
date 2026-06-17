@@ -549,3 +549,213 @@ class ExpenseSplit(BaseModel):
 
     def __str__(self):
         return f"{self.description} - R$ {self.value}"
+
+
+AUTOMATION_CONDITION_FIELDS = (
+    ("merchant", "Estabelecimento"),
+    ("description", "Descrição"),
+    ("category", "Categoria"),
+    ("value", "Valor"),
+    ("account", "Conta"),
+    ("payment_method", "Forma de pagamento"),
+)
+
+AUTOMATION_OPERATORS = (
+    ("contains", "contém"),
+    ("not_contains", "não contém"),
+    ("eq", "igual a"),
+    ("neq", "diferente de"),
+    ("gt", "maior que"),
+    ("gte", "maior ou igual a"),
+    ("lt", "menor que"),
+    ("lte", "menor ou igual a"),
+)
+
+AUTOMATION_ACTION_TYPES = (
+    ("set_category", "Definir categoria"),
+    ("add_tag", "Adicionar tag"),
+    ("create_alert", "Criar alerta"),
+)
+
+AUTOMATION_LOGIC_CHOICES = (
+    ("all", "Todas as condições (AND)"),
+    ("any", "Qualquer condição (OR)"),
+)
+
+
+class AutomationRule(BaseModel):
+    """
+    Regra de automação financeira no formato SE (condições) → ENTÃO (ações).
+
+    `conditions`: lista de objetos ``{field, operator, value}``.
+    `actions`: lista de objetos ``{type, value}``.
+    `logic`: 'all' (AND) ou 'any' (OR) para combinar condições.
+    """
+
+    name = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        verbose_name="Nome",
+    )
+    description = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Descrição",
+    )
+    logic = models.CharField(
+        max_length=10,
+        choices=AUTOMATION_LOGIC_CHOICES,
+        default="all",
+        verbose_name="Lógica das condições",
+    )
+    conditions = models.JSONField(
+        default=list,
+        verbose_name="Condições (SE)",
+        help_text="Lista de objetos {field, operator, value}",
+    )
+    actions = models.JSONField(
+        default=list,
+        verbose_name="Ações (ENTÃO)",
+        help_text="Lista de objetos {type, value}",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Ativa",
+    )
+    priority = models.PositiveIntegerField(
+        default=100,
+        verbose_name="Prioridade",
+        help_text="Menor valor = maior prioridade.",
+    )
+    apply_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Aplicações",
+        editable=False,
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="automation_rules",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        ordering = ["priority", "created_at"]
+        verbose_name = "Regra de Automação"
+        verbose_name_plural = "Regras de Automação"
+        indexes = [
+            models.Index(fields=["owner", "is_active"]),
+            models.Index(fields=["priority"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name} (prioridade {self.priority})"
+
+    def matches(self, expense: "Expense") -> bool:
+        """Retorna True se o expense satisfaz as condições desta regra."""
+        results = [self._check_condition(c, expense) for c in self.conditions]
+        if not results:
+            return False
+        return all(results) if self.logic == "all" else any(results)
+
+    def _check_condition(self, condition: dict, expense: "Expense") -> bool:
+        field = condition.get("field", "")
+        operator = condition.get("operator", "eq")
+        target = str(condition.get("value", ""))
+
+        field_value = ""
+        if field == "merchant":
+            field_value = expense.merchant or ""
+        elif field == "description":
+            field_value = expense.description or ""
+        elif field == "category":
+            field_value = expense.category or ""
+        elif field == "value":
+            field_value = str(expense.value)
+        elif field == "account":
+            field_value = str(expense.account_id or "")
+        elif field == "payment_method":
+            field_value = expense.payment_method or ""
+
+        if operator == "contains":
+            return target.lower() in field_value.lower()
+        if operator == "not_contains":
+            return target.lower() not in field_value.lower()
+        if operator == "eq":
+            return field_value.lower() == target.lower()
+        if operator == "neq":
+            return field_value.lower() != target.lower()
+
+        try:
+            fv = float(field_value)
+            tv = float(target)
+            if operator == "gt":
+                return fv > tv
+            if operator == "gte":
+                return fv >= tv
+            if operator == "lt":
+                return fv < tv
+            if operator == "lte":
+                return fv <= tv
+        except (ValueError, TypeError):
+            pass
+        return False
+
+    def apply(self, expense: "Expense") -> list[str]:
+        """Aplica as ações sobre o expense e retorna lista aplicada."""
+        applied = []
+        for action in self.actions:
+            action_type = action.get("type", "")
+            value = action.get("value", "")
+            if action_type == "set_category" and value:
+                expense.category = value
+                applied.append(f"set_category:{value}")
+            elif action_type == "add_tag" and value:
+                try:
+                    member = expense.account.owner
+                    owner_user = member.user if member is not None else None
+                    tag = Tag.objects.filter(
+                        pk=int(value), owner=owner_user
+                    ).first()
+                    if tag:
+                        expense.tags.add(tag)
+                        applied.append(f"add_tag:{value}")
+                except (ValueError, TypeError, AttributeError):
+                    pass
+            elif action_type == "create_alert" and value:
+                applied.append(f"create_alert:{value}")
+        return applied
+
+
+class AutomationRuleLog(BaseModel):
+    """Registro de cada vez que AutomationRule foi aplicada a um Expense."""
+
+    rule = models.ForeignKey(
+        AutomationRule,
+        on_delete=models.CASCADE,
+        related_name="logs",
+        verbose_name="Regra",
+    )
+    expense = models.ForeignKey(
+        Expense,
+        on_delete=models.CASCADE,
+        related_name="automation_logs",
+        verbose_name="Despesa",
+    )
+    actions_applied = models.JSONField(
+        default=list,
+        verbose_name="Ações aplicadas",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Log de Automação"
+        verbose_name_plural = "Logs de Automação"
+        indexes = [
+            models.Index(fields=["rule", "created_at"]),
+            models.Index(fields=["expense"]),
+        ]
+
+    def __str__(self):
+        return f"{self.rule.name} → despesa #{self.expense_id}"

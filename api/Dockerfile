@@ -11,6 +11,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     postgresql-client \
     netcat-openbsd \
     curl \
+    tesseract-ocr \
+    tesseract-ocr-por \
+    tesseract-ocr-eng \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -52,6 +55,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     postgresql-client \
     netcat-openbsd \
     curl \
+    tesseract-ocr \
+    tesseract-ocr-por \
+    tesseract-ocr-eng \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

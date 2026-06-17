@@ -15,6 +15,11 @@ urlpatterns = [
         name="expense-suggest-category",
     ),
     path(
+        "expenses/ocr/",
+        views.ExpenseOCRView.as_view(),
+        name="expense-ocr",
+    ),
+    path(
         "expenses/",
         views.ExpenseCreateListView.as_view(),
         name="expense-create-list",
@@ -71,6 +76,27 @@ urlpatterns = [
     # Tags
     path("tags/", views.TagListCreateView.as_view(), name="tag-list-create"),
     path("tags/<int:pk>/", views.TagDetailView.as_view(), name="tag-detail"),
+    # Automation Rules
+    path(
+        "automation-rules/apply/",
+        views.AutomationRuleApplyView.as_view(),
+        name="automation-rule-apply",
+    ),
+    path(
+        "automation-rules/",
+        views.AutomationRuleListCreateView.as_view(),
+        name="automation-rule-list",
+    ),
+    path(
+        "automation-rules/<int:pk>/",
+        views.AutomationRuleRetrieveUpdateDestroyView.as_view(),
+        name="automation-rule-detail",
+    ),
+    path(
+        "automation-rules/<int:pk>/logs/",
+        views.AutomationRuleLogListView.as_view(),
+        name="automation-rule-logs",
+    ),
     # Fixed Expense Generation Log
     path(
         "fixed-expenses/generation-log/",

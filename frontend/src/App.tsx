@@ -31,6 +31,7 @@ const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
+const AutomationRules = lazy(() => import('./pages/AutomationRules'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
@@ -245,6 +246,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <CategorizationRules />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/automation-rules"
+            element={
+              <PageWrapper>
+                <AutomationRules />
               </PageWrapper>
             }
           />

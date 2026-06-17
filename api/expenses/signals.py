@@ -130,6 +130,49 @@ def dispatch_llm_categorization(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender="expenses.Expense")
+def apply_automation_rules(sender, instance, created, **kwargs):
+    """Aplica regras de automação após criação de uma despesa."""
+    if not created:
+        return
+    if getattr(instance, "_applying_automation", False):
+        return
+
+    user = instance.created_by
+    if not user:
+        return
+
+    from expenses.models import AutomationRule, AutomationRuleLog
+
+    rules = AutomationRule.objects.filter(
+        owner=user, is_active=True, is_deleted=False
+    ).order_by("priority", "created_at")
+
+    category_changed = False
+    for rule in rules:
+        if not rule.matches(instance):
+            continue
+        applied = rule.apply(instance)
+        if not applied:
+            continue
+        if any(a.startswith("set_category:") for a in applied):
+            category_changed = True
+        AutomationRuleLog.objects.create(
+            rule=rule,
+            expense=instance,
+            actions_applied=applied,
+            created_by=user,
+            updated_by=user,
+        )
+        AutomationRule.objects.filter(pk=rule.pk).update(
+            apply_count=rule.apply_count + 1
+        )
+
+    if category_changed:
+        instance._applying_automation = True
+        instance.save(update_fields=["category"])
+
+
+@receiver(post_save, sender="expenses.Expense")
 def embed_expense(sender, instance, **kwargs):
     from agents.services.embedding_service import (
         generate_embedding_for_instance,
