@@ -608,20 +608,28 @@ export default function Dashboard() {
     const currExp = sum(
       expenses,
       currentMonthStr,
-      (e) => e.payed && !e.related_transfer
+      (e) => e.payed && !e.related_transfer && !e.is_transfer_generated
     );
-    const prevExp = sum(expenses, prevMonthStr, (e) => e.payed && !e.related_transfer);
+    const prevExp = sum(
+      expenses,
+      prevMonthStr,
+      (e) => e.payed && !e.related_transfer && !e.is_transfer_generated
+    );
     const currRev = sum(
       revenues,
       currentMonthStr,
       (r) =>
-        (r as { received?: boolean }).received === true && r.category !== 'transfer'
+        (r as { received?: boolean }).received === true &&
+        !r.related_transfer &&
+        !r.is_transfer_generated
     );
     const prevRev = sum(
       revenues,
       prevMonthStr,
       (r) =>
-        (r as { received?: boolean }).received === true && r.category !== 'transfer'
+        (r as { received?: boolean }).received === true &&
+        !r.related_transfer &&
+        !r.is_transfer_generated
     );
 
     const delta = (curr: number, prev: number) =>

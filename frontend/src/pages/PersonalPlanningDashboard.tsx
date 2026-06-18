@@ -33,6 +33,10 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import {
+  DailyCaloricSummaryCard,
+  type DailyCaloricSummaryData,
+} from '@/components/personal-planning/DailyCaloricSummaryCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
 import { Button } from '@/components/ui/button';
@@ -162,6 +166,15 @@ export default function PersonalPlanningDashboard() {
   const { data: mealTypes = [] } = useQuery({
     queryKey: ['mealTypes'],
     queryFn: () => mealTypeService.getAll({ page_size: 50 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: caloricSummary, isLoading: caloricSummaryLoading } = useQuery({
+    queryKey: ['dailyCaloricSummary', today],
+    queryFn: () =>
+      apiClient.get<DailyCaloricSummaryData>(
+        `${API_CONFIG.ENDPOINTS.DAILY_CALORIC_SUMMARY}?date=${today}`
+      ),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -606,6 +619,12 @@ export default function PersonalPlanningDashboard() {
             className="overflow-hidden"
           >
             <div className="space-y-lg">
+              {/* Resumo Calórico */}
+              <DailyCaloricSummaryCard
+                data={caloricSummary}
+                isLoading={caloricSummaryLoading}
+              />
+
               {/* Linha 3: Treinos */}
               <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
                 {/* Card: Resumo de Treinos */}

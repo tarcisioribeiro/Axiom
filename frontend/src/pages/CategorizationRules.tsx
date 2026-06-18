@@ -233,7 +233,15 @@ function RuleForm({
   );
 }
 
-export default function CategorizationRules() {
+function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function CategorizationRules({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -341,8 +349,10 @@ export default function CategorizationRules() {
 
   if (isLoading) return <LoadingState />;
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.categorizationRules.title')} icon={<Tag />}>
         <Button onClick={handleCreate}>
           <Plus className="mr-sm h-4 w-4" />
@@ -484,6 +494,6 @@ export default function CategorizationRules() {
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

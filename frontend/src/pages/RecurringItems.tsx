@@ -1,4 +1,4 @@
-import { CalendarClock, TrendingUp } from 'lucide-react';
+import { CalendarClock, RefreshCcw, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import FixedExpenses from './FixedExpenses';
 import FixedRevenues from './FixedRevenues';
+import SubscriptionTracker from './SubscriptionTracker';
 
 const TAB_KEY = 'recurringItems.activeTab';
 
@@ -34,6 +35,10 @@ export default function RecurringItems() {
             <TrendingUp className="h-4 w-4" />
             {t('pages.fixedRevenues.title')}
           </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="flex-1 gap-xs">
+            <RefreshCcw className="h-4 w-4" />
+            {t('nav.items.subscriptions')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="fixed-expenses" className="mt-0 flex-1">
@@ -42,6 +47,10 @@ export default function RecurringItems() {
 
         <TabsContent value="fixed-revenues" className="mt-0 flex-1">
           <FixedRevenues embedded />
+        </TabsContent>
+
+        <TabsContent value="subscriptions" className="mt-0 flex-1">
+          <SubscriptionTracker embedded />
         </TabsContent>
       </Tabs>
     </AnimatedPage>
