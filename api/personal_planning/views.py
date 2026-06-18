@@ -2792,3 +2792,242 @@ Seja prático, saboroso e alinhado com o objetivo calórico."""
                 {"error": f"Erro ao salvar o cardápio: {exc}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+# ============================================================================
+# DAILY CALORIC SUMMARY VIEW
+# ============================================================================
+
+
+class DailyCaloricSummaryView(APIView):
+    """
+    GET /api/v1/personal-planning/daily-caloric-summary/?date=YYYY-MM-DD
+
+    Retorna o resumo calórico do dia integrando dieta, treino e medidas
+    corporais.
+
+    Fórmulas usadas:
+      - TMB (Mifflin-St Jeor):
+          Homem: 10*peso + 6.25*altura - 5*idade + 5
+          Mulher: 10*peso + 6.25*altura - 5*idade - 161
+      - TDEE = TMB × multiplicador_nivel_atividade
+      - Kcal consumidas = soma das calorias dos ingredientes das refeições
+          kcal_ingrediente = (quantidade / serving_size) * calories_per_serving
+      - Kcal gastas no treino = MET_médio × peso_kg × (minutos / 60)
+      - Saldo = consumido - (TDEE + gastos_treino)
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    _ACTIVITY_MULTIPLIER = {
+        "sedentary": 1.2,
+        "lightly_active": 1.375,
+        "moderately_active": 1.55,
+        "very_active": 1.725,
+        "extremely_active": 1.9,
+    }
+    _DEFAULT_MET = 5.0
+
+    def get(self, request):
+        user = request.user
+
+        # --- Data alvo ---
+        date_str = request.query_params.get("date")
+        try:
+            target_date = (
+                date.fromisoformat(date_str)
+                if date_str
+                else timezone.now().date()
+            )
+        except ValueError:
+            return Response(
+                {"error": "Parâmetro 'date' inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # --- Membro e medidas corporais ---
+        try:
+            member = Member.objects.get(user=user)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        latest_metric = (
+            BodyMetric.objects.filter(owner=member, is_deleted=False)
+            .order_by("-measured_at")
+            .first()
+        )
+
+        # --- TMB e TDEE ---
+        bmr = None
+        tdee = None
+        weight_kg = None
+        if (
+            latest_metric
+            and latest_metric.weight_kg
+            and latest_metric.height_cm
+            and member.age
+        ):
+            weight_kg = float(latest_metric.weight_kg)
+            height_cm = float(latest_metric.height_cm)
+            age = member.age
+            if member.sex == "M":
+                bmr = round(10 * weight_kg + 6.25 * height_cm - 5 * age + 5, 1)
+            else:
+                bmr = round(
+                    10 * weight_kg + 6.25 * height_cm - 5 * age - 161, 1
+                )
+            multiplier = self._ACTIVITY_MULTIPLIER.get(
+                member.activity_level, 1.2
+            )
+            tdee = round(bmr * multiplier, 1)
+
+        # --- Calorias consumidas (refeições do dia) ---
+        meal_logs = (
+            MealLog.objects.filter(
+                owner=member, date=target_date, is_deleted=False
+            )
+            .select_related("meal_type", "menu_option")
+            .prefetch_related("menu_option__menuoptioningredient_set__food")
+        )
+
+        meals_summary = []
+        total_consumed = 0.0
+
+        for log in meal_logs:
+            meal_kcal = 0.0
+            if log.menu_option and not log.is_free_meal:
+                for (
+                    ingredient
+                ) in log.menu_option.menuoptioningredient_set.filter(
+                    is_deleted=False, is_optional=False
+                ):
+                    food = ingredient.food
+                    if not food or not food.calories_per_serving:
+                        continue
+                    cal_per_serving = float(food.calories_per_serving)
+                    if (
+                        food.serving_size
+                        and float(food.serving_size) > 0
+                        and ingredient.quantity
+                    ):
+                        meal_kcal += (
+                            float(ingredient.quantity)
+                            / float(food.serving_size)
+                        ) * cal_per_serving
+                    elif ingredient.quantity:
+                        meal_kcal += cal_per_serving
+
+            meal_kcal = round(meal_kcal, 1)
+            total_consumed += meal_kcal
+            meals_summary.append(
+                {
+                    "meal_type": log.meal_type.name,
+                    "meal_type_order": log.meal_type.order,
+                    "is_free_meal": log.is_free_meal,
+                    "calories": meal_kcal,
+                    "logged_at": (
+                        log.time.strftime("%H:%M") if log.time else None
+                    ),
+                }
+            )
+
+        meals_summary.sort(key=lambda x: x["meal_type_order"])
+        total_consumed = round(total_consumed, 1)
+
+        # --- Calorias gastas no treino ---
+        sessions = WorkoutSession.objects.filter(
+            owner=member, date=target_date, is_deleted=False
+        ).prefetch_related("workoutsessionexercise_set__exercise__exercise")
+
+        sessions_summary = []
+        total_exercise_kcal = 0.0
+
+        for session in sessions:
+            duration = session.duration_minutes
+            if not duration or duration <= 0:
+                sessions_summary.append(
+                    {
+                        "name": (
+                            session.workout_day.name
+                            if session.workout_day
+                            else "Treino livre"
+                        ),
+                        "duration_minutes": None,
+                        "calories_burned": None,
+                    }
+                )
+                continue
+
+            met_values = []
+            for wse in session.workoutsessionexercise_set.filter(
+                is_deleted=False
+            ):
+                plan_exercise = wse.exercise
+                if plan_exercise and plan_exercise.exercise:
+                    met_values.append(float(plan_exercise.exercise.met_value))
+
+            avg_met = (
+                (sum(met_values) / len(met_values))
+                if met_values
+                else self._DEFAULT_MET
+            )
+            session_kcal = round(
+                avg_met * (weight_kg or 70.0) * (duration / 60), 1
+            )
+            total_exercise_kcal += session_kcal
+
+            sessions_summary.append(
+                {
+                    "name": (
+                        session.workout_day.name
+                        if session.workout_day
+                        else "Treino livre"
+                    ),
+                    "duration_minutes": duration,
+                    "calories_burned": session_kcal,
+                }
+            )
+
+        total_exercise_kcal = round(total_exercise_kcal, 1)
+
+        # --- Saldo calórico ---
+        net_calories = None
+        if tdee is not None:
+            net_calories = round(
+                total_consumed - (tdee + total_exercise_kcal), 1
+            )
+
+        return Response(
+            {
+                "date": str(target_date),
+                "bmr": bmr,
+                "tdee": tdee,
+                "activity_level": member.activity_level,
+                "calories_consumed": total_consumed,
+                "calories_burned_exercise": total_exercise_kcal,
+                "net_calories": net_calories,
+                "has_body_metrics": latest_metric is not None,
+                "body_metrics": {
+                    "weight_kg": (
+                        float(latest_metric.weight_kg)
+                        if latest_metric and latest_metric.weight_kg
+                        else None
+                    ),
+                    "height_cm": (
+                        float(latest_metric.height_cm)
+                        if latest_metric and latest_metric.height_cm
+                        else None
+                    ),
+                    "measured_at": (
+                        str(latest_metric.measured_at)
+                        if latest_metric
+                        else None
+                    ),
+                },
+                "meals": meals_summary,
+                "workout_sessions": sessions_summary,
+            }
+        )

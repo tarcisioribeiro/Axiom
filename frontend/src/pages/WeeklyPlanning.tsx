@@ -6,17 +6,22 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Circle,
+  AlertCircle,
   Clock,
+  Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { getIconByName } from '@/components/ui/icon-picker';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { taskInstancesService } from '@/services/task-instances-service';
@@ -35,6 +40,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   nutrition:
     'bg-category-nutrition/10 border-category-nutrition/30 text-category-nutrition',
   work: 'bg-category-work/10 border-category-work/30 text-category-work',
+  leisure: 'bg-category-leisure/10 border-category-leisure/30 text-category-leisure',
   finance: 'bg-category-finance/10 border-category-finance/30 text-category-finance',
   other: 'bg-muted/30 border-border text-foreground',
 };
@@ -68,6 +74,50 @@ function formatMinutes(minutes: number): string {
   return `${h}h ${m}min`;
 }
 
+function InstanceIcon({ name, className }: { name: string; className?: string }) {
+  const icon = getIconByName(name);
+  if (!icon) return null;
+  return createElement(icon, { className });
+}
+
+function StatusIcon({ status }: { status: TaskInstance['status'] }) {
+  if (status === 'completed')
+    return <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />;
+  if (status === 'in_progress')
+    return <Clock className="h-3 w-3 shrink-0 text-warning" />;
+  if (status === 'skipped')
+    return <AlertCircle className="h-3 w-3 shrink-0 text-muted-foreground" />;
+  return <Circle className="h-3 w-3 shrink-0 text-muted-foreground" />;
+}
+
+function TaskPill({ instance }: { instance: TaskInstance }) {
+  const category = instance.category ?? 'other';
+  const colorClass = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.other;
+  const isDone = instance.status === 'completed';
+
+  return (
+    <div
+      className={cn(
+        'flex items-start gap-xs rounded border px-xs py-xs text-xs leading-tight transition-opacity',
+        colorClass,
+        isDone && 'opacity-50'
+      )}
+      title={instance.task_name}
+    >
+      <StatusIcon status={instance.status} />
+      <div className="min-w-0 flex-1">
+        <p className={cn('truncate font-medium', isDone && 'line-through')}>
+          <InstanceIcon name={instance.icon ?? ''} className="mr-xs inline h-3 w-3" />
+          {instance.task_name}
+        </p>
+        {instance.scheduled_time && (
+          <span className="opacity-70">{instance.scheduled_time}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function WeeklyPlanning() {
   const { t, i18n } = useTranslation();
   const [weekOffset, setWeekOffset] = useState(0);
@@ -99,6 +149,11 @@ export default function WeeklyPlanning() {
   }, {});
 
   const today = formatLocalDate(new Date());
+  const isCurrentWeek = weekOffset === 0;
+
+  const totalTasks = instances.length;
+  const completedTasks = instances.filter((i) => i.status === 'completed').length;
+  const weekPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   const weekLabel = (() => {
     const locale = i18n.language;
@@ -113,9 +168,6 @@ export default function WeeklyPlanning() {
     });
     return `${start} – ${end}`;
   })();
-
-  const totalTasks = instances.length;
-  const completedTasks = instances.filter((i) => i.status === 'completed').length;
 
   if (isLoading) return <LoadingState />;
 
@@ -139,7 +191,7 @@ export default function WeeklyPlanning() {
               variant="outline"
               size="sm"
               onClick={() => setWeekOffset(0)}
-              disabled={weekOffset === 0}
+              disabled={isCurrentWeek}
             >
               {t('weeklyPlanning.thisWeek')}
             </Button>
@@ -192,6 +244,25 @@ export default function WeeklyPlanning() {
           </Card>
         </div>
 
+        {/* Week progress bar */}
+        {totalTasks > 0 && (
+          <div className="mb-md flex items-center gap-md">
+            <Badge variant="secondary">
+              {completedTasks}/{totalTasks} {t('weeklyPlanning.completed')}
+            </Badge>
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all',
+                  weekPct >= 100 ? 'bg-success' : 'bg-primary'
+                )}
+                style={{ width: `${weekPct}%` }}
+              />
+            </div>
+            <span className="text-sm font-medium">{weekPct}%</span>
+          </div>
+        )}
+
         {/* 7-day grid */}
         <div className="grid grid-cols-1 gap-md sm:grid-cols-7">
           {days.map((day) => {
@@ -200,6 +271,12 @@ export default function WeeklyPlanning() {
             const load = loadByDate[key] ?? 0;
             const isOverloaded = load > OVERLOAD_MINUTES;
             const isToday = key === today;
+            const dayCompleted = dayInsts.filter(
+              (i) => i.status === 'completed'
+            ).length;
+            const dayTotal = dayInsts.length;
+            const dayPct =
+              dayTotal > 0 ? Math.round((dayCompleted / dayTotal) * 100) : 0;
 
             return (
               <Card
@@ -227,13 +304,39 @@ export default function WeeklyPlanning() {
                         {day.getDate()}
                       </p>
                     </div>
-                    {isOverloaded && (
-                      <AlertTriangle
-                        className="h-4 w-4 text-warning"
-                        aria-label={t('weeklyPlanning.overloadedDay')}
-                      />
-                    )}
+                    <div className="text-right">
+                      {isOverloaded && (
+                        <AlertTriangle
+                          className="mb-xs h-4 w-4 text-warning"
+                          aria-label={t('weeklyPlanning.overloadedDay')}
+                        />
+                      )}
+                      {dayTotal > 0 && (
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {dayCompleted}/{dayTotal}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Per-day completion progress */}
+                  {dayTotal > 0 && (
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          dayPct >= 100
+                            ? 'bg-success'
+                            : dayPct >= 60
+                              ? 'bg-primary'
+                              : 'bg-muted-foreground/30'
+                        )}
+                        style={{ width: `${dayPct}%` }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Load bar */}
                   <div className="flex items-center gap-xs">
                     <div
                       className={cn(
@@ -244,7 +347,7 @@ export default function WeeklyPlanning() {
                       <div
                         className={cn(
                           'h-full rounded-full transition-all',
-                          isOverloaded ? 'bg-warning' : 'bg-primary'
+                          isOverloaded ? 'bg-warning' : 'bg-primary/40'
                         )}
                         style={{
                           width: `${Math.min(100, (load / OVERLOAD_MINUTES) * 100)}%`,
@@ -283,29 +386,28 @@ export default function WeeklyPlanning() {
             </div>
           </div>
         )}
+
+        {/* Legend */}
+        <div className="mt-md flex flex-wrap items-center gap-sm text-xs text-muted-foreground">
+          <span>{t('weeklyPlanning.legend', 'Legenda')}:</span>
+          <span className="flex items-center gap-xs">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+            {t('weeklyPlanning.statusCompleted', 'Concluído')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Clock className="h-3.5 w-3.5 text-warning" />
+            {t('weeklyPlanning.statusInProgress', 'Em andamento')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Circle className="h-3.5 w-3.5" />
+            {t('weeklyPlanning.statusPending', 'Pendente')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Zap className="h-3.5 w-3.5 text-warning" />
+            {t('weeklyPlanning.overloadedDay', 'Dia sobrecarregado')}
+          </span>
+        </div>
       </PageContainer>
     </AnimatedPage>
-  );
-}
-
-function TaskPill({ instance }: { instance: TaskInstance }) {
-  const category = instance.category ?? 'other';
-  const colorClass = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.other;
-  const isDone = instance.status === 'completed';
-
-  return (
-    <div
-      className={cn(
-        'rounded border px-xs py-xs text-xs leading-tight transition-opacity',
-        colorClass,
-        isDone && 'line-through opacity-50'
-      )}
-      title={instance.task_name}
-    >
-      <span className="block truncate">{instance.task_name}</span>
-      {instance.scheduled_time && (
-        <span className="opacity-70">{instance.scheduled_time}</span>
-      )}
-    </div>
   );
 }

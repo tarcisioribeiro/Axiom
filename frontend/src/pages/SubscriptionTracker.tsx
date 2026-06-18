@@ -3,7 +3,6 @@ import { RefreshCcw, AlertTriangle, CalendarClock } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -50,7 +49,15 @@ function isDueSoon(dueDay: number): boolean {
   return false;
 }
 
-export default function SubscriptionTracker() {
+function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function SubscriptionTracker({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
 
   const fixedExpensesQuery = useQuery({
@@ -93,106 +100,104 @@ export default function SubscriptionTracker() {
 
   if (isLoading) return <LoadingState fullScreen />;
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('subscriptions.title')}
-          icon={<RefreshCcw />}
-          subtitle={t('subscriptions.subtitle')}
+    <Wrapper>
+      <PageHeader
+        title={t('subscriptions.title')}
+        icon={<RefreshCcw />}
+        subtitle={t('subscriptions.subtitle')}
+      />
+
+      <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-2">
+        <StatCard
+          title={t('subscriptions.monthlyTotal')}
+          value={formatCurrency(monthlyTotal)}
+          icon={<CalendarClock className="h-5 w-5" />}
+          accentColor="blue"
+          prominent
+          description={t('subscriptions.activeCount', {
+            count: subscriptions.length,
+          })}
         />
-
-        <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-2">
+        {dueSoon.length > 0 && (
           <StatCard
-            title={t('subscriptions.monthlyTotal')}
-            value={formatCurrency(monthlyTotal)}
-            icon={<CalendarClock className="h-5 w-5" />}
-            accentColor="blue"
-            prominent
-            description={t('subscriptions.activeCount', {
-              count: subscriptions.length,
-            })}
+            title={t('subscriptions.dueSoon')}
+            value={dueSoon.length}
+            icon={<AlertTriangle className="h-4 w-4" />}
+            accentColor="orange"
+            description={t('subscriptions.dueSoonDesc')}
           />
-          {dueSoon.length > 0 && (
-            <StatCard
-              title={t('subscriptions.dueSoon')}
-              value={dueSoon.length}
-              icon={<AlertTriangle className="h-4 w-4" />}
-              accentColor="orange"
-              description={t('subscriptions.dueSoonDesc')}
-            />
-          )}
-        </div>
-
-        {subscriptions.length === 0 ? (
-          <div className="mt-md">
-            <EmptyState
-              title={t('subscriptions.noSubscriptions')}
-              message={t('subscriptions.noSubscriptionsDesc')}
-              icon={<RefreshCcw className="h-8 w-8" />}
-            />
-          </div>
-        ) : (
-          <div className="mt-md space-y-md">
-            {(Object.keys(grouped) as SubscriptionGroup[])
-              .filter((g) => grouped[g].length > 0)
-              .map((group) => (
-                <Card key={group}>
-                  <CardHeader className="pb-sm">
-                    <CardTitle as="h3" className="text-base">
-                      {t(`subscriptions.groups.${group}`)}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-sm">
-                      {grouped[group].map((sub) => {
-                        const soon = isDueSoon(sub.due_day);
-                        return (
-                          <div
-                            key={sub.id}
-                            className={cn(
-                              'flex items-center justify-between rounded-lg border p-sm transition-colors',
-                              soon ? 'border-warning/40 bg-warning/5' : 'bg-muted/20'
-                            )}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-sm">
-                                <span className="truncate text-sm font-medium">
-                                  {sub.description}
-                                </span>
-                                {soon && (
-                                  <Badge
-                                    variant="outline"
-                                    className="border-warning/40 text-xs text-warning"
-                                  >
-                                    <AlertTriangle className="mr-xs h-3 w-3" />
-                                    {t('subscriptions.dueSoon')}
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="mt-xs flex items-center gap-sm text-xs text-muted-foreground">
-                                <span>
-                                  {translateCategory(sub.category, 'expense')}
-                                </span>
-                                <span>·</span>
-                                <span>
-                                  {t('subscriptions.renewalOn', { day: sub.due_day })}
-                                </span>
-                              </div>
-                            </div>
-                            <span className="ml-md text-sm font-bold">
-                              {formatCurrency(parseFloat(sub.default_value))}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
         )}
-      </PageContainer>
-    </AnimatedPage>
+      </div>
+
+      {subscriptions.length === 0 ? (
+        <div className="mt-md">
+          <EmptyState
+            title={t('subscriptions.noSubscriptions')}
+            message={t('subscriptions.noSubscriptionsDesc')}
+            icon={<RefreshCcw className="h-8 w-8" />}
+          />
+        </div>
+      ) : (
+        <div className="mt-md space-y-md">
+          {(Object.keys(grouped) as SubscriptionGroup[])
+            .filter((g) => grouped[g].length > 0)
+            .map((group) => (
+              <Card key={group}>
+                <CardHeader className="pb-sm">
+                  <CardTitle as="h3" className="text-base">
+                    {t(`subscriptions.groups.${group}`)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-sm">
+                    {grouped[group].map((sub) => {
+                      const soon = isDueSoon(sub.due_day);
+                      return (
+                        <div
+                          key={sub.id}
+                          className={cn(
+                            'flex items-center justify-between rounded-lg border p-sm transition-colors',
+                            soon ? 'border-warning/40 bg-warning/5' : 'bg-muted/20'
+                          )}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-sm">
+                              <span className="truncate text-sm font-medium">
+                                {sub.description}
+                              </span>
+                              {soon && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-warning/40 text-xs text-warning"
+                                >
+                                  <AlertTriangle className="mr-xs h-3 w-3" />
+                                  {t('subscriptions.dueSoon')}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="mt-xs flex items-center gap-sm text-xs text-muted-foreground">
+                              <span>{translateCategory(sub.category, 'expense')}</span>
+                              <span>·</span>
+                              <span>
+                                {t('subscriptions.renewalOn', { day: sub.due_day })}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="ml-md text-sm font-bold">
+                            {formatCurrency(parseFloat(sub.default_value))}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+        </div>
+      )}
+    </Wrapper>
   );
 }

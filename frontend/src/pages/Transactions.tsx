@@ -1,9 +1,10 @@
-import { TrendingDown, TrendingUp } from 'lucide-react';
+import { CreditCard, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import CreditCardExpenses from './CreditCardExpenses';
 import Expenses from './Expenses';
 import Revenues from './Revenues';
 
@@ -34,6 +35,10 @@ export default function Transactions() {
             <TrendingUp className="h-4 w-4" />
             {t('pages.revenues.title')}
           </TabsTrigger>
+          <TabsTrigger value="credit-card" className="flex-1 gap-xs">
+            <CreditCard className="h-4 w-4" />
+            {t('nav.items.creditCardExpenses')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="expenses" className="mt-0 flex-1">
@@ -42,6 +47,10 @@ export default function Transactions() {
 
         <TabsContent value="revenues" className="mt-0 flex-1">
           <Revenues embedded />
+        </TabsContent>
+
+        <TabsContent value="credit-card" className="mt-0 flex-1">
+          <CreditCardExpenses embedded />
         </TabsContent>
       </Tabs>
     </AnimatedPage>

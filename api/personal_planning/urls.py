@@ -8,6 +8,7 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     BodyMetricRetrieveUpdateDestroyView,
     ChallengeListCreateView,
     ChallengeRetrieveUpdateDestroyView,
+    DailyCaloricSummaryView,
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
     ExerciseListCreateView,
@@ -365,5 +366,11 @@ urlpatterns = [
         "ai-menu-plan/",
         AIMenuPlanGenerationView.as_view(),
         name="ai-menu-plan-generation",
+    ),
+    # Daily Caloric Summary
+    path(
+        "daily-caloric-summary/",
+        DailyCaloricSummaryView.as_view(),
+        name="daily-caloric-summary",
     ),
 ]
