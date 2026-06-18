@@ -24,7 +24,6 @@ import {
   YAxis,
 } from 'recharts';
 
-
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
