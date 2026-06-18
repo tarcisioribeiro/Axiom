@@ -11,6 +11,25 @@ from app.models import BaseModel
 
 SEX_OPTION = (("M", "Masculino"), ("F", "Feminino"))
 
+ACTIVITY_LEVEL_CHOICES = (
+    ("sedentary", "Sedentário (sem exercício ou muito leve)"),
+    ("lightly_active", "Levemente Ativo (exercício 1–3 dias/semana)"),
+    ("moderately_active", "Moderadamente Ativo (exercício 3–5 dias/semana)"),
+    ("very_active", "Muito Ativo (exercício intenso 6–7 dias/semana)"),
+    (
+        "extremely_active",
+        "Extremamente Ativo (trabalho físico + exercício intenso)",
+    ),
+)
+
+ACTIVITY_LEVEL_TDEE_MULTIPLIER = {
+    "sedentary": 1.2,
+    "lightly_active": 1.375,
+    "moderately_active": 1.55,
+    "very_active": 1.725,
+    "extremely_active": 1.9,
+}
+
 
 def compute_document_hash(document: str) -> str:
     """
@@ -124,6 +143,13 @@ class Member(BaseModel):
         max_length=200, verbose_name="Profissão", null=True, blank=True
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
+    activity_level = models.CharField(
+        max_length=20,
+        choices=ACTIVITY_LEVEL_CHOICES,
+        default="sedentary",
+        verbose_name="Nível de Atividade",
+        help_text="Usado para cálculo do gasto calórico diário total (TDEE).",
+    )
 
     # Python-level descriptor: transparently encrypts/decrypts CPF
     document = _DocumentField()

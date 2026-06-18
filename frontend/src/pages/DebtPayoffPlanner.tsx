@@ -13,9 +13,9 @@ import {
   Info,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
@@ -127,7 +127,15 @@ function computePayoffPlan(
   }));
 }
 
-export default function DebtPayoffPlanner() {
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function DebtPayoffPlanner({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
   const [strategy, setStrategy] = useState<Strategy>('snowball');
   const [monthlyExtra, setMonthlyExtra] = useState(0);
@@ -243,348 +251,348 @@ export default function DebtPayoffPlanner() {
     payable: t('pages.debtPayoff.types.payable'),
   };
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('pages.debtPayoff.title')}
-          description={t('pages.debtPayoff.description')}
-          icon={<TrendingDown className="h-6 w-6 text-destructive" />}
-        />
+    <Wrapper>
+      <PageHeader
+        title={t('pages.debtPayoff.title')}
+        description={t('pages.debtPayoff.description')}
+        icon={<TrendingDown className="h-6 w-6 text-destructive" />}
+      />
 
-        {isLoading ? (
-          <div className="flex h-64 items-center justify-center text-muted-foreground">
-            {t('common.loading')}
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center text-muted-foreground">
+          {t('common.loading')}
+        </div>
+      ) : debts.length === 0 ? (
+        <div className="flex h-64 flex-col items-center justify-center gap-md text-center">
+          <Trophy className="h-16 w-16 text-success opacity-60" />
+          <div>
+            <p className="text-lg font-semibold text-success">
+              {t('pages.debtPayoff.noDebts')}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {t('pages.debtPayoff.noDebtsDesc')}
+            </p>
           </div>
-        ) : debts.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-md text-center">
-            <Trophy className="h-16 w-16 text-success opacity-60" />
-            <div>
-              <p className="text-lg font-semibold text-success">
-                {t('pages.debtPayoff.noDebts')}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.debtPayoff.noDebtsDesc')}
-              </p>
-            </div>
+        </div>
+      ) : (
+        <div className="space-y-lg">
+          {/* Summary stats */}
+          <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title={t('pages.debtPayoff.totalDebt')}
+              value={formatCurrency(totalDebt)}
+              icon={<TrendingDown className="h-4 w-4" />}
+              variant="danger"
+            />
+            <StatCard
+              title={t('pages.debtPayoff.totalDebts')}
+              value={String(debts.length)}
+              icon={<Target className="h-4 w-4" />}
+            />
+            <StatCard
+              title={t('pages.debtPayoff.minimumMonthly')}
+              value={formatCurrency(totalMinimum)}
+              icon={<DollarSign className="h-4 w-4" />}
+            />
+            {lastPayoff && (
+              <StatCard
+                title={t('pages.debtPayoff.estimatedPayoff')}
+                value={formatDate(lastPayoff.toISOString())}
+                icon={<CalendarDays className="h-4 w-4" />}
+                variant="success"
+              />
+            )}
           </div>
-        ) : (
-          <div className="space-y-lg">
-            {/* Summary stats */}
-            <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title={t('pages.debtPayoff.totalDebt')}
-                value={formatCurrency(totalDebt)}
-                icon={<TrendingDown className="h-4 w-4" />}
-                variant="danger"
-              />
-              <StatCard
-                title={t('pages.debtPayoff.totalDebts')}
-                value={String(debts.length)}
-                icon={<Target className="h-4 w-4" />}
-              />
-              <StatCard
-                title={t('pages.debtPayoff.minimumMonthly')}
-                value={formatCurrency(totalMinimum)}
-                icon={<DollarSign className="h-4 w-4" />}
-              />
-              {lastPayoff && (
-                <StatCard
-                  title={t('pages.debtPayoff.estimatedPayoff')}
-                  value={formatDate(lastPayoff.toISOString())}
-                  icon={<CalendarDays className="h-4 w-4" />}
-                  variant="success"
-                />
-              )}
-            </div>
 
-            {/* Controls */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t('pages.debtPayoff.controls')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-lg">
-                <div className="grid gap-lg sm:grid-cols-2">
-                  {/* Strategy selector */}
-                  <div className="space-y-sm">
-                    <p className="text-sm font-medium">
-                      {t('pages.debtPayoff.strategy')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-sm">
-                      <button
-                        onClick={() => setStrategy('snowball')}
-                        className={cn(
-                          'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
-                          strategy === 'snowball'
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-border hover:border-primary/40'
-                        )}
-                      >
-                        <Snowflake className="h-6 w-6" />
-                        <p className="text-sm font-medium">
-                          {t('pages.debtPayoff.snowball')}
-                        </p>
-                        <p className="text-center text-xs text-muted-foreground">
-                          {t('pages.debtPayoff.snowballDesc')}
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => setStrategy('avalanche')}
-                        className={cn(
-                          'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
-                          strategy === 'avalanche'
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-border hover:border-primary/40'
-                        )}
-                      >
-                        <Flame className="h-6 w-6" />
-                        <p className="text-sm font-medium">
-                          {t('pages.debtPayoff.avalanche')}
-                        </p>
-                        <p className="text-center text-xs text-muted-foreground">
-                          {t('pages.debtPayoff.avalancheDesc')}
-                        </p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Monthly extra */}
-                  <div className="space-y-sm">
-                    <p className="text-sm font-medium">
-                      {t('pages.debtPayoff.extraMonthly')}
-                    </p>
-                    <CurrencyInput
-                      value={monthlyExtra || ''}
-                      onChange={(e) =>
-                        setMonthlyExtra(
-                          parseFloat((e.target as HTMLInputElement).value) || 0
-                        )
-                      }
-                      placeholder="0,00"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.debtPayoff.extraMonthlyHint')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Strategy comparison */}
-                {interestSaved > 0 && (
-                  <div className="flex items-start gap-sm rounded-lg border border-success/30 bg-success/5 p-md">
-                    <Info className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                    <p className="text-sm text-success">
-                      {t('pages.debtPayoff.interestSavedWithAvalanche', {
-                        amount: formatCurrency(interestSaved),
-                      })}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Payoff plan */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-sm text-base">
-                  {strategy === 'snowball' ? (
-                    <Snowflake className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Flame className="h-4 w-4 text-primary" />
-                  )}
-                  {t('pages.debtPayoff.plan', {
-                    strategy:
-                      strategy === 'snowball'
-                        ? t('pages.debtPayoff.snowball')
-                        : t('pages.debtPayoff.avalanche'),
-                  })}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+          {/* Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {t('pages.debtPayoff.controls')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-lg">
+              <div className="grid gap-lg sm:grid-cols-2">
+                {/* Strategy selector */}
                 <div className="space-y-sm">
-                  <AnimatePresence mode="sync">
-                    {activePlan.map((plan, idx) => {
-                      const debtBalancePct =
-                        totalDebt > 0 ? (plan.debt.balance / totalDebt) * 100 : 0;
-
-                      return (
-                        <motion.div
-                          key={plan.debt.id}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{ delay: idx * 0.05 }}
-                          className="rounded-lg border bg-card p-md"
-                        >
-                          <div className="flex items-start justify-between gap-sm">
-                            <div className="flex items-start gap-sm">
-                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                                {plan.priority}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-xs">
-                                  <p className="truncate text-sm font-semibold">
-                                    {plan.debt.name}
-                                  </p>
-                                  <span
-                                    className={cn(
-                                      'rounded-full px-xs py-0.5 text-xs font-medium',
-                                      typeColors[plan.debt.type]
-                                    )}
-                                  >
-                                    {typeLabels[plan.debt.type]}
-                                  </span>
-                                </div>
-                                <div className="mt-xs flex flex-wrap gap-sm text-xs text-muted-foreground">
-                                  {plan.debt.interestRate > 0 && (
-                                    <span>{plan.debt.interestRate}% a.a.</span>
-                                  )}
-                                  {plan.debt.dueDate && (
-                                    <span className="flex items-center gap-xs">
-                                      <CalendarDays className="h-3 w-3" />
-                                      {formatDate(plan.debt.dueDate)}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="shrink-0 text-right">
-                              <p className="text-sm font-bold text-destructive">
-                                {formatCurrency(plan.debt.balance)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatCurrency(plan.monthlyPayment)}/
-                                {t('pages.debtPayoff.month')}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-sm h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-destructive/60 transition-all"
-                              style={{ width: `${debtBalancePct}%` }}
-                            />
-                          </div>
-
-                          <div className="mt-sm flex items-center justify-between text-xs text-muted-foreground">
-                            <span className="flex items-center gap-xs">
-                              <ArrowRight className="h-3 w-3" />
-                              {t('pages.debtPayoff.payoffBy')}{' '}
-                              <strong className="text-foreground">
-                                {plan.payoffDate.toLocaleDateString('pt-BR', {
-                                  month: 'short',
-                                  year: 'numeric',
-                                })}
-                              </strong>
-                            </span>
-                            {plan.totalInterest > 0 && (
-                              <span>
-                                {t('pages.debtPayoff.interest')}{' '}
-                                {formatCurrency(plan.totalInterest)}
-                              </span>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Comparison table */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t('pages.debtPayoff.comparison')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-md sm:grid-cols-2">
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-md">
-                    <div className="mb-sm flex items-center gap-sm">
-                      <Snowflake className="h-4 w-4 text-primary" />
-                      <p className="font-medium">{t('pages.debtPayoff.snowball')}</p>
-                    </div>
-                    <div className="space-y-xs text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.debtPayoff.totalInterest')}
-                        </span>
-                        <span className="font-semibold">
-                          {formatCurrency(snowballInterest)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.debtPayoff.payoffDate')}
-                        </span>
-                        <span className="font-semibold">
-                          {snowballPlan.length > 0 &&
-                          snowballPlan[snowballPlan.length - 1]?.payoffDate
-                            ? snowballPlan[
-                                snowballPlan.length - 1
-                              ].payoffDate.toLocaleDateString('pt-BR', {
-                                month: 'short',
-                                year: 'numeric',
-                              })
-                            : '-'}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="mt-sm text-xs">
-                      {t('pages.debtPayoff.snowballBenefit')}
-                    </Badge>
-                  </div>
-                  <div className="rounded-lg border border-warning/20 bg-warning/5 p-md">
-                    <div className="mb-sm flex items-center gap-sm">
-                      <Flame className="h-4 w-4 text-warning" />
-                      <p className="font-medium">{t('pages.debtPayoff.avalanche')}</p>
-                    </div>
-                    <div className="space-y-xs text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.debtPayoff.totalInterest')}
-                        </span>
-                        <span className="font-semibold">
-                          {formatCurrency(avalancheInterest)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {t('pages.debtPayoff.payoffDate')}
-                        </span>
-                        <span className="font-semibold">
-                          {avalanchePlan.length > 0 &&
-                          avalanchePlan[avalanchePlan.length - 1]?.payoffDate
-                            ? avalanchePlan[
-                                avalanchePlan.length - 1
-                              ].payoffDate.toLocaleDateString('pt-BR', {
-                                month: 'short',
-                                year: 'numeric',
-                              })
-                            : '-'}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={interestSaved > 0 ? 'default' : 'secondary'}
-                      className="mt-sm text-xs"
+                  <p className="text-sm font-medium">
+                    {t('pages.debtPayoff.strategy')}
+                  </p>
+                  <div className="grid grid-cols-2 gap-sm">
+                    <button
+                      onClick={() => setStrategy('snowball')}
+                      className={cn(
+                        'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                        strategy === 'snowball'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-primary/40'
+                      )}
                     >
-                      {interestSaved > 0
-                        ? t('pages.debtPayoff.savesWith', {
-                            amount: formatCurrency(interestSaved),
-                          })
-                        : t('pages.debtPayoff.avalancheBenefit')}
-                    </Badge>
+                      <Snowflake className="h-6 w-6" />
+                      <p className="text-sm font-medium">
+                        {t('pages.debtPayoff.snowball')}
+                      </p>
+                      <p className="text-center text-xs text-muted-foreground">
+                        {t('pages.debtPayoff.snowballDesc')}
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setStrategy('avalanche')}
+                      className={cn(
+                        'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                        strategy === 'avalanche'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                    >
+                      <Flame className="h-6 w-6" />
+                      <p className="text-sm font-medium">
+                        {t('pages.debtPayoff.avalanche')}
+                      </p>
+                      <p className="text-center text-xs text-muted-foreground">
+                        {t('pages.debtPayoff.avalancheDesc')}
+                      </p>
+                    </button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </PageContainer>
-    </AnimatedPage>
+
+                {/* Monthly extra */}
+                <div className="space-y-sm">
+                  <p className="text-sm font-medium">
+                    {t('pages.debtPayoff.extraMonthly')}
+                  </p>
+                  <CurrencyInput
+                    value={monthlyExtra || ''}
+                    onChange={(e) =>
+                      setMonthlyExtra(
+                        parseFloat((e.target as HTMLInputElement).value) || 0
+                      )
+                    }
+                    placeholder="0,00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.debtPayoff.extraMonthlyHint')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Strategy comparison */}
+              {interestSaved > 0 && (
+                <div className="flex items-start gap-sm rounded-lg border border-success/30 bg-success/5 p-md">
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                  <p className="text-sm text-success">
+                    {t('pages.debtPayoff.interestSavedWithAvalanche', {
+                      amount: formatCurrency(interestSaved),
+                    })}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Payoff plan */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-sm text-base">
+                {strategy === 'snowball' ? (
+                  <Snowflake className="h-4 w-4 text-primary" />
+                ) : (
+                  <Flame className="h-4 w-4 text-primary" />
+                )}
+                {t('pages.debtPayoff.plan', {
+                  strategy:
+                    strategy === 'snowball'
+                      ? t('pages.debtPayoff.snowball')
+                      : t('pages.debtPayoff.avalanche'),
+                })}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-sm">
+                <AnimatePresence mode="sync">
+                  {activePlan.map((plan, idx) => {
+                    const debtBalancePct =
+                      totalDebt > 0 ? (plan.debt.balance / totalDebt) * 100 : 0;
+
+                    return (
+                      <motion.div
+                        key={plan.debt.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="rounded-lg border bg-card p-md"
+                      >
+                        <div className="flex items-start justify-between gap-sm">
+                          <div className="flex items-start gap-sm">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                              {plan.priority}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-xs">
+                                <p className="truncate text-sm font-semibold">
+                                  {plan.debt.name}
+                                </p>
+                                <span
+                                  className={cn(
+                                    'rounded-full px-xs py-0.5 text-xs font-medium',
+                                    typeColors[plan.debt.type]
+                                  )}
+                                >
+                                  {typeLabels[plan.debt.type]}
+                                </span>
+                              </div>
+                              <div className="mt-xs flex flex-wrap gap-sm text-xs text-muted-foreground">
+                                {plan.debt.interestRate > 0 && (
+                                  <span>{plan.debt.interestRate}% a.a.</span>
+                                )}
+                                {plan.debt.dueDate && (
+                                  <span className="flex items-center gap-xs">
+                                    <CalendarDays className="h-3 w-3" />
+                                    {formatDate(plan.debt.dueDate)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm font-bold text-destructive">
+                              {formatCurrency(plan.debt.balance)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatCurrency(plan.monthlyPayment)}/
+                              {t('pages.debtPayoff.month')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-sm h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-destructive/60 transition-all"
+                            style={{ width: `${debtBalancePct}%` }}
+                          />
+                        </div>
+
+                        <div className="mt-sm flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-xs">
+                            <ArrowRight className="h-3 w-3" />
+                            {t('pages.debtPayoff.payoffBy')}{' '}
+                            <strong className="text-foreground">
+                              {plan.payoffDate.toLocaleDateString('pt-BR', {
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </strong>
+                          </span>
+                          {plan.totalInterest > 0 && (
+                            <span>
+                              {t('pages.debtPayoff.interest')}{' '}
+                              {formatCurrency(plan.totalInterest)}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Comparison table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {t('pages.debtPayoff.comparison')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-md sm:grid-cols-2">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-md">
+                  <div className="mb-sm flex items-center gap-sm">
+                    <Snowflake className="h-4 w-4 text-primary" />
+                    <p className="font-medium">{t('pages.debtPayoff.snowball')}</p>
+                  </div>
+                  <div className="space-y-xs text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.debtPayoff.totalInterest')}
+                      </span>
+                      <span className="font-semibold">
+                        {formatCurrency(snowballInterest)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.debtPayoff.payoffDate')}
+                      </span>
+                      <span className="font-semibold">
+                        {snowballPlan.length > 0 &&
+                        snowballPlan[snowballPlan.length - 1]?.payoffDate
+                          ? snowballPlan[
+                              snowballPlan.length - 1
+                            ].payoffDate.toLocaleDateString('pt-BR', {
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="mt-sm text-xs">
+                    {t('pages.debtPayoff.snowballBenefit')}
+                  </Badge>
+                </div>
+                <div className="rounded-lg border border-warning/20 bg-warning/5 p-md">
+                  <div className="mb-sm flex items-center gap-sm">
+                    <Flame className="h-4 w-4 text-warning" />
+                    <p className="font-medium">{t('pages.debtPayoff.avalanche')}</p>
+                  </div>
+                  <div className="space-y-xs text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.debtPayoff.totalInterest')}
+                      </span>
+                      <span className="font-semibold">
+                        {formatCurrency(avalancheInterest)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.debtPayoff.payoffDate')}
+                      </span>
+                      <span className="font-semibold">
+                        {avalanchePlan.length > 0 &&
+                        avalanchePlan[avalanchePlan.length - 1]?.payoffDate
+                          ? avalanchePlan[
+                              avalanchePlan.length - 1
+                            ].payoffDate.toLocaleDateString('pt-BR', {
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          : '-'}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge
+                    variant={interestSaved > 0 ? 'default' : 'secondary'}
+                    className="mt-sm text-xs"
+                  >
+                    {interestSaved > 0
+                      ? t('pages.debtPayoff.savesWith', {
+                          amount: formatCurrency(interestSaved),
+                        })
+                      : t('pages.debtPayoff.avalancheBenefit')}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </Wrapper>
   );
 }

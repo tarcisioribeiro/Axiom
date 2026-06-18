@@ -169,6 +169,7 @@ export const API_CONFIG = {
     MENU_OPTIONS: '/api/v1/personal-planning/menu-options/',
     MENU_OPTION_INGREDIENTS: '/api/v1/personal-planning/menu-option-ingredients/',
     MEAL_LOGS: '/api/v1/personal-planning/meal-logs/',
+    DAILY_CALORIC_SUMMARY: '/api/v1/personal-planning/daily-caloric-summary/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',

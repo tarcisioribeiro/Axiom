@@ -1317,6 +1317,16 @@ class Exercise(BaseModel):
     description = models.TextField(
         null=True, blank=True, verbose_name="Descrição"
     )
+    met_value = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        default=5.0,
+        verbose_name="MET",
+        help_text=(
+            "Equivalente Metabólico da Tarefa. "
+            "Usado para estimar calorias gastas: kcal = MET × peso_kg × horas."
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
