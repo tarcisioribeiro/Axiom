@@ -102,12 +102,12 @@ function SummaryCard({
       <CardContent className="space-y-sm">
         <div className="grid grid-cols-2 gap-sm">
           <div>
-            <p className="text-xs text-muted-foreground">A</p>
-            <p className="text-lg font-bold">{formatCurrency(valueA)}</p>
+            <p className="text-xs font-semibold text-warning">A</p>
+            <p className="text-lg font-bold text-warning">{formatCurrency(valueA)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">B</p>
-            <p className="text-lg font-bold">{formatCurrency(valueB)}</p>
+            <p className="text-xs font-semibold text-info">B</p>
+            <p className="text-lg font-bold text-info">{formatCurrency(valueB)}</p>
           </div>
         </div>
         <div className="flex items-center justify-between border-t pt-sm">
@@ -243,10 +243,13 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
 
       {!isLoading && dataA && dataB && (
         <>
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              <strong className="text-foreground">A</strong> = {labelA} &nbsp;·&nbsp;{' '}
-              <strong className="text-foreground">B</strong> = {labelB}
+          <div className="flex flex-wrap items-center gap-sm">
+            <span className="inline-flex items-center gap-xs rounded-full bg-warning/10 px-sm py-xs text-xs font-semibold text-warning">
+              <span className="h-1.5 w-1.5 rounded-full bg-warning" />A — {labelA}
+            </span>
+            <span className="text-xs text-muted-foreground">vs</span>
+            <span className="inline-flex items-center gap-xs rounded-full bg-info/10 px-sm py-xs text-xs font-semibold text-info">
+              <span className="h-1.5 w-1.5 rounded-full bg-info" />B — {labelB}
             </span>
           </div>
 
@@ -283,8 +286,8 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
                 <div className="space-y-sm">
                   <div className="grid grid-cols-[1fr_auto_auto_auto] gap-sm text-xs font-medium text-muted-foreground">
                     <span>{t('common.fields.category')}</span>
-                    <span className="text-right">A</span>
-                    <span className="text-right">B</span>
+                    <span className="text-right font-semibold text-warning">A</span>
+                    <span className="text-right font-semibold text-info">B</span>
                     <span className="text-right">{t('monthComparison.variation')}</span>
                   </div>
                   {expenseCategoryMap.map(({ cat, totalA, totalB, diff: _diff }) => {
@@ -298,10 +301,10 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
                         <span className="truncate font-medium">
                           {translate('expenseCategories', cat)}
                         </span>
-                        <span className="text-right tabular-nums">
+                        <span className="text-right tabular-nums text-warning">
                           {formatCurrency(totalA)}
                         </span>
-                        <span className="text-right tabular-nums">
+                        <span className="text-right tabular-nums text-info">
                           {formatCurrency(totalB)}
                         </span>
                         <div className="text-right">
