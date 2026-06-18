@@ -10,10 +10,10 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -29,7 +29,11 @@ import { loansService } from '@/services/loans-service';
 import { vaultsService } from '@/services/vaults-service';
 import type { Account, Vault, Loan, CreditCard as CreditCardType } from '@/types';
 
-export default function NetWorthTracker() {
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function NetWorthTracker({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
 
   const accountsQuery = useQuery({
@@ -160,190 +164,190 @@ export default function NetWorthTracker() {
 
   if (isLoading) return <LoadingState fullScreen />;
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('netWorth.title')}
-          icon={<TrendingUp />}
-          subtitle={t('netWorth.subtitle')}
+    <Wrapper>
+      <PageHeader
+        title={t('netWorth.title')}
+        icon={<TrendingUp />}
+        subtitle={t('netWorth.subtitle')}
+      />
+
+      <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-3">
+        <StatCard
+          title={t('netWorth.netWorthLabel')}
+          value={formatCurrency(netWorth)}
+          icon={<Wallet className="h-5 w-5" />}
+          accentColor={netWorth >= 0 ? 'green' : 'red'}
+          prominent
         />
+        <StatCard
+          title={t('netWorth.assetsLabel')}
+          value={formatCurrency(totalAssets)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          accentColor="green"
+        />
+        <StatCard
+          title={t('netWorth.liabilitiesLabel')}
+          value={formatCurrency(totalLiabilities)}
+          icon={<TrendingDown className="h-4 w-4" />}
+          accentColor="red"
+        />
+      </div>
 
-        <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-3">
-          <StatCard
-            title={t('netWorth.netWorthLabel')}
-            value={formatCurrency(netWorth)}
-            icon={<Wallet className="h-5 w-5" />}
-            accentColor={netWorth >= 0 ? 'green' : 'red'}
-            prominent
-          />
-          <StatCard
-            title={t('netWorth.assetsLabel')}
-            value={formatCurrency(totalAssets)}
-            icon={<TrendingUp className="h-4 w-4" />}
-            accentColor="green"
-          />
-          <StatCard
-            title={t('netWorth.liabilitiesLabel')}
-            value={formatCurrency(totalLiabilities)}
-            icon={<TrendingDown className="h-4 w-4" />}
-            accentColor="red"
-          />
-        </div>
+      <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle as="h2">
+              {t('netWorth.assetsLabel')} vs {t('netWorth.liabilitiesLabel')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="net-worth-distribution"
+              data={pieData}
+              dataKey="value"
+              nameKey="name"
+              formatter={(v) => formatCurrency(Number(v))}
+              colors={chartColors}
+              emptyMessage={t('netWorth.noAssets')}
+              lockChartType="pie"
+              height={280}
+            />
+          </CardContent>
+        </Card>
 
-        <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
+        <div className="space-y-md">
           <Card>
             <CardHeader className="pb-sm">
-              <CardTitle as="h2">
-                {t('netWorth.assetsLabel')} vs {t('netWorth.liabilitiesLabel')}
-              </CardTitle>
+              <div className="flex items-center gap-sm">
+                <TrendingUp className="h-4 w-4 text-success" />
+                <CardTitle as="h3" className="text-base">
+                  {t('netWorth.assetsSection')}
+                </CardTitle>
+              </div>
             </CardHeader>
-            <CardContent>
-              <ChartContainer
-                chartId="net-worth-distribution"
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                formatter={(v) => formatCurrency(Number(v))}
-                colors={chartColors}
-                emptyMessage={t('netWorth.noAssets')}
-                lockChartType="pie"
-                height={280}
-              />
+            <CardContent className="space-y-sm">
+              <div className="flex items-center justify-between rounded-lg bg-success/5 p-sm">
+                <div className="flex items-center gap-sm">
+                  <Wallet className="h-4 w-4 text-success" />
+                  <span className="text-sm">{t('netWorth.bankAccounts')}</span>
+                </div>
+                <span className="font-semibold text-success">
+                  {formatCurrency(totalBankAssets)}
+                </span>
+              </div>
+              {positiveAccounts.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between px-sm text-xs text-muted-foreground"
+                >
+                  <span>{a.account_name}</span>
+                  <span className="font-medium text-success">
+                    {formatCurrency(parseFloat(a.balance))}
+                  </span>
+                </div>
+              ))}
+              {totalVaultAssets > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-blue-500/5 p-sm">
+                  <div className="flex items-center gap-sm">
+                    <VaultIcon className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm">{t('netWorth.vaults')}</span>
+                  </div>
+                  <span className="font-semibold text-blue-500">
+                    {formatCurrency(totalVaultAssets)}
+                  </span>
+                </div>
+              )}
+              {totalLentLoanAssets > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-teal-500/5 p-sm">
+                  <div className="flex items-center gap-sm">
+                    <HandCoins className="h-4 w-4 text-teal-500" />
+                    <span className="text-sm">{t('netWorth.lentLoans')}</span>
+                  </div>
+                  <span className="font-semibold text-teal-500">
+                    {formatCurrency(totalLentLoanAssets)}
+                  </span>
+                </div>
+              )}
+              {totalAssets === 0 && (
+                <p className="py-md text-center text-sm text-muted-foreground">
+                  {t('netWorth.noAssets')}
+                </p>
+              )}
             </CardContent>
           </Card>
 
-          <div className="space-y-md">
-            <Card>
-              <CardHeader className="pb-sm">
-                <div className="flex items-center gap-sm">
-                  <TrendingUp className="h-4 w-4 text-success" />
-                  <CardTitle as="h3" className="text-base">
-                    {t('netWorth.assetsSection')}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-sm">
-                <div className="flex items-center justify-between rounded-lg bg-success/5 p-sm">
+          <Card>
+            <CardHeader className="pb-sm">
+              <div className="flex items-center gap-sm">
+                <TrendingDown className="h-4 w-4 text-destructive" />
+                <CardTitle as="h3" className="text-base">
+                  {t('netWorth.liabilitiesSection')}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-sm">
+              {totalLoanLiabilities > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
                   <div className="flex items-center gap-sm">
-                    <Wallet className="h-4 w-4 text-success" />
-                    <span className="text-sm">{t('netWorth.bankAccounts')}</span>
+                    <HandCoins className="h-4 w-4 text-destructive" />
+                    <span className="text-sm">{t('netWorth.loans')}</span>
                   </div>
-                  <span className="font-semibold text-success">
-                    {formatCurrency(totalBankAssets)}
+                  <span className="font-semibold text-destructive">
+                    {formatCurrency(totalLoanLiabilities)}
                   </span>
                 </div>
-                {positiveAccounts.map((a) => (
+              )}
+              {totalCreditCardLiabilities > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-orange-500/5 p-sm">
+                  <div className="flex items-center gap-sm">
+                    <CreditCard className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm">{t('netWorth.creditCards')}</span>
+                  </div>
+                  <span className="font-semibold text-orange-500">
+                    {formatCurrency(totalCreditCardLiabilities)}
+                  </span>
+                </div>
+              )}
+              {totalOverdraftLiabilities > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
+                  <div className="flex items-center gap-sm">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-sm">{t('netWorth.overdraft')}</span>
+                  </div>
+                  <span className="font-semibold text-destructive">
+                    {formatCurrency(totalOverdraftLiabilities)}
+                  </span>
+                </div>
+              )}
+              {totalOverdraftLiabilities > 0 &&
+                overdraftAccounts.map((a) => (
                   <div
                     key={a.id}
                     className="flex items-center justify-between px-sm text-xs text-muted-foreground"
                   >
                     <span>{a.account_name}</span>
-                    <span className="font-medium text-success">
+                    <span className="font-medium text-destructive">
                       {formatCurrency(parseFloat(a.balance))}
                     </span>
                   </div>
                 ))}
-                {totalVaultAssets > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-blue-500/5 p-sm">
-                    <div className="flex items-center gap-sm">
-                      <VaultIcon className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">{t('netWorth.vaults')}</span>
-                    </div>
-                    <span className="font-semibold text-blue-500">
-                      {formatCurrency(totalVaultAssets)}
-                    </span>
-                  </div>
-                )}
-                {totalLentLoanAssets > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-teal-500/5 p-sm">
-                    <div className="flex items-center gap-sm">
-                      <HandCoins className="h-4 w-4 text-teal-500" />
-                      <span className="text-sm">{t('netWorth.lentLoans')}</span>
-                    </div>
-                    <span className="font-semibold text-teal-500">
-                      {formatCurrency(totalLentLoanAssets)}
-                    </span>
-                  </div>
-                )}
-                {totalAssets === 0 && (
-                  <p className="py-md text-center text-sm text-muted-foreground">
-                    {t('netWorth.noAssets')}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-sm">
-                <div className="flex items-center gap-sm">
-                  <TrendingDown className="h-4 w-4 text-destructive" />
-                  <CardTitle as="h3" className="text-base">
-                    {t('netWorth.liabilitiesSection')}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-sm">
-                {totalLoanLiabilities > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
-                    <div className="flex items-center gap-sm">
-                      <HandCoins className="h-4 w-4 text-destructive" />
-                      <span className="text-sm">{t('netWorth.loans')}</span>
-                    </div>
-                    <span className="font-semibold text-destructive">
-                      {formatCurrency(totalLoanLiabilities)}
-                    </span>
-                  </div>
-                )}
-                {totalCreditCardLiabilities > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-orange-500/5 p-sm">
-                    <div className="flex items-center gap-sm">
-                      <CreditCard className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm">{t('netWorth.creditCards')}</span>
-                    </div>
-                    <span className="font-semibold text-orange-500">
-                      {formatCurrency(totalCreditCardLiabilities)}
-                    </span>
-                  </div>
-                )}
-                {totalOverdraftLiabilities > 0 && (
-                  <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
-                    <div className="flex items-center gap-sm">
-                      <AlertTriangle className="h-4 w-4 text-destructive" />
-                      <span className="text-sm">{t('netWorth.overdraft')}</span>
-                    </div>
-                    <span className="font-semibold text-destructive">
-                      {formatCurrency(totalOverdraftLiabilities)}
-                    </span>
-                  </div>
-                )}
-                {totalOverdraftLiabilities > 0 &&
-                  overdraftAccounts.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-center justify-between px-sm text-xs text-muted-foreground"
-                    >
-                      <span>{a.account_name}</span>
-                      <span className="font-medium text-destructive">
-                        {formatCurrency(parseFloat(a.balance))}
-                      </span>
-                    </div>
-                  ))}
-                {totalLiabilities === 0 && (
-                  <p
-                    className={cn(
-                      'py-md text-center text-sm',
-                      totalLiabilities === 0 ? 'text-success' : 'text-muted-foreground'
-                    )}
-                  >
-                    {t('netWorth.noLiabilities')}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+              {totalLiabilities === 0 && (
+                <p
+                  className={cn(
+                    'py-md text-center text-sm',
+                    totalLiabilities === 0 ? 'text-success' : 'text-muted-foreground'
+                  )}
+                >
+                  {t('netWorth.noLiabilities')}
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </PageContainer>
-    </AnimatedPage>
+      </div>
+    </Wrapper>
   );
 }

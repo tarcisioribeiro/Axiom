@@ -30,13 +30,10 @@ import { useAuthStore } from './stores/auth-store';
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
-const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
-const AutomationRules = lazy(() => import('./pages/AutomationRules'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
-const CreditCards = lazy(() => import('./pages/CreditCards'));
-const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
+const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Members = lazy(() => import('./pages/Members'));
@@ -77,9 +74,6 @@ const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
-// Tags Module
-const Tags = lazy(() => import('./pages/Tags'));
-
 // Webhooks
 const Webhooks = lazy(() => import('./pages/Webhooks'));
 
@@ -103,25 +97,20 @@ const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 const Permissions = lazy(() => import('./pages/Permissions'));
 
 // Planning extras
-const PlanningToday = lazy(() => import('./pages/PlanningToday'));
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 const BodyMetrics = lazy(() => import('./pages/BodyMetrics'));
-const MyWeekPage = lazy(() => import('./pages/MyWeekPage'));
 const PersonalAnalytics = lazy(() => import('./pages/PersonalAnalytics'));
 const WeeklyPlanning = lazy(() => import('./pages/WeeklyPlanning'));
 const OnboardingWizard = lazy(() => import('./pages/OnboardingWizard'));
 
-// Finance extras
-const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
-const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
-const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
-const MonthComparison = lazy(() => import('./pages/MonthComparison'));
-const SpendingInsights = lazy(() => import('./pages/SpendingInsights'));
-const DebtPayoffPlanner = lazy(() => import('./pages/DebtPayoffPlanner'));
-const MonthlyPlanner = lazy(() => import('./pages/MonthlyPlanner'));
+// Finance merged pages
+const RulesAndTagsPage = lazy(() => import('./pages/RulesAndTagsPage'));
+const FinanceAgendaPage = lazy(() => import('./pages/FinanceAgendaPage'));
+const FinanceAnalyticsPage = lazy(() => import('./pages/FinanceAnalyticsPage'));
+const FinancialHealthPage = lazy(() => import('./pages/FinancialHealthPage'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -244,34 +233,27 @@ function AnimatedRoutes() {
             element={<Navigate to="/recurring" replace />}
           />
           <Route
-            path="/categorization-rules"
+            path="/finance/rules-tags"
             element={
               <PageWrapper>
-                <CategorizationRules />
+                <RulesAndTagsPage />
               </PageWrapper>
             }
+          />
+          <Route
+            path="/categorization-rules"
+            element={<Navigate to="/finance/rules-tags" replace />}
           />
           <Route
             path="/automation-rules"
-            element={
-              <PageWrapper>
-                <AutomationRules />
-              </PageWrapper>
-            }
+            element={<Navigate to="/finance/rules-tags" replace />}
           />
-          <Route
-            path="/tags"
-            element={
-              <PageWrapper>
-                <Tags />
-              </PageWrapper>
-            }
-          />
+          <Route path="/tags" element={<Navigate to="/finance/rules-tags" replace />} />
           <Route
             path="/credit-cards"
             element={
               <PageWrapper>
-                <CreditCards />
+                <CreditCardManagement />
               </PageWrapper>
             }
           />
@@ -281,11 +263,7 @@ function AnimatedRoutes() {
           />
           <Route
             path="/credit-card-expenses"
-            element={
-              <PageWrapper>
-                <CreditCardExpenses />
-              </PageWrapper>
-            }
+            element={<Navigate to="/transactions" replace />}
           />
           <Route
             path="/transfers"
@@ -478,14 +456,13 @@ function AnimatedRoutes() {
           />
           {/* Personal Planning Module routes — wrapped in contextual sidebar */}
           <Route path="/planning" element={<PlanningLayout />}>
-            <Route index element={<Navigate to="/planning/today" replace />} />
+            <Route
+              index
+              element={<Navigate to="/planning/daily-checklist" replace />}
+            />
             <Route
               path="today"
-              element={
-                <PageWrapper>
-                  <PlanningToday />
-                </PageWrapper>
-              }
+              element={<Navigate to="/planning/daily-checklist" replace />}
             />
             <Route
               path="dashboard"
@@ -517,7 +494,7 @@ function AnimatedRoutes() {
             />
             <Route
               path="today-tasks"
-              element={<Navigate to="/planning/today" replace />}
+              element={<Navigate to="/planning/daily-checklist" replace />}
             />
             <Route
               path="daily-checklist"
@@ -561,11 +538,7 @@ function AnimatedRoutes() {
             />
             <Route
               path="week"
-              element={
-                <PageWrapper>
-                  <MyWeekPage />
-                </PageWrapper>
-              }
+              element={<Navigate to="/planning/weekly-planning" replace />}
             />
             <Route
               path="analytics"
@@ -673,62 +646,60 @@ function AnimatedRoutes() {
             }
           />
 
-          {/* Finance extras */}
+          {/* Finance merged pages */}
+          <Route
+            path="/finance/agenda"
+            element={
+              <PageWrapper>
+                <FinanceAgendaPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/analytics"
+            element={
+              <PageWrapper>
+                <FinanceAnalyticsPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/financial-health"
+            element={
+              <PageWrapper>
+                <FinancialHealthPage />
+              </PageWrapper>
+            }
+          />
+
+          {/* Finance extras — kept for direct access + backward-compat redirects */}
           <Route
             path="/finance/calendar"
-            element={
-              <PageWrapper>
-                <FinancialCalendar />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/finance/net-worth"
-            element={
-              <PageWrapper>
-                <NetWorthTracker />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/finance/subscriptions"
-            element={
-              <PageWrapper>
-                <SubscriptionTracker />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/finance/month-comparison"
-            element={
-              <PageWrapper>
-                <MonthComparison />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/finance/spending-insights"
-            element={
-              <PageWrapper>
-                <SpendingInsights />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/finance/debt-payoff"
-            element={
-              <PageWrapper>
-                <DebtPayoffPlanner />
-              </PageWrapper>
-            }
+            element={<Navigate to="/finance/agenda" replace />}
           />
           <Route
             path="/finance/monthly-planner"
-            element={
-              <PageWrapper>
-                <MonthlyPlanner />
-              </PageWrapper>
-            }
+            element={<Navigate to="/finance/agenda" replace />}
+          />
+          <Route
+            path="/finance/spending-insights"
+            element={<Navigate to="/finance/analytics" replace />}
+          />
+          <Route
+            path="/finance/month-comparison"
+            element={<Navigate to="/finance/analytics" replace />}
+          />
+          <Route
+            path="/finance/net-worth"
+            element={<Navigate to="/finance/financial-health" replace />}
+          />
+          <Route
+            path="/finance/debt-payoff"
+            element={<Navigate to="/finance/financial-health" replace />}
+          />
+          <Route
+            path="/finance/subscriptions"
+            element={<Navigate to="/recurring" replace />}
           />
 
           {/* Agents */}
