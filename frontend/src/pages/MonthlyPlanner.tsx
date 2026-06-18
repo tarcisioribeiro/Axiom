@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   CreditCard,
   Plus,
+  Target,
   TrendingDown,
   TrendingUp,
   Trash2,
@@ -168,15 +169,24 @@ function SectionCard({
   title,
   icon: Icon,
   total,
+  variant = 'default',
   children,
 }: {
   title: string;
   icon: React.ElementType;
   total: number;
+  variant?: 'revenue' | 'expense' | 'bill' | 'default';
   children: React.ReactNode;
 }) {
+  const variantBorder = {
+    revenue: 'border-l-4 border-l-success',
+    expense: 'border-l-4 border-l-destructive',
+    bill: 'border-l-4 border-l-warning',
+    default: '',
+  }[variant];
+
   return (
-    <Card>
+    <Card className={variantBorder}>
       <CardHeader className="pb-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-sm">
@@ -608,7 +618,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           <Button variant="outline" size="sm" onClick={() => navigateMonth(-1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-36 text-center text-base font-semibold">
+          <span className="min-w-44 text-center text-2xl font-bold tracking-tight">
             {monthNames[month - 1]} {year}
           </span>
           <Button variant="outline" size="sm" onClick={() => navigateMonth(1)}>
@@ -721,13 +731,14 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       </div>
 
       {/* Revenues + Expenses */}
-      <div className="mb-lg grid grid-cols-1 gap-md lg:grid-cols-2">
-        {/* Revenues */}
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+        {/* Left: Revenues + Budgets */}
         <div className="space-y-sm">
           <SectionCard
             title={t('monthlyPlanner.fixedRevenues')}
             icon={CircleDollarSign}
             total={totalFixed}
+            variant="revenue"
           >
             {(data?.fixed_revenues.length ?? 0) === 0 && (
               <p className="py-sm text-center text-xs text-muted-foreground">
@@ -752,6 +763,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             title={t('monthlyPlanner.extraRevenues')}
             icon={CircleDollarSign}
             total={totalExtra}
+            variant="revenue"
           >
             {extraRevenues.map((r, i) => (
               <ExtraItemRow
@@ -773,14 +785,105 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               {t('monthlyPlanner.addItem')}
             </Button>
           </SectionCard>
+
+          {/* Budget by category — below extra revenues */}
+          <Card className="border-l-4 border-l-primary">
+            <CardHeader className="pb-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-sm">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-semibold">
+                    {t('monthlyPlanner.budgetByCategory')}
+                  </CardTitle>
+                </div>
+                <span className="text-sm font-semibold">
+                  {formatCurrency(totalBudgets)}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {allCategories.length === 0 && (
+                <p className="py-sm text-center text-xs text-muted-foreground">
+                  {t('monthlyPlanner.noBudgetSuggestions')}
+                </p>
+              )}
+              <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
+                {allCategories.map((cat) => {
+                  const suggested = budgetSuggestionMap[cat];
+                  const existing = existingBudgetMap[cat];
+                  const currentOverride = budgetOverrides[cat] ?? existing ?? '';
+                  const limitAmount = parseFloat(
+                    currentOverride || String(suggested ?? 0)
+                  );
+                  const executionPct =
+                    isApplied && limitAmount > 0
+                      ? Math.min(100, Math.round((actualExpenses / limitAmount) * 100))
+                      : null;
+
+                  return (
+                    <div
+                      key={cat}
+                      className="space-y-xs rounded-lg border bg-muted/20 p-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium">
+                          {translateCategory(cat, 'expense')}
+                        </span>
+                        {suggested !== undefined && (
+                          <span className="text-xs text-muted-foreground">
+                            {t('monthlyPlanner.overrideHint', {
+                              value: formatCurrency(suggested),
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={currentOverride}
+                        onChange={(e) => updateBudgetOverride(cat, e.target.value)}
+                        placeholder={suggested ? suggested.toFixed(2) : '0.00'}
+                        className="h-7 text-sm"
+                        disabled={isApplied}
+                      />
+                      {executionPct !== null && (
+                        <div>
+                          <p className="mb-xs text-xs text-muted-foreground">
+                            {t('monthlyPlanner.executionPercent', {
+                              percent: executionPct,
+                            })}
+                          </p>
+                          <div className="h-1.5 w-full rounded-full bg-muted">
+                            <div
+                              className={cn(
+                                'h-1.5 rounded-full transition-all',
+                                executionPct >= 100
+                                  ? 'bg-destructive'
+                                  : executionPct >= 80
+                                    ? 'bg-yellow-500'
+                                    : 'bg-primary'
+                              )}
+                              style={{ width: `${executionPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Expenses */}
+        {/* Right: Expenses */}
         <div className="space-y-sm">
           <SectionCard
             title={t('monthlyPlanner.fixedExpenses')}
             icon={TrendingDown}
             total={totalFixedExp}
+            variant="expense"
           >
             {(data?.fixed_expenses.length ?? 0) === 0 && (
               <p className="py-sm text-center text-xs text-muted-foreground">
@@ -805,6 +908,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             title={t('monthlyPlanner.creditCardBills')}
             icon={CreditCard}
             total={totalBills}
+            variant="bill"
           >
             {(data?.credit_card_bills.length ?? 0) === 0 && (
               <p className="py-sm text-center text-xs text-muted-foreground">
@@ -825,6 +929,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             title={t('monthlyPlanner.extraExpenses')}
             icon={TrendingDown}
             total={totalExtraExp}
+            variant="expense"
           >
             {extraExpenses.map((e, i) => (
               <ExtraItemRow
@@ -848,86 +953,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </SectionCard>
         </div>
       </div>
-
-      {/* Budget by category */}
-      <Card>
-        <CardHeader className="pb-sm">
-          <CardTitle className="text-sm font-semibold">
-            {t('monthlyPlanner.budgetByCategory')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {allCategories.length === 0 && (
-            <p className="py-sm text-center text-xs text-muted-foreground">
-              {t('monthlyPlanner.noBudgetSuggestions')}
-            </p>
-          )}
-          <div className="grid grid-cols-1 gap-sm sm:grid-cols-2 lg:grid-cols-3">
-            {allCategories.map((cat) => {
-              const suggested = budgetSuggestionMap[cat];
-              const existing = existingBudgetMap[cat];
-              const currentOverride = budgetOverrides[cat] ?? existing ?? '';
-              const limitAmount = parseFloat(currentOverride || String(suggested ?? 0));
-              const executionPct =
-                isApplied && limitAmount > 0
-                  ? Math.min(100, Math.round((actualExpenses / limitAmount) * 100))
-                  : null;
-
-              return (
-                <div
-                  key={cat}
-                  className="space-y-xs rounded-lg border bg-muted/20 p-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium">
-                      {translateCategory(cat, 'expense')}
-                    </span>
-                    {suggested !== undefined && (
-                      <span className="text-xs text-muted-foreground">
-                        {t('monthlyPlanner.overrideHint', {
-                          value: formatCurrency(suggested),
-                        })}
-                      </span>
-                    )}
-                  </div>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={currentOverride}
-                    onChange={(e) => updateBudgetOverride(cat, e.target.value)}
-                    placeholder={suggested ? suggested.toFixed(2) : '0.00'}
-                    className="h-7 text-sm"
-                    disabled={isApplied}
-                  />
-                  {executionPct !== null && (
-                    <div>
-                      <p className="mb-xs text-xs text-muted-foreground">
-                        {t('monthlyPlanner.executionPercent', {
-                          percent: executionPct,
-                        })}
-                      </p>
-                      <div className="h-1.5 w-full rounded-full bg-muted">
-                        <div
-                          className={cn(
-                            'h-1.5 rounded-full transition-all',
-                            executionPct >= 100
-                              ? 'bg-destructive'
-                              : executionPct >= 80
-                                ? 'bg-yellow-500'
-                                : 'bg-primary'
-                          )}
-                          style={{ width: `${executionPct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
     </Wrapper>
   );
 }
