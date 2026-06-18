@@ -3,7 +3,6 @@ import { Pencil, Plus, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -24,7 +23,11 @@ function getDefaultForm(): TagFormData {
   return { name: '', color: DEFAULT_TAG_COLOR };
 }
 
-export default function Tags() {
+function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function Tags({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -138,100 +141,96 @@ export default function Tags() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('pages.tags.title')}
-          icon={<TagIcon className="h-5 w-5" />}
-        >
-          <SearchInput
-            placeholder={`${t('common.actions.search')}...`}
-            value={search}
-            onValueChange={setSearch}
-            className="w-48"
-          />
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.tags.newBtn')}
-          </Button>
-        </PageHeader>
-
-        {isLoading ? (
-          <LoadingState />
-        ) : tags.length === 0 ? (
-          <EmptyState
-            icon={<TagIcon className="h-10 w-10" />}
-            title={t('pages.tags.emptyState')}
-            action={
-              !search
-                ? {
-                    label: t('pages.tags.newBtn'),
-                    icon: <Plus className="mr-xs h-4 w-4" />,
-                    onClick: handleCreate,
-                  }
-                : undefined
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {tags.map((tag) => (
-              <div
-                key={tag.id}
-                className="flex items-center justify-between gap-sm rounded-lg border border-border bg-card px-md py-sm shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-sm">
-                  <span
-                    className="h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: tag.color }}
-                  />
-                  <span
-                    className="truncate rounded-full px-sm py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: `${tag.color}22`,
-                      color: tag.color,
-                    }}
-                  >
-                    {tag.name}
-                  </span>
-                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                    {(tag as Tag & { expense_count?: number }).expense_count
-                      ? t('pages.tags.expenseCount', {
-                          count: (tag as Tag & { expense_count?: number })
-                            .expense_count,
-                        })
-                      : t('pages.tags.noExpenses')}
-                  </span>
-                </div>
-                <div className="flex shrink-0 gap-xs">
-                  <button
-                    onClick={() => handleEdit(tag)}
-                    className="rounded p-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => void handleDelete(tag)}
-                    className="rounded p-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <TagFormDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          selected={selected}
-          form={form}
-          setForm={setForm}
-          onSubmit={handleSubmit}
-          isPending={isPending}
+    <Wrapper>
+      <PageHeader title={t('pages.tags.title')} icon={<TagIcon className="h-5 w-5" />}>
+        <SearchInput
+          placeholder={`${t('common.actions.search')}...`}
+          value={search}
+          onValueChange={setSearch}
+          className="w-48"
         />
-      </PageContainer>
-    </AnimatedPage>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.tags.newBtn')}
+        </Button>
+      </PageHeader>
+
+      {isLoading ? (
+        <LoadingState />
+      ) : tags.length === 0 ? (
+        <EmptyState
+          icon={<TagIcon className="h-10 w-10" />}
+          title={t('pages.tags.emptyState')}
+          action={
+            !search
+              ? {
+                  label: t('pages.tags.newBtn'),
+                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  onClick: handleCreate,
+                }
+              : undefined
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {tags.map((tag) => (
+            <div
+              key={tag.id}
+              className="flex items-center justify-between gap-sm rounded-lg border border-border bg-card px-md py-sm shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-sm">
+                <span
+                  className="h-3 w-3 shrink-0 rounded-full"
+                  style={{ backgroundColor: tag.color }}
+                />
+                <span
+                  className="truncate rounded-full px-sm py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: `${tag.color}22`,
+                    color: tag.color,
+                  }}
+                >
+                  {tag.name}
+                </span>
+                <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                  {(tag as Tag & { expense_count?: number }).expense_count
+                    ? t('pages.tags.expenseCount', {
+                        count: (tag as Tag & { expense_count?: number }).expense_count,
+                      })
+                    : t('pages.tags.noExpenses')}
+                </span>
+              </div>
+              <div className="flex shrink-0 gap-xs">
+                <button
+                  onClick={() => handleEdit(tag)}
+                  className="rounded p-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => void handleDelete(tag)}
+                  className="rounded p-xs text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <TagFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        selected={selected}
+        form={form}
+        setForm={setForm}
+        onSubmit={handleSubmit}
+        isPending={isPending}
+      />
+    </Wrapper>
   );
 }
