@@ -4,7 +4,6 @@ import { ChevronDown, ChevronUp, History, Plus, Trash2, Zap } from 'lucide-react
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -670,7 +669,11 @@ function RuleCard({
   );
 }
 
-export default function AutomationRules() {
+function EmbeddedWrapper({ children }: { children: React.ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function AutomationRules({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -788,82 +791,82 @@ export default function AutomationRules() {
 
   const isMutating = createMutation.isPending || updateMutation.isPending;
 
-  return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('pages.automationRules.title')}
-          subtitle={t('pages.automationRules.subtitle')}
-          actions={
-            <div className="flex gap-sm">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => applyMutation.mutate()}
-                disabled={applyMutation.isPending}
-              >
-                <Zap className="mr-xs h-3.5 w-3.5" />
-                {t('pages.automationRules.applyAll')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditingRule(undefined);
-                  setFormOpen(true);
-                }}
-              >
-                <Plus className="mr-xs h-3.5 w-3.5" />
-                {t('pages.automationRules.newRule')}
-              </Button>
-            </div>
-          }
-        />
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
-        {isLoading ? (
-          <LoadingState />
-        ) : rules.length === 0 ? (
-          <EmptyState
-            title={t('pages.automationRules.empty')}
-            description={t('pages.automationRules.emptyDesc')}
-            action={{
-              label: t('pages.automationRules.newRule'),
-              onClick: () => {
+  return (
+    <Wrapper>
+      <PageHeader
+        title={t('pages.automationRules.title')}
+        subtitle={t('pages.automationRules.subtitle')}
+        actions={
+          <div className="flex gap-sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => applyMutation.mutate()}
+              disabled={applyMutation.isPending}
+            >
+              <Zap className="mr-xs h-3.5 w-3.5" />
+              {t('pages.automationRules.applyAll')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
                 setEditingRule(undefined);
                 setFormOpen(true);
-              },
-            }}
-          />
-        ) : (
-          <div className="space-y-sm">
-            {rules.map((rule) => (
-              <RuleCard
-                key={rule.id}
-                rule={rule}
-                onEdit={handleEdit}
-                onDelete={(id) => void handleDelete(id)}
-                onToggle={handleToggle}
-                onViewLogs={handleViewLogs}
-              />
-            ))}
+              }}
+            >
+              <Plus className="mr-xs h-3.5 w-3.5" />
+              {t('pages.automationRules.newRule')}
+            </Button>
           </div>
-        )}
+        }
+      />
 
-        <RuleFormDialog
-          key={editingRule?.id ?? 'new'}
-          rule={editingRule}
-          open={formOpen}
-          onOpenChange={(v) => {
-            setFormOpen(v);
-            if (!v) setEditingRule(undefined);
+      {isLoading ? (
+        <LoadingState />
+      ) : rules.length === 0 ? (
+        <EmptyState
+          title={t('pages.automationRules.empty')}
+          description={t('pages.automationRules.emptyDesc')}
+          action={{
+            label: t('pages.automationRules.newRule'),
+            onClick: () => {
+              setEditingRule(undefined);
+              setFormOpen(true);
+            },
           }}
-          onSubmit={handleSubmit}
-          isLoading={isMutating}
         />
+      ) : (
+        <div className="space-y-sm">
+          {rules.map((rule) => (
+            <RuleCard
+              key={rule.id}
+              rule={rule}
+              onEdit={handleEdit}
+              onDelete={(id) => void handleDelete(id)}
+              onToggle={handleToggle}
+              onViewLogs={handleViewLogs}
+            />
+          ))}
+        </div>
+      )}
 
-        {logsRule && (
-          <RuleLogsDialog rule={logsRule} open={logsOpen} onOpenChange={setLogsOpen} />
-        )}
-      </PageContainer>
-    </AnimatedPage>
+      <RuleFormDialog
+        key={editingRule?.id ?? 'new'}
+        rule={editingRule}
+        open={formOpen}
+        onOpenChange={(v) => {
+          setFormOpen(v);
+          if (!v) setEditingRule(undefined);
+        }}
+        onSubmit={handleSubmit}
+        isLoading={isMutating}
+      />
+
+      {logsRule && (
+        <RuleLogsDialog rule={logsRule} open={logsOpen} onOpenChange={setLogsOpen} />
+      )}
+    </Wrapper>
   );
 }

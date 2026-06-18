@@ -24,7 +24,6 @@ import {
   Vault,
   PiggyBank,
   Receipt,
-  Tag,
   BotMessageSquare,
   Dumbbell,
   UtensilsCrossed,
@@ -35,9 +34,6 @@ import {
   BookMarked,
   Scale,
   CalendarDays,
-  TrendingUp,
-  RefreshCcw,
-  CalendarCheck,
   NotebookPen,
   ListTodo,
   HeartPulse,
@@ -45,7 +41,7 @@ import {
   BarChart3,
   CalendarRange,
   Zap,
-  ShoppingCart,
+  Landmark,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -172,19 +168,9 @@ export const navModules: NavModule[] = [
             icon: CalendarClock,
           },
           {
-            titleKey: 'nav.items.categorizationRules',
-            href: '/categorization-rules',
-            icon: Tag,
-          },
-          {
-            titleKey: 'nav.items.automationRules',
-            href: '/automation-rules',
+            titleKey: 'nav.items.rulesAndTags',
+            href: '/finance/rules-tags',
             icon: Zap,
-          },
-          {
-            titleKey: 'nav.items.tags',
-            href: '/tags',
-            icon: Tag,
           },
         ],
       },
@@ -197,11 +183,6 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.transactions',
             href: '/transactions',
             icon: TrendingDown,
-          },
-          {
-            titleKey: 'nav.items.creditCardExpenses',
-            href: '/credit-card-expenses',
-            icon: ShoppingCart,
           },
           { titleKey: 'nav.items.transfers', href: '/transfers', icon: ArrowLeftRight },
           {
@@ -217,29 +198,19 @@ export const navModules: NavModule[] = [
             icon: Scale,
           },
           {
-            titleKey: 'nav.items.financialCalendar',
-            href: '/finance/calendar',
+            titleKey: 'nav.items.financeAgenda',
+            href: '/finance/agenda',
             icon: CalendarDays,
           },
           {
-            titleKey: 'nav.items.netWorth',
-            href: '/finance/net-worth',
-            icon: TrendingUp,
-          },
-          {
-            titleKey: 'nav.items.subscriptions',
-            href: '/finance/subscriptions',
-            icon: RefreshCcw,
-          },
-          {
-            titleKey: 'nav.items.monthlyPlanner',
-            href: '/finance/monthly-planner',
-            icon: CalendarCheck,
-          },
-          {
-            titleKey: 'nav.items.spendingInsights',
-            href: '/finance/spending-insights',
+            titleKey: 'nav.items.financeAnalytics',
+            href: '/finance/analytics',
             icon: BarChart3,
+          },
+          {
+            titleKey: 'nav.items.financialHealth',
+            href: '/finance/financial-health',
+            icon: Landmark,
           },
         ],
       },

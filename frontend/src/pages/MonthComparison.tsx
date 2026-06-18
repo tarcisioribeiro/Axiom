@@ -13,9 +13,10 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
+
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -156,7 +157,11 @@ function MonthSelector({
   );
 }
 
-export default function MonthComparison() {
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function MonthComparison({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
@@ -208,119 +213,117 @@ export default function MonthComparison() {
       .sort((a, b) => Math.max(b.totalA, b.totalB) - Math.max(a.totalA, a.totalB));
   }, [dataA, dataB]);
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('monthComparison.title')}
-          icon={<BarChart3 />}
-          subtitle={t('monthComparison.subtitle')}
+    <Wrapper>
+      <PageHeader
+        title={t('monthComparison.title')}
+        icon={<BarChart3 />}
+        subtitle={t('monthComparison.subtitle')}
+      />
+
+      <div className="flex flex-wrap items-end gap-md rounded-lg border bg-muted/40 p-md">
+        <MonthSelector
+          label={t('monthComparison.monthA')}
+          value={monthA}
+          onChange={setMonthA}
+          options={monthOptions}
+          placeholder={t('monthComparison.selectMonthA')}
         />
+        <MonthSelector
+          label={t('monthComparison.monthB')}
+          value={monthB}
+          onChange={setMonthB}
+          options={monthOptions}
+          placeholder={t('monthComparison.selectMonthB')}
+        />
+      </div>
 
-        <div className="flex flex-wrap items-end gap-md rounded-lg border bg-muted/40 p-md">
-          <MonthSelector
-            label={t('monthComparison.monthA')}
-            value={monthA}
-            onChange={setMonthA}
-            options={monthOptions}
-            placeholder={t('monthComparison.selectMonthA')}
-          />
-          <MonthSelector
-            label={t('monthComparison.monthB')}
-            value={monthB}
-            onChange={setMonthB}
-            options={monthOptions}
-            placeholder={t('monthComparison.selectMonthB')}
-          />
-        </div>
+      {isLoading && <LoadingState />}
 
-        {isLoading && <LoadingState />}
+      {!isLoading && dataA && dataB && (
+        <>
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>
+              <strong className="text-foreground">A</strong> = {labelA} &nbsp;·&nbsp;{' '}
+              <strong className="text-foreground">B</strong> = {labelB}
+            </span>
+          </div>
 
-        {!isLoading && dataA && dataB && (
-          <>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                <strong className="text-foreground">A</strong> = {labelA} &nbsp;·&nbsp;{' '}
-                <strong className="text-foreground">B</strong> = {labelB}
-              </span>
-            </div>
+          <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+            <SummaryCard
+              title={t('monthComparison.revenues')}
+              icon={<TrendingUp className="h-4 w-4 text-success" />}
+              valueA={parseFloat(dataA.total_revenues)}
+              valueB={parseFloat(dataB.total_revenues)}
+            />
+            <SummaryCard
+              title={t('monthComparison.expenses')}
+              icon={<TrendingDown className="h-4 w-4 text-destructive" />}
+              valueA={parseFloat(dataA.total_expenses)}
+              valueB={parseFloat(dataB.total_expenses)}
+              inverse
+            />
+            <SummaryCard
+              title={t('monthComparison.balance')}
+              icon={<Wallet className="h-4 w-4 text-primary" />}
+              valueA={parseFloat(dataA.balance)}
+              valueB={parseFloat(dataB.balance)}
+            />
+          </div>
 
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-              <SummaryCard
-                title={t('monthComparison.revenues')}
-                icon={<TrendingUp className="h-4 w-4 text-success" />}
-                valueA={parseFloat(dataA.total_revenues)}
-                valueB={parseFloat(dataB.total_revenues)}
-              />
-              <SummaryCard
-                title={t('monthComparison.expenses')}
-                icon={<TrendingDown className="h-4 w-4 text-destructive" />}
-                valueA={parseFloat(dataA.total_expenses)}
-                valueB={parseFloat(dataB.total_expenses)}
-                inverse
-              />
-              <SummaryCard
-                title={t('monthComparison.balance')}
-                icon={<Wallet className="h-4 w-4 text-primary" />}
-                valueA={parseFloat(dataA.balance)}
-                valueB={parseFloat(dataB.balance)}
-              />
-            </div>
-
-            {expenseCategoryMap.length > 0 && (
-              <Card>
-                <CardHeader className="pb-sm">
-                  <CardTitle className="text-base">
-                    {t('monthComparison.expenseBreakdown')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-sm">
-                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-sm text-xs font-medium text-muted-foreground">
-                      <span>{t('common.fields.category')}</span>
-                      <span className="text-right">A</span>
-                      <span className="text-right">B</span>
-                      <span className="text-right">
-                        {t('monthComparison.variation')}
-                      </span>
-                    </div>
-                    {expenseCategoryMap.map(({ cat, totalA, totalB, diff: _diff }) => {
-                      const pct =
-                        totalA !== 0 ? ((totalB - totalA) / Math.abs(totalA)) * 100 : 0;
-                      return (
-                        <div
-                          key={cat}
-                          className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-sm border-t pt-sm text-sm"
-                        >
-                          <span className="truncate font-medium">
-                            {translate('expenseCategories', cat)}
-                          </span>
-                          <span className="text-right tabular-nums">
-                            {formatCurrency(totalA)}
-                          </span>
-                          <span className="text-right tabular-nums">
-                            {formatCurrency(totalB)}
-                          </span>
-                          <div className="text-right">
-                            <VariationBadge pct={pct} inverse />
-                          </div>
-                        </div>
-                      );
-                    })}
+          {expenseCategoryMap.length > 0 && (
+            <Card>
+              <CardHeader className="pb-sm">
+                <CardTitle className="text-base">
+                  {t('monthComparison.expenseBreakdown')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-sm">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-sm text-xs font-medium text-muted-foreground">
+                    <span>{t('common.fields.category')}</span>
+                    <span className="text-right">A</span>
+                    <span className="text-right">B</span>
+                    <span className="text-right">{t('monthComparison.variation')}</span>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+                  {expenseCategoryMap.map(({ cat, totalA, totalB, diff: _diff }) => {
+                    const pct =
+                      totalA !== 0 ? ((totalB - totalA) / Math.abs(totalA)) * 100 : 0;
+                    return (
+                      <div
+                        key={cat}
+                        className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-sm border-t pt-sm text-sm"
+                      >
+                        <span className="truncate font-medium">
+                          {translate('expenseCategories', cat)}
+                        </span>
+                        <span className="text-right tabular-nums">
+                          {formatCurrency(totalA)}
+                        </span>
+                        <span className="text-right tabular-nums">
+                          {formatCurrency(totalB)}
+                        </span>
+                        <div className="text-right">
+                          <VariationBadge pct={pct} inverse />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
 
-        {!isLoading && (!dataA || !dataB) && (
-          <EmptyState
-            icon={<BarChart3 className="h-10 w-10" />}
-            title={t('monthComparison.emptyState')}
-          />
-        )}
-      </PageContainer>
-    </AnimatedPage>
+      {!isLoading && (!dataA || !dataB) && (
+        <EmptyState
+          icon={<BarChart3 className="h-10 w-10" />}
+          title={t('monthComparison.emptyState')}
+        />
+      )}
+    </Wrapper>
   );
 }

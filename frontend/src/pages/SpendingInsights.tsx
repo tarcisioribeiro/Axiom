@@ -9,6 +9,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
@@ -23,7 +24,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
+
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -92,7 +93,11 @@ function CurrencyTooltip({
   );
 }
 
-export default function SpendingInsights() {
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function SpendingInsights({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation();
   const chartColors = useChartColors();
   const semanticColors = useSemanticColors();
@@ -105,18 +110,18 @@ export default function SpendingInsights() {
 
   if (isLoading) return <LoadingState />;
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   if (isError || !data) {
     return (
-      <AnimatedPage>
-        <PageContainer>
-          <PageHeader title={t('spendingInsights.title')} />
-          <EmptyState
-            title={t('spendingInsights.unavailable')}
-            description={t('spendingInsights.unavailableDesc')}
-            icon={<BarChart3 className="h-8 w-8" />}
-          />
-        </PageContainer>
-      </AnimatedPage>
+      <Wrapper>
+        <PageHeader title={t('spendingInsights.title')} />
+        <EmptyState
+          title={t('spendingInsights.unavailable')}
+          description={t('spendingInsights.unavailableDesc')}
+          icon={<BarChart3 className="h-8 w-8" />}
+        />
+      </Wrapper>
     );
   }
 
@@ -144,236 +149,233 @@ export default function SpendingInsights() {
   ).toLocaleString(i18n.language, { month: 'long', year: 'numeric' });
 
   return (
-    <AnimatedPage>
-      <PageContainer>
-        <PageHeader
-          title={t('spendingInsights.title')}
-          description={t('spendingInsights.description', { month: monthName })}
-        />
+    <Wrapper>
+      <PageHeader
+        title={t('spendingInsights.title')}
+        description={t('spendingInsights.description', { month: monthName })}
+      />
 
-        {/* Trend summary row */}
-        <div className="grid grid-cols-1 gap-lg sm:grid-cols-3">
-          {/* Current month total */}
-          <Card className="sm:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between pb-sm">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('spendingInsights.totalMonth', { month: monthName })}
-              </CardTitle>
-              <div
+      {/* Trend summary row */}
+      <div className="grid grid-cols-1 gap-lg sm:grid-cols-3">
+        {/* Current month total */}
+        <Card className="sm:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-sm">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t('spendingInsights.totalMonth', { month: monthName })}
+            </CardTitle>
+            <div
+              className={cn(
+                'rounded-lg p-sm',
+                trendDirection === 'up'
+                  ? 'bg-destructive/10'
+                  : trendDirection === 'down'
+                    ? 'bg-success/10'
+                    : 'bg-muted'
+              )}
+            >
+              <TrendIcon
                 className={cn(
-                  'rounded-lg p-sm',
+                  'h-4 w-4',
                   trendDirection === 'up'
-                    ? 'bg-destructive/10'
+                    ? 'text-destructive'
                     : trendDirection === 'down'
-                      ? 'bg-success/10'
-                      : 'bg-muted'
+                      ? 'text-success'
+                      : 'text-muted-foreground'
                 )}
-              >
-                <TrendIcon
-                  className={cn(
-                    'h-4 w-4',
-                    trendDirection === 'up'
-                      ? 'text-destructive'
-                      : trendDirection === 'down'
-                        ? 'text-success'
-                        : 'text-muted-foreground'
-                  )}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-sm">
-              <p className="text-3xl font-bold tracking-tight">
-                {formatCurrency(current_month.total_expenses)}
+              />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-sm">
+            <p className="text-3xl font-bold tracking-tight">
+              {formatCurrency(current_month.total_expenses)}
+            </p>
+            <div className="flex items-center gap-md">
+              <TrendBadge direction={trendDirection} pct={trend.pct_change} />
+              <span className="text-xs text-muted-foreground">
+                {t('spendingInsights.vsPriorAvg', {
+                  value: formatCurrency(trend.prior_avg),
+                })}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Growing categories count */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-sm">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {t('spendingInsights.risingCategories')}
+            </CardTitle>
+            <div className="rounded-lg bg-destructive/10 p-sm">
+              <Flame className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold tracking-tight">
+              {growing_categories.length}
+            </p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('spendingInsights.aboveAverage')}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+        {/* Top categories bar chart */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('spendingInsights.topCategories')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {top_categories.length === 0 ? (
+              <p className="py-lg text-center text-sm text-muted-foreground">
+                {t('spendingInsights.noCategories')}
               </p>
-              <div className="flex items-center gap-md">
-                <TrendBadge direction={trendDirection} pct={trend.pct_change} />
-                <span className="text-xs text-muted-foreground">
-                  {t('spendingInsights.vsPriorAvg', {
-                    value: formatCurrency(trend.prior_avg),
-                  })}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={top_categories.map((c) => ({
+                    ...c,
+                    name: translateCategory(c.category, 'expense'),
+                  }))}
+                  layout="vertical"
+                  margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    stroke="hsl(var(--border))"
+                  />
+                  <XAxis
+                    type="number"
+                    tickFormatter={axisFormatCurrency}
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={110}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CurrencyTooltip />} />
+                  <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+                    {top_categories.map((_, idx) => (
+                      <Cell key={idx} fill={chartColors[idx % chartColors.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Growing categories count */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-sm">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t('spendingInsights.risingCategories')}
-              </CardTitle>
-              <div className="rounded-lg bg-destructive/10 p-sm">
-                <Flame className="h-4 w-4 text-destructive" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold tracking-tight">
-                {growing_categories.length}
+        {/* Monthly breakdown line chart */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('spendingInsights.monthlyEvolution')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthly_breakdown.length === 0 ? (
+              <p className="py-lg text-center text-sm text-muted-foreground">
+                {t('spendingInsights.noHistoryData')}
               </p>
-              <p className="mt-xs text-xs text-muted-foreground">
-                {t('spendingInsights.aboveAverage')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart
+                  data={monthly_breakdown}
+                  margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tickFormatter={axisFormatCurrency}
+                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={70}
+                  />
+                  <Tooltip content={<CurrencyTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke={semanticColors.primary}
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: semanticColors.primary }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Charts row */}
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-          {/* Top categories bar chart */}
-          <Card>
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('spendingInsights.topCategories')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {top_categories.length === 0 ? (
-                <p className="py-lg text-center text-sm text-muted-foreground">
-                  {t('spendingInsights.noCategories')}
-                </p>
-              ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart
-                    data={top_categories.map((c) => ({
-                      ...c,
-                      name: translateCategory(c.category, 'expense'),
-                    }))}
-                    layout="vertical"
-                    margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                      stroke="hsl(var(--border))"
-                    />
-                    <XAxis
-                      type="number"
-                      tickFormatter={axisFormatCurrency}
-                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={110}
-                      tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip content={<CurrencyTooltip />} />
-                    <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-                      {top_categories.map((_, idx) => (
-                        <Cell key={idx} fill={chartColors[idx % chartColors.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Monthly breakdown line chart */}
-          <Card>
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('spendingInsights.monthlyEvolution')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {monthly_breakdown.length === 0 ? (
-                <p className="py-lg text-center text-sm text-muted-foreground">
-                  {t('spendingInsights.noHistoryData')}
-                </p>
-              ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart
-                    data={monthly_breakdown}
-                    margin={{ left: 0, right: 16, top: 4, bottom: 4 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={axisFormatCurrency}
-                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      width={70}
-                    />
-                    <Tooltip content={<CurrencyTooltip />} />
-                    <Line
-                      type="monotone"
-                      dataKey="total"
-                      stroke={semanticColors.primary}
-                      strokeWidth={2}
-                      dot={{ r: 4, fill: semanticColors.primary }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Growing categories list */}
-        {growing_categories.length > 0 && (
-          <Card>
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('spendingInsights.highestGrowthCategories')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="divide-y divide-border">
-                {growing_categories.map((item, idx) => (
-                  <div
-                    key={item.category}
-                    className="flex items-center justify-between py-sm"
-                  >
-                    <div className="flex items-center gap-sm">
-                      <span
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                        style={{
-                          backgroundColor: chartColors[idx % chartColors.length],
-                        }}
-                      >
-                        {idx + 1}
-                      </span>
-                      <span className="text-sm font-medium">
-                        {translateCategory(item.category, 'expense')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-md text-right">
-                      <div className="hidden sm:block">
-                        <p className="text-xs text-muted-foreground">
-                          {t('spendingInsights.current')}:{' '}
-                          {formatCurrency(item.current)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('spendingInsights.average')}:{' '}
-                          {formatCurrency(item.prior_avg)}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="border-destructive/50 text-xs font-semibold text-destructive"
-                      >
-                        +{item.pct_change.toFixed(1)}%
-                      </Badge>
-                    </div>
+      {/* Growing categories list */}
+      {growing_categories.length > 0 && (
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('spendingInsights.highestGrowthCategories')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-border">
+              {growing_categories.map((item, idx) => (
+                <div
+                  key={item.category}
+                  className="flex items-center justify-between py-sm"
+                >
+                  <div className="flex items-center gap-sm">
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={{
+                        backgroundColor: chartColors[idx % chartColors.length],
+                      }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span className="text-sm font-medium">
+                      {translateCategory(item.category, 'expense')}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </PageContainer>
-    </AnimatedPage>
+                  <div className="flex items-center gap-md text-right">
+                    <div className="hidden sm:block">
+                      <p className="text-xs text-muted-foreground">
+                        {t('spendingInsights.current')}: {formatCurrency(item.current)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('spendingInsights.average')}:{' '}
+                        {formatCurrency(item.prior_avg)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="border-destructive/50 text-xs font-semibold text-destructive"
+                    >
+                      +{item.pct_change.toFixed(1)}%
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </Wrapper>
   );
 }
