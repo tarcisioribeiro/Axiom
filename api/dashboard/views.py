@@ -563,11 +563,13 @@ class MonthlyStatementView(APIView):
             created_by=request.user,
             date__year=year,
             date__month=month,
+            related_transfer__isnull=True,
         )
         revenues_qs = Revenue.objects.filter(
             created_by=request.user,
             date__year=year,
             date__month=month,
+            related_transfer__isnull=True,
         )
 
         total_expenses = expenses_qs.aggregate(total=Sum("value"))[
