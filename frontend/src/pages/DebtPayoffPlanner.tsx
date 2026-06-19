@@ -127,6 +127,16 @@ function computePayoffPlan(
   }));
 }
 
+function getPriorityBorderColor(priority: number): string {
+  const colors = [
+    'border-l-destructive',
+    'border-l-warning',
+    'border-l-accent',
+    'border-l-muted-foreground',
+  ];
+  return colors[Math.min(priority - 1, colors.length - 1)];
+}
+
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
@@ -165,6 +175,7 @@ export default function DebtPayoffPlanner({
     const result: Debt[] = [];
 
     for (const loan of loansQuery.data ?? []) {
+      if (loan.loan_type !== 'borrowed') continue;
       const balance = parseFloat(loan.value) - parseFloat(loan.payed_value || '0');
       if (balance <= 0) continue;
       result.push({
@@ -178,18 +189,38 @@ export default function DebtPayoffPlanner({
       });
     }
 
+    const billsByCard = new Map<number, typeof billsQuery.data>();
     for (const bill of billsQuery.data ?? []) {
       const balance =
         parseFloat(bill.total_amount) - parseFloat(bill.paid_amount ?? '0');
       if (balance <= 0) continue;
+      const group = billsByCard.get(bill.credit_card) ?? [];
+      group.push(bill);
+      billsByCard.set(bill.credit_card, group);
+    }
+    for (const [cardId, bills] of billsByCard) {
+      if (!bills || bills.length === 0) continue;
+      const totalBalance = bills.reduce(
+        (sum, b) => sum + parseFloat(b.total_amount) - parseFloat(b.paid_amount ?? '0'),
+        0
+      );
+      const totalMinimum = bills.reduce(
+        (sum, b) => sum + parseFloat(b.minimum_payment ?? '0'),
+        0
+      );
+      const cardName = bills[0].credit_card_name ?? t('pages.debtPayoff.creditCard');
+      const dueDates = bills
+        .map((b) => b.due_date)
+        .filter((d): d is string => !!d)
+        .sort();
       result.push({
-        id: `bill-${bill.id}`,
-        name: `${bill.credit_card_name ?? t('pages.debtPayoff.creditCard')} — ${bill.month}/${bill.year}`,
-        balance,
+        id: `card-${cardId}`,
+        name: cardName,
+        balance: totalBalance,
         interestRate: 0,
-        minimumPayment: parseFloat(bill.minimum_payment ?? String(balance)),
+        minimumPayment: totalMinimum || totalBalance,
         type: 'bill',
-        dueDate: bill.due_date ?? undefined,
+        dueDate: dueDates[0],
       });
     }
 
@@ -327,11 +358,18 @@ export default function DebtPayoffPlanner({
                       className={cn(
                         'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
                         strategy === 'snowball'
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/40'
+                          ? 'border-info bg-info/5 text-info'
+                          : 'border-border hover:border-info/30'
                       )}
                     >
-                      <Snowflake className="h-6 w-6" />
+                      <Snowflake
+                        className={cn(
+                          'h-6 w-6',
+                          strategy === 'snowball'
+                            ? 'text-info'
+                            : 'text-muted-foreground'
+                        )}
+                      />
                       <p className="text-sm font-medium">
                         {t('pages.debtPayoff.snowball')}
                       </p>
@@ -344,11 +382,18 @@ export default function DebtPayoffPlanner({
                       className={cn(
                         'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
                         strategy === 'avalanche'
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border hover:border-primary/40'
+                          ? 'border-warning bg-warning/5 text-warning'
+                          : 'border-border hover:border-warning/30'
                       )}
                     >
-                      <Flame className="h-6 w-6" />
+                      <Flame
+                        className={cn(
+                          'h-6 w-6',
+                          strategy === 'avalanche'
+                            ? 'text-warning'
+                            : 'text-muted-foreground'
+                        )}
+                      />
                       <p className="text-sm font-medium">
                         {t('pages.debtPayoff.avalanche')}
                       </p>
@@ -424,11 +469,25 @@ export default function DebtPayoffPlanner({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="rounded-lg border bg-card p-md"
+                        className={cn(
+                          'rounded-lg border border-l-4 bg-card p-md',
+                          getPriorityBorderColor(plan.priority)
+                        )}
                       >
                         <div className="flex items-start justify-between gap-sm">
                           <div className="flex items-start gap-sm">
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                            <div
+                              className={cn(
+                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-2 ring-offset-1',
+                                plan.priority === 1
+                                  ? 'bg-destructive/10 text-destructive ring-destructive/40'
+                                  : plan.priority === 2
+                                    ? 'bg-warning/10 text-warning ring-warning/40'
+                                    : plan.priority === 3
+                                      ? 'bg-accent/10 text-accent ring-accent/40'
+                                      : 'bg-muted text-muted-foreground ring-muted-foreground/20'
+                              )}
+                            >
                               {plan.priority}
                             </div>
                             <div className="min-w-0">
