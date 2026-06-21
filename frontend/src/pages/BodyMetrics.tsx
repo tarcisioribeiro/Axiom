@@ -610,8 +610,16 @@ export default function BodyMetrics() {
                                 x2="0"
                                 y2="1"
                               >
-                                <stop offset="5%" stopColor={color} stopOpacity={0.25} />
-                                <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+                                <stop
+                                  offset="5%"
+                                  stopColor={color}
+                                  stopOpacity={0.25}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor={color}
+                                  stopOpacity={0.02}
+                                />
                               </linearGradient>
                             ))}
                           </defs>

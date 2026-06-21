@@ -309,11 +309,16 @@ function BillItem({
         )}
       </div>
       {isPaid && (
-        <Badge variant="outline" className="shrink-0 border-success text-success text-xs">
+        <Badge
+          variant="outline"
+          className="shrink-0 border-success text-xs text-success"
+        >
           Pago
         </Badge>
       )}
-      <span className="shrink-0 text-muted-foreground">{formatCurrency(bill.total_amount)}</span>
+      <span className="shrink-0 text-muted-foreground">
+        {formatCurrency(bill.total_amount)}
+      </span>
     </div>
   );
 }
@@ -377,7 +382,8 @@ function ActualItemsCard({
   renderItem: (item: unknown, idx: number) => ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const borderColor = variant === 'revenue' ? 'border-l-success' : 'border-l-destructive';
+  const borderColor =
+    variant === 'revenue' ? 'border-l-success' : 'border-l-destructive';
 
   return (
     <Card className={`border-l-4 ${borderColor} border-dashed opacity-80`}>
@@ -403,7 +409,9 @@ function ActualItemsCard({
       {expanded && (
         <CardContent className="space-y-xs">
           {items.length === 0 ? (
-            <p className="py-sm text-center text-xs text-muted-foreground">{emptyText}</p>
+            <p className="py-sm text-center text-xs text-muted-foreground">
+              {emptyText}
+            </p>
           ) : (
             items.map((item, idx) => renderItem(item, idx))
           )}
@@ -439,7 +447,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     Record<string, FixedItemOverride>
   >({});
   const [billOverrides, setBillOverrides] = useState<Record<string, boolean>>({});
-  const [budgetDisabledCategories, setBudgetDisabledCategories] = useState<string[]>([]);
+  const [budgetDisabledCategories, setBudgetDisabledCategories] = useState<string[]>(
+    []
+  );
   const [initializedKey, setInitializedKey] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -541,14 +551,19 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
   const addExtraRevenue = () => {
     if (!planId) return;
-    const updated = [...extraRevenues, { description: '', value: '', category: 'income' }];
+    const updated = [
+      ...extraRevenues,
+      { description: '', value: '', category: 'income' },
+    ];
     setExtraRevenues(updated);
     scheduleSave(planId, buildPayload({ extra_revenues: updated }));
   };
 
   const updateExtraRevenue = (idx: number, field: keyof ExtraItem, val: string) => {
     if (!planId) return;
-    const updated = extraRevenues.map((r, i) => (i === idx ? { ...r, [field]: val } : r));
+    const updated = extraRevenues.map((r, i) =>
+      i === idx ? { ...r, [field]: val } : r
+    );
     setExtraRevenues(updated);
     scheduleSave(planId, buildPayload({ extra_revenues: updated }));
   };
@@ -562,14 +577,19 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
   const addExtraExpense = () => {
     if (!planId) return;
-    const updated = [...extraExpenses, { description: '', value: '', category: 'others' }];
+    const updated = [
+      ...extraExpenses,
+      { description: '', value: '', category: 'others' },
+    ];
     setExtraExpenses(updated);
     scheduleSave(planId, buildPayload({ extra_expenses: updated }));
   };
 
   const updateExtraExpense = (idx: number, field: keyof ExtraItem, val: string) => {
     if (!planId) return;
-    const updated = extraExpenses.map((e, i) => (i === idx ? { ...e, [field]: val } : e));
+    const updated = extraExpenses.map((e, i) =>
+      i === idx ? { ...e, [field]: val } : e
+    );
     setExtraExpenses(updated);
     scheduleSave(planId, buildPayload({ extra_expenses: updated }));
   };
@@ -910,7 +930,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     {t('monthlyPlanner.budgetByCategory')}
                   </CardTitle>
                 </div>
-                <span className="text-sm font-semibold">{formatCurrency(totalBudgets)}</span>
+                <span className="text-sm font-semibold">
+                  {formatCurrency(totalBudgets)}
+                </span>
               </div>
             </CardHeader>
             <CardContent>
@@ -925,7 +947,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   const existing = existingBudgetMap[cat];
                   const currentOverride = budgetOverrides[cat] ?? existing ?? '';
                   const isDisabled = budgetDisabledCategories.includes(cat);
-                  const limitAmount = parseFloat(currentOverride || String(suggested ?? 0));
+                  const limitAmount = parseFloat(
+                    currentOverride || String(suggested ?? 0)
+                  );
                   const executionPct =
                     isApplied && limitAmount > 0
                       ? Math.min(100, Math.round((actualExpenses / limitAmount) * 100))
@@ -1016,8 +1040,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   <div className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{r.description}</span>
                     <span className="text-xs text-muted-foreground">
-                      {translateCategory(r.category, 'revenue')} ·{' '}
-                      {formatDate(r.date)}
+                      {translateCategory(r.category, 'revenue')} · {formatDate(r.date)}
                     </span>
                   </div>
                   <span className="ml-sm shrink-0 font-semibold text-success">
@@ -1120,16 +1143,20 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-xs">
-                      <span className="block truncate font-medium">{e.description}</span>
+                      <span className="block truncate font-medium">
+                        {e.description}
+                      </span>
                       {!e.payed && (
-                        <Badge variant="outline" className="shrink-0 text-xs text-warning">
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 text-xs text-warning"
+                        >
                           {t('monthlyPlanner.pending')}
                         </Badge>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {translateCategory(e.category, 'expense')} ·{' '}
-                      {formatDate(e.date)}
+                      {translateCategory(e.category, 'expense')} · {formatDate(e.date)}
                     </span>
                   </div>
                   <span className="ml-sm shrink-0 font-semibold text-destructive">
