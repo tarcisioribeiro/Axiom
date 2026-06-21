@@ -15,9 +15,9 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -56,7 +56,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useSemanticColors } from '@/lib/chart-colors';
+import { useChartGradientId, useSemanticColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
@@ -212,6 +212,7 @@ export default function BodyMetrics() {
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const semanticColors = useSemanticColors();
+  const getGradientId = useChartGradientId('body-metrics');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BodyMetric | null>(null);
@@ -553,37 +554,67 @@ export default function BodyMetrics() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-md flex flex-wrap gap-sm">
-                      {chartMetrics.map(({ key, labelKey, color, unit }) => (
-                        <button
-                          key={key}
-                          onClick={() => toggleMetric(key)}
-                          className={cn(
-                            'inline-flex items-center gap-xs rounded-full border px-md py-xs text-xs transition-opacity',
-                            activeMetrics.has(key) ? 'opacity-100' : 'opacity-40'
-                          )}
-                          style={{ borderColor: color, color }}
-                        >
-                          <span
-                            className="h-2 w-2 rounded-full"
-                            style={{ backgroundColor: color }}
-                          />
-                          {t(`pages.bodyMetrics.${labelKey}`)}
-                          {unit ? ` (${unit})` : ''}
-                        </button>
-                      ))}
+                    <div className="mb-md flex flex-wrap gap-xs">
+                      {chartMetrics.map(({ key, labelKey, color, unit }) => {
+                        const isActive = activeMetrics.has(key);
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => toggleMetric(key)}
+                            className={cn(
+                              'inline-flex items-center gap-xs rounded-full border px-sm py-1 text-xs font-medium transition-all duration-200',
+                              isActive ? 'shadow-sm' : 'hover:opacity-70'
+                            )}
+                            style={{
+                              borderColor: color,
+                              color: isActive ? color : 'hsl(var(--muted-foreground))',
+                              backgroundColor: isActive ? `${color}1a` : 'transparent',
+                              opacity: isActive ? 1 : 0.5,
+                            }}
+                          >
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{
+                                backgroundColor: isActive
+                                  ? color
+                                  : 'hsl(var(--muted-foreground))',
+                              }}
+                            />
+                            {t(`pages.bodyMetrics.${labelKey}`)}
+                            {unit ? ` (${unit})` : ''}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {chartData.length < 2 ? (
-                      <p className="py-xl text-center text-sm text-muted-foreground">
-                        {t('pages.bodyMetrics.noDataForChart')}
-                      </p>
+                      <div className="flex flex-col items-center justify-center py-xl text-center">
+                        <Activity className="mb-sm h-8 w-8 text-muted-foreground/40" />
+                        <p className="text-sm text-muted-foreground">
+                          {t('pages.bodyMetrics.noDataForChart')}
+                        </p>
+                      </div>
                     ) : (
-                      <ResponsiveContainer width="100%" height={320}>
-                        <LineChart
+                      <ResponsiveContainer width="100%" height={360}>
+                        <AreaChart
                           data={chartData}
-                          margin={{ top: 4, right: 8, left: -10, bottom: 4 }}
+                          margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
                         >
+                          <defs>
+                            {chartMetrics.map(({ key, color }, idx) => (
+                              <linearGradient
+                                key={`grad-${key}`}
+                                id={getGradientId(idx)}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+                                <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+                              </linearGradient>
+                            ))}
+                          </defs>
                           <CartesianGrid
                             strokeDasharray="3 3"
                             stroke="hsl(var(--border))"
@@ -623,32 +654,43 @@ export default function BodyMetrics() {
                           />
                           {chartMetrics
                             .filter(({ key }) => activeMetrics.has(key))
-                            .map(({ key, labelKey, color, unit }) => (
-                              <Line
-                                key={key}
-                                type="monotone"
-                                dataKey={key}
-                                stroke={color}
-                                strokeWidth={2.5}
-                                dot={{
-                                  r: 3,
-                                  strokeWidth: 2,
-                                  fill: 'hsl(var(--background))',
-                                  stroke: color,
-                                }}
-                                activeDot={{
-                                  r: 6,
-                                  strokeWidth: 2,
-                                  fill: color,
-                                  stroke: 'hsl(var(--background))',
-                                }}
-                                connectNulls
-                                name={String(
-                                  `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
-                                )}
-                              />
-                            ))}
-                        </LineChart>
+                            .map(({ key, labelKey, color, unit }) => {
+                              const gradIdx = chartMetrics.findIndex(
+                                (m) => m.key === key
+                              );
+                              return (
+                                <Area
+                                  key={key}
+                                  type="monotone"
+                                  dataKey={key}
+                                  stroke={color}
+                                  strokeWidth={2.5}
+                                  fill={`url(#${getGradientId(gradIdx)})`}
+                                  dot={{
+                                    r: 3,
+                                    strokeWidth: 2,
+                                    fill: 'hsl(var(--background))',
+                                    stroke: color,
+                                  }}
+                                  activeDot={{
+                                    r: 6,
+                                    strokeWidth: 2,
+                                    fill: color,
+                                    stroke: 'hsl(var(--background))',
+                                    style: {
+                                      filter: `drop-shadow(0 0 4px ${color})`,
+                                    },
+                                  }}
+                                  connectNulls
+                                  animationDuration={600}
+                                  animationEasing="ease-out"
+                                  name={String(
+                                    `${t(`pages.bodyMetrics.${labelKey}`)}${unit ? ` (${unit})` : ''}`
+                                  )}
+                                />
+                              );
+                            })}
+                        </AreaChart>
                       </ResponsiveContainer>
                     )}
                   </CardContent>

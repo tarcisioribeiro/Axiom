@@ -174,18 +174,48 @@ class MonthlyPlanSummaryView(APIView):
         next_year = year if month < 12 else year + 1
         date_to = f"{next_year}-{next_month:02d}-01"
 
-        actual_revenues = Revenue.objects.filter(
+        revenue_qs = Revenue.objects.filter(
             created_by=user,
             date__gte=date_from,
             date__lt=date_to,
             is_deleted=False,
-        ).aggregate(total=Sum("value"))["total"] or Decimal("0")
-        actual_expenses = Expense.objects.filter(
+            related_transfer__isnull=True,
+        ).order_by("-date")
+        actual_revenues = revenue_qs.aggregate(total=Sum("value"))[
+            "total"
+        ] or Decimal("0")
+        actual_revenue_items = [
+            {
+                "id": r.id,
+                "description": r.description,
+                "value": str(r.value),
+                "category": r.category,
+                "date": str(r.date),
+            }
+            for r in revenue_qs[:50]
+        ]
+
+        expense_qs = Expense.objects.filter(
             created_by=user,
             date__gte=date_from,
             date__lt=date_to,
             is_deleted=False,
-        ).aggregate(total=Sum("value"))["total"] or Decimal("0")
+            related_transfer__isnull=True,
+        ).order_by("-date")
+        actual_expenses = expense_qs.aggregate(total=Sum("value"))[
+            "total"
+        ] or Decimal("0")
+        actual_expense_items = [
+            {
+                "id": e.id,
+                "description": e.description,
+                "value": str(e.value),
+                "category": e.category,
+                "date": str(e.date),
+                "payed": e.payed,
+            }
+            for e in expense_qs[:50]
+        ]
 
         total_overdraft = Account.objects.filter(
             created_by=user,
@@ -209,6 +239,8 @@ class MonthlyPlanSummaryView(APIView):
                     "revenues": str(actual_revenues),
                     "expenses": str(actual_expenses),
                 },
+                "actual_revenue_items": actual_revenue_items,
+                "actual_expense_items": actual_expense_items,
                 "total_overdraft_limit": str(total_overdraft),
             }
         )

@@ -16,6 +16,8 @@ class MonthlyPlan(BaseModel):
     budget_overrides = models.JSONField(default=dict, blank=True)
     fixed_revenue_overrides = models.JSONField(default=dict, blank=True)
     fixed_expense_overrides = models.JSONField(default=dict, blank=True)
+    bill_overrides = models.JSONField(default=dict, blank=True)
+    budget_disabled_categories = models.JSONField(default=list, blank=True)
     applied_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
