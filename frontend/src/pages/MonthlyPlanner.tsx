@@ -3,8 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CalendarCheck,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   CircleDollarSign,
   CreditCard,
   Plus,
@@ -21,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,7 +31,7 @@ import { Input } from '@/components/ui/input';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -48,6 +51,8 @@ interface PlanPayload {
   budget_overrides: Record<string, string>;
   fixed_revenue_overrides: Record<string, FixedItemOverride>;
   fixed_expense_overrides: Record<string, FixedItemOverride>;
+  bill_overrides: Record<string, boolean>;
+  budget_disabled_categories: string[];
 }
 
 interface MonthlyPlan {
@@ -59,6 +64,8 @@ interface MonthlyPlan {
   budget_overrides: Record<string, string>;
   fixed_revenue_overrides: Record<string, FixedItemOverride>;
   fixed_expense_overrides: Record<string, FixedItemOverride>;
+  bill_overrides: Record<string, boolean>;
+  budget_disabled_categories: string[];
   applied_at: string | null;
 }
 
@@ -94,6 +101,7 @@ interface CreditCardBillItem {
   total_amount: string;
   due_date: string | null;
   status: string;
+  paid_amount: string;
 }
 
 interface BudgetSuggestion {
@@ -108,6 +116,23 @@ interface ExistingBudget {
   limit_amount: string;
 }
 
+interface ActualRevenueItem {
+  id: number;
+  description: string;
+  value: string;
+  category: string;
+  date: string;
+}
+
+interface ActualExpenseItem {
+  id: number;
+  description: string;
+  value: string;
+  category: string;
+  date: string;
+  payed: boolean;
+}
+
 interface MonthlyPlanSummary {
   plan: MonthlyPlan;
   fixed_revenues: FixedRevenueItem[];
@@ -116,6 +141,8 @@ interface MonthlyPlanSummary {
   existing_budgets: ExistingBudget[];
   budget_suggestions: BudgetSuggestion[];
   actual: { revenues: string; expenses: string };
+  actual_revenue_items: ActualRevenueItem[];
+  actual_expense_items: ActualExpenseItem[];
   total_overdraft_limit: string;
 }
 
@@ -201,26 +228,6 @@ function SectionCard({
   );
 }
 
-function FixedItem({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-lg bg-muted/40 px-sm py-xs text-sm">
-      <div>
-        <span className="font-medium">{label}</span>
-        {sub && <span className="ml-xs text-xs text-muted-foreground">{sub}</span>}
-      </div>
-      <span className="text-muted-foreground">{formatCurrency(value)}</span>
-    </div>
-  );
-}
-
 function EditableFixedItem({
   id,
   label,
@@ -270,6 +277,52 @@ function EditableFixedItem({
   );
 }
 
+function BillItem({
+  bill,
+  enabled,
+  onToggle,
+}: {
+  bill: CreditCardBillItem;
+  enabled: boolean;
+  onToggle: (id: number, enabled: boolean) => void;
+}) {
+  const isPaid = bill.status === 'paid';
+
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-sm rounded-lg bg-muted/40 px-sm py-xs text-sm transition-opacity',
+        !enabled && 'opacity-40'
+      )}
+    >
+      <Checkbox
+        checked={enabled}
+        onCheckedChange={(checked) => onToggle(bill.id, !!checked)}
+        className="shrink-0"
+      />
+      <div className="min-w-0 flex-1">
+        <span className="font-medium">{bill.credit_card_name}</span>
+        {bill.due_date && (
+          <span className="ml-xs text-xs text-muted-foreground">
+            {formatDueDate(bill.due_date)}
+          </span>
+        )}
+      </div>
+      {isPaid && (
+        <Badge
+          variant="outline"
+          className="shrink-0 border-success text-xs text-success"
+        >
+          Pago
+        </Badge>
+      )}
+      <span className="shrink-0 text-muted-foreground">
+        {formatCurrency(bill.total_amount)}
+      </span>
+    </div>
+  );
+}
+
 function ExtraItemRow({
   item,
   index,
@@ -313,6 +366,61 @@ function ExtraItemRow({
   );
 }
 
+function ActualItemsCard({
+  title,
+  icon: Icon,
+  variant,
+  items,
+  emptyText,
+  renderItem,
+}: {
+  title: string;
+  icon: React.ElementType;
+  variant: 'revenue' | 'expense';
+  items: unknown[];
+  emptyText: string;
+  renderItem: (item: unknown, idx: number) => ReactNode;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const borderColor =
+    variant === 'revenue' ? 'border-l-success' : 'border-l-destructive';
+
+  return (
+    <Card className={`border-l-4 ${borderColor} border-dashed opacity-80`}>
+      <CardHeader className="pb-sm">
+        <button
+          className="flex w-full items-center justify-between"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          <div className="flex items-center gap-sm">
+            <Icon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+            <Badge variant="secondary" className="text-xs">
+              {items.length}
+            </Badge>
+          </div>
+          {expanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+      </CardHeader>
+      {expanded && (
+        <CardContent className="space-y-xs">
+          {items.length === 0 ? (
+            <p className="py-sm text-center text-xs text-muted-foreground">
+              {emptyText}
+            </p>
+          ) : (
+            items.map((item, idx) => renderItem(item, idx))
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -338,7 +446,10 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const [fixedExpenseOverrides, setFixedExpenseOverrides] = useState<
     Record<string, FixedItemOverride>
   >({});
-  // Track which month/year combo has been initialized to avoid resetting on refetch
+  const [billOverrides, setBillOverrides] = useState<Record<string, boolean>>({});
+  const [budgetDisabledCategories, setBudgetDisabledCategories] = useState<string[]>(
+    []
+  );
   const [initializedKey, setInitializedKey] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -354,7 +465,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  // Derived state: initialize local edits when a new month/year loads (not on refetch)
   const currentKey = `${month}-${year}`;
   if (summaryQuery.data && initializedKey !== currentKey) {
     const { plan } = summaryQuery.data;
@@ -364,9 +474,10 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     setBudgetOverrides(plan.budget_overrides ?? {});
     setFixedRevenueOverrides(plan.fixed_revenue_overrides ?? {});
     setFixedExpenseOverrides(plan.fixed_expense_overrides ?? {});
+    setBillOverrides(plan.bill_overrides ?? {});
+    setBudgetDisabledCategories(plan.budget_disabled_categories ?? []);
   }
 
-  // planId is derived from query data (stable once loaded for a month/year)
   const planId = summaryQuery.data?.plan.id ?? null;
 
   const saveMutation = useMutation({
@@ -377,7 +488,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     },
   });
 
-  // scheduleSave takes id as argument to avoid stale closures in the debounce
   const scheduleSave = useCallback(
     (id: number, payload: PlanPayload) => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -434,6 +544,8 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     budget_overrides: budgetOverrides,
     fixed_revenue_overrides: fixedRevenueOverrides,
     fixed_expense_overrides: fixedExpenseOverrides,
+    bill_overrides: billOverrides,
+    budget_disabled_categories: budgetDisabledCategories,
     ...overrides,
   });
 
@@ -496,6 +608,15 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     scheduleSave(planId, buildPayload({ budget_overrides: updated }));
   };
 
+  const toggleBudgetCategory = (category: string, enabled: boolean) => {
+    if (!planId) return;
+    const updated = enabled
+      ? budgetDisabledCategories.filter((c) => c !== category)
+      : [...budgetDisabledCategories.filter((c) => c !== category), category];
+    setBudgetDisabledCategories(updated);
+    scheduleSave(planId, buildPayload({ budget_disabled_categories: updated }));
+  };
+
   const toggleFixedRevenue = (id: number, enabled: boolean) => {
     if (!planId) return;
     const updated = {
@@ -542,6 +663,13 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     scheduleSave(planId, buildPayload({ fixed_expense_overrides: updated }));
   };
 
+  const toggleBill = (id: number, enabled: boolean) => {
+    if (!planId) return;
+    const updated = { ...billOverrides, [String(id)]: enabled };
+    setBillOverrides(updated);
+    scheduleSave(planId, buildPayload({ bill_overrides: updated }));
+  };
+
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   if (summaryQuery.isLoading) {
@@ -584,12 +712,15 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     const v = parseFloat(ov?.value ?? e.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
-  const totalBills = (data?.credit_card_bills ?? []).reduce(
-    (acc, b) => acc + parseFloat(b.total_amount || '0'),
-    0
-  );
+
+  const totalBills = (data?.credit_card_bills ?? []).reduce((acc, b) => {
+    if (billOverrides[String(b.id)] === false) return acc;
+    return acc + parseFloat(b.total_amount || '0');
+  }, 0);
+
   const totalExtraExp = sumValues(extraExpenses);
   const totalBudgets = allCategories.reduce((acc, cat) => {
+    if (budgetDisabledCategories.includes(cat)) return acc;
     const override = budgetOverrides[cat] ?? existingBudgetMap[cat];
     const v = parseFloat(override ?? '0');
     return acc + (isNaN(v) ? 0 : v);
@@ -603,6 +734,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
   const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
   const actualBalance = actualRevenues - actualExpenses;
+
+  const actualRevenueItems = data?.actual_revenue_items ?? [];
+  const actualExpenseItems = data?.actual_expense_items ?? [];
 
   return (
     <Wrapper>
@@ -786,7 +920,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             </Button>
           </SectionCard>
 
-          {/* Budget by category — below extra revenues */}
+          {/* Budget by category */}
           <Card className="border-l-4 border-l-primary">
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
@@ -812,6 +946,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   const suggested = budgetSuggestionMap[cat];
                   const existing = existingBudgetMap[cat];
                   const currentOverride = budgetOverrides[cat] ?? existing ?? '';
+                  const isDisabled = budgetDisabledCategories.includes(cat);
                   const limitAmount = parseFloat(
                     currentOverride || String(suggested ?? 0)
                   );
@@ -823,14 +958,26 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   return (
                     <div
                       key={cat}
-                      className="space-y-xs rounded-lg border bg-muted/20 p-sm"
+                      className={cn(
+                        'space-y-xs rounded-lg border bg-muted/20 p-sm transition-opacity',
+                        isDisabled && 'opacity-40'
+                      )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium">
-                          {translateCategory(cat, 'expense')}
-                        </span>
+                      <div className="flex items-center justify-between gap-xs">
+                        <div className="flex min-w-0 items-center gap-xs">
+                          <Checkbox
+                            checked={!isDisabled}
+                            onCheckedChange={(checked) =>
+                              toggleBudgetCategory(cat, !!checked)
+                            }
+                            className="shrink-0"
+                          />
+                          <span className="truncate text-xs font-medium">
+                            {translateCategory(cat, 'expense')}
+                          </span>
+                        </div>
                         {suggested !== undefined && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="shrink-0 text-xs text-muted-foreground">
                             {t('monthlyPlanner.overrideHint', {
                               value: formatCurrency(suggested),
                             })}
@@ -845,9 +992,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                         onChange={(e) => updateBudgetOverride(cat, e.target.value)}
                         placeholder={suggested ? suggested.toFixed(2) : '0.00'}
                         className="h-7 text-sm"
-                        disabled={isApplied}
+                        disabled={isApplied || isDisabled}
                       />
-                      {executionPct !== null && (
+                      {executionPct !== null && !isDisabled && (
                         <div>
                           <p className="mb-xs text-xs text-muted-foreground">
                             {t('monthlyPlanner.executionPercent', {
@@ -875,6 +1022,34 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               </div>
             </CardContent>
           </Card>
+
+          {/* Actual registered revenues */}
+          <ActualItemsCard
+            title={t('monthlyPlanner.registeredRevenues')}
+            icon={TrendingUp}
+            variant="revenue"
+            items={actualRevenueItems}
+            emptyText={t('monthlyPlanner.noRegisteredRevenues')}
+            renderItem={(item, idx) => {
+              const r = item as ActualRevenueItem;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{r.description}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {translateCategory(r.category, 'revenue')} · {formatDate(r.date)}
+                    </span>
+                  </div>
+                  <span className="ml-sm shrink-0 font-semibold text-success">
+                    {formatCurrency(r.value)}
+                  </span>
+                </div>
+              );
+            }}
+          />
         </div>
 
         {/* Right: Expenses */}
@@ -916,11 +1091,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               </p>
             )}
             {data?.credit_card_bills.map((b) => (
-              <FixedItem
+              <BillItem
                 key={b.id}
-                label={b.credit_card_name}
-                value={b.total_amount}
-                sub={formatDueDate(b.due_date)}
+                bill={b}
+                enabled={billOverrides[String(b.id)] !== false}
+                onToggle={toggleBill}
               />
             ))}
           </SectionCard>
@@ -951,6 +1126,46 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               {t('monthlyPlanner.addItem')}
             </Button>
           </SectionCard>
+
+          {/* Actual registered expenses */}
+          <ActualItemsCard
+            title={t('monthlyPlanner.registeredExpenses')}
+            icon={TrendingDown}
+            variant="expense"
+            items={actualExpenseItems}
+            emptyText={t('monthlyPlanner.noRegisteredExpenses')}
+            renderItem={(item, idx) => {
+              const e = item as ActualExpenseItem;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-xs">
+                      <span className="block truncate font-medium">
+                        {e.description}
+                      </span>
+                      {!e.payed && (
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 text-xs text-warning"
+                        >
+                          {t('monthlyPlanner.pending')}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {translateCategory(e.category, 'expense')} · {formatDate(e.date)}
+                    </span>
+                  </div>
+                  <span className="ml-sm shrink-0 font-semibold text-destructive">
+                    {formatCurrency(e.value)}
+                  </span>
+                </div>
+              );
+            }}
+          />
         </div>
       </div>
     </Wrapper>

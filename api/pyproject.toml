@@ -12,7 +12,7 @@ DRF = "flake8_no_serializer_all:NoSerializerAllChecker"
 
 [tool.black]
 line-length = 79
-target-version = ['py311']
+target-version = ['py312']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -113,7 +113,7 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 plugins = ["mypy_django_plugin.main"]
 warn_return_any = true
 warn_unused_configs = true

@@ -16,6 +16,8 @@ class MonthlyPlanSerializer(serializers.ModelSerializer):
             "budget_overrides",
             "fixed_revenue_overrides",
             "fixed_expense_overrides",
+            "bill_overrides",
+            "budget_disabled_categories",
             "applied_at",
             "created_at",
             "updated_at",
