@@ -6603,7 +6603,12 @@
     "planningMode": "Planejamento",
     "realizedMode": "Realizado",
     "executionPercent": "{{percent}}% executado",
-    "withOverdraft": "Com cheque especial"
+    "withOverdraft": "Com cheque especial",
+    "registeredRevenues": "Receitas Registradas",
+    "registeredExpenses": "Despesas Registradas",
+    "noRegisteredRevenues": "Nenhuma receita registrada neste mês",
+    "noRegisteredExpenses": "Nenhuma despesa registrada neste mês",
+    "pending": "Pendente"
   },
   "spendingInsights": {
     "title": "Insights de Gastos",

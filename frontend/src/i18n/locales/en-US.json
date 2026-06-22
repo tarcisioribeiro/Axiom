@@ -6514,7 +6514,12 @@
     "planningMode": "Planning",
     "realizedMode": "Actual",
     "executionPercent": "{{percent}}% completed",
-    "withOverdraft": "With overdraft"
+    "withOverdraft": "With overdraft",
+    "registeredRevenues": "Registered Revenues",
+    "registeredExpenses": "Registered Expenses",
+    "noRegisteredRevenues": "No revenues registered this month",
+    "noRegisteredExpenses": "No expenses registered this month",
+    "pending": "Pending"
   },
   "spendingInsights": {
     "title": "Spending Insights",
