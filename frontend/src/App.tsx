@@ -97,7 +97,6 @@ const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 const Permissions = lazy(() => import('./pages/Permissions'));
 
 // Planning extras
-const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
@@ -456,13 +455,10 @@ function AnimatedRoutes() {
           />
           {/* Personal Planning Module routes — wrapped in contextual sidebar */}
           <Route path="/planning" element={<PlanningLayout />}>
-            <Route
-              index
-              element={<Navigate to="/planning/daily-checklist" replace />}
-            />
+            <Route index element={<Navigate to="/planning/tasks-goals" replace />} />
             <Route
               path="today"
-              element={<Navigate to="/planning/daily-checklist" replace />}
+              element={<Navigate to="/planning/tasks-goals" replace />}
             />
             <Route
               path="dashboard"
@@ -494,15 +490,11 @@ function AnimatedRoutes() {
             />
             <Route
               path="today-tasks"
-              element={<Navigate to="/planning/daily-checklist" replace />}
+              element={<Navigate to="/planning/tasks-goals" replace />}
             />
             <Route
               path="daily-checklist"
-              element={
-                <PageWrapper>
-                  <DailyChecklist />
-                </PageWrapper>
-              }
+              element={<Navigate to="/planning/tasks-goals" replace />}
             />
             <Route
               path="reflections"

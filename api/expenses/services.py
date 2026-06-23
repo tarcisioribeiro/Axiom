@@ -73,7 +73,7 @@ def get_or_create_bill(credit_card, year, month_num, user):
     return bill, True
 
 
-def bulk_generate_fixed_expenses(month, expense_values, user):
+def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
     """Generate fixed expenses for a given month.
 
     Returns a dict with keys: success, created_count, month, expenses.
@@ -115,15 +115,34 @@ def bulk_generate_fixed_expenses(month, expense_values, user):
                 fixed_exp.credit_card, year, month_num, user
             )
 
-            already_exists = CreditCardInstallment.objects.filter(
-                purchase__description=fixed_exp.description,
-                purchase__card=fixed_exp.credit_card,
-                bill=bill,
-                is_deleted=False,
-                purchase__is_deleted=False,
-            ).exists()
+            existing_installment = (
+                CreditCardInstallment.objects.filter(
+                    purchase__description=fixed_exp.description,
+                    purchase__card=fixed_exp.credit_card,
+                    bill=bill,
+                    is_deleted=False,
+                    purchase__is_deleted=False,
+                )
+                .select_related("purchase")
+                .first()
+            )
 
-            if already_exists:
+            if existing_installment:
+                if upsert:
+                    existing_installment.value = item["value"]
+                    existing_installment.updated_by = user
+                    existing_installment.save(
+                        update_fields=["value", "updated_by", "updated_at"]
+                    )
+                    existing_installment.purchase.total_value = item["value"]
+                    existing_installment.purchase.updated_by = user
+                    existing_installment.purchase.save(
+                        update_fields=[
+                            "total_value",
+                            "updated_by",
+                            "updated_at",
+                        ]
+                    )
                 continue
 
             purchase = CreditCardPurchase.objects.create(
@@ -154,12 +173,19 @@ def bulk_generate_fixed_expenses(month, expense_values, user):
             month_start = datetime(year_int, month_int, 1).date()
             month_end = datetime(year_int, month_int, last_day).date()
 
-            if Expense.objects.filter(
+            existing_expense = Expense.objects.filter(
                 fixed_expense_template=fixed_exp,
                 date__gte=month_start,
                 date__lte=month_end,
                 is_deleted=False,
-            ).exists():
+            ).first()
+            if existing_expense:
+                if upsert:
+                    existing_expense.value = item["value"]
+                    existing_expense.updated_by = user
+                    existing_expense.save(
+                        update_fields=["value", "updated_by", "updated_at"]
+                    )
                 continue
 
             expense = Expense.objects.create(
