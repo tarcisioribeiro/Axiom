@@ -1,4 +1,4 @@
-import { CreditCard, Receipt, ShoppingCart } from 'lucide-react';
+import { CreditCard, Receipt } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 
 import CreditCardBills from './CreditCardBills';
-import CreditCardExpenses from './CreditCardExpenses';
 import CreditCards from './CreditCards';
 
 const TAB_KEY = 'creditCardManagement.activeTab';
@@ -15,14 +14,14 @@ const TAB_KEY = 'creditCardManagement.activeTab';
 const TAB_LABEL_KEYS: Record<string, string> = {
   cards: 'pages.creditCards.title',
   bills: 'pages.creditCardBills.title',
-  expenses: 'pages.creditCardExpenses.title',
 };
 
 export default function CreditCardManagement() {
   const { t } = useTranslation();
   const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
 
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'cards';
+  const storedTab = localStorage.getItem(TAB_KEY);
+  const defaultTab = storedTab === 'expenses' ? 'cards' : (storedTab ?? 'cards');
 
   useEffect(() => {
     setExtraLabel(t(TAB_LABEL_KEYS[defaultTab] ?? 'pages.creditCards.title'));
@@ -51,10 +50,6 @@ export default function CreditCardManagement() {
             <Receipt className="h-4 w-4" />
             {t('pages.creditCardBills.title')}
           </TabsTrigger>
-          <TabsTrigger value="expenses" className="flex-1 gap-xs">
-            <ShoppingCart className="h-4 w-4" />
-            {t('pages.creditCardExpenses.title')}
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="cards" className="mt-0 flex-1">
@@ -62,9 +57,6 @@ export default function CreditCardManagement() {
         </TabsContent>
         <TabsContent value="bills" className="mt-0 flex-1">
           <CreditCardBills embedded />
-        </TabsContent>
-        <TabsContent value="expenses" className="mt-0 flex-1">
-          <CreditCardExpenses embedded />
         </TabsContent>
       </Tabs>
     </AnimatedPage>
