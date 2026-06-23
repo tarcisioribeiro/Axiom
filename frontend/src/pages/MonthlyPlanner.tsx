@@ -514,10 +514,16 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     if (!planId) return;
     const monthName = monthNames[month - 1];
     const confirmed = await showConfirm({
-      title: t('monthlyPlanner.applyConfirmTitle'),
-      description: t('monthlyPlanner.applyConfirmDescription', {
-        month: `${monthName} ${year}`,
-      }),
+      title: isApplied
+        ? t('monthlyPlanner.reapplyConfirmTitle')
+        : t('monthlyPlanner.applyConfirmTitle'),
+      description: isApplied
+        ? t('monthlyPlanner.reapplyConfirmDescription', {
+            month: `${monthName} ${year}`,
+          })
+        : t('monthlyPlanner.applyConfirmDescription', {
+            month: `${monthName} ${year}`,
+          }),
       variant: 'warning',
     });
     if (confirmed) applyMutation.mutate(planId);
@@ -760,23 +766,19 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </Button>
         </div>
 
-        {isApplied ? (
-          <div className="flex items-center gap-xs rounded-lg bg-primary/10 px-sm py-xs text-xs text-primary">
-            <CalendarCheck className="h-3.5 w-3.5" />
-            {t('monthlyPlanner.planApplied')}
-          </div>
-        ) : (
-          <Button
-            onClick={() => void handleApply()}
-            disabled={applyMutation.isPending || !planId}
-            size="sm"
-          >
-            <CalendarCheck className="mr-xs h-4 w-4" />
-            {applyMutation.isPending
-              ? t('monthlyPlanner.applyingPlan')
+        <Button
+          onClick={() => void handleApply()}
+          disabled={applyMutation.isPending || !planId}
+          size="sm"
+          variant={isApplied ? 'outline' : 'default'}
+        >
+          <CalendarCheck className="mr-xs h-4 w-4" />
+          {applyMutation.isPending
+            ? t('monthlyPlanner.applyingPlan')
+            : isApplied
+              ? t('monthlyPlanner.reapplyPlan')
               : t('monthlyPlanner.applyPlan')}
-          </Button>
-        )}
+        </Button>
       </div>
 
       {/* Summary stats */}

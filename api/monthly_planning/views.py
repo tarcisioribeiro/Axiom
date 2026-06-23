@@ -112,7 +112,6 @@ _MONTH_ABBREVS = [
 
 
 def _credit_card_bills_data(user: User, month: int, year: int) -> list:
-    month_str = _MONTH_ABBREVS[month - 1]
     return [
         {
             "id": b.id,
@@ -124,8 +123,8 @@ def _credit_card_bills_data(user: User, month: int, year: int) -> list:
         }
         for b in CreditCardBill.objects.filter(
             credit_card__created_by=user,
-            month=month_str,
-            year=str(year),
+            due_date__year=year,
+            due_date__month=month,
             is_deleted=False,
         ).select_related("credit_card")
     ]
@@ -287,12 +286,7 @@ class MonthlyPlanApplyView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if plan.applied_at:
-            return Response(
-                {"error": "Plan already applied"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        is_reapply = bool(plan.applied_at)
         month_str = f"{plan.year}-{plan.month:02d}"
         results: dict = {}
 
@@ -313,6 +307,7 @@ class MonthlyPlanApplyView(APIView):
                     month=month_str,
                     revenue_values=revenue_values,
                     user=user,
+                    upsert=is_reapply,
                 )
                 results["revenues_created"] = result.get("created_count", 0)
             except Exception:
@@ -338,6 +333,7 @@ class MonthlyPlanApplyView(APIView):
                     month=month_str,
                     expense_values=expense_values,
                     user=user,
+                    upsert=is_reapply,
                 )
                 results["expenses_created"] = result.get("created_count", 0)
             except Exception:
@@ -371,6 +367,9 @@ class MonthlyPlanApplyView(APIView):
         plan.save(update_fields=["applied_at", "updated_by", "updated_at"])
 
         return Response(
-            {"status": "applied", "results": results},
+            {
+                "status": "reapplied" if is_reapply else "applied",
+                "results": results,
+            },
             status=status.HTTP_200_OK,
         )

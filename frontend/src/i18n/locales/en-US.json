@@ -5944,6 +5944,17 @@
         "bill": "Bill",
         "payable": "Payable"
       }
+    },
+    "focusBlocks": {
+      "title": "Focus Blocks",
+      "addBlock": "New Block",
+      "blockPlaceholder": "Block name (e.g. Morning, Work, Study...)",
+      "addTask": "Add task",
+      "noTasks": "No tasks in this block. Add tasks below.",
+      "deleteBlock": "Delete block",
+      "removeTask": "Remove task from block",
+      "emptyState": "No blocks created. Create blocks to organize your tasks by theme or period.",
+      "progress": "{{done}}/{{total}} done"
     }
   },
   "userProfile": {
@@ -6499,8 +6510,11 @@
     "noFixedExpenses": "No fixed expenses registered",
     "noBills": "No bills for this month",
     "noBudgetSuggestions": "Not enough history for suggestions",
+    "reapplyPlan": "Re-apply Plan",
     "applyConfirmTitle": "Apply Monthly Plan?",
-    "applyConfirmDescription": "This will generate fixed entries and create the defined budgets for {{month}}. This action cannot be undone.",
+    "applyConfirmDescription": "This will generate fixed entries and create the defined budgets for {{month}}.",
+    "reapplyConfirmTitle": "Re-apply Monthly Plan?",
+    "reapplyConfirmDescription": "Existing entries and budgets for {{month}} will be updated with the edited values. New items will be created.",
     "applySuccess": "Plan applied successfully!",
     "applyError": "Error applying the plan. Please try again.",
     "saveSuccess": "Plan saved",

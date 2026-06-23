@@ -95,14 +95,9 @@ export const navModules: NavModule[] = [
         icon: ListTodo,
         items: [
           {
-            titleKey: 'nav.items.dailyChecklist',
-            href: '/planning/daily-checklist',
-            icon: CheckCircle2,
-          },
-          {
             titleKey: 'nav.items.tasksGoals',
             href: '/planning/tasks-goals',
-            icon: Target,
+            icon: CheckCircle2,
           },
           {
             titleKey: 'nav.items.reflections',
