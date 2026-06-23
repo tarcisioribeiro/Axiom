@@ -4,16 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import DailyChecklist from './DailyChecklist';
 import Goals from './Goals';
 import RoutineTasks from './RoutineTasks';
-import TodayTasks from './TodayTasks';
 
 const TAB_KEY = 'tasksGoals.activeTab';
 
 export default function TasksAndGoals() {
   const { t } = useTranslation();
 
-  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'today';
+  const defaultTab = localStorage.getItem(TAB_KEY) ?? 'daily';
 
   const handleTabChange = (value: string) => {
     localStorage.setItem(TAB_KEY, value);
@@ -27,9 +27,9 @@ export default function TasksAndGoals() {
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="today" className="flex-1 gap-xs">
+          <TabsTrigger value="daily" className="flex-1 gap-xs">
             <CheckCircle2 className="h-4 w-4" />
-            {t('pages.todayTasks.title')}
+            {t('pages.dailyChecklist.title')}
           </TabsTrigger>
           <TabsTrigger value="routine" className="flex-1 gap-xs">
             <Calendar className="h-4 w-4" />
@@ -41,8 +41,8 @@ export default function TasksAndGoals() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="mt-0 flex-1">
-          <TodayTasks embedded />
+        <TabsContent value="daily" className="mt-0 flex-1">
+          <DailyChecklist embedded />
         </TabsContent>
 
         <TabsContent value="routine" className="mt-0 flex-1">

@@ -7,7 +7,7 @@ from django.utils import timezone
 from revenues.models import FixedRevenue, FixedRevenueGenerationLog, Revenue
 
 
-def bulk_generate_fixed_revenues(month, revenue_values, user):
+def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
     """Generate fixed revenues for a given month.
 
     Returns a dict with keys: success, created_count, month, revenues.
@@ -46,13 +46,20 @@ def bulk_generate_fixed_revenues(month, revenue_values, user):
                 year_int, month_int, min(fixed_rev.due_day, last_day)
             ).date()
 
-        if Revenue.objects.filter(
+        existing = Revenue.objects.filter(
             description=fixed_rev.description,
             date__gte=month_start,
             date__lte=month_end,
             account=fixed_rev.account,
             is_deleted=False,
-        ).exists():
+        ).first()
+        if existing:
+            if upsert:
+                existing.value = item["value"]
+                existing.updated_by = user
+                existing.save(
+                    update_fields=["value", "updated_by", "updated_at"]
+                )
             continue
 
         revenue = Revenue.objects.create(

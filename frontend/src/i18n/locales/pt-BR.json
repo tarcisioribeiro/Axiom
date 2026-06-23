@@ -6033,6 +6033,17 @@
         "bill": "Fatura",
         "payable": "A Pagar"
       }
+    },
+    "focusBlocks": {
+      "title": "Blocos de Foco",
+      "addBlock": "Novo Bloco",
+      "blockPlaceholder": "Nome do bloco (ex: Manhã, Trabalho, Estudos...)",
+      "addTask": "Adicionar tarefa",
+      "noTasks": "Nenhuma tarefa neste bloco. Adicione tarefas abaixo.",
+      "deleteBlock": "Excluir bloco",
+      "removeTask": "Remover tarefa do bloco",
+      "emptyState": "Nenhum bloco criado. Crie blocos para organizar suas tarefas por tema ou período.",
+      "progress": "{{done}}/{{total}} concluídas"
     }
   },
   "userProfile": {
@@ -6588,8 +6599,11 @@
     "noFixedExpenses": "Nenhuma despesa fixa cadastrada",
     "noBills": "Nenhuma fatura para este mês",
     "noBudgetSuggestions": "Sem histórico suficiente para sugestões",
+    "reapplyPlan": "Reaplicar Plano",
     "applyConfirmTitle": "Aplicar Plano Mensal?",
-    "applyConfirmDescription": "Isso irá gerar os lançamentos fixos e criar os orçamentos definidos para {{month}}. Esta ação não pode ser desfeita.",
+    "applyConfirmDescription": "Isso irá gerar os lançamentos fixos e criar os orçamentos definidos para {{month}}.",
+    "reapplyConfirmTitle": "Reaplicar Plano Mensal?",
+    "reapplyConfirmDescription": "Os lançamentos e orçamentos já existentes para {{month}} serão atualizados com os valores editados. Novos itens serão criados.",
     "applySuccess": "Plano aplicado com sucesso!",
     "applyError": "Erro ao aplicar o plano. Tente novamente.",
     "saveSuccess": "Plano salvo",

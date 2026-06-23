@@ -17,14 +17,29 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Save,
   CheckCircle2,
+  Circle,
   StickyNote,
   RefreshCw,
   ExternalLink,
   AlertCircle,
   Flame,
   Zap,
+  Moon,
+  Sun,
+  Sunset,
+  Timer,
+  Play,
+  Pause,
+  RotateCcw,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -32,10 +47,13 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { FocusBlocksSection } from '@/components/personal-planning/FocusBlocksSection';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { XPFloating, useXPTrigger } from '@/components/personal-planning/XPFloating';
+import { TaskCategoryBadge } from '@/components/today-tasks/TaskCategoryBadge';
 import { Button } from '@/components/ui/button';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -54,10 +72,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SuccessAnimation } from '@/components/ui/success-animation';
 import { Textarea } from '@/components/ui/textarea';
+import { translate } from '@/config/constants';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { appService } from '@/services/app-service';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
@@ -72,6 +92,142 @@ import {
   type InstanceStatus,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+type ViewMode = 'list' | 'kanban';
+const VIEW_MODE_KEY = 'dailyChecklist.viewMode';
+const POMODORO_CYCLES_KEY = 'dailyChecklist.pomodoroCycles';
+
+type PomodoroMode = 'focus' | 'shortBreak' | 'longBreak';
+const POMODORO_DURATIONS: Record<PomodoroMode, number> = {
+  focus: 25 * 60,
+  shortBreak: 5 * 60,
+  longBreak: 15 * 60,
+};
+
+function PomodoroBar() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [mode, setMode] = useState<PomodoroMode>('focus');
+  const [secondsLeft, setSecondsLeft] = useState(POMODORO_DURATIONS.focus);
+  const [running, setRunning] = useState(false);
+  const [cycles, setCycles] = useState<number>(() => {
+    const stored = localStorage.getItem(POMODORO_CYCLES_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const total = POMODORO_DURATIONS[mode];
+  const progress = ((total - secondsLeft) / total) * 100;
+  const timeString = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
+
+  const handleComplete = useCallback(() => {
+    setRunning(false);
+    if (mode === 'focus') {
+      const next = cycles + 1;
+      setCycles(next);
+      localStorage.setItem(POMODORO_CYCLES_KEY, String(next));
+      toast({ title: t('pages.todayTasks.pomodoroFocusDone') });
+    } else {
+      toast({ title: t('pages.todayTasks.pomodoroBreakDone') });
+    }
+  }, [mode, cycles, toast, t]);
+
+  useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current!);
+            handleComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [running, handleComplete]);
+
+  const switchMode = (m: PomodoroMode) => {
+    setRunning(false);
+    setMode(m);
+    setSecondsLeft(POMODORO_DURATIONS[m]);
+  };
+
+  const ringColor =
+    mode === 'focus'
+      ? 'hsl(var(--primary))'
+      : mode === 'shortBreak'
+        ? 'hsl(var(--chart-2))'
+        : 'hsl(var(--warning))';
+
+  return (
+    <div className="flex items-center gap-md rounded-lg border bg-card px-lg py-md">
+      <div className="flex items-center gap-sm">
+        <Timer className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-muted-foreground">
+          {t('pages.todayTasks.pomodoroTitle')}
+        </span>
+      </div>
+      <div className="flex items-center gap-xs rounded-md border p-0.5">
+        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => switchMode(m)}
+            className={cn(
+              'rounded px-sm py-xs text-xs transition-colors',
+              mode === m
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t(`pages.todayTasks.pomodoroMode.${m}`)}
+          </button>
+        ))}
+      </div>
+      <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
+        <span className="text-xs font-bold tabular-nums">{timeString}</span>
+      </CircularProgress>
+      <div className="flex items-center gap-xs">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setRunning((r) => !r)}
+          aria-label={
+            running
+              ? t('pages.todayTasks.pomodoroPause')
+              : t('pages.todayTasks.pomodoroStart')
+          }
+        >
+          {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => {
+            setRunning(false);
+            setSecondsLeft(POMODORO_DURATIONS[mode]);
+          }}
+          aria-label={t('pages.todayTasks.pomodoroReset')}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+      {cycles > 0 && (
+        <span className="ml-auto text-xs text-muted-foreground">
+          {t('pages.todayTasks.pomodoroCycles', { count: cycles })}
+        </span>
+      )}
+    </div>
+  );
+}
 
 // Mapeia status de instância para status do Kanban
 const mapInstanceToKanban = (status: InstanceStatus): KanbanStatus => {
@@ -97,10 +253,19 @@ const mapKanbanToInstance = (status: KanbanStatus): InstanceStatus => {
   }
 };
 
-export default function DailyChecklist() {
-  const { t } = useTranslation();
+interface DailyChecklistProps {
+  embedded?: boolean;
+}
+
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function DailyChecklist({ embedded = false }: DailyChecklistProps) {
+  const { t, i18n } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [instances, setInstances] = useState<TaskInstance[]>([]);
+  const [blockedTaskIds, setBlockedTaskIds] = useState<Set<number>>(new Set());
   const [cards, setCards] = useState<TaskCard[]>([]);
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null);
   const [reflection, setReflection] = useState('');
@@ -111,6 +276,12 @@ export default function DailyChecklist() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'kanban'
+  );
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const prevDayRateRef = useRef<number>(0);
   const xp = useXPTrigger();
   useTaskReminders(cards);
   const [summary, setSummary] = useState({
@@ -123,27 +294,16 @@ export default function DailyChecklist() {
   const { toast } = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const measuringConfig = {
-    droppable: {
-      strategy: MeasuringStrategy.Always,
-    },
-  };
+  const measuringConfig = { droppable: { strategy: MeasuringStrategy.Always } };
 
-  // Converte TaskInstance[] para TaskCard[]
-  const convertInstancesToCards = (instances: TaskInstance[]): TaskCard[] => {
-    return instances.map((instance) => ({
+  const convertInstancesToCards = (list: TaskInstance[]): TaskCard[] =>
+    list.map((instance) => ({
       id: `instance-${instance.id}`,
-      task_id: instance.id, // Agora é o ID da instância
+      task_id: instance.id,
       task_name: instance.task_name,
       description: instance.task_description || undefined,
       category: instance.category,
@@ -151,22 +311,54 @@ export default function DailyChecklist() {
       icon: instance.icon || undefined,
       unit: instance.unit,
       index: instance.occurrence_index,
-      total_instances: instances.filter((i) => i.template === instance.template).length,
+      total_instances: list.filter((i) => i.template === instance.template).length,
       status: mapInstanceToKanban(instance.status),
       notes: instance.notes || undefined,
       record_id: instance.id,
       scheduled_time: instance.time_display || undefined,
     }));
-  };
 
-  // Agrupa cards por status
-  const cardsByStatus = useMemo(() => {
-    return {
-      todo: cards.filter((card) => card.status === 'todo'),
-      doing: cards.filter((card) => card.status === 'doing'),
-      done: cards.filter((card) => card.status === 'done'),
-    };
-  }, [cards]);
+  const cardsByStatus = useMemo(
+    () => ({
+      todo: cards.filter((c) => c.status === 'todo'),
+      doing: cards.filter((c) => c.status === 'doing'),
+      done: cards.filter((c) => c.status === 'done'),
+    }),
+    [cards]
+  );
+
+  const looseCardsByStatus = useMemo(
+    () => ({
+      todo: cards.filter((c) => c.status === 'todo' && !blockedTaskIds.has(c.task_id)),
+      doing: cards.filter(
+        (c) => c.status === 'doing' && !blockedTaskIds.has(c.task_id)
+      ),
+      done: cards.filter((c) => c.status === 'done' && !blockedTaskIds.has(c.task_id)),
+    }),
+    [cards, blockedTaskIds]
+  );
+
+  const looseInstances = useMemo(
+    () => instances.filter((i) => !blockedTaskIds.has(i.id)),
+    [instances, blockedTaskIds]
+  );
+
+  const dayRate =
+    cards.length > 0 ? (cardsByStatus.done.length / cards.length) * 100 : 0;
+  const dayRingColor =
+    dayRate >= 80
+      ? 'hsl(var(--chart-2))'
+      : dayRate >= 40
+        ? 'hsl(var(--warning))'
+        : 'hsl(var(--primary))';
+
+  const hour = new Date().getHours();
+  const greeting = useMemo(() => {
+    if (hour < 12) return { label: t('pages.todayTasks.greetingMorning'), Icon: Sun };
+    if (hour < 18)
+      return { label: t('pages.todayTasks.greetingAfternoon'), Icon: Sunset };
+    return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
+  }, [hour, t]);
 
   useEffect(() => {
     const initializeDate = async () => {
@@ -177,7 +369,6 @@ export default function DailyChecklist() {
         setSelectedDate(formatLocalDate(new Date()));
       }
     };
-
     void loadCurrentUserMember();
     void initializeDate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,12 +382,20 @@ export default function DailyChecklist() {
   }, [selectedDate, ownerId]);
 
   useEffect(() => {
-    if (instances.length > 0) {
-      setCards(convertInstancesToCards(instances));
-    } else {
-      setCards([]);
-    }
+    setCards(instances.length > 0 ? convertInstancesToCards(instances) : []);
   }, [instances]);
+
+  useEffect(() => {
+    if (cards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
+      const timer = setTimeout(() => {
+        setShowCelebration(true);
+        toast({ title: t('pages.todayTasks.allDoneTitle') });
+      }, 0);
+      prevDayRateRef.current = dayRate;
+      return () => clearTimeout(timer);
+    }
+    prevDayRateRef.current = dayRate;
+  }, [dayRate, cards.length, toast, t]);
 
   const loadCurrentUserMember = async () => {
     try {
@@ -218,11 +417,8 @@ export default function DailyChecklist() {
         taskInstancesService.getForDate(selectedDate, sync),
         dailyReflectionsService.getAll(),
       ]);
-
       setInstances(instancesResponse.instances);
       setSummary(instancesResponse.summary);
-
-      // Encontra reflexão do dia selecionado
       const dayReflection = reflections.find((r) => r.date === selectedDate);
       if (dayReflection) {
         setReflection(dayReflection.reflection);
@@ -244,39 +440,51 @@ export default function DailyChecklist() {
     }
   };
 
+  const handleToggleTaskComplete = useCallback(
+    async (task: TaskInstance) => {
+      const newStatus: InstanceStatus =
+        task.status === 'completed' ? 'pending' : 'completed';
+      setUpdatingTaskId(task.id);
+      setInstances((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
+      );
+      try {
+        await taskInstancesService.bulkUpdate([{ id: task.id, status: newStatus }]);
+      } catch (error: unknown) {
+        setInstances((prev) =>
+          prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t))
+        );
+        toast({
+          title: t('pages.dailyChecklist.saveError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+      } finally {
+        setUpdatingTaskId(null);
+      }
+    },
+    [toast, t]
+  );
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    const card = cards.find((c) => c.id === active.id);
-    setActiveCard(card || null);
+    setActiveCard(cards.find((c) => c.id === active.id) || null);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-
     if (!over) return;
-
     const activeId = active.id as string;
     const overId = over.id as string;
-
     setCards((prevCards) => {
-      const activeCard = prevCards.find((c) => c.id === activeId);
-      const overCard = prevCards.find((c) => c.id === overId);
-
-      if (!activeCard) return prevCards;
-
+      const ac = prevCards.find((c) => c.id === activeId);
+      const oc = prevCards.find((c) => c.id === overId);
+      if (!ac) return prevCards;
       let targetStatus: KanbanStatus | undefined;
-
-      if (overCard) {
-        targetStatus = overCard.status;
-      } else if (['todo', 'doing', 'done'].includes(overId)) {
+      if (oc) targetStatus = oc.status;
+      else if (['todo', 'doing', 'done'].includes(overId))
         targetStatus = overId as KanbanStatus;
-      }
-
-      // Retorna o mesmo array se não houver mudança - evita re-renders desnecessários
-      if (!targetStatus || activeCard.status === targetStatus) {
-        return prevCards;
-      }
-
+      if (!targetStatus || ac.status === targetStatus) return prevCards;
       return prevCards.map((card) =>
         card.id === activeId ? { ...card, status: targetStatus } : card
       );
@@ -286,30 +494,19 @@ export default function DailyChecklist() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
-
     if (!over) return;
-
     const activeId = active.id as string;
     const overId = over.id as string;
-
     setCards((prevCards) => {
-      const activeCard = prevCards.find((c) => c.id === activeId);
-      const overCard = prevCards.find((c) => c.id === overId);
-
-      if (!activeCard) return prevCards;
-
+      const ac = prevCards.find((c) => c.id === activeId);
+      const oc = prevCards.find((c) => c.id === overId);
+      if (!ac) return prevCards;
       let finalStatus: KanbanStatus | undefined;
-
-      if (overCard) {
-        finalStatus = overCard.status;
-      } else if (['todo', 'doing', 'done'].includes(overId)) {
+      if (oc) finalStatus = oc.status;
+      else if (['todo', 'doing', 'done'].includes(overId))
         finalStatus = overId as KanbanStatus;
-      }
-
       if (!finalStatus) return prevCards;
-
-      // Fire XP animation when card moves to done
-      if (finalStatus === 'done' && activeCard.status !== 'done') {
+      if (finalStatus === 'done' && ac.status !== 'done') {
         const vpW = window.innerWidth;
         const vpH = window.innerHeight;
         xp.fire(
@@ -317,14 +514,11 @@ export default function DailyChecklist() {
           vpH * 0.45 + (Math.random() - 0.5) * 60
         );
       }
-
-      // Reordena apenas se estiver na mesma coluna e sobre outro card
-      if (activeCard.status === finalStatus && overCard) {
-        const activeIndex = prevCards.findIndex((c) => c.id === activeId);
-        const overIndex = prevCards.findIndex((c) => c.id === overId);
-        return arrayMove(prevCards, activeIndex, overIndex);
+      if (ac.status === finalStatus && oc) {
+        const ai = prevCards.findIndex((c) => c.id === activeId);
+        const oi = prevCards.findIndex((c) => c.id === overId);
+        return arrayMove(prevCards, ai, oi);
       }
-
       return prevCards;
     });
   };
@@ -332,18 +526,12 @@ export default function DailyChecklist() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-
-      // Prepara atualizações de status das instâncias
       const updates = cards.map((card) => ({
-        id: card.task_id, // task_id agora é o ID da instância
+        id: card.task_id,
         status: mapKanbanToInstance(card.status),
         notes: card.notes,
       }));
-
-      // Salva todas as atualizações de uma vez
       const updatePromise = taskInstancesService.bulkUpdate(updates);
-
-      // Salva ou atualiza reflexão se houver conteúdo
       let reflectionPromise;
       if (reflection.trim().length >= 10) {
         const reflectionData = {
@@ -352,7 +540,6 @@ export default function DailyChecklist() {
           mood: mood || undefined,
           owner: ownerId,
         };
-
         if (reflectionId) {
           reflectionPromise = dailyReflectionsService.update(
             reflectionId,
@@ -362,17 +549,13 @@ export default function DailyChecklist() {
           reflectionPromise = dailyReflectionsService.create(reflectionData);
         }
       }
-
       const promises: Promise<unknown>[] = [updatePromise];
       if (reflectionPromise) promises.push(reflectionPromise);
       await Promise.all(promises);
-
       toast({
         title: t('pages.dailyChecklist.saved'),
         description: t('pages.dailyChecklist.savedDesc'),
       });
-
-      // Recarrega dados para obter IDs e contagens atualizados
       void loadData();
     } catch (error: unknown) {
       toast({
@@ -404,7 +587,10 @@ export default function DailyChecklist() {
     }
   };
 
-  const completedTasks = cardsByStatus.done.length;
+  const changeViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_KEY, mode);
+  };
 
   const { data: gamification } = useQuery<{
     total_xp: number;
@@ -424,14 +610,118 @@ export default function DailyChecklist() {
     (n) => n.notification_type === 'task_overdue' && !n.is_read
   );
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  const completedTasks = cardsByStatus.done.length;
+
+  const dateLabel = selectedDate
+    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    : '';
+
+  const viewToggle = (
+    <div className="flex items-center rounded-md border p-0.5">
+      {(['list', 'kanban'] as ViewMode[]).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          onClick={() => changeViewMode(mode)}
+          title={t(`pages.todayTasks.${mode}Mode`)}
+          className={cn(
+            'rounded px-sm py-xs transition-colors',
+            viewMode === mode
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {mode === 'list' ? (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (isLoading) return <LoadingState />;
+
+  const GreetIcon = greeting.Icon;
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
-    <PageContainer>
+    <Wrapper>
       <XPFloating onMount={xp.register} />
-      <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
+      <SuccessAnimation
+        show={showCelebration}
+        variant="celebration"
+        size="lg"
+        onComplete={() => setShowCelebration(false)}
+        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+      />
+
+      {!embedded && (
+        <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
+          {viewToggle}
+        </PageHeader>
+      )}
+
+      <PomodoroBar />
+
+      {/* Saudação + progresso do dia */}
+      <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
+        <CircularProgress
+          value={dayRate}
+          size={64}
+          strokeWidth={5}
+          color={dayRingColor}
+        >
+          <span className="text-sm font-bold">{completedTasks}</span>
+        </CircularProgress>
+        <div className="flex-1">
+          <div className="flex items-center gap-sm">
+            <GreetIcon className="h-5 w-5 text-muted-foreground" />
+            <span className="text-lg font-semibold">{greeting.label}</span>
+          </div>
+          <p className="mt-0.5 capitalize text-muted-foreground">{dateLabel}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold">
+            {completedTasks}
+            <span className="text-base font-normal text-muted-foreground">
+              /{cards.length}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.todayTasks.tasksLabel')}
+          </p>
+        </div>
+      </div>
 
       {gamification && (
         <div className="flex items-center gap-md rounded-lg border bg-muted/30 px-md py-sm">
@@ -485,7 +775,9 @@ export default function DailyChecklist() {
         </div>
       )}
 
+      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-md">
+        {embedded && viewToggle}
         <div className="flex items-end gap-sm">
           <div>
             <Label htmlFor="date">{t('common.fields.date')}</Label>
@@ -606,87 +898,166 @@ export default function DailyChecklist() {
         </div>
       </div>
 
-      {cards.length === 0 ? (
-        <EmptyState
-          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
-          title={t('pages.dailyChecklist.noTasks')}
-          message={t('pages.dailyChecklist.noTasksDesc')}
+      {/* Blocos de Foco */}
+      {selectedDate && (
+        <FocusBlocksSection
+          date={selectedDate}
+          instances={instances}
+          onToggleTaskComplete={(task) => void handleToggleTaskComplete(task)}
+          onBlockedTaskIdsChange={setBlockedTaskIds}
         />
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={rectIntersection}
-          measuring={measuringConfig}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="grid grid-cols-1 gap-md md:grid-cols-3 md:gap-lg">
-            <KanbanColumn
-              status="todo"
-              title={t('pages.dailyChecklist.todo')}
-              cards={cardsByStatus.todo}
-            />
-            <KanbanColumn
-              status="doing"
-              title={t('pages.dailyChecklist.inProgress')}
-              cards={cardsByStatus.doing}
-            />
-            <KanbanColumn
-              status="done"
-              title={t('pages.dailyChecklist.done')}
-              cards={cardsByStatus.done}
-            />
-          </div>
-
-          <DragOverlay>
-            {activeCard ? <KanbanCard card={activeCard} /> : null}
-          </DragOverlay>
-        </DndContext>
       )}
 
-      {/* End-of-day reflection prompt when all tasks are done (#244) */}
-      {cards.length > 0 &&
-        cardsByStatus.todo.length === 0 &&
-        cardsByStatus.doing.length === 0 &&
-        cardsByStatus.done.length === cards.length &&
-        !reflection.trim() && (
-          <div className="flex items-center gap-md rounded-lg border border-success/30 bg-success/5 px-md py-md">
-            <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">
-                {t('pages.dailyChecklist.allDone')}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t('pages.dailyChecklist.reflectionPrompt')}
-              </p>
+      {/* Vista Lista */}
+      {viewMode === 'list' && (
+        <>
+          {looseInstances.length === 0 ? (
+            <EmptyState
+              icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+              title={t('pages.dailyChecklist.noTasks')}
+              message={t('pages.dailyChecklist.noTasksDesc')}
+            />
+          ) : (
+            <div className="space-y-sm">
+              {looseInstances.map((task) => {
+                const isCompleted = task.status === 'completed';
+                const isUpdating = updatingTaskId === task.id;
+                return (
+                  <div
+                    key={task.id}
+                    className={cn(
+                      'flex items-center gap-md rounded-lg border p-md transition-opacity',
+                      isCompleted && 'opacity-60'
+                    )}
+                  >
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => void handleToggleTaskComplete(task)}
+                      className="shrink-0 text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
+                      title={
+                        isCompleted
+                          ? t('pages.todayTasks.markPending')
+                          : t('pages.todayTasks.markCompleted')
+                      }
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-6 w-6 text-success" />
+                      ) : (
+                        <Circle className="h-6 w-6" />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <h3
+                        className={cn('font-semibold', isCompleted && 'line-through')}
+                      >
+                        {task.task_name}
+                      </h3>
+                      {task.time_display && (
+                        <p className="text-sm text-muted-foreground">
+                          {t('pages.todayTasks.timeLabel', { time: task.time_display })}
+                        </p>
+                      )}
+                    </div>
+                    {task.category && (
+                      <TaskCategoryBadge
+                        icon={task.icon}
+                        label={translate('taskCategories', task.category)}
+                        category={task.category}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsReflectionOpen(true)}
+          )}
+        </>
+      )}
+
+      {/* Vista Kanban */}
+      {viewMode === 'kanban' && (
+        <>
+          {instances.length === 0 ? (
+            <EmptyState
+              icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+              title={t('pages.dailyChecklist.noTasks')}
+              message={t('pages.dailyChecklist.noTasksDesc')}
+            />
+          ) : looseInstances.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={rectIntersection}
+              measuring={measuringConfig}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
             >
-              <StickyNote className="mr-xs h-3.5 w-3.5" />
-              {t('pages.dailyChecklist.addReflection')}
+              <div className="grid grid-cols-1 gap-md md:grid-cols-3 md:gap-lg">
+                <KanbanColumn
+                  status="todo"
+                  title={t('pages.dailyChecklist.todo')}
+                  cards={looseCardsByStatus.todo}
+                />
+                <KanbanColumn
+                  status="doing"
+                  title={t('pages.dailyChecklist.inProgress')}
+                  cards={looseCardsByStatus.doing}
+                />
+                <KanbanColumn
+                  status="done"
+                  title={t('pages.dailyChecklist.done')}
+                  cards={looseCardsByStatus.done}
+                />
+              </div>
+              <DragOverlay>
+                {activeCard ? <KanbanCard card={activeCard} /> : null}
+              </DragOverlay>
+            </DndContext>
+          ) : null}
+
+          {cards.length > 0 &&
+            cardsByStatus.todo.length === 0 &&
+            cardsByStatus.doing.length === 0 &&
+            cardsByStatus.done.length === cards.length &&
+            !reflection.trim() && (
+              <div className="flex items-center gap-md rounded-lg border border-success/30 bg-success/5 px-md py-md">
+                <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('pages.dailyChecklist.allDone')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.dailyChecklist.reflectionPrompt')}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsReflectionOpen(true)}
+                >
+                  <StickyNote className="mr-xs h-3.5 w-3.5" />
+                  {t('pages.dailyChecklist.addReflection')}
+                </Button>
+              </div>
+            )}
+
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={isSaving} size="lg">
+              {isSaving ? (
+                <>
+                  <Save className="mr-sm h-4 w-4 animate-pulse" />
+                  {t('common.actions.saving')}
+                </>
+              ) : (
+                <>
+                  <Save className="mr-sm h-4 w-4" />
+                  {t('common.actions.save')}
+                </>
+              )}
             </Button>
           </div>
-        )}
-
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving} size="lg">
-          {isSaving ? (
-            <>
-              <Save className="mr-sm h-4 w-4 animate-pulse" />
-              {t('common.actions.saving')}
-            </>
-          ) : (
-            <>
-              <Save className="mr-sm h-4 w-4" />
-              {t('common.actions.save')}
-            </>
-          )}
-        </Button>
-      </div>
-    </PageContainer>
+        </>
+      )}
+    </Wrapper>
   );
 }
