@@ -1,6 +1,6 @@
 from django.urls import path
 
-from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances
+from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances; Wellness Center
     AIMenuPlanGenerationView,
     AIRoutineSuggestionView,
     AIWorkoutPlanGenerationView,
@@ -8,9 +8,14 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     BodyMetricRetrieveUpdateDestroyView,
     ChallengeListCreateView,
     ChallengeRetrieveUpdateDestroyView,
+    CrisisImpulseLogDetailView,
+    CrisisImpulseLogListCreateView,
+    CrisisImpulseResolveView,
     DailyCaloricSummaryView,
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
+    EmotionalCheckinDetailView,
+    EmotionalCheckinListCreateView,
     ExerciseListCreateView,
     ExerciseRetrieveUpdateDestroyView,
     ExportGoalsView,
@@ -41,6 +46,8 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     RoutineTaskListCreateView,
     RoutineTemplateImportView,
     RoutineTemplateListView,
+    SelfEsteemAssessmentDetailView,
+    SelfEsteemAssessmentListCreateView,
     TaskInstanceBulkUpdateView,
     TaskInstanceDetailView,
     TaskInstanceListCreateView,
@@ -48,6 +55,12 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     UserRoutineTemplateDetailView,
     UserRoutineTemplateImportView,
     UserRoutineTemplateListCreateView,
+    WellnessDashboardView,
+    WellnessInterventionCompletionDetailView,
+    WellnessInterventionCompletionListCreateView,
+    WellnessInterventionListView,
+    WellnessWeeklyReportGenerateView,
+    WellnessWeeklyReportListView,
     WorkoutDayListCreateView,
     WorkoutDayRetrieveUpdateDestroyView,
     WorkoutExerciseListCreateView,
@@ -372,5 +385,71 @@ urlpatterns = [
         "daily-caloric-summary/",
         DailyCaloricSummaryView.as_view(),
         name="daily-caloric-summary",
+    ),
+    # ── Wellness Center ────────────────────────────────────────────
+    path(
+        "wellness/dashboard/",
+        WellnessDashboardView.as_view(),
+        name="wellness-dashboard",
+    ),
+    path(
+        "wellness/self-esteem/",
+        SelfEsteemAssessmentListCreateView.as_view(),
+        name="self-esteem-list-create",
+    ),
+    path(
+        "wellness/self-esteem/<int:pk>/",
+        SelfEsteemAssessmentDetailView.as_view(),
+        name="self-esteem-detail",
+    ),
+    path(
+        "wellness/checkins/",
+        EmotionalCheckinListCreateView.as_view(),
+        name="emotional-checkin-list-create",
+    ),
+    path(
+        "wellness/checkins/<int:pk>/",
+        EmotionalCheckinDetailView.as_view(),
+        name="emotional-checkin-detail",
+    ),
+    path(
+        "wellness/crisis/",
+        CrisisImpulseLogListCreateView.as_view(),
+        name="crisis-impulse-list-create",
+    ),
+    path(
+        "wellness/crisis/<int:pk>/",
+        CrisisImpulseLogDetailView.as_view(),
+        name="crisis-impulse-detail",
+    ),
+    path(
+        "wellness/crisis/<int:pk>/resolve/",
+        CrisisImpulseResolveView.as_view(),
+        name="crisis-impulse-resolve",
+    ),
+    path(
+        "wellness/interventions/",
+        WellnessInterventionListView.as_view(),
+        name="wellness-intervention-list",
+    ),
+    path(
+        "wellness/intervention-completions/",
+        WellnessInterventionCompletionListCreateView.as_view(),
+        name="wellness-intervention-completion-list-create",
+    ),
+    path(
+        "wellness/intervention-completions/<int:pk>/",
+        WellnessInterventionCompletionDetailView.as_view(),
+        name="wellness-intervention-completion-detail",
+    ),
+    path(
+        "wellness/weekly-reports/",
+        WellnessWeeklyReportListView.as_view(),
+        name="wellness-weekly-report-list",
+    ),
+    path(
+        "wellness/weekly-reports/generate/",
+        WellnessWeeklyReportGenerateView.as_view(),
+        name="wellness-weekly-report-generate",
     ),
 ]

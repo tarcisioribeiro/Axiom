@@ -229,7 +229,8 @@
       "books": "Collection",
       "intellect": "Learning",
       "daily": "Daily Routine",
-      "health": "Health & Body"
+      "health": "Health & Body",
+      "wellness": "Wellness"
     },
     "items": {
       "accounts": "Accounts",
@@ -299,7 +300,8 @@
       "rulesAndTags": "Rules & Tags",
       "financeAgenda": "Financial Agenda",
       "financeAnalytics": "Analytics",
-      "financialHealth": "Financial Health"
+      "financialHealth": "Financial Health",
+      "emotionalWellness": "Emotional Wellness"
     },
     "agents": "AI Agents"
   },
@@ -397,7 +399,8 @@
     "bodyMetrics": "Body Measurements",
     "courses": "Courses",
     "skills": "Skills",
-    "knowledgeGraph": "Knowledge Graph"
+    "knowledgeGraph": "Knowledge Graph",
+    "emotionalWellness": "Emotional Wellness"
   },
   "auth": {
     "login": {
@@ -6533,7 +6536,11 @@
     "registeredExpenses": "Registered Expenses",
     "noRegisteredRevenues": "No revenues registered this month",
     "noRegisteredExpenses": "No expenses registered this month",
-    "pending": "Pending"
+    "pending": "Pending",
+    "accountBalance": "Account Balance",
+    "overdraftLimit": "Overdraft limit",
+    "totalAvailable": "Total available",
+    "insufficientBalance": "Insufficient balance"
   },
   "spendingInsights": {
     "title": "Spending Insights",

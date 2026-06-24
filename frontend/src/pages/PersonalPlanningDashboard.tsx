@@ -1215,6 +1215,12 @@ export default function PersonalPlanningDashboard() {
                           >
                             {t('pages.planningDashboard.ctaReflect')}
                           </Link>
+                          <Link
+                            to="/planning/emotional-wellness"
+                            className="rounded-md bg-rose-500/10 px-sm py-xs text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/20"
+                          >
+                            Bem-Estar Emocional
+                          </Link>
                         </div>
                       </CardContent>
                     </Card>

@@ -3031,3 +3031,535 @@ class DailyCaloricSummaryView(APIView):
                 "workout_sessions": sessions_summary,
             }
         )
+
+
+# ============================================================================
+# WELLNESS CENTER VIEWS
+# ============================================================================
+
+from django.db.models import Avg  # noqa: E402
+
+from personal_planning.models import (  # noqa: E402
+    CrisisImpulseLog,
+    EmotionalCheckin,
+    SelfEsteemAssessment,
+    WellnessIntervention,
+    WellnessInterventionCompletion,
+    WellnessWeeklyReport,
+)
+from personal_planning.serializers import (  # noqa: E402
+    CrisisImpulseLogCreateSerializer,
+    CrisisImpulseLogSerializer,
+    EmotionalCheckinCreateSerializer,
+    EmotionalCheckinSerializer,
+    SelfEsteemAssessmentCreateSerializer,
+    SelfEsteemAssessmentSerializer,
+    WellnessInterventionCompletionCreateSerializer,
+    WellnessInterventionCompletionSerializer,
+    WellnessInterventionSerializer,
+    WellnessWeeklyReportSerializer,
+)
+
+
+def _get_member(user):
+    from members.models import Member
+
+    return Member.objects.get(user=user)
+
+
+class SelfEsteemAssessmentListCreateView(BaseListCreateView):
+    serializer_class = SelfEsteemAssessmentSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return SelfEsteemAssessment.objects.filter(
+            owner=member, is_deleted=False
+        )
+
+    def perform_create(self, serializer):
+        member = _get_member(self.request.user)
+        serializer.save(owner=member)
+
+    def create(self, request, *args, **kwargs):
+        create_ser = SelfEsteemAssessmentCreateSerializer(
+            data={**request.data, "owner": _get_member(request.user).pk}
+        )
+        create_ser.is_valid(raise_exception=True)
+        instance = create_ser.save()
+
+        # Gera análise da IA de forma assíncrona/best-effort
+        try:
+            _generate_self_esteem_ai(request.user, instance)
+        except Exception:
+            pass
+
+        out = SelfEsteemAssessmentSerializer(instance)
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+
+class SelfEsteemAssessmentDetailView(BaseRetrieveUpdateDestroyView):
+    serializer_class = SelfEsteemAssessmentSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return SelfEsteemAssessment.objects.filter(
+            owner=member, is_deleted=False
+        )
+
+
+def _generate_self_esteem_ai(user, instance: SelfEsteemAssessment):
+    """Chama o LLM e salva a análise no registro."""
+    from agents.core.llm_client import LLMClient
+
+    member = _get_member(user)
+    recent = SelfEsteemAssessment.objects.filter(
+        owner=member, is_deleted=False
+    ).order_by("-assessed_at")[:5]
+    history_str = ", ".join(f"{a.assessed_at}: {a.score}/30" for a in recent)
+
+    questions = [
+        "Sinto que sou uma pessoa de valor, pelo menos tanto quanto"
+        " outras pessoas.",
+        "Sinto que tenho várias qualidades boas.",
+        "Ao todo, estou inclinado(a) a sentir que sou um(a)" " fracasso(a).",
+        "Sou capaz de fazer as coisas tão bem quanto outras pessoas.",
+        "Sinto que não tenho muito do que me orgulhar.",
+        "Tenho uma atitude positiva em relação a mim mesmo(a).",
+        "No geral, estou satisfeito(a) comigo mesmo(a).",
+        "Gostaria de poder ter mais respeito por mim mesmo(a).",
+        "Às vezes me sinto inútil(mente).",
+        "Às vezes penso que não sirvo para nada.",
+    ]
+    respostas_str = "\n".join(
+        f"Q{i+1}: {q} → {v}/3"
+        for i, (q, v) in enumerate(
+            zip(
+                questions,
+                [
+                    instance.q1,
+                    instance.q2,
+                    instance.q3,
+                    instance.q4,
+                    instance.q5,
+                    instance.q6,
+                    instance.q7,
+                    instance.q8,
+                    instance.q9,
+                    instance.q10,
+                ],
+            )
+        )
+    )
+
+    _json_schema = (
+        "{{\n"
+        '  "analysis": "Análise empática em 2-3 parágrafos.'
+        ' NÃO use linguagem clínica ou diagnóstica.",\n'
+        '  "strengths": ["ponto forte 1", "ponto forte 2",'
+        ' "ponto forte 3"],\n'
+        '  "limiting_beliefs": ["crença limitante 1",'
+        ' "crença limitante 2"],\n'
+        '  "weekly_suggestions": ["sugestão prática 1",'
+        ' "sugestão prática 2", "sugestão prática 3"]\n'
+        "}}"
+    )
+    prompt = (
+        "Você é um coach de desenvolvimento pessoal empático e prático.\n"
+        "O usuário completou a Escala de Autoestima de Rosenberg.\n\n"
+        f"Pontuação atual: {instance.score}/30\n"
+        f"Histórico recente: {history_str or 'primeira avaliação'}\n\n"
+        f"Respostas:\n{respostas_str}\n\n"
+        "Responda SOMENTE com JSON válido (sem markdown) neste formato:\n"
+        f"{_json_schema}\n\n"
+        "Fale na segunda pessoa, de forma calorosa, nunca diagnóstica."
+    )
+
+    resp = LLMClient.chat([{"role": "user", "content": prompt}])
+    start, end = resp.find("{"), resp.rfind("}") + 1
+    if start != -1 and end > start:
+        instance.ai_analysis = resp[start:end]
+        SelfEsteemAssessment.objects.filter(pk=instance.pk).update(
+            ai_analysis=instance.ai_analysis
+        )
+
+
+class EmotionalCheckinListCreateView(BaseListCreateView):
+    serializer_class = EmotionalCheckinSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        qs = EmotionalCheckin.objects.filter(owner=member, is_deleted=False)
+        days = self.request.query_params.get("days")
+        if days:
+            try:
+                cutoff = date.today() - timedelta(days=int(days))
+                qs = qs.filter(checked_at__gte=cutoff)
+            except ValueError:
+                pass
+        return qs
+
+    def create(self, request, *args, **kwargs):
+        create_ser = EmotionalCheckinCreateSerializer(
+            data={**request.data, "owner": _get_member(request.user).pk}
+        )
+        create_ser.is_valid(raise_exception=True)
+        instance = create_ser.save()
+        out = EmotionalCheckinSerializer(instance)
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+
+class EmotionalCheckinDetailView(BaseRetrieveUpdateDestroyView):
+    serializer_class = EmotionalCheckinSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return EmotionalCheckin.objects.filter(owner=member, is_deleted=False)
+
+
+class CrisisImpulseLogListCreateView(BaseListCreateView):
+    serializer_class = CrisisImpulseLogSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return CrisisImpulseLog.objects.filter(owner=member, is_deleted=False)
+
+    def create(self, request, *args, **kwargs):
+        member = _get_member(request.user)
+        create_ser = CrisisImpulseLogCreateSerializer(
+            data={**request.data, "owner": member.pk}
+        )
+        create_ser.is_valid(raise_exception=True)
+        instance = create_ser.save()
+
+        # Gera resposta da IA
+        try:
+            _generate_crisis_ai(instance)
+        except Exception:
+            pass
+
+        out = CrisisImpulseLogSerializer(instance)
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+
+class CrisisImpulseLogDetailView(BaseRetrieveUpdateDestroyView):
+    serializer_class = CrisisImpulseLogSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return CrisisImpulseLog.objects.filter(owner=member, is_deleted=False)
+
+
+def _generate_crisis_ai(instance: CrisisImpulseLog):
+    """Gera resposta empática + plano de ação imediato via LLM."""
+    from agents.core.llm_client import LLMClient
+
+    emotional_label = instance.get_emotional_state_display()
+    impulse_label = instance.get_impulse_type_display()
+    if instance.emotional_state == "other" and instance.emotional_state_other:
+        emotional_label = instance.emotional_state_other
+    if instance.impulse_type == "other" and instance.impulse_type_other:
+        impulse_label = instance.impulse_type_other
+
+    _crisis_schema = (
+        "{{\n"
+        '  "validation": "Validação emocional calorosa em 2-3 frases.'
+        ' SEM julgamento. SEM diagnóstico.",\n'
+        '  "explanation": "Explicação curta (1-2 frases) de por que'
+        ' o impulso pode estar surgindo agora.",\n'
+        '  "action_plan": {{\n'
+        '    "5min": ["ação 1 de 5 minutos", "ação 2 de 5 minutos"],\n'
+        '    "10min": ["ação 1 de 10 min", "ação 2 de 10 min"],\n'
+        '    "20min": ["ação 1 de 20 min", "ação 2 de 20 min"]\n'
+        "  }},\n"
+        '  "affirmation": "Uma frase de encorajamento curta e genuína."\n'
+        "}}"
+    )
+    prompt = (
+        "Você é um coach de bem-estar emocional empático e sem"
+        " julgamentos.\n"
+        "O usuário está passando por um momento difícil e pediu ajuda.\n\n"
+        f"Estado emocional: {emotional_label}\n"
+        f"Impulso que está tentando evitar: {impulse_label}\n\n"
+        "Responda SOMENTE com JSON válido (sem markdown) neste formato:\n"
+        f"{_crisis_schema}\n\n"
+        "Seja extremamente prático e humano. Nunca use linguagem clínica."
+    )
+
+    resp = LLMClient.chat([{"role": "user", "content": prompt}])
+    start, end = resp.find("{"), resp.rfind("}") + 1
+    if start != -1 and end > start:
+        CrisisImpulseLog.objects.filter(pk=instance.pk).update(
+            ai_response=resp[start:end]
+        )
+        instance.ai_response = resp[start:end]
+
+
+class WellnessInterventionListView(BaseListCreateView):
+    serializer_class = WellnessInterventionSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        from django.db.models import Q
+
+        qs = WellnessIntervention.objects.filter(is_deleted=False).filter(
+            Q(is_global=True) | Q(owner=member)
+        )
+        category = self.request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+        duration = self.request.query_params.get("max_duration")
+        if duration:
+            try:
+                qs = qs.filter(duration_minutes__lte=int(duration))
+            except ValueError:
+                pass
+        return qs
+
+
+class WellnessInterventionCompletionListCreateView(BaseListCreateView):
+    serializer_class = WellnessInterventionCompletionSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return WellnessInterventionCompletion.objects.filter(
+            owner=member, is_deleted=False
+        ).select_related("intervention")
+
+    def create(self, request, *args, **kwargs):
+        create_ser = WellnessInterventionCompletionCreateSerializer(
+            data={**request.data, "owner": _get_member(request.user).pk}
+        )
+        create_ser.is_valid(raise_exception=True)
+        instance = create_ser.save()
+        out = WellnessInterventionCompletionSerializer(instance)
+        return Response(out.data, status=status.HTTP_201_CREATED)
+
+
+class WellnessInterventionCompletionDetailView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WellnessInterventionCompletionSerializer
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return WellnessInterventionCompletion.objects.filter(
+            owner=member, is_deleted=False
+        )
+
+
+class WellnessWeeklyReportListView(BaseListCreateView):
+    serializer_class = WellnessWeeklyReportSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        member = _get_member(self.request.user)
+        return WellnessWeeklyReport.objects.filter(
+            owner=member, is_deleted=False
+        )
+
+
+class WellnessWeeklyReportGenerateView(APIView):
+    """POST /wellness/weekly-report/generate/ — relatório via IA."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        import json as _json
+
+        from agents.core.llm_client import LLMClient
+
+        member = _get_member(request.user)
+        today = date.today()
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=6)
+
+        checkins = EmotionalCheckin.objects.filter(
+            owner=member,
+            is_deleted=False,
+            checked_at__range=(week_start, week_end),
+        )
+        assessments = SelfEsteemAssessment.objects.filter(
+            owner=member, is_deleted=False
+        ).order_by("-assessed_at")
+        impulses = CrisisImpulseLog.objects.filter(
+            owner=member,
+            is_deleted=False,
+            logged_at__date__range=(week_start, week_end),
+        )
+        completions = WellnessInterventionCompletion.objects.filter(
+            owner=member,
+            is_deleted=False,
+            completed_at__date__range=(week_start, week_end),
+        ).select_related("intervention")
+
+        agg = checkins.aggregate(
+            avg_l=Avg("loneliness"),
+            avg_a=Avg("anxiety"),
+            avg_m=Avg("motivation"),
+        )
+        latest_score = (
+            assessments.first().score if assessments.exists() else None
+        )
+        completed_titles = ", ".join(
+            c.intervention.title for c in completions[:10]
+        )
+
+        n_completions = completions.count()
+        context = (
+            f"Semana: {week_start} a {week_end}\n"
+            f"Check-ins realizados: {checkins.count()}\n"
+            f"Média solidão: {agg['avg_l'] or 'N/A'}\n"
+            f"Média ansiedade: {agg['avg_a'] or 'N/A'}\n"
+            f"Média motivação: {agg['avg_m'] or 'N/A'}\n"
+            f"Impulsos registrados: {impulses.count()}\n"
+            f"Intervenções concluídas: {n_completions}"
+            f" ({completed_titles})\n"
+            f"Última pontuação Rosenberg:"
+            f" {latest_score or 'sem avaliação'}/30\n"
+        )
+        _weekly_schema = (
+            "{{\n"
+            '  "summary": "Resumo empático da semana em 2-3 parágrafos.'
+            ' Sem linguagem alarmista. Sem diagnóstico.",\n'
+            '  "attention_points": ["ponto de atenção 1",'
+            ' "ponto de atenção 2"],\n'
+            '  "suggestions": ["sugestão prática 1",'
+            ' "sugestão prática 2", "sugestão prática 3"]\n'
+            "}}"
+        )
+        prompt = (
+            "Você é um coach de bem-estar emocional.\n"
+            "Analise os dados da semana do usuário e gere um relatório"
+            " encorajador e prático.\n\n"
+            f"{context}\n"
+            "Responda SOMENTE com JSON válido (sem markdown):\n"
+            f"{_weekly_schema}"
+        )
+
+        try:
+            client = LLMClient.get_instance()
+            resp = client.chat([{"role": "user", "content": prompt}])
+            start, end = resp.find("{"), resp.rfind("}") + 1
+            parsed = (
+                _json.loads(resp[start:end])
+                if start != -1 and end > start
+                else {}
+            )
+        except Exception:
+            parsed = {}
+
+        report, _ = WellnessWeeklyReport.objects.update_or_create(
+            owner=member,
+            week_start=week_start,
+            defaults={
+                "week_end": week_end,
+                "ai_summary": parsed.get("summary", ""),
+                "attention_points": parsed.get("attention_points", []),
+                "suggestions": parsed.get("suggestions", []),
+                "avg_loneliness": agg["avg_l"],
+                "avg_anxiety": agg["avg_a"],
+                "avg_motivation": agg["avg_m"],
+                "latest_self_esteem_score": latest_score,
+            },
+        )
+        return Response(WellnessWeeklyReportSerializer(report).data)
+
+
+class WellnessDashboardView(APIView):
+    """GET /wellness/dashboard/ — dados agregados para o dashboard."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        member = _get_member(request.user)
+        today = date.today()
+        week_ago = today - timedelta(days=7)
+
+        latest_assessment = SelfEsteemAssessment.objects.filter(
+            owner=member, is_deleted=False
+        ).first()
+        week_assessments = SelfEsteemAssessment.objects.filter(
+            owner=member, is_deleted=False, assessed_at__gte=week_ago
+        )
+        checkins_week = EmotionalCheckin.objects.filter(
+            owner=member, is_deleted=False, checked_at__gte=week_ago
+        )
+        impulses_week = CrisisImpulseLog.objects.filter(
+            owner=member,
+            is_deleted=False,
+            logged_at__date__gte=week_ago,
+        )
+        completions_week = WellnessInterventionCompletion.objects.filter(
+            owner=member,
+            is_deleted=False,
+            completed_at__date__gte=week_ago,
+        )
+
+        agg = checkins_week.aggregate(
+            avg_l=Avg("loneliness"),
+            avg_a=Avg("anxiety"),
+            avg_m=Avg("motivation"),
+            avg_e=Avg("energy"),
+        )
+        week_score_avg = week_assessments.aggregate(avg=Avg("score"))["avg"]
+
+        return Response(
+            {
+                "self_esteem": {
+                    "current_score": (
+                        latest_assessment.score if latest_assessment else None
+                    ),
+                    "assessed_at": (
+                        str(latest_assessment.assessed_at)
+                        if latest_assessment
+                        else None
+                    ),
+                    "week_avg": (
+                        round(float(week_score_avg), 1)
+                        if week_score_avg
+                        else None
+                    ),
+                },
+                "emotional": {
+                    "avg_loneliness": (
+                        round(float(agg["avg_l"]), 1) if agg["avg_l"] else None
+                    ),
+                    "avg_anxiety": (
+                        round(float(agg["avg_a"]), 1) if agg["avg_a"] else None
+                    ),
+                    "avg_motivation": (
+                        round(float(agg["avg_m"]), 1) if agg["avg_m"] else None
+                    ),
+                    "avg_energy": (
+                        round(float(agg["avg_e"]), 1) if agg["avg_e"] else None
+                    ),
+                    "checkins_this_week": checkins_week.count(),
+                },
+                "impulses": {
+                    "count_this_week": impulses_week.count(),
+                    "resolved_this_week": impulses_week.filter(
+                        resolved=True
+                    ).count(),
+                },
+                "interventions": {
+                    "completed_this_week": completions_week.count(),
+                },
+            }
+        )
+
+
+class CrisisImpulseResolveView(APIView):
+    """PATCH /wellness/crisis/<pk>/resolve/ — marca impulso como superado."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def patch(self, request, pk):
+        member = _get_member(request.user)
+        try:
+            log = CrisisImpulseLog.objects.get(
+                pk=pk, owner=member, is_deleted=False
+            )
+        except CrisisImpulseLog.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        log.resolved = True
+        log.save(update_fields=["resolved", "updated_at"])
+        return Response(CrisisImpulseLogSerializer(log).data)

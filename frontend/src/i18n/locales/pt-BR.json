@@ -229,7 +229,8 @@
       "books": "Acervo",
       "intellect": "Aprendizado",
       "daily": "Rotina Diária",
-      "health": "Saúde & Corpo"
+      "health": "Saúde & Corpo",
+      "wellness": "Bem-Estar"
     },
     "items": {
       "accounts": "Contas",
@@ -299,7 +300,8 @@
       "rulesAndTags": "Regras & Etiquetas",
       "financeAgenda": "Agenda Financeira",
       "financeAnalytics": "Análises",
-      "financialHealth": "Saúde Financeira"
+      "financialHealth": "Saúde Financeira",
+      "emotionalWellness": "Bem-Estar Emocional"
     },
     "agents": "Agentes IA"
   },
@@ -397,7 +399,8 @@
     "bodyMetrics": "Medidas Corporais",
     "courses": "Cursos",
     "skills": "Habilidades",
-    "knowledgeGraph": "Grafo de Conhecimento"
+    "knowledgeGraph": "Grafo de Conhecimento",
+    "emotionalWellness": "Bem-Estar Emocional"
   },
   "auth": {
     "login": {
@@ -6622,7 +6625,11 @@
     "registeredExpenses": "Despesas Registradas",
     "noRegisteredRevenues": "Nenhuma receita registrada neste mês",
     "noRegisteredExpenses": "Nenhuma despesa registrada neste mês",
-    "pending": "Pendente"
+    "pending": "Pendente",
+    "accountBalance": "Saldo em Contas",
+    "overdraftLimit": "Cheque especial",
+    "totalAvailable": "Total disponível",
+    "insufficientBalance": "Saldo insuficiente"
   },
   "spendingInsights": {
     "title": "Insights de Gastos",
