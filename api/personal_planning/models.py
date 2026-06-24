@@ -2088,3 +2088,314 @@ class BodyMetric(BaseModel):
 
     def __str__(self):
         return f"{self.owner} — {self.measured_at}"
+
+
+# ============================================================================
+# WELLNESS CENTER MODELS
+# ============================================================================
+
+ROSENBERG_RESPONSE_CHOICES = (
+    (0, "Discordo totalmente"),
+    (1, "Discordo"),
+    (2, "Concordo"),
+    (3, "Concordo totalmente"),
+)
+
+WELLNESS_INTERVENTION_CATEGORY_CHOICES = (
+    ("self_esteem", "Autoestima"),
+    ("loneliness", "Solidão"),
+    ("neediness", "Carência"),
+    ("anxiety", "Ansiedade"),
+    ("emotional_dependency", "Dependência Emocional"),
+)
+
+IMPULSE_TYPE_CHOICES = (
+    ("pornography", "Pornografia"),
+    ("alcohol", "Álcool"),
+    ("social_media", "Redes Sociais"),
+    ("shopping", "Compras"),
+    ("procrastination", "Procrastinação"),
+    ("other", "Outro"),
+)
+
+EMOTIONAL_STATE_CHOICES = (
+    ("loneliness", "Solidão"),
+    ("neediness", "Carência"),
+    ("anxiety", "Ansiedade"),
+    ("boredom", "Tédio"),
+    ("frustration", "Frustração"),
+    ("anger", "Raiva"),
+    ("other", "Outro"),
+)
+
+DIFFICULTY_CHOICES = (
+    ("easy", "Fácil"),
+    ("medium", "Médio"),
+    ("hard", "Difícil"),
+)
+
+
+class SelfEsteemAssessment(BaseModel):
+    """Avaliação de autoestima baseada na Escala de Rosenberg (10 itens)."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="self_esteem_assessments",
+        verbose_name="Proprietário",
+    )
+    assessed_at = models.DateField(verbose_name="Data da avaliação")
+    # Rosenberg: perguntas 1,2,4,6,7 são positivas; 3,5,8,9,10 são negativas
+    q1 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q2 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q3 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q4 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q5 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q6 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q7 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q8 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q9 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    q10 = models.SmallIntegerField(choices=ROSENBERG_RESPONSE_CHOICES)
+    score = models.SmallIntegerField(verbose_name="Pontuação total (0–30)")
+    ai_analysis = models.TextField(
+        blank=True, verbose_name="Análise gerada pela IA"
+    )
+
+    class Meta:
+        verbose_name = "Avaliação de Autoestima"
+        verbose_name_plural = "Avaliações de Autoestima"
+        ordering = ["-assessed_at"]
+        indexes = [models.Index(fields=["owner", "-assessed_at"])]
+
+    def __str__(self):
+        return f"{self.owner} — Rosenberg {self.score}/30 ({self.assessed_at})"
+
+    def calculate_score(self) -> int:
+        """
+        Perguntas positivas (1,2,4,6,7): soma direta 0–3.
+        Perguntas negativas (3,5,8,9,10): invertidas (3-valor).
+        """
+        positive = [self.q1, self.q2, self.q4, self.q6, self.q7]
+        negative = [self.q3, self.q5, self.q8, self.q9, self.q10]
+        return sum(positive) + sum(3 - v for v in negative)
+
+    def save(self, *args, **kwargs):
+        self.score = self.calculate_score()
+        super().save(*args, **kwargs)
+
+
+class EmotionalCheckin(BaseModel):
+    """Check-in emocional diário com escalas numéricas e texto livre."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="emotional_checkins",
+        verbose_name="Proprietário",
+    )
+    checked_at = models.DateField(verbose_name="Data do check-in")
+    loneliness = models.SmallIntegerField(
+        default=0, verbose_name="Solidão (0–10)"
+    )
+    neediness = models.SmallIntegerField(
+        default=0, verbose_name="Carência (0–10)"
+    )
+    anxiety = models.SmallIntegerField(
+        default=0, verbose_name="Ansiedade (0–10)"
+    )
+    sadness = models.SmallIntegerField(
+        default=0, verbose_name="Tristeza (0–10)"
+    )
+    motivation = models.SmallIntegerField(
+        default=5, verbose_name="Motivação (0–10)"
+    )
+    energy = models.SmallIntegerField(default=5, verbose_name="Energia (0–10)")
+    what_happened = models.TextField(
+        blank=True, verbose_name="O que aconteceu hoje?"
+    )
+    occupying_thoughts = models.TextField(
+        blank=True, verbose_name="O que está ocupando seus pensamentos?"
+    )
+
+    class Meta:
+        verbose_name = "Check-in Emocional"
+        verbose_name_plural = "Check-ins Emocionais"
+        ordering = ["-checked_at"]
+        indexes = [models.Index(fields=["owner", "-checked_at"])]
+
+    def __str__(self):
+        return f"{self.owner} — check-in {self.checked_at}"
+
+
+class CrisisImpulseLog(BaseModel):
+    """Registro do Modo Crise — impulso capturado com resposta da IA."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="crisis_impulse_logs",
+        verbose_name="Proprietário",
+    )
+    logged_at = models.DateTimeField(
+        default=timezone.now, verbose_name="Registrado em"
+    )
+    emotional_state = models.CharField(
+        max_length=30,
+        choices=EMOTIONAL_STATE_CHOICES,
+        verbose_name="Estado emocional",
+    )
+    emotional_state_other = models.CharField(
+        max_length=200, blank=True, verbose_name="Estado emocional (outro)"
+    )
+    impulse_type = models.CharField(
+        max_length=30,
+        choices=IMPULSE_TYPE_CHOICES,
+        verbose_name="Tipo de impulso",
+    )
+    impulse_type_other = models.CharField(
+        max_length=200, blank=True, verbose_name="Tipo de impulso (outro)"
+    )
+    ai_response = models.TextField(
+        blank=True, verbose_name="Resposta da IA (JSON estruturado)"
+    )
+    resolved = models.BooleanField(
+        default=False, verbose_name="Impulso superado?"
+    )
+
+    class Meta:
+        verbose_name = "Registro de Crise / Impulso"
+        verbose_name_plural = "Registros de Crise / Impulso"
+        ordering = ["-logged_at"]
+        indexes = [models.Index(fields=["owner", "-logged_at"])]
+
+    def __str__(self):
+        return (
+            f"{self.owner} — "
+            f"{self.get_impulse_type_display()} "
+            f"({self.logged_at:%Y-%m-%d})"
+        )
+
+
+class WellnessIntervention(BaseModel):
+    """Catálogo de intervenções de bem-estar emocional."""
+
+    title = models.CharField(max_length=200, verbose_name="Título")
+    description = models.TextField(verbose_name="Descrição")
+    category = models.CharField(
+        max_length=30,
+        choices=WELLNESS_INTERVENTION_CATEGORY_CHOICES,
+        verbose_name="Categoria",
+    )
+    duration_minutes = models.PositiveSmallIntegerField(
+        verbose_name="Duração (minutos)"
+    )
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DIFFICULTY_CHOICES,
+        default="easy",
+        verbose_name="Dificuldade",
+    )
+    expected_benefit = models.TextField(verbose_name="Benefício esperado")
+    is_global = models.BooleanField(
+        default=True,
+        verbose_name="Global (disponível para todos)",
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="custom_interventions",
+        null=True,
+        blank=True,
+        verbose_name="Proprietário (se personalizado)",
+    )
+
+    class Meta:
+        verbose_name = "Intervenção de Bem-Estar"
+        verbose_name_plural = "Intervenções de Bem-Estar"
+        ordering = ["category", "duration_minutes"]
+        indexes = [models.Index(fields=["category", "difficulty"])]
+
+    def __str__(self):
+        return (
+            f"[{self.get_category_display()}] "
+            f"{self.title} ({self.duration_minutes}min)"
+        )
+
+
+class WellnessInterventionCompletion(BaseModel):
+    """Registro de conclusão de uma intervenção pelo usuário."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="intervention_completions",
+        verbose_name="Proprietário",
+    )
+    intervention = models.ForeignKey(
+        WellnessIntervention,
+        on_delete=models.PROTECT,
+        related_name="completions",
+        verbose_name="Intervenção",
+    )
+    completed_at = models.DateTimeField(
+        default=timezone.now, verbose_name="Concluída em"
+    )
+    rating = models.SmallIntegerField(
+        null=True, blank=True, verbose_name="Avaliação (1–5)"
+    )
+    notes = models.TextField(blank=True, verbose_name="Observações")
+
+    class Meta:
+        verbose_name = "Conclusão de Intervenção"
+        verbose_name_plural = "Conclusões de Intervenção"
+        ordering = ["-completed_at"]
+        indexes = [models.Index(fields=["owner", "-completed_at"])]
+
+    def __str__(self):
+        return (
+            f"{self.owner} — "
+            f"{self.intervention.title} "
+            f"({self.completed_at:%Y-%m-%d})"
+        )
+
+
+class WellnessWeeklyReport(BaseModel):
+    """Relatório semanal gerado pela IA com padrões e recomendações."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="wellness_weekly_reports",
+        verbose_name="Proprietário",
+    )
+    week_start = models.DateField(verbose_name="Início da semana")
+    week_end = models.DateField(verbose_name="Fim da semana")
+    ai_summary = models.TextField(verbose_name="Resumo da IA")
+    attention_points = models.JSONField(
+        default=list, verbose_name="Pontos de atenção"
+    )
+    suggestions = models.JSONField(
+        default=list, verbose_name="Sugestões práticas"
+    )
+    avg_loneliness = models.DecimalField(
+        max_digits=4, decimal_places=2, null=True, blank=True
+    )
+    avg_anxiety = models.DecimalField(
+        max_digits=4, decimal_places=2, null=True, blank=True
+    )
+    avg_motivation = models.DecimalField(
+        max_digits=4, decimal_places=2, null=True, blank=True
+    )
+    latest_self_esteem_score = models.SmallIntegerField(
+        null=True, blank=True, verbose_name="Última pontuação de autoestima"
+    )
+
+    class Meta:
+        verbose_name = "Relatório Semanal de Bem-Estar"
+        verbose_name_plural = "Relatórios Semanais de Bem-Estar"
+        ordering = ["-week_start"]
+        indexes = [models.Index(fields=["owner", "-week_start"])]
+        unique_together = [["owner", "week_start"]]
+
+    def __str__(self):
+        return f"{self.owner} — semana {self.week_start}"

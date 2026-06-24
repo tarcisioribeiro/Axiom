@@ -170,6 +170,17 @@ export const API_CONFIG = {
     MENU_OPTION_INGREDIENTS: '/api/v1/personal-planning/menu-option-ingredients/',
     MEAL_LOGS: '/api/v1/personal-planning/meal-logs/',
     DAILY_CALORIC_SUMMARY: '/api/v1/personal-planning/daily-caloric-summary/',
+    // Wellness Center
+    WELLNESS_DASHBOARD: '/api/v1/personal-planning/wellness/dashboard/',
+    WELLNESS_SELF_ESTEEM: '/api/v1/personal-planning/wellness/self-esteem/',
+    WELLNESS_CHECKINS: '/api/v1/personal-planning/wellness/checkins/',
+    WELLNESS_CRISIS: '/api/v1/personal-planning/wellness/crisis/',
+    WELLNESS_INTERVENTIONS: '/api/v1/personal-planning/wellness/interventions/',
+    WELLNESS_INTERVENTION_COMPLETIONS:
+      '/api/v1/personal-planning/wellness/intervention-completions/',
+    WELLNESS_WEEKLY_REPORTS: '/api/v1/personal-planning/wellness/weekly-reports/',
+    WELLNESS_WEEKLY_REPORTS_GENERATE:
+      '/api/v1/personal-planning/wellness/weekly-reports/generate/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',
