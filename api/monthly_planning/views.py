@@ -216,11 +216,31 @@ class MonthlyPlanSummaryView(APIView):
             for e in expense_qs[:50]
         ]
 
-        total_overdraft = Account.objects.filter(
+        account_aggregates = Account.objects.filter(
             created_by=user,
             is_active=True,
             is_deleted=False,
-        ).aggregate(total=Sum("overdraft_limit"))["total"] or Decimal("0")
+        ).aggregate(
+            total_balance=Sum("current_balance"),
+            total_overdraft=Sum("overdraft_limit"),
+        )
+        total_balance = account_aggregates["total_balance"] or Decimal("0")
+        total_overdraft = account_aggregates["total_overdraft"] or Decimal("0")
+
+        expense_cat_qs = (
+            Expense.objects.filter(
+                created_by=user,
+                date__gte=date_from,
+                date__lt=date_to,
+                is_deleted=False,
+                related_transfer__isnull=True,
+            )
+            .values("category")
+            .annotate(total=Sum("value"))
+        )
+        actual_expenses_by_category = {
+            row["category"]: str(row["total"]) for row in expense_cat_qs
+        }
 
         return Response(
             {
@@ -240,7 +260,9 @@ class MonthlyPlanSummaryView(APIView):
                 },
                 "actual_revenue_items": actual_revenue_items,
                 "actual_expense_items": actual_expense_items,
+                "total_account_balance": str(total_balance),
                 "total_overdraft_limit": str(total_overdraft),
+                "actual_expenses_by_category": actual_expenses_by_category,
             }
         )
 

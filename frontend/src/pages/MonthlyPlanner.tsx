@@ -9,6 +9,7 @@ import {
   ChevronUp,
   CircleDollarSign,
   CreditCard,
+  Landmark,
   Plus,
   Target,
   TrendingDown,
@@ -143,7 +144,9 @@ interface MonthlyPlanSummary {
   actual: { revenues: string; expenses: string };
   actual_revenue_items: ActualRevenueItem[];
   actual_expense_items: ActualExpenseItem[];
+  total_account_balance: string;
   total_overdraft_limit: string;
+  actual_expenses_by_category: Record<string, string>;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -281,10 +284,12 @@ function BillItem({
   bill,
   enabled,
   onToggle,
+  isInsufficient,
 }: {
   bill: CreditCardBillItem;
   enabled: boolean;
   onToggle: (id: number, enabled: boolean) => void;
+  isInsufficient?: boolean;
 }) {
   const isPaid = bill.status === 'paid';
 
@@ -314,6 +319,15 @@ function BillItem({
           className="shrink-0 border-success text-xs text-success"
         >
           Pago
+        </Badge>
+      )}
+      {isInsufficient && enabled && !isPaid && (
+        <Badge
+          variant="outline"
+          className="shrink-0 border-destructive text-xs text-destructive"
+        >
+          <AlertTriangle className="mr-xs h-3 w-3" />
+          Saldo insuficiente
         </Badge>
       )}
       <span className="shrink-0 text-muted-foreground">
@@ -740,6 +754,31 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const actualRevenues = parseFloat(data?.actual.revenues ?? '0');
   const actualExpenses = parseFloat(data?.actual.expenses ?? '0');
   const actualBalance = actualRevenues - actualExpenses;
+  const hasActualData = actualRevenues > 0 || actualExpenses > 0;
+
+  const totalAccountBalance = parseFloat(data?.total_account_balance ?? '0');
+  const totalAvailable = totalAccountBalance + totalOverdraft;
+
+  const actualExpensesByCategory = data?.actual_expenses_by_category ?? {};
+
+  // Compute per-bill sufficiency: sort enabled bills by due date, flag when
+  // the running cumulative total exceeds the available balance.
+  const billInsufficientMap: Record<number, boolean> = (() => {
+    const enabledBills = (data?.credit_card_bills ?? [])
+      .filter((b) => billOverrides[String(b.id)] !== false && b.status !== 'paid')
+      .sort((a, b) => {
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return a.due_date.localeCompare(b.due_date);
+      });
+    const map: Record<number, boolean> = {};
+    let running = 0;
+    for (const b of enabledBills) {
+      running += parseFloat(b.total_amount || '0');
+      if (running > totalAvailable) map[b.id] = true;
+    }
+    return map;
+  })();
 
   const actualRevenueItems = data?.actual_revenue_items ?? [];
   const actualExpenseItems = data?.actual_expense_items ?? [];
@@ -782,7 +821,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       </div>
 
       {/* Summary stats */}
-      <div className="mb-lg grid grid-cols-3 gap-md">
+      <div className="mb-lg grid grid-cols-2 gap-md lg:grid-cols-4">
         <Card className="border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="pt-md">
             <div className="flex items-center gap-sm">
@@ -794,7 +833,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             <p className="mt-xs text-lg font-bold text-emerald-600">
               {formatCurrency(totalRevenues)}
             </p>
-            {isApplied && (
+            {hasActualData && (
               <p className="text-xs text-muted-foreground">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualRevenues)}
               </p>
@@ -818,7 +857,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
               </p>
             )}
-            {isApplied && (
+            {hasActualData && (
               <p className="text-xs text-muted-foreground">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
               </p>
@@ -848,7 +887,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             >
               {formatCurrency(projectedBalance)}
             </p>
-            {isApplied && (
+            {hasActualData && (
               <p className="text-xs text-muted-foreground">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualBalance)}
               </p>
@@ -862,6 +901,28 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 </span>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-md">
+            <div className="flex items-center gap-sm">
+              <Landmark className="h-4 w-4 text-primary" />
+              <span className="text-xs text-muted-foreground">
+                {t('monthlyPlanner.accountBalance')}
+              </span>
+            </div>
+            <p className="mt-xs text-lg font-bold text-primary">
+              {formatCurrency(totalAccountBalance)}
+            </p>
+            {totalOverdraft > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('monthlyPlanner.overdraftLimit')}: {formatCurrency(totalOverdraft)}
+              </p>
+            )}
+            <p className="text-xs font-medium text-primary">
+              {t('monthlyPlanner.totalAvailable')}: {formatCurrency(totalAvailable)}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -952,9 +1013,10 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   const limitAmount = parseFloat(
                     currentOverride || String(suggested ?? 0)
                   );
+                  const catActual = parseFloat(actualExpensesByCategory[cat] ?? '0');
                   const executionPct =
-                    isApplied && limitAmount > 0
-                      ? Math.min(100, Math.round((actualExpenses / limitAmount) * 100))
+                    limitAmount > 0 && catActual > 0
+                      ? Math.min(100, Math.round((catActual / limitAmount) * 100))
                       : null;
 
                   return (
@@ -1098,6 +1160,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 bill={b}
                 enabled={billOverrides[String(b.id)] !== false}
                 onToggle={toggleBill}
+                isInsufficient={billInsufficientMap[b.id] === true}
               />
             ))}
           </SectionCard>

@@ -5,7 +5,7 @@
 # Substitui: banco PostgreSQL + arquivos MinIO
 # Fonte    : arquivo gerado pelo k8s-backup.sh
 #
-# Dependências: docker, mc (MinIO Client)
+# Dependências: docker (MinIO Client executado via imagem minio/mc)
 # Uso: ./scripts/docker-restore.sh <backup.tar.gz>
 #      ./scripts/docker-restore.sh <diretório_backup>
 # =============================================================================
@@ -19,6 +19,7 @@ ENV_FILE="${REPO_ROOT}/.env"
 # Nomes dos containers (conforme docker-compose.yml)
 CONTAINER_DB="axiom-db"
 CONTAINER_MINIO="axiom-storage"
+CONTAINER_API="axiom-api"
 CONTAINERS_APP=("axiom-api" "axiom-worker" "axiom-queue" "axiom-db-backup")
 
 # ── Funções auxiliares ────────────────────────────────────────────────────────
@@ -30,8 +31,30 @@ cleanup() {
         log "Removendo diretório temporário de extração..."
         rm -rf "$TEMP_DIR"
     fi
+    if [[ -n "${MC_CONFIG_DIR:-}" && -d "$MC_CONFIG_DIR" ]]; then
+        rm -rf "$MC_CONFIG_DIR"
+    fi
 }
 trap cleanup EXIT
+
+# MinIO Client via Docker (evita dependência de binário local)
+MC_CONFIG_DIR=""  # inicializado antes do uso para o cleanup
+
+mc_cmd() {
+    docker run --rm \
+        --network host \
+        -v "${MC_CONFIG_DIR}:/root/.mc" \
+        minio/mc "$@"
+}
+
+mc_mirror() {
+    local src_dir="$1"; shift
+    docker run --rm \
+        --network host \
+        -v "${MC_CONFIG_DIR}:/root/.mc" \
+        -v "${src_dir}:/mnt/backup:ro" \
+        minio/mc "$@"
+}
 
 # ── Argumento obrigatório ─────────────────────────────────────────────────────
 if [[ $# -lt 1 ]]; then
@@ -45,9 +68,7 @@ fi
 INPUT="$1"
 
 # ── Verificação de dependências ───────────────────────────────────────────────
-for cmd in docker mc; do
-    command -v "$cmd" &>/dev/null || err "Dependência não encontrada: '$cmd'. Instale antes de continuar."
-done
+command -v docker &>/dev/null || err "Dependência não encontrada: 'docker'. Instale antes de continuar."
 
 # ── Carregar credenciais do .env local ───────────────────────────────────────
 [[ -f "$ENV_FILE" ]] || err "Arquivo .env não encontrado em '${ENV_FILE}'. Está na raiz correta?"
@@ -56,7 +77,7 @@ log "Carregando credenciais de ${ENV_FILE}..."
 set -a
 # shellcheck disable=SC1090
 source <(grep -E '^[A-Z_]+=' "$ENV_FILE" \
-    | grep -E '^(DB_NAME|DB_USER|DB_PASSWORD|MINIO_ROOT_USER|MINIO_ROOT_PASSWORD|MINIO_BUCKET_NAME|MINIO_PORT)=' \
+    | grep -E '^(DB_NAME|DB_USER|DB_PASSWORD|MINIO_ROOT_USER|MINIO_ROOT_PASSWORD|MINIO_BUCKET_NAME|MINIO_PORT|MINIO_ENDPOINT)=' \
     | sed 's/\r//' \
     | sed "s/^/export /")
 set +a
@@ -169,25 +190,92 @@ log "Banco de dados restaurado com sucesso."
 # ── Restaurar MinIO ───────────────────────────────────────────────────────────
 log "Restaurando arquivos MinIO (tamanho: ${MINIO_SIZE})..."
 
+MC_CONFIG_DIR="$(mktemp -d)"
+
 log "  Configurando alias mc 'local-minio' (porta ${MINIO_LOCAL_PORT})..."
-mc alias set local-minio \
+mc_cmd alias set local-minio \
     "http://localhost:${MINIO_LOCAL_PORT}" \
     "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" \
     --api S3v4 \
     >/dev/null
 
 log "  Garantindo existência do bucket '${MINIO_BUCKET}'..."
-mc mb --ignore-existing "local-minio/${MINIO_BUCKET}" >/dev/null
+mc_cmd mb --ignore-existing "local-minio/${MINIO_BUCKET}" >/dev/null
 
 log "  Sincronizando arquivos (--overwrite --remove para substituição completa)..."
-mc mirror \
+mc_mirror "${WORK_DIR}/minio" mirror \
     --preserve \
     --overwrite \
     --remove \
-    "${WORK_DIR}/minio/" \
+    /mnt/backup/ \
     "local-minio/${MINIO_BUCKET}"
 
 log "MinIO restaurado com sucesso."
+
+# ── Corrigir SystemConfig para ambiente Docker ────────────────────────────────
+# O dump restaurado pode conter valores do ambiente de origem (ex: K8s) que
+# sobrescrevem o .env via cfg(). Aqui sincronizamos as chaves MinIO do
+# SystemConfig com as credenciais locais antes de subir os containers.
+if docker inspect "$CONTAINER_API" &>/dev/null 2>&1; then
+    log "Sincronizando SystemConfig com credenciais locais (${ENV_FILE})..."
+
+    log "  Iniciando '${CONTAINER_API}' temporariamente..."
+    docker start "$CONTAINER_API" &>/dev/null
+
+    log "  Aguardando Django inicializar (máx. 30s)..."
+    _django_ready=0
+    for _i in $(seq 1 30); do
+        if docker exec "$CONTAINER_API" \
+                python -c "import django; django.setup()" &>/dev/null 2>&1; then
+            _django_ready=1
+            break
+        fi
+        sleep 1
+    done
+
+    if [[ $_django_ready -eq 1 ]]; then
+        docker exec -i "$CONTAINER_API" python - \
+            "${MINIO_ROOT_USER}" \
+            "${MINIO_ROOT_PASSWORD}" \
+            "${MINIO_ENDPOINT:-minio:9000}" \
+            "${MINIO_BUCKET_NAME:-axiom}" <<'PYEOF'
+import sys, os, django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
+django.setup()
+from admin_panel.models import SystemConfig
+
+minio_user, minio_pass, minio_endpoint, minio_bucket = sys.argv[1:]
+
+updates = {
+    'MINIO_ROOT_USER':     minio_user,
+    'MINIO_ENDPOINT':      minio_endpoint,
+    'MINIO_ROOT_PASSWORD': minio_pass,
+    'MINIO_BUCKET_NAME':   minio_bucket,
+}
+
+for key, val in updates.items():
+    if not val:
+        continue
+    try:
+        obj = SystemConfig.objects.get(key=key)
+        obj.set_value(val)
+        obj.save()
+        masked = '***' if 'PASSWORD' in key else val
+        print(f'  Atualizado: {key} = {masked}')
+    except SystemConfig.DoesNotExist:
+        pass  # chave ausente no SystemConfig — .env já serve de fallback
+    except Exception as e:
+        print(f'  AVISO: {key}: {e}', file=sys.stderr)
+PYEOF
+        log "SystemConfig sincronizado."
+    else
+        log "AVISO: timeout aguardando Django. Atualize manualmente via Django Admin:"
+        log "  MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, MINIO_ENDPOINT, MINIO_BUCKET_NAME"
+    fi
+
+    log "  Parando '${CONTAINER_API}'..."
+    docker stop "$CONTAINER_API" &>/dev/null || true
+fi
 
 # ── Reiniciar containers de aplicação ─────────────────────────────────────────
 log "Reiniciando containers de aplicação..."
