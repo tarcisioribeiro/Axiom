@@ -37,6 +37,7 @@ import {
   Brain,
   Network,
   Scale,
+  Heart,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -108,6 +109,12 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/planning/body-metrics': {
     labelKey: 'breadcrumb.bodyMetrics',
     icon: Scale,
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
+  },
+  '/planning/emotional-wellness': {
+    labelKey: 'breadcrumb.emotionalWellness',
+    icon: Heart,
     moduleKey: 'breadcrumb.planning',
     moduleIcon: Calendar,
   },

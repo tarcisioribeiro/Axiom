@@ -42,6 +42,7 @@ import {
   CalendarRange,
   Zap,
   Landmark,
+  Heart,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -126,6 +127,18 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.bodyMetrics',
             href: '/planning/body-metrics',
             icon: Scale,
+          },
+        ],
+      },
+      {
+        id: 'planning-wellness',
+        titleKey: 'nav.submodules.wellness',
+        icon: Heart,
+        items: [
+          {
+            titleKey: 'nav.items.emotionalWellness',
+            href: '/planning/emotional-wellness',
+            icon: Heart,
           },
         ],
       },

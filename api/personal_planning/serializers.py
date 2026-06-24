@@ -1068,3 +1068,208 @@ class UserRoutineTemplateCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserRoutineTemplate
         fields = ["id", "name", "description", "icon", "tasks", "owner"]
+
+
+# ============================================================================
+# WELLNESS CENTER SERIALIZERS
+# ============================================================================
+
+from personal_planning.models import (  # noqa: E402
+    CrisisImpulseLog,
+    EmotionalCheckin,
+    SelfEsteemAssessment,
+    WellnessIntervention,
+    WellnessInterventionCompletion,
+    WellnessWeeklyReport,
+)
+
+
+class SelfEsteemAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SelfEsteemAssessment
+        fields = [
+            "id",
+            "assessed_at",
+            "q1",
+            "q2",
+            "q3",
+            "q4",
+            "q5",
+            "q6",
+            "q7",
+            "q8",
+            "q9",
+            "q10",
+            "score",
+            "ai_analysis",
+            "created_at",
+        ]
+        read_only_fields = ["score", "ai_analysis", "created_at"]
+
+
+class SelfEsteemAssessmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SelfEsteemAssessment
+        fields = [
+            "assessed_at",
+            "q1",
+            "q2",
+            "q3",
+            "q4",
+            "q5",
+            "q6",
+            "q7",
+            "q8",
+            "q9",
+            "q10",
+            "owner",
+        ]
+
+
+class EmotionalCheckinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmotionalCheckin
+        fields = [
+            "id",
+            "checked_at",
+            "loneliness",
+            "neediness",
+            "anxiety",
+            "sadness",
+            "motivation",
+            "energy",
+            "what_happened",
+            "occupying_thoughts",
+            "created_at",
+        ]
+        read_only_fields = ["created_at"]
+
+
+class EmotionalCheckinCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmotionalCheckin
+        fields = [
+            "checked_at",
+            "loneliness",
+            "neediness",
+            "anxiety",
+            "sadness",
+            "motivation",
+            "energy",
+            "what_happened",
+            "occupying_thoughts",
+            "owner",
+        ]
+
+
+class CrisisImpulseLogSerializer(serializers.ModelSerializer):
+    emotional_state_display = serializers.CharField(
+        source="get_emotional_state_display", read_only=True
+    )
+    impulse_type_display = serializers.CharField(
+        source="get_impulse_type_display", read_only=True
+    )
+
+    class Meta:
+        model = CrisisImpulseLog
+        fields = [
+            "id",
+            "logged_at",
+            "emotional_state",
+            "emotional_state_display",
+            "emotional_state_other",
+            "impulse_type",
+            "impulse_type_display",
+            "impulse_type_other",
+            "ai_response",
+            "resolved",
+            "created_at",
+        ]
+        read_only_fields = ["ai_response", "created_at"]
+
+
+class CrisisImpulseLogCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CrisisImpulseLog
+        fields = [
+            "logged_at",
+            "emotional_state",
+            "emotional_state_other",
+            "impulse_type",
+            "impulse_type_other",
+            "owner",
+        ]
+
+
+class WellnessInterventionSerializer(serializers.ModelSerializer):
+    category_display = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
+    difficulty_display = serializers.CharField(
+        source="get_difficulty_display", read_only=True
+    )
+
+    class Meta:
+        model = WellnessIntervention
+        fields = [
+            "id",
+            "title",
+            "description",
+            "category",
+            "category_display",
+            "duration_minutes",
+            "difficulty",
+            "difficulty_display",
+            "expected_benefit",
+            "is_global",
+        ]
+
+
+class WellnessInterventionCompletionSerializer(serializers.ModelSerializer):
+    intervention_title = serializers.CharField(
+        source="intervention.title", read_only=True
+    )
+    intervention_category = serializers.CharField(
+        source="intervention.category", read_only=True
+    )
+
+    class Meta:
+        model = WellnessInterventionCompletion
+        fields = [
+            "id",
+            "intervention",
+            "intervention_title",
+            "intervention_category",
+            "completed_at",
+            "rating",
+            "notes",
+            "created_at",
+        ]
+        read_only_fields = ["created_at"]
+
+
+class WellnessInterventionCompletionCreateSerializer(
+    serializers.ModelSerializer
+):
+    class Meta:
+        model = WellnessInterventionCompletion
+        fields = ["intervention", "completed_at", "rating", "notes", "owner"]
+
+
+class WellnessWeeklyReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WellnessWeeklyReport
+        fields = [
+            "id",
+            "week_start",
+            "week_end",
+            "ai_summary",
+            "attention_points",
+            "suggestions",
+            "avg_loneliness",
+            "avg_anxiety",
+            "avg_motivation",
+            "latest_self_esteem_score",
+            "created_at",
+        ]
+        read_only_fields = ["created_at"]
