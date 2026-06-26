@@ -2541,6 +2541,7 @@ class CourseLessonBulkCompleteView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = CourseLesson.objects.all()
 
     def post(self, request):
         lesson_ids = request.data.get("lesson_ids", [])
