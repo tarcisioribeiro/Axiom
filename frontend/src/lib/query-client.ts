@@ -1,5 +1,10 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 
+import {
+  playDeleteSound,
+  playErrorSound,
+  playSuccessSound,
+} from '@/hooks/use-sound-feedback';
 import { toast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -42,6 +47,12 @@ const ERROR_DEBOUNCE_MS = 2_000;
  * Global error handling: All query failures show a destructive toast via the
  * standalone `toast()` function (safe to call outside React).  Errors within
  * 2 s of each other are collapsed into a single notification.
+ *
+ * Global sound feedback: since every page's create/update/delete action goes
+ * through a `useMutation` backed by this client, playing tones here covers
+ * the whole app without wiring sound into each individual page. `delete()`
+ * on `BaseService` resolves to `void`, so a nullish mutation result is used
+ * to tell a deletion apart from a create/update (which resolve to the record).
  */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -49,6 +60,7 @@ export const queryClient = new QueryClient({
       const now = Date.now();
       if (now - lastErrorShownAt > ERROR_DEBOUNCE_MS) {
         lastErrorShownAt = now;
+        playErrorSound();
         toast({
           title: 'Erro ao carregar dados',
           description: getErrorMessage(error),
@@ -60,8 +72,16 @@ export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     // After any successful mutation (create/update/delete), invalidate all
     // active queries so every view that reads from the database is refreshed.
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data === undefined || data === null) {
+        playDeleteSound();
+      } else {
+        playSuccessSound();
+      }
       void queryClient.invalidateQueries();
+    },
+    onError: () => {
+      playErrorSound();
     },
   }),
   defaultOptions: {
