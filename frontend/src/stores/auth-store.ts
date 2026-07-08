@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { playErrorSound, playSuccessSound } from '@/hooks/use-sound-feedback';
 import { logger } from '@/lib/logger';
 import { authService } from '@/services/auth-service';
 import type { LoginCredentials, Permission, User } from '@/types';
@@ -77,6 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAdmin: true,
           isLoading: false,
         });
+        playSuccessSound();
         return;
       }
 
@@ -101,6 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAdmin: false,
         isLoading: false,
       });
+      playSuccessSound();
     } catch (error: unknown) {
       const err = error as Error;
       const message =
@@ -108,6 +111,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           ? 'Superusuários não têm acesso ao sistema. Use o painel admin.'
           : err.message || 'Login failed';
       set({ error: message, isLoading: false });
+      playErrorSound();
       throw error;
     }
   },
@@ -147,6 +151,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           requires2FA: false,
           tempToken: null,
         });
+        playSuccessSound();
         return;
       }
 
@@ -170,9 +175,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         requires2FA: false,
         tempToken: null,
       });
+      playSuccessSound();
     } catch (error: unknown) {
       const err = error as Error;
       set({ error: err.message || 'Código inválido.', isLoading: false });
+      playErrorSound();
       throw error;
     }
   },
