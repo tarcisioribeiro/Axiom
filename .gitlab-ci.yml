@@ -232,6 +232,7 @@ lint:k8s:
     # repeat jobs don't re-fetch everything, and -n 1 serializes downloads to
     # avoid tripping transient rate-limiting/timeouts on raw.githubusercontent.com.
     - |
+      mkdir -p .kubeconform-cache
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
         xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 -n 1 \
           -cache .kubeconform-cache \
