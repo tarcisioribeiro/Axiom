@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from accounts.models import Account
 from app.base_views import BaseRetrieveUpdateDestroyView
 from budgets.models import Budget
-from credit_cards.models import CreditCardBill
+from credit_cards.models import CreditCardBill, CreditCardInstallment
 from expenses.models import Expense, FixedExpense
 from monthly_planning.models import MonthlyPlan
 from monthly_planning.serializers import MonthlyPlanSerializer
@@ -76,7 +76,37 @@ def _fixed_revenues_data(user: User) -> list:
     ]
 
 
-def _fixed_expenses_data(user: User) -> list:
+def _is_fixed_expense_already_posted(
+    fe: FixedExpense, month: int, year: int, date_from: str, date_to: str
+) -> bool:
+    """
+    Checks whether this FixedExpense template has already been posted for
+    the given month, either as a credit card installment (bill.dispatch)
+    or as a standalone checking-account Expense. Mirrors the lookup logic
+    in expenses.services.bulk_generate_fixed_expenses so the summary never
+    counts a template that has already turned into a real transaction.
+    """
+    if fe.credit_card:
+        return CreditCardInstallment.objects.filter(
+            purchase__description=fe.description,
+            purchase__card=fe.credit_card,
+            bill__year=str(year),
+            bill__month=_MONTH_ABBREVS[month - 1],
+            is_deleted=False,
+            purchase__is_deleted=False,
+        ).exists()
+
+    return Expense.objects.filter(
+        fixed_expense_template=fe,
+        date__gte=date_from,
+        date__lt=date_to,
+        is_deleted=False,
+    ).exists()
+
+
+def _fixed_expenses_data(
+    user: User, month: int, year: int, date_from: str, date_to: str
+) -> list:
     return [
         {
             "id": e.id,
@@ -88,11 +118,45 @@ def _fixed_expenses_data(user: User) -> list:
             "credit_card_name": (e.credit_card.name if e.credit_card else ""),
             "payment_method": e.payment_method or "",
             "allow_value_edit": e.allow_value_edit,
+            "already_posted": _is_fixed_expense_already_posted(
+                e, month, year, date_from, date_to
+            ),
         }
         for e in FixedExpense.objects.filter(
             created_by=user, is_active=True, is_deleted=False
         ).select_related("account", "credit_card")
     ]
+
+
+def _opening_balance(user: User, date_from: str) -> Decimal:
+    """
+    Balance of the user's checking accounts at the start of date_from
+    (day 1 of the target month), reconstructed the same way
+    accounts.services.recalculate_account_balance() computes
+    current_balance — sum of received revenues minus paid expenses — but
+    restricted to entries dated before the target month, so it reflects
+    the balance actually carried into that month rather than today's
+    live balance.
+    """
+    total_revenues = Revenue.objects.filter(
+        account__created_by=user,
+        account__is_active=True,
+        account__is_deleted=False,
+        received=True,
+        is_deleted=False,
+        date__lt=date_from,
+    ).aggregate(total=Sum("value"))["total"] or Decimal("0")
+
+    total_expenses = Expense.objects.filter(
+        account__created_by=user,
+        account__is_active=True,
+        account__is_deleted=False,
+        payed=True,
+        is_deleted=False,
+        date__lt=date_from,
+    ).aggregate(total=Sum("value"))["total"] or Decimal("0")
+
+    return total_revenues - total_expenses
 
 
 _MONTH_ABBREVS = [
@@ -173,6 +237,8 @@ class MonthlyPlanSummaryView(APIView):
         next_year = year if month < 12 else year + 1
         date_to = f"{next_year}-{next_month:02d}-01"
 
+        opening_balance = _opening_balance(user, date_from)
+
         revenue_qs = Revenue.objects.filter(
             created_by=user,
             date__gte=date_from,
@@ -180,9 +246,9 @@ class MonthlyPlanSummaryView(APIView):
             is_deleted=False,
             related_transfer__isnull=True,
         ).order_by("-date")
-        actual_revenues = revenue_qs.aggregate(total=Sum("value"))[
-            "total"
-        ] or Decimal("0")
+        actual_revenues = (
+            revenue_qs.aggregate(total=Sum("value"))["total"] or Decimal("0")
+        ) + opening_balance
         actual_revenue_items = [
             {
                 "id": r.id,
@@ -193,6 +259,16 @@ class MonthlyPlanSummaryView(APIView):
             }
             for r in revenue_qs[:50]
         ]
+        if opening_balance != Decimal("0"):
+            actual_revenue_items.append(
+                {
+                    "id": 0,
+                    "description": "Saldo em contas no início do mês",
+                    "value": str(opening_balance),
+                    "category": "deposit",
+                    "date": date_from,
+                }
+            )
 
         expense_qs = Expense.objects.filter(
             created_by=user,
@@ -215,6 +291,17 @@ class MonthlyPlanSummaryView(APIView):
             }
             for e in expense_qs[:50]
         ]
+
+        # Registered expenses that are not already represented elsewhere in
+        # the plan's totals: bill-payment expenses are already inside
+        # credit_card_bills' total_amount, and fixed-expense-linked expenses
+        # are already inside the (always-counted) fixed_expenses total. Only
+        # the remainder — ad-hoc expenses posted directly outside the
+        # planner — should be added to the projected "Total Despesas".
+        registered_expenses_net = expense_qs.filter(
+            related_bill_payment__isnull=True,
+            fixed_expense_template__isnull=True,
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0")
 
         account_aggregates = Account.objects.filter(
             created_by=user,
@@ -246,7 +333,9 @@ class MonthlyPlanSummaryView(APIView):
             {
                 "plan": MonthlyPlanSerializer(plan).data,
                 "fixed_revenues": _fixed_revenues_data(user),
-                "fixed_expenses": _fixed_expenses_data(user),
+                "fixed_expenses": _fixed_expenses_data(
+                    user, month, year, date_from, date_to
+                ),
                 "credit_card_bills": _credit_card_bills_data(
                     user, month, year
                 ),
@@ -262,6 +351,8 @@ class MonthlyPlanSummaryView(APIView):
                 "actual_expense_items": actual_expense_items,
                 "total_account_balance": str(total_balance),
                 "total_overdraft_limit": str(total_overdraft),
+                "opening_balance": str(opening_balance),
+                "registered_expenses_net": str(registered_expenses_net),
                 "actual_expenses_by_category": actual_expenses_by_category,
             }
         )

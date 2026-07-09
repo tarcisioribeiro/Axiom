@@ -62,6 +62,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     accounts,
     loans,
     payables,
+    fixedExpenses,
     isLoading,
     isFetching,
     isDialogOpen,
@@ -466,6 +467,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             accounts={accounts}
             loans={loans}
             payables={payables}
+            fixedExpenses={fixedExpenses}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
