@@ -176,6 +176,7 @@ export const expenseSchema = z.object({
   merchant: z.string().optional(),
   related_loan: z.number().int().positive().optional().nullable(),
   related_payable: z.number().int().positive().optional().nullable(),
+  fixed_expense_template: z.number().int().positive().optional().nullable(),
 });
 
 // ============================================================================

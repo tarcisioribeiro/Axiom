@@ -26,6 +26,7 @@ export interface Expense {
   loan_description?: string;
   related_payable?: number | null;
   payable_description?: string;
+  fixed_expense_template?: number | null;
   auto_categorized: boolean;
   is_initial_balance?: boolean;
   currency_code?: string;
@@ -52,6 +53,7 @@ export interface ExpenseFormData {
   frequency?: string;
   related_loan?: number | null;
   related_payable?: number | null;
+  fixed_expense_template?: number | null;
 }
 
 export interface ExpenseSplit {

@@ -56,6 +56,7 @@ import type {
   CategorizationRule,
   Expense,
   ExpenseFormData,
+  FixedExpense,
   Loan,
   Member,
   Payable,
@@ -73,6 +74,7 @@ interface ExpenseFormProps {
   accounts: Account[];
   loans?: Loan[];
   payables?: Payable[];
+  fixedExpenses?: FixedExpense[];
   onSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -84,6 +86,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   accounts,
   loans,
   payables,
+  fixedExpenses,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -122,6 +125,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       merchant: '',
       related_loan: null,
       related_payable: null,
+      fixed_expense_template: null,
     },
   });
 
@@ -184,6 +188,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setValue('merchant', expense.merchant ?? '');
       setValue('related_loan', expense.related_loan || null);
       setValue('related_payable', expense.related_payable || null);
+      setValue('fixed_expense_template', expense.fixed_expense_template || null);
     } else if (accounts.length > 0) {
       setValue('account', accounts[0].id, { shouldDirty: true });
     }
@@ -331,7 +336,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   };
 
   const selectedAccount = accounts.find((a) => a.id === watchedAccount);
-  const hasEligibleLinks = eligibleLoans.length > 0 || eligiblePayables.length > 0;
+  const eligibleFixedExpenses = fixedExpenses ?? [];
+  const hasEligibleLinks =
+    eligibleLoans.length > 0 ||
+    eligiblePayables.length > 0 ||
+    eligibleFixedExpenses.length > 0;
 
   const handleOCRResult = (result: OCRResult) => {
     if (result.merchant) setValue('description', result.merchant);
@@ -663,6 +672,43 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     {t('pages.expenses.form.relatedPayableHint')}
+                  </p>
+                </div>
+              )}
+
+              {eligibleFixedExpenses.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.expenses.form.relatedFixedExpenseLabel')}
+                  </Label>
+                  <Select
+                    value={watch('fixed_expense_template')?.toString() || 'none'}
+                    onValueChange={(v) =>
+                      setValue(
+                        'fixed_expense_template',
+                        v === 'none' ? null : parseInt(v)
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('common.fields.select_optional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                      {eligibleFixedExpenses.map((fixedExpense) => (
+                        <SelectItem
+                          key={fixedExpense.id}
+                          value={fixedExpense.id.toString()}
+                        >
+                          {fixedExpense.description} — R$ {fixedExpense.default_value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.expenses.form.relatedFixedExpenseHint')}
                   </p>
                 </div>
               )}
