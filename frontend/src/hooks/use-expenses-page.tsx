@@ -18,9 +18,17 @@ import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import type { ExpenseExportParams } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
+import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
-import type { Expense, ExpenseFormData, Account, Loan, Payable } from '@/types';
+import type {
+  Expense,
+  ExpenseFormData,
+  Account,
+  Loan,
+  Payable,
+  FixedExpense,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 import type { Column } from '../components/common/DataTable';
@@ -30,6 +38,7 @@ export interface UseExpensesPageReturn {
   accounts: Account[];
   loans: Loan[];
   payables: Payable[];
+  fixedExpenses: FixedExpense[];
   isLoading: boolean;
   isFetching: boolean;
   isDialogOpen: boolean;
@@ -185,6 +194,16 @@ export function useExpensesPage(opts?: {
     queryFn: () => payablesService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
     select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  // Only account-based (non-card) fixed expenses can be linked here — card-
+  // linked ones are matched to their bill installment automatically instead.
+  const { data: fixedExpenses = [] } = useQuery({
+    queryKey: ['fixedExpenses'],
+    queryFn: () => fixedExpensesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) =>
+      (Array.isArray(data) ? data : []).filter((fe) => fe.is_active && !fe.credit_card),
   });
 
   const invalidateExpenses = () =>
@@ -406,6 +425,7 @@ export function useExpensesPage(opts?: {
     accounts,
     loans,
     payables,
+    fixedExpenses,
     isLoading,
     isFetching,
     isDialogOpen,
