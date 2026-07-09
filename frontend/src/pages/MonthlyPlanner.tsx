@@ -44,6 +44,7 @@ interface ExtraItem {
   description: string;
   value: string;
   category: string;
+  enabled?: boolean;
 }
 
 interface PlanPayload {
@@ -89,6 +90,7 @@ interface FixedExpenseItem {
   account_name: string;
   credit_card_name: string;
   allow_value_edit: boolean;
+  already_posted: boolean;
 }
 
 interface FixedItemOverride {
@@ -146,6 +148,8 @@ interface MonthlyPlanSummary {
   actual_expense_items: ActualExpenseItem[];
   total_account_balance: string;
   total_overdraft_limit: string;
+  opening_balance: string;
+  registered_expenses_net: string;
   actual_expenses_by_category: Record<string, string>;
 }
 
@@ -180,8 +184,11 @@ const MONTH_NAMES_EN = [
   'December',
 ];
 
-function sumValues(items: Array<{ value?: string; default_value?: string }>): number {
+function sumValues(
+  items: Array<{ value?: string; default_value?: string; enabled?: boolean }>
+): number {
   return items.reduce((acc, item) => {
+    if (item.enabled === false) return acc;
     const v = parseFloat(item.value ?? item.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
@@ -195,7 +202,10 @@ function formatDueDate(isoDate: string | null | undefined): string | undefined {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionCard({
+/** A visually distinct block (accent border + divider header) nested inside
+ * a shared parent Card, used to group related items without a separate
+ * Card per group. */
+function CardSubSection({
   title,
   icon: Icon,
   total,
@@ -208,26 +218,25 @@ function SectionCard({
   variant?: 'revenue' | 'expense' | 'bill' | 'default';
   children: React.ReactNode;
 }) {
-  const variantBorder = {
-    revenue: 'border-l-4 border-l-success',
-    expense: 'border-l-4 border-l-destructive',
-    bill: 'border-l-4 border-l-warning',
-    default: '',
+  const accent = {
+    revenue: 'border-l-success/60',
+    expense: 'border-l-destructive/60',
+    bill: 'border-l-warning/60',
+    default: 'border-l-border',
   }[variant];
 
   return (
-    <Card className={variantBorder}>
-      <CardHeader className="pb-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-sm">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-          </div>
-          <span className="text-sm font-semibold">{formatCurrency(total)}</span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-xs">{children}</CardContent>
-    </Card>
+    <div className={cn('space-y-sm border-l-2 pl-sm', accent)}>
+      <div className="flex items-center gap-xs">
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+        <div className="h-px flex-1 bg-border/50" />
+        <span className="text-sm font-semibold">{formatCurrency(total)}</span>
+      </div>
+      <div className="space-y-xs">{children}</div>
+    </div>
   );
 }
 
@@ -237,6 +246,8 @@ function EditableFixedItem({
   defaultValue,
   sub,
   override,
+  alreadyPosted,
+  forceDisabled,
   onToggle,
   onValueChange,
 }: {
@@ -245,10 +256,17 @@ function EditableFixedItem({
   defaultValue: string;
   sub?: string;
   override?: FixedItemOverride;
+  /** Shows the informational "already posted" badge. Does not affect the total. */
+  alreadyPosted?: boolean;
+  /** Forces the checkbox off — used when the value is already counted
+   * elsewhere (e.g. a card-linked fixed expense already inside a bill
+   * total), so including it here would double-count it. */
+  forceDisabled?: boolean;
   onToggle: (id: number, enabled: boolean) => void;
   onValueChange: (id: number, value: string) => void;
 }) {
-  const enabled = override?.enabled !== false;
+  const { t } = useTranslation();
+  const enabled = !forceDisabled && override?.enabled !== false;
   const displayValue = override?.value ?? defaultValue;
 
   return (
@@ -261,12 +279,21 @@ function EditableFixedItem({
       <Checkbox
         checked={enabled}
         onCheckedChange={(checked) => onToggle(id, !!checked)}
+        disabled={forceDisabled}
         className="shrink-0"
       />
       <div className="min-w-0 flex-1">
         <span className="font-medium">{label}</span>
         {sub && <span className="ml-xs text-xs text-muted-foreground">{sub}</span>}
       </div>
+      {alreadyPosted && (
+        <Badge
+          variant="outline"
+          className="shrink-0 border-success text-xs text-success"
+        >
+          {t('monthlyPlanner.alreadyPosted')}
+        </Badge>
+      )}
       <Input
         type="number"
         min="0"
@@ -341,21 +368,37 @@ function ExtraItemRow({
   item,
   index,
   onChange,
+  onToggle,
   onRemove,
   removeLabel,
 }: {
   item: ExtraItem;
   index: number;
   onChange: (idx: number, field: keyof ExtraItem, val: string) => void;
+  onToggle: (idx: number, enabled: boolean) => void;
   onRemove: (idx: number) => void;
   removeLabel: string;
 }) {
+  const { t } = useTranslation();
+  const enabled = item.enabled !== false;
+
   return (
-    <div className="flex items-center gap-xs">
+    <div
+      className={cn(
+        'flex items-center gap-xs transition-opacity',
+        !enabled && 'opacity-40'
+      )}
+    >
+      <Checkbox
+        checked={enabled}
+        onCheckedChange={(checked) => onToggle(index, !!checked)}
+        className="shrink-0"
+      />
       <Input
         value={item.description}
         onChange={(e) => onChange(index, 'description', e.target.value)}
-        placeholder="Descrição"
+        placeholder={t('monthlyPlanner.descriptionPlaceholder')}
+        disabled={!enabled}
         className="h-8 flex-1 text-sm"
       />
       <Input
@@ -365,6 +408,7 @@ function ExtraItemRow({
         type="number"
         min="0"
         step="0.01"
+        disabled={!enabled}
         className="h-8 w-28 text-sm"
       />
       <Button
@@ -380,7 +424,10 @@ function ExtraItemRow({
   );
 }
 
-function ActualItemsCard({
+/** Collapsible sub-section (same visual language as CardSubSection) that
+ * lists real, already-posted records for context/transparency. Collapsed
+ * by default since the list can be long. */
+function ActualItemsSection({
   title,
   icon: Icon,
   variant,
@@ -396,32 +443,31 @@ function ActualItemsCard({
   renderItem: (item: unknown, idx: number) => ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const borderColor =
-    variant === 'revenue' ? 'border-l-success' : 'border-l-destructive';
+  const accent =
+    variant === 'revenue' ? 'border-l-success/60' : 'border-l-destructive/60';
 
   return (
-    <Card className={`border-l-4 ${borderColor} border-dashed opacity-80`}>
-      <CardHeader className="pb-sm">
-        <button
-          className="flex w-full items-center justify-between"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          <div className="flex items-center gap-sm">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-            <Badge variant="secondary" className="text-xs">
-              {items.length}
-            </Badge>
-          </div>
-          {expanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-      </CardHeader>
+    <div className={cn('space-y-sm border-l-2 pl-sm', accent)}>
+      <button
+        className="flex w-full items-center gap-xs"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+        <Badge variant="secondary" className="text-xs">
+          {items.length}
+        </Badge>
+        <div className="h-px flex-1 bg-border/50" />
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
       {expanded && (
-        <CardContent className="space-y-xs">
+        <div className="space-y-xs">
           {items.length === 0 ? (
             <p className="py-sm text-center text-xs text-muted-foreground">
               {emptyText}
@@ -429,9 +475,9 @@ function ActualItemsCard({
           ) : (
             items.map((item, idx) => renderItem(item, idx))
           )}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -588,6 +634,13 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     scheduleSave(planId, buildPayload({ extra_revenues: updated }));
   };
 
+  const toggleExtraRevenue = (idx: number, enabled: boolean) => {
+    if (!planId) return;
+    const updated = extraRevenues.map((r, i) => (i === idx ? { ...r, enabled } : r));
+    setExtraRevenues(updated);
+    scheduleSave(planId, buildPayload({ extra_revenues: updated }));
+  };
+
   const removeExtraRevenue = (idx: number) => {
     if (!planId) return;
     const updated = extraRevenues.filter((_, i) => i !== idx);
@@ -610,6 +663,13 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     const updated = extraExpenses.map((e, i) =>
       i === idx ? { ...e, [field]: val } : e
     );
+    setExtraExpenses(updated);
+    scheduleSave(planId, buildPayload({ extra_expenses: updated }));
+  };
+
+  const toggleExtraExpense = (idx: number, enabled: boolean) => {
+    if (!planId) return;
+    const updated = extraExpenses.map((e, i) => (i === idx ? { ...e, enabled } : e));
     setExtraExpenses(updated);
     scheduleSave(planId, buildPayload({ extra_expenses: updated }));
   };
@@ -710,7 +770,8 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
   const totalExtra = sumValues(extraRevenues);
-  const totalRevenues = totalFixed + totalExtra;
+  const openingBalance = parseFloat(data?.opening_balance ?? '0');
+  const totalRevenues = totalFixed + totalExtra + openingBalance;
 
   const allCategories = [
     ...new Set([
@@ -727,6 +788,13 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   );
 
   const totalFixedExp = (data?.fixed_expenses ?? []).reduce((acc, e) => {
+    // Card-linked fixed expenses that are already posted are already inside
+    // totalBills (the bill's total_amount already contains that
+    // installment) — skip those to avoid double-counting. Account-linked
+    // ones stay counted here even once posted: their registered Expense is
+    // excluded from registeredExpensesNet instead, so the value is still
+    // counted exactly once.
+    if (e.already_posted && e.credit_card_name) return acc;
     const ov = fixedExpenseOverrides[String(e.id)];
     if (ov?.enabled === false) return acc;
     const v = parseFloat(ov?.value ?? e.default_value ?? '0');
@@ -745,7 +813,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     const v = parseFloat(override ?? '0');
     return acc + (isNaN(v) ? 0 : v);
   }, 0);
-  const totalExpenses = totalFixedExp + totalBills + totalExtraExp + totalBudgets;
+  const registeredExpensesNet = parseFloat(data?.registered_expenses_net ?? '0');
+  const totalExpenses =
+    totalFixedExp + totalBills + totalExtraExp + totalBudgets + registeredExpensesNet;
 
   const projectedBalance = totalRevenues - totalExpenses;
   const totalOverdraft = parseFloat(data?.total_overdraft_limit ?? '0');
@@ -931,57 +1001,107 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
         {/* Left: Revenues + Budgets */}
         <div className="space-y-sm">
-          <SectionCard
-            title={t('monthlyPlanner.fixedRevenues')}
-            icon={CircleDollarSign}
-            total={totalFixed}
-            variant="revenue"
-          >
-            {(data?.fixed_revenues.length ?? 0) === 0 && (
-              <p className="py-sm text-center text-xs text-muted-foreground">
-                {t('monthlyPlanner.noFixedRevenues')}
-              </p>
-            )}
-            {data?.fixed_revenues.map((r) => (
-              <EditableFixedItem
-                key={r.id}
-                id={r.id}
-                label={r.description}
-                defaultValue={r.default_value}
-                sub={r.account_name || t('monthlyPlanner.dueDay', { day: r.due_day })}
-                override={fixedRevenueOverrides[String(r.id)]}
-                onToggle={toggleFixedRevenue}
-                onValueChange={updateFixedRevenueValue}
-              />
-            ))}
-          </SectionCard>
+          <Card className="border-l-4 border-l-success">
+            <CardHeader className="pb-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-sm">
+                  <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-semibold">
+                    {t('monthlyPlanner.totalRevenues')}
+                  </CardTitle>
+                </div>
+                <span className="text-sm font-semibold text-success">
+                  {formatCurrency(totalRevenues)}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-lg">
+              <CardSubSection
+                title={t('monthlyPlanner.fixedRevenues')}
+                icon={CircleDollarSign}
+                total={totalFixed}
+                variant="revenue"
+              >
+                {(data?.fixed_revenues.length ?? 0) === 0 && (
+                  <p className="py-sm text-center text-xs text-muted-foreground">
+                    {t('monthlyPlanner.noFixedRevenues')}
+                  </p>
+                )}
+                {data?.fixed_revenues.map((r) => (
+                  <EditableFixedItem
+                    key={r.id}
+                    id={r.id}
+                    label={r.description}
+                    defaultValue={r.default_value}
+                    sub={
+                      r.account_name || t('monthlyPlanner.dueDay', { day: r.due_day })
+                    }
+                    override={fixedRevenueOverrides[String(r.id)]}
+                    onToggle={toggleFixedRevenue}
+                    onValueChange={updateFixedRevenueValue}
+                  />
+                ))}
+              </CardSubSection>
 
-          <SectionCard
-            title={t('monthlyPlanner.extraRevenues')}
-            icon={CircleDollarSign}
-            total={totalExtra}
-            variant="revenue"
-          >
-            {extraRevenues.map((r, i) => (
-              <ExtraItemRow
-                key={i}
-                item={r}
-                index={i}
-                onChange={updateExtraRevenue}
-                onRemove={removeExtraRevenue}
-                removeLabel={t('monthlyPlanner.removeItem')}
+              <CardSubSection
+                title={t('monthlyPlanner.extraRevenues')}
+                icon={CircleDollarSign}
+                total={totalExtra}
+                variant="revenue"
+              >
+                {extraRevenues.map((r, i) => (
+                  <ExtraItemRow
+                    key={i}
+                    item={r}
+                    index={i}
+                    onChange={updateExtraRevenue}
+                    onToggle={toggleExtraRevenue}
+                    onRemove={removeExtraRevenue}
+                    removeLabel={t('monthlyPlanner.removeItem')}
+                  />
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addExtraRevenue}
+                  className="w-full gap-xs text-xs"
+                >
+                  <Plus className="h-3 w-3" />
+                  {t('monthlyPlanner.addItem')}
+                </Button>
+              </CardSubSection>
+
+              <ActualItemsSection
+                title={t('monthlyPlanner.registeredRevenues')}
+                icon={TrendingUp}
+                variant="revenue"
+                items={actualRevenueItems}
+                emptyText={t('monthlyPlanner.noRegisteredRevenues')}
+                renderItem={(item, idx) => {
+                  const r = item as ActualRevenueItem;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">
+                          {r.description}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {translateCategory(r.category, 'revenue')} ·{' '}
+                          {formatDate(r.date)}
+                        </span>
+                      </div>
+                      <span className="ml-sm shrink-0 font-semibold text-success">
+                        {formatCurrency(r.value)}
+                      </span>
+                    </div>
+                  );
+                }}
               />
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addExtraRevenue}
-              className="w-full gap-xs text-xs"
-            >
-              <Plus className="h-3 w-3" />
-              {t('monthlyPlanner.addItem')}
-            </Button>
-          </SectionCard>
+            </CardContent>
+          </Card>
 
           {/* Budget by category */}
           <Card className="border-l-4 border-l-primary">
@@ -1086,151 +1206,143 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               </div>
             </CardContent>
           </Card>
-
-          {/* Actual registered revenues */}
-          <ActualItemsCard
-            title={t('monthlyPlanner.registeredRevenues')}
-            icon={TrendingUp}
-            variant="revenue"
-            items={actualRevenueItems}
-            emptyText={t('monthlyPlanner.noRegisteredRevenues')}
-            renderItem={(item, idx) => {
-              const r = item as ActualRevenueItem;
-              return (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{r.description}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {translateCategory(r.category, 'revenue')} · {formatDate(r.date)}
-                    </span>
-                  </div>
-                  <span className="ml-sm shrink-0 font-semibold text-success">
-                    {formatCurrency(r.value)}
-                  </span>
-                </div>
-              );
-            }}
-          />
         </div>
 
         {/* Right: Expenses */}
         <div className="space-y-sm">
-          <SectionCard
-            title={t('monthlyPlanner.fixedExpenses')}
-            icon={TrendingDown}
-            total={totalFixedExp}
-            variant="expense"
-          >
-            {(data?.fixed_expenses.length ?? 0) === 0 && (
-              <p className="py-sm text-center text-xs text-muted-foreground">
-                {t('monthlyPlanner.noFixedExpenses')}
-              </p>
-            )}
-            {data?.fixed_expenses.map((e) => (
-              <EditableFixedItem
-                key={e.id}
-                id={e.id}
-                label={e.description}
-                defaultValue={e.default_value}
-                sub={e.credit_card_name || e.account_name}
-                override={fixedExpenseOverrides[String(e.id)]}
-                onToggle={toggleFixedExpense}
-                onValueChange={updateFixedExpenseValue}
-              />
-            ))}
-          </SectionCard>
-
-          <SectionCard
-            title={t('monthlyPlanner.creditCardBills')}
-            icon={CreditCard}
-            total={totalBills}
-            variant="bill"
-          >
-            {(data?.credit_card_bills.length ?? 0) === 0 && (
-              <p className="py-sm text-center text-xs text-muted-foreground">
-                {t('monthlyPlanner.noBills')}
-              </p>
-            )}
-            {data?.credit_card_bills.map((b) => (
-              <BillItem
-                key={b.id}
-                bill={b}
-                enabled={billOverrides[String(b.id)] !== false}
-                onToggle={toggleBill}
-                isInsufficient={billInsufficientMap[b.id] === true}
-              />
-            ))}
-          </SectionCard>
-
-          <SectionCard
-            title={t('monthlyPlanner.extraExpenses')}
-            icon={TrendingDown}
-            total={totalExtraExp}
-            variant="expense"
-          >
-            {extraExpenses.map((e, i) => (
-              <ExtraItemRow
-                key={i}
-                item={e}
-                index={i}
-                onChange={updateExtraExpense}
-                onRemove={removeExtraExpense}
-                removeLabel={t('monthlyPlanner.removeItem')}
-              />
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={addExtraExpense}
-              className="w-full gap-xs text-xs"
-            >
-              <Plus className="h-3 w-3" />
-              {t('monthlyPlanner.addItem')}
-            </Button>
-          </SectionCard>
-
-          {/* Actual registered expenses */}
-          <ActualItemsCard
-            title={t('monthlyPlanner.registeredExpenses')}
-            icon={TrendingDown}
-            variant="expense"
-            items={actualExpenseItems}
-            emptyText={t('monthlyPlanner.noRegisteredExpenses')}
-            renderItem={(item, idx) => {
-              const e = item as ActualExpenseItem;
-              return (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-xs">
-                      <span className="block truncate font-medium">
-                        {e.description}
-                      </span>
-                      {!e.payed && (
-                        <Badge
-                          variant="outline"
-                          className="shrink-0 text-xs text-warning"
-                        >
-                          {t('monthlyPlanner.pending')}
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {translateCategory(e.category, 'expense')} · {formatDate(e.date)}
-                    </span>
-                  </div>
-                  <span className="ml-sm shrink-0 font-semibold text-destructive">
-                    {formatCurrency(e.value)}
-                  </span>
+          <Card className="border-l-4 border-l-destructive">
+            <CardHeader className="pb-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-sm">
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-semibold">
+                    {t('monthlyPlanner.totalExpenses')}
+                  </CardTitle>
                 </div>
-              );
-            }}
-          />
+                <span className="text-sm font-semibold text-destructive">
+                  {formatCurrency(totalExpenses)}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-lg">
+              <CardSubSection
+                title={t('monthlyPlanner.fixedExpenses')}
+                icon={TrendingDown}
+                total={totalFixedExp}
+                variant="expense"
+              >
+                {(data?.fixed_expenses.length ?? 0) === 0 && (
+                  <p className="py-sm text-center text-xs text-muted-foreground">
+                    {t('monthlyPlanner.noFixedExpenses')}
+                  </p>
+                )}
+                {data?.fixed_expenses.map((e) => (
+                  <EditableFixedItem
+                    key={e.id}
+                    id={e.id}
+                    label={e.description}
+                    defaultValue={e.default_value}
+                    sub={e.credit_card_name || e.account_name}
+                    override={fixedExpenseOverrides[String(e.id)]}
+                    alreadyPosted={e.already_posted}
+                    forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
+                    onToggle={toggleFixedExpense}
+                    onValueChange={updateFixedExpenseValue}
+                  />
+                ))}
+              </CardSubSection>
+
+              <CardSubSection
+                title={t('monthlyPlanner.creditCardBills')}
+                icon={CreditCard}
+                total={totalBills}
+                variant="bill"
+              >
+                {(data?.credit_card_bills.length ?? 0) === 0 && (
+                  <p className="py-sm text-center text-xs text-muted-foreground">
+                    {t('monthlyPlanner.noBills')}
+                  </p>
+                )}
+                {data?.credit_card_bills.map((b) => (
+                  <BillItem
+                    key={b.id}
+                    bill={b}
+                    enabled={billOverrides[String(b.id)] !== false}
+                    onToggle={toggleBill}
+                    isInsufficient={billInsufficientMap[b.id] === true}
+                  />
+                ))}
+              </CardSubSection>
+
+              <CardSubSection
+                title={t('monthlyPlanner.extraExpenses')}
+                icon={TrendingDown}
+                total={totalExtraExp}
+                variant="expense"
+              >
+                {extraExpenses.map((e, i) => (
+                  <ExtraItemRow
+                    key={i}
+                    item={e}
+                    index={i}
+                    onChange={updateExtraExpense}
+                    onToggle={toggleExtraExpense}
+                    onRemove={removeExtraExpense}
+                    removeLabel={t('monthlyPlanner.removeItem')}
+                  />
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addExtraExpense}
+                  className="w-full gap-xs text-xs"
+                >
+                  <Plus className="h-3 w-3" />
+                  {t('monthlyPlanner.addItem')}
+                </Button>
+              </CardSubSection>
+
+              <ActualItemsSection
+                title={t('monthlyPlanner.registeredExpenses')}
+                icon={TrendingDown}
+                variant="expense"
+                items={actualExpenseItems}
+                emptyText={t('monthlyPlanner.noRegisteredExpenses')}
+                renderItem={(item, idx) => {
+                  const e = item as ActualExpenseItem;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-xs">
+                          <span className="block truncate font-medium">
+                            {e.description}
+                          </span>
+                          {!e.payed && (
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 text-xs text-warning"
+                            >
+                              {t('monthlyPlanner.pending')}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {translateCategory(e.category, 'expense')} ·{' '}
+                          {formatDate(e.date)}
+                        </span>
+                      </div>
+                      <span className="ml-sm shrink-0 font-semibold text-destructive">
+                        {formatCurrency(e.value)}
+                      </span>
+                    </div>
+                  );
+                }}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </Wrapper>
