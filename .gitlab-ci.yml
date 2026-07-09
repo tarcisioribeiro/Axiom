@@ -218,17 +218,28 @@ lint:k8s:
   image:
     name: ghcr.io/yannh/kubeconform:v0.7.0-alpine@sha256:8f0eeaaa96ba27ba1500b0e4b1c215acc358d159c62a7ecae58d7a03403287b0
     entrypoint: [""]
+  cache:
+    key: kubeconform-schema-cache-v1.29.0
+    paths:
+      - .kubeconform-cache/
   script:
     # kubeconform validates manifests against official Kubernetes schemas
     # without requiring a live cluster. kustomization.yaml files are excluded
     # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
     # Third-party CRD schemas (e.g. cert-manager ClusterIssuer) are fetched from
     # the community CRDs catalog so they are validated rather than skipped.
+    # -cache persists downloaded schemas across pipeline runs (via CI cache) so
+    # repeat jobs don't re-fetch everything, and -n 1 serializes downloads to
+    # avoid tripping transient rate-limiting/timeouts on raw.githubusercontent.com.
     - |
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
-        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 \
+        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 -n 1 \
+          -cache .kubeconform-cache \
           -schema-location default \
           -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+  retry:
+    max: 2
+    when: script_failure
   rules:
     - changes:
         - k8s/**/*.yaml
