@@ -807,6 +807,8 @@
         "relatedLoanLabel": "Empréstimo Relacionado (Opcional)",
         "relatedLoanPlaceholder": "Selecione (opcional)",
         "relatedLoanHint": "Vincule esta receita a um empréstimo que você está recebendo",
+        "relatedFixedRevenueLabel": "Receita Fixa Relacionada (Opcional)",
+        "relatedFixedRevenueHint": "Vincule esta receita a uma receita fixa do planejamento mensal, para que ela não seja contada em duplicidade",
         "none": "Nenhum",
         "receivedLabel": "Recebido"
       },
