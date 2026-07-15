@@ -600,10 +600,20 @@ build:frontend:
     entrypoint: [""]
   stage: scan
   interruptible: false
+  # GHCR intermittently resets HTTP/2 streams mid-download (surfaces as
+  # "stream error: stream ID N; PROTOCOL_ERROR"), which is unrelated to the
+  # --timeout flag since it aborts the transfer outright rather than
+  # stalling it. GODEBUG=http2client=0 forces Trivy's registry client down
+  # to HTTP/1.1, which isn't affected by that reset. `retry` is kept as a
+  # safety net for any other transient network failure during the pull.
   variables:
     TRIVY_USERNAME: "$GHCR_USERNAME"
     TRIVY_PASSWORD: "$GHCR_TOKEN"
     TRIVY_NO_PROGRESS: "true"
+    GODEBUG: "http2client=0"
+  retry:
+    max: 2
+    when: always
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH == "main"
