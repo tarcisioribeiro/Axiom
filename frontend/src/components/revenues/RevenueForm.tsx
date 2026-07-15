@@ -38,7 +38,14 @@ import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
-import type { Account, Loan, Member, Revenue, RevenueFormData } from '@/types';
+import type {
+  Account,
+  FixedRevenue,
+  Loan,
+  Member,
+  Revenue,
+  RevenueFormData,
+} from '@/types';
 
 export interface RevenuePrefillData {
   description?: string;
@@ -51,6 +58,7 @@ interface RevenueFormProps {
   prefillData?: RevenuePrefillData;
   accounts: Account[];
   loans?: Loan[];
+  fixedRevenues?: FixedRevenue[];
   onSubmit: (data: RevenueFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -61,6 +69,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   prefillData,
   accounts,
   loans,
+  fixedRevenues,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -87,6 +96,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           frequency: revenue.frequency || undefined,
           notes: revenue.notes,
           related_loan: revenue.related_loan || null,
+          fixed_revenue_template: revenue.fixed_revenue_template || null,
         }
       : {
           date: formatLocalDate(new Date()),
@@ -133,7 +143,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   const watchedReceived = watch('received');
   const watchedValue = watch('value') ?? 0;
   const selectedAccount = accounts.find((a) => a.id === watch('account'));
-  const hasEligibleLinks = eligibleLoans.length > 0;
+  const eligibleFixedRevenues = fixedRevenues ?? [];
+  const hasEligibleLinks = eligibleLoans.length > 0 || eligibleFixedRevenues.length > 0;
 
   // Use REVENUE_CATEGORIES_CANONICAL if available, otherwise fall back to TRANSLATIONS
   const revenueCategories =
@@ -365,6 +376,43 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               <p className="text-xs text-muted-foreground">
                 {t('pages.revenues.form.relatedLoanHint')}
               </p>
+
+              {eligibleFixedRevenues.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.revenues.form.relatedFixedRevenueLabel')}
+                  </Label>
+                  <Select
+                    value={watch('fixed_revenue_template')?.toString() || 'none'}
+                    onValueChange={(v) =>
+                      setValue(
+                        'fixed_revenue_template',
+                        v === 'none' ? null : parseInt(v)
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('common.fields.select_optional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                      {eligibleFixedRevenues.map((fixedRevenue) => (
+                        <SelectItem
+                          key={fixedRevenue.id}
+                          value={fixedRevenue.id.toString()}
+                        >
+                          {fixedRevenue.description} — R$ {fixedRevenue.default_value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.revenues.form.relatedFixedRevenueHint')}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

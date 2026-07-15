@@ -57,6 +57,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     revenues,
     accounts,
     loans,
+    fixedRevenues,
     isLoading,
     isDialogOpen,
     setIsDialogOpen,
@@ -441,6 +442,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             prefillData={!selectedRevenue ? prefillRevenueData : undefined}
             accounts={accounts}
             loans={loans}
+            fixedRevenues={fixedRevenues}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
