@@ -132,6 +132,15 @@ class Revenue(BaseModel):
             "Receita gerada automaticamente a partir do saldo inicial da conta"
         ),
     )
+    fixed_revenue_template = models.ForeignKey(
+        "FixedRevenue",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_revenues",
+        verbose_name="Modelo de Receita Fixa",
+        help_text="Template de receita fixa que gerou esta receita",
+    )
     tags = models.ManyToManyField(
         "expenses.Tag",
         blank=True,
