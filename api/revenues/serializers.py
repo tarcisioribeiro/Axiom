@@ -52,6 +52,7 @@ class RevenueSerializer(serializers.ModelSerializer):
             "tags",
             "tag_ids",
             "related_transfer",
+            "fixed_revenue_template",
             "related_loan",
         ]
         read_only_fields = ["id", "uuid", "net_amount"]

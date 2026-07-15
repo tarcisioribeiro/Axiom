@@ -14,10 +14,11 @@ import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import { fixedRevenuesService } from '@/services/fixed-revenues-service';
 import { loansService } from '@/services/loans-service';
 import type { RevenueExportParams } from '@/services/revenues-service';
 import { revenuesService } from '@/services/revenues-service';
-import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
+import type { Revenue, RevenueFormData, Account, Loan, FixedRevenue } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 import type { Column } from '../components/common/DataTable';
@@ -26,6 +27,7 @@ export interface UseRevenuesPageReturn {
   revenues: Revenue[];
   accounts: Account[];
   loans: Loan[];
+  fixedRevenues: FixedRevenue[];
   isLoading: boolean;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
@@ -123,6 +125,18 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     queryFn: () => loansService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
     select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const { data: fixedRevenues = [] } = useQuery({
+    queryKey: ['fixedRevenues'],
+    queryFn: async () => {
+      const data = await fixedRevenuesService.getAll();
+      const list: FixedRevenue[] = Array.isArray(data)
+        ? (data as unknown as FixedRevenue[])
+        : (data.results ?? []);
+      return list.filter((fr) => fr.is_active);
+    },
+    staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const invalidateRevenues = () =>
@@ -359,6 +373,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     revenues,
     accounts,
     loans,
+    fixedRevenues,
     isLoading,
     isDialogOpen,
     setIsDialogOpen,
