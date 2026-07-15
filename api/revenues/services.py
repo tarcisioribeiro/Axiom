@@ -47,10 +47,9 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
             ).date()
 
         existing = Revenue.objects.filter(
-            description=fixed_rev.description,
+            fixed_revenue_template=fixed_rev,
             date__gte=month_start,
             date__lte=month_end,
-            account=fixed_rev.account,
             is_deleted=False,
         ).first()
         if existing:
@@ -72,6 +71,7 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
             received=False,
             notes=fixed_rev.notes,
             member=fixed_rev.member,
+            fixed_revenue_template=fixed_rev,
             created_by=user,
             updated_by=user,
         )
@@ -129,9 +129,7 @@ def get_fixed_revenues_stats():
     prev_start, prev_end = month_range_dates(previous_month)
 
     current_revenues = Revenue.objects.filter(
-        description__in=FixedRevenue.objects.filter(
-            is_active=True, is_deleted=False
-        ).values_list("description", flat=True),
+        fixed_revenue_template__isnull=False,
         date__gte=cur_start,
         date__lte=cur_end,
         is_deleted=False,
@@ -140,9 +138,7 @@ def get_fixed_revenues_stats():
     current_received = current_revenues.filter(received=True).count()
 
     previous_revenues = Revenue.objects.filter(
-        description__in=FixedRevenue.objects.filter(
-            is_active=True, is_deleted=False
-        ).values_list("description", flat=True),
+        fixed_revenue_template__isnull=False,
         date__gte=prev_start,
         date__lte=prev_end,
         is_deleted=False,

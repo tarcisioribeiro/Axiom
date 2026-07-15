@@ -26,6 +26,7 @@ export interface Revenue {
   is_initial_balance?: boolean;
   related_loan?: number | null;
   loan_description?: string;
+  fixed_revenue_template?: number | null;
   currency_code?: string;
   tags?: Tag[];
   tag_ids?: number[];
@@ -47,4 +48,5 @@ export interface RevenueFormData {
   frequency?: string | null;
   notes?: string;
   related_loan?: number | null;
+  fixed_revenue_template?: number | null;
 }

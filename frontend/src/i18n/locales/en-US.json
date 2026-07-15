@@ -807,6 +807,8 @@
         "relatedLoanLabel": "Related Loan (Optional)",
         "relatedLoanPlaceholder": "Select (optional)",
         "relatedLoanHint": "Link this revenue to a loan you are receiving",
+        "relatedFixedRevenueLabel": "Related Fixed Revenue (Optional)",
+        "relatedFixedRevenueHint": "Link this revenue to a fixed revenue from the monthly planner, so it isn't double-counted",
         "none": "None",
         "receivedLabel": "Received"
       },
