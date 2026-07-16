@@ -35,9 +35,9 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy source code (changes frequently, comes last)
 COPY . .
 
-# Type-check and lint before building (fail fast on quality issues)
-RUN npm run typecheck
-RUN npm run lint
+# Type-check and lint already run as dedicated, parallel CI jobs
+# (typecheck:frontend, lint:frontend) before this image is built — running
+# them again here would just duplicate that work on every single build.
 
 # Build the application
 RUN npm run build
