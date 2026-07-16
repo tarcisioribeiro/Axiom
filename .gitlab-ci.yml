@@ -643,7 +643,6 @@ deploy:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: deploy-staging
   interruptible: false
   needs:
