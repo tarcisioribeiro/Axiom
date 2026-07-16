@@ -30,25 +30,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Stage 3: Dev dependencies (for quality checks)
-FROM deps AS dev-deps
-
-COPY requirements-dev.txt .
-
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements-dev.txt
-
-# Stage 4: Quality checks (runs black, isort, flake8 — fails fast before production build)
-FROM dev-deps AS quality
-
-WORKDIR /app
-
-COPY . .
-
-RUN black --check . && isort --check . && flake8 .
-
-# Stage 5: Production image — starts fresh to exclude build-only packages
+# Stage 3: Production image — starts fresh to exclude build-only packages
 # (build-essential brings linux-libc-dev with kernel CVEs not needed at runtime)
+# Quality checks (black/isort/flake8/mypy) are NOT run here — they already run
+# as dedicated, parallel CI jobs (lint:backend, typecheck:backend) before this
+# image is built; re-running them inside the build would just duplicate that
+# work on every single build.
 FROM python:3.12-slim AS production
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
@@ -69,8 +56,8 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 
-# Copy application code from quality stage (ensures checks have passed)
-COPY --from=quality --chown=appuser:appuser /app .
+# Copy application code
+COPY --chown=appuser:appuser . .
 
 # Create required directories with correct permissions (after COPY to ensure proper ownership)
 RUN mkdir -p /app/media/security/archives /app/media/loans /app/logs /app/staticfiles && \

@@ -9,7 +9,6 @@ stages:
   - build
   - scan
   - deploy-staging
-  - promote
   - deploy-production
   - smoke-production
   - cleanup
@@ -32,13 +31,23 @@ variables:
   # SBOM / supply-chain tooling — pin exact versions for reproducibility.
   SYFT_VERSION: "1.18.1"
   COSIGN_VERSION: "2.4.3"
+  # Shallow clone by default — most jobs only need the files at HEAD, not
+  # history. Jobs that need real history (lint:commits, lint:secrets) override
+  # this per-job. Cuts checkout time on every job.
+  GIT_DEPTH: "1"
+  # Faster cache/artifact (de)compression on runners that support it (GitLab
+  # Runner 14.6+). Silently ignored on older runners.
+  FF_USE_FASTZIP: "true"
+  CACHE_COMPRESSION_LEVEL: "fastest"
+  ARTIFACT_COMPRESSION_LEVEL: "fastest"
 
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    # Always run the full branch pipeline on develop even when the develop→main
-    # MR is already open. The promote stage needs branch pipelines to create or
-    # verify the promotion MR — an MR pipeline for develop→main is not enough.
+    # Always run the full branch pipeline on develop even when a develop→main
+    # MR is already open (e.g. opened manually). deploy:staging and the other
+    # develop-only jobs need a branch pipeline to run — an MR pipeline for
+    # develop→main is not enough.
     - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
@@ -81,13 +90,14 @@ workflow:
     - apk add --no-cache git
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-    - cd frontend && npm ci --prefer-offline --legacy-peer-deps
+    # --no-audit/--no-fund: audit runs separately in lint:npm-audit; skipping
+    # it here avoids a redundant network round-trip on every node job.
+    - cd frontend && npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
 
-# Runner local na VPS (tag: vps) — network_mode=host → acesso direto a 127.0.0.1:6443.
+# Runner com acesso ao cluster via túnel — network_mode=host → acesso direto a 127.0.0.1:6443.
 # KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
 # Para gerar: base64 -w0 /etc/rancher/k3s/k3s.yaml
 .k8s_tunnel:
-  tags: [vps]
   before_script: &k8s_tunnel_before_script
     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
@@ -107,14 +117,17 @@ workflow:
     - echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
 # ------------------------------------------------------------------------------
-# Shared rule: skip this job on main — develop already validated it.
-# Apply via `extends: [.base, .rules_skip_main]` on lint, typecheck, and test jobs.
+# Shared rule for lint/typecheck/test jobs: these are verification steps, so
+# they only need to run where code is still being reviewed — MR pipelines and
+# feature-branch pushes before an MR exists. Once code lands on develop or
+# main it has already been verified by the MR pipeline that merged it; those
+# branches only need to build and deploy, not re-lint.
+# Apply via `extends: [.base, .rules_verify_only]` on lint, typecheck, and test jobs.
 # ------------------------------------------------------------------------------
-.rules_skip_main:
+.rules_verify_only:
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
-    - when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
 
 # ==============================================================================
 # STAGE: lint
@@ -123,7 +136,7 @@ workflow:
 lint:backend:
   extends:
     - .python_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
   script:
     - cd api
@@ -134,7 +147,7 @@ lint:backend:
 lint:frontend:
   extends:
     - .node_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
   script:
     - npm run lint
@@ -143,10 +156,14 @@ lint:frontend:
 lint:migrations:
   extends:
     - .python_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
   needs:
     - lint:backend
+  # lint:backend is the primary pull-push job for this cache key; avoid every
+  # parallel python job re-uploading an unchanged pip cache archive.
+  cache:
+    policy: pull
   variables:
     SECRET_KEY: "ci-insecure-key-for-migrations-check-only"
     DEBUG: "False"
@@ -164,30 +181,39 @@ lint:migrations:
 lint:bandit:
   extends:
     - .python_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
+  cache:
+    policy: pull
   script:
     - bandit -r api/ -x api/tests,api/\*/migrations -ll
 
 lint:pip-audit:
   extends:
     - .python_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
+  cache:
+    policy: pull
   script:
     - pip-audit -r api/requirements.txt --desc --vulnerability-service osv --ignore-vuln PYSEC-2025-183
 
 lint:npm-audit:
   extends:
     - .node_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: lint
+  # lint:frontend is the primary pull-push job for this cache key.
+  cache:
+    policy: pull
   script:
     - npm audit --audit-level=high
 
 lint:commits:
   extends: .node_base
   stage: lint
+  cache:
+    policy: pull
   # Fetch the full git history so every commit in the MR range is reachable.
   variables:
     GIT_DEPTH: 0
@@ -205,13 +231,17 @@ lint:secrets:
     name: ghcr.io/gitleaks/gitleaks:v8.27.2
     entrypoint: [""]
   stage: lint
+  # Global GIT_DEPTH default is shallow (1) for fast checkouts elsewhere; this
+  # job needs full history to actually scan it.
+  variables:
+    GIT_DEPTH: "0"
   script:
     # Scan full git history for leaked secrets; --redact masks secret values in output.
     # gitleaks:allow comments in source suppress known false positives (e.g. CI dummy keys).
     - gitleaks detect --source . --redact
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
 
 lint:k8s:
   stage: lint
@@ -242,7 +272,12 @@ lint:k8s:
     max: 2
     when: script_failure
   rules:
-    - changes:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - k8s/**/*.yaml
+        - .gitlab-ci.yml
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
+      changes:
         - k8s/**/*.yaml
         - .gitlab-ci.yml
 
@@ -254,10 +289,12 @@ lint:k8s:
 typecheck:backend:
   extends:
     - .python_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: typecheck
   needs:
     - lint:backend
+  cache:
+    policy: pull
   variables:
     SECRET_KEY: "ci-insecure-key-for-mypy-only"
     DEBUG: "False"
@@ -269,10 +306,12 @@ typecheck:backend:
 typecheck:frontend:
   extends:
     - .node_base
-    - .rules_skip_main
+    - .rules_verify_only
   stage: typecheck
   needs:
     - lint:frontend
+  cache:
+    policy: pull
   script:
     - npm run typecheck
 
@@ -283,7 +322,7 @@ typecheck:frontend:
 # test:backend:
 #   extends:
 #     - .python_base
-#     - .rules_skip_main
+#     - .rules_verify_only
 #   stage: test
 #
 #   needs:
@@ -336,7 +375,7 @@ typecheck:frontend:
 # test:frontend:
 #   extends:
 #     - .node_base
-#     - .rules_skip_main
+#     - .rules_verify_only
 #   stage: test
 #   needs:
 #     - typecheck:frontend
@@ -353,7 +392,7 @@ typecheck:frontend:
 # build:storybook:
 #   extends:
 #     - .node_base
-#     - .rules_skip_main
+#     - .rules_verify_only
 #   stage: test
 #   needs:
 #     - typecheck:frontend
@@ -371,9 +410,9 @@ typecheck:frontend:
 
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
 #   GITLAB_TOKEN              — Personal or Project Access Token with `api` scope
-#                               (Developer role or higher). Used by promote:to_main to
-#                               create the develop→main MR. Mark as Masked.
-#                               Do NOT use $CI_JOB_TOKEN — it cannot create MRs.
+#                               (Developer role or higher). Used by cleanup:registry to
+#                               prune old registry/package versions. Mark as Masked.
+#                               Do NOT use $CI_JOB_TOKEN — it cannot list/delete via the API.
 #   KUBECONFIG_CONTENT        — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
 #   STAGING_URL               — public URL of the staging environment (e.g. https://staging.example.com)
 #   PRODUCTION_URL            — public URL of the production environment (e.g. https://example.com)
@@ -416,6 +455,12 @@ typecheck:frontend:
     # dockerd-entrypoint.sh to start dockerd with these additional flags so
     # the daemon itself also resolves external hostnames via Google DNS.
     DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
+  # Caches the syft/cosign binaries (pinned by version) so they aren't
+  # curl-downloaded from GitHub on every single build job.
+  cache:
+    key: "sbom-tools-${SYFT_VERSION}-${COSIGN_VERSION}"
+    paths:
+      - .sbom-tools/
   before_script:
     - echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
     - apk add --no-cache curl
@@ -436,6 +481,10 @@ build:api:
     # Falls back to a full build if the develop image is not in the registry
     # (e.g. develop pipeline failed before build, or first-time setup).
     # HEAD^2 is the develop tip on a merge commit; falls back to HEAD^1 on fast-forward.
+    # Fallback/direct builds pass --cache-from against the last image pushed
+    # for the same branch (built with BUILDKIT_INLINE_CACHE=1) so the DinD
+    # daemon — fresh on every job — can still reuse layers (apt-get, pip
+    # install) instead of rebuilding them from scratch every pipeline run.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
@@ -448,14 +497,26 @@ build:api:
           docker push "$API_IMAGE:main"
         else
           echo "main: develop image ($API_IMAGE:$DEVELOP_SHA) not found — building from source"
-          docker build --network=host -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+          docker pull "$API_IMAGE:main" 2>/dev/null || true
+          docker build --network=host \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --cache-from "$API_IMAGE:main" \
+            -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
           docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
           docker push "$API_IMAGE:main"
         fi
       else
-        docker build --network=host -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+        docker pull "$API_IMAGE:develop" 2>/dev/null || true
+        docker build --network=host \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --cache-from "$API_IMAGE:develop" \
+          -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+        if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+          docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:develop"
+          docker push "$API_IMAGE:develop"
+        fi
         if [ -n "${CI_COMMIT_TAG:-}" ]; then
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
           docker push "$API_IMAGE:$CI_COMMIT_TAG"
@@ -463,10 +524,16 @@ build:api:
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────
-    # Install syft at the pinned version declared in global variables.
+    # Install syft at the pinned version declared in global variables, reusing
+    # the cached binary (keyed by SYFT_VERSION) instead of curl-downloading it
+    # on every build.
     - |
-      curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
-        | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+      mkdir -p .sbom-tools
+      if [ ! -x .sbom-tools/syft ]; then
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+          | sh -s -- -b .sbom-tools "v${SYFT_VERSION}"
+      fi
+      export PATH="$PWD/.sbom-tools:$PATH"
     # Generate both CycloneDX JSON and SPDX JSON from the image just pushed.
     - |
       syft "$API_IMAGE:$CI_COMMIT_SHORT_SHA" \
@@ -489,11 +556,15 @@ build:api:
     # Attaches the CycloneDX SBOM as a signed in-toto attestation on the image.
     # Requires COSIGN_PRIVATE_KEY (and optionally COSIGN_PASSWORD) to be set as
     # masked CI/CD variables. If not set, this step is silently skipped.
+    # cosign binary is cached the same way as syft (keyed by COSIGN_VERSION).
     - |
       if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
-        curl -sSfL \
-          "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
-          -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
+        if [ ! -x .sbom-tools/cosign ]; then
+          curl -sSfL \
+            "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
+            -o .sbom-tools/cosign && chmod +x .sbom-tools/cosign
+        fi
+        export PATH="$PWD/.sbom-tools:$PATH"
         printf '%s' "$COSIGN_PRIVATE_KEY" | base64 -d > /tmp/cosign.key
         COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
           --key /tmp/cosign.key \
@@ -520,27 +591,35 @@ build:frontend:
     - job: test:frontend
       optional: true
   script:
-    # On main: try to re-tag the image already built by the develop pipeline.
-    # Falls back to a full build if the develop image is not in the registry
-    # (e.g. develop pipeline failed before build, or first-time setup).
-    # HEAD^2 is the develop tip on a merge commit; falls back to HEAD^1 on fast-forward.
+    # On main: always rebuild (VITE_APP_ENV is baked into the JS bundle, so the
+    # staging image from develop can't be re-tagged for production), but still
+    # pass --cache-from against the previous main image (built with
+    # BUILDKIT_INLINE_CACHE=1) — same VITE_APP_ENV value each time, so the
+    # npm ci layer is reusable even though the app-code layers aren't.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        # VITE_APP_ENV is baked into the JS bundle at build time, so the staging
-        # image (develop branch) cannot be re-tagged for production — it would
-        # carry VITE_APP_ENV=staging in the bundle. Always rebuild for main.
         echo "main: building production image with VITE_APP_ENV=production"
+        docker pull "$FRONTEND_IMAGE:main" 2>/dev/null || true
         docker build --network=host \
           --build-arg VITE_APP_ENV=production \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --cache-from "$FRONTEND_IMAGE:main" \
           -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         docker push "$FRONTEND_IMAGE:main"
       else
+        docker pull "$FRONTEND_IMAGE:develop" 2>/dev/null || true
         docker build --network=host \
           --build-arg VITE_APP_ENV=staging \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --cache-from "$FRONTEND_IMAGE:develop" \
           -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+        if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"
+          docker push "$FRONTEND_IMAGE:develop"
+        fi
         if [ -n "${CI_COMMIT_TAG:-}" ]; then
           docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
           docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
@@ -548,9 +627,15 @@ build:frontend:
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────
+    # Reuses the cached binary from the .sbom-tools/ cache key (shared with
+    # build:api) instead of curl-downloading it again.
     - |
-      curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
-        | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+      mkdir -p .sbom-tools
+      if [ ! -x .sbom-tools/syft ]; then
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+          | sh -s -- -b .sbom-tools "v${SYFT_VERSION}"
+      fi
+      export PATH="$PWD/.sbom-tools:$PATH"
     - |
       syft "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" \
         -o cyclonedx-json=frontend-sbom.cdx.json \
@@ -569,9 +654,12 @@ build:frontend:
     # ── Optional cosign attestation ───────────────────────────────────────────
     - |
       if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
-        curl -sSfL \
-          "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
-          -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
+        if [ ! -x .sbom-tools/cosign ]; then
+          curl -sSfL \
+            "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
+            -o .sbom-tools/cosign && chmod +x .sbom-tools/cosign
+        fi
+        export PATH="$PWD/.sbom-tools:$PATH"
         printf '%s' "$COSIGN_PRIVATE_KEY" | base64 -d > /tmp/cosign.key
         COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
           --key /tmp/cosign.key \
@@ -611,6 +699,14 @@ build:frontend:
     TRIVY_PASSWORD: "$GHCR_TOKEN"
     TRIVY_NO_PROGRESS: "true"
     GODEBUG: "http2client=0"
+    # Persist the vulnerability DB across pipeline runs — Trivy still checks
+    # freshness and re-downloads when the remote DB is newer, so this only
+    # skips the download when the cached copy is already current.
+    TRIVY_CACHE_DIR: ".trivycache/"
+  cache:
+    key: trivy-db-cache-v1
+    paths:
+      - .trivycache/
   retry:
     max: 2
     when: always
@@ -795,7 +891,6 @@ seed:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: deploy-staging
   needs:
     - job: deploy:staging
@@ -1349,7 +1444,6 @@ deploy:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: deploy-production
   interruptible: false
   needs:
@@ -1483,7 +1577,6 @@ smoke:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1595,7 +1688,6 @@ deploy:rollback:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1646,134 +1738,6 @@ deploy:rollback:production:
     - rm -f /tmp/kubeconfig
   allow_failure: false
 
-# ==============================================================================
-# STAGE: promote
-#
-# Runs on the develop branch after all test-e2e stage jobs complete
-# successfully. Creates a Merge Request from develop → main via the GitLab
-# REST API. The job is idempotent — if an open MR already exists it prints the
-# URL and exits cleanly without creating a duplicate.
-#
-# After creating the MR the job attempts to enable "Merge when pipeline
-# succeeds" (auto-merge). This is best-effort: if the MR pipeline has not
-# started yet, or if project settings do not allow auto-merge, a warning is
-# printed but the job still succeeds (the MR was created).
-#
-# Required CI/CD variable:
-#   GITLAB_TOKEN  — Personal Access Token or Project Access Token with the
-#                   `api` scope and Developer (or higher) role on this project.
-#                   Configure it in: Settings → CI/CD → Variables (Masked).
-#                   ⚠  Do NOT use $CI_JOB_TOKEN — it cannot create Merge Requests.
-# ==============================================================================
-
-promote:to_main:
-  image: python:3.12-slim
-  stage: promote
-  interruptible: false
-  needs:
-    - job: deploy:staging
-    - job: seed:staging
-  # CI_COMMIT_BRANCH is only populated for branch pipelines (not MR pipelines),
-  # so this rule is already implicitly restricted to push events on develop.
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-  script:
-    - |
-      python3 - <<'PYEOF'
-      import json, os, sys
-      import urllib.request, urllib.error
-
-      token        = os.environ.get("GITLAB_TOKEN", "")
-      project_id   = os.environ["CI_PROJECT_ID"]
-      api_url      = os.environ["CI_API_V4_URL"]
-      pipeline_url = os.environ.get("CI_PIPELINE_URL", "")
-      pipeline_id  = os.environ.get("CI_PIPELINE_ID", "")
-      commit_sha   = os.environ.get("CI_COMMIT_SHORT_SHA", "")
-      commit_title = os.environ.get("CI_COMMIT_TITLE", "")
-
-      if not token:
-          print("ERROR: GITLAB_TOKEN is not set.")
-          print("Configure it in: Settings → CI/CD → Variables (scope: api, masked).")
-          sys.exit(1)
-
-      headers = {
-          "PRIVATE-TOKEN": token,
-          "Content-Type":  "application/json",
-      }
-
-      def api_call(method, path, payload=None):
-          url  = f"{api_url}/projects/{project_id}{path}"
-          data = json.dumps(payload).encode() if payload else None
-          req  = urllib.request.Request(url, data=data, headers=headers, method=method)
-          try:
-              with urllib.request.urlopen(req) as resp:
-                  return json.loads(resp.read())
-          except urllib.error.HTTPError as exc:
-              body = exc.read().decode()
-              raise RuntimeError(f"HTTP {exc.code} {exc.reason} — {body}") from exc
-
-      # ── 1. Check for an existing open MR develop → main ─────────────────────
-      print("Checking for an existing open MR (develop → main)...")
-      try:
-          mrs = api_call(
-              "GET",
-              "/merge_requests?state=opened"
-              "&source_branch=develop&target_branch=main",
-          )
-      except RuntimeError as exc:
-          print(f"ERROR: Could not query open MRs: {exc}")
-          sys.exit(1)
-
-      if mrs:
-          mr = mrs[0]
-          print(f"Open MR already exists: !{mr['iid']} — {mr['web_url']}")
-          print("No new MR created.")
-          sys.exit(0)
-
-      # ── 2. Create the promotion MR ───────────────────────────────────────────
-      print("No open MR found — creating develop → main MR...")
-      from datetime import datetime, timezone
-      date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha})"
-      description = (
-          "## Promoção automática\n\n"
-          "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
-          f"os testes de staging passarem para o commit `{commit_sha}`.\n\n"
-          f"**Pipeline:** {pipeline_url}\n\n"
-          "Revise as alterações abaixo e faça o merge quando estiver pronto."
-      )
-      try:
-          mr = api_call("POST", "/merge_requests", {
-              "source_branch":        "develop",
-              "target_branch":        "main",
-              "title":                mr_title,
-              "description":          description,
-              "remove_source_branch": False,
-              "squash":               False,
-          })
-      except RuntimeError as exc:
-          print(f"ERROR: Failed to create MR: {exc}")
-          sys.exit(1)
-
-      print(f"MR created: !{mr['iid']} — {mr['web_url']}")
-
-      # ── 3. Enable auto-merge (best-effort) ───────────────────────────────────
-      # Requires the MR pipeline to have already started and the project to
-      # allow "Merge when pipeline succeeds". Failure here is non-fatal.
-      print("Attempting to enable auto-merge (merge_when_pipeline_succeeds)...")
-      try:
-          result = api_call(
-              "PUT",
-              f"/merge_requests/{mr['iid']}/merge",
-              {"merge_when_pipeline_succeeds": True},
-          )
-          print(f"Auto-merge enabled for !{result['iid']}.")
-      except RuntimeError as exc:
-          print(f"WARNING: Could not enable auto-merge (non-fatal): {exc}")
-          print("The MR was created. Enable auto-merge manually from the MR page if needed.")
-
-      print("promote:to_main completed successfully.")
-      PYEOF
 # Manual rollback job for production — operators can trigger this at any point
 # after deploy:production, regardless of smoke test outcome.
 # API uses the same blue-green slot-switch as the automated rollback.
@@ -1781,7 +1745,6 @@ rollback:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: smoke-production
   interruptible: false
   needs:
@@ -1854,7 +1817,7 @@ rollback:production:
 # revisionHistoryLimit: 3 definido nos manifests de Deployment.
 #
 # Variáveis necessárias:
-#   GITLAB_TOKEN       — token com scope `api` (já usado pelo promote:to_main)
+#   GITLAB_TOKEN       — token com scope `api` (usado por cleanup:registry)
 #   KUBECONFIG_CONTENT — kubeconfig base64 (já usado pelos deploys)
 # ==============================================================================
 
@@ -1988,7 +1951,6 @@ cleanup:k8s:staging:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:
@@ -2027,7 +1989,6 @@ cleanup:k8s:production:
   image:
     name: alpine/k8s:1.30.10
     entrypoint: [""]
-  tags: [vps]
   stage: cleanup
   interruptible: false
   needs:
