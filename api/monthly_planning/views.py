@@ -74,7 +74,7 @@ def _is_fixed_revenue_already_posted(
 def _fixed_revenues_data(user: User, date_from: str, date_to: str) -> list:
     return [
         {
-            "id": r.id,
+            "id": r.pk,
             "description": r.description,
             "default_value": str(r.default_value),
             "category": r.category,

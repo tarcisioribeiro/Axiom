@@ -1038,7 +1038,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                       r.account_name || t('monthlyPlanner.dueDay', { day: r.due_day })
                     }
                     override={fixedRevenueOverrides[String(r.id)]}
-                    alreadyPosted={r.already_posted}
                     onToggle={toggleFixedRevenue}
                     onValueChange={updateFixedRevenueValue}
                   />
