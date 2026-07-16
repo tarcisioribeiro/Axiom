@@ -82,6 +82,16 @@ workflow:
         - frontend/package-lock.json
     paths:
       - .npm/
+      # Caching node_modules itself (not just npm's download cache) lets the
+      # before_script below skip `npm ci` entirely when the lockfile hasn't
+      # changed — that's the dominant cost of this job, not just a speedup.
+      - frontend/node_modules/
+      # eslint/prettier caches ride the same lockfile-keyed cache scope. Both
+      # tools content-hash individual files internally, so an incrementally
+      # updated cache stays valid across commits even though the scope key
+      # itself only changes when the lockfile does.
+      - frontend/.eslintcache
+      - frontend/.prettiercache
   before_script:
     # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
     # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
@@ -90,9 +100,18 @@ workflow:
     - apk add --no-cache git
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-    # --no-audit/--no-fund: audit runs separately in lint:npm-audit; skipping
-    # it here avoids a redundant network round-trip on every node job.
-    - cd frontend && npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
+    - cd frontend
+    # node_modules is cached above and keyed by package-lock.json's content
+    # hash, so a restored non-empty directory already matches the current
+    # lockfile — reinstalling would just repeat work. --no-audit/--no-fund:
+    # audit runs separately in lint:npm-audit; skipping it here avoids a
+    # redundant network round-trip on every node job.
+    - |
+      if [ -d node_modules ] && [ -n "$(ls -A node_modules 2>/dev/null)" ]; then
+        echo "node_modules restored from cache (package-lock.json unchanged) — skipping npm ci"
+      else
+        npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
+      fi
 
 # Runner com acesso ao cluster via túnel — network_mode=host → acesso direto a 127.0.0.1:6443.
 # KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
@@ -150,8 +169,22 @@ lint:frontend:
     - .rules_verify_only
   stage: lint
   script:
-    - npm run lint
-    - npm run format:check
+    # eslint and prettier are independent of each other, so run them
+    # concurrently instead of back-to-back. --cache-strategy content (not the
+    # default "metadata") is required here: a fresh git checkout resets every
+    # file's mtime on each pipeline run, which would make mtime-based cache
+    # invalidation see every file as changed and defeat the cache entirely.
+    - |
+      npm run lint -- --cache --cache-location .eslintcache --cache-strategy content &
+      LINT_PID=$!
+      npm run format:check -- --cache --cache-location .prettiercache --cache-strategy content &
+      FORMAT_PID=$!
+      wait "$LINT_PID"; LINT_STATUS=$?
+      wait "$FORMAT_PID"; FORMAT_STATUS=$?
+      if [ "$LINT_STATUS" -ne 0 ] || [ "$FORMAT_STATUS" -ne 0 ]; then
+        echo "npm run lint exited $LINT_STATUS, npm run format:check exited $FORMAT_STATUS"
+        exit 1
+      fi
 
 lint:migrations:
   extends:
