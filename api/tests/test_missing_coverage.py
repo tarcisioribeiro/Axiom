@@ -560,6 +560,31 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["created_count"], 1)
 
+    def test_bulk_generate_creates_revenue_with_float_value(self):
+        """
+        MonthlyPlanApplyView and the Celery task both build revenue_values
+        with float(fixed_rev.default_value), not Decimal. Revenue.save()
+        computes net_amount as value - tax_amount, which raises TypeError
+        if value is a plain float — regression test for that crash.
+        """
+        from revenues.models import Revenue
+        from revenues.services import bulk_generate_fixed_revenues
+
+        result = bulk_generate_fixed_revenues(
+            month="2026-09",
+            revenue_values=[
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": float(self.fixed_rev.default_value),
+                }
+            ],
+            user=self.user,
+        )
+        self.assertTrue(result["success"])
+        self.assertEqual(result["created_count"], 1)
+        revenue = Revenue.objects.get(fixed_revenue_template=self.fixed_rev)
+        self.assertEqual(revenue.net_amount, Decimal("5000.00"))
+
     def test_bulk_generate_skips_existing_revenue(self):
         from revenues.services import bulk_generate_fixed_revenues
 
@@ -755,6 +780,61 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         url = reverse("fixed-revenue-detail", args=[fr.pk])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+# ===========================================================================
+# monthly_planning/views.py — MonthlyPlanSummaryView already_posted badge
+# ===========================================================================
+
+
+class MonthlyPlanSummaryFixedRevenueBadgeTest(BaseMissingCoverageTestCase):
+    def setUp(self):
+        super().setUp()
+        from revenues.models import FixedRevenue
+
+        self.fixed_rev = FixedRevenue.objects.create(
+            description="Monthly Salary",
+            default_value=Decimal("5000.00"),
+            category="salary",
+            account=self.account,
+            due_day=5,
+            is_active=True,
+            created_by=self.user,
+            updated_by=self.user,
+        )
+
+    def test_already_posted_false_before_generation(self):
+        url = reverse("monthly-plan-summary")
+        response = self.client.get(url, {"month": 7, "year": 2026})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next(
+            r
+            for r in response.data["fixed_revenues"]
+            if r["id"] == self.fixed_rev.id
+        )
+        self.assertFalse(item["already_posted"])
+
+    def test_already_posted_true_after_generation(self):
+        from revenues.services import bulk_generate_fixed_revenues
+
+        bulk_generate_fixed_revenues(
+            month="2026-07",
+            revenue_values=[
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": float(self.fixed_rev.default_value),
+                }
+            ],
+            user=self.user,
+        )
+        url = reverse("monthly-plan-summary")
+        response = self.client.get(url, {"month": 7, "year": 2026})
+        item = next(
+            r
+            for r in response.data["fixed_revenues"]
+            if r["id"] == self.fixed_rev.id
+        )
+        self.assertTrue(item["already_posted"])
 
 
 # ===========================================================================
