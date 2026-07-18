@@ -79,6 +79,7 @@ interface FixedRevenueItem {
   due_day: number;
   account_name: string;
   allow_value_edit: boolean;
+  already_posted: boolean;
 }
 
 interface FixedExpenseItem {

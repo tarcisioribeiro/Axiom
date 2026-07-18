@@ -59,16 +59,31 @@ def _get_budget_suggestions(user: User, month: int, year: int) -> list:
     return suggestions
 
 
-def _fixed_revenues_data(user: User) -> list:
+def _is_fixed_revenue_already_posted(
+    fr: FixedRevenue, date_from: str, date_to: str
+) -> bool:
+    """Mirrors _is_fixed_expense_already_posted for the revenue side."""
+    return Revenue.objects.filter(
+        fixed_revenue_template=fr,
+        date__gte=date_from,
+        date__lt=date_to,
+        is_deleted=False,
+    ).exists()
+
+
+def _fixed_revenues_data(user: User, date_from: str, date_to: str) -> list:
     return [
         {
-            "id": r.id,
+            "id": r.pk,
             "description": r.description,
             "default_value": str(r.default_value),
             "category": r.category,
             "due_day": r.due_day,
             "account_name": r.account.account_name if r.account else "",
             "allow_value_edit": r.allow_value_edit,
+            "already_posted": _is_fixed_revenue_already_posted(
+                r, date_from, date_to
+            ),
         }
         for r in FixedRevenue.objects.filter(
             created_by=user, is_active=True, is_deleted=False
@@ -332,7 +347,9 @@ class MonthlyPlanSummaryView(APIView):
         return Response(
             {
                 "plan": MonthlyPlanSerializer(plan).data,
-                "fixed_revenues": _fixed_revenues_data(user),
+                "fixed_revenues": _fixed_revenues_data(
+                    user, date_from, date_to
+                ),
                 "fixed_expenses": _fixed_expenses_data(
                     user, month, year, date_from, date_to
                 ),
