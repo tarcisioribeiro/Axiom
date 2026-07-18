@@ -177,7 +177,9 @@ class Revenue(BaseModel):
             Argumentos nomeados do método save.
         """
         if self.net_amount is None:
-            self.net_amount = self.value - Decimal(str(self.tax_amount))
+            self.net_amount = Decimal(str(self.value)) - Decimal(
+                str(self.tax_amount)
+            )
         super().save(*args, **kwargs)
 
     def __str__(self):
