@@ -842,7 +842,7 @@ deploy:staging:
         if kubectl -n axiom-staging wait pod "$POSTGRES_POD" \
             --for=condition=Ready --timeout=60s 2>/dev/null; then
           kubectl -n axiom-staging exec "$POSTGRES_POD" -c postgres -- \
-            su postgres -c "psql -c \"ALTER USER \\\"${STAGING_DB_USER}\\\" WITH PASSWORD '${STAGING_DB_PASSWORD}';\"" \
+            psql -U "${STAGING_DB_USER}" -c "ALTER USER \"${STAGING_DB_USER}\" WITH PASSWORD '${STAGING_DB_PASSWORD}';" \
             && echo "Senha sincronizada com sucesso." \
             || echo "AVISO: não foi possível sincronizar a senha do PostgreSQL — verifique as credenciais."
         else
