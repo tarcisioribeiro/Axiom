@@ -1,0 +1,8 @@
+# Known historical leak: GitLab PAT hardcoded in customization/git/.gitconfig,
+# introduced on the now-closed MR !152 (feat/addapt-i3-style). The secret is
+# unreachable from develop/main/any live branch but still scanned by gitleaks
+# because GitLab retains refs/merge-requests/152/* indefinitely. Token has
+# been revoked; entries below suppress the historical false-positive by exact
+# commit+file+rule+line fingerprint.
+08dbf162ecb0ea030cc73de85d000939f274def5:customization/git/.gitconfig:gitlab-pat:89
+51451c00df47a67c3266d1446376b95174e81b8e:customization/git/.gitconfig:gitlab-pat:89
