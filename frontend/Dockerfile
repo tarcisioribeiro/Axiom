@@ -45,8 +45,14 @@ RUN npm run build
 # Stage 2: Production with nginx
 FROM nginx:alpine
 
+# Cache-buster for the OS package layer below — see api/Dockerfile for why
+# this is needed: --cache-from reuses this layer forever otherwise, so
+# `apk upgrade` never actually re-runs and security patches never land.
+ARG APK_CACHE_BUST=1
+
 # Upgrade OS packages and install curl for healthcheck
-RUN apk upgrade --no-cache && apk add --no-cache curl
+RUN echo "cache-bust: ${APK_CACHE_BUST}" && \
+    apk upgrade --no-cache && apk add --no-cache curl
 
 
 # Create non-root user for nginx

@@ -444,6 +444,7 @@ build:api:
           docker pull "$API_IMAGE:main" 2>/dev/null || true
           docker build --network=host \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
             --cache-from "$API_IMAGE:main" \
             -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
@@ -454,6 +455,7 @@ build:api:
         docker pull "$API_IMAGE:develop" 2>/dev/null || true
         docker build --network=host \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
           --cache-from "$API_IMAGE:develop" \
           -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
@@ -547,6 +549,7 @@ build:frontend:
         docker build --network=host \
           --build-arg VITE_APP_ENV=production \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --build-arg APK_CACHE_BUST="$(date +%Y%U)" \
           --cache-from "$FRONTEND_IMAGE:main" \
           -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
@@ -557,6 +560,7 @@ build:frontend:
         docker build --network=host \
           --build-arg VITE_APP_ENV=staging \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --build-arg APK_CACHE_BUST="$(date +%Y%U)" \
           --cache-from "$FRONTEND_IMAGE:develop" \
           -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
