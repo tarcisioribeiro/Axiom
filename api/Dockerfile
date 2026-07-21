@@ -4,8 +4,17 @@
 # Stage 1: Base with system dependencies (cached)
 FROM python:3.12-slim AS base
 
+# Cache-buster for the OS package layer below. --cache-from reuses this layer
+# across builds indefinitely (the instructions never change), so without this
+# arg, `apt-get upgrade` never actually re-runs and security patches (e.g.
+# Debian CVEs fixed upstream) never land in the image. CI passes a value that
+# changes weekly to force a periodic refresh while keeping the layer cached
+# for same-week rebuilds.
+ARG APT_CACHE_BUST=1
+
 # Install system dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+RUN echo "cache-bust: ${APT_CACHE_BUST}" && \
+    apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     postgresql-client \
@@ -38,7 +47,10 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # work on every single build.
 FROM python:3.12-slim AS production
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+ARG APT_CACHE_BUST=1
+
+RUN echo "cache-bust: ${APT_CACHE_BUST}" && \
+    apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     postgresql-client \
     netcat-openbsd \
     curl \
