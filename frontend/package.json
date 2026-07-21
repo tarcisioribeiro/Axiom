@@ -46,7 +46,7 @@
     "@react-pdf/renderer": "4.3.2",
     "@sentry/react": "8.55.0",
     "@tanstack/react-query": "5.91.0",
-    "axios": "1.16.0",
+    "axios": "1.18.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "date-fns": "4.1.0",
@@ -129,9 +129,31 @@
   "overrides": {
     "esbuild": "0.28.1",
     "flatted": "3.4.2",
-    "dompurify": "3.4.2",
-    "fast-uri": "3.1.2",
+    "dompurify": "3.4.12",
+    "fast-uri": "3.1.3",
     "lodash": "4.18.1",
-    "@xmldom/xmldom": "0.8.13"
+    "@xmldom/xmldom": "0.8.13",
+    "js-yaml": "4.3.0",
+    "brace-expansion": "1.1.16",
+    "glob": {
+      "brace-expansion": "2.1.2"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "brace-expansion": "2.1.2"
+    },
+    "filelist": {
+      "brace-expansion": "2.1.2"
+    },
+    "readdir-glob": {
+      "brace-expansion": "2.1.2"
+    },
+    "workbox-build": {
+      "glob": {
+        "minimatch": {
+          "brace-expansion": "5.0.7"
+        }
+      }
+    },
+    "uuid": "11.1.1"
   }
 }
