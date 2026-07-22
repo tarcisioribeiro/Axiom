@@ -238,7 +238,7 @@ router = DefaultRouter()
 router.register(r'books', BookViewSet, basename='book')
 
 urlpatterns = [
-    path('api/v1/', include(router.urls)),
+    path('apps/api/v1/', include(router.urls)),
 ]
 ```
 

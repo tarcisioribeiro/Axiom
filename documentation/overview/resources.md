@@ -482,5 +482,5 @@ Consulte [`development/pending_features.md`](../development/pending_features.md)
 ## Links Relacionados
 
 - [Arquitetura do Sistema](../02-architecture/visao-geral.md)
-- [Documentação da API](../05-api/endpoints.md)
+- [Documentação da API](../05-apps/api/endpoints.md)
 - [Guia de Desenvolvimento](../08-development/guia-desenvolvimento.md)

@@ -364,7 +364,7 @@ graph TB
 
 ### SecurityHeadersMiddleware
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/app/middleware.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/middleware.py`
 
 ```python
 class SecurityHeadersMiddleware(MiddlewareMixin):
@@ -537,7 +537,7 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 
 ### CORS (Cross-Origin Resource Sharing)
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/app/settings.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/settings.py`
 
 ```python
 # CORS Configuration
@@ -717,7 +717,7 @@ cursor.execute('SELECT * FROM accounts WHERE balance > %s', [min_balance])
 
 ### AuditLoggingMiddleware
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/app/middleware.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/middleware.py`
 
 ```python
 class AuditLoggingMiddleware(MiddlewareMixin):
@@ -893,7 +893,7 @@ REST_FRAMEWORK = {
 ### Throttling Customizado
 
 ```python
-# api/throttling.py
+# apps/api/throttling.py
 from rest_framework.throttling import UserRateThrottle
 
 
@@ -1132,10 +1132,10 @@ secrets/
 
 ```bash
 pip install bandit
-bandit -r api/ -ll  # Level Low and above
+bandit -r apps/api/ -ll  # Level Low and above
 
 # Ignorar false positives
-bandit -r api/ -ll -x api/tests/
+bandit -r apps/api/ -ll -x apps/api/tests/
 ```
 
 #### Safety (Vulnerabilidades em Dependências)

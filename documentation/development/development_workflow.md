@@ -337,7 +337,7 @@ docker-compose exec api pytest
 docker-compose exec api pytest --cov=. --cov-report=html
 
 # Abrir relatório de cobertura
-# Abre api/htmlcov/index.html no navegador
+# Abre apps/api/htmlcov/index.html no navegador
 ```
 
 ### Testes do Frontend (React)
@@ -556,7 +556,7 @@ docker-compose exec api bash -c "black . && isort . && flake8 ."
 **Configuração do Black:**
 
 ```toml
-# api/pyproject.toml
+# apps/api/pyproject.toml
 [tool.black]
 line-length = 100
 target-version = ['py311']
@@ -573,7 +573,7 @@ exclude = '''
 **Configuração do isort:**
 
 ```toml
-# api/pyproject.toml
+# apps/api/pyproject.toml
 [tool.isort]
 profile = "black"
 line_length = 100
@@ -583,7 +583,7 @@ skip = ["migrations", ".venv"]
 **Configuração do flake8:**
 
 ```ini
-# api/.flake8
+# apps/api/.flake8
 [flake8]
 max-line-length = 100
 exclude = .git,__pycache__,*/migrations/*,venv
@@ -610,7 +610,7 @@ npx prettier --write "src/**/*.{ts,tsx}"
 **Configuração do ESLint:**
 
 ```javascript
-// frontend/eslint.config.js
+// apps/frontend/eslint.config.js
 export default {
   extends: [
     'eslint:recommended',
@@ -652,7 +652,7 @@ echo "All checks passed!"
 docker-compose exec api pip install nome-do-pacote
 
 # Atualizar requirements.txt
-docker-compose exec api pip freeze > api/requirements.txt
+docker-compose exec api pip freeze > apps/api/requirements.txt
 
 # Reinstalar dependências após atualizar requirements.txt
 docker-compose up -d --build api
@@ -686,7 +686,7 @@ docker-compose exec api pip list --outdated
 docker-compose exec api pip install --upgrade django
 
 # Congelar versões
-docker-compose exec api pip freeze > api/requirements.txt
+docker-compose exec api pip freeze > apps/api/requirements.txt
 ```
 
 **npm packages:**

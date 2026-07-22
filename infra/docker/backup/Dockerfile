@@ -26,7 +26,7 @@ RUN curl -fsSL \
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Backup scripts are mounted at runtime: ./api/scripts -> /scripts (read-only)
-# Backup output directory:               ./backups     -> /backups
+# Backup scripts are mounted at runtime: ./apps/api/scripts -> /scripts (read-only)
+# Backup output directory:               ./backups          -> /backups
 
 ENTRYPOINT ["/entrypoint.sh"]

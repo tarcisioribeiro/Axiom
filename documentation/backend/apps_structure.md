@@ -7,7 +7,7 @@ O backend do Axiom é organizado em apps Django modulares, cada uma responsável
 ## Estrutura de Diretórios
 
 ```
-api/
+apps/api/
 ├── app/                    # Configuração principal e utilitários
 ├── authentication/         # Autenticação JWT via cookies
 ├── members/               # Gestão de membros

@@ -183,7 +183,7 @@ credenciais para obter um JWT em cookie HttpOnly e validar o endpoint autenticad
 > o `access_token` diretamente do arquivo de cookie.
 
 **Valores:** devem ser idênticos aos usados na provisão do K8s secret
-(`STAGING_SUPERUSER_USERNAME` / `STAGING_SUPERUSER_PASSWORD` em `k8s/staging/secrets.yaml`).
+(`STAGING_SUPERUSER_USERNAME` / `STAGING_SUPERUSER_PASSWORD` em `infra/k8s/staging/secrets.yaml`).
 
 **Como confirmar os valores vigentes no cluster:**
 
@@ -194,7 +194,7 @@ kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 ```
 
-> **Atenção:** O script `api/createsuperuser.py` **só cria** o superusuário se
+> **Atenção:** O script `apps/api/createsuperuser.py` **só cria** o superusuário se
 > ele ainda não existir. Se o usuário já existe no banco e a senha do K8s secret
 > foi alterada posteriormente, o banco e a variável CI ficam dessincronizados —
 > o smoke test passará a retornar 401. Para realinhar, redefina a senha no banco:
@@ -389,7 +389,7 @@ Nome do bucket MinIO onde os backups de staging são armazenados.
 #### `BACKUP_ENCRYPTION_KEY`
 
 Passphrase AES-256-CBC usada para encriptar os backups gerados pelo script
-`api/scripts/backup.sh`. Os jobs `backup:staging` e `test:backup-restore` usam
+`apps/api/scripts/backup.sh`. Os jobs `backup:staging` e `test:backup-restore` usam
 esta chave — o primeiro para encriptar, o segundo para descriptografar antes de
 restaurar.
 
@@ -565,8 +565,8 @@ kubectl delete namespace axiom --ignore-not-found
 ### 4. Criar os namespaces
 
 ```bash
-kubectl apply -f k8s/staging/namespace.yaml
-kubectl apply -f k8s/namespace.yaml   # produção
+kubectl apply -f infra/k8s/staging/namespace.yaml
+kubectl apply -f infra/k8s/namespace.yaml   # produção
 ```
 
 ### 5. Criar ServiceAccounts para o GitLab CI
@@ -660,7 +660,7 @@ kubectl create secret docker-registry gitlab-registry-secret \
 ### 8. Provisionar os secrets do Kubernetes (staging)
 
 Os secrets do k8s são aplicados **manualmente uma única vez** e não são gerenciados
-pelo CI. O arquivo `k8s/staging/secrets.yaml` usa placeholders `${VAR}` que
+pelo CI. O arquivo `infra/k8s/staging/secrets.yaml` usa placeholders `${VAR}` que
 precisam ser substituídos via `envsubst` antes de aplicar.
 
 Gere e exporte cada variável no terminal:
@@ -699,7 +699,7 @@ export STAGING_SENTRY_DSN=""
 Aplique os secrets no cluster:
 
 ```bash
-envsubst < k8s/staging/secrets.yaml | kubectl apply -f -
+envsubst < infra/k8s/staging/secrets.yaml | kubectl apply -f -
 ```
 
 Verifique:
@@ -711,26 +711,26 @@ kubectl get secret axiom-secrets -n axiom-staging
 ### 9. Aplicar os demais recursos de infraestrutura (staging)
 
 ```bash
-kubectl apply -f k8s/staging/serviceaccounts.yaml
-kubectl apply -f k8s/staging/resource-quota.yaml
-kubectl apply -f k8s/staging/network-policy.yaml
-kubectl apply -f k8s/staging/configmap.yaml
-kubectl apply -f k8s/staging/postgres/pvc.yaml
-kubectl apply -f k8s/staging/postgres/configmap.yaml
-kubectl apply -f k8s/staging/postgres/deployment.yaml
-kubectl apply -f k8s/staging/postgres/service.yaml
-kubectl apply -f k8s/staging/redis/pvc.yaml
-kubectl apply -f k8s/staging/redis/deployment.yaml
-kubectl apply -f k8s/staging/redis/service.yaml
-kubectl apply -f k8s/staging/minio/pvc.yaml
-kubectl apply -f k8s/staging/minio/tls.yaml
-kubectl apply -f k8s/staging/minio/deployment.yaml
-kubectl apply -f k8s/staging/minio/service.yaml
-kubectl apply -f k8s/staging/api/pvc.yaml
-kubectl apply -f k8s/staging/ingress.yaml
+kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
+kubectl apply -f infra/k8s/staging/resource-quota.yaml
+kubectl apply -f infra/k8s/staging/network-policy.yaml
+kubectl apply -f infra/k8s/staging/configmap.yaml
+kubectl apply -f infra/k8s/staging/postgres/pvc.yaml
+kubectl apply -f infra/k8s/staging/postgres/configmap.yaml
+kubectl apply -f infra/k8s/staging/postgres/deployment.yaml
+kubectl apply -f infra/k8s/staging/postgres/service.yaml
+kubectl apply -f infra/k8s/staging/redis/pvc.yaml
+kubectl apply -f infra/k8s/staging/redis/deployment.yaml
+kubectl apply -f infra/k8s/staging/redis/service.yaml
+kubectl apply -f infra/k8s/staging/minio/pvc.yaml
+kubectl apply -f infra/k8s/staging/minio/tls.yaml
+kubectl apply -f infra/k8s/staging/minio/deployment.yaml
+kubectl apply -f infra/k8s/staging/minio/service.yaml
+kubectl apply -f infra/k8s/staging/api/pvc.yaml
+kubectl apply -f infra/k8s/staging/ingress.yaml
 ```
 
-> Os manifestos `api/deployment.yaml` e `frontend/deployment.yaml` são aplicados
+> Os manifestos `infra/k8s/staging/api/deployment.yaml` e `infra/k8s/staging/frontend/deployment.yaml` são aplicados
 > pelo job `deploy:staging` a cada pipeline — não é necessário aplicá-los manualmente.
 
 ---

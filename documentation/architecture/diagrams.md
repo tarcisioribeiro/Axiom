@@ -664,7 +664,7 @@ stateDiagram-v2
 
 ## 11. Pipeline de Agentes de IA — Componentes
 
-Visão dos componentes do módulo `api/agents/` e suas dependências.
+Visão dos componentes do módulo `apps/api/agents/` e suas dependências.
 
 ```mermaid
 graph TB

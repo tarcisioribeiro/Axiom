@@ -153,7 +153,7 @@ PermissionError: [Errno 13] Permission denied
 
 ```bash
 # Linux - ajustar permissões
-sudo chown -R $USER:$USER api/media api/logs api/staticfiles
+sudo chown -R $USER:$USER apps/api/media apps/api/logs apps/api/staticfiles
 
 # Ou rodar container como seu usuário
 docker-compose exec -u $(id -u):$(id -g) api bash
@@ -369,7 +369,7 @@ Migration accounts.0002_auto_20260112_1234 is applied before its dependency
 2. **Resetar migrations (⚠️ perde dados!)**
    ```bash
    # Remover arquivos de migration (exceto __init__.py)
-   rm api/accounts/migrations/0*.py
+   rm apps/api/accounts/migrations/0*.py
 
    # Recriar migrations
    docker-compose exec api python manage.py makemigrations
@@ -438,7 +438,7 @@ docker-compose exec api python manage.py migrate --fake-initial
 
 3. **Verificar configuração de JWT**
    ```python
-   # api/app/settings.py
+   # apps/api/app/settings.py
    SIMPLE_JWT = {
        'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
        'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -479,7 +479,7 @@ const newAccessToken = await refreshAccessToken();
 
 1. **Desabilitar CSRF para API (já configurado)**
    ```python
-   # api/app/settings.py
+   # apps/api/app/settings.py
    REST_FRAMEWORK = {
        'DEFAULT_AUTHENTICATION_CLASSES': [
            'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -613,7 +613,7 @@ print(settings.CORS_ALLOW_CREDENTIALS)
 
 2. **Verificar settings.py**
    ```python
-   # api/app/settings.py
+   # apps/api/app/settings.py
    CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
    CORS_ALLOW_CREDENTIALS = True  # Necessário para cookies HttpOnly
    ```
@@ -633,7 +633,7 @@ print(settings.CORS_ALLOW_CREDENTIALS)
 
 1. **Verificar withCredentials no axios**
    ```typescript
-   // frontend/src/services/api-client.ts
+   // apps/frontend/src/services/api-client.ts
    const apiClient = axios.create({
      baseURL: import.meta.env.VITE_API_BASE_URL,
      withCredentials: true,  // ✅ Deve estar true
@@ -642,7 +642,7 @@ print(settings.CORS_ALLOW_CREDENTIALS)
 
 2. **Verificar SameSite**
    ```python
-   # api/app/settings.py
+   # apps/api/app/settings.py
    SIMPLE_JWT = {
        'AUTH_COOKIE_SAMESITE': 'Lax',  # 'Strict' pode bloquear
        'AUTH_COOKIE_SECURE': False,    # True apenas em HTTPS
@@ -743,13 +743,13 @@ docker stats axiom-api
 
 1. **Reduzir número de resultados**
    ```python
-   # api/ai_assistant/config.py
+   # apps/api/ai_assistant/config.py
    TOP_K_RESULTS = 3  # Em vez de 5
    ```
 
 2. **Aumentar cache TTL**
    ```python
-   # api/ai_assistant/config.py
+   # apps/api/ai_assistant/config.py
    CACHE_TTL = 3600  # 1 hora
    ```
 
@@ -782,7 +782,7 @@ docker stats axiom-api
 
 3. **Ajustar similaridade threshold**
    ```python
-   # api/ai_assistant/config.py
+   # apps/api/ai_assistant/config.py
    SIMILARITY_THRESHOLD = 0.5  # Reduzir para incluir mais resultados
    ```
 
@@ -834,7 +834,7 @@ docker stats axiom-api
 
 1. **Limitar connection pooling**
    ```python
-   # api/app/settings.py
+   # apps/api/app/settings.py
    DATABASES = {
        'default': {
            'CONN_MAX_AGE': 60,  # Reduzir de 600 para 60
@@ -850,7 +850,7 @@ docker stats axiom-api
 
 3. **Limitar workers do Gunicorn (produção)**
    ```python
-   # api/gunicorn.conf.py
+   # apps/api/gunicorn.conf.py
    workers = 2  # Em vez de 4
    ```
 
@@ -917,14 +917,14 @@ npm ERR! ERESOLVE could not resolve
 
 1. **Usar .dockerignore**
    ```bash
-   # api/.dockerignore
+   # apps/api/.dockerignore
    __pycache__
    *.pyc
    *.pyo
    .git
    venv
 
-   # frontend/.dockerignore
+   # apps/frontend/.dockerignore
    node_modules
    dist
    .git
@@ -943,7 +943,7 @@ npm ERR! ERESOLVE could not resolve
 ### Habilitar debug SQL
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 LOGGING = {
     'loggers': {
         'django.db.backends': {
@@ -956,7 +956,7 @@ LOGGING = {
 ### Habilitar debug de requests
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 LOGGING = {
     'loggers': {
         'django.request': {

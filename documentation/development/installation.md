@@ -41,7 +41,7 @@ Este guia detalha como configurar o ambiente de desenvolvimento do Axiom.
 ```bash
 # Docker
 docker --version
-docker-compose --version
+docker compose version
 
 # Python (local)
 python --version
@@ -141,13 +141,19 @@ Copie as chaves geradas e adicione ao arquivo `.env`.
 
 ### Passo 4: Iniciar os Containers
 
+O compose file fica em `infra/docker/docker-compose.yml`; use `--project-directory .`
+(executando a partir da raiz do repo) para que caminhos relativos e o `.env`
+sejam resolvidos corretamente. Um atalho de shell simplifica os comandos abaixo:
+
 ```bash
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+
 # Inicie todos os serviços em modo detached
-docker-compose up -d
+$DC up -d
 
 # Aguarde os serviços iniciarem (cerca de 30-60 segundos)
 # Acompanhe os logs em tempo real
-docker-compose logs -f
+$DC logs -f
 ```
 
 ### Passo 5: Executar Migrations
@@ -156,27 +162,27 @@ Após os containers estarem rodando e saudáveis:
 
 ```bash
 # Execute as migrations do banco de dados
-docker-compose exec api python manage.py migrate
+$DC exec api python manage.py migrate
 
 # Verifique o status das migrations
-docker-compose exec api python manage.py showmigrations
+$DC exec api python manage.py showmigrations
 ```
 
 ### Passo 6: Criar Dados Iniciais (Opcional)
 
 ```bash
 # Configurar permissões de usuários e grupos
-docker-compose exec api python manage.py setup_permissions
+$DC exec api python manage.py setup_permissions
 
 # Ou crie um superuser manualmente (se não usou DJANGO_SUPERUSER_* no .env)
-docker-compose exec api python manage.py createsuperuser
+$DC exec api python manage.py createsuperuser
 ```
 
 ### Passo 7: Coletar Arquivos Estáticos (Opcional)
 
 ```bash
 # Coletar arquivos estáticos para servir via Django Admin
-docker-compose exec api python manage.py collectstatic --noinput
+$DC exec api python manage.py collectstatic --noinput
 ```
 
 ### Verificar Instalação
@@ -257,7 +263,7 @@ redis-cli ping  # Deve retornar: PONG
 
 ```bash
 # Entre no diretório da API
-cd api
+cd apps/api
 
 # Crie um ambiente virtual
 python3 -m venv venv
@@ -276,7 +282,7 @@ pip install -r requirements.txt
 
 ### Passo 5: Configurar Variáveis de Ambiente do Backend
 
-Crie um arquivo `.env` na raiz do projeto (não dentro de `api/`):
+Crie um arquivo `.env` na raiz do projeto (não dentro de `apps/api/`):
 
 ```bash
 # Database Configuration
@@ -314,7 +320,7 @@ DEBUG=True
 ### Passo 6: Executar Migrations e Criar Superuser
 
 ```bash
-# Ainda dentro de api/ com venv ativado
+# Ainda dentro de apps/api/ com venv ativado
 python manage.py migrate
 python manage.py setup_permissions
 python manage.py createsuperuser  # Se não configurou DJANGO_SUPERUSER_*
@@ -324,7 +330,7 @@ python manage.py collectstatic --noinput
 ### Passo 7: Iniciar Backend
 
 ```bash
-# Ainda dentro de api/ com venv ativado
+# Ainda dentro de apps/api/ com venv ativado
 python manage.py runserver 0.0.0.0:39100
 ```
 
@@ -336,7 +342,7 @@ Em um **novo terminal**:
 
 ```bash
 # Entre no diretório do frontend
-cd frontend
+cd apps/frontend
 
 # Instale as dependências
 npm install
@@ -344,7 +350,7 @@ npm install
 
 ### Passo 9: Configurar Variáveis de Ambiente do Frontend
 
-Crie um arquivo `.env` em `frontend/`:
+Crie um arquivo `.env` em `apps/frontend/`:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:39100
@@ -353,7 +359,7 @@ VITE_API_BASE_URL=http://localhost:39100
 ### Passo 10: Iniciar Frontend
 
 ```bash
-# Ainda dentro de frontend/
+# Ainda dentro de apps/frontend/
 npm run dev
 ```
 
@@ -399,7 +405,8 @@ Verifique se todos os serviços estão saudáveis:
 
 ```bash
 # Com Docker
-docker-compose ps
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+$DC ps
 
 # Todos devem estar "healthy" ou "running"
 
@@ -413,16 +420,16 @@ curl http://localhost:39100/live/      # Liveness probe
 
 ```bash
 # Docker - todos os serviços
-docker-compose logs -f
+$DC logs -f
 
 # Docker - apenas backend
-docker-compose logs -f api
+$DC logs -f api
 
 # Docker - apenas frontend
-docker-compose logs -f frontend
+$DC logs -f frontend
 
 # Docker - apenas banco de dados
-docker-compose logs -f db
+$DC logs -f db
 
 # Local - os logs aparecem no terminal onde você iniciou os serviços
 ```
@@ -431,7 +438,7 @@ docker-compose logs -f db
 
 ```bash
 # Docker
-docker-compose exec db psql -U axiom_user -d axiom_db
+$DC exec db psql -U axiom_user -d axiom_db
 
 # Local
 psql -U axiom_user -d axiom_db
@@ -447,7 +454,7 @@ psql -U axiom_user -d axiom_db
 
 ```bash
 # Docker
-docker-compose exec redis redis-cli ping
+$DC exec redis redis-cli ping
 
 # Local
 redis-cli ping
@@ -459,16 +466,16 @@ redis-cli ping
 
 ```bash
 # Backend - Docker
-docker-compose exec api python manage.py test
-docker-compose exec api pytest
+$DC exec api python manage.py test
+$DC exec api pytest
 
 # Backend - Local (com venv ativado)
-cd api
+cd apps/api
 python manage.py test
 pytest
 
 # Frontend
-cd frontend
+cd apps/frontend
 npm run test
 npm run lint
 npm run build  # Verifica erros de TypeScript
@@ -502,10 +509,10 @@ sudo netstat -tulpn | grep :39102
 
 ```bash
 # Docker - verifique se o container db está saudável
-docker-compose ps
+$DC ps
 
 # Aguarde o healthcheck passar (pode levar até 30 segundos)
-docker-compose logs db
+$DC logs db
 
 # Local - verifique se PostgreSQL está rodando
 sudo systemctl status postgresql  # Linux
@@ -529,7 +536,7 @@ sudo apt install python3-dev libpq-dev
 
 ```bash
 # Limpe o cache e reinstale
-cd frontend
+cd apps/frontend
 rm -rf node_modules package-lock.json
 npm cache clean --force
 npm install

@@ -15,45 +15,45 @@ repos:
       - id: trailing-whitespace
       - id: detect-private-key
 
-  # Python formatting — config in api/pyproject.toml [tool.black]
+  # Python formatting — config in apps/api/pyproject.toml [tool.black]
   - repo: https://github.com/psf/black
     rev: 24.10.0
     hooks:
       - id: black
-        files: ^api/
-        exclude: ^api/.*/migrations/
-        args: [--config, api/pyproject.toml]
+        files: ^apps/api/
+        exclude: ^apps/api/.*/migrations/
+        args: [--config, apps/api/pyproject.toml]
 
-  # Import sorting — config in api/pyproject.toml [tool.isort]
+  # Import sorting — config in apps/api/pyproject.toml [tool.isort]
   - repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        files: ^api/
-        exclude: ^api/.*/migrations/
-        args: [--settings-path, api/]
+        files: ^apps/api/
+        exclude: ^apps/api/.*/migrations/
+        args: [--settings-path, apps/api/]
 
-  # Linting — config in api/.flake8
+  # Linting — config in apps/api/.flake8
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
       - id: flake8
-        files: ^api/
-        exclude: ^api/.*/migrations/
-        args: ["--config=api/.flake8"]
+        files: ^apps/api/
+        exclude: ^apps/api/.*/migrations/
+        args: ["--config=apps/api/.flake8"]
 
   # Type checking — runs in an isolated pre-commit virtualenv so no host-level
   # pip install is required.  The versions below must stay in sync with
-  # api/requirements-dev.txt and api/requirements.txt.
+  # apps/api/requirements-dev.txt and apps/api/requirements.txt.
   - repo: local
     hooks:
       - id: mypy
         name: mypy
         language: python
-        entry: bash -c 'cd api && python -m mypy --config-file pyproject.toml .'
+        entry: bash -c 'cd apps/api && python -m mypy --config-file pyproject.toml .'
         pass_filenames: false
-        files: ^api/
-        exclude: ^api/.*/migrations/
+        files: ^apps/api/
+        exclude: ^apps/api/.*/migrations/
         additional_dependencies:
           - mypy==1.19.1
           - django-stubs==5.2.9
@@ -76,7 +76,7 @@ repos:
       - id: commitlint
         name: commitlint
         language: node
-        entry: commitlint --edit --config frontend/commitlint.config.cjs
+        entry: commitlint --edit --config apps/frontend/commitlint.config.cjs
         pass_filenames: false
         additional_dependencies:
           - '@commitlint/cli@19'

@@ -90,36 +90,44 @@ graph TB
 
 ## Estrutura do Monorepo
 
-O projeto utiliza uma estrutura de monorepo que organiza o código em dois diretórios principais:
+O projeto organiza o código em dois grandes agrupamentos na raiz — `apps/`
+(código de produto) e `infra/` (operação) — preparados para acomodar os
+novos módulos da iniciativa atual (mobile, banco de dados, storage, LLM):
 
 ```
 Axiom/
-├── api/                    # Backend Django
-│   ├── accounts/          # Gestão de contas bancárias
-│   ├── credit_cards/      # Gestão de cartões de crédito
-│   ├── expenses/          # Controle de despesas
-│   ├── revenues/          # Controle de receitas
-│   ├── loans/             # Gestão de empréstimos
-│   ├── transfers/         # Transferências bancárias
-│   ├── dashboard/         # Dashboard financeiro
-│   ├── security/          # Módulo de segurança (senhas)
-│   ├── library/           # Biblioteca de livros
-│   ├── ai_assistant/      # Assistente de IA (RAG)
-│   ├── authentication/    # Sistema de autenticação
-│   ├── members/           # Sistema de membros
-│   └── app/               # Configuração central
-├── frontend/              # Frontend React
-│   ├── src/
-│   │   ├── components/   # Componentes React
-│   │   ├── pages/        # Páginas/rotas
-│   │   ├── services/     # Camada de serviços
-│   │   ├── stores/       # Estado global (Zustand)
-│   │   ├── types/        # Definições TypeScript
-│   │   └── utils/        # Utilitários
-│   └── public/           # Arquivos estáticos
-├── docker-compose.yml     # Orquestração de containers
-├── .env                   # Variáveis de ambiente
-└── documentation/         # Documentação do projeto
+├── apps/
+│   ├── api/                # Backend Django
+│   │   ├── accounts/       # Gestão de contas bancárias
+│   │   ├── credit_cards/   # Gestão de cartões de crédito
+│   │   ├── expenses/       # Controle de despesas
+│   │   ├── revenues/       # Controle de receitas
+│   │   ├── loans/          # Gestão de empréstimos
+│   │   ├── transfers/      # Transferências bancárias
+│   │   ├── dashboard/      # Dashboard financeiro
+│   │   ├── security/       # Módulo de segurança (senhas)
+│   │   ├── library/        # Biblioteca de livros
+│   │   ├── agents/         # Módulo de agentes de IA / LLM (RAG)
+│   │   ├── exchange_rates/ # Módulo de câmbio (banco de taxas BRL)
+│   │   ├── authentication/ # Sistema de autenticação
+│   │   ├── members/        # Sistema de membros
+│   │   └── app/            # Configuração central
+│   ├── frontend/           # Frontend React
+│   │   ├── src/
+│   │   │   ├── components/ # Componentes React
+│   │   │   ├── pages/      # Páginas/rotas
+│   │   │   ├── services/   # Camada de serviços
+│   │   │   ├── stores/     # Estado global (Zustand)
+│   │   │   ├── types/      # Definições TypeScript
+│   │   │   └── utils/      # Utilitários
+│   │   └── public/         # Arquivos estáticos
+│   └── mobile/              # Reservado para o futuro app mobile (sem código ainda)
+├── infra/
+│   ├── k8s/                 # Manifests Kubernetes (kustomize base + overlays)
+│   ├── docker/               # docker-compose.yml + Dockerfiles auxiliares (db-backup)
+│   └── scripts/              # Scripts de backup/restore e migração
+├── .env                      # Variáveis de ambiente
+└── documentation/             # Documentação do projeto
 ```
 
 ### Vantagens do Monorepo
