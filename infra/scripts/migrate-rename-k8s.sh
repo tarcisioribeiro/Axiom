@@ -66,7 +66,7 @@ elif [[ "$TARGET" == "staging" ]]; then
     DB_PASSWORD="${STAGING_DB_PASSWORD:?Exporte STAGING_DB_PASSWORD}"
     MINIO_ROOT_USER="${STAGING_MINIO_ROOT_USER:?Exporte STAGING_MINIO_ROOT_USER}"
     MINIO_ROOT_PASSWORD="${STAGING_MINIO_ROOT_PASSWORD:?Exporte STAGING_MINIO_ROOT_PASSWORD}"
-    MANIFEST_NAMESPACE_FILE="infra/k8s/staging/namespace.yaml"
+    MANIFEST_NAMESPACE_FILE="infra/k8s/base/namespace.yaml"
     APPLY_SCRIPT="infra/k8s/scripts/apply-staging.sh"
 else
     error "Target inválido: '$TARGET'. Use 'production' ou 'staging'."
@@ -183,44 +183,21 @@ fi
 step "[4/7] Aplicando manifests no namespace '$NEW_NAMESPACE'..."
 
 if [[ "$DRY_RUN" == "false" ]]; then
-    # Aplica apenas infraestrutura base (sem API/frontend ainda)
-    kubectl apply -f "$MANIFEST_NAMESPACE_FILE"
-
+    # Aplica a infraestrutura inteira via kustomize (namespace, rbac, quota,
+    # network-policy, configmap, postgres, redis, minio, ollama, frontend,
+    # ingress — ver infra/k8s/README.md). API/frontend com imagem real ficam
+    # por conta do primeiro deploy do CI, como em qualquer bootstrap novo.
     if [[ "$TARGET" == "production" ]]; then
-        kubectl apply -f infra/k8s/serviceaccounts.yaml
-        kubectl apply -f infra/k8s/resource-quota.yaml
-        kubectl apply -f infra/k8s/network-policy.yaml
-        envsubst < infra/k8s/base/configmap.yaml | kubectl apply -f -
-        kubectl apply -f infra/k8s/postgres/configmap.yaml
-        kubectl apply -f infra/k8s/postgres/pvc.yaml
-        kubectl apply -f infra/k8s/postgres/deployment.yaml
-        kubectl apply -f infra/k8s/postgres/service.yaml
-        kubectl apply -f infra/k8s/redis/pvc.yaml
-        kubectl apply -f infra/k8s/redis/deployment.yaml
-        kubectl apply -f infra/k8s/redis/service.yaml
-        kubectl apply -f infra/k8s/minio/pvc.yaml
-        kubectl apply -f infra/k8s/minio/deployment.yaml
-        kubectl apply -f infra/k8s/minio/service.yaml
+        kubectl apply -k infra/k8s/overlays/production
     else
-        kubectl apply -f infra/k8s/staging/namespace.yaml
-        envsubst < infra/k8s/staging/configmap.yaml | kubectl apply -f -
-        kubectl apply -f infra/k8s/staging/postgres/configmap.yaml
-        kubectl apply -f infra/k8s/staging/postgres/pvc.yaml
-        kubectl apply -f infra/k8s/staging/postgres/deployment.yaml
-        kubectl apply -f infra/k8s/staging/postgres/service.yaml
-        kubectl apply -f infra/k8s/staging/redis/pvc.yaml
-        kubectl apply -f infra/k8s/staging/redis/deployment.yaml
-        kubectl apply -f infra/k8s/staging/redis/service.yaml
-        kubectl apply -f infra/k8s/staging/minio/pvc.yaml
-        kubectl apply -f infra/k8s/staging/minio/deployment.yaml
-        kubectl apply -f infra/k8s/staging/minio/service.yaml
+        kubectl apply -k infra/k8s/overlays/staging
     fi
 
     wait_for_deployment "$NEW_NAMESPACE" "postgres" 120
     wait_for_deployment "$NEW_NAMESPACE" "minio" 90
     info "Infraestrutura base pronta em '$NEW_NAMESPACE'."
 else
-    dry_run "kubectl apply -f $MANIFEST_NAMESPACE_FILE + infra (postgres, redis, minio)"
+    dry_run "kubectl apply -k infra/k8s/overlays/$TARGET"
 fi
 
 # ---------------------------------------------------------------------------

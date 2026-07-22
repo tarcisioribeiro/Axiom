@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "39100"
+spec:
+  type: ClusterIP
+  # Blue-green: the selector is toggled between slot: blue and slot: green
+  # by blue-green-switch.sh on every production deploy. Do NOT set this
+  # selector manually; use the script to avoid split-brain traffic.
+  selector:
+    app: api
+    slot: blue
+  ports:
+    - port: 39100
+      targetPort: 39100
+      protocol: TCP
+      name: http

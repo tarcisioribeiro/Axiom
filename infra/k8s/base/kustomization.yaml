@@ -1,0 +1,51 @@
+# =============================================================================
+# Axiom — kustomize base
+# =============================================================================
+# Shared shape for every environment. Values here reflect the production
+# footprint (bigger resource requests/limits, TLS-enabled MinIO, etc.) —
+# overlays/staging patches values *down* and removes prod-only features that
+# don't apply to staging (see overlays/staging/kustomization.yaml).
+#
+# The API Deployment(s) are intentionally NOT here: production uses a real
+# blue-green pair (api-blue/api-green) while staging uses a single Recreate
+# Deployment. Those live directly in each overlay (overlays/<env>/api/).
+#
+# api/service.yaml is ALSO not here, deliberately: its selector is toggled
+# between slot:blue/slot:green by blue-green-switch.sh on every production
+# deploy, so it must never be reset by a blanket `kubectl apply`. Production
+# applies it once at bootstrap (create-if-missing) from overlays/production/
+# api/service.yaml. Staging has no such concern, but kustomize's load
+# restrictor forbids overlays from reaching into base/ for a single loose
+# file (only whole kustomization directories), so overlays/staging/api/
+# keeps its own copy rather than sharing this one. api/pvc.yaml has no such
+# risk and is shared here.
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - cluster-issuers.yaml
+  - serviceaccounts.yaml
+  - network-policy.yaml
+  - resource-quota.yaml
+  - ingress.yaml
+  - postgres/configmap.yaml
+  - postgres/pvc.yaml
+  - postgres/deployment.yaml
+  - postgres/service.yaml
+  - redis/pvc.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  - minio/pvc.yaml
+  - minio/deployment.yaml
+  - minio/service.yaml
+  - minio/tls.yaml
+  - ollama/pvc.yaml
+  - ollama/deployment.yaml
+  - ollama/service.yaml
+  - frontend/configmap-nginx.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - api/pvc.yaml

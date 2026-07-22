@@ -317,6 +317,11 @@ lint:k8s:
     # kubeconform validates manifests against official Kubernetes schemas
     # without requiring a live cluster. kustomization.yaml files are excluded
     # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
+    # overlays/*/patches/*.yaml are excluded too — they are intentionally partial
+    # strategic-merge fragments (e.g. just spec.template.spec.containers[0].resources),
+    # not standalone manifests, so they fail required-field validation on their own.
+    # The fully-rendered overlays (what actually gets applied) are validated
+    # implicitly by deploy:staging / deploy:production against the real API server.
     # Third-party CRD schemas (e.g. cert-manager ClusterIssuer) are fetched from
     # the community CRDs catalog so they are validated rather than skipped.
     # -cache persists downloaded schemas across pipeline runs (via CI cache) so
@@ -324,7 +329,7 @@ lint:k8s:
     # avoid tripping transient rate-limiting/timeouts on raw.githubusercontent.com.
     - |
       mkdir -p .kubeconform-cache
-      find infra/k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
+      find infra/k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -path "*/patches/*" -not -name "kustomization.yaml" | sort | \
         xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 -n 1 \
           -cache .kubeconform-cache \
           -schema-location default \
@@ -751,17 +756,15 @@ deploy:staging:
       else
         echo "Pod do PostgreSQL não encontrado — pulando sincronização de senha."
       fi
-    - kubectl apply -f infra/k8s/staging/resource-quota.yaml
-    - kubectl apply -f infra/k8s/staging/ingress.yaml
-    - kubectl apply -f infra/k8s/staging/api/service.yaml
-    - kubectl apply -f infra/k8s/staging/configmap.yaml
-    - kubectl apply -f infra/k8s/staging/minio/service.yaml
-    # ── Ollama: RBAC, network policy e deployment ────────────────────────────
-    - kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
-    - kubectl apply -f infra/k8s/staging/network-policy.yaml
-    - kubectl apply -f infra/k8s/staging/ollama/pvc.yaml
-    - kubectl apply -f infra/k8s/staging/ollama/service.yaml
-    - kubectl apply -f infra/k8s/staging/ollama/deployment.yaml
+    # Renderiza o overlay inteiro (postgres, redis, minio, ollama, rbac,
+    # network-policy, quota, ingress, configmap, frontend) de uma vez só.
+    # O frontend entra no build com a tag placeholder 0.0.0 — substituída aqui
+    # via sed antes do apply, pelo mesmo motivo de sempre: nunca deixar uma
+    # revisão intermediária com a imagem placeholder virar alvo de rollback.
+    - |
+      kubectl kustomize infra/k8s/overlays/staging \
+        | sed "s|image: .*axiom-frontend:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
+        | kubectl apply -f -
     # Força rollout para limpar condição ProgressDeadlineExceeded residual de
     # deploys anteriores — o pod template do Ollama não muda entre ciclos, então
     # kubectl apply não incrementa a generation nem reseta a condição por conta própria.
@@ -773,18 +776,11 @@ deploy:staging:
     - |
       kubectl -n axiom-staging rollout status deployment/ollama --timeout=600s \
         || echo "AVISO: rollout do Ollama não completou em 600s — deploy segue. LLM pode estar temporariamente indisponível."
-    # Apply deployment specs with the real image tag substituted in-place so
-    # kubectl apply creates exactly one rollout revision per deploy cycle.
-    # Using sed to replace the placeholder 0.0.0 tag avoids a spurious revision
-    # with the placeholder image that would otherwise be the rollback target.
+    # API: Deployment único (sem blue-green em staging). Mesma lógica de sed
+    # de sempre — ver comentário acima sobre a tag placeholder.
     - |
       sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
-        infra/k8s/staging/api/deployment.yaml | kubectl apply -f -
-    - kubectl apply -f infra/k8s/staging/frontend/configmap-nginx.yaml
-    - kubectl apply -f infra/k8s/staging/frontend/service.yaml
-    - |
-      sed "s|image: .*:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
-        infra/k8s/staging/frontend/deployment.yaml | kubectl apply -f -
+        infra/k8s/overlays/staging/api/deployment.yaml | kubectl apply -f -
     # Força nova revisão mesmo em retentativas do mesmo SHA (sem mudança de image
     # tag, kubectl apply não incrementa a generation nem reseta a condição
     # ProgressDeadlineExceeded — mesmo problema corrigido no Ollama acima).
@@ -889,8 +885,8 @@ seed:staging:
 #         --from-literal=MINIO_SECRET_KEY="$STAGING_MINIO_ROOT_PASSWORD" \
 #         --dry-run=client -o yaml | kubectl apply -f -
 #     # Ensure the sa-backup service account and CronJob/PVC/ConfigMap exist
-#     - kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
-#     - kubectl apply -f infra/k8s/staging/backup-cronjob.yaml
+#     - kubectl apply -k infra/k8s/overlays/staging
+#     - kubectl apply -f infra/k8s/overlays/staging/backup-cronjob.yaml
 #     # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
 #     - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
 #     # Delete stale job from a previous attempt of this pipeline (retry-safe).
@@ -1429,16 +1425,19 @@ deploy:production:
         --docker-username="$GHCR_USERNAME" \
         --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
-    # ── 2. Apply base manifests (idempotent — safe on every run) ─────────────────
-    - kubectl apply -f infra/k8s/base/namespace.yaml
-    - kubectl apply -f infra/k8s/base/configmap.yaml
-    - kubectl apply -f infra/k8s/serviceaccounts.yaml
-    - kubectl apply -f infra/k8s/network-policy.yaml
-    - kubectl apply -f infra/k8s/api/pvc.yaml
-    # ── 2b. Ollama: PVC, Service, Deployment ─────────────────────────────────────
-    - kubectl apply -f infra/k8s/ollama/pvc.yaml
-    - kubectl apply -f infra/k8s/ollama/service.yaml
-    - kubectl apply -f infra/k8s/ollama/deployment.yaml
+    # ── 2. Apply the full overlay (idempotent — safe on every run) ───────────────
+    # Renders namespace, configmap, rbac, network-policy, quota, ingress,
+    # postgres, redis, minio, ollama and frontend in one shot. The frontend
+    # placeholder image (0.0.0) is substituted before it ever reaches the
+    # cluster, same reasoning as always: never let a placeholder-image
+    # revision become the rollback target.
+    # API (blue/green) and its Service are deliberately NOT part of this
+    # overlay build — see base/kustomization.yaml for why — and are handled
+    # by their own bespoke steps below.
+    - |
+      kubectl kustomize infra/k8s/overlays/production \
+        | sed "s|image: .*axiom-frontend:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
+        | kubectl apply -f -
     - kubectl -n axiom rollout status deployment/ollama --timeout=600s
     # ── 3. Sync blue-green Deployment specs + Service ────────────────────────────
     # Always apply the manifest so spec changes (volumes, probes, env) propagate.
@@ -1451,28 +1450,22 @@ deploy:production:
         CURRENT_IMAGE=$(kubectl -n axiom get deployment api-blue \
           -o jsonpath='{.spec.template.spec.containers[0].image}')
         sed "s|image: .*:0\.0\.0|image: $CURRENT_IMAGE|" \
-          infra/k8s/api/deployment-blue.yaml | kubectl apply -f -
+          infra/k8s/overlays/production/api/deployment-blue.yaml | kubectl apply -f -
       else
         sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
-          infra/k8s/api/deployment-blue.yaml | kubectl apply -f -
+          infra/k8s/overlays/production/api/deployment-blue.yaml | kubectl apply -f -
       fi
     - |
       if kubectl -n axiom get deployment api-green >/dev/null 2>&1; then
         CURRENT_IMAGE=$(kubectl -n axiom get deployment api-green \
           -o jsonpath='{.spec.template.spec.containers[0].image}')
         sed "s|image: .*:0\.0\.0|image: $CURRENT_IMAGE|" \
-          infra/k8s/api/deployment-green.yaml | kubectl apply -f -
+          infra/k8s/overlays/production/api/deployment-green.yaml | kubectl apply -f -
       else
         sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
-          infra/k8s/api/deployment-green.yaml | kubectl apply -f -
+          infra/k8s/overlays/production/api/deployment-green.yaml | kubectl apply -f -
       fi
-    - kubectl -n axiom get svc api-service >/dev/null 2>&1 || kubectl apply -f infra/k8s/api/service.yaml
-    # ── 4. Apply frontend manifests with the current image tag ───────────────────
-    - kubectl apply -f infra/k8s/frontend/configmap-nginx.yaml
-    - |
-      sed "s|image: .*:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
-        infra/k8s/frontend/deployment.yaml | kubectl apply -f -
-    - kubectl apply -f infra/k8s/frontend/service.yaml
+    - kubectl -n axiom get svc api-service >/dev/null 2>&1 || kubectl apply -f infra/k8s/overlays/production/api/service.yaml
     # ── 5. API: blue-green zero-downtime deploy ───────────────────────────────────
     # The script reads the active slot from the Service selector, deploys the
     # new image to the inactive slot, waits for readiness, then switches

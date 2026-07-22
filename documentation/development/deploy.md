@@ -183,7 +183,7 @@ credenciais para obter um JWT em cookie HttpOnly e validar o endpoint autenticad
 > o `access_token` diretamente do arquivo de cookie.
 
 **Valores:** devem ser idênticos aos usados na provisão do K8s secret
-(`STAGING_SUPERUSER_USERNAME` / `STAGING_SUPERUSER_PASSWORD` em `infra/k8s/staging/secrets.yaml`).
+(`STAGING_SUPERUSER_USERNAME` / `STAGING_SUPERUSER_PASSWORD` em `infra/k8s/overlays/staging/secrets.yaml`).
 
 **Como confirmar os valores vigentes no cluster:**
 
@@ -564,10 +564,10 @@ kubectl delete namespace axiom --ignore-not-found
 
 ### 4. Criar os namespaces
 
-```bash
-kubectl apply -f infra/k8s/staging/namespace.yaml
-kubectl apply -f infra/k8s/namespace.yaml   # produção
-```
+Os namespaces `axiom-staging` e `axiom` são criados automaticamente pelo
+`kubectl apply -k` do passo 9 — o kustomize renomeia `infra/k8s/base/namespace.yaml`
+conforme o overlay (`namespace: axiom-staging` / `namespace: axiom`), então não
+precisam de um passo isolado.
 
 ### 5. Criar ServiceAccounts para o GitLab CI
 
@@ -660,7 +660,7 @@ kubectl create secret docker-registry gitlab-registry-secret \
 ### 8. Provisionar os secrets do Kubernetes (staging)
 
 Os secrets do k8s são aplicados **manualmente uma única vez** e não são gerenciados
-pelo CI. O arquivo `infra/k8s/staging/secrets.yaml` usa placeholders `${VAR}` que
+pelo CI. O arquivo `infra/k8s/overlays/staging/secrets.yaml` usa placeholders `${VAR}` que
 precisam ser substituídos via `envsubst` antes de aplicar.
 
 Gere e exporte cada variável no terminal:
@@ -699,7 +699,7 @@ export STAGING_SENTRY_DSN=""
 Aplique os secrets no cluster:
 
 ```bash
-envsubst < infra/k8s/staging/secrets.yaml | kubectl apply -f -
+envsubst < infra/k8s/overlays/staging/secrets.yaml | kubectl apply -f -
 ```
 
 Verifique:
@@ -710,28 +710,19 @@ kubectl get secret axiom-secrets -n axiom-staging
 
 ### 9. Aplicar os demais recursos de infraestrutura (staging)
 
+Namespace, RBAC, quota, network-policy, configmap, postgres, redis, minio,
+ollama e ingress — tudo de uma vez, via kustomize (ver `infra/k8s/README.md`
+para o detalhamento da estrutura `base/` + `overlays/`):
+
 ```bash
-kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
-kubectl apply -f infra/k8s/staging/resource-quota.yaml
-kubectl apply -f infra/k8s/staging/network-policy.yaml
-kubectl apply -f infra/k8s/staging/configmap.yaml
-kubectl apply -f infra/k8s/staging/postgres/pvc.yaml
-kubectl apply -f infra/k8s/staging/postgres/configmap.yaml
-kubectl apply -f infra/k8s/staging/postgres/deployment.yaml
-kubectl apply -f infra/k8s/staging/postgres/service.yaml
-kubectl apply -f infra/k8s/staging/redis/pvc.yaml
-kubectl apply -f infra/k8s/staging/redis/deployment.yaml
-kubectl apply -f infra/k8s/staging/redis/service.yaml
-kubectl apply -f infra/k8s/staging/minio/pvc.yaml
-kubectl apply -f infra/k8s/staging/minio/tls.yaml
-kubectl apply -f infra/k8s/staging/minio/deployment.yaml
-kubectl apply -f infra/k8s/staging/minio/service.yaml
-kubectl apply -f infra/k8s/staging/api/pvc.yaml
-kubectl apply -f infra/k8s/staging/ingress.yaml
+kubectl apply -k infra/k8s/overlays/staging
 ```
 
-> Os manifestos `infra/k8s/staging/api/deployment.yaml` e `infra/k8s/staging/frontend/deployment.yaml` são aplicados
-> pelo job `deploy:staging` a cada pipeline — não é necessário aplicá-los manualmente.
+> Os manifestos `infra/k8s/overlays/staging/api/deployment.yaml` e o Deployment
+> do frontend (dentro do overlay) recebem a tag de imagem real via `sed` e são
+> re-aplicados pelo job `deploy:staging` a cada pipeline — não é necessário
+> aplicá-los manualmente aqui além desta primeira vez (ficam com a imagem
+> placeholder `0.0.0` até o primeiro deploy do CI).
 
 ---
 

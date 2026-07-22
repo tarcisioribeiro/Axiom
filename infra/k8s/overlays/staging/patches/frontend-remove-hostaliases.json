@@ -1,0 +1,4 @@
+[
+  { "op": "remove", "path": "/spec/template/spec/hostAliases" },
+  { "op": "remove", "path": "/spec/template/spec/initContainers" }
+]

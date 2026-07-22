@@ -1,0 +1,5 @@
+[
+  { "op": "replace", "path": "/spec/tls/0/hosts/0", "value": "axiom-staging.tjtux.duckdns.org" },
+  { "op": "replace", "path": "/spec/tls/0/secretName", "value": "axiom-staging-tls" },
+  { "op": "replace", "path": "/spec/rules/0/host", "value": "axiom-staging.tjtux.duckdns.org" }
+]

@@ -4,36 +4,20 @@
 # =============================================================================
 # Usage: bash infra/k8s/scripts/apply-production.sh
 #
+# One-time bootstrap only. Day-to-day deploys are handled by the
+# deploy:production CI job (blue-green), which applies the same overlay plus
+# the real image tags. This script leaves api-blue/api-green and frontend on
+# the placeholder 0.0.0 image — expect ImagePullBackOff until the first CI
+# deploy runs.
+#
 # Prerequisites:
 #   See infra/k8s/scripts/apply-staging.sh for k3s + nginx-ingress + cert-manager setup.
 #
-#   GitLab registry secret for production:
-#     kubectl create secret docker-registry gitlab-registry-secret \
-#       --docker-server=registry.gitlab.com \
-#       --docker-username=YOUR_GITLAB_USERNAME \
-#       --docker-password=YOUR_PERSONAL_ACCESS_TOKEN \
-#       --namespace axiom
+#   GHCR pull secret created (see deploy:production job in .gitlab-ci.yml for
+#   the exact command — it is created imperatively, never committed).
 #
-#   Required environment variables — set ALL before running:
-#     export AXIOM_DOMAIN=axiom.example.com   # your production domain
-#     export LETSENCRYPT_EMAIL=admin@example.com        # cert notification email
-#     export DB_NAME=axiom_db
-#     export DB_USER=axiom
-#     export DB_PASSWORD=$(openssl rand -base64 24)
-#     export SECRET_KEY=$(openssl rand -base64 48)
-#     export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-#     export DJANGO_SUPERUSER_USERNAME=admin
-#     export DJANGO_SUPERUSER_EMAIL=admin@example.com
-#     export DJANGO_SUPERUSER_PASSWORD=$(openssl rand -base64 16)
-#     export MINIO_ROOT_USER=minioadmin
-#     export MINIO_ROOT_PASSWORD=$(openssl rand -base64 24)
-#     export SENTRY_DSN=""
-#     export BACKUP_ENCRYPTION_KEY=$(openssl rand -base64 48)
-#     export MINIO_ENDPOINT=http://minio-service:9000
-#     export MINIO_ACCESS_KEY=$MINIO_ROOT_USER
-#     export MINIO_SECRET_KEY=$MINIO_ROOT_PASSWORD
-#     export GRAFANA_ADMIN_USER=admin
-#     export GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 24)
+#   Secrets applied — infra/k8s/base/secrets.yaml uses ${VAR} placeholders;
+#   export every variable it references, then:
 #     envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 # =============================================================================
 
@@ -41,63 +25,30 @@ set -euo pipefail
 
 NAMESPACE="axiom"
 
-echo "==> [1/10] Namespace"
-kubectl apply -f infra/k8s/base/namespace.yaml
+echo "==> Applying production overlay (namespace, rbac, network-policy, quota,"
+echo "    postgres, redis, minio, ollama, frontend, ingress)..."
+kubectl apply -k infra/k8s/overlays/production
 
-echo "==> [2/10] ServiceAccounts + ResourceQuota + NetworkPolicies"
-kubectl apply -f infra/k8s/serviceaccounts.yaml
-kubectl apply -f infra/k8s/resource-quota.yaml
-kubectl apply -f infra/k8s/network-policy.yaml
-
-echo "==> [3/10] ConfigMap"
-envsubst < infra/k8s/base/configmap.yaml | kubectl apply -f -
-
-echo "==> [4/10] PostgreSQL"
-kubectl apply -f infra/k8s/postgres/configmap.yaml
-kubectl apply -f infra/k8s/postgres/pvc.yaml
-kubectl apply -f infra/k8s/postgres/deployment.yaml
-kubectl apply -f infra/k8s/postgres/service.yaml
-echo "    Waiting for PostgreSQL..."
+echo "==> Waiting for rollouts..."
 kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
-
-echo "==> [5/10] Redis"
-kubectl apply -f infra/k8s/redis/pvc.yaml
-kubectl apply -f infra/k8s/redis/deployment.yaml
-kubectl apply -f infra/k8s/redis/service.yaml
-echo "    Waiting for Redis..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
-
-echo "==> [6/10] MinIO"
-kubectl apply -f infra/k8s/minio/pvc.yaml
-kubectl apply -f infra/k8s/minio/deployment.yaml
-kubectl apply -f infra/k8s/minio/service.yaml
-echo "    Waiting for MinIO..."
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
-echo "==> [7/10] API + Frontend (blue-green)"
-kubectl apply -f infra/k8s/api/pvc.yaml
-kubectl apply -f infra/k8s/api/deployment-blue.yaml
-kubectl apply -f infra/k8s/api/deployment-green.yaml
-kubectl apply -f infra/k8s/api/service.yaml
-kubectl apply -f infra/k8s/frontend/deployment.yaml
-kubectl apply -f infra/k8s/frontend/service.yaml
-echo "    Waiting for API (blue slot — initial bootstrap)..."
-kubectl rollout status deployment/api-blue -n "$NAMESPACE" --timeout=180s
-echo "    Waiting for Frontend..."
-kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
+echo "==> API (blue-green) + Service — applied separately, like every CI deploy"
+kubectl apply -f infra/k8s/overlays/production/api/deployment-blue.yaml
+kubectl apply -f infra/k8s/overlays/production/api/deployment-green.yaml
+kubectl apply -f infra/k8s/overlays/production/api/service.yaml
 
-echo "==> [8/10] HPA + PDB"
-kubectl apply -f infra/k8s/hpa.yaml
-kubectl apply -f infra/k8s/pdb.yaml
+echo "==> HPA + PDB (not applied by CI — optional, apply manually if wanted)"
+kubectl apply -f infra/k8s/overlays/production/hpa.yaml
+kubectl apply -f infra/k8s/overlays/production/pdb.yaml
 
-echo "==> [9/10] Backup CronJob"
-kubectl apply -f infra/k8s/backup-cronjob.yaml
-
-echo "==> [10/10] Ingress"
-echo "    Applying ingress (AXIOM_DOMAIN=${AXIOM_DOMAIN})..."
-envsubst < infra/k8s/ingress.yaml | kubectl apply -f -
+echo "==> Backup CronJob"
+kubectl apply -f infra/k8s/overlays/production/backup-cronjob.yaml
 
 echo ""
-echo "Production deployed successfully!"
+echo "Production bootstrap applied. api-blue/api-green and frontend are on"
+echo "the placeholder 0.0.0 image until the first CI deploy — trigger"
+echo "deploy:production next."
 echo "Pods:"
 kubectl get pods -n "$NAMESPACE"
