@@ -1561,9 +1561,9 @@ class AccountReconciliationView(APIView):
             from bank_reconciliation.models import BankStatementEntry
 
             entries = BankStatementEntry.objects.filter(
-                account=account, is_deleted=False
+                statement_import__account=account, is_deleted=False
             )
-            unmatched = entries.filter(matched=False).count()
+            unmatched = entries.exclude(status="matched").count()
             statement_balance = float(
                 entries.aggregate(total=Sum("amount"))["total"] or 0
             )
