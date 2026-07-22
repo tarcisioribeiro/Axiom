@@ -280,10 +280,25 @@ spec:
               image: postgres:16
               command: ["/bin/bash", "/scripts/backup.sh"]
               env:
+                # PostgreSQL connection — external self-managed VM, same
+                # DB_HOST/DB_PORT/DB_SSLMODE the API deployment uses (see
+                # axiom-config and documentation/database/infrastructure.md).
                 - name: PGHOST
-                  value: "postgres-service"
+                  valueFrom:
+                    configMapKeyRef:
+                      name: axiom-config
+                      key: DB_HOST
                 - name: PGPORT
-                  value: "5432"
+                  valueFrom:
+                    configMapKeyRef:
+                      name: axiom-config
+                      key: DB_PORT
+                - name: PGSSLMODE
+                  valueFrom:
+                    configMapKeyRef:
+                      name: axiom-config
+                      key: DB_SSLMODE
+                      optional: true
                 - name: DB_NAME
                   valueFrom:
                     secretKeyRef:

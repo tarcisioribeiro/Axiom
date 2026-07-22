@@ -2,10 +2,17 @@
 # =============================================================================
 # k8s-backup.sh — Backup de produção Kubernetes → arquivo local
 # =============================================================================
-# Exporta: dump PostgreSQL + arquivos MinIO
+# Exporta: dump PostgreSQL (via rede, no Postgres externo ao cluster) +
+#          arquivos MinIO (ainda in-cluster)
 # Saída  : backups/backup_YYYYMMDD_HHMMSS.tar.gz
 #
-# Dependências: kubectl (contexto configurado), mc (MinIO Client)
+# O PostgreSQL roda fora do cluster (VM auto-gerenciada — veja
+# documentation/database/infrastructure.md), então esta máquina precisa ter
+# acesso de rede a ele (túnel WireGuard ou allowlist de firewall, conforme o
+# runbook) para que o pg_dump abaixo funcione.
+#
+# Dependências: kubectl (contexto configurado, só para MinIO/ConfigMap),
+#               pg_dump (cliente PostgreSQL), mc (MinIO Client)
 # Uso: ./infra/scripts/k8s-backup.sh
 # =============================================================================
 
@@ -61,7 +68,7 @@ cleanup() {
 trap cleanup EXIT
 
 # ── Verificação de dependências ───────────────────────────────────────────────
-for cmd in kubectl; do
+for cmd in kubectl pg_dump; do
     command -v "$cmd" &>/dev/null || err "Dependência não encontrada: '$cmd'. Instale antes de continuar."
 done
 
@@ -87,12 +94,23 @@ DB_PASSWORD="$(read_secret DB_PASSWORD)"
 MINIO_USER="$(read_secret MINIO_ROOT_USER)"
 MINIO_PASS="$(read_secret MINIO_ROOT_PASSWORD)"
 
+# Host/porta/sslmode do Postgres externo, definidos no ConfigMap axiom-config
+# (mesmos valores usados pela aplicação — veja infra/k8s/base/configmap.yaml).
+DB_HOST="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
+    -o jsonpath='{.data.DB_HOST}' 2>/dev/null)"
+DB_PORT="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
+    -o jsonpath='{.data.DB_PORT}' 2>/dev/null)"
+DB_SSLMODE="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
+    -o jsonpath='{.data.DB_SSLMODE}' 2>/dev/null || echo 'prefer')"
+[[ -z "$DB_HOST" ]] && err "DB_HOST não encontrado no ConfigMap axiom-config"
+[[ -z "$DB_PORT" ]] && DB_PORT="5432"
+
 # Bucket definido no ConfigMap (fallback: axiom)
 MINIO_BUCKET="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
     -o jsonpath='{.data.MINIO_BUCKET_NAME}' 2>/dev/null || echo 'axiom')"
 [[ -z "$MINIO_BUCKET" ]] && MINIO_BUCKET="axiom"
 
-log "Banco de dados : ${DB_NAME} (usuário: ${DB_USER})"
+log "Banco de dados : ${DB_NAME} (usuário: ${DB_USER}) em ${DB_HOST}:${DB_PORT}"
 log "Bucket MinIO   : ${MINIO_BUCKET}"
 
 # ── Criar diretório de trabalho ───────────────────────────────────────────────
@@ -100,29 +118,20 @@ mkdir -p "${WORK_DIR}/minio"
 log "Diretório de trabalho: ${WORK_DIR}"
 
 # ── Backup PostgreSQL ─────────────────────────────────────────────────────────
-log "Localizando pod do PostgreSQL no namespace '${NAMESPACE}'..."
-POSTGRES_POD="$(kubectl get pod \
-    -l app=postgres \
-    -n "$NAMESPACE" \
-    --field-selector=status.phase=Running \
-    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
-
-[[ -z "$POSTGRES_POD" ]] \
-    && err "Nenhum pod PostgreSQL em execução encontrado (label app=postgres) no namespace ${NAMESPACE}"
-
-log "Pod PostgreSQL: ${POSTGRES_POD}"
+log "Conectando ao PostgreSQL externo em ${DB_HOST}:${DB_PORT}..."
 log "Executando pg_dump (formato custom)..."
 
-kubectl exec "$POSTGRES_POD" -n "$NAMESPACE" -- \
-    env PGPASSWORD="$DB_PASSWORD" \
+PGSSLMODE="$DB_SSLMODE" PGPASSWORD="$DB_PASSWORD" \
     pg_dump \
+        -h "$DB_HOST" -p "$DB_PORT" \
         -U "$DB_USER" \
         -d "$DB_NAME" \
         --format=custom \
         --no-acl \
         --no-owner \
         --compress=6 \
-    > "${WORK_DIR}/database.dump"
+    > "${WORK_DIR}/database.dump" \
+    || err "pg_dump falhou — verifique conectividade de rede com ${DB_HOST}:${DB_PORT} (VPN/firewall configurados? veja documentation/database/infrastructure.md)"
 
 DUMP_SIZE="$(du -sh "${WORK_DIR}/database.dump" | cut -f1)"
 log "pg_dump concluído — tamanho: ${DUMP_SIZE}"
@@ -163,8 +172,9 @@ cat > "${WORK_DIR}/metadata.json" <<EOF
   "namespace": "${NAMESPACE}",
   "db_name": "${DB_NAME}",
   "db_user": "${DB_USER}",
-  "minio_bucket": "${MINIO_BUCKET}",
-  "postgres_pod": "${POSTGRES_POD}"
+  "db_host": "${DB_HOST}",
+  "db_port": "${DB_PORT}",
+  "minio_bucket": "${MINIO_BUCKET}"
 }
 EOF
 

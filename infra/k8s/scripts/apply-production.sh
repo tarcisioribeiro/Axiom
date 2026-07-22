@@ -26,11 +26,13 @@ set -euo pipefail
 NAMESPACE="axiom"
 
 echo "==> Applying production overlay (namespace, rbac, network-policy, quota,"
-echo "    postgres, redis, minio, ollama, frontend, ingress)..."
+echo "    redis, minio, ollama, frontend, ingress)..."
+echo "    PostgreSQL is NOT applied here — it runs on an external self-managed"
+echo "    VM (see documentation/database/infrastructure.md); axiom-config's"
+echo "    DB_HOST must already point at it before this script runs."
 kubectl apply -k infra/k8s/overlays/production
 
 echo "==> Waiting for rollouts..."
-kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 

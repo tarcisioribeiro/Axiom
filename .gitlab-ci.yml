@@ -732,31 +732,12 @@ deploy:staging:
         --docker-username="$GHCR_USERNAME" \
         --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
-    # Sincroniza a senha do PostgreSQL com o Secret atual.
-    # O Postgres só lê POSTGRES_PASSWORD na inicialização do PVC; após isso a
-    # senha fica gravada no disco e mudanças no Secret são ignoradas.  Este passo
-    # conecta via socket local (peer auth) e emite ALTER USER para manter as
-    # credenciais em sincronia sempre que STAGING_DB_PASSWORD for rotacionada.
-    - |
-      POSTGRES_POD=$(kubectl -n axiom-staging get pods -l app=postgres \
-        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-      if [ -n "$POSTGRES_POD" ]; then
-        echo "Sincronizando senha do PostgreSQL com o Secret atual..."
-        # Aguarda o container estar Ready antes de tentar exec — evita race condition
-        # onde o pod existe mas o container ainda está reiniciando (container not found).
-        if kubectl -n axiom-staging wait pod "$POSTGRES_POD" \
-            --for=condition=Ready --timeout=60s 2>/dev/null; then
-          kubectl -n axiom-staging exec "$POSTGRES_POD" -c postgres -- \
-            psql -U "${STAGING_DB_USER}" -c "ALTER USER \"${STAGING_DB_USER}\" WITH PASSWORD '${STAGING_DB_PASSWORD}';" \
-            && echo "Senha sincronizada com sucesso." \
-            || echo "AVISO: não foi possível sincronizar a senha do PostgreSQL — verifique as credenciais."
-        else
-          echo "AVISO: pod do PostgreSQL não ficou Ready em 60s — pulando sincronização de senha."
-        fi
-      else
-        echo "Pod do PostgreSQL não encontrado — pulando sincronização de senha."
-      fi
-    # Renderiza o overlay inteiro (postgres, redis, minio, ollama, rbac,
+    # PostgreSQL roda em uma VM externa auto-gerenciada (não mais in-cluster),
+    # então este job não sincroniza mais a senha automaticamente. Se
+    # STAGING_DB_PASSWORD for rotacionado, rode manualmente na VM:
+    #   ALTER USER <STAGING_DB_USER> WITH PASSWORD '<nova-senha>';
+    # Veja documentation/database/infrastructure.md para o runbook completo.
+    # Renderiza o overlay inteiro (redis, minio, ollama, rbac,
     # network-policy, quota, ingress, configmap, frontend) de uma vez só.
     # O frontend entra no build com a tag placeholder 0.0.0 — substituída aqui
     # via sed antes do apply, pelo mesmo motivo de sempre: nunca deixar uma
@@ -1427,7 +1408,9 @@ deploy:production:
         --dry-run=client -o yaml | kubectl apply -f -
     # ── 2. Apply the full overlay (idempotent — safe on every run) ───────────────
     # Renders namespace, configmap, rbac, network-policy, quota, ingress,
-    # postgres, redis, minio, ollama and frontend in one shot. The frontend
+    # redis, minio, ollama and frontend in one shot (PostgreSQL runs on an
+    # external self-managed VM, not in this overlay — see
+    # documentation/database/infrastructure.md). The frontend
     # placeholder image (0.0.0) is substituted before it ever reaches the
     # cluster, same reasoning as always: never let a placeholder-image
     # revision become the rollback target.

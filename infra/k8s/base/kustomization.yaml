@@ -6,6 +6,12 @@
 # overlays/staging patches values *down* and removes prod-only features that
 # don't apply to staging (see overlays/staging/kustomization.yaml).
 #
+# PostgreSQL is NOT here: it runs on an external self-managed VM, outside the
+# cluster, for both staging and production (see
+# documentation/database/infrastructure.md). DB_HOST/DB_PORT/DB_SSLMODE below
+# point at that VM; DB_NAME/DB_USER/DB_PASSWORD stay in the axiom-secrets
+# Secret as before.
+#
 # The API Deployment(s) are intentionally NOT here: production uses a real
 # blue-green pair (api-blue/api-green) while staging uses a single Recreate
 # Deployment. Those live directly in each overlay (overlays/<env>/api/).
@@ -31,10 +37,6 @@ resources:
   - network-policy.yaml
   - resource-quota.yaml
   - ingress.yaml
-  - postgres/configmap.yaml
-  - postgres/pvc.yaml
-  - postgres/deployment.yaml
-  - postgres/service.yaml
   - redis/pvc.yaml
   - redis/deployment.yaml
   - redis/service.yaml

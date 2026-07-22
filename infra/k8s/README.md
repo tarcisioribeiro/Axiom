@@ -5,7 +5,9 @@
 ```
 infra/k8s/
 ├── base/               # Shared manifests — shape reflects the production footprint
-│   ├── postgres/ redis/ minio/ ollama/ frontend/ api/
+│   ├── redis/ minio/ ollama/ frontend/ api/   # PostgreSQL runs on an external
+│   │                                          # self-managed VM, not here — see
+│   │                                          # documentation/database/infrastructure.md
 │   ├── cluster-issuers.yaml   # cert-manager ClusterIssuers (cluster-scoped, shared)
 │   ├── ingress.yaml, configmap.yaml, network-policy.yaml, resource-quota.yaml, ...
 │   └── kustomization.yaml
@@ -68,6 +70,12 @@ kubectl wait --namespace ingress-nginx \
 
 These steps are run **once** when provisioning the production environment. After this, ongoing deploys are fully managed by the CI/CD pipeline. See `infra/k8s/scripts/apply-production.sh` for the scripted version of this section.
 
+> `DB_NAME`/`DB_USER`/`DB_PASSWORD` must correspond to a real role/database
+> already created on the external PostgreSQL VM — see
+> [documentation/database/infrastructure.md](../../documentation/database/infrastructure.md).
+> `DB_HOST`/`DB_PORT`/`DB_SSLMODE` (in `infra/k8s/base/configmap.yaml`) must
+> already point at that VM before applying step 2.
+
 ```bash
 # 1. Secrets — infra/k8s/base/secrets.yaml uses ${VAR} placeholders
 export DB_NAME=axiom_db DB_USER=axiom DB_PASSWORD=... SECRET_KEY=... ENCRYPTION_KEY=... \
@@ -76,8 +84,9 @@ export DB_NAME=axiom_db DB_USER=axiom DB_PASSWORD=... SECRET_KEY=... ENCRYPTION_
 envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 
 # 2. Everything else — namespace, RBAC, ClusterIssuers, network-policy, quota,
-#    postgres, redis, minio (mounts minio-tls once cert-manager issues it),
+#    redis, minio (mounts minio-tls once cert-manager issues it),
 #    ollama, frontend, ingress. Safe to re-run.
+#    PostgreSQL is NOT here — it runs on the external VM (see above).
 kubectl apply -k infra/k8s/overlays/production
 
 # Wait for the internal CA / minio-tls Certificate before MinIO needs it
@@ -117,8 +126,8 @@ envsubst < infra/k8s/overlays/staging/secrets.yaml | kubectl apply -f -
 Required environment variables for secrets:
 | Variable | Description |
 |---|---|
-| `STAGING_DB_NAME` | PostgreSQL database name |
-| `STAGING_DB_USER` | PostgreSQL user |
+| `STAGING_DB_NAME` | PostgreSQL database name (must exist on the external VM — see [documentation/database/infrastructure.md](../../documentation/database/infrastructure.md)) |
+| `STAGING_DB_USER` | PostgreSQL user (role already created on the external VM) |
 | `STAGING_DB_PASSWORD` | PostgreSQL password |
 | `STAGING_SECRET_KEY` | Django `SECRET_KEY` (generate: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`) |
 | `STAGING_ENCRYPTION_KEY` | Fernet key (generate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`) |
@@ -141,9 +150,12 @@ kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
 
 ### Step 3 — Apply everything else
 
-Namespace, RBAC, ClusterIssuers, network-policy, quota, postgres, redis,
-minio, ollama, api (single Deployment, no TLS — staging never mounts
-`minio-tls`), frontend, ingress — all in one shot:
+Namespace, RBAC, ClusterIssuers, network-policy, quota, redis, minio, ollama,
+api (single Deployment, no TLS — staging never mounts `minio-tls`), frontend,
+ingress — all in one shot. PostgreSQL is not applied here — it runs on the
+same external VM as production (see
+[documentation/database/infrastructure.md](../../documentation/database/infrastructure.md)),
+so `axiom-config`'s `DB_HOST` must already point at it:
 
 ```bash
 kubectl apply -k infra/k8s/overlays/staging
