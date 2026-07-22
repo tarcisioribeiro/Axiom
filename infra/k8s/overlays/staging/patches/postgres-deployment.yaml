@@ -15,13 +15,3 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "250m"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-  namespace: axiom
-spec:
-  resources:
-    requests:
-      storage: 2Gi

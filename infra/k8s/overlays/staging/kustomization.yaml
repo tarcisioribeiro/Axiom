@@ -26,9 +26,12 @@ resources:
 
 patches:
   - path: patches/configmap.yaml
-  - path: patches/postgres.yaml
-  - path: patches/redis.yaml
-  - path: patches/ollama.yaml
+  - path: patches/postgres-deployment.yaml
+  - path: patches/postgres-pvc.yaml
+  - path: patches/redis-deployment.yaml
+  - path: patches/redis-pvc.yaml
+  - path: patches/ollama-deployment.yaml
+  - path: patches/ollama-pvc.yaml
   - path: patches/frontend.yaml
   - path: patches/frontend-remove-hostaliases.json
     target:
@@ -40,19 +43,23 @@ patches:
       name: minio
   - path: patches/minio-job.yaml
   - path: patches/minio-service.yaml
+  - path: patches/minio-pvc.yaml
   - path: patches/minio-tls.yaml
-  - path: patches/api-pvc.yaml
+  - path: patches/api-logs-pvc.yaml
+  - path: patches/api-static-pvc.yaml
   - path: patches/api-service.json
     target:
       kind: Service
       name: api-service
   - path: patches/serviceaccounts.yaml
   - path: patches/resource-quota.yaml
+  - path: patches/limit-range.yaml
   - path: patches/ingress.json
     target:
       kind: Ingress
       name: axiom-ingress
-  - path: patches/network-policy-remove.yaml
+  - path: patches/network-policy-remove-prometheus.yaml
+  - path: patches/network-policy-remove-acme-solver.yaml
   - path: patches/network-policy-backup.json
     target:
       kind: NetworkPolicy

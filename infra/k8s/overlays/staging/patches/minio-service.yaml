@@ -16,13 +16,3 @@ spec:
       nodePort: 30901
       protocol: TCP
       name: console
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: minio-pvc
-  namespace: axiom
-spec:
-  resources:
-    requests:
-      storage: 5Gi
