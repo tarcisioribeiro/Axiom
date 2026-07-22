@@ -7,8 +7,8 @@
 #
 #   lint:backend       black · isort · flake8
 #   lint:migrations    makemigrations --check --dry-run
-#   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
-#   lint:pip-audit     pip-audit -r api/requirements.txt --desc --ignore-vuln PYSEC-2025-183
+#   lint:bandit        bandit -r apps/api/ -x apps/api/tests,apps/api/migrations -ll
+#   lint:pip-audit     pip-audit -r apps/api/requirements.txt --desc --ignore-vuln PYSEC-2025-183
 #   lint:frontend      eslint · prettier
 #   lint:npm-audit     npm audit --audit-level=high
 #   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
@@ -26,7 +26,7 @@
 #
 # Pré-requisitos:
 #   - Docker + docker compose com o serviço 'api' rodando
-#   - Node.js 20+ com frontend/node_modules instalado no host
+#   - Node.js 20+ com apps/frontend/node_modules instalado no host
 #     (o container 'frontend' é nginx-only; npm roda direto no host)
 #
 # Uso:
@@ -163,9 +163,9 @@ check_docker() {
 	fi
 
 	# Verifica se o serviço 'api' está Up
-	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps api 2>/dev/null | grep -q "Up"; then
+	if ! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" ps api 2>/dev/null | grep -q "Up"; then
 		log "${YELLOW}  Serviço 'api' não está rodando. Subindo containers...${NC}"
-		docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d >>"$LOG_FILE" 2>&1
+		docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" up -d >>"$LOG_FILE" 2>&1
 		log "  Aguardando inicialização (20s)..."
 		sleep 20
 	fi
@@ -185,9 +185,9 @@ check_node() {
 	ver="$(node --version)"
 	log "${GREEN}  ✓  Node.js $ver encontrado${NC}"
 
-	if [ ! -d "$SCRIPT_DIR/frontend/node_modules" ]; then
+	if [ ! -d "$SCRIPT_DIR/apps/frontend/node_modules" ]; then
 		log "${YELLOW}  node_modules ausente — rodando npm ci...${NC}"
-		if ! (cd "$SCRIPT_DIR/frontend" && npm ci) >>"$LOG_FILE" 2>&1; then
+		if ! (cd "$SCRIPT_DIR/apps/frontend" && npm ci) >>"$LOG_FILE" 2>&1; then
 			log "${RED}  ✗  Falha ao instalar dependências do frontend.${NC}"
 			return 1
 		fi
@@ -199,14 +199,14 @@ check_node() {
 
 _install_docker_devdeps() {
 	log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
-	docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
+	docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api \
 		pip install --quiet --user \
 		mypy pytest pytest-cov pytest-django freezegun \
 		django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1
 	# pip exits non-zero when a dependency is already satisfied at a conflicting version;
 	# ignore the exit code and verify importability directly instead.
-	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1 || \
-		! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m pytest --version >/dev/null 2>&1; then
+	if ! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api python -m mypy --version >/dev/null 2>&1 || \
+		! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api python -m pytest --version >/dev/null 2>&1; then
 		log "${RED}  ✗  Ferramentas de dev não encontradas após instalação — verifique o container.${NC}"
 		return 1
 	fi
@@ -215,8 +215,8 @@ _install_docker_devdeps() {
 check_docker_devdeps() {
 	log "${YELLOW}Verificando ferramentas de dev no container api...${NC}"
 
-	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1 || \
-		! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m pytest --version >/dev/null 2>&1; then
+	if ! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api python -m mypy --version >/dev/null 2>&1 || \
+		! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api python -m pytest --version >/dev/null 2>&1; then
 		_install_docker_devdeps || return 1
 	fi
 
@@ -244,12 +244,12 @@ check_python_venv() {
 	fi
 
 	if [ ! -f "$VENV_BIN/black" ] || [ ! -f "$VENV_BIN/bandit" ]; then
-		log "${YELLOW}  Instalando dependências (api/requirements-dev.txt + pip-audit)...${NC}"
+		log "${YELLOW}  Instalando dependências (apps/api/requirements-dev.txt + pip-audit)...${NC}"
 		if ! "$VENV_BIN/pip" install --quiet --upgrade pip >>"$LOG_FILE" 2>&1; then
 			log "${RED}  ✗  Falha ao atualizar pip no venv.${NC}"
 			return 1
 		fi
-		if ! "$VENV_BIN/pip" install --quiet -r "$SCRIPT_DIR/api/requirements-dev.txt" pip-audit >>"$LOG_FILE" 2>&1; then
+		if ! "$VENV_BIN/pip" install --quiet -r "$SCRIPT_DIR/apps/api/requirements-dev.txt" pip-audit >>"$LOG_FILE" 2>&1; then
 			log "${RED}  ✗  Falha ao instalar dependências no venv.${NC}"
 			return 1
 		fi
@@ -306,38 +306,38 @@ section "LINT"
 
 if ! $FRONTEND_ONLY; then
 	run_step_safe "lint:backend" "black" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/black' --check --diff ."
+		sh -c "cd '$SCRIPT_DIR/apps/api' && '$VENV_BIN/black' --check --diff ."
 
 	run_step_safe "lint:backend" "isort" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/isort' --check-only --diff ."
+		sh -c "cd '$SCRIPT_DIR/apps/api' && '$VENV_BIN/isort' --check-only --diff ."
 
 	run_step_safe "lint:backend" "flake8" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/flake8' ."
+		sh -c "cd '$SCRIPT_DIR/apps/api' && '$VENV_BIN/flake8' ."
 
 	run_step_safe "lint:migrations" "makemigrations --check --dry-run" \
-		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
+		docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T \
 		-e SECRET_KEY="ci-insecure-key-for-migrations-check-only" \
 		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
 		api python manage.py makemigrations --check --dry-run
 
-	run_step_safe "lint:bandit" "bandit -r api/ -x api/tests,api/migrations -ll" \
-		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r api/ -x api/tests,api/migrations -ll"
+	run_step_safe "lint:bandit" "bandit -r apps/api/ -x apps/api/tests,apps/api/migrations -ll" \
+		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r apps/api/ -x apps/api/tests,apps/api/migrations -ll"
 
 	# PYSEC-2025-183 (PyJWT): disputed by supplier — key length is application's responsibility
-	run_step_safe "lint:pip-audit" "pip-audit -r api/requirements.txt --desc" \
-		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/api/requirements.txt' --desc --ignore-vuln PYSEC-2025-183"
+	run_step_safe "lint:pip-audit" "pip-audit -r apps/api/requirements.txt --desc" \
+		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/apps/api/requirements.txt' --desc --ignore-vuln PYSEC-2025-183"
 fi
 
 if ! $BACKEND_ONLY; then
 	run_step_safe "lint:frontend" "eslint" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm run lint"
+		sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run lint"
 
 	run_step_safe "lint:frontend" "prettier" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm run format:check"
+		sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run format:check"
 
 	run_step_safe "lint:npm-audit" "npm audit --audit-level=high" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && out=\$(npm audit --audit-level=high 2>&1); ec=\$?; printf '%s\n' \"\$out\"; if [ \$ec -ne 0 ] && printf '%s' \"\$out\" | grep -qE 'endpoint returned an error|request.*failed'; then printf 'AVISO: npm audit falhou por indisponibilidade do registry — verifique manualmente.\n'; exit 0; fi; exit \$ec"
+		sh -c "cd '$SCRIPT_DIR/apps/frontend' && out=\$(npm audit --audit-level=high 2>&1); ec=\$?; printf '%s\n' \"\$out\"; if [ \$ec -ne 0 ] && printf '%s' \"\$out\" | grep -qE 'endpoint returned an error|request.*failed'; then printf 'AVISO: npm audit falhou por indisponibilidade do registry — verifique manualmente.\n'; exit 0; fi; exit \$ec"
 fi
 
 # ==============================================================================
@@ -350,7 +350,7 @@ if ! $FRONTEND_ONLY; then
 	# pragma: allowlist secret
 	_MYPY_SECRET_KEY="ci-insecure-key-for-mypy-only" # pragma: allowlist secret
 	run_step_safe "typecheck:backend" "mypy" \
-		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
+		docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T \
 		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
 		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
@@ -360,7 +360,7 @@ fi
 
 if ! $BACKEND_ONLY; then
 	run_step_safe "typecheck:frontend" "tsc" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm run typecheck"
+		sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run typecheck"
 fi
 
 # ==============================================================================
@@ -371,13 +371,13 @@ section "TEST"
 if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
 	run_step_safe "test:backend" "pytest" \
-		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
+		docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api \
 		bash -c 'python -m pytest --version >/dev/null 2>&1 || pip install --quiet --user pytest pytest-cov pytest-django freezegun; export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
 fi
 
 if ! $BACKEND_ONLY; then
 	run_step_safe "test:frontend" "vitest" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage"
+		sh -c "cd '$SCRIPT_DIR/apps/frontend' && npm run test:coverage"
 fi
 
 # ==============================================================================

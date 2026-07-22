@@ -30,23 +30,23 @@ Documentação do Django REST Framework.
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
 - **[Sistema de Agentes (IA)](backend/agents.md)** - 6 agentes especializados, providers LLM, RAG, endpoints e configuração
 
-### [4. Frontend](frontend/README.md)
+### [4. Frontend](apps/frontend/README.md)
 Documentação do React + TypeScript.
 
-- **[Estrutura do Projeto](frontend/project_structure.md)** - Organização de diretórios e arquivos
-- **[Componentes UI](frontend/ui_components.md)** - shadcn/ui, Radix e componentes customizados
-- **[Roteamento](frontend/routing.md)** - React Router e proteção de rotas
-- **[Gerenciamento de Estado](frontend/state_management.md)** - Zustand stores
-- **[API Client](frontend/api_client.md)** - Axios, interceptores e serviços
-- **[Estilização](frontend/stylization.md)** - TailwindCSS e tema Dracula
+- **[Estrutura do Projeto](apps/frontend/project_structure.md)** - Organização de diretórios e arquivos
+- **[Componentes UI](apps/frontend/ui_components.md)** - shadcn/ui, Radix e componentes customizados
+- **[Roteamento](apps/frontend/routing.md)** - React Router e proteção de rotas
+- **[Gerenciamento de Estado](apps/frontend/state_management.md)** - Zustand stores
+- **[API Client](apps/frontend/api_client.md)** - Axios, interceptores e serviços
+- **[Estilização](apps/frontend/stylization.md)** - TailwindCSS e tema Dracula
 
-### [5. API](api/README.md)
+### [5. API](apps/api/README.md)
 Documentação dos endpoints RESTful.
 
-- **[Endpoints](api/endpoints.md)** - Lista completa de endpoints por módulo
-- **[Autenticação e Tokens](api/token_authentication.md)** - Login, refresh e logout
-- **[Tratamento de Erros](api/error_treatments.md)** - Status codes e mensagens de erro
-- **[Filtros e Ordenação](api/filters_ordering.md)** - Query parameters suportados
+- **[Endpoints](apps/api/endpoints.md)** - Lista completa de endpoints por módulo
+- **[Autenticação e Tokens](apps/api/token_authentication.md)** - Login, refresh e logout
+- **[Tratamento de Erros](apps/api/error_treatments.md)** - Status codes e mensagens de erro
+- **[Filtros e Ordenação](apps/api/filters_ordering.md)** - Query parameters suportados
 
 ### [6. Banco de Dados](database/README.md)
 PostgreSQL com pgvector.
@@ -118,10 +118,10 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
    - [Migrations](database/migrations.md) - Criar migrations
 
 3. **Frontend**
-   - [Estrutura do Projeto](frontend/project_structure.md) - Onde colocar arquivos
-   - [API Client](frontend/api_client.md) - Chamar APIs
-   - [Componentes UI](frontend/ui_components.md) - Interface
-   - [Gerenciamento de Estado](frontend/state_management.md) - Estado global
+   - [Estrutura do Projeto](apps/frontend/project_structure.md) - Onde colocar arquivos
+   - [API Client](apps/frontend/api_client.md) - Chamar APIs
+   - [Componentes UI](apps/frontend/ui_components.md) - Interface
+   - [Gerenciamento de Estado](apps/frontend/state_management.md) - Estado global
 
 4. **Testes e Deploy**
    - [Workflow de Desenvolvimento](development/development_workflow.md) - Testes
@@ -138,7 +138,7 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
    - [Sistema de Permissões](authentication-security/permissions_system.md) - Controle de acesso
 
 3. **Validação**
-   - [Tratamento de Erros](api/error_treatments.md) - Mensagens seguras
+   - [Tratamento de Erros](apps/api/error_treatments.md) - Mensagens seguras
    - [Troubleshooting](development/troubleshooting.md) - Testes de segurança
 
 ### Otimizar Performance
@@ -152,8 +152,8 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
    - [ViewSets e Views](backend/viewsets_views.md) - Otimizações de queries
 
 3. **Frontend**
-   - [API Client](frontend/api_client.md) - Caching e interceptores
-   - [Componentes UI](frontend/ui_components.md) - Lazy loading
+   - [API Client](apps/frontend/api_client.md) - Caching e interceptores
+   - [Componentes UI](apps/frontend/ui_components.md) - Lazy loading
 
 4. **Banco de Dados**
    - [Schema](database/schema.md) - Índices adequados

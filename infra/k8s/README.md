@@ -5,8 +5,8 @@
 ### 1. cert-manager
 
 cert-manager is required for TLS certificate management. It issues and renews:
-- **External TLS** — Let's Encrypt certificates for the public Ingress (`letsencrypt-prod` / `letsencrypt-staging` ClusterIssuers in `k8s/ingress.yaml`).
-- **Internal TLS** — Self-signed certificates for service-to-service communication inside the cluster (API → MinIO), managed by the `internal-ca-issuer` ClusterIssuer in `k8s/minio/tls.yaml`.
+- **External TLS** — Let's Encrypt certificates for the public Ingress (`letsencrypt-prod` / `letsencrypt-staging` ClusterIssuers in `infra/k8s/ingress.yaml`).
+- **Internal TLS** — Self-signed certificates for service-to-service communication inside the cluster (API → MinIO), managed by the `internal-ca-issuer` ClusterIssuer in `infra/k8s/minio/tls.yaml`.
 
 Install cert-manager before applying any other manifests:
 
@@ -35,15 +35,15 @@ These steps are run **once** when provisioning the production environment. After
 
 ```bash
 # 1. Namespace, RBAC, base resources
-kubectl apply -f k8s/base/namespace.yaml
-kubectl apply -f k8s/base/secrets.yaml       # fill in real values first
-kubectl apply -f k8s/base/configmap.yaml
-kubectl apply -f k8s/serviceaccounts.yaml
+kubectl apply -f infra/k8s/base/namespace.yaml
+kubectl apply -f infra/k8s/base/secrets.yaml       # fill in real values first
+kubectl apply -f infra/k8s/base/configmap.yaml
+kubectl apply -f infra/k8s/serviceaccounts.yaml
 
 # 2. cert-manager ClusterIssuers + internal CA (must come before MinIO)
 #    ClusterIssuers are cluster-scoped and shared between environments.
-kubectl apply -f k8s/ingress.yaml            # creates letsencrypt-* ClusterIssuers
-kubectl apply -f k8s/minio/tls.yaml          # creates internal-ca-issuer + minio-tls Certificate
+kubectl apply -f infra/k8s/ingress.yaml            # creates letsencrypt-* ClusterIssuers
+kubectl apply -f infra/k8s/minio/tls.yaml          # creates internal-ca-issuer + minio-tls Certificate
 
 # Wait for the internal CA to be ready before MinIO starts
 kubectl wait --namespace cert-manager \
@@ -54,13 +54,13 @@ kubectl wait --namespace axiom \
   --timeout=60s
 
 # 3. Stateful services
-kubectl apply -f k8s/postgres/
-kubectl apply -f k8s/redis/
-kubectl apply -f k8s/minio/         # deployment.yaml mounts the minio-tls Secret
+kubectl apply -f infra/k8s/postgres/
+kubectl apply -f infra/k8s/redis/
+kubectl apply -f infra/k8s/minio/         # deployment.yaml mounts the minio-tls Secret
 
 # 4. Application
-kubectl apply -f k8s/api/           # deployment.yaml mounts ca.crt from minio-tls
-kubectl apply -f k8s/frontend/
+kubectl apply -f infra/k8s/api/           # deployment.yaml mounts ca.crt from minio-tls
+kubectl apply -f infra/k8s/frontend/
 ```
 
 ---
@@ -71,11 +71,11 @@ These steps are run **once** when provisioning the staging environment. The CI/C
 
 ### Step 1 — Apply ClusterIssuers (if not done yet for production)
 
-The ClusterIssuers in `k8s/minio/tls.yaml` are cluster-scoped and shared between environments. Skip this step if they already exist.
+The ClusterIssuers in `infra/k8s/minio/tls.yaml` are cluster-scoped and shared between environments. Skip this step if they already exist.
 
 ```bash
 kubectl get clusterissuer internal-ca-issuer 2>/dev/null \
-  || kubectl apply -f k8s/minio/tls.yaml
+  || kubectl apply -f infra/k8s/minio/tls.yaml
 
 kubectl wait --namespace cert-manager \
   --for=condition=Ready certificate/minio-internal-ca \
@@ -85,19 +85,19 @@ kubectl wait --namespace cert-manager \
 ### Step 2 — Create the staging namespace and base resources
 
 ```bash
-kubectl apply -f k8s/staging/namespace.yaml
-kubectl apply -f k8s/staging/resource-quota.yaml
-kubectl apply -f k8s/staging/serviceaccounts.yaml
-kubectl apply -f k8s/staging/network-policy.yaml
+kubectl apply -f infra/k8s/staging/namespace.yaml
+kubectl apply -f infra/k8s/staging/resource-quota.yaml
+kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
+kubectl apply -f infra/k8s/staging/network-policy.yaml
 ```
 
 ### Step 3 — Create secrets and ConfigMap
 
-The `k8s/staging/secrets.yaml` file uses `${VAR}` placeholders. Substitute them before applying (or use a tool like `envsubst`):
+The `infra/k8s/staging/secrets.yaml` file uses `${VAR}` placeholders. Substitute them before applying (or use a tool like `envsubst`):
 
 ```bash
-envsubst < k8s/staging/secrets.yaml | kubectl apply -f -
-kubectl apply -f k8s/staging/configmap.yaml
+envsubst < infra/k8s/staging/secrets.yaml | kubectl apply -f -
+kubectl apply -f infra/k8s/staging/configmap.yaml
 ```
 
 Required environment variables for secrets:
@@ -130,7 +130,7 @@ kubectl -n axiom-staging create secret docker-registry gitlab-registry-secret \
 > **This is the most commonly missed step.** Without it, the API pod cannot be scheduled because it mounts `ca.crt` from the `minio-tls` secret, which is created by cert-manager only after this manifest is applied.
 
 ```bash
-kubectl apply -f k8s/staging/minio/tls.yaml
+kubectl apply -f infra/k8s/staging/minio/tls.yaml
 kubectl wait --namespace axiom-staging \
   --for=condition=Ready certificate/minio-tls \
   --timeout=60s
@@ -142,9 +142,9 @@ kubectl -n axiom-staging get secret minio-tls
 ### Step 6 — Apply stateful services
 
 ```bash
-kubectl apply -f k8s/staging/postgres/
-kubectl apply -f k8s/staging/redis/
-kubectl apply -f k8s/staging/minio/
+kubectl apply -f infra/k8s/staging/postgres/
+kubectl apply -f infra/k8s/staging/redis/
+kubectl apply -f infra/k8s/staging/minio/
 ```
 
 ### Step 7 — Verify the environment is ready for CI/CD
@@ -202,7 +202,7 @@ The CA (`minio-internal-ca`) has a 10-year lifetime and must be rotated manually
 ## External TLS (Ingress)
 
 External HTTPS is terminated at the nginx Ingress using Let's Encrypt certificates.
-See the comments at the top of `k8s/ingress.yaml` for the staging → production promotion workflow.
+See the comments at the top of `infra/k8s/ingress.yaml` for the staging → production promotion workflow.
 
 ---
 
@@ -263,7 +263,7 @@ If missing or expired, recreate it (see **Step 4** above).
 kubectl -n axiom-staging describe resourcequota
 ```
 
-If the namespace quota is exhausted, clean up unused resources or adjust the quota in `k8s/staging/resource-quota.yaml`.
+If the namespace quota is exhausted, clean up unused resources or adjust the quota in `infra/k8s/staging/resource-quota.yaml`.
 
 ### Inspecting a failed pod
 

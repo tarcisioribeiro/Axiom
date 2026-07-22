@@ -1,6 +1,6 @@
 # Configuração LLM / Ollama
 
-O sistema de agentes do Axiom (`api/agents/`) suporta dois provedores de LLM: **Ollama** (local, privado) e **Anthropic Claude** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin.
+O sistema de agentes do Axiom (`apps/api/agents/`) suporta dois provedores de LLM: **Ollama** (local, privado) e **Anthropic Claude** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin.
 
 ## Índice
 

@@ -4,13 +4,13 @@ import { defineConfig, devices } from '@playwright/test';
  * Playwright E2E configuration.
  *
  * Tests live in e2e/ at the repository root.
- * Run: cd frontend && npm run test:e2e
+ * Run: cd apps/frontend && npm run test:e2e
  *
  * Requires the app to be running:
- *   docker-compose up -d
+ *   docker compose -f infra/docker/docker-compose.yml --project-directory . up -d
  * or locally:
- *   cd frontend && npm run dev  (port 39101)
- *   cd api && python manage.py runserver 0.0.0.0:39100
+ *   cd apps/frontend && npm run dev  (port 39101)
+ *   cd apps/api && python manage.py runserver 0.0.0.0:39100
  *
  * Environment variables:
  *   BASE_URL        — frontend origin  (default: http://localhost:39101)
@@ -21,7 +21,7 @@ import { defineConfig, devices } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:39101';
 
 export default defineConfig({
-  testDir: '../e2e',
+  testDir: '../../e2e',
 
   // Run each test file in parallel; keep tests within a file sequential so
   // login state is preserved across steps.
@@ -32,8 +32,8 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
 
   reporter: process.env.CI
-    ? [['junit', { outputFile: '../e2e-results/results.xml' }], ['list']]
-    : [['html', { outputFolder: '../e2e-results/html', open: 'never' }], ['list']],
+    ? [['junit', { outputFile: '../../e2e-results/results.xml' }], ['list']]
+    : [['html', { outputFolder: '../../e2e-results/html', open: 'never' }], ['list']],
 
   use: {
     baseURL: BASE_URL,

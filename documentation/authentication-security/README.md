@@ -170,7 +170,7 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 - **Bandit**: Análise estática de segurança Python
   ```bash
   pip install bandit
-  bandit -r api/ -ll
+  bandit -r apps/api/ -ll
   ```
 
 - **Safety**: Verifica vulnerabilidades em dependências

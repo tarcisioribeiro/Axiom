@@ -26,7 +26,7 @@ O Axiom utiliza criptografia simétrica **Fernet** (baseada em AES-128) para pro
 
 ### Módulo de Criptografia
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/app/encryption.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/app/encryption.py`
 
 ```python
 import os

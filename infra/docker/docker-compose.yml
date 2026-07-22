@@ -161,7 +161,7 @@ services:
   # Django API Backend
   api:
     build:
-      context: ./api
+      context: ./apps/api
       dockerfile: Dockerfile
       target: production
     container_name: axiom-api
@@ -188,7 +188,7 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./api/media:/app/media
+      - ./apps/api/media:/app/media
       - logs_data:/app/logs  # Volume nomeado evita problemas de permissão de owner (UID 1000)
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
       - /var/run/docker.sock:/var/run/docker.sock  # Docker socket para restart via painel admin
@@ -227,7 +227,7 @@ services:
   # Check health:         docker compose exec api python manage.py check_backup_health
   db-backup:
     build:
-      context: ./docker/backup
+      context: ./infra/docker/backup
       dockerfile: Dockerfile
     container_name: axiom-db-backup
     depends_on:
@@ -265,8 +265,8 @@ services:
       BACKUP_DIR: /backups
     volumes:
       - ./backups:/backups
-      - ./api/scripts:/scripts:ro
-      - ./api/media:/app/media:ro
+      - ./apps/api/scripts:/scripts:ro
+      - ./apps/api/media:/app/media:ro
     restart: unless-stopped
     healthcheck:
       # Verify crond is alive. Backup staleness is monitored separately
@@ -321,7 +321,7 @@ services:
   # Celery Worker — processa tasks assíncronas (notificações, rendimentos, etc.)
   worker:
     build:
-      context: ./api
+      context: ./apps/api
       dockerfile: Dockerfile
       target: production
     container_name: axiom-worker
@@ -367,7 +367,7 @@ services:
   # Celery Beat — agendador de tasks periódicas (cron substituído)
   queue:
     build:
-      context: ./api
+      context: ./apps/api
       dockerfile: Dockerfile
       target: production
     container_name: axiom-queue
@@ -416,7 +416,7 @@ services:
   # React Frontend
   frontend:
     build:
-      context: ./frontend
+      context: ./apps/frontend
       dockerfile: Dockerfile
       args:
         - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:39100}

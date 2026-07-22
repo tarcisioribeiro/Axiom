@@ -7,7 +7,7 @@ O frontend do Axiom é uma aplicação React + TypeScript moderna, utilizando Vi
 ## Estrutura de Diretórios
 
 ```
-frontend/
+apps/frontend/
 ├── src/
 │   ├── assets/              # Recursos estáticos (imagens, ícones)
 │   ├── components/          # Componentes React

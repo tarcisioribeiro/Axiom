@@ -94,7 +94,7 @@ Cada modelo Django automaticamente gera 4 permissões:
 ## GlobalDefaultPermission
 
 ### Arquivo
-`/home/tarcisio/Development/Axiom/api/app/permissions.py`
+`/home/tarcisio/Development/Axiom/apps/api/app/permissions.py`
 
 ### Código Completo
 

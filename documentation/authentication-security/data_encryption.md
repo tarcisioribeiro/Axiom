@@ -57,7 +57,7 @@ graph TB
 ## FieldEncryption Class
 
 ### Arquivo
-`/home/tarcisio/Development/Axiom/api/app/encryption.py`
+`/home/tarcisio/Development/Axiom/apps/api/app/encryption.py`
 
 ### Código Completo
 
@@ -201,7 +201,7 @@ data = "123"  # CVV original
 
 ### 1. Cartões de Crédito (CreditCard)
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/credit_cards/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/credit_cards/models.py`
 
 ```python
 class CreditCard(BaseModel):
@@ -258,7 +258,7 @@ print(card._security_code)  # "gAAAAABf..." (criptografado no DB)
 
 ### 2. Cartões Armazenados (StoredCreditCard - módulo Security)
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/security/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/security/models.py`
 
 ```python
 class StoredCreditCard(BaseModel):
@@ -345,7 +345,7 @@ print(card._cvv)  # "gAAAAABg..." (criptografado)
 
 ### 3. Senhas (Password - módulo Security)
 
-**Arquivo**: `/home/tarcisio/Development/Axiom/api/security/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/apps/api/security/models.py`
 
 ```python
 class Password(BaseModel):
