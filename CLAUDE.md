@@ -4,16 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). The UI is in Brazilian Portuguese; API data uses English keys translated via `frontend/src/config/constants.ts`.
+Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). The UI is in Brazilian Portuguese; API data uses English keys translated via `apps/frontend/src/config/constants.ts`.
 
 ## Architecture
 
 ### Monorepo Structure
 ```
 Axiom/
-├── api/              # Django backend (port 39100)
-├── frontend/         # React frontend (port 39101)
-├── docker-compose.yml
+├── apps/
+│   ├── api/          # Django backend (port 39100)
+│   ├── frontend/     # React frontend (port 39101)
+│   └── mobile/       # Reserved for the future mobile app (no code yet)
+├── infra/
+│   ├── k8s/          # Kubernetes manifests (kustomize base + overlays)
+│   ├── docker/       # docker-compose.yml + auxiliary Dockerfiles (e.g. db-backup)
+│   └── scripts/      # Backup/restore and migration helper scripts
+├── documentation/    # Project documentation
+├── e2e/              # Playwright end-to-end specs
 └── .env              # Root environment variables
 ```
 
@@ -23,13 +30,13 @@ Axiom/
 
 **Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances. `personal_planning` also includes workout tracking (exercises, workout plans, days, sessions, sets) and nutrition tracking (foods, meal types, menu options, meal logs) under the same app.
 
-**Receivables** (`api/receivables/`): Mirror of `payables` for the revenue side — tracks money owed to the user (fees, reimbursements, services rendered). Creating a `Receivable` does NOT auto-create a revenue record; only recording receipt (`received_value`) triggers that. Statuses: `active`, `received`, `overdue`, `cancelled`.
+**Receivables** (`apps/api/receivables/`): Mirror of `payables` for the revenue side — tracks money owed to the user (fees, reimbursements, services rendered). Creating a `Receivable` does NOT auto-create a revenue record; only recording receipt (`received_value`) triggers that. Statuses: `active`, `received`, `overdue`, `cancelled`.
 
-**Exchange Rates** (`api/exchange_rates/`): Stores daily BRL exchange rates fetched from BCB PTAX API (official Brazilian Central Bank). Use `ExchangeRate.convert(amount, from_currency, to_currency)` as a utility anywhere in the codebase. Cross-rate conversions go through BRL. Rates are refreshed via a Celery periodic task.
+**Exchange Rates** (`apps/api/exchange_rates/`): Stores daily BRL exchange rates fetched from BCB PTAX API (official Brazilian Central Bank). Use `ExchangeRate.convert(amount, from_currency, to_currency)` as a utility anywhere in the codebase. Cross-rate conversions go through BRL. Rates are refreshed via a Celery periodic task.
 
-**Webhooks** (`api/webhooks/`): Outbound webhook system. Users configure `Webhook` endpoints subscribed to specific events. Call `dispatch_event(event, payload, user=user)` from `webhooks.dispatch` to trigger deliveries. Payloads are signed with HMAC-SHA256 in the `X-Axiom-Signature` header. Deliveries are queued via Celery with retry logic. Event types include: `expense.created/updated/deleted`, `revenue.*`, `transfer.created`, `loan.*`, `budget.exceeded`, `vault.deposit/withdrawal`, `health_score.updated`.
+**Webhooks** (`apps/api/webhooks/`): Outbound webhook system. Users configure `Webhook` endpoints subscribed to specific events. Call `dispatch_event(event, payload, user=user)` from `webhooks.dispatch` to trigger deliveries. Payloads are signed with HMAC-SHA256 in the `X-Axiom-Signature` header. Deliveries are queued via Celery with retry logic. Event types include: `expense.created/updated/deleted`, `revenue.*`, `transfer.created`, `loan.*`, `budget.exceeded`, `vault.deposit/withdrawal`, `health_score.updated`.
 
-**Admin Panel** (`api/admin_panel/`): `SystemConfig` model stores encrypted system configuration (LLM keys, email, MinIO, backup settings) editable via Django Admin. Values marked `is_secret=True` are stored encrypted with `ENCRYPTION_KEY`. Access via Django Admin at `/admin/`, not the frontend `/admin/` route.
+**Admin Panel** (`apps/api/admin_panel/`): `SystemConfig` model stores encrypted system configuration (LLM keys, email, MinIO, backup settings) editable via Django Admin. Values marked `is_secret=True` are stored encrypted with `ENCRYPTION_KEY`. Access via Django Admin at `/admin/`, not the frontend `/admin/` route.
 
 **Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`. The same file also defines shared choice tuples reused across apps: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
@@ -63,7 +70,7 @@ Axiom/
 
 **Caching**: Redis (django-redis) with key prefix `axiom`. Specific TTLs defined in settings: `CACHE_TTL_DASHBOARD_STATS` (60s), `CACHE_TTL_ACCOUNT_BALANCES` (30s), `CACHE_TTL_CATEGORY_BREAKDOWN` (300s), `CACHE_TTL_BALANCE_FORECAST` (120s).
 
-**Agents / LLM Module** (`api/agents/`): Django app providing AI-powered financial assistants. Six domain agents (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`) are selected automatically by `core/router.py`. Endpoints are under `/api/v1/agents/` — `ask/` (sync), `stream/` (SSE), `history/`, `sessions/`, `status/`. Core infrastructure in `core/`: `llm_client.py` (Ollama/Groq/Anthropic providers with thread-safe singleton, circuit breaker for Ollama, Redis embedding cache), `memory.py` (conversation persistence in Redis + PostgreSQL), `context_compressor.py`, `summarizer.py`. RAG via pgvector in `tools/rag_tools.py`. Background thread writes persistence after response to reduce latency. `AgentRateThrottle` enforced on all views. Prompt injection patterns (EN + PT-BR) validated server-side.
+**Agents / LLM Module** (`apps/api/agents/`): Django app providing AI-powered financial assistants. Six domain agents (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`) are selected automatically by `core/router.py`. Endpoints are under `/api/v1/agents/` — `ask/` (sync), `stream/` (SSE), `history/`, `sessions/`, `status/`. Core infrastructure in `core/`: `llm_client.py` (Ollama/Groq/Anthropic providers with thread-safe singleton, circuit breaker for Ollama, Redis embedding cache), `memory.py` (conversation persistence in Redis + PostgreSQL), `context_compressor.py`, `summarizer.py`. RAG via pgvector in `tools/rag_tools.py`. Background thread writes persistence after response to reduce latency. `AgentRateThrottle` enforced on all views. Prompt injection patterns (EN + PT-BR) validated server-side.
 
 ### Frontend (React + TypeScript)
 
@@ -91,56 +98,61 @@ Axiom/
 
 **UI Primitives** (`components/ui/`): Radix UI-based low-level components wrapped with project styling — `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`. Form-specific: `currency-input` (BRL R$ prefix, `accentColor` variants: default/destructive/success), `form-section` (visual section divider with title + icon for grouping form fields), `status-toggle` (two-option pill toggle for binary status, `activeClass` per option). Use these for building feature components.
 
-**Import alias**: `@/` → `frontend/src/`
+**Import alias**: `@/` → `apps/frontend/src/`
 
 **Pre-commit**: Two hook systems: `pre-commit` (Python) runs black/isort/flake8/mypy on backend staged files; `husky` + `lint-staged` runs ESLint + Prettier on frontend staged files. Commitlint enforces conventional commits at the commit-msg stage (see [Commit Convention](#commit-convention)).
 
 ## Development Commands
 
 ### Docker Workflow (primary)
+All `docker compose` commands are run from the repo root and point at the
+compose file in `infra/docker/`, with `--project-directory .` so relative
+paths (volumes, `.env`) resolve against the repo root:
 ```bash
-docker compose up -d                                    # Start all services
-docker compose logs -f api                              # View API logs
-docker compose logs -f worker                           # View Celery worker logs
-docker compose exec api python manage.py <command>      # Run management commands
-docker compose up -d --build                            # Rebuild after dependency changes
+DC="docker compose -f infra/docker/docker-compose.yml --project-directory ."
+
+$DC up -d                                    # Start all services
+$DC logs -f api                              # View API logs
+$DC logs -f worker                           # View Celery worker logs
+$DC exec api python manage.py <command>      # Run management commands
+$DC up -d --build                            # Rebuild after dependency changes
 ```
 
-> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> axiom-api:/app/<path>`) for a quick test, or rebuild with `docker compose up -d --build` to make changes permanent.
+> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> axiom-api:/app/<path>`) for a quick test, or rebuild with `$DC up -d --build` to make changes permanent.
 
 ### Backend
 ```bash
-# Testing (tests live in api/tests/) — pytest is a dev dep; install in container first if missing:
+# Testing (tests live in apps/api/tests/) — pytest is a dev dep; install in container first if missing:
 # docker exec axiom-api pip install --user pytest pytest-django pytest-cov
-docker compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
-docker compose exec api python -m pytest tests/test_views.py                  # Single file
-docker compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
-docker compose exec api python -m pytest tests/ --cov                         # With coverage
+$DC exec api python -m pytest tests/                               # All tests (SQLite in-memory)
+$DC exec api python -m pytest tests/test_views.py                  # Single file
+$DC exec api python -m pytest tests/test_views.py -k test_name     # Single test
+$DC exec api python -m pytest tests/ --cov                         # With coverage
 
 # Code quality (uses root .venv)
-source .venv/bin/activate && cd api && black . && isort . && flake8 .   # Format + lint
+source .venv/bin/activate && cd apps/api && black . && isort . && flake8 .   # Format + lint
 
 # Migrations
 # IMPORTANT: always run makemigrations locally and commit the generated files
 # before pushing. The container entrypoint runs --check --dry-run and will
 # refuse to start if there are uncommitted schema changes.
-docker compose exec api python manage.py makemigrations
-docker compose exec api python manage.py migrate
+$DC exec api python manage.py makemigrations
+$DC exec api python manage.py migrate
 
 # Custom management commands
-docker compose exec api python manage.py update_balances             # Recalculate account balances from transactions
-docker compose exec api python manage.py setup_permissions           # Create Members group with full CRUD on all user-facing apps
-docker compose exec api python manage.py fix_installments_paid_status
-docker compose exec api python manage.py close_overdue_bills         # Mark overdue credit card bills
-docker compose exec api python manage.py process_existing_transfers
-docker compose exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
-docker compose exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
-docker compose exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
+$DC exec api python manage.py update_balances             # Recalculate account balances from transactions
+$DC exec api python manage.py setup_permissions           # Create Members group with full CRUD on all user-facing apps
+$DC exec api python manage.py fix_installments_paid_status
+$DC exec api python manage.py close_overdue_bills         # Mark overdue credit card bills
+$DC exec api python manage.py process_existing_transfers
+$DC exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
+$DC exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
+$DC exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
 ```
 
 ### Frontend
 ```bash
-cd frontend
+cd apps/frontend
 npm run dev              # Dev server
 npm run build            # Production build (TypeScript + Vite)
 npm run lint             # ESLint
@@ -169,7 +181,7 @@ A `ci-check.sh` script at the repo root simulates the full GitLab pipeline local
 ```bash
 # Setup (one-time): create root .venv with dev dependencies
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r api/requirements-dev.txt pip-audit
+pip install -r apps/api/requirements-dev.txt pip-audit
 
 # Run full pipeline simulation (lint → typecheck → test → secret-detection)
 source .venv/bin/activate && ./ci-check.sh
@@ -181,31 +193,31 @@ source .venv/bin/activate && ./ci-check.sh
 
 The script requires:
 - Docker Compose running with the `api` service up
-- Node.js 20+ on the host with `frontend/node_modules` present
+- Node.js 20+ on the host with `apps/frontend/node_modules` present
 - `.venv` at the repo root (auto-created if missing)
 
 Stages covered: `lint:backend` (black/isort/flake8), `lint:migrations`, `lint:bandit`, `lint:pip-audit`, `lint:frontend` (eslint/prettier), `lint:npm-audit`, `typecheck:backend` (mypy via Docker), `typecheck:frontend` (tsc), `test:backend` (pytest via Docker), `test:frontend` (vitest).
 
 After any change, also verify the Docker build passes:
 ```bash
-docker compose up --build -d
+$DC up --build -d
 ```
 
 ### Local Development (without Docker)
 ```bash
 # Backend — uses the root .venv (same as ci-check.sh)
 source .venv/bin/activate
-cd api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
+cd apps/api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
 
 # Frontend
-cd frontend && npm install && npm run dev
+cd apps/frontend && npm install && npm run dev
 ```
 
 ### Database
 ```bash
-docker compose exec db pg_dump -U $DB_USER axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
-docker compose exec -T db psql -U $DB_USER axiom_db < backups/your_backup.sql
-docker compose exec db psql -U $DB_USER -d axiom_db    # PostgreSQL shell
+$DC exec db pg_dump -U $DB_USER axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+$DC exec -T db psql -U $DB_USER axiom_db < backups/your_backup.sql
+$DC exec db psql -U $DB_USER -d axiom_db    # PostgreSQL shell
 ```
 
 ### Git Hooks (one-time setup, run from repo root)
@@ -220,7 +232,7 @@ pre-commit install --hook-type commit-msg # commitlint hook — REQUIRED
 
 ## Design Token System
 
-Typography, spacing, and font weights are CSS variables defined in `frontend/src/index.css` and mapped to Tailwind utilities via `frontend/tailwind.config.js` (scales: `--text-*`, `--font-*`, `--spacing-*`).
+Typography, spacing, and font weights are CSS variables defined in `apps/frontend/src/index.css` and mapped to Tailwind utilities via `apps/frontend/tailwind.config.js` (scales: `--text-*`, `--font-*`, `--spacing-*`).
 
 **Rule**: Prefer semantic spacing tokens (`p-md`, `gap-lg`) over numeric Tailwind defaults (`p-4`, `gap-6`) for layout and component padding. Numeric values are still acceptable for small adjustments (borders, icon sizes, etc.).
 
@@ -231,7 +243,7 @@ The frontend uses **TanStack Query v5** (`@tanstack/react-query`) for all server
 **Data fetching pattern for new pages**: use `useQuery` + `useMutation` (TanStack Query) rather than the older `hooks/use-crud-page.ts` hook. Both exist in the codebase; TanStack Query is the current standard.
 
 ### Cache TTLs
-`staleTime` is aligned with the backend's Redis cache TTLs (`api/app/settings.py`). Data within its stale window is served from cache; data beyond it triggers a background refetch.
+`staleTime` is aligned with the backend's Redis cache TTLs (`apps/api/app/settings.py`). Data within its stale window is served from cache; data beyond it triggers a background refetch.
 
 | Constant | Value | Backend setting | Used for |
 |---|---|---|---|
@@ -302,7 +314,7 @@ def get_queryset(self):
 
 ### Backend Testing Patterns
 
-Tests live in `api/tests/`. All test classes extend `BaseAPITestCase(APITestCase)` which creates a superuser and JWT-authenticated client in `setUp()`.
+Tests live in `apps/api/tests/`. All test classes extend `BaseAPITestCase(APITestCase)` which creates a superuser and JWT-authenticated client in `setUp()`.
 
 ```python
 class BaseAPITestCase(APITestCase):
@@ -395,7 +407,7 @@ test(expenses): add missing edge-case coverage
 pre-commit install --hook-type commit-msg
 ```
 
-Config is at `frontend/commitlint.config.cjs` (alongside its packages). Packages are in `frontend/devDependencies`.
+Config is at `apps/frontend/commitlint.config.cjs` (alongside its packages). Packages are in `apps/frontend/devDependencies`.
 
 ## Dependency Management
 
@@ -404,14 +416,14 @@ All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) 
 ### Files
 | File | Purpose |
 |------|---------|
-| `api/requirements.txt` | Production Python deps — pinned to exact versions |
-| `api/requirements-dev.txt` | Dev/test Python deps — also pinned exactly |
-| `frontend/package.json` | npm deps — exact versions, enforced by `package-lock.json` |
+| `apps/api/requirements.txt` | Production Python deps — pinned to exact versions |
+| `apps/api/requirements-dev.txt` | Dev/test Python deps — also pinned exactly |
+| `apps/frontend/package.json` | npm deps — exact versions, enforced by `package-lock.json` |
 
 ### Updating dependencies
 1. Create a dedicated PR for dependency updates (do not bundle with feature work).
 2. Review the changelog/release notes for each package being upgraded.
-3. **Backend**: run `pip install -r requirements.txt` in a clean virtualenv, verify tests pass (`docker compose exec api python -m pytest tests/`), then update the pin in the file.
+3. **Backend**: run `pip install -r requirements.txt` in a clean virtualenv, verify tests pass (`docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python -m pytest tests/`), then update the pin in the file.
 4. **Frontend**: run `npm install <pkg>@<version>` to update `package-lock.json` as well, verify tests pass (`npm run test -- --run`), then commit both files.
 5. Use commit type `chore(deps):` per the commit convention.
 
@@ -420,7 +432,7 @@ All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) 
 
 ## Tool Configuration
 
-Backend tools configured in `api/pyproject.toml`: Black (line-length 88, excludes migrations), isort (black profile), pytest (DJANGO_SETTINGS_MODULE=app.settings), coverage, mypy, flake8.
+Backend tools configured in `apps/api/pyproject.toml`: Black (line-length 88, excludes migrations), isort (black profile), pytest (DJANGO_SETTINGS_MODULE=app.settings), coverage, mypy, flake8.
 
 Frontend: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc` with tailwindcss plugin).
 
@@ -428,5 +440,5 @@ Frontend: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc` with 
 
 After any change:
 1. Run `source .venv/bin/activate && ./ci-check.sh` (see [CI/CD Validation](#cicd-validation-run-before-every-push))
-2. Verify the Docker build still passes: `docker compose up --build -d`
+2. Verify the Docker build still passes: `docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d`
 3. Tell the changes to user in brazilian portuguese

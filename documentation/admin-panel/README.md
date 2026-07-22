@@ -13,7 +13,7 @@ O **Painel de Administração** do Axiom permite gerenciar configurações do si
 
 ## Visão Geral
 
-O modelo `SystemConfig` (em `api/admin_panel/models.py`) armazena pares chave-valor organizados em categorias. Cada entrada possui:
+O modelo `SystemConfig` (em `apps/api/admin_panel/models.py`) armazena pares chave-valor organizados em categorias. Cada entrada possui:
 
 | Campo | Descrição |
 |-------|-----------|

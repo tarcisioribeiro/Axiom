@@ -112,7 +112,7 @@ Estes cookies são **acessíveis** ao JavaScript:
 ### Backend
 
 #### 1. CookieTokenObtainPairView (Login)
-**Arquivo**: `api/authentication/cookie_auth.py`
+**Arquivo**: `apps/api/authentication/cookie_auth.py`
 
 ```python
 class CookieTokenObtainPairView(TokenObtainPairView):
@@ -192,7 +192,7 @@ Set-Cookie: refresh_token=eyJ0eXAiOiJKV1QiLCJhbGc...; Max-Age=3600; Path=/api/v1
 ```
 
 #### 2. CookieTokenRefreshView (Refresh)
-**Arquivo**: `api/authentication/cookie_auth.py`
+**Arquivo**: `apps/api/authentication/cookie_auth.py`
 
 ```python
 class CookieTokenRefreshView(TokenRefreshView):
@@ -253,7 +253,7 @@ class CookieTokenRefreshView(TokenRefreshView):
 ```
 
 #### 3. logout_view (Logout)
-**Arquivo**: `api/authentication/cookie_auth.py`
+**Arquivo**: `apps/api/authentication/cookie_auth.py`
 
 ```python
 def logout_view(request):
@@ -283,7 +283,7 @@ def logout_view(request):
 ### Frontend
 
 #### ApiClient (api-client.ts)
-**Arquivo**: `frontend/src/services/api-client.ts`
+**Arquivo**: `apps/frontend/src/services/api-client.ts`
 
 ```typescript
 class ApiClient {
@@ -599,7 +599,7 @@ export const authService = {
 O Django REST Framework espera tokens JWT no header `Authorization: Bearer <token>`. No entanto, nossos tokens estão em cookies HttpOnly. O middleware faz a ponte entre estes dois sistemas.
 
 ### Arquivo
-`api/authentication/middleware.py`
+`apps/api/authentication/middleware.py`
 
 ### Código
 

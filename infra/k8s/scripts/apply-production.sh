@@ -2,10 +2,10 @@
 # =============================================================================
 # Axiom — Apply Production Manifests (k3s single-node VPS)
 # =============================================================================
-# Usage: bash k8s/scripts/apply-production.sh
+# Usage: bash infra/k8s/scripts/apply-production.sh
 #
 # Prerequisites:
-#   See k8s/scripts/apply-staging.sh for k3s + nginx-ingress + cert-manager setup.
+#   See infra/k8s/scripts/apply-staging.sh for k3s + nginx-ingress + cert-manager setup.
 #
 #   GitLab registry secret for production:
 #     kubectl create secret docker-registry gitlab-registry-secret \
@@ -34,7 +34,7 @@
 #     export MINIO_SECRET_KEY=$MINIO_ROOT_PASSWORD
 #     export GRAFANA_ADMIN_USER=admin
 #     export GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 24)
-#     envsubst < k8s/base/secrets.yaml | kubectl apply -f -
+#     envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 # =============================================================================
 
 set -euo pipefail
@@ -42,60 +42,60 @@ set -euo pipefail
 NAMESPACE="axiom"
 
 echo "==> [1/10] Namespace"
-kubectl apply -f k8s/base/namespace.yaml
+kubectl apply -f infra/k8s/base/namespace.yaml
 
 echo "==> [2/10] ServiceAccounts + ResourceQuota + NetworkPolicies"
-kubectl apply -f k8s/serviceaccounts.yaml
-kubectl apply -f k8s/resource-quota.yaml
-kubectl apply -f k8s/network-policy.yaml
+kubectl apply -f infra/k8s/serviceaccounts.yaml
+kubectl apply -f infra/k8s/resource-quota.yaml
+kubectl apply -f infra/k8s/network-policy.yaml
 
 echo "==> [3/10] ConfigMap"
-envsubst < k8s/base/configmap.yaml | kubectl apply -f -
+envsubst < infra/k8s/base/configmap.yaml | kubectl apply -f -
 
 echo "==> [4/10] PostgreSQL"
-kubectl apply -f k8s/postgres/configmap.yaml
-kubectl apply -f k8s/postgres/pvc.yaml
-kubectl apply -f k8s/postgres/deployment.yaml
-kubectl apply -f k8s/postgres/service.yaml
+kubectl apply -f infra/k8s/postgres/configmap.yaml
+kubectl apply -f infra/k8s/postgres/pvc.yaml
+kubectl apply -f infra/k8s/postgres/deployment.yaml
+kubectl apply -f infra/k8s/postgres/service.yaml
 echo "    Waiting for PostgreSQL..."
 kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
 
 echo "==> [5/10] Redis"
-kubectl apply -f k8s/redis/pvc.yaml
-kubectl apply -f k8s/redis/deployment.yaml
-kubectl apply -f k8s/redis/service.yaml
+kubectl apply -f infra/k8s/redis/pvc.yaml
+kubectl apply -f infra/k8s/redis/deployment.yaml
+kubectl apply -f infra/k8s/redis/service.yaml
 echo "    Waiting for Redis..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
 
 echo "==> [6/10] MinIO"
-kubectl apply -f k8s/minio/pvc.yaml
-kubectl apply -f k8s/minio/deployment.yaml
-kubectl apply -f k8s/minio/service.yaml
+kubectl apply -f infra/k8s/minio/pvc.yaml
+kubectl apply -f infra/k8s/minio/deployment.yaml
+kubectl apply -f infra/k8s/minio/service.yaml
 echo "    Waiting for MinIO..."
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
 echo "==> [7/10] API + Frontend (blue-green)"
-kubectl apply -f k8s/api/pvc.yaml
-kubectl apply -f k8s/api/deployment-blue.yaml
-kubectl apply -f k8s/api/deployment-green.yaml
-kubectl apply -f k8s/api/service.yaml
-kubectl apply -f k8s/frontend/deployment.yaml
-kubectl apply -f k8s/frontend/service.yaml
+kubectl apply -f infra/k8s/api/pvc.yaml
+kubectl apply -f infra/k8s/api/deployment-blue.yaml
+kubectl apply -f infra/k8s/api/deployment-green.yaml
+kubectl apply -f infra/k8s/api/service.yaml
+kubectl apply -f infra/k8s/frontend/deployment.yaml
+kubectl apply -f infra/k8s/frontend/service.yaml
 echo "    Waiting for API (blue slot — initial bootstrap)..."
 kubectl rollout status deployment/api-blue -n "$NAMESPACE" --timeout=180s
 echo "    Waiting for Frontend..."
 kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
 
 echo "==> [8/10] HPA + PDB"
-kubectl apply -f k8s/hpa.yaml
-kubectl apply -f k8s/pdb.yaml
+kubectl apply -f infra/k8s/hpa.yaml
+kubectl apply -f infra/k8s/pdb.yaml
 
 echo "==> [9/10] Backup CronJob"
-kubectl apply -f k8s/backup-cronjob.yaml
+kubectl apply -f infra/k8s/backup-cronjob.yaml
 
 echo "==> [10/10] Ingress"
 echo "    Applying ingress (AXIOM_DOMAIN=${AXIOM_DOMAIN})..."
-envsubst < k8s/ingress.yaml | kubectl apply -f -
+envsubst < infra/k8s/ingress.yaml | kubectl apply -f -
 
 echo ""
 echo "Production deployed successfully!"

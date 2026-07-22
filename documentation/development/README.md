@@ -99,26 +99,31 @@ Se você está começando agora, siga esta sequência:
 
 ```
 Axiom/
-├── api/                    # Backend Django REST Framework
-│   ├── accounts/          # Contas bancárias
-│   ├── authentication/    # Autenticação JWT
-│   ├── credit_cards/      # Cartões de crédito
-│   ├── expenses/          # Despesas
-│   ├── revenues/          # Receitas
-│   ├── loans/             # Empréstimos
-│   ├── transfers/         # Transferências
-│   ├── security/          # Senhas
-│   ├── library/           # Biblioteca de livros
-│   └── app/               # Configurações centrais
-├── frontend/              # Frontend React + TypeScript
-│   ├── src/
-│   │   ├── components/   # Componentes React
-│   │   ├── pages/        # Páginas/rotas
-│   │   ├── services/     # API clients
-│   │   └── stores/       # Estado global (Zustand)
-│   └── public/           # Assets estáticos
-├── documentation/         # Documentação do projeto
-└── docker-compose.yml    # Orquestração Docker
+├── apps/
+│   ├── api/                # Backend Django REST Framework
+│   │   ├── accounts/       # Contas bancárias
+│   │   ├── authentication/ # Autenticação JWT
+│   │   ├── credit_cards/   # Cartões de crédito
+│   │   ├── expenses/       # Despesas
+│   │   ├── revenues/       # Receitas
+│   │   ├── loans/          # Empréstimos
+│   │   ├── transfers/      # Transferências
+│   │   ├── security/       # Senhas
+│   │   ├── library/        # Biblioteca de livros
+│   │   └── app/            # Configurações centrais
+│   ├── frontend/           # Frontend React + TypeScript
+│   │   ├── src/
+│   │   │   ├── components/ # Componentes React
+│   │   │   ├── pages/      # Páginas/rotas
+│   │   │   ├── services/   # API clients
+│   │   │   └── stores/     # Estado global (Zustand)
+│   │   └── public/         # Assets estáticos
+│   └── mobile/              # Reservado para o futuro app mobile
+├── infra/
+│   ├── k8s/                  # Manifests Kubernetes
+│   ├── docker/                # docker-compose.yml + Dockerfiles auxiliares
+│   └── scripts/                # Scripts de backup/restore e migração
+└── documentation/         # Documentação do projeto
 ```
 
 ## Tecnologias Principais
@@ -173,7 +178,7 @@ Axiom/
 Se você encontrar problemas não cobertos nesta documentação:
 
 1. Verifique a [Solução de Problemas](./troubleshooting.md)
-2. Consulte os logs: `docker compose logs -f`
+2. Consulte os logs: `docker compose -f infra/docker/docker-compose.yml --project-directory . logs -f`
 3. Abra uma issue no GitLab com detalhes do erro
 4. Entre em contato com a equipe de desenvolvimento
 

@@ -746,8 +746,8 @@ Como versionar a API para permitir evolução sem quebrar clientes existentes.
 ```python
 # urls.py
 urlpatterns = [
-    path('api/v1/', include('myapp.urls')),
-    # Futuro: path('api/v2/', include('myapp.urls_v2')),
+    path('apps/api/v1/', include('myapp.urls')),
+    # Futuro: path('apps/api/v2/', include('myapp.urls_v2')),
 ]
 ```
 
@@ -789,7 +789,7 @@ Como organizar o código backend do Django.
 **Estrutura atual**:
 
 ```
-api/
+apps/api/
 ├── accounts/          # Contas bancárias
 ├── credit_cards/      # Cartões de crédito
 ├── expenses/          # Despesas
@@ -875,7 +875,7 @@ O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários
 
 | Decisão | Escolha | Razão Principal |
 |---------|---------|-----------------|
-| Repositório | Monorepo | Sincronia frontend/backend |
+| Repositório | Monorepo | Sincronia apps/frontend/backend |
 | Backend Framework | Django REST Framework | Ecosystem completo |
 | Frontend Framework | React 18 | Ecosystem e comunidade |
 | Linguagem Frontend | TypeScript | Type safety |

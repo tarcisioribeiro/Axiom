@@ -1,6 +1,6 @@
 # pgvector - Busca Vetorial Semântica
 
-> **⚠️ NOTA DE MIGRAÇÃO (Maio/2026)**: O sistema de embeddings foi migrado de `sentence-transformers/all-MiniLM-L6-v2` (384 dims, Python) para **`nomic-embed-text` via Ollama** (768 dims). O gerador de embeddings agora é `LLMClient.embed()` em `api/agents/core/llm_client.py`. O modelo de dados é `AgentEmbedding` em `api/agents/models.py` (schema `vectors.agent_embeddings`), não mais `ContentEmbedding`. O cache de embeddings é feito no Redis (TTL 5min). Os exemplos de código nesta página usam a API antiga — consulte [`backend/agents.md`](../backend/agents.md) para a implementação atual.
+> **⚠️ NOTA DE MIGRAÇÃO (Maio/2026)**: O sistema de embeddings foi migrado de `sentence-transformers/all-MiniLM-L6-v2` (384 dims, Python) para **`nomic-embed-text` via Ollama** (768 dims). O gerador de embeddings agora é `LLMClient.embed()` em `apps/api/agents/core/llm_client.py`. O modelo de dados é `AgentEmbedding` em `apps/api/agents/models.py` (schema `vectors.agent_embeddings`), não mais `ContentEmbedding`. O cache de embeddings é feito no Redis (TTL 5min). Os exemplos de código nesta página usam a API antiga — consulte [`backend/agents.md`](../backend/agents.md) para a implementação atual.
 
 > Documentação completa da extensão pgvector para busca semântica com embeddings locais
 
@@ -186,7 +186,7 @@ class Migration(migrations.Migration):
 
 **Executar**:
 ```bash
-docker-compose exec api python manage.py migrate ai_assistant
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py migrate ai_assistant
 ```
 
 ---
@@ -671,13 +671,13 @@ class Command(BaseCommand):
 **Uso**:
 ```bash
 # Reindexar tudo
-docker-compose exec api python manage.py reindex_embeddings
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py reindex_embeddings
 
 # Apenas finanças
-docker-compose exec api python manage.py reindex_embeddings --module finance
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py reindex_embeddings --module finance
 
 # Apenas um usuário
-docker-compose exec api python manage.py reindex_embeddings --owner 1
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py reindex_embeddings --owner 1
 ```
 
 ---
@@ -820,7 +820,7 @@ results = ContentEmbedding.objects.filter(
 
 ```sql
 -- Conectar ao banco
-docker-compose exec db psql -U $DB_USER axiom_db
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec db psql -U $DB_USER axiom_db
 
 -- Criar índice IVFFlat para cosine similarity
 CREATE INDEX idx_contentembedding_cosine ON ai_assistant_contentembedding
@@ -1323,7 +1323,7 @@ ALTER TABLE ai_assistant_contentembedding
 ADD COLUMN embedding vector(384);
 
 -- Reindexar tudo
-docker-compose exec api python manage.py reindex_embeddings
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py reindex_embeddings
 ```
 
 ---

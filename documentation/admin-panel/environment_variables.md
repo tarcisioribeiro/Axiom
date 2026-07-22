@@ -18,7 +18,7 @@ Esta página lista todas as chaves gerenciadas pelo `SystemConfig` do painel de 
 
 ## Categoria: LLM / Agentes
 
-Configurações do sistema de agentes inteligentes (`api/agents/`).
+Configurações do sistema de agentes inteligentes (`apps/api/agents/`).
 
 | Chave | Secret | Restart | Padrão | Descrição |
 |-------|:------:|:-------:|--------|-----------|
