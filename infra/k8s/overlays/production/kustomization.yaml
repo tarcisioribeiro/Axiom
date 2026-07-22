@@ -1,18 +1,13 @@
 # =============================================================================
 # Axiom — Kustomize production overlay
 # =============================================================================
+# Base already reflects the production footprint (see base/kustomization.yaml),
+# so this overlay adds no patches — it only sets the namespace and pulls in
+# the API blue-green Deployments, which are production-only and never shared
+# with staging's single Recreate Deployment.
 #
-# This overlay extends the base k8s/ configuration for production.
-# It is equivalent to k8s/kustomization.yaml but placed here to keep
-# the overlay structure symmetric with staging.
-#
-# CI deploy command for production:
-#
-#   cd k8s/overlays/production
-#   kustomize edit set image \
-#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
-#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
-#   kustomize build . | kubectl apply -f -
+# CI deploy command (see .gitlab-ci.yml deploy:production):
+#   kubectl apply -k infra/k8s/overlays/production
 # =============================================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -20,4 +15,6 @@ kind: Kustomization
 namespace: axiom
 
 resources:
-  - ../../kustomization.yaml
+  - ../../base
+  - api/deployment-blue.yaml
+  - api/deployment-green.yaml

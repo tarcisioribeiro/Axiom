@@ -1,0 +1,27 @@
+# MinIO server TLS certificate, per-namespace.
+# Depends on the ClusterIssuers in base/cluster-issuers.yaml, applied first.
+# The resulting Secret (minio-tls) contains:
+#   tls.crt  — MinIO server certificate
+#   tls.key  — MinIO server private key
+#   ca.crt   — CA certificate (mounted read-only into the API pod for trust)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-tls
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  secretName: minio-tls
+  duration: 8760h     # 1 year
+  renewBefore: 720h   # 30 days
+  commonName: minio-service.axiom.svc.cluster.local
+  dnsNames:
+    - minio-service
+    - minio-service.axiom
+    - minio-service.axiom.svc
+    - minio-service.axiom.svc.cluster.local
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer

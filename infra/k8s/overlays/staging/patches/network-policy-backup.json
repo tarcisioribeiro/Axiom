@@ -1,0 +1,3 @@
+[
+  { "op": "remove", "path": "/spec/ingress/0/from/1" }
+]

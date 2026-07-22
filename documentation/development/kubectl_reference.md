@@ -750,7 +750,7 @@ kubectl rollout status deployment/minio -n axiom --timeout=60s
 
 ```bash
 # Executar o job de init para criar o bucket axiom (se ainda não existir)
-kubectl apply -f infra/k8s/minio/deployment.yaml -n axiom
+kubectl apply -f infra/k8s/base/minio/deployment.yaml -n axiom
 
 # Ver status do job
 kubectl get job minio-init -n axiom
@@ -1590,26 +1590,28 @@ bash infra/k8s/scripts/apply-production.sh
 # Aplicar todos os manifestos de staging via script
 bash infra/k8s/scripts/apply-staging.sh
 
-# Aplicar um manifesto específico
-kubectl apply -f infra/k8s/postgres/deployment.yaml
-kubectl apply -f infra/k8s/redis/deployment.yaml
-kubectl apply -f infra/k8s/minio/deployment.yaml
-kubectl apply -f infra/k8s/api/deployment-blue.yaml
-kubectl apply -f infra/k8s/api/deployment-green.yaml
-kubectl apply -f infra/k8s/frontend/deployment.yaml
-kubectl apply -f infra/k8s/backup-cronjob.yaml
-kubectl apply -f infra/k8s/ingress.yaml
-kubectl apply -f infra/k8s/hpa.yaml
-kubectl apply -f infra/k8s/pdb.yaml
-kubectl apply -f infra/k8s/resource-quota.yaml
-kubectl apply -f infra/k8s/network-policy.yaml
+# Aplicar um manifesto específico (compartilhado entre ambientes, em base/)
+kubectl apply -f infra/k8s/base/postgres/deployment.yaml
+kubectl apply -f infra/k8s/base/redis/deployment.yaml
+kubectl apply -f infra/k8s/base/minio/deployment.yaml
+kubectl apply -f infra/k8s/base/network-policy.yaml
+kubectl apply -f infra/k8s/base/resource-quota.yaml
 
-# Aplicar usando Kustomize (produção)
+# Manifestos só de produção (blue-green, HPA/PDB, backup, ingress base)
+kubectl apply -f infra/k8s/overlays/production/api/deployment-blue.yaml
+kubectl apply -f infra/k8s/overlays/production/api/deployment-green.yaml
+kubectl apply -f infra/k8s/base/frontend/deployment.yaml
+kubectl apply -f infra/k8s/overlays/production/backup-cronjob.yaml
+kubectl apply -f infra/k8s/base/ingress.yaml
+kubectl apply -f infra/k8s/overlays/production/hpa.yaml
+kubectl apply -f infra/k8s/overlays/production/pdb.yaml
+
+# Aplicar usando Kustomize (produção) — forma recomendada, ver infra/k8s/README.md
 kubectl apply -k infra/k8s/overlays/production/
 
 # Aplicar usando Kustomize (staging)
 kubectl apply -k infra/k8s/overlays/staging/
 
 # Dry-run antes de aplicar (verificar sem alterar o cluster)
-kubectl apply -f infra/k8s/postgres/deployment.yaml --dry-run=server
+kubectl apply -f infra/k8s/base/postgres/deployment.yaml --dry-run=server
 ```

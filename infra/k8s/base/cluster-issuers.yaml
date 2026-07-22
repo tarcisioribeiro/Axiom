@@ -1,0 +1,92 @@
+# cert-manager cluster-scoped resources — shared by every environment.
+# Applied by both overlays/production and overlays/staging; applying twice is
+# idempotent (identical content), so no "does it already exist" guard is needed.
+#
+# Prerequisites: cert-manager must be installed in the cluster before these
+# apply — see infra/k8s/README.md.
+---
+# Bootstrap: self-signed ClusterIssuer used only to mint the internal CA.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: minio-selfsigned-issuer
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  selfSigned: {}
+---
+# Internal CA certificate.
+# cert-manager places this secret in the cert-manager namespace so that the
+# ClusterIssuer of type `ca` (below) can reference it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-internal-ca
+  namespace: cert-manager
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  isCA: true
+  commonName: minio-internal-ca
+  secretName: minio-internal-ca
+  duration: 87600h    # 10 years — rotate manually if CA is compromised
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: minio-selfsigned-issuer
+    kind: ClusterIssuer
+---
+# CA-backed ClusterIssuer — used to sign MinIO service certificates.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: internal-ca-issuer
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  ca:
+    # Secret must be in the cert-manager namespace (default cluster-resource-namespace).
+    secretName: minio-internal-ca
+---
+# cert-manager ClusterIssuer — Let's Encrypt Staging (safe for testing)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: tarcisio.ribeiro.1840@hotmail.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+# cert-manager ClusterIssuer — Let's Encrypt Production
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tarcisio.ribeiro.1840@hotmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx

@@ -1,12 +1,47 @@
 # Kubernetes Deployment — Axiom
 
+## Layout
+
+```
+infra/k8s/
+├── base/               # Shared manifests — shape reflects the production footprint
+│   ├── postgres/ redis/ minio/ ollama/ frontend/ api/
+│   ├── cluster-issuers.yaml   # cert-manager ClusterIssuers (cluster-scoped, shared)
+│   ├── ingress.yaml, configmap.yaml, network-policy.yaml, resource-quota.yaml, ...
+│   └── kustomization.yaml
+├── overlays/
+│   ├── production/     # namespace: axiom — adds blue-green API Deployments,
+│   │   ├── api/         # HPA/PDB/backup-cronjob (not applied automatically by CI)
+│   │   └── kustomization.yaml
+│   └── staging/         # namespace: axiom-staging — patches/ scales resources
+│       ├── api/          # down, drops MinIO TLS, single (non-blue-green) API
+│       ├── patches/
+│       └── kustomization.yaml
+└── scripts/             # blue-green-switch.sh (CI) + apply-{staging,production}.sh (one-time bootstrap)
+```
+
+Production and staging share almost everything through `base/` — only genuine
+behavioral differences (blue-green vs. single Deployment, MinIO TLS on/off,
+resource sizing, ConfigMap values) live in each overlay's `patches/`. Render
+either environment locally to see exactly what gets applied:
+
+```bash
+kubectl kustomize infra/k8s/overlays/production
+kubectl kustomize infra/k8s/overlays/staging
+```
+
+The `deploy:staging` / `deploy:production` CI jobs apply almost everything
+with a single `kubectl apply -k infra/k8s/overlays/<env>`; only the API
+(blue-green in production, image-tag substitution in both) stays as bespoke
+steps — see the comments in `.gitlab-ci.yml` for why.
+
 ## Prerequisites
 
 ### 1. cert-manager
 
 cert-manager is required for TLS certificate management. It issues and renews:
-- **External TLS** — Let's Encrypt certificates for the public Ingress (`letsencrypt-prod` / `letsencrypt-staging` ClusterIssuers in `infra/k8s/ingress.yaml`).
-- **Internal TLS** — Self-signed certificates for service-to-service communication inside the cluster (API → MinIO), managed by the `internal-ca-issuer` ClusterIssuer in `infra/k8s/minio/tls.yaml`.
+- **External TLS** — Let's Encrypt certificates for the public Ingress (`letsencrypt-prod` / `letsencrypt-staging` ClusterIssuers in `infra/k8s/base/cluster-issuers.yaml`).
+- **Internal TLS** — Self-signed certificates for service-to-service communication inside the cluster (API → MinIO), managed by the `internal-ca-issuer` ClusterIssuer in `infra/k8s/base/cluster-issuers.yaml`.
 
 Install cert-manager before applying any other manifests:
 
@@ -31,21 +66,21 @@ kubectl wait --namespace ingress-nginx \
 
 ## Production — One-time Setup
 
-These steps are run **once** when provisioning the production environment. After this, ongoing deploys are fully managed by the CI/CD pipeline.
+These steps are run **once** when provisioning the production environment. After this, ongoing deploys are fully managed by the CI/CD pipeline. See `infra/k8s/scripts/apply-production.sh` for the scripted version of this section.
 
 ```bash
-# 1. Namespace, RBAC, base resources
-kubectl apply -f infra/k8s/base/namespace.yaml
-kubectl apply -f infra/k8s/base/secrets.yaml       # fill in real values first
-kubectl apply -f infra/k8s/base/configmap.yaml
-kubectl apply -f infra/k8s/serviceaccounts.yaml
+# 1. Secrets — infra/k8s/base/secrets.yaml uses ${VAR} placeholders
+export DB_NAME=axiom_db DB_USER=axiom DB_PASSWORD=... SECRET_KEY=... ENCRYPTION_KEY=... \
+       DJANGO_SUPERUSER_USERNAME=admin DJANGO_SUPERUSER_EMAIL=... DJANGO_SUPERUSER_PASSWORD=... \
+       REDIS_PASSWORD=... MINIO_ROOT_USER=... MINIO_ROOT_PASSWORD=... SENTRY_DSN=""
+envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 
-# 2. cert-manager ClusterIssuers + internal CA (must come before MinIO)
-#    ClusterIssuers are cluster-scoped and shared between environments.
-kubectl apply -f infra/k8s/ingress.yaml            # creates letsencrypt-* ClusterIssuers
-kubectl apply -f infra/k8s/minio/tls.yaml          # creates internal-ca-issuer + minio-tls Certificate
+# 2. Everything else — namespace, RBAC, ClusterIssuers, network-policy, quota,
+#    postgres, redis, minio (mounts minio-tls once cert-manager issues it),
+#    ollama, frontend, ingress. Safe to re-run.
+kubectl apply -k infra/k8s/overlays/production
 
-# Wait for the internal CA to be ready before MinIO starts
+# Wait for the internal CA / minio-tls Certificate before MinIO needs it
 kubectl wait --namespace cert-manager \
   --for=condition=Ready certificate/minio-internal-ca \
   --timeout=60s
@@ -53,51 +88,30 @@ kubectl wait --namespace axiom \
   --for=condition=Ready certificate/minio-tls \
   --timeout=60s
 
-# 3. Stateful services
-kubectl apply -f infra/k8s/postgres/
-kubectl apply -f infra/k8s/redis/
-kubectl apply -f infra/k8s/minio/         # deployment.yaml mounts the minio-tls Secret
+# 3. API (blue-green) — not part of the overlay build, applied directly.
+#    Mounts ca.crt from minio-tls, so re-run step 1's wait first if needed.
+kubectl apply -f infra/k8s/overlays/production/api/deployment-blue.yaml
+kubectl apply -f infra/k8s/overlays/production/api/deployment-green.yaml
+kubectl apply -f infra/k8s/overlays/production/api/service.yaml
 
-# 4. Application
-kubectl apply -f infra/k8s/api/           # deployment.yaml mounts ca.crt from minio-tls
-kubectl apply -f infra/k8s/frontend/
+# 4. Optional — not applied automatically by CI
+kubectl apply -f infra/k8s/overlays/production/hpa.yaml
+kubectl apply -f infra/k8s/overlays/production/pdb.yaml
+kubectl apply -f infra/k8s/overlays/production/backup-cronjob.yaml
 ```
 
 ---
 
 ## Staging — One-time Setup
 
-These steps are run **once** when provisioning the staging environment. The CI/CD pipeline (`deploy:staging` job) only applies the Deployment, Service, and Ingress manifests — **it does not apply TLS certificates, namespaces, or secrets**. Missing any step below will cause the deploy pipeline to fail.
+These steps are run **once** when provisioning the staging environment. The CI/CD pipeline (`deploy:staging` job) only applies the Deployment, Service, and Ingress manifests — **it does not apply TLS certificates, namespaces, or secrets**. Missing any step below will cause the deploy pipeline to fail. See `infra/k8s/scripts/apply-staging.sh` for the scripted version of steps 2 onward.
 
-### Step 1 — Apply ClusterIssuers (if not done yet for production)
+### Step 1 — Create secrets
 
-The ClusterIssuers in `infra/k8s/minio/tls.yaml` are cluster-scoped and shared between environments. Skip this step if they already exist.
-
-```bash
-kubectl get clusterissuer internal-ca-issuer 2>/dev/null \
-  || kubectl apply -f infra/k8s/minio/tls.yaml
-
-kubectl wait --namespace cert-manager \
-  --for=condition=Ready certificate/minio-internal-ca \
-  --timeout=60s
-```
-
-### Step 2 — Create the staging namespace and base resources
+The `infra/k8s/overlays/staging/secrets.yaml` file uses `${VAR}` placeholders. Substitute them before applying (or use a tool like `envsubst`):
 
 ```bash
-kubectl apply -f infra/k8s/staging/namespace.yaml
-kubectl apply -f infra/k8s/staging/resource-quota.yaml
-kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
-kubectl apply -f infra/k8s/staging/network-policy.yaml
-```
-
-### Step 3 — Create secrets and ConfigMap
-
-The `infra/k8s/staging/secrets.yaml` file uses `${VAR}` placeholders. Substitute them before applying (or use a tool like `envsubst`):
-
-```bash
-envsubst < infra/k8s/staging/secrets.yaml | kubectl apply -f -
-kubectl apply -f infra/k8s/staging/configmap.yaml
+envsubst < infra/k8s/overlays/staging/secrets.yaml | kubectl apply -f -
 ```
 
 Required environment variables for secrets:
@@ -116,48 +130,37 @@ Required environment variables for secrets:
 | `STAGING_MINIO_ROOT_PASSWORD` | MinIO root password |
 | `STAGING_SENTRY_DSN` | Sentry DSN (optional, leave empty to disable) |
 
-### Step 4 — Create the GitLab registry pull secret
+### Step 2 — Create the GHCR pull secret
 
 ```bash
-kubectl -n axiom-staging create secret docker-registry gitlab-registry-secret \
-  --docker-server=registry.tjtux.duckdns.org \
+kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
   --docker-username=<gitlab-user> \
-  --docker-password=<gitlab-deploy-token>
+  --docker-password=<github-pat-or-deploy-token>
 ```
 
-### Step 5 — Apply the MinIO TLS certificate for staging
+### Step 3 — Apply everything else
 
-> **This is the most commonly missed step.** Without it, the API pod cannot be scheduled because it mounts `ca.crt` from the `minio-tls` secret, which is created by cert-manager only after this manifest is applied.
+Namespace, RBAC, ClusterIssuers, network-policy, quota, postgres, redis,
+minio, ollama, api (single Deployment, no TLS — staging never mounts
+`minio-tls`), frontend, ingress — all in one shot:
 
 ```bash
-kubectl apply -f infra/k8s/staging/minio/tls.yaml
-kubectl wait --namespace axiom-staging \
-  --for=condition=Ready certificate/minio-tls \
-  --timeout=60s
-
-# Confirm the secret exists before proceeding
-kubectl -n axiom-staging get secret minio-tls
+kubectl apply -k infra/k8s/overlays/staging
 ```
 
-### Step 6 — Apply stateful services
-
-```bash
-kubectl apply -f infra/k8s/staging/postgres/
-kubectl apply -f infra/k8s/staging/redis/
-kubectl apply -f infra/k8s/staging/minio/
-```
-
-### Step 7 — Verify the environment is ready for CI/CD
+### Step 4 — Verify the environment is ready for CI/CD
 
 ```bash
 # All pods should be Running
 kubectl -n axiom-staging get pods
 
-# minio-tls secret must exist
+# minio-tls secret must exist (created for every environment, even though
+# staging's MinIO/API pods don't mount it — see Internal TLS section below)
 kubectl -n axiom-staging get secret minio-tls
 
-# gitlab-registry-secret must exist
-kubectl -n axiom-staging get secret gitlab-registry-secret
+# ghcr-pull-secret must exist
+kubectl -n axiom-staging get secret ghcr-pull-secret
 
 # axiom-secrets must exist
 kubectl -n axiom-staging get secret axiom-secrets
@@ -184,7 +187,9 @@ minio-selfsigned-issuer  (ClusterIssuer, self-signed bootstrap)
                     production: axiom/minio-tls
 ```
 
-The `minio-tls` Secret contains three keys:
+The `minio-tls` Secret contains three keys — **production only**, MinIO and the
+API pod mount them; staging's MinIO runs plain HTTP and its API pod never
+mounts `ca.crt` (see `overlays/staging/patches/minio-deployment.json`):
 | Key | Mounted in | Purpose |
 |-----|-----------|---------|
 | `tls.crt` | MinIO pod at `/root/.minio/certs/public.crt` | MinIO server certificate |
@@ -192,7 +197,7 @@ The `minio-tls` Secret contains three keys:
 | `ca.crt`  | API pod at `/etc/ssl/minio/ca.crt` | CA used by Django to verify MinIO |
 
 The Django setting `AWS_S3_VERIFY` is set to the path `/etc/ssl/minio/ca.crt` via the
-`MINIO_CA_BUNDLE` env var in the ConfigMap.
+`MINIO_CA_BUNDLE` env var in production's ConfigMap (absent in staging's).
 
 cert-manager automatically renews the `minio-tls` certificate 30 days before it expires.
 The CA (`minio-internal-ca`) has a 10-year lifetime and must be rotated manually if compromised.
@@ -202,7 +207,7 @@ The CA (`minio-internal-ca`) has a 10-year lifetime and must be rotated manually
 ## External TLS (Ingress)
 
 External HTTPS is terminated at the nginx Ingress using Let's Encrypt certificates.
-See the comments at the top of `infra/k8s/ingress.yaml` for the staging → production promotion workflow.
+See `infra/k8s/base/cluster-issuers.yaml` for the staging → production ClusterIssuer promotion workflow.
 
 ---
 
@@ -237,25 +242,25 @@ kubectl -n axiom-staging delete pod <pod-name> --force --grace-period=0
 
 After force-deleting, re-trigger the pipeline.
 
-#### 2. `minio-tls` secret not found
+#### 2. `minio-tls` secret not found (production only)
 
-The API deployment mounts `ca.crt` from the `minio-tls` secret. If cert-manager never issued the certificate, the pod cannot be scheduled.
+In production, the API deployment mounts `ca.crt` from the `minio-tls` secret. If cert-manager never issued the certificate, the pod cannot be scheduled. Staging's API pod never mounts this secret, so this only applies to `axiom` (production).
 
 ```bash
-kubectl -n axiom-staging get secret minio-tls
+kubectl -n axiom get secret minio-tls
 ```
 
-If not found, follow **Staging — One-time Setup, Step 5** above.
+If not found, follow **Production — One-time Setup** above and wait for the `minio-internal-ca` / `minio-tls` Certificates to become Ready.
 
-#### 3. `gitlab-registry-secret` not found or expired
+#### 3. `ghcr-pull-secret` not found or expired
 
 The pod cannot pull its image from the private registry.
 
 ```bash
-kubectl -n axiom-staging get secret gitlab-registry-secret
+kubectl -n axiom-staging get secret ghcr-pull-secret
 ```
 
-If missing or expired, recreate it (see **Step 4** above).
+If missing or expired, recreate it (see **Step 2** above).
 
 #### 4. Resource quota exceeded
 
@@ -263,7 +268,7 @@ If missing or expired, recreate it (see **Step 4** above).
 kubectl -n axiom-staging describe resourcequota
 ```
 
-If the namespace quota is exhausted, clean up unused resources or adjust the quota in `infra/k8s/staging/resource-quota.yaml`.
+If the namespace quota is exhausted, clean up unused resources or adjust the values in `infra/k8s/overlays/staging/patches/resource-quota.yaml` (production: `infra/k8s/base/resource-quota.yaml`).
 
 ### Inspecting a failed pod
 

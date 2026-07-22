@@ -1,53 +1,63 @@
 # =============================================================================
 # Axiom — Kustomize staging overlay
 # =============================================================================
+# Patches base/ down to the staging footprint: smaller resource requests/
+# limits and storage, no MinIO TLS, NodePort MinIO instead of ClusterIP,
+# staging-only ConfigMap values, and the single-Deployment (non-blue-green)
+# API. See each file under patches/ for the specific delta it captures.
 #
-# CI deploy command for staging:
-#
-#   cd k8s/overlays/staging
-#   kustomize edit set image \
-#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
-#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
-#   kustomize build . | kubectl apply -f -
-#
-# Required env vars (applied separately via envsubst):
-#   AXIOM_STAGING_DOMAIN   e.g. staging.axiom.example.com
-#   LETSENCRYPT_EMAIL
-#   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD, ...
-#   (see k8s/staging/secrets.yaml for the full list)
+# CI deploy command (see .gitlab-ci.yml deploy:staging):
+#   kubectl apply -k infra/k8s/overlays/staging
 # =============================================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: axiom-staging
 
-resources:
-  - ../../staging/namespace.yaml
-  - ../../staging/postgres/configmap.yaml
-  - ../../staging/postgres/pvc.yaml
-  - ../../staging/postgres/deployment.yaml
-  - ../../staging/postgres/service.yaml
-  - ../../staging/redis/pvc.yaml
-  - ../../staging/redis/deployment.yaml
-  - ../../staging/redis/service.yaml
-  - ../../staging/minio/pvc.yaml
-  - ../../staging/minio/deployment.yaml
-  - ../../staging/minio/service.yaml
-  - ../../staging/api/pvc.yaml
-  - ../../staging/api/deployment.yaml
-  - ../../staging/api/service.yaml
-  - ../../staging/frontend/configmap-nginx.yaml
-  - ../../staging/frontend/deployment.yaml
-  - ../../staging/frontend/service.yaml
-  - ../../staging/ollama/pvc.yaml
-  - ../../staging/ollama/deployment.yaml
-  - ../../staging/ollama/service.yaml
-  - ../../staging/serviceaccounts.yaml
-  - ../../staging/network-policy.yaml
-  - ../../staging/resource-quota.yaml
+labels:
+  - pairs:
+      environment: staging
+    includeSelectors: false
 
-images:
-  - name: registry.gitlab.com/tarcisioribeiro/axiom/api
-    newTag: latest
-  - name: registry.gitlab.com/tarcisioribeiro/axiom/frontend
-    newTag: latest
+resources:
+  - ../../base
+  - api/deployment.yaml
+  - api/service.yaml
+
+patches:
+  - path: patches/configmap.yaml
+  - path: patches/postgres.yaml
+  - path: patches/redis.yaml
+  - path: patches/ollama.yaml
+  - path: patches/frontend.yaml
+  - path: patches/frontend-remove-hostaliases.json
+    target:
+      kind: Deployment
+      name: frontend
+  - path: patches/minio-deployment.json
+    target:
+      kind: Deployment
+      name: minio
+  - path: patches/minio-job.yaml
+  - path: patches/minio-service.yaml
+  - path: patches/minio-tls.yaml
+  - path: patches/api-pvc.yaml
+  - path: patches/api-service.json
+    target:
+      kind: Service
+      name: api-service
+  - path: patches/serviceaccounts.yaml
+  - path: patches/resource-quota.yaml
+  - path: patches/ingress.json
+    target:
+      kind: Ingress
+      name: axiom-ingress
+  - path: patches/network-policy-remove.yaml
+  - path: patches/network-policy-backup.json
+    target:
+      kind: NetworkPolicy
+      name: allow-api-to-postgres
+  - path: patches/network-policy-backup.json
+    target:
+      kind: NetworkPolicy
+      name: allow-api-to-minio
