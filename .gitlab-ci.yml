@@ -675,7 +675,7 @@ scan:frontend:
 
 deploy:staging:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: deploy-staging
   interruptible: false
@@ -818,7 +818,7 @@ deploy:staging:
 
 seed:staging:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: deploy-staging
   needs:
@@ -1371,7 +1371,7 @@ seed:staging:
 
 deploy:production:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: deploy-production
   interruptible: false
@@ -1501,7 +1501,7 @@ deploy:production:
 
 smoke:production:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: smoke-production
   interruptible: false
@@ -1612,7 +1612,7 @@ smoke:production:
 
 deploy:rollback:production:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: smoke-production
   interruptible: false
@@ -1669,7 +1669,7 @@ deploy:rollback:production:
 # API uses the same blue-green slot-switch as the automated rollback.
 rollback:production:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: smoke-production
   interruptible: false
@@ -1875,7 +1875,7 @@ cleanup:registry:
 
 cleanup:k8s:staging:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: cleanup
   interruptible: false
@@ -1913,7 +1913,7 @@ cleanup:k8s:staging:
 
 cleanup:k8s:production:
   image:
-    name: alpine/k8s:1.30.10
+    name: alpine/k8s:1.36.2
     entrypoint: [""]
   stage: cleanup
   interruptible: false

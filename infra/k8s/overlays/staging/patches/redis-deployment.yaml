@@ -25,13 +25,3 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "100m"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: redis-pvc
-  namespace: axiom
-spec:
-  resources:
-    requests:
-      storage: 500Mi
