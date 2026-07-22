@@ -26,8 +26,6 @@ resources:
 
 patches:
   - path: patches/configmap.yaml
-  - path: patches/postgres-deployment.yaml
-  - path: patches/postgres-pvc.yaml
   - path: patches/redis-deployment.yaml
   - path: patches/redis-pvc.yaml
   - path: patches/ollama-deployment.yaml
@@ -60,10 +58,6 @@ patches:
       name: axiom-ingress
   - path: patches/network-policy-remove-prometheus.yaml
   - path: patches/network-policy-remove-acme-solver.yaml
-  - path: patches/network-policy-backup.json
-    target:
-      kind: NetworkPolicy
-      name: allow-api-to-postgres
   - path: patches/network-policy-backup.json
     target:
       kind: NetworkPolicy

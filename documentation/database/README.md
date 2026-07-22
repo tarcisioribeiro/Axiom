@@ -4,6 +4,14 @@ Esta seção contém a documentação completa sobre o banco de dados PostgreSQL
 
 ## Arquivos Disponíveis
 
+### [infrastructure.md](infrastructure.md)
+Topologia e operação do PostgreSQL de produção/staging:
+- PostgreSQL externo ao cluster k8s (VM auto-gerenciada)
+- Setup manual da VM (instalação, pgvector, roles)
+- Runbook de rede/segurança (WireGuard vs. firewall-allowlist)
+- Referência de `DB_SSLMODE`
+- Procedimento completo de backup e restore
+
 ### [schema.md](schema.md)
 Documentação completa do schema do banco de dados:
 - Todas as tabelas e seus campos
@@ -209,6 +217,8 @@ psql -h localhost -p 39102 -U axiom_user -d axiom_db
 ```
 
 ### Backup e Restore
+
+Comandos rápidos para o Postgres local de desenvolvimento (docker-compose):
 ```bash
 # Backup
 docker-compose exec db pg_dump -U axiom_user axiom_db > backup.sql
@@ -216,6 +226,10 @@ docker-compose exec db pg_dump -U axiom_user axiom_db > backup.sql
 # Restore
 docker-compose exec -T db psql -U axiom_user axiom_db < backup.sql
 ```
+
+Para o procedimento completo de produção/staging (backup automatizado,
+criptografia, retenção, restore) veja
+[infrastructure.md](infrastructure.md#backup-e-restore).
 
 ---
 

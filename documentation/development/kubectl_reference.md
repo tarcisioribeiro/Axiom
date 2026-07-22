@@ -56,7 +56,6 @@ kubectl get all -n axiom -o wide
 
 | Deployment   | Namespace    | Porta      | Notas                          |
 |--------------|--------------|------------|--------------------------------|
-| `postgres`   | axiom   | 5432       | PostgreSQL 16 + pgvector       |
 | `redis`      | axiom   | 6379       | Redis 7, autenticado           |
 | `minio`      | axiom   | 9000/9001  | Object storage, TLS interno    |
 | `api-blue`   | axiom   | 39100      | Slot blue (blue-green)         |
@@ -68,11 +67,14 @@ kubectl get all -n axiom -o wide
 
 | Service             | Namespace  | Porta(s)    |
 |---------------------|------------|-------------|
-| `postgres-service`  | axiom | 5432        |
 | `redis-service`     | axiom | 6379        |
 | `minio-service`     | axiom | 9000, 9001  |
 | `api-service`       | axiom | 39100       |
 | `frontend-service`  | axiom | 80          |
+
+> PostgreSQL não aparece nessas tabelas — ele roda fora do cluster, em uma VM
+> externa. Veja a seção 3 e
+> [documentation/database/infrastructure.md](../database/infrastructure.md).
 
 ---
 
@@ -155,130 +157,43 @@ kubectl describe limitrange axiom-limit-range -n axiom
 
 ## 3. PostgreSQL
 
-### Inspecionar
+O PostgreSQL **não roda dentro do cluster** — ele fica em uma VM externa
+auto-gerenciada, alcançada via túnel WireGuard (ou allowlist de firewall como
+alternativa). Veja
+[documentation/database/infrastructure.md](../database/infrastructure.md)
+para a topologia completa, o runbook de rede e o procedimento de backup/restore.
+Não há mais pod, Deployment, Service ou PVC de Postgres neste cluster — os
+comandos `kubectl get/describe/logs/exec/port-forward` de outras seções deste
+documento não se aplicam ao banco de dados.
+
+`DB_HOST`/`DB_PORT`/`DB_SSLMODE` estão em `axiom-config`
+(`kubectl get configmap axiom-config -n axiom -o yaml`); usuário/senha/nome
+do banco estão em `axiom-secrets` (ver seção 9 — Secrets e senhas).
 
 ```bash
-# Ver o pod do Postgres (produção)
-kubectl get pod -l app=postgres -n axiom
-
-# Ver detalhes do pod (recursos, volumes, probes, eventos)
-kubectl describe pod -l app=postgres -n axiom
-
-# Ver o deployment
-kubectl get deployment postgres -n axiom
-kubectl describe deployment postgres -n axiom
-
-# Ver o service
-kubectl get svc postgres-service -n axiom
-kubectl describe svc postgres-service -n axiom
-```
-
-### Logs
-
-```bash
-# Logs em tempo real
-kubectl logs -f -l app=postgres -n axiom
-
-# Últimas 100 linhas
-kubectl logs -l app=postgres -n axiom --tail=100
-
-# Logs do container anterior (após crash/restart)
-kubectl logs -l app=postgres -n axiom --previous
-```
-
-### Port-forward
-
-```bash
-# Expor PostgreSQL localmente na porta 5432
-kubectl port-forward svc/postgres-service 5432:5432 -n axiom
-
-# Ou usando a porta local 15432 (evita conflito com Postgres local)
-kubectl port-forward svc/postgres-service 15432:5432 -n axiom
-
-# Conectar via psql após o port-forward (em outro terminal)
-# Obtendo usuário e senha — ver seção 9 (Secrets e senhas)
-psql -h localhost -p 15432 -U <DB_USER> -d <DB_NAME>
-```
-
-### Acesso ao shell do Postgres
-
-```bash
-# Abrir psql diretamente no pod
-kubectl exec -it -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB
-
-# Executar query rápida sem abrir shell interativo
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
-
-# Listar tabelas
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt+"
+# Conectar diretamente na VM (requer acesso de rede via WireGuard/allowlist)
+psql -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME>
 
 # Ver tamanho do banco
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB \
+psql -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
   -c "SELECT pg_size_pretty(pg_database_size(current_database()));"
 
 # Ver conexões ativas
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB \
+psql -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
   -c "SELECT count(*), state FROM pg_stat_activity GROUP BY state;"
-```
 
-### Backup manual via kubectl (pg_dump direto)
-
-```bash
-# Dump do banco para arquivo local (produção)
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom \
+# Backup manual (mesmo caminho usado por infra/scripts/k8s-backup.sh)
+pg_dump -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> --format=custom \
   > backup_manual_$(date +%Y%m%d_%H%M%S).dump
 
-# Dump em formato SQL puro
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- pg_dump -U $POSTGRES_USER -d $POSTGRES_DB \
-  > backup_manual_$(date +%Y%m%d_%H%M%S).sql
-```
-
-### Restaurar backup
-
-```bash
-# Restaurar dump (formato custom) — via port-forward
-kubectl port-forward svc/postgres-service 15432:5432 -n axiom &
-pg_restore -h localhost -p 15432 -U <DB_USER> -d <DB_NAME> \
+# Restaurar
+pg_restore -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
   --clean --if-exists --no-owner --no-privileges \
   --verbose backup_manual.dump
-
-# Restaurar SQL puro via stdin
-kubectl exec -i -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- psql -U $POSTGRES_USER -d $POSTGRES_DB < backup_manual.sql
 ```
 
-### Reiniciar o Postgres
-
-```bash
-# Forçar rollout restart (recria o pod sem alterar imagem)
-kubectl rollout restart deployment/postgres -n axiom
-
-# Aguardar o pod ficar pronto
-kubectl rollout status deployment/postgres -n axiom --timeout=120s
-```
-
-### PVC do Postgres
-
-```bash
-# Ver o PVC
-kubectl get pvc postgres-pvc -n axiom
-kubectl describe pvc postgres-pvc -n axiom
-```
+Reiniciar/gerenciar o serviço Postgres é feito na própria VM
+(`systemctl restart postgresql`), não via `kubectl rollout`.
 
 ---
 
@@ -838,10 +753,10 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
   -in  db_backup_<TIMESTAMP>.dump.enc \
   -out db_backup_<TIMESTAMP>.dump
 
-# 3. Restaurar via port-forward do Postgres
-kubectl port-forward svc/postgres-service 15432:5432 -n axiom &
+# 3. Restaurar diretamente na VM externa do Postgres (requer acesso de
+#    rede via WireGuard/allowlist — não é mais um port-forward de cluster)
 pg_restore \
-  -h localhost -p 15432 -U <DB_USER> -d <DB_NAME> \
+  -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
   --clean --if-exists --no-owner --no-privileges \
   --verbose db_backup_<TIMESTAMP>.dump
 ```
@@ -1134,7 +1049,6 @@ kubectl get pvc -n axiom
 kubectl get pvc -n axiom-staging
 
 # Ver detalhes de um PVC específico
-kubectl describe pvc postgres-pvc -n axiom
 kubectl describe pvc redis-pvc -n axiom
 kubectl describe pvc minio-pvc -n axiom
 kubectl describe pvc backup-pvc -n axiom
@@ -1147,20 +1061,24 @@ kubectl get pv
 
 # Ver uso de disco dentro de um pod (a partir do pod)
 kubectl exec -n axiom \
-  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- df -h
 ```
+
+> Não há PVC de Postgres neste cluster — o disco do banco é gerenciado na
+> própria VM externa (veja
+> [documentation/database/infrastructure.md](../database/infrastructure.md)).
 
 ### Expandir um PVC (se o StorageClass suportar)
 
 ```bash
-# Exemplo: expandir o PVC do Postgres de 10Gi para 20Gi
-kubectl patch pvc postgres-pvc -n axiom \
+# Exemplo: expandir o PVC do MinIO de 10Gi para 20Gi
+kubectl patch pvc minio-pvc -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/resources/requests/storage","value":"20Gi"}]'
 
 # Acompanhar a expansão
-kubectl describe pvc postgres-pvc -n axiom | grep -A5 Conditions
+kubectl describe pvc minio-pvc -n axiom | grep -A5 Conditions
 ```
 
 ---
@@ -1344,8 +1262,9 @@ kubectl port-forward svc/api-service 39200:39100 -n axiom-staging
 # Frontend de staging
 kubectl port-forward svc/frontend-service 8081:80 -n axiom-staging
 
-# PostgreSQL de staging
-kubectl port-forward svc/postgres-service 25432:5432 -n axiom-staging
+# PostgreSQL de staging roda na mesma VM externa (banco axiom_staging_db) —
+# conecte direto via psql/pg_dump, não há Service/port-forward de cluster
+# (veja documentation/database/infrastructure.md)
 
 # Redis de staging
 kubectl port-forward svc/redis-service 26379:6379 -n axiom-staging
@@ -1391,7 +1310,6 @@ kubectl get secret axiom-secrets -n axiom-staging -o json | \
 ```bash
 kubectl logs -f -l app=api -n axiom-staging
 kubectl logs -f -l app=frontend -n axiom-staging
-kubectl logs -f -l app=postgres -n axiom-staging
 kubectl logs -f -l app=redis -n axiom-staging
 kubectl logs -f -l app=minio -n axiom-staging
 ```
@@ -1411,7 +1329,6 @@ kubectl logs -f -l app=axiom-backup -n axiom-staging
 ```bash
 kubectl rollout restart deployment/api -n axiom-staging
 kubectl rollout restart deployment/frontend -n axiom-staging
-kubectl rollout restart deployment/postgres -n axiom-staging
 kubectl rollout restart deployment/redis -n axiom-staging
 kubectl rollout restart deployment/minio -n axiom-staging
 ```
@@ -1471,10 +1388,11 @@ kubectl get namespace axiom -o json \
 ### Verificar conectividade entre pods
 
 ```bash
-# Testar se a API consegue chegar ao Postgres (dentro do pod da API)
+# Testar se a API consegue chegar ao Postgres externo (dentro do pod da API)
+# — usa DB_HOST/DB_PORT do ConfigMap axiom-config, já injetados no pod
 kubectl exec -n axiom \
   $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- nc -zv postgres-service 5432
+  -- sh -c 'nc -zv "$DB_HOST" "$DB_PORT"'
 
 # Testar se a API consegue chegar ao Redis
 kubectl exec -n axiom \
@@ -1512,7 +1430,6 @@ kubectl describe pods -l app=api -n axiom
 kubectl get all -l app.kubernetes.io/name=axiom -n axiom
 
 # Recursos de um componente específico
-kubectl get all -l app.kubernetes.io/component=postgres -n axiom
 kubectl get all -l app.kubernetes.io/component=redis -n axiom
 kubectl get all -l app.kubernetes.io/component=api -n axiom
 kubectl get all -l app.kubernetes.io/component=frontend -n axiom
@@ -1528,9 +1445,6 @@ kubectl get configmap -n axiom
 
 # Ver o ConfigMap principal da aplicação
 kubectl describe configmap axiom-config -n axiom
-
-# Ver o ConfigMap de init do Postgres
-kubectl describe configmap postgres-init-config -n axiom
 
 # Ver o ConfigMap do script de backup
 kubectl describe configmap backup-script -n axiom
@@ -1564,7 +1478,6 @@ kubectl get serviceaccount -n axiom
 
 # Ver detalhes de uma ServiceAccount
 kubectl describe serviceaccount sa-api -n axiom
-kubectl describe serviceaccount sa-postgres -n axiom
 kubectl describe serviceaccount sa-redis -n axiom
 kubectl describe serviceaccount sa-minio -n axiom
 kubectl describe serviceaccount sa-backup -n axiom
@@ -1591,7 +1504,6 @@ bash infra/k8s/scripts/apply-production.sh
 bash infra/k8s/scripts/apply-staging.sh
 
 # Aplicar um manifesto específico (compartilhado entre ambientes, em base/)
-kubectl apply -f infra/k8s/base/postgres/deployment.yaml
 kubectl apply -f infra/k8s/base/redis/deployment.yaml
 kubectl apply -f infra/k8s/base/minio/deployment.yaml
 kubectl apply -f infra/k8s/base/network-policy.yaml
@@ -1613,5 +1525,5 @@ kubectl apply -k infra/k8s/overlays/production/
 kubectl apply -k infra/k8s/overlays/staging/
 
 # Dry-run antes de aplicar (verificar sem alterar o cluster)
-kubectl apply -f infra/k8s/base/postgres/deployment.yaml --dry-run=server
+kubectl apply -f infra/k8s/base/redis/deployment.yaml --dry-run=server
 ```

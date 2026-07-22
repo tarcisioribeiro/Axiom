@@ -663,6 +663,11 @@ Os secrets do k8s são aplicados **manualmente uma única vez** e não são gere
 pelo CI. O arquivo `infra/k8s/overlays/staging/secrets.yaml` usa placeholders `${VAR}` que
 precisam ser substituídos via `envsubst` antes de aplicar.
 
+> `STAGING_DB_NAME`/`STAGING_DB_USER`/`STAGING_DB_PASSWORD` agora precisam
+> corresponder a um role/database reais na VM externa do PostgreSQL (não mais
+> a um Postgres in-cluster) — veja
+> [documentation/database/infrastructure.md](../database/infrastructure.md).
+
 Gere e exporte cada variável no terminal:
 
 ```bash

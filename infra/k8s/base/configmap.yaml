@@ -7,9 +7,15 @@ metadata:
     app.kubernetes.io/name: axiom
     app.kubernetes.io/component: config
 data:
-  # Database connection
-  DB_HOST: "postgres-service"
+  # Database connection — external self-managed PostgreSQL VM, reached over
+  # the WireGuard tunnel (not the VM's public IP). See
+  # documentation/database/infrastructure.md for the network/security runbook.
+  DB_HOST: "10.8.0.1" # TODO: set to the real WireGuard tunnel IP of the Postgres VM
   DB_PORT: "5432"
+  # "prefer" degrades gracefully if the VM has no TLS cert configured yet.
+  # Bump to "require" only if using the firewall-allowlist alternative
+  # (mandatory there) instead of the WireGuard tunnel.
+  DB_SSLMODE: "prefer"
 
   # API settings
   API_PORT: "39100"

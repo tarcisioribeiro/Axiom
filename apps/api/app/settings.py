@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -154,7 +155,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "app.wsgi.application"
 
-DATABASES = {
+DATABASES: dict[str, dict[str, Any]] = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME"),
@@ -164,6 +165,13 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT", 5432),
     }
 }
+
+# Optional TLS mode for the external self-managed Postgres server. Only added
+# when explicitly set, so local/docker-compose Postgres (no DB_SSLMODE env
+# var) keeps today's implicit libpq default behavior unchanged.
+_db_sslmode = os.getenv("DB_SSLMODE")
+if _db_sslmode:
+    DATABASES["default"]["OPTIONS"] = {"sslmode": _db_sslmode}
 
 # Use SQLite for tests to avoid database connection issues
 if _TESTING:

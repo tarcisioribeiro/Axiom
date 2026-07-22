@@ -395,9 +395,11 @@ AUTH_COOKIE_SECURE=True
 ALLOWED_HOSTS=axiom.com,www.axiom.com
 CORS_ALLOWED_ORIGINS=https://axiom.com
 
-# Banco robusto
-DB_HOST=banco-producao.rds.amazonaws.com
+# PostgreSQL externo ao cluster k8s — VM auto-gerenciada, alcançada via
+# túnel WireGuard (veja documentation/database/infrastructure.md)
+DB_HOST=10.8.0.1
 DB_PORT=5432
+DB_SSLMODE=prefer
 ```
 
 ```python
