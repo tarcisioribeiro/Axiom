@@ -2074,6 +2074,14 @@ class MealLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 PDF_ROW_LIMIT = 500
 
 
+def _export_meta(request, date_from=None, date_to=None):
+    """Monta o dict `meta` esperado por `build_pdf_response`."""
+    return {
+        "user_name": request.user.get_full_name() or request.user.username,
+        "period": f"{date_from or 'início'} a {date_to or 'hoje'}",
+    }
+
+
 class ExportWorkoutSessionsView(APIView):
     """
     Exporta sessões de treino do usuário em CSV ou PDF.
@@ -2145,7 +2153,12 @@ class ExportWorkoutSessionsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             return build_pdf_response(
-                list(rows()), headers, "treinos", "Histórico de Treinos"
+                title="Histórico de Treinos",
+                headers=headers,
+                rows=list(rows()),
+                totals_row=None,
+                meta=_export_meta(request, date_from, date_to),
+                filename="treinos",
             )
         return build_csv_response(rows(), headers, "treinos")
 
@@ -2214,7 +2227,12 @@ class ExportMealLogsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             return build_pdf_response(
-                list(rows()), headers, "nutricao", "Registros Nutricionais"
+                title="Registros Nutricionais",
+                headers=headers,
+                rows=list(rows()),
+                totals_row=None,
+                meta=_export_meta(request, date_from, date_to),
+                filename="nutricao",
             )
         return build_csv_response(rows(), headers, "nutricao")
 
@@ -2264,7 +2282,12 @@ class ExportReflectionsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             return build_pdf_response(
-                list(rows()), headers, "reflexoes", "Reflexões Diárias"
+                title="Reflexões Diárias",
+                headers=headers,
+                rows=list(rows()),
+                totals_row=None,
+                meta=_export_meta(request, date_from, date_to),
+                filename="reflexoes",
             )
         return build_csv_response(rows(), headers, "reflexoes")
 
@@ -2329,7 +2352,17 @@ class ExportGoalsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             return build_pdf_response(
-                list(rows()), headers, "metas", "Progresso de Metas"
+                title="Progresso de Metas",
+                headers=headers,
+                rows=list(rows()),
+                totals_row=None,
+                meta={
+                    "user_name": (
+                        request.user.get_full_name() or request.user.username
+                    ),
+                    "period": f"Status: {status_filter or 'todos'}",
+                },
+                filename="metas",
             )
         return build_csv_response(rows(), headers, "metas")
 
@@ -2468,7 +2501,7 @@ class AIRoutineSuggestionView(APIView):
 
             from agents.core.llm_client import LLMClient
 
-            client = LLMClient.get_instance()
+            client = LLMClient
             areas_str = ", ".join(focus_areas) if focus_areas else "geral"
             prompt = (
                 "Crie sugestões de tarefas de rotina diária para alcançar:"
@@ -2576,7 +2609,7 @@ Seja específico e prático para o nível informado."""
         try:
             from agents.core.llm_client import LLMClient
 
-            client = LLMClient.get_instance()
+            client = LLMClient
             raw = client.chat([{"role": "user", "content": prompt}])
 
             start = raw.find("{")
@@ -2723,7 +2756,7 @@ Seja prático, saboroso e alinhado com o objetivo calórico."""
         try:
             from agents.core.llm_client import LLMClient
 
-            client = LLMClient.get_instance()
+            client = LLMClient
             raw = client.chat([{"role": "user", "content": prompt}])
 
             start = raw.find("{")
@@ -2890,7 +2923,7 @@ class DailyCaloricSummaryView(APIView):
                 owner=member, date=target_date, is_deleted=False
             )
             .select_related("meal_type", "menu_option")
-            .prefetch_related("menu_option__menuoptioningredient_set__food")
+            .prefetch_related("menu_option__ingredients__food")
         )
 
         meals_summary = []
@@ -2899,9 +2932,7 @@ class DailyCaloricSummaryView(APIView):
         for log in meal_logs:
             meal_kcal = 0.0
             if log.menu_option and not log.is_free_meal:
-                for (
-                    ingredient
-                ) in log.menu_option.menuoptioningredient_set.filter(
+                for ingredient in log.menu_option.ingredients.filter(
                     is_deleted=False, is_optional=False
                 ):
                     food = ingredient.food
@@ -2940,7 +2971,7 @@ class DailyCaloricSummaryView(APIView):
         # --- Calorias gastas no treino ---
         sessions = WorkoutSession.objects.filter(
             owner=member, date=target_date, is_deleted=False
-        ).prefetch_related("workoutsessionexercise_set__exercise__exercise")
+        ).prefetch_related("session_exercises__exercise__exercise")
 
         sessions_summary = []
         total_exercise_kcal = 0.0
@@ -2962,9 +2993,7 @@ class DailyCaloricSummaryView(APIView):
                 continue
 
             met_values = []
-            for wse in session.workoutsessionexercise_set.filter(
-                is_deleted=False
-            ):
+            for wse in session.session_exercises.filter(is_deleted=False):
                 plan_exercise = wse.exercise
                 if plan_exercise and plan_exercise.exercise:
                     met_values.append(float(plan_exercise.exercise.met_value))
@@ -3436,7 +3465,7 @@ class WellnessWeeklyReportGenerateView(APIView):
         )
 
         try:
-            client = LLMClient.get_instance()
+            client = LLMClient
             resp = client.chat([{"role": "user", "content": prompt}])
             start, end = resp.find("{"), resp.rfind("}") + 1
             parsed = (
