@@ -22,6 +22,11 @@ from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import (
+    BaseRenderer,
+    BrowsableAPIRenderer,
+    JSONRenderer,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -903,6 +908,7 @@ class BookAISummaryView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
 
     def post(self, request, pk):
         from members.models import Member
@@ -2094,6 +2100,29 @@ class BookHighlightDetailView(BaseRetrieveUpdateDestroyView):
         )
 
 
+class _MarkdownRenderer(BaseRenderer):
+    """Renderer marcador para permitir `?format=markdown` sem 404 no
+    content negotiation do DRF. A view sempre retorna um HttpResponse
+    bruto, então `render()` nunca é de fato invocado."""
+
+    media_type = "text/markdown"
+    format = "markdown"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
+class _CSVRenderer(BaseRenderer):
+    """Renderer marcador para permitir `?format=csv` sem 404 no content
+    negotiation do DRF (view retorna HttpResponse bruto)."""
+
+    media_type = "text/csv"
+    format = "csv"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
 class BookHighlightExportView(APIView):
     """
     GET /api/v1/library/highlights/export/?book=<id>
@@ -2104,6 +2133,12 @@ class BookHighlightExportView(APIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     throttle_classes = [ExportRateThrottle]
     queryset = BookHighlight.objects.all()
+    renderer_classes = [
+        JSONRenderer,
+        BrowsableAPIRenderer,
+        _MarkdownRenderer,
+        _CSVRenderer,
+    ]
 
     def get(self, request):
         from django.http import HttpResponse
@@ -2238,6 +2273,7 @@ class KindleImportView(APIView):
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     parser_classes = [MultiPartParser, FormParser]
+    queryset = BookHighlight.objects.all()
 
     _SEPARATOR = "=========="
     _PAGE_RE = re.compile(r"página\s+(\d+)", re.IGNORECASE)
@@ -3010,6 +3046,7 @@ class FlashCardReviewView(APIView):
     """Aplica resultado de revisão (SM-2) ao flashcard."""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = FlashCard.objects.all()
 
     def post(self, request, pk):
         try:
@@ -3032,6 +3069,7 @@ class FlashCardFromHighlightView(APIView):
     """Cria flashcards automaticamente a partir dos destaques de um livro."""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = FlashCard.objects.all()
 
     def post(self, request, pk):
         try:
@@ -3086,6 +3124,7 @@ class KnowledgeGraphSuggestLinksView(APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = KnowledgeLink.objects.all()
 
     def get(self, request):
         try:
@@ -3172,6 +3211,7 @@ class GoodreadsImportView(APIView):
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     parser_classes = (MultiPartParser, FormParser)
+    queryset = Book.objects.all()
 
     SHELF_MAP = {
         "read": "read",
@@ -3189,6 +3229,8 @@ class GoodreadsImportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        member = request.user.member
+
         try:
             text = csv_file.read().decode("utf-8-sig")
         except UnicodeDecodeError:
@@ -3198,9 +3240,9 @@ class GoodreadsImportView(APIView):
         rows = list(reader)
 
         existing_titles = list(
-            Book.objects.filter(
-                owner=request.user, is_deleted=False
-            ).values_list("title", flat=True)
+            Book.objects.filter(owner=member, is_deleted=False).values_list(
+                "title", flat=True
+            )
         )
 
         imported, skipped, errors = [], [], []
@@ -3237,6 +3279,7 @@ class GoodreadsImportView(APIView):
             # Resolve publisher padrão para importação Goodreads
             publisher, _ = Publisher.objects.get_or_create(
                 name="Desconhecida",
+                owner=member,
                 defaults={
                     "created_by": request.user,
                     "updated_by": request.user,
@@ -3247,7 +3290,7 @@ class GoodreadsImportView(APIView):
             author_name = (row.get("Author") or "").strip() or "Desconhecido"
             author, _ = Author.objects.get_or_create(
                 name=author_name,
-                owner=request.user,
+                owner=member,
                 defaults={
                     "created_by": request.user,
                     "updated_by": request.user,
@@ -3269,7 +3312,7 @@ class GoodreadsImportView(APIView):
                     literarytype="book",
                     publisher=publisher,
                     synopsis="Importado do Goodreads.",
-                    owner=request.user,
+                    owner=member,
                     created_by=request.user,
                     updated_by=request.user,
                 )
@@ -3302,6 +3345,7 @@ class MentorPlanView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Skill.objects.all()
 
     def post(self, request):
         try:
@@ -3323,28 +3367,31 @@ class MentorPlanView(APIView):
             )
 
         # Agrega contexto do usuário
+        member = request.user.member
         skills = list(
-            Skill.objects.filter(owner=request.user, is_deleted=False).values(
-                "name", "level", "xp_points"
+            Skill.objects.filter(owner=member, is_deleted=False).values(
+                "name", "proficiency"
             )
         )
         recent_books = list(
             Book.objects.filter(
-                owner=request.user, read_status="read", is_deleted=False
+                owner=member, read_status="read", is_deleted=False
             )
             .order_by("-updated_at")
             .values("title")[:10]
         )
         to_read = list(
             Book.objects.filter(
-                owner=request.user, read_status="to_read", is_deleted=False
+                owner=member, read_status="to_read", is_deleted=False
             )
             .order_by("reading_priority")
             .values("title")[:5]
         )
 
         skills_text = (
-            ", ".join(f"{s['name']} (nível {s['level']})" for s in skills)
+            ", ".join(
+                f"{s['name']} (nível {s['proficiency']})" for s in skills
+            )
             or "nenhuma"
         )
         books_read_text = (
@@ -3412,6 +3459,7 @@ class MonthlyLearningReportView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Reading.objects.all()
 
     def get(self, request):
         from django.db.models import Count, Sum
@@ -3426,9 +3474,11 @@ class MonthlyLearningReportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        member = request.user.member
+
         # Leituras do mês
         readings = Reading.objects.filter(
-            owner=request.user,
+            owner=member,
             reading_date__month=month,
             reading_date__year=year,
             is_deleted=False,
@@ -3440,7 +3490,7 @@ class MonthlyLearningReportView(APIView):
         )
 
         books_completed = Book.objects.filter(
-            owner=request.user,
+            owner=member,
             read_status="read",
             updated_at__month=month,
             updated_at__year=year,
@@ -3449,7 +3499,7 @@ class MonthlyLearningReportView(APIView):
 
         # Sessões de curso do mês
         course_sessions = CourseSession.objects.filter(
-            owner=request.user,
+            owner=member,
             session_date__month=month,
             session_date__year=year,
             is_deleted=False,
@@ -3462,13 +3512,13 @@ class MonthlyLearningReportView(APIView):
         # Skills com maior progressão no mês (aproximação: mais atualizado)
         top_skills = list(
             Skill.objects.filter(
-                owner=request.user,
+                owner=member,
                 is_deleted=False,
                 updated_at__month=month,
                 updated_at__year=year,
             )
-            .order_by("-xp_points")
-            .values("name", "level", "xp_points")[:5]
+            .order_by("-updated_at")
+            .values("name", "proficiency")[:5]
         )
 
         metrics = {

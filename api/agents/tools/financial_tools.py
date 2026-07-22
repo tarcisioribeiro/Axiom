@@ -32,7 +32,7 @@ def get_expense_summary(
 
     from expenses.models import Expense
 
-    result = list(
+    qs: Any = (
         Expense.objects.filter(
             created_by=user,
             date__range=(start, end),
@@ -43,6 +43,7 @@ def get_expense_summary(
         .annotate(total=Sum("value"), count=Count("id"))
         .order_by("-total")
     )
+    result = list(qs)
     cache.set(key, result, _TTL_EXPENSES)
     return result
 
@@ -57,7 +58,7 @@ def get_revenue_summary(
 
     from revenues.models import Revenue
 
-    result = list(
+    qs: Any = (
         Revenue.objects.filter(
             created_by=user,
             date__range=(start, end),
@@ -68,6 +69,7 @@ def get_revenue_summary(
         .annotate(total=Sum("value"), count=Count("id"))
         .order_by("-total")
     )
+    result = list(qs)
     cache.set(key, result, _TTL_EXPENSES)
     return result
 
@@ -111,7 +113,7 @@ def get_monthly_trend(user: User, months: int = 3) -> list[dict[str, Any]]:
     from expenses.models import Expense
 
     cutoff = timezone.now().date() - timedelta(days=months * 31)
-    result = list(
+    qs: Any = (
         Expense.objects.filter(
             created_by=user,
             date__gte=cutoff,
@@ -123,6 +125,7 @@ def get_monthly_trend(user: User, months: int = 3) -> list[dict[str, Any]]:
         .annotate(total=Sum("value"), count=Count("id"))
         .order_by("month")
     )
+    result = list(qs)
     cache.set(key, result, _TTL_TREND)
     return result
 
