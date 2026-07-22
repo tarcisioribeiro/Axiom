@@ -800,6 +800,7 @@ class PasswordFavoriteToggleView(VaultLockedMixin, APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Password.objects.all()  # required by GlobalDefaultPermission
 
     def patch(self, request, pk):
         password = get_object_or_404(
@@ -819,6 +820,9 @@ class StoredCreditCardFavoriteToggleView(VaultLockedMixin, APIView):
     """PATCH /api/v1/security/stored-cards/<pk>/favorite/"""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = (
+        StoredCreditCard.objects.all()
+    )  # required by GlobalDefaultPermission
 
     def patch(self, request, pk):
         card = get_object_or_404(
@@ -835,6 +839,9 @@ class StoredBankAccountFavoriteToggleView(VaultLockedMixin, APIView):
     """PATCH /api/v1/security/stored-accounts/<pk>/favorite/"""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = (
+        StoredBankAccount.objects.all()
+    )  # required by GlobalDefaultPermission
 
     def patch(self, request, pk):
         account = get_object_or_404(
@@ -854,6 +861,7 @@ class ArchiveFavoriteToggleView(VaultLockedMixin, APIView):
     """PATCH /api/v1/security/archives/<pk>/favorite/"""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Archive.objects.all()  # required by GlobalDefaultPermission
 
     def patch(self, request, pk):
         archive = get_object_or_404(
@@ -886,6 +894,7 @@ class ActivityLogExportCSVView(APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = ActivityLog.objects.all()  # required by GlobalDefaultPermission
 
     def get(self, request):
         from django.utils import timezone as tz
@@ -2090,6 +2099,9 @@ class StoredCardShareTokenView(VaultLockedMixin, APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = (
+        StoredCreditCard.objects.all()
+    )  # required by GlobalDefaultPermission
 
     def get(self, request, pk):
         card = get_object_or_404(
@@ -2145,6 +2157,9 @@ class StoredAccountShareTokenView(VaultLockedMixin, APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = (
+        StoredBankAccount.objects.all()
+    )  # required by GlobalDefaultPermission
 
     def get(self, request, pk):
         account = get_object_or_404(
@@ -2733,6 +2748,7 @@ class VaultExportZipView(VaultLockedMixin, APIView):
 
 class HibpCheckView(APIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Password.objects.all()  # required by GlobalDefaultPermission
 
     def post(self, request):
         import urllib.request
@@ -2902,6 +2918,7 @@ class SecuritySearchView(VaultLockedMixin, APIView):
     """
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Password.objects.all()  # required by GlobalDefaultPermission
 
     def get(self, request):
         from members.models import Member
@@ -2954,21 +2971,36 @@ class SecuritySearchView(VaultLockedMixin, APIView):
             )[:20]
         )
 
-        stored_cards = list(
+        # card_number_masked is a Python descriptor property (decrypts
+        # _card_number), not a DB column, so it can't be requested via
+        # .values() — fetch model instances and build the dicts in Python
+        # instead.
+        stored_cards_qs = (
             StoredCreditCard.objects.filter(
                 owner=member,
                 is_deleted=False,
             )
             .filter(Q(name__icontains=q) | Q(cardholder_name__icontains=q))
-            .values(
+            .only(
                 "id",
                 "name",
                 "cardholder_name",
                 "flag",
-                "card_number_masked",
                 "is_favorite",
+                "_card_number",
             )[:20]
         )
+        stored_cards = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "cardholder_name": c.cardholder_name,
+                "flag": c.flag,
+                "card_number_masked": c.card_number_masked,
+                "is_favorite": c.is_favorite,
+            }
+            for c in stored_cards_qs
+        ]
 
         stored_accounts = list(
             StoredBankAccount.objects.filter(
