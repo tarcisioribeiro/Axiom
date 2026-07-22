@@ -6,14 +6,14 @@
 # Saída  : backups/backup_YYYYMMDD_HHMMSS.tar.gz
 #
 # Dependências: kubectl (contexto configurado), mc (MinIO Client)
-# Uso: ./scripts/k8s-backup.sh
+# Uso: ./infra/scripts/k8s-backup.sh
 # =============================================================================
 
 set -euo pipefail
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 NAMESPACE="axiom"
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BACKUP_BASE="${REPO_ROOT}/backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 WORK_DIR="${BACKUP_BASE}/backup_${TIMESTAMP}"

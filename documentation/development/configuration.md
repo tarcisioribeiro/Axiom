@@ -16,7 +16,7 @@ Este guia detalha todas as configurações necessárias para executar o Axiom.
 O Axiom utiliza variáveis de ambiente para configuração. Existem dois níveis:
 
 1. **Raiz do projeto** (`.env`): Configurações compartilhadas (backend, banco de dados, portas)
-2. **Frontend** (`frontend/.env`): Configurações específicas do frontend
+2. **Frontend** (`apps/frontend/.env`): Configurações específicas do frontend
 
 ## Variáveis de Ambiente
 
@@ -140,7 +140,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:39101
 VITE_API_BASE_URL=http://localhost:39100
 ```
 
-### Arquivo frontend/.env (Frontend)
+### Arquivo apps/frontend/.env (Frontend)
 
 ```bash
 # URL base da API backend
@@ -235,7 +235,7 @@ REDIS_PORT=6380
 **Importante**: Se mudar `API_PORT`, também mude `VITE_API_BASE_URL` no frontend:
 
 ```bash
-# frontend/.env
+# apps/frontend/.env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
@@ -293,7 +293,7 @@ LOG_FORMAT=plain
 
 ### Níveis de Log
 
-Configure o nível de log em `api/app/settings.py`:
+Configure o nível de log em `apps/api/app/settings.py`:
 
 ```python
 LOGGING = {
@@ -331,7 +331,7 @@ docker-compose logs -f api
 Para permitir requisições do frontend:
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",      # Vite dev server
@@ -347,7 +347,7 @@ CORS_ALLOW_CREDENTIALS = True  # Necessário para cookies HttpOnly
 Configuração de autenticação via cookies:
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 
 SIMPLE_JWT = {
     'AUTH_COOKIE': 'access_token',
@@ -363,7 +363,7 @@ SIMPLE_JWT = {
 Para otimizar conexões ao banco:
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 
 DATABASES = {
     'default': {
@@ -401,7 +401,7 @@ DB_PORT=5432
 ```
 
 ```python
-# api/app/settings.py (produção)
+# apps/api/app/settings.py (produção)
 
 ALLOWED_HOSTS = ['axiom.com', 'www.axiom.com']
 SECURE_SSL_REDIRECT = True

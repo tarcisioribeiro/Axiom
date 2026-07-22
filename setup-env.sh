@@ -488,12 +488,12 @@ fi
 
 # Corrigir permissões do diretório de media para o container Docker (appuser uid=1000)
 print_info "Corrigindo permissões do diretório de media..."
-if [ -d "./api/media" ]; then
-    sudo chown -R 1000:1000 ./api/media
+if [ -d "./apps/api/media" ]; then
+    sudo chown -R 1000:1000 ./apps/api/media
     print_success "Permissões do diretório de media corrigidas"
 else
-    mkdir -p ./api/media
-    sudo chown -R 1000:1000 ./api/media
+    mkdir -p ./apps/api/media
+    sudo chown -R 1000:1000 ./apps/api/media
     print_success "Diretório de media criado com permissões corretas"
 fi
 
@@ -530,8 +530,8 @@ print_success "Configuração concluída!"
 echo ""
 print_info "Próximos passos:"
 echo "  1. Revise o arquivo .env e ajuste conforme necessário"
-echo "  2. Execute: docker-compose up -d"
-echo "  3. Execute: docker-compose exec api python manage.py migrate"
+echo "  2. Execute: docker compose -f infra/docker/docker-compose.yml --project-directory . up -d"
+echo "  3. Execute: docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py migrate"
 echo "  4. Acesse http://localhost:$FRONTEND_PORT para o frontend"
 echo "  5. Acesse http://localhost:$API_PORT/admin para o admin Django"
 echo ""

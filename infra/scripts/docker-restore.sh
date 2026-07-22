@@ -6,14 +6,14 @@
 # Fonte    : arquivo gerado pelo k8s-backup.sh
 #
 # Dependências: docker (MinIO Client executado via imagem minio/mc)
-# Uso: ./scripts/docker-restore.sh <backup.tar.gz>
-#      ./scripts/docker-restore.sh <diretório_backup>
+# Uso: ./infra/scripts/docker-restore.sh <backup.tar.gz>
+#      ./infra/scripts/docker-restore.sh <diretório_backup>
 # =============================================================================
 
 set -euo pipefail
 
 # ── Configuração ──────────────────────────────────────────────────────────────
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 ENV_FILE="${REPO_ROOT}/.env"
 
 # Nomes dos containers (conforme docker-compose.yml)
@@ -134,9 +134,9 @@ echo ""
 # ── Verificar containers de infraestrutura ────────────────────────────────────
 log "Verificando containers de infraestrutura..."
 docker inspect "$CONTAINER_DB" &>/dev/null \
-    || err "Container '${CONTAINER_DB}' não encontrado. Execute 'docker compose up -d' primeiro."
+    || err "Container '${CONTAINER_DB}' não encontrado. Execute 'docker compose -f infra/docker/docker-compose.yml --project-directory . up -d' primeiro."
 docker inspect "$CONTAINER_MINIO" &>/dev/null \
-    || err "Container '${CONTAINER_MINIO}' não encontrado. Execute 'docker compose up -d' primeiro."
+    || err "Container '${CONTAINER_MINIO}' não encontrado. Execute 'docker compose -f infra/docker/docker-compose.yml --project-directory . up -d' primeiro."
 
 # ── Parar containers de aplicação ────────────────────────────────────────────
 log "Parando containers de aplicação para evitar escritas durante a restauração..."

@@ -2,7 +2,7 @@
 # =============================================================================
 # Axiom — Apply Staging Manifests (k3s single-node VPS)
 # =============================================================================
-# Usage: bash k8s/scripts/apply-staging.sh
+# Usage: bash infra/k8s/scripts/apply-staging.sh
 #
 # Prerequisites:
 #   1. k3s installed WITHOUT Traefik:
@@ -39,7 +39,7 @@
 #        export STAGING_MINIO_ROOT_USER=minioadmin
 #        export STAGING_MINIO_ROOT_PASSWORD=$(openssl rand -base64 24)
 #        export STAGING_SENTRY_DSN=""
-#        envsubst < k8s/staging/secrets.yaml | kubectl apply -f -
+#        envsubst < infra/k8s/staging/secrets.yaml | kubectl apply -f -
 # =============================================================================
 
 set -euo pipefail
@@ -47,44 +47,44 @@ set -euo pipefail
 NAMESPACE="axiom-staging"
 
 echo "==> [1/8] Namespace"
-kubectl apply -f k8s/staging/namespace.yaml
+kubectl apply -f infra/k8s/staging/namespace.yaml
 
 echo "==> [2/8] ServiceAccounts + ResourceQuota + NetworkPolicies"
-kubectl apply -f k8s/staging/serviceaccounts.yaml
-kubectl apply -f k8s/staging/resource-quota.yaml
-kubectl apply -f k8s/staging/network-policy.yaml
+kubectl apply -f infra/k8s/staging/serviceaccounts.yaml
+kubectl apply -f infra/k8s/staging/resource-quota.yaml
+kubectl apply -f infra/k8s/staging/network-policy.yaml
 
 echo "==> [3/8] ConfigMap"
-envsubst < k8s/staging/configmap.yaml | kubectl apply -f -
+envsubst < infra/k8s/staging/configmap.yaml | kubectl apply -f -
 
 echo "==> [4/8] PostgreSQL"
-kubectl apply -f k8s/staging/postgres/configmap.yaml
-kubectl apply -f k8s/staging/postgres/pvc.yaml
-kubectl apply -f k8s/staging/postgres/deployment.yaml
-kubectl apply -f k8s/staging/postgres/service.yaml
+kubectl apply -f infra/k8s/staging/postgres/configmap.yaml
+kubectl apply -f infra/k8s/staging/postgres/pvc.yaml
+kubectl apply -f infra/k8s/staging/postgres/deployment.yaml
+kubectl apply -f infra/k8s/staging/postgres/service.yaml
 echo "    Waiting for PostgreSQL to be ready..."
 kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
 
 echo "==> [5/8] Redis"
-kubectl apply -f k8s/staging/redis/pvc.yaml
-kubectl apply -f k8s/staging/redis/deployment.yaml
-kubectl apply -f k8s/staging/redis/service.yaml
+kubectl apply -f infra/k8s/staging/redis/pvc.yaml
+kubectl apply -f infra/k8s/staging/redis/deployment.yaml
+kubectl apply -f infra/k8s/staging/redis/service.yaml
 echo "    Waiting for Redis to be ready..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
 
 echo "==> [6/8] MinIO"
-kubectl apply -f k8s/staging/minio/pvc.yaml
-kubectl apply -f k8s/staging/minio/deployment.yaml
-kubectl apply -f k8s/staging/minio/service.yaml
+kubectl apply -f infra/k8s/staging/minio/pvc.yaml
+kubectl apply -f infra/k8s/staging/minio/deployment.yaml
+kubectl apply -f infra/k8s/staging/minio/service.yaml
 echo "    Waiting for MinIO to be ready..."
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
 echo "==> [7/8] API + Frontend"
-kubectl apply -f k8s/staging/api/pvc.yaml
-kubectl apply -f k8s/staging/api/deployment.yaml
-kubectl apply -f k8s/staging/api/service.yaml
-kubectl apply -f k8s/staging/frontend/deployment.yaml
-kubectl apply -f k8s/staging/frontend/service.yaml
+kubectl apply -f infra/k8s/staging/api/pvc.yaml
+kubectl apply -f infra/k8s/staging/api/deployment.yaml
+kubectl apply -f infra/k8s/staging/api/service.yaml
+kubectl apply -f infra/k8s/staging/frontend/deployment.yaml
+kubectl apply -f infra/k8s/staging/frontend/service.yaml
 echo "    Waiting for API to be ready..."
 kubectl rollout status deployment/api -n "$NAMESPACE" --timeout=180s
 echo "    Waiting for Frontend to be ready..."
@@ -92,7 +92,7 @@ kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
 
 echo "==> [8/8] Ingress"
 echo "    Applying ingress (AXIOM_STAGING_DOMAIN=${AXIOM_STAGING_DOMAIN})..."
-envsubst < k8s/staging/ingress.yaml | kubectl apply -f -
+envsubst < infra/k8s/staging/ingress.yaml | kubectl apply -f -
 
 echo ""
 echo "Staging deployed successfully!"

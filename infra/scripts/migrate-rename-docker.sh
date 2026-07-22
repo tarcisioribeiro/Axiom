@@ -13,13 +13,16 @@
 # Pré-requisitos:
 #   - docker compose up -d  (serviços rodando)
 #   - .env já atualizado com DB_NAME=axiom_db e MINIO_BUCKET_NAME=axiom
-#   - Rodar a partir da raiz do repositório
+#   - Pode ser executado de qualquer diretório do repositório
 #
 # Uso:
-#   bash scripts/migrate-rename-docker.sh [--dry-run]
+#   bash infra/scripts/migrate-rename-docker.sh [--dry-run]
 # =============================================================================
 
 set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+DC=(docker compose -f "$REPO_ROOT/infra/docker/docker-compose.yml" --project-directory "$REPO_ROOT")
 
 DRY_RUN=false
 [[ "${1:-}" == "--dry-run" ]] && DRY_RUN=true
@@ -45,8 +48,9 @@ MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD:?Variável MINIO_ROOT_PASSWORD não d
 MINIO_USE_SSL="${MINIO_USE_SSL:-false}"
 MC_IMAGE="minio/mc:RELEASE.2025-02-15T10-36-16Z@sha256:9ae9ed28d04f7c36ee6b84c36b2c0168f1be28350d54344c3e5088a631f4c603"
 
-# Detecta nome da rede Docker Compose
-COMPOSE_PROJECT="${COMPOSE_PROJECT_NAME:-$(basename "$(pwd)")}"
+# Detecta nome da rede Docker Compose (projeto = nome do diretório raiz do repo,
+# já que os comandos "${DC[@]}" usam --project-directory "$REPO_ROOT")
+COMPOSE_PROJECT="${COMPOSE_PROJECT_NAME:-$(basename "$REPO_ROOT")}"
 DOCKER_NETWORK="${COMPOSE_PROJECT}_network"
 
 info "Configuração detectada:"
@@ -69,15 +73,15 @@ fi
 # ---------------------------------------------------------------------------
 info "[0/6] Verificando pré-requisitos..."
 
-docker compose ps --services | grep -q "db" \
-    || error "Serviço 'db' não está rodando. Execute 'docker compose up -d' primeiro."
+"${DC[@]}" ps --services | grep -q "db" \
+    || error "Serviço 'db' não está rodando. Execute 'docker compose -f infra/docker/docker-compose.yml --project-directory . up -d' primeiro."
 
-DB_EXISTS=$(docker compose exec -T db psql -U "$DB_USER" postgres \
+DB_EXISTS=$("${DC[@]}" exec -T db psql -U "$DB_USER" postgres \
     -tAc "SELECT 1 FROM pg_database WHERE datname='$OLD_DB'" 2>/dev/null || echo "")
 
 if [[ -z "$DB_EXISTS" ]]; then
     warn "Banco '$OLD_DB' não encontrado. Verificando se '$NEW_DB' já existe..."
-    NEW_EXISTS=$(docker compose exec -T db psql -U "$DB_USER" postgres \
+    NEW_EXISTS=$("${DC[@]}" exec -T db psql -U "$DB_USER" postgres \
         -tAc "SELECT 1 FROM pg_database WHERE datname='$NEW_DB'" 2>/dev/null || echo "")
     [[ -n "$NEW_EXISTS" ]] \
         && info "Banco '$NEW_DB' já existe — etapa de rename será pulada." \
@@ -90,11 +94,11 @@ info "Pré-requisitos OK."
 # Etapa 1 — Backup
 # ---------------------------------------------------------------------------
 info "[1/6] Criando backup de segurança do PostgreSQL..."
-mkdir -p backups
-BACKUP_FILE="backups/pre_rename_$(date +%Y%m%d_%H%M%S).sql"
+mkdir -p "$REPO_ROOT/backups"
+BACKUP_FILE="$REPO_ROOT/backups/pre_rename_$(date +%Y%m%d_%H%M%S).sql"
 
 if [[ "$DRY_RUN" == "false" ]]; then
-    docker compose exec -T db pg_dump -U "$DB_USER" "$OLD_DB" > "$BACKUP_FILE" \
+    "${DC[@]}" exec -T db pg_dump -U "$DB_USER" "$OLD_DB" > "$BACKUP_FILE" \
         && info "Backup salvo em: $BACKUP_FILE ($(du -sh "$BACKUP_FILE" | cut -f1))" \
         || error "Falha ao criar backup. Abortando."
 else
@@ -110,10 +114,10 @@ APP_SERVICES="api worker queue"
 if [[ "$DRY_RUN" == "false" ]]; then
     # Para apenas os serviços que existem
     for svc in $APP_SERVICES; do
-        docker compose stop "$svc" 2>/dev/null && info "  Parado: $svc" || warn "  Serviço não encontrado (ignorado): $svc"
+        "${DC[@]}" stop "$svc" 2>/dev/null && info "  Parado: $svc" || warn "  Serviço não encontrado (ignorado): $svc"
     done
 else
-    dry_run "docker compose stop $APP_SERVICES"
+    dry_run "docker compose -f infra/docker/docker-compose.yml --project-directory . stop $APP_SERVICES"
 fi
 
 # ---------------------------------------------------------------------------
@@ -121,12 +125,12 @@ fi
 # ---------------------------------------------------------------------------
 info "[3/6] Renomeando banco: $OLD_DB → $NEW_DB..."
 
-DB_EXISTS=$(docker compose exec -T db psql -U "$DB_USER" postgres \
+DB_EXISTS=$("${DC[@]}" exec -T db psql -U "$DB_USER" postgres \
     -tAc "SELECT 1 FROM pg_database WHERE datname='$OLD_DB'" 2>/dev/null || echo "")
 
 if [[ -n "$DB_EXISTS" ]]; then
     if [[ "$DRY_RUN" == "false" ]]; then
-        docker compose exec -T db psql -U "$DB_USER" postgres \
+        "${DC[@]}" exec -T db psql -U "$DB_USER" postgres \
             -c "ALTER DATABASE \"$OLD_DB\" RENAME TO \"$NEW_DB\";" \
             && info "Banco renomeado com sucesso." \
             || error "Falha ao renomear banco. Verifique conexões ativas."
@@ -200,20 +204,20 @@ fi
 info "[6/6] Iniciando todos os serviços com a nova configuração..."
 
 if [[ "$DRY_RUN" == "false" ]]; then
-    docker compose up -d \
+    "${DC[@]}" up -d \
         && info "Todos os serviços iniciados." \
         || error "Falha ao iniciar serviços."
 
     echo ""
     info "Aguardando API ficar saudável (até 60s)..."
     for i in $(seq 1 12); do
-        STATUS=$(docker compose ps --format json api 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('Health','unknown'))" 2>/dev/null || echo "unknown")
+        STATUS=$("${DC[@]}" ps --format json api 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('Health','unknown'))" 2>/dev/null || echo "unknown")
         [[ "$STATUS" == "healthy" ]] && { info "API saudável."; break; }
-        [[ $i -eq 12 ]] && warn "API ainda não reportou healthy — verifique: docker compose logs api"
+        [[ $i -eq 12 ]] && warn "API ainda não reportou healthy — verifique: docker compose -f infra/docker/docker-compose.yml --project-directory . logs api"
         sleep 5
     done
 else
-    dry_run "docker compose up -d"
+    dry_run "docker compose -f infra/docker/docker-compose.yml --project-directory . up -d"
 fi
 
 # ---------------------------------------------------------------------------
@@ -229,7 +233,7 @@ if [[ "$DRY_RUN" == "false" ]]; then
     echo "  Backup salvo   : $BACKUP_FILE"
     echo ""
     echo "Próximos passos:"
-    echo "  1. Verifique os logs:       docker compose logs -f api"
+    echo "  1. Verifique os logs:       docker compose -f infra/docker/docker-compose.yml --project-directory . logs -f api"
     echo "  2. Teste a aplicação em:    http://localhost:39101"
     echo "  3. Após validar, remova os buckets antigos no MinIO Console (porta 39106)"
     echo "     Buckets para remover: $OLD_BUCKET, $OLD_BACKUP_BUCKET"

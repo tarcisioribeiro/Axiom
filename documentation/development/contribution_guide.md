@@ -743,8 +743,8 @@ O merge será feito por um maintainer usando "Squash and merge" para manter hist
 documentation/
 ├── overview/           # Visão geral do sistema
 ├── architecture/       # Arquitetura e design
-├── api/               # Documentação de APIs
-├── frontend/          # Frontend específico
+├── apps/api/               # Documentação de APIs
+├── apps/frontend/          # Frontend específico
 ├── backend/           # Backend específico
 ├── development/       # Guias de desenvolvimento (este arquivo)
 └── deployment/        # Deploy e produção

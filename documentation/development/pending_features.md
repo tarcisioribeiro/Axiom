@@ -32,12 +32,12 @@ Este documento cataloga funcionalidades que possuem infraestrutura parcial no co
 
 ### O que já existe
 
-- ✅ `api/notifications/services.py` — `NotificationEmailService` completo com método `send_notification_email()`
-- ✅ `api/notifications/templates/email/notification_email.html` — template HTML responsivo
-- ✅ `api/notifications/management/commands/send_due_notifications.py` — command para acionar via cron
-- ✅ `api/notifications/models.py` — `Notification` e `NotificationPreference` (canal: in_app / email / both)
-- ✅ `frontend/src/pages/NotificationPreferences.tsx` — UI de preferências completamente funcional
-- ✅ `api/app/settings.py` (linhas 437–456) — backend SMTP configurável via variáveis de ambiente
+- ✅ `apps/api/notifications/services.py` — `NotificationEmailService` completo com método `send_notification_email()`
+- ✅ `apps/api/notifications/templates/email/notification_email.html` — template HTML responsivo
+- ✅ `apps/api/notifications/management/commands/send_due_notifications.py` — command para acionar via cron
+- ✅ `apps/api/notifications/models.py` — `Notification` e `NotificationPreference` (canal: in_app / email / both)
+- ✅ `apps/frontend/src/pages/NotificationPreferences.tsx` — UI de preferências completamente funcional
+- ✅ `apps/api/app/settings.py` (linhas 437–456) — backend SMTP configurável via variáveis de ambiente
 
 ### O que falta
 
@@ -98,10 +98,10 @@ DEFAULT_FROM_EMAIL=Axiom <noreply@seudominio.com>
 
 #### Passo 2 — Verificar que o settings.py lê as variáveis
 
-As variáveis já são lidas corretamente em `api/app/settings.py`:
+As variáveis já são lidas corretamente em `apps/api/app/settings.py`:
 
 ```python
-# api/app/settings.py (linhas 437-456) — já implementado, apenas verificar
+# apps/api/app/settings.py (linhas 437-456) — já implementado, apenas verificar
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
@@ -115,7 +115,7 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 
 ```bash
 # Abrir shell Django
-docker compose exec api python manage.py shell
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py shell
 
 # Testar envio direto
 from django.core.mail import send_mail
@@ -148,7 +148,7 @@ crontab -e
 scheduler:
   build:
     context: .
-    dockerfile: api/Dockerfile
+    dockerfile: apps/api/Dockerfile
   command: >
     sh -c "while true; do
       python manage.py send_due_notifications;
@@ -165,10 +165,10 @@ scheduler:
 
 ```bash
 # Disparar notificações manualmente
-docker compose exec api python manage.py send_due_notifications
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py send_due_notifications
 
 # Ver logs
-docker compose logs api | grep notification
+docker compose -f infra/docker/docker-compose.yml --project-directory . logs api | grep notification
 ```
 
 ---
@@ -177,11 +177,11 @@ docker compose logs api | grep notification
 
 ### O que já existe
 
-- ✅ Sistema JWT completo em `api/authentication/views.py`
-- ✅ Middleware de autenticação em `api/authentication/middleware.py`
-- ✅ Configuração SMTP em `api/app/settings.py`
-- ✅ Página de login em `frontend/src/pages/Login.tsx`
-- ✅ Serviço de email em `api/notifications/services.py` (pode ser reutilizado)
+- ✅ Sistema JWT completo em `apps/api/authentication/views.py`
+- ✅ Middleware de autenticação em `apps/api/authentication/middleware.py`
+- ✅ Configuração SMTP em `apps/api/app/settings.py`
+- ✅ Página de login em `apps/frontend/src/pages/Login.tsx`
+- ✅ Serviço de email em `apps/api/notifications/services.py` (pode ser reutilizado)
 
 ### O que falta
 
@@ -202,7 +202,7 @@ docker compose logs api | grep notification
 O Django possui `django.contrib.auth.tokens.PasswordResetTokenGenerator` nativo. Não é necessário criar uma tabela nova — o token é gerado de forma stateless a partir do hash da senha atual + timestamp + user ID.
 
 ```python
-# api/authentication/utils.py — criar este arquivo
+# apps/api/authentication/utils.py — criar este arquivo
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -235,7 +235,7 @@ def validate_reset_token(uidb64, token):
 #### Passo 2 — Criar template de email para reset
 
 ```html
-<!-- api/authentication/templates/email/password_reset_email.html -->
+<!-- apps/api/authentication/templates/email/password_reset_email.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -269,7 +269,7 @@ def validate_reset_token(uidb64, token):
 #### Passo 3 — Criar as views de reset
 
 ```python
-# api/authentication/views.py — adicionar ao final do arquivo
+# apps/api/authentication/views.py — adicionar ao final do arquivo
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -381,7 +381,7 @@ class PasswordResetConfirmView(APIView):
 #### Passo 4 — Registrar as URLs
 
 ```python
-# api/authentication/urls.py — adicionar as rotas
+# apps/api/authentication/urls.py — adicionar as rotas
 
 from .views import PasswordResetRequestView, PasswordResetConfirmView
 
@@ -403,14 +403,14 @@ FRONTEND_URL=http://localhost:39101
 E ler no settings.py:
 
 ```python
-# api/app/settings.py
+# apps/api/app/settings.py
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:39101")
 ```
 
 #### Passo 6 — Criar o serviço no frontend
 
 ```typescript
-// frontend/src/services/auth-service.ts — adicionar métodos
+// apps/frontend/src/services/auth-service.ts — adicionar métodos
 
 async requestPasswordReset(email: string): Promise<void> {
   await apiClient.post('/auth/password-reset/', { email });
@@ -433,7 +433,7 @@ async confirmPasswordReset(
 
 #### Passo 7 — Criar páginas no frontend
 
-**Arquivo**: `frontend/src/pages/ForgotPassword.tsx`
+**Arquivo**: `apps/frontend/src/pages/ForgotPassword.tsx`
 
 Deve conter:
 - Formulário com campo de email
@@ -441,7 +441,7 @@ Deve conter:
 - Mensagem de sucesso após envio
 - Link de volta para Login
 
-**Arquivo**: `frontend/src/pages/ResetPassword.tsx`
+**Arquivo**: `apps/frontend/src/pages/ResetPassword.tsx`
 
 Deve conter:
 - Campos "Nova senha" e "Confirmar senha"
@@ -453,7 +453,7 @@ Deve conter:
 #### Passo 8 — Adicionar rotas no router
 
 ```typescript
-// frontend/src/App.tsx ou router — adicionar rotas públicas
+// apps/frontend/src/App.tsx ou router — adicionar rotas públicas
 
 { path: '/forgot-password', element: <ForgotPassword /> },
 { path: '/reset-password/:uid/:token', element: <ResetPassword /> },
@@ -462,7 +462,7 @@ Deve conter:
 #### Passo 9 — Adicionar link na página de Login
 
 ```tsx
-// frontend/src/pages/Login.tsx — adicionar abaixo do botão de login
+// apps/frontend/src/pages/Login.tsx — adicionar abaixo do botão de login
 
 <Link to="/forgot-password" className="text-sm text-muted-foreground hover:underline">
   Esqueci minha senha
@@ -475,10 +475,10 @@ Deve conter:
 
 ### O que já existe
 
-- ✅ `api/authentication/views.py` — função `create_user_with_member()` salva o email
-- ✅ `api/members/models.py` — campo `email` no model `Member`
-- ✅ `api/app/settings.py` — SMTP configurável
-- ✅ `frontend/src/pages/Register.tsx` — formulário de cadastro completo
+- ✅ `apps/api/authentication/views.py` — função `create_user_with_member()` salva o email
+- ✅ `apps/api/members/models.py` — campo `email` no model `Member`
+- ✅ `apps/api/app/settings.py` — SMTP configurável
+- ✅ `apps/frontend/src/pages/Register.tsx` — formulário de cadastro completo
 
 ### O que falta
 
@@ -494,7 +494,7 @@ Deve conter:
 #### Passo 1 — Adicionar campo ao model Member
 
 ```python
-# api/members/models.py — adicionar campo ao model Member
+# apps/api/members/models.py — adicionar campo ao model Member
 
 email_verified = models.BooleanField(default=False)
 email_verification_token = models.UUIDField(null=True, blank=True)
@@ -504,8 +504,8 @@ email_verification_sent_at = models.DateTimeField(null=True, blank=True)
 Após editar, criar e aplicar a migration:
 
 ```bash
-docker compose exec api python manage.py makemigrations members
-docker compose exec api python manage.py migrate
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py makemigrations members
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py migrate
 ```
 
 > **⚠️ ATENÇÃO**: Sempre execute `makemigrations` localmente e comite os arquivos gerados antes de fazer push. O entrypoint do container executa `--check --dry-run` e recusa iniciar se houver migrations pendentes.
@@ -513,7 +513,7 @@ docker compose exec api python manage.py migrate
 #### Passo 2 — Criar template de email de verificação
 
 ```html
-<!-- api/authentication/templates/email/email_verification.html -->
+<!-- apps/api/authentication/templates/email/email_verification.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><title>Confirme seu Email — Axiom</title></head>
@@ -536,7 +536,7 @@ docker compose exec api python manage.py migrate
 #### Passo 3 — Criar view de verificação
 
 ```python
-# api/authentication/views.py — adicionar
+# apps/api/authentication/views.py — adicionar
 
 import uuid
 from django.utils import timezone
@@ -601,7 +601,7 @@ class EmailVerificationConfirmView(APIView):
 #### Passo 4 — Disparar verificação no registro
 
 ```python
-# api/authentication/views.py — função create_user_with_member()
+# apps/api/authentication/views.py — função create_user_with_member()
 # Após criar o usuário, adicionar:
 
 # Enviar email de verificação em background
@@ -617,9 +617,9 @@ verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}/"
 
 #### Passo 5 — Frontend
 
-- **Página** `frontend/src/pages/VerifyEmail.tsx`: lê token da URL, chama o endpoint confirm, exibe sucesso/erro
+- **Página** `apps/frontend/src/pages/VerifyEmail.tsx`: lê token da URL, chama o endpoint confirm, exibe sucesso/erro
 - **Rota pública**: `/verify-email/:token`
-- **Banner opcional**: em `frontend/src/components/common/PageContainer.tsx` ou similar, verificar se `user.member.email_verified === false` e exibir aviso com botão "Reenviar email"
+- **Banner opcional**: em `apps/frontend/src/components/common/PageContainer.tsx` ou similar, verificar se `user.member.email_verified === false` e exibir aviso com botão "Reenviar email"
 
 ---
 
@@ -627,9 +627,9 @@ verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}/"
 
 ### O que já existe
 
-- ✅ `api/security/views.py` — `ArchiveDownloadView` (download individual de arquivo)
-- ✅ `api/security/models.py` — models completos: `Password`, `StoredCreditCard`, `StoredBankAccount`, `Archive`
-- ✅ `api/app/export_utils.py` — utilitários de export CSV/PDF (referência de padrão)
+- ✅ `apps/api/security/views.py` — `ArchiveDownloadView` (download individual de arquivo)
+- ✅ `apps/api/security/models.py` — models completos: `Password`, `StoredCreditCard`, `StoredBankAccount`, `Archive`
+- ✅ `apps/api/app/export_utils.py` — utilitários de export CSV/PDF (referência de padrão)
 - ✅ Vault unlock/lock com `VaultLockedMixin`
 - ✅ Páginas frontend: `Passwords.tsx`, `StoredCards.tsx`, `StoredAccounts.tsx`, `Archives.tsx`
 
@@ -644,7 +644,7 @@ verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}/"
 #### Passo 1 — Criar a view de export ZIP
 
 ```python
-# api/security/views.py — adicionar ao final
+# apps/api/security/views.py — adicionar ao final
 
 import csv
 import io
@@ -753,7 +753,7 @@ class VaultExportZipView(APIView):
 #### Passo 2 — Registrar a URL
 
 ```python
-# api/security/urls.py — adicionar
+# apps/api/security/urls.py — adicionar
 
 from .views import VaultExportZipView
 
@@ -766,7 +766,7 @@ urlpatterns = [
 #### Passo 3 — Criar serviço no frontend
 
 ```typescript
-// frontend/src/services/security-service.ts — adicionar método
+// apps/frontend/src/services/security-service.ts — adicionar método
 
 async exportVaultZip(): Promise<void> {
   const response = await apiClient.get('/security/vault/export/', {
@@ -786,7 +786,7 @@ async exportVaultZip(): Promise<void> {
 
 #### Passo 4 — Adicionar botão na UI
 
-Adicionar um botão "Exportar cofre" em `frontend/src/pages/Passwords.tsx` (ou criar uma página `/security/vault` agregadora), protegido pela verificação de vault desbloqueado.
+Adicionar um botão "Exportar cofre" em `apps/frontend/src/pages/Passwords.tsx` (ou criar uma página `/security/vault` agregadora), protegido pela verificação de vault desbloqueado.
 
 ---
 
@@ -794,12 +794,12 @@ Adicionar um botão "Exportar cofre" em `frontend/src/pages/Passwords.tsx` (ou c
 
 ### O que já existe
 
-- ✅ `api/bank_reconciliation/parsers.py` — parsers OFX 1.x SGML e CSV com auto-detecção
-- ✅ `api/bank_reconciliation/views.py` — `BankStatementImportCreateView` (upload, preview, confirm)
+- ✅ `apps/api/bank_reconciliation/parsers.py` — parsers OFX 1.x SGML e CSV com auto-detecção
+- ✅ `apps/api/bank_reconciliation/views.py` — `BankStatementImportCreateView` (upload, preview, confirm)
 - ✅ Detecção de duplicatas por hash SHA-256
 - ✅ Auto-matching de transações com expenses/revenues existentes
-- ✅ `frontend/src/pages/PasswordImport.tsx` — referência de UX completa com 3 etapas (upload → preview → resumo)
-- ✅ Upload básico em `frontend/src/pages/Accounts.tsx`
+- ✅ `apps/frontend/src/pages/PasswordImport.tsx` — referência de UX completa com 3 etapas (upload → preview → resumo)
+- ✅ Upload básico em `apps/frontend/src/pages/Accounts.tsx`
 
 ### O que falta
 
@@ -812,7 +812,7 @@ Adicionar um botão "Exportar cofre" em `frontend/src/pages/Passwords.tsx` (ou c
 
 #### Passo 1 — Criar a página BankStatementImport
 
-Criar `frontend/src/pages/BankStatementImport.tsx` seguindo exatamente o mesmo padrão do `PasswordImport.tsx`:
+Criar `apps/frontend/src/pages/BankStatementImport.tsx` seguindo exatamente o mesmo padrão do `PasswordImport.tsx`:
 
 **Etapa 1 — Upload**
 - Drag-and-drop ou seleção de arquivo (`.ofx`, `.csv`)
@@ -836,14 +836,14 @@ Criar `frontend/src/pages/BankStatementImport.tsx` seguindo exatamente o mesmo p
 #### Passo 2 — Adicionar rota
 
 ```typescript
-// frontend/src/App.tsx — adicionar rota protegida
+// apps/frontend/src/App.tsx — adicionar rota protegida
 
 { path: '/accounts/import', element: <BankStatementImport /> },
 ```
 
 #### Passo 3 — Adicionar botão de acesso
 
-Em `frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que navega para `/accounts/import`.
+Em `apps/frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que navega para `/accounts/import`.
 
 ---
 
@@ -851,7 +851,7 @@ Em `frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que na
 
 ### O que já existe
 
-- ✅ `api/security/views.py` — `VaultHealthReportView` totalmente funcional
+- ✅ `apps/api/security/views.py` — `VaultHealthReportView` totalmente funcional
   - Analisa força de senhas (weak / medium / strong)
   - Detecta senhas duplicadas por hash
   - Identifica senhas desatualizadas (>90 dias)
@@ -868,7 +868,7 @@ Em `frontend/src/pages/Accounts.tsx`, adicionar botão "Importar extrato" que na
 
 #### Passo 1 — Criar a página VaultHealthReport
 
-Criar `frontend/src/pages/VaultHealthReport.tsx`:
+Criar `apps/frontend/src/pages/VaultHealthReport.tsx`:
 
 **Layout sugerido**:
 - Card de destaque com o **score geral** (0–100) usando um medidor circular ou barra de progresso colorida (verde/amarelo/vermelho)
@@ -878,7 +878,7 @@ Criar `frontend/src/pages/VaultHealthReport.tsx`:
 - Lista de senhas desatualizadas (>90 dias) ordenadas pela mais antiga
 
 ```typescript
-// frontend/src/services/security-service.ts — adicionar método
+// apps/frontend/src/services/security-service.ts — adicionar método
 
 async getVaultHealthReport(): Promise<VaultHealthReport> {
   const response = await apiClient.get<VaultHealthReport>('/security/vault/health/');
@@ -936,7 +936,7 @@ Adicionar entrada "Saúde do Cofre" no menu lateral do módulo Security, com íc
 #### Passo 1 — Instalar dependência
 
 ```bash
-# api/requirements.txt — adicionar (versão exata conforme política do projeto)
+# apps/api/requirements.txt — adicionar (versão exata conforme política do projeto)
 pyotp==2.9.0
 qrcode[pil]==8.0
 ```
@@ -945,13 +945,13 @@ Após editar `requirements.txt`:
 
 ```bash
 # Rebuildar o container
-docker compose up --build -d
+docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d
 ```
 
 #### Passo 2 — Criar model TOTPDevice
 
 ```python
-# api/authentication/models.py — criar ou adicionar ao arquivo
+# apps/api/authentication/models.py — criar ou adicionar ao arquivo
 
 import pyotp
 from django.db import models
@@ -990,14 +990,14 @@ class TOTPDevice(BaseModel):
 Criar e aplicar migration:
 
 ```bash
-docker compose exec api python manage.py makemigrations authentication
-docker compose exec api python manage.py migrate
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py makemigrations authentication
+docker compose -f infra/docker/docker-compose.yml --project-directory . exec api python manage.py migrate
 ```
 
 #### Passo 3 — Criar views de 2FA
 
 ```python
-# api/authentication/views.py — adicionar
+# apps/api/authentication/views.py — adicionar
 
 import pyotp
 import qrcode
@@ -1103,7 +1103,7 @@ class TwoFactorDisableView(APIView):
 
 #### Passo 4 — Modificar o fluxo de login
 
-A view de login (`LoginView`) em `api/authentication/views.py` deve ser modificada para:
+A view de login (`LoginView`) em `apps/api/authentication/views.py` deve ser modificada para:
 
 1. Verificar se o usuário tem `TOTPDevice` ativo após validar username/password
 2. Se sim: retornar `{ "requires_2fa": true, "temp_token": "..." }` em vez dos cookies JWT
@@ -1112,12 +1112,12 @@ A view de login (`LoginView`) em `api/authentication/views.py` deve ser modifica
 
 #### Passo 5 — Frontend
 
-Criar `frontend/src/pages/TwoFactorSetup.tsx`:
+Criar `apps/frontend/src/pages/TwoFactorSetup.tsx`:
 - Exibe QR code retornado pelo backend
 - Campo para digitar código de confirmação
 - Exibe backup codes após ativação (com aviso para salvar)
 
-Modificar `frontend/src/pages/Login.tsx`:
+Modificar `apps/frontend/src/pages/Login.tsx`:
 - Após login bem-sucedido, checar se resposta tem `requires_2fa: true`
 - Se sim, exibir campo de código 2FA antes de prosseguir
 
@@ -1162,7 +1162,7 @@ FRONTEND_URL=http://localhost:39101
 
 ### Testes a escrever
 
-Cada funcionalidade implementada deve ter testes em `api/tests/`:
+Cada funcionalidade implementada deve ter testes em `apps/api/tests/`:
 
 ```python
 # Padrão mínimo para cada funcionalidade nova

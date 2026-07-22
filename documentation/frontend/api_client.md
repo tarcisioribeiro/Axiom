@@ -655,4 +655,4 @@ const account = await apiClient.get('/api/v1/accounts/1/');
 ## Próximos Passos
 
 - **Estado Global:** Veja [gerenciamento-estado.md](./gerenciamento-estado.md)
-- **API Endpoints:** Veja [../05-api/endpoints.md](../05-api/endpoints.md)
+- **API Endpoints:** Veja [../05-apps/api/endpoints.md](../05-apps/api/endpoints.md)

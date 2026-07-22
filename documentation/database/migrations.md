@@ -844,10 +844,10 @@ docker-compose exec api python manage.py migrate expenses 0002
 docker-compose exec api python manage.py makemigrations
 
 # REVISAR ARQUIVO GERADO
-cat api/expenses/migrations/0003_auto_20260112_1234.py
+cat apps/api/expenses/migrations/0003_auto_20260112_1234.py
 
 # Editar se necessário
-vim api/expenses/migrations/0003_auto_20260112_1234.py
+vim apps/api/expenses/migrations/0003_auto_20260112_1234.py
 
 # Aplicar
 docker-compose exec api python manage.py migrate
@@ -1009,7 +1009,7 @@ docker-compose exec api python manage.py makemigrations
 docker-compose exec api python manage.py makemigrations expenses --empty
 
 # Verificar INSTALLED_APPS
-grep "expenses" api/app/settings.py
+grep "expenses" apps/api/app/settings.py
 
 # Verificar erros de sintaxe
 docker-compose exec api python manage.py check

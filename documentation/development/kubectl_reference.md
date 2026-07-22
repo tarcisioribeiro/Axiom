@@ -750,7 +750,7 @@ kubectl rollout status deployment/minio -n axiom --timeout=60s
 
 ```bash
 # Executar o job de init para criar o bucket axiom (se ainda não existir)
-kubectl apply -f k8s/minio/deployment.yaml -n axiom
+kubectl apply -f infra/k8s/minio/deployment.yaml -n axiom
 
 # Ver status do job
 kubectl get job minio-init -n axiom
@@ -970,7 +970,7 @@ kubectl patch secret axiom-secrets -n axiom \
   -p='[{"op":"replace","path":"/data/DB_PASSWORD","value":"'$(echo -n "NOVA_SENHA" | base64 -w0)'"}]'
 
 # Recriar o secret inteiro (depois de editar o secrets.yaml)
-envsubst < k8s/base/secrets.yaml | kubectl apply -f -
+envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 ```
 
 ### Secret do registry (pull de imagens)
@@ -1585,31 +1585,31 @@ kubectl get networkpolicy -n axiom-staging
 
 ```bash
 # Aplicar todos os manifestos de produção via script
-bash k8s/scripts/apply-production.sh
+bash infra/k8s/scripts/apply-production.sh
 
 # Aplicar todos os manifestos de staging via script
-bash k8s/scripts/apply-staging.sh
+bash infra/k8s/scripts/apply-staging.sh
 
 # Aplicar um manifesto específico
-kubectl apply -f k8s/postgres/deployment.yaml
-kubectl apply -f k8s/redis/deployment.yaml
-kubectl apply -f k8s/minio/deployment.yaml
-kubectl apply -f k8s/api/deployment-blue.yaml
-kubectl apply -f k8s/api/deployment-green.yaml
-kubectl apply -f k8s/frontend/deployment.yaml
-kubectl apply -f k8s/backup-cronjob.yaml
-kubectl apply -f k8s/ingress.yaml
-kubectl apply -f k8s/hpa.yaml
-kubectl apply -f k8s/pdb.yaml
-kubectl apply -f k8s/resource-quota.yaml
-kubectl apply -f k8s/network-policy.yaml
+kubectl apply -f infra/k8s/postgres/deployment.yaml
+kubectl apply -f infra/k8s/redis/deployment.yaml
+kubectl apply -f infra/k8s/minio/deployment.yaml
+kubectl apply -f infra/k8s/api/deployment-blue.yaml
+kubectl apply -f infra/k8s/api/deployment-green.yaml
+kubectl apply -f infra/k8s/frontend/deployment.yaml
+kubectl apply -f infra/k8s/backup-cronjob.yaml
+kubectl apply -f infra/k8s/ingress.yaml
+kubectl apply -f infra/k8s/hpa.yaml
+kubectl apply -f infra/k8s/pdb.yaml
+kubectl apply -f infra/k8s/resource-quota.yaml
+kubectl apply -f infra/k8s/network-policy.yaml
 
 # Aplicar usando Kustomize (produção)
-kubectl apply -k k8s/overlays/production/
+kubectl apply -k infra/k8s/overlays/production/
 
 # Aplicar usando Kustomize (staging)
-kubectl apply -k k8s/overlays/staging/
+kubectl apply -k infra/k8s/overlays/staging/
 
 # Dry-run antes de aplicar (verificar sem alterar o cluster)
-kubectl apply -f k8s/postgres/deployment.yaml --dry-run=server
+kubectl apply -f infra/k8s/postgres/deployment.yaml --dry-run=server
 ```

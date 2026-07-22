@@ -1,6 +1,6 @@
 # Fluxo de Dados
 
-> **⚠️ NOTA (Maio/2026)**: As seções sobre embeddings neste documento referenciam a implementação anterior (`sentence-transformers/all-MiniLM-L6-v2`, 384 dims). O sistema atual usa `nomic-embed-text` via Ollama (768 dims), com geração em `LLMClient.embed()` (`api/agents/core/llm_client.py`). O LLM de chat agora suporta múltiplos providers (Ollama/Groq/Anthropic) configurável via `LLM_PROVIDER`. Consulte [`backend/agents.md`](../backend/agents.md) para o fluxo atual.
+> **⚠️ NOTA (Maio/2026)**: As seções sobre embeddings neste documento referenciam a implementação anterior (`sentence-transformers/all-MiniLM-L6-v2`, 384 dims). O sistema atual usa `nomic-embed-text` via Ollama (768 dims), com geração em `LLMClient.embed()` (`apps/api/agents/core/llm_client.py`). O LLM de chat agora suporta múltiplos providers (Ollama/Groq/Anthropic) configurável via `LLM_PROVIDER`. Consulte [`backend/agents.md`](../backend/agents.md) para o fluxo atual.
 
 ## Introdução
 
@@ -861,6 +861,6 @@ const Accounts = lazy(() => import('./pages/Accounts'));
 
 - [Visão Geral da Arquitetura](./visao-geral.md)
 - [Decisões Arquiteturais](./decisoes-arquiteturais.md)
-- [Documentação da API](../05-api/endpoints.md)
+- [Documentação da API](../05-apps/api/endpoints.md)
 - [Autenticação](../07-authentication-security/autenticacao.md)
 - [Segurança](../07-authentication-security/seguranca.md)

@@ -15,15 +15,15 @@
 # Pré-requisitos:
 #   - kubectl configurado e com acesso ao cluster
 #   - envsubst disponível (apt install gettext-base)
-#   - Variáveis de ambiente do k8s/scripts/apply-production.sh exportadas
-#   - Para staging: variáveis do k8s/scripts/apply-staging.sh exportadas
+#   - Variáveis de ambiente do infra/k8s/scripts/apply-production.sh exportadas
+#   - Para staging: variáveis do infra/k8s/scripts/apply-staging.sh exportadas
 #
 # Uso:
-#   bash scripts/migrate-rename-k8s.sh [production|staging] [--dry-run]
+#   bash infra/scripts/migrate-rename-k8s.sh [production|staging] [--dry-run]
 #
 # Exemplos:
-#   bash scripts/migrate-rename-k8s.sh production
-#   bash scripts/migrate-rename-k8s.sh staging --dry-run
+#   bash infra/scripts/migrate-rename-k8s.sh production
+#   bash infra/scripts/migrate-rename-k8s.sh staging --dry-run
 # =============================================================================
 
 set -euo pipefail
@@ -53,8 +53,8 @@ if [[ "$TARGET" == "production" ]]; then
     DB_PASSWORD="${DB_PASSWORD:?Exporte DB_PASSWORD}"
     MINIO_ROOT_USER="${MINIO_ROOT_USER:?Exporte MINIO_ROOT_USER}"
     MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD:?Exporte MINIO_ROOT_PASSWORD}"
-    MANIFEST_NAMESPACE_FILE="k8s/base/namespace.yaml"
-    APPLY_SCRIPT="k8s/scripts/apply-production.sh"
+    MANIFEST_NAMESPACE_FILE="infra/k8s/base/namespace.yaml"
+    APPLY_SCRIPT="infra/k8s/scripts/apply-production.sh"
 elif [[ "$TARGET" == "staging" ]]; then
     OLD_NAMESPACE="mindledger-staging"
     NEW_NAMESPACE="axiom-staging"
@@ -66,8 +66,8 @@ elif [[ "$TARGET" == "staging" ]]; then
     DB_PASSWORD="${STAGING_DB_PASSWORD:?Exporte STAGING_DB_PASSWORD}"
     MINIO_ROOT_USER="${STAGING_MINIO_ROOT_USER:?Exporte STAGING_MINIO_ROOT_USER}"
     MINIO_ROOT_PASSWORD="${STAGING_MINIO_ROOT_PASSWORD:?Exporte STAGING_MINIO_ROOT_PASSWORD}"
-    MANIFEST_NAMESPACE_FILE="k8s/staging/namespace.yaml"
-    APPLY_SCRIPT="k8s/scripts/apply-staging.sh"
+    MANIFEST_NAMESPACE_FILE="infra/k8s/staging/namespace.yaml"
+    APPLY_SCRIPT="infra/k8s/scripts/apply-staging.sh"
 else
     error "Target inválido: '$TARGET'. Use 'production' ou 'staging'."
 fi
@@ -187,33 +187,33 @@ if [[ "$DRY_RUN" == "false" ]]; then
     kubectl apply -f "$MANIFEST_NAMESPACE_FILE"
 
     if [[ "$TARGET" == "production" ]]; then
-        kubectl apply -f k8s/serviceaccounts.yaml
-        kubectl apply -f k8s/resource-quota.yaml
-        kubectl apply -f k8s/network-policy.yaml
-        envsubst < k8s/base/configmap.yaml | kubectl apply -f -
-        kubectl apply -f k8s/postgres/configmap.yaml
-        kubectl apply -f k8s/postgres/pvc.yaml
-        kubectl apply -f k8s/postgres/deployment.yaml
-        kubectl apply -f k8s/postgres/service.yaml
-        kubectl apply -f k8s/redis/pvc.yaml
-        kubectl apply -f k8s/redis/deployment.yaml
-        kubectl apply -f k8s/redis/service.yaml
-        kubectl apply -f k8s/minio/pvc.yaml
-        kubectl apply -f k8s/minio/deployment.yaml
-        kubectl apply -f k8s/minio/service.yaml
+        kubectl apply -f infra/k8s/serviceaccounts.yaml
+        kubectl apply -f infra/k8s/resource-quota.yaml
+        kubectl apply -f infra/k8s/network-policy.yaml
+        envsubst < infra/k8s/base/configmap.yaml | kubectl apply -f -
+        kubectl apply -f infra/k8s/postgres/configmap.yaml
+        kubectl apply -f infra/k8s/postgres/pvc.yaml
+        kubectl apply -f infra/k8s/postgres/deployment.yaml
+        kubectl apply -f infra/k8s/postgres/service.yaml
+        kubectl apply -f infra/k8s/redis/pvc.yaml
+        kubectl apply -f infra/k8s/redis/deployment.yaml
+        kubectl apply -f infra/k8s/redis/service.yaml
+        kubectl apply -f infra/k8s/minio/pvc.yaml
+        kubectl apply -f infra/k8s/minio/deployment.yaml
+        kubectl apply -f infra/k8s/minio/service.yaml
     else
-        kubectl apply -f k8s/staging/namespace.yaml
-        envsubst < k8s/staging/configmap.yaml | kubectl apply -f -
-        kubectl apply -f k8s/staging/postgres/configmap.yaml
-        kubectl apply -f k8s/staging/postgres/pvc.yaml
-        kubectl apply -f k8s/staging/postgres/deployment.yaml
-        kubectl apply -f k8s/staging/postgres/service.yaml
-        kubectl apply -f k8s/staging/redis/pvc.yaml
-        kubectl apply -f k8s/staging/redis/deployment.yaml
-        kubectl apply -f k8s/staging/redis/service.yaml
-        kubectl apply -f k8s/staging/minio/pvc.yaml
-        kubectl apply -f k8s/staging/minio/deployment.yaml
-        kubectl apply -f k8s/staging/minio/service.yaml
+        kubectl apply -f infra/k8s/staging/namespace.yaml
+        envsubst < infra/k8s/staging/configmap.yaml | kubectl apply -f -
+        kubectl apply -f infra/k8s/staging/postgres/configmap.yaml
+        kubectl apply -f infra/k8s/staging/postgres/pvc.yaml
+        kubectl apply -f infra/k8s/staging/postgres/deployment.yaml
+        kubectl apply -f infra/k8s/staging/postgres/service.yaml
+        kubectl apply -f infra/k8s/staging/redis/pvc.yaml
+        kubectl apply -f infra/k8s/staging/redis/deployment.yaml
+        kubectl apply -f infra/k8s/staging/redis/service.yaml
+        kubectl apply -f infra/k8s/staging/minio/pvc.yaml
+        kubectl apply -f infra/k8s/staging/minio/deployment.yaml
+        kubectl apply -f infra/k8s/staging/minio/service.yaml
     fi
 
     wait_for_deployment "$NEW_NAMESPACE" "postgres" 120

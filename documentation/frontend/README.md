@@ -22,7 +22,7 @@ Documentação do frontend React + TypeScript do Axiom.
 | `useQuery` / `useMutation` | TanStack Query para server state |
 | `PageContainer` | Wrapper raiz de toda página |
 | `DataTable` | Tabela paginada com empty state |
-| `@/` | Alias para `frontend/src/` |
+| `@/` | Alias para `apps/frontend/src/` |
 
 ---
 
