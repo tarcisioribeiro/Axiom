@@ -6,7 +6,8 @@
 # (non-blue-green) API. See each file under patches/ for the specific delta it
 # captures. MinIO is external to the cluster for both staging and production
 # (see documentation/storage/infrastructure.md) — there's no in-cluster MinIO
-# resource to patch here anymore.
+# resource to patch here anymore. Same for Ollama, decommissioned as
+# non-strategic.
 #
 # CI deploy command (see .gitlab-ci.yml deploy:staging):
 #   kubectl apply -k infra/k8s/overlays/staging
@@ -30,8 +31,6 @@ patches:
   - path: patches/configmap.yaml
   - path: patches/redis-deployment.yaml
   - path: patches/redis-pvc.yaml
-  - path: patches/ollama-deployment.yaml
-  - path: patches/ollama-pvc.yaml
   - path: patches/frontend.yaml
   - path: patches/frontend-remove-hostaliases.json
     target:

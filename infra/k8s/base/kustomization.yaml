@@ -35,6 +35,11 @@
 # file (only whole kustomization directories), so overlays/staging/api/
 # keeps its own copy rather than sharing this one. api/pvc.yaml has no such
 # risk and is shared here.
+#
+# Ollama is ALSO NOT here anymore: it was decommissioned as non-strategic
+# (LLM features degrade gracefully via the circuit breaker in
+# agents/core/llm_client.py when unreachable). There is no more in-cluster
+# Deployment/Service/PVC for it.
 # =============================================================================
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -50,9 +55,6 @@ resources:
   - redis/pvc.yaml
   - redis/deployment.yaml
   - redis/service.yaml
-  - ollama/pvc.yaml
-  - ollama/deployment.yaml
-  - ollama/service.yaml
   - frontend/configmap-nginx.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
