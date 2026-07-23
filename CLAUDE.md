@@ -14,7 +14,7 @@ Axiom/
 ├── apps/
 │   ├── api/          # Django backend (port 39100)
 │   ├── frontend/     # React frontend (port 39101)
-│   └── mobile/       # Reserved for the future mobile app (no code yet)
+│   └── mobile/       # Flutter mobile app (scaffolding — see documentation/mobile/README.md)
 ├── infra/
 │   ├── k8s/          # Kubernetes manifests (kustomize base + overlays)
 │   ├── docker/       # docker-compose.yml + auxiliary Dockerfiles (e.g. db-backup)
@@ -102,6 +102,14 @@ Axiom/
 
 **Pre-commit**: Two hook systems: `pre-commit` (Python) runs black/isort/flake8/mypy on backend staged files; `husky` + `lint-staged` runs ESLint + Prettier on frontend staged files. Commitlint enforces conventional commits at the commit-msg stage (see [Commit Convention](#commit-convention)).
 
+### Mobile (Flutter)
+
+**Stack**: Flutter 3.27.x / Dart 3.6.x, Material 3, targeting Android and iOS. See `documentation/architecture/architectural_decisions.md` §16 for why Flutter was chosen over React Native/native.
+
+**State**: Scaffolding only — `lib/main.dart` (`AxiomMobileApp`, a `MaterialApp`) renders `lib/screens/login_screen.dart`, a static placeholder login screen with no API integration yet. Real auth/API consumption is future work; see `documentation/mobile/README.md`.
+
+**Dependencies**: Pinned to exact versions in `pubspec.yaml` (no `^` ranges), same policy as the rest of the repo; `pubspec.lock` is committed.
+
 ## Development Commands
 
 ### Docker Workflow (primary)
@@ -174,9 +182,20 @@ npm run build:storybook                       # Build static Storybook
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. Config in `vitest.config.ts`. Setup file: `src/test/setup.ts`. `globals: false` — test files must explicitly import `{ describe, it, expect, vi }` from `'vitest'`. Pre-push hook runs `npm run test:coverage` automatically.
 
+### Mobile
+```bash
+cd apps/mobile
+flutter pub get                        # Install dependencies
+flutter run                            # Run on a connected device/emulator
+dart format --set-exit-if-changed .    # Format check
+flutter analyze                        # Lint / static analysis
+flutter test --coverage                # Tests with coverage
+flutter build apk --debug              # Build verification (Android; iOS needs macOS/Xcode)
+```
+
 ### CI/CD Validation (run before every push)
 
-A `ci-check.sh` script at the repo root simulates the full GitLab pipeline locally. **Run this after any change.**
+A `ci-check.sh` script at the repo root simulates the full GitLab pipeline locally. **Run this after any change.** It does not cover the mobile module yet (`lint:mobile`/`test:mobile`/`build:mobile` run in GitLab CI only) — run the Flutter commands above directly for now.
 
 ```bash
 # Setup (one-time): create root .venv with dev dependencies

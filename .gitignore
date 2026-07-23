@@ -114,6 +114,7 @@ coverage/
 *.cover
 .hypothesis/
 e2e-results/
+test-results/
 
 # Certificates and keys
 *.pem

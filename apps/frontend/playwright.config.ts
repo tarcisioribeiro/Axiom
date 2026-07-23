@@ -23,6 +23,10 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:39101';
 export default defineConfig({
   testDir: '../../e2e',
 
+  // Consolidate all Playwright output (HTML/JUnit reports + failure traces
+  // and screenshots) under a single gitignored directory instead of two.
+  outputDir: '../../e2e-results/test-results',
+
   // Run each test file in parallel; keep tests within a file sequential so
   // login state is preserved across steps.
   fullyParallel: false,
