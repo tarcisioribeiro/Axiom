@@ -67,7 +67,7 @@ spec:
       serviceAccountName: sa-api
       # true necessário para montar o token e permitir o "Restart All" do admin
       # panel (patch em api-blue/api-green/frontend). RBAC restringe o
-      # acesso a esses deployments apenas (role-api-restart-ollama).
+      # acesso a esses deployments apenas (role-api-restart).
       automountServiceAccountToken: true
       imagePullSecrets:
         - name: ghcr-pull-secret

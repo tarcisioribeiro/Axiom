@@ -12,7 +12,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #
 #   The Secret "axiom-backup-secrets" must exist before applying.
-#   It is defined in k8s/base/secrets.yaml and requires these variables:
+#   It is defined in infra/k8s/base/secrets.yaml and requires these variables:
 #
 #     BACKUP_ENCRYPTION_KEY  Random 32+ char passphrase for AES-256 encryption.
 #                            NEVER change this after encrypting data — older
@@ -52,7 +52,7 @@
 # Apply
 # ─────────────────────────────────────────────────────────────────────────────
 #
-#   kubectl apply -f k8s/backup-cronjob.yaml
+#   kubectl apply -f infra/k8s/overlays/production/backup-cronjob.yaml
 #
 #   Trigger a manual run:
 #     kubectl create job --from=cronjob/axiom-db-backup axiom-backup-manual -n axiom
@@ -99,7 +99,7 @@ data:
     # =============================================================================
     #
     # Runs inside the Docker Compose db-backup container (see docker/backup/) or a
-    # Kubernetes CronJob pod (see k8s/backup-cronjob.yaml).  Connects to PostgreSQL
+    # Kubernetes CronJob pod (see infra/k8s/overlays/production/backup-cronjob.yaml).  Connects to PostgreSQL
     # via the cluster/network-internal service hostname set in PGHOST.
     #
     # ─────────────────────────────────────────────────────────────────────────────

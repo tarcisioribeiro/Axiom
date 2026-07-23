@@ -100,6 +100,22 @@ log "Blue-green deploy complete."
 log "  Active slot  : $NEW_SLOT  (image: $NEW_IMAGE)"
 log "  Standby slot : $ACTIVE_SLOT  (replicas: 0 — ready for rollback)"
 log ""
+
+# If per-slot HPAs (overlays/production/hpa.yaml) are in use, the standby
+# slot's HPA will fight the scale-to-0 above (minReplicas: 1 has no
+# scale-to-zero exemption for plain CPU/memory metrics — see the comment
+# block in hpa.yaml). This script does NOT delete it automatically, since
+# that's a live change to autoscaling state; print the command instead.
+if kube get hpa "api-$ACTIVE_SLOT-hpa" >/dev/null 2>&1; then
+  log "  NOTE: HorizontalPodAutoscaler/api-$ACTIVE_SLOT-hpa still targets the"
+  log "  standby slot and will scale it back up to minReplicas within ~15s"
+  log "  unless removed. To keep the standby at 0 replicas:"
+  log "    kubectl delete hpa api-$ACTIVE_SLOT-hpa -n $NAMESPACE"
+  log "  Re-apply it before the next switch makes this slot active again:"
+  log "    kubectl apply -f infra/k8s/overlays/production/hpa.yaml -n $NAMESPACE"
+  log ""
+fi
+
 log "  Rollback command:"
 log "    kubectl scale deployment/api-$ACTIVE_SLOT --replicas=1 -n $NAMESPACE"
 log "    kubectl patch svc $SERVICE -n $NAMESPACE \\"

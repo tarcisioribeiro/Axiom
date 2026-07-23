@@ -9,10 +9,6 @@ data:
   CORS_ALLOWED_ORIGINS: "http://localhost:39101,https://axiom-staging.tjtux.duckdns.org"
   MINIO_BUCKET_NAME: "axiom-staging"
   MINIO_USE_SSL: "false"
-  # No Django-proxy-only in staging — nulled out, not just left with the
-  # (wrong) production value.
-  MINIO_EXTERNAL_ENDPOINT: null
-  MINIO_CA_BUNDLE: null
   SENTRY_ENVIRONMENT: "staging"
   SECURE_HSTS_SECONDS: "0"
   SECURE_HSTS_INCLUDE_SUBDOMAINS: "False"

@@ -7,13 +7,13 @@
 # Apply with:
 #   export GRAFANA_ADMIN_USER=admin
 #   export GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 24)
-#   envsubst < k8s/monitoring/grafana.yaml | kubectl apply -f -
+#   envsubst < infra/k8s/monitoring/grafana.yaml | kubectl apply -f -
 #
 # Access Grafana UI:
 #   kubectl port-forward -n monitoring svc/grafana 3000:3000
 ---
 # Grafana admin credentials — set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD
-# before applying via: envsubst < k8s/monitoring/grafana.yaml | kubectl apply -f -
+# before applying via: envsubst < infra/k8s/monitoring/grafana.yaml | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
