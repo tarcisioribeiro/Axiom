@@ -26,7 +26,9 @@ spec:
         environment: staging
     spec:
       serviceAccountName: sa-api
-      # true necessário para montar o token e permitir restart do Ollama via admin panel.
+      # true necessário para montar o token e permitir o "Restart All" do admin
+      # panel (patch em api/frontend). RBAC restringe o acesso a esses
+      # deployments apenas (role-api-restart-ollama).
       automountServiceAccountToken: true
       imagePullSecrets:
         - name: ghcr-pull-secret

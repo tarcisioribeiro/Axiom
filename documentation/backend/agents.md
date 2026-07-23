@@ -44,6 +44,11 @@ apps/api/agents/
 │   ├── forecast_tools.py  # Projeções de saldo e despesas fixas
 │   ├── planning_tools.py  # Resumo de rotinas, metas e tarefas
 │   └── rag_tools.py       # Busca vetorial (pgvector / Python fallback)
+├── providers/              # Único ponto de import de models de outros apps
+│   ├── financial_provider.py  # accounts, expenses, revenues, budgets
+│   ├── personal_provider.py   # personal_planning
+│   ├── library_provider.py    # library
+│   └── security_provider.py   # security
 ├── models.py              # AgentConversation, AgentEmbedding
 ├── serializers.py         # Validação de request/response
 ├── views.py               # Endpoints (ask, stream, history, status, sessions)
@@ -227,14 +232,15 @@ Expressões suportadas: `hoje`, `ontem`, `esta semana`, `semana passada`, `mês 
 
 ## 5. LLM Providers
 
-O `LLMClient` (`core/llm_client.py`) abstrai três provedores via variável de ambiente `LLM_PROVIDER`.
+O `LLMClient` (`core/llm_client.py`) abstrai quatro provedores via variável de ambiente `LLM_PROVIDER`, com fallback automático entre eles via `LLM_FALLBACK_PROVIDERS` (ver `documentation/llm/infrastructure.md` para o runbook de infraestrutura do Ollama externo).
 
 ```mermaid
 flowchart TD
     ENV{{"LLM_PROVIDER\n(env var)"}}
-    ENV -->|ollama| OLL["Ollama (local)\nPOST /api/chat\nOLLAMA_BASE_URL:11434"]
+    ENV -->|ollama| OLL["Ollama (self-hosted, externo ao cluster)\nPOST /api/chat\nOLLAMA_BASE_URL:11434"]
     ENV -->|groq| GRQ["Groq (cloud)\nOpenAI-compatible API\napi.groq.com/openai/v1"]
-    ENV -->|anthropic| ANT["Anthropic (cloud)\nSDK anthropic.Anthropic()\nClaude Haiku/Sonnet/Opus"]
+    ENV -->|anthropic| ANT["Anthropic (cloud)\nSDK anthropic.Anthropic()\nClaude Haiku/Sonnet"]
+    ENV -->|openai| OAI["OpenAI (cloud)\nOpenAI-compatible API\napi.openai.com/v1"]
 
     OLL --> FB["Fallback automático:\nse modelo não instalado\n→ tenta OLLAMA_MODEL env"]
 ```
@@ -243,13 +249,14 @@ flowchart TD
 
 ### Modelos configuráveis por agente
 
-Cada agente define `ollama_model`, `anthropic_model` e `groq_model`. O método `get_model()` retorna o modelo correto para o provider ativo. Isso permite usar modelos mais leves (ex: Haiku) para tarefas simples e modelos mais capazes (Opus) para análises complexas.
+Cada agente define `ollama_model`, `anthropic_model`, `groq_model` e `openai_model`. O método `get_model()` retorna o modelo correto para o provider ativo. Isso permite usar modelos mais leves (ex: Haiku/gpt-4o-mini) para tarefas simples e modelos mais capazes (Sonnet/gpt-4o) para análises complexas.
 
 ```python
 class FinanceAgent(BaseAgent):
     ollama_model = "qwen2.5:7b"
     anthropic_model = "claude-haiku-4-5-20251001"
     groq_model = "llama-3.1-8b-instant"
+    openai_model = "gpt-4o-mini"
 ```
 
 ### Fallback Ollama
@@ -526,28 +533,32 @@ AgentEmbedding  [schema: vectors.agent_embeddings]
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `LLM_PROVIDER` | `ollama` | Provider ativo: `ollama`, `groq`, `anthropic` |
-| `OLLAMA_BASE_URL` | `http://ollama:11434` | URL do serviço Ollama |
+| `LLM_PROVIDER` | `ollama` | Provider ativo: `ollama`, `groq`, `anthropic`, `openai` |
+| `LLM_FALLBACK_PROVIDERS` | — | Providers de fallback, em ordem, separados por vírgula (ex: `groq,anthropic`) |
+| `OLLAMA_BASE_URL` | `http://ollama:11434` | URL do serviço Ollama — self-hosted externo ao cluster em staging/produção (ver `documentation/llm/infrastructure.md`) |
 | `OLLAMA_MODEL` | `mistral:7b-instruct` | Modelo global de chat (fallback) |
 | `OLLAMA_EMBED_MODEL` | `nomic-embed-text` | Modelo de embeddings |
 | `GROQ_API_KEY` | — | Chave da API Groq |
 | `GROQ_MODEL` | `llama-3.1-8b-instant` | Modelo Groq |
 | `ANTHROPIC_API_KEY` | — | Chave da API Anthropic |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | Modelo Anthropic |
+| `OPENAI_API_KEY` | — | Chave da API OpenAI |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Modelo OpenAI |
 | `LLM_TIMEOUT_CHAT` | `120` | Timeout em segundos para chat |
 | `LLM_TIMEOUT_EMBED` | `30` | Timeout em segundos para embeddings |
 
 ### Configuração via Admin Panel
 
-As variáveis `LLM_PROVIDER`, `OLLAMA_MODEL`, `ANTHROPIC_MODEL` e `GROQ_API_KEY` podem ser gerenciadas pelo Django Admin em `http://localhost:39100/admin/` sem necessidade de rebuild do container. Consulte [`admin-panel/llm_ollama_configuration.md`](../admin-panel/llm_ollama_configuration.md).
+As variáveis `LLM_PROVIDER`, `OLLAMA_MODEL`, `ANTHROPIC_MODEL`, `GROQ_API_KEY` e `OPENAI_API_KEY` podem ser gerenciadas pelo Django Admin em `http://localhost:39100/admin/` sem necessidade de rebuild do container. Consulte [`admin-panel/llm_ollama_configuration.md`](../admin-panel/llm_ollama_configuration.md).
 
 ### Modelos recomendados por provider
 
 | Provider | Chat | Embedding | Observações |
 |---|---|---|---|
-| Ollama (local) | `qwen2.5:7b` ou `mistral:7b-instruct` | `nomic-embed-text` | Requer GPU ou RAM ≥ 8 GB |
+| Ollama (self-hosted) | `qwen2.5:7b` ou `mistral:7b-instruct` | `nomic-embed-text` | Requer GPU ou RAM ≥ 8 GB; roda fora do cluster k8s |
 | Groq | `llama-3.1-8b-instant` | via Ollama | Gratuito com limite de tokens/min |
 | Anthropic | `claude-haiku-4-5-20251001` | via Ollama | Mais rápido e barato; Sonnet para análises complexas |
+| OpenAI | `gpt-4o-mini` | via Ollama | `gpt-4o` para análises complexas |
 
 ---
 

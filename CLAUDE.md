@@ -70,7 +70,7 @@ Axiom/
 
 **Caching**: Redis (django-redis) with key prefix `axiom`. Specific TTLs defined in settings: `CACHE_TTL_DASHBOARD_STATS` (60s), `CACHE_TTL_ACCOUNT_BALANCES` (30s), `CACHE_TTL_CATEGORY_BREAKDOWN` (300s), `CACHE_TTL_BALANCE_FORECAST` (120s).
 
-**Agents / LLM Module** (`apps/api/agents/`): Django app providing AI-powered financial assistants. Six domain agents (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`) are selected automatically by `core/router.py`. Endpoints are under `/api/v1/agents/` — `ask/` (sync), `stream/` (SSE), `history/`, `sessions/`, `status/`. Core infrastructure in `core/`: `llm_client.py` (Ollama/Groq/Anthropic providers with thread-safe singleton, circuit breaker for Ollama, Redis embedding cache), `memory.py` (conversation persistence in Redis + PostgreSQL), `context_compressor.py`, `summarizer.py`. RAG via pgvector in `tools/rag_tools.py`. Background thread writes persistence after response to reduce latency. `AgentRateThrottle` enforced on all views. Prompt injection patterns (EN + PT-BR) validated server-side.
+**Agents / LLM Module** (`apps/api/agents/`): Django app providing AI-powered financial assistants. Six domain agents (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`) are selected automatically by `core/router.py`. Endpoints are under `/api/v1/agents/` — `ask/` (sync), `stream/` (SSE), `history/`, `sessions/`, `status/`. Core infrastructure in `core/`: `llm_client.py` (Ollama/Groq/Anthropic/OpenAI providers with thread-safe singleton, circuit breaker for Ollama, Redis embedding cache), `memory.py` (conversation persistence in Redis + PostgreSQL), `context_compressor.py`, `summarizer.py`. RAG via pgvector in `tools/rag_tools.py`. Background thread writes persistence after response to reduce latency. `AgentRateThrottle` enforced on all views. Prompt injection patterns (EN + PT-BR) validated server-side. `providers/` (`financial_provider.py`, `personal_provider.py`, `library_provider.py`, `security_provider.py`) is the **only** place in `agents/` allowed to import models from other Django apps — tools, domain agents, and views all consume data through it. See `documentation/architecture/agents-llm-boundary.md` for the full boundary rationale and `documentation/llm/infrastructure.md` for the external Ollama host runbook.
 
 ### Frontend (React + TypeScript)
 
@@ -348,11 +348,14 @@ Key testing conventions:
 - `MINIO_BUCKET_NAME`: target bucket (default: `axiom`)
 - `MINIO_USE_SSL`: `true`/`false` (default: `false`)
 - `MINIO_CA_BUNDLE`: path to CA cert for self-signed MinIO TLS (e.g. `/etc/ssl/minio/ca.crt` in k8s)
-- `LLM_PROVIDER`: `ollama` (default), `groq`, or `anthropic`
-- `OLLAMA_BASE_URL`: Ollama server URL (default: `http://ollama:11434`)
+- `LLM_PROVIDER`: `ollama` (default), `groq`, `anthropic`, or `openai`
+- `LLM_FALLBACK_PROVIDERS`: comma-separated fallback providers tried in order if the primary fails (e.g. `groq,anthropic`)
+- `OLLAMA_BASE_URL`: Ollama server URL (default: `http://ollama:11434` locally; points at a self-managed external host in staging/production — see `documentation/llm/infrastructure.md`)
 - `OLLAMA_MODEL`: chat model (default: `mistral:7b-instruct`)
 - `OLLAMA_EMBED_MODEL`: embedding model (default: `nomic-embed-text`)
+- `GROQ_API_KEY` / `GROQ_MODEL`: required when `LLM_PROVIDER=groq`
 - `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL`: required when `LLM_PROVIDER=anthropic`
+- `OPENAI_API_KEY` / `OPENAI_MODEL`: required when `LLM_PROVIDER=openai`
 - `LLM_TIMEOUT_CHAT` / `LLM_TIMEOUT_EMBED`: timeouts in seconds (defaults: 120 / 30)
 
 ## Key Rotation

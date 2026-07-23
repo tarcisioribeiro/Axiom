@@ -22,14 +22,19 @@ Configurações do sistema de agentes inteligentes (`apps/api/agents/`).
 
 | Chave | Secret | Restart | Padrão | Descrição |
 |-------|:------:|:-------:|--------|-----------|
-| `LLM_PROVIDER` | | **Sim** | `ollama` | Provedor ativo: `ollama` (local) ou `anthropic` (nuvem). Trocar este valor requer reiniciar o container. |
-| `OLLAMA_BASE_URL` | | | `http://ollama:11434` | Endereço HTTP do servidor Ollama. Dentro do Docker, o valor padrão aponta para o service `ollama`. Fora do Docker, use `http://localhost:11434`. |
+| `LLM_PROVIDER` | | **Sim** | `ollama` | Provedor ativo: `ollama` (self-hosted), `groq`, `anthropic` ou `openai` (nuvem). Trocar este valor requer reiniciar o container. |
+| `LLM_FALLBACK_PROVIDERS` | | | — | Providers de fallback, em ordem, separados por vírgula (ex: `groq,anthropic`), usados se o provider ativo falhar. |
+| `OLLAMA_BASE_URL` | | | `http://ollama:11434` | Endereço HTTP do servidor Ollama. Localmente aponta para o service `ollama` do Docker Compose; em staging/produção aponta para um host self-hosted externo ao cluster (ver [`documentation/llm/infrastructure.md`](../llm/infrastructure.md)). |
 | `OLLAMA_MODEL` | | | — | Tag do modelo Ollama para chat. Deve estar baixado localmente. Exemplo: `mistral:7b-instruct`. |
 | `OLLAMA_EMBED_MODEL` | | | — | Tag do modelo Ollama para embeddings (RAG). Deve estar baixado localmente. Exemplo: `nomic-embed-text`. |
 | `LLM_TIMEOUT_CHAT` | | | `120` | Segundos máximos de espera por uma resposta de chat. Aumente em hardware lento (ex: `300`). |
 | `LLM_TIMEOUT_EMBED` | | | `30` | Segundos máximos de espera por um embedding. |
+| `GROQ_API_KEY` | 🔒 | | — | Chave de API Groq. Obrigatória quando `LLM_PROVIDER=groq`. |
+| `GROQ_MODEL` | | | — | Modelo Groq a utilizar. Exemplo: `llama-3.1-8b-instant`. |
 | `ANTHROPIC_API_KEY` | 🔒 | | — | Chave de API Anthropic. Obrigatória quando `LLM_PROVIDER=anthropic`. Começa com `sk-ant-api03-`. |
 | `ANTHROPIC_MODEL` | | | — | ID do modelo Claude. Consulte a [documentação oficial](https://docs.anthropic.com/en/docs/about-claude/models) para o ID atualizado. Exemplo: `claude-sonnet-4-6`. |
+| `OPENAI_API_KEY` | 🔒 | | — | Chave de API OpenAI. Obrigatória quando `LLM_PROVIDER=openai`. |
+| `OPENAI_MODEL` | | | — | Modelo OpenAI a utilizar. Exemplo: `gpt-4o-mini`. |
 
 **Guia completo**: [Configuração LLM / Ollama](llm_ollama_configuration.md)
 

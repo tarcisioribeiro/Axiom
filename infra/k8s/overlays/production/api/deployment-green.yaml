@@ -65,8 +65,9 @@ spec:
           hostnames:
             - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-api
-      # true necessário para montar o token e permitir restart do Ollama via admin panel.
-      # RBAC restringe o acesso a patch no deployment "ollama" apenas.
+      # true necessário para montar o token e permitir o "Restart All" do admin
+      # panel (patch em api-blue/api-green/frontend). RBAC restringe o
+      # acesso a esses deployments apenas (role-api-restart-ollama).
       automountServiceAccountToken: true
       imagePullSecrets:
         - name: ghcr-pull-secret

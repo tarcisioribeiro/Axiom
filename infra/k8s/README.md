@@ -5,10 +5,11 @@
 ```
 infra/k8s/
 ├── base/               # Shared manifests — shape reflects the production footprint
-│   ├── redis/ ollama/ frontend/ api/   # PostgreSQL and MinIO run external,
+│   ├── redis/ frontend/ api/           # PostgreSQL, MinIO and Ollama run external,
 │   │                                   # self-managed, not here — see
-│   │                                   # documentation/database/infrastructure.md
-│   │                                   # and documentation/storage/infrastructure.md
+│   │                                   # documentation/database/infrastructure.md,
+│   │                                   # documentation/storage/infrastructure.md
+│   │                                   # and documentation/llm/infrastructure.md
 │   ├── cluster-issuers.yaml   # cert-manager ClusterIssuers (cluster-scoped, shared)
 │   ├── ingress.yaml, configmap.yaml, network-policy.yaml, resource-quota.yaml, ...
 │   └── kustomization.yaml
@@ -92,12 +93,13 @@ These steps are run **once** when provisioning the production environment. After
 export DB_NAME=axiom_db DB_USER=axiom DB_PASSWORD=... SECRET_KEY=... ENCRYPTION_KEY=... \
        DJANGO_SUPERUSER_USERNAME=admin DJANGO_SUPERUSER_EMAIL=... DJANGO_SUPERUSER_PASSWORD=... \
        REDIS_PASSWORD=... MINIO_ROOT_USER=... MINIO_ROOT_PASSWORD=... \
-       MINIO_ENDPOINT=... MINIO_EXTERNAL_ENDPOINT=... SENTRY_DSN=""
+       MINIO_ENDPOINT=... MINIO_EXTERNAL_ENDPOINT=... OLLAMA_BASE_URL=... \
+       GROQ_API_KEY="" ANTHROPIC_API_KEY="" OPENAI_API_KEY="" SENTRY_DSN=""
 envsubst < infra/k8s/base/secrets.yaml | kubectl apply -f -
 
 # 2. Everything else — namespace, RBAC, ClusterIssuers, network-policy, quota,
-#    redis, ollama, frontend, ingress. Safe to re-run.
-#    PostgreSQL and MinIO are NOT here — both run external (see above).
+#    redis, frontend, ingress. Safe to re-run.
+#    PostgreSQL, MinIO and Ollama are NOT here — all run external (see above).
 kubectl apply -k infra/k8s/overlays/production
 
 # 3. API (blue-green) — not part of the overlay build, applied directly.
@@ -156,14 +158,16 @@ kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
 
 ### Step 3 — Apply everything else
 
-Namespace, RBAC, ClusterIssuers, network-policy, quota, redis, ollama,
-api (single Deployment), frontend, ingress — all in one shot. PostgreSQL and
-MinIO are not applied here — both run self-managed, external to k3s (see
-[documentation/database/infrastructure.md](../../documentation/database/infrastructure.md)
+Namespace, RBAC, ClusterIssuers, network-policy, quota, redis,
+api (single Deployment), frontend, ingress — all in one shot. PostgreSQL,
+MinIO and Ollama are not applied here — all three run self-managed, external
+to k3s (see
+[documentation/database/infrastructure.md](../../documentation/database/infrastructure.md),
+[documentation/storage/infrastructure.md](../../documentation/storage/infrastructure.md)
 and
-[documentation/storage/infrastructure.md](../../documentation/storage/infrastructure.md)),
-so `axiom-secrets`'s `DB_HOST`/`DB_PORT`/`MINIO_ENDPOINT` (from step 1 above)
-must already point at them:
+[documentation/llm/infrastructure.md](../../documentation/llm/infrastructure.md)),
+so `axiom-secrets`'s `DB_HOST`/`DB_PORT`/`MINIO_ENDPOINT`/`OLLAMA_BASE_URL`
+(from step 1 above) must already point at them:
 
 ```bash
 kubectl apply -k infra/k8s/overlays/staging

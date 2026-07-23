@@ -2,8 +2,9 @@ from datetime import date, timedelta
 from typing import Any
 
 from django.contrib.auth.models import User
-from django.db.models import Count
 from django.utils import timezone
+
+from agents.providers import personal_provider
 
 
 def get_routine_summary(
@@ -16,19 +17,15 @@ def get_routine_summary(
 
     If start/end are provided they take precedence over days.
     """
-    from personal_planning.models import TaskInstance
-
     if start is not None and end is not None:
         period_start, period_end = start, end
     else:
         period_end = timezone.now().date()
         period_start = period_end - timedelta(days=days - 1)
 
-    instances = TaskInstance.objects.filter(
-        owner__user=user,
-        scheduled_date__range=(period_start, period_end),
-        is_deleted=False,
-    ).values("status")
+    instances = personal_provider.task_instances_status(
+        user, period_start, period_end
+    )
 
     total = len(instances)
     completed = sum(1 for i in instances if i["status"] == "completed")
@@ -56,24 +53,14 @@ def get_top_missed_routines(
     end: date | None = None,
 ) -> list[dict[str, Any]]:
     """Routines with the highest failure count in the period."""
-    from personal_planning.models import TaskInstance
-
     if start is not None and end is not None:
         period_start, period_end = start, end
     else:
         period_end = timezone.now().date()
         period_start = period_end - timedelta(days=days - 1)
 
-    missed = (
-        TaskInstance.objects.filter(
-            owner__user=user,
-            scheduled_date__range=(period_start, period_end),
-            is_deleted=False,
-        )
-        .exclude(status="completed")
-        .values("template__name", "template__category")
-        .annotate(miss_count=Count("id"))
-        .order_by("-miss_count")[:5]
+    missed = personal_provider.missed_task_instances_by_template(
+        user, period_start, period_end, limit=5
     )
 
     return [
@@ -88,17 +75,7 @@ def get_top_missed_routines(
 
 def get_active_goals(user: User) -> list[dict[str, Any]]:
     """Active goals with progress."""
-    from personal_planning.models import Goal
-
-    goals = Goal.objects.filter(
-        owner__user=user,
-        status="active",
-        is_deleted=False,
-    ).values(
-        "title", "goal_type", "target_value", "current_value", "end_date"
-    )[
-        :10
-    ]
+    goals = personal_provider.active_goals(user, limit=10)
 
     result = []
     for g in goals:
@@ -123,15 +100,10 @@ def get_active_goals(user: User) -> list[dict[str, Any]]:
 
 
 def get_today_pending_tasks(user: User) -> list[dict[str, Any]]:
-    from personal_planning.models import TaskInstance
-
     today = timezone.now().date()
-    pending = TaskInstance.objects.filter(
-        owner__user=user,
-        scheduled_date=today,
-        status="pending",
-        is_deleted=False,
-    ).values("template__name", "template__category", "template__icon")[:10]
+    pending = personal_provider.today_pending_task_instances(
+        user, today, limit=10
+    )
 
     return [
         {

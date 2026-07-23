@@ -8,8 +8,9 @@ DEFAULT_CONFIGS: list[dict] = [
         "category": "llm",
         "label": "Provedor LLM",
         "description": (
-            "Provedor de linguagem: 'ollama' (local), "
-            "'groq' (nuvem, rápido e gratuito) ou 'anthropic' (nuvem, Claude)."
+            "Provedor de linguagem: 'ollama' (self-hosted), "
+            "'groq' (nuvem, rápido e gratuito), 'anthropic' (nuvem, Claude) "
+            "ou 'openai' (nuvem, GPT)."
         ),
         "is_secret": False,
         "requires_restart": True,
@@ -104,6 +105,28 @@ DEFAULT_CONFIGS: list[dict] = [
         "category": "llm",
         "label": "Modelo Anthropic",
         "description": "Modelo Claude a utilizar (ex: claude-sonnet-4-6).",
+        "is_secret": False,
+        "requires_restart": False,
+        "is_editable": True,
+    },
+    {
+        "key": "OPENAI_API_KEY",
+        "category": "llm",
+        "label": "Chave API OpenAI",
+        "description": (
+            "Chave de API para uso com OpenAI "
+            "(obrigatório se LLM_PROVIDER=openai). Obtenha em"
+            " platform.openai.com."
+        ),
+        "is_secret": True,
+        "requires_restart": False,
+        "is_editable": True,
+    },
+    {
+        "key": "OPENAI_MODEL",
+        "category": "llm",
+        "label": "Modelo OpenAI",
+        "description": "Modelo OpenAI a utilizar (ex: gpt-4o, gpt-4o-mini).",
         "is_secret": False,
         "requires_restart": False,
         "is_editable": True,

@@ -186,6 +186,7 @@ class PersonalAgent(BaseAgent):
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-sonnet-4-6"
     groq_model = "llama-3.3-70b-specdec"
+    openai_model = "gpt-4o"
 
     def can_handle(self, query: str) -> float:
         q = _normalize(query)

@@ -40,6 +40,7 @@ class PlanningAgent(BaseAgent):
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-haiku-4-5-20251001"
     groq_model = "gemma2-9b-it"
+    openai_model = "gpt-4o-mini"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()

@@ -9,6 +9,8 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from agents.providers import personal_provider
+
 
 def get_workout_summary(
     user: User,
@@ -18,8 +20,6 @@ def get_workout_summary(
 ) -> dict[str, Any]:
     """Resumo das sessões de treino num período."""
     try:
-        from personal_planning.models import WorkoutSession
-
         today = timezone.now().date()
         if start is not None and end is not None:
             period_start, period_end = start, end
@@ -27,18 +27,8 @@ def get_workout_summary(
             period_end = today
             period_start = period_end - timedelta(days=days - 1)
 
-        sessions = list(
-            WorkoutSession.objects.filter(
-                owner__user=user,
-                date__range=(period_start, period_end),
-                is_deleted=False,
-            ).values(
-                "date",
-                "workout_day__name",
-                "started_at",
-                "finished_at",
-                "notes",
-            )
+        sessions = personal_provider.workout_sessions(
+            user, period_start, period_end
         )
 
         result = []
@@ -85,8 +75,6 @@ def get_nutrition_summary(
 ) -> dict[str, Any]:
     """Resumo do diário alimentar num período."""
     try:
-        from personal_planning.models import MealLog
-
         today = timezone.now().date()
         if start is not None and end is not None:
             period_start, period_end = start, end
@@ -94,19 +82,7 @@ def get_nutrition_summary(
             period_end = today
             period_start = period_end - timedelta(days=days - 1)
 
-        logs = list(
-            MealLog.objects.filter(
-                owner__user=user,
-                date__range=(period_start, period_end),
-                is_deleted=False,
-            ).values(
-                "date",
-                "meal_type__name",
-                "menu_option__name",
-                "is_free_meal",
-                "notes",
-            )
-        )
+        logs = personal_provider.meal_logs(user, period_start, period_end)
 
         free_meals = sum(1 for entry in logs if entry["is_free_meal"])
         recent = [
@@ -143,30 +119,19 @@ def get_nutrition_summary(
 def get_active_workout_plan(user: User) -> dict[str, Any]:
     """Retorna o plano de treino ativo e seus dias."""
     try:
-        from personal_planning.models import WorkoutDay, WorkoutPlan
-
-        plan = (
-            WorkoutPlan.objects.filter(owner__user=user, is_deleted=False)
-            .order_by("-created_at")
-            .first()
-        )
+        plan = personal_provider.active_workout_plan_with_days(user)
         if not plan:
             return {"has_plan": False}
 
-        days = list(
-            WorkoutDay.objects.filter(plan=plan, is_deleted=False)
-            .values("name", "muscle_groups", "order")
-            .order_by("order")
-        )
         return {
             "has_plan": True,
-            "plan_name": plan.name,
+            "plan_name": plan["plan_name"],
             "days": [
                 {
                     "name": d["name"],
                     "muscle_groups": (d["muscle_groups"] or "")[:100],
                 }
-                for d in days
+                for d in plan["days"]
             ],
         }
     except Exception:

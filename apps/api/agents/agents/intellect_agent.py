@@ -14,6 +14,7 @@ from django.utils import timezone
 from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
+from agents.providers import library_provider
 
 _KW_BOOKS = [
     "livro",
@@ -202,6 +203,7 @@ class IntellectAgent(BaseAgent):
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-sonnet-4-6"
     groq_model = "llama-3.3-70b-versatile"
+    openai_model = "gpt-4o"
 
     def can_handle(self, query: str) -> float:
         q = _normalize(query)
@@ -250,19 +252,13 @@ class IntellectAgent(BaseAgent):
         book_id = ctx.metadata.get("book_id")
         if book_id:
             try:
-                from library.models import Book
-
-                book_obj = (
-                    Book.objects.filter(
-                        pk=book_id, owner__user=user, is_deleted=False
-                    )
-                    .values("title")
-                    .first()
+                book_title = library_provider.book_title_for_user(
+                    book_id, user
                 )
-                if book_obj:
+                if book_title:
                     book_context = (
                         "Foco desta conversa: livro "
-                        + f"'{safe_str(book_obj['title'])}'. "
+                        + f"'{safe_str(book_title)}'. "
                         + "Priorize trechos e informações sobre esta obra.\n\n"
                     )
             except Exception:
@@ -288,28 +284,14 @@ class IntellectAgent(BaseAgent):
         end: date | None = None,
     ) -> list[dict[str, Any]]:
         try:
-            from library.models import Book, Reading
-
-            qs = Book.objects.filter(owner__user=user, is_deleted=False)
-            if start and end:
-                qs = qs.filter(updated_at__date__range=(start, end))
-            books = list(
-                qs.values(
-                    "id", "title", "genre", "read_status", "pages", "rating"
-                ).order_by("-updated_at")[:8]
+            books = library_provider.recent_books_detailed(
+                user, start, end, limit=8
             )
-
-            from django.db.models import Sum
 
             # Enriquece com páginas lidas acumuladas (sessões de leitura)
             result = []
             for b in books:
-                pages_read = (
-                    Reading.objects.filter(
-                        book_id=b["id"], is_deleted=False
-                    ).aggregate(total=Sum("pages_read"))["total"]
-                    or 0
-                )
+                pages_read = library_provider.reading_pages_read(b["id"])
                 result.append(
                     {
                         "title": safe_str(b["title"]),
@@ -329,39 +311,22 @@ class IntellectAgent(BaseAgent):
 
     def _get_course_progress(self, user: User) -> list[dict[str, Any]]:
         try:
-            from library.models import Course, CourseSession
-
-            courses = list(
-                Course.objects.filter(owner__user=user, is_deleted=False)
-                .values("id", "title", "platform", "status")
-                .order_by("-updated_at")[:6]
-            )
-            result = []
-            for c in courses:
-                sessions_count = CourseSession.objects.filter(
-                    course_id=c["id"], is_deleted=False
-                ).count()
-                result.append(
-                    {
-                        "title": safe_str(c["title"]),
-                        "platform": safe_str(c["platform"] or ""),
-                        "status": safe_str(c["status"] or ""),
-                        "sessions": sessions_count,
-                    }
-                )
-            return result
+            courses = library_provider.course_progress(user, limit=6)
+            return [
+                {
+                    "title": safe_str(c["title"]),
+                    "platform": safe_str(c["platform"] or ""),
+                    "status": safe_str(c["status"] or ""),
+                    "sessions": c["sessions_count"],
+                }
+                for c in courses
+            ]
         except Exception:
             return []
 
     def _get_skills(self, user: User) -> list[dict[str, Any]]:
         try:
-            from library.models import Skill
-
-            skills = list(
-                Skill.objects.filter(owner__user=user, is_deleted=False)
-                .values("name", "category", "proficiency", "status")
-                .order_by("category", "name")[:12]
-            )
+            skills = library_provider.skills(user, limit=12)
             return [
                 {
                     "name": safe_str(s["name"]),

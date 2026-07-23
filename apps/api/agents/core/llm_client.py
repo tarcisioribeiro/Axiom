@@ -1,5 +1,5 @@
 """
-Cliente LLM com suporte a Ollama (local), Groq (cloud) e Anthropic.
+Cliente LLM com suporte a Ollama (local), Groq (cloud), Anthropic e OpenAI.
 
 Melhorias implementadas:
 - Anthropic client reutilizado via singleton thread-safe
@@ -29,6 +29,7 @@ from app.config import cfg as _cfg
 logger = logging.getLogger(__name__)
 
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+_OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 _FALLBACK_ERROR: dict[str, str] = {
     "pt": "Desculpe, não foi possível processar sua pergunta no momento.",
@@ -86,6 +87,8 @@ class LLMClient:
             return cls._anthropic_chat(messages, model=model)
         if provider == "groq":
             return cls._groq_chat(messages, model=model)
+        if provider == "openai":
+            return cls._openai_chat(messages, model=model)
         return cls._ollama_chat(messages, model=model)
 
     @classmethod
@@ -96,6 +99,8 @@ class LLMClient:
             yield from cls._anthropic_stream(messages, model=model)
         elif provider == "groq":
             yield from cls._groq_stream(messages, model=model)
+        elif provider == "openai":
+            yield from cls._openai_stream(messages, model=model)
         else:
             yield from cls._ollama_stream(messages, model=model)
 
@@ -465,6 +470,75 @@ class LLMClient:
             except (json.JSONDecodeError, IndexError, KeyError):
                 continue
 
+    # ── OpenAI
+    # ─────────────────────────────────────────────────────────
+
+    @classmethod
+    def _openai_chat(
+        cls, messages: list[dict[str, str]], model: str | None = None
+    ) -> str:
+        openai_api_key = _cfg("OPENAI_API_KEY", "")
+        openai_model = _cfg("OPENAI_MODEL", "gpt-4o-mini")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or openai_model
+        resp = requests.post(
+            f"{_OPENAI_BASE_URL}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {openai_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": effective_model,
+                "messages": messages,
+                "stream": False,
+            },
+            timeout=timeout_chat,
+        )
+        resp.raise_for_status()
+        data: dict[str, Any] = resp.json()
+        return str(data["choices"][0]["message"]["content"])
+
+    @classmethod
+    def _openai_stream(
+        cls, messages: list[dict[str, str]], model: str | None = None
+    ) -> Generator[str, None, None]:
+        openai_api_key = _cfg("OPENAI_API_KEY", "")
+        openai_model = _cfg("OPENAI_MODEL", "gpt-4o-mini")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or openai_model
+        resp = requests.post(
+            f"{_OPENAI_BASE_URL}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {openai_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": effective_model,
+                "messages": messages,
+                "stream": True,
+            },
+            timeout=timeout_chat,
+            stream=True,
+        )
+        resp.raise_for_status()
+        for line in resp.iter_lines():
+            if not line:
+                continue
+            raw = line.decode("utf-8") if isinstance(line, bytes) else line
+            if not raw.startswith("data: "):
+                continue
+            payload = raw[6:]
+            if payload == "[DONE]":
+                break
+            try:
+                chunk: dict[str, Any] = json.loads(payload)
+                delta = chunk.get("choices", [{}])[0].get("delta", {})
+                token = delta.get("content", "")
+                if token:
+                    yield token
+            except (json.JSONDecodeError, IndexError, KeyError):
+                continue
+
     # ── Anthropic
     # ─────────────────────────────────────────────────────────────
 
@@ -558,6 +632,8 @@ class LLMClient:
                 )
             if provider == "groq":
                 return bool(_cfg("GROQ_API_KEY"))
+            if provider == "openai":
+                return bool(_cfg("OPENAI_API_KEY"))
             ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
             resp = requests.get(f"{ollama_url}/api/tags", timeout=5)
             return resp.status_code == 200
@@ -569,6 +645,8 @@ class LLMClient:
         provider = _cfg("LLM_PROVIDER", "ollama")
         if provider == "groq":
             return [_cfg("GROQ_MODEL", "llama-3.1-8b-instant")]
+        if provider == "openai":
+            return [_cfg("OPENAI_MODEL", "gpt-4o-mini")]
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
         try:
             resp = requests.get(f"{ollama_url}/api/tags", timeout=5)

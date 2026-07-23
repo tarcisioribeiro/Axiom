@@ -15,10 +15,14 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
   LLM_PROVIDER: {
     hint: 'Define qual provedor o sistema de agentes usa. Trocar entre provedores requer reinicialização do container.',
     default_value: 'ollama',
-    accepted_values: 'ollama | anthropic',
+    accepted_values: 'ollama | groq | anthropic | openai',
+  },
+  LLM_FALLBACK_PROVIDERS: {
+    hint: 'Providers de fallback, em ordem, separados por vírgula — testados se o provider principal (LLM_PROVIDER) falhar.',
+    example: 'groq,anthropic',
   },
   OLLAMA_BASE_URL: {
-    hint: 'Endereço HTTP do servidor Ollama. Dentro do Docker Compose, o service name "ollama" resolve automaticamente. Para Ollama instalado no host (fora do Docker), use http://host.docker.internal:11434.',
+    hint: 'Endereço HTTP do servidor Ollama. Localmente, dentro do Docker Compose, o service name "ollama" resolve automaticamente. Em staging/produção aponta para um host self-hosted externo ao cluster.',
     default_value: 'http://ollama:11434',
     example: 'http://host.docker.internal:11434',
   },
@@ -42,6 +46,16 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
     hint: 'Segundos máximos de espera por um embedding. Embeddings são geralmente mais rápidos que chat; raramente precisa ser aumentado.',
     default_value: '30',
   },
+  GROQ_API_KEY: {
+    hint: 'Chave secreta da API Groq. Obrigatória quando LLM_PROVIDER=groq. Obtida em console.groq.com → API Keys. Armazenada criptografada no banco.',
+    example: 'gsk_...',
+    warning: 'Nunca commite esta chave em código.',
+  },
+  GROQ_MODEL: {
+    hint: 'Modelo Groq a utilizar (API compatível com o formato OpenAI).',
+    example: 'llama-3.1-8b-instant',
+    accepted_values: 'llama-3.1-8b-instant | llama-3.3-70b-versatile | gemma2-9b-it',
+  },
   ANTHROPIC_API_KEY: {
     hint: 'Chave secreta da API Anthropic. Obrigatória quando LLM_PROVIDER=anthropic. Obtida em console.anthropic.com → API Keys. Armazenada criptografada no banco.',
     example: 'sk-ant-api03-...',
@@ -52,6 +66,17 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
     hint: 'ID do modelo Claude a utilizar. Os IDs são versionados; consulte docs.anthropic.com/en/docs/about-claude/models para o ID mais recente recomendado.',
     example: 'claude-sonnet-4-6',
     accepted_values: 'claude-sonnet-4-6 | claude-haiku-4-5-20251001 | claude-opus-4-7',
+  },
+  OPENAI_API_KEY: {
+    hint: 'Chave secreta da API OpenAI. Obrigatória quando LLM_PROVIDER=openai. Obtida em platform.openai.com → API Keys. Armazenada criptografada no banco.',
+    example: 'sk-...',
+    warning:
+      'Nunca commite esta chave em código. Ela só é exibida uma vez ao ser criada.',
+  },
+  OPENAI_MODEL: {
+    hint: 'Modelo OpenAI a utilizar.',
+    example: 'gpt-4o-mini',
+    accepted_values: 'gpt-4o-mini | gpt-4o',
   },
   EMAIL_BACKEND: {
     hint: 'Classe Python do backend de email do Django. Em produção use o backend SMTP. Em desenvolvimento, o backend "console" imprime emails no stdout do container em vez de enviá-los.',

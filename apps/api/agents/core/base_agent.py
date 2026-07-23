@@ -66,6 +66,7 @@ class BaseAgent(ABC):
     ollama_model: str = "mistral:7b-instruct"
     anthropic_model: str = "claude-haiku-4-5-20251001"
     groq_model: str = "llama-3.1-8b-instant"
+    openai_model: str = "gpt-4o-mini"
 
     def get_model(self) -> str:
         provider = cfg("LLM_PROVIDER", "ollama")
@@ -73,6 +74,8 @@ class BaseAgent(ABC):
             return self.anthropic_model
         if provider == "groq":
             return self.groq_model
+        if provider == "openai":
+            return self.openai_model
         return self.ollama_model
 
     @abstractmethod
