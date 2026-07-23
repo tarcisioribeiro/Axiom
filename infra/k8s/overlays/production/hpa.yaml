@@ -1,16 +1,92 @@
+# -----------------------------------------------------------------------------
+# api-blue-hpa / api-green-hpa — one HPA per blue-green slot.
+#
+# There is no single Deployment named "api" in production (see
+# api/deployment-blue.yaml / api/deployment-green.yaml) — only api-blue and
+# api-green — so a single api-hpa with scaleTargetRef.name: api can never
+# resolve its target (AbleToScale stays False forever). These two per-slot
+# HPAs fix that by targeting the real Deployment names.
+#
+# Known limitation — minReplicas vs. blue-green-switch.sh's scale-to-0:
+#   scripts/blue-green-switch.sh scales the OLD (now-inactive) slot down to
+#   0 replicas after every switch, specifically to keep an instant-rollback
+#   target at zero cost. With both HPAs applied and minReplicas: 1, the
+#   standby slot's HPA will notice replicas (0) < minReplicas (1) on its
+#   next reconcile (~15s) and scale it back up to 1 — silently undoing the
+#   scale-to-0 step. HPA v2 only allows minReplicas: 0 for Object/External
+#   metrics (would need the alpha HPAScaleToZero gate + a non-Resource
+#   metric, e.g. via KEDA), not for plain CPU/memory Resource metrics as
+#   used here.
+#
+#   If you apply this file, either:
+#     a) accept the standby slot idling at 1 replica instead of 0 (simplest —
+#        do nothing further), or
+#     b) delete the standby's HPA right after each switch so it stops
+#        fighting the scale-to-0 step, and (re)apply it for the new active
+#        slot — see the extra log lines blue-green-switch.sh prints at the
+#        end of every run for the exact commands.
+#
+# This file is optional and NOT applied automatically by CI (see
+# infra/k8s/README.md, "Production — One-time Setup", step 4).
+# -----------------------------------------------------------------------------
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: api-hpa
+  name: api-blue-hpa
   namespace: axiom
   labels:
     app.kubernetes.io/name: axiom
     app.kubernetes.io/component: api
+    slot: blue
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: api
+    name: api-blue
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-green-hpa
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: api
+    slot: green
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-green
   minReplicas: 1
   maxReplicas: 10
   metrics:

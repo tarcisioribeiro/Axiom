@@ -113,6 +113,14 @@ kubectl apply -f infra/k8s/overlays/production/pdb.yaml
 kubectl apply -f infra/k8s/overlays/production/backup-cronjob.yaml
 ```
 
+> `hpa.yaml` defines one HPA per blue-green slot (`api-blue-hpa` /
+> `api-green-hpa`), each with `minReplicas: 1`. `blue-green-switch.sh` scales
+> the standby slot to 0 replicas after every switch for instant rollback —
+> the standby's own HPA will scale it back up to 1 within ~15s unless you
+> delete it (`kubectl delete hpa api-<standby-slot>-hpa`). The script prints
+> the exact command when this applies. See the comment block at the top of
+> `hpa.yaml` for the full tradeoff.
+
 ---
 
 ## Staging — One-time Setup

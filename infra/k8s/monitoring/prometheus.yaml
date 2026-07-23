@@ -1,7 +1,7 @@
 # Prometheus Monitoring Stack for Axiom
 # -------------------------------------------
 # Apply order:
-#   kubectl apply -f k8s/monitoring/prometheus.yaml
+#   kubectl apply -f infra/k8s/monitoring/prometheus.yaml
 #
 # Metrics exposed by the Django API at /metrics (django-prometheus)
 # are auto-discovered via the prometheus.io/scrape annotations on api-service.

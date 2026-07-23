@@ -2,7 +2,7 @@
 # Axiom Staging — Automated Database Backup
 # =============================================================================
 #
-# Adapted from k8s/backup-cronjob.yaml (production).
+# Adapted from infra/k8s/overlays/production/backup-cronjob.yaml (production).
 # Key differences from production:
 #   - namespace: axiom-staging
 #   - CronJob name: axiom-db-backup-staging
@@ -24,7 +24,7 @@
 #     MINIO_SECRET_KEY       MinIO secret key
 #
 # Apply:
-#   kubectl apply -f k8s/staging/backup-cronjob.yaml
+#   kubectl apply -f infra/k8s/overlays/staging/backup-cronjob.yaml
 #
 # Trigger a manual run:
 #   kubectl create job --from=cronjob/axiom-db-backup-staging \
