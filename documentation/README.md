@@ -84,6 +84,11 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
 - **[Configuração LLM / Ollama](admin-panel/llm_ollama_configuration.md)** - Ollama local, Anthropic Claude, modelos e monitoramento de agentes
 - **[Referência de Variáveis](admin-panel/environment_variables.md)** - Tabela completa de todas as chaves, valores padrão, segredos e efeitos
 
+### [10. Mobile](mobile/README.md)
+App mobile em Flutter — estado atual, stack e como rodar.
+
+- **[Visão Geral](mobile/README.md)** - Stack, estrutura de diretórios, comandos de desenvolvimento e integração com CI/CD
+
 ## 🚀 Início Rápido
 
 ### Para Novos Usuários

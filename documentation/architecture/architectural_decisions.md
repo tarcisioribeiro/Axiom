@@ -21,6 +21,7 @@ Este documento registra as principais decisões arquiteturais tomadas durante o 
 13. [Versionamento de API por URL vs. Header](#13-versionamento-de-api-por-url-vs-header)
 14. [Apps Django Modulares vs. App Monolítico](#14-apps-django-modulares-vs-app-monolítico)
 15. [Groq vs. OpenAI vs. Modelos Locais](#15-groq-vs-openai-vs-modelos-locais)
+16. [Flutter vs. React Native vs. Nativo](#16-flutter-vs-react-native-vs-nativo)
 
 ---
 
@@ -886,6 +887,54 @@ O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários
 
 ---
 
+## 16. Flutter vs. React Native vs. Nativo
+
+### Decisão
+
+**Escolhido**: Flutter (Dart)
+
+### Contexto
+
+O Axiom precisa de um app mobile (Android/iOS) consumindo a mesma API Django
+já usada pelo frontend web. `apps/mobile/` existia apenas como diretório
+reservado; esta decisão define a stack para o scaffolding inicial.
+
+### Alternativas Consideradas
+
+1. **Flutter** (escolhido)
+2. **React Native (Expo)**: reaproveitaria TypeScript/React do frontend web
+3. **React Native CLI (bare)**: mesmo TS/React, sem a camada de abstração do Expo
+4. **Nativo (Kotlin + Swift separados)**: dois codebases completos
+
+### Justificativa
+
+**Vantagens do Flutter**:
+- **Um único codebase Dart** para Android e iOS, com widgets renderizados diretamente pela engine (Skia/Impeller) — UI visualmente consistente entre plataformas, sem depender de componentes nativos por trás de uma ponte JS
+- **Hot reload** rápido para iteração de UI
+- **Tooling maduro**: `flutter analyze`, `flutter test`, `flutter build` cobrem lint/test/build sem depender de configuração adicional de bundler
+- Performance previsível (compilado para código nativo ARM, sem bridge JS como no React Native clássico)
+
+**Por que não React Native (Expo ou bare)?**
+- Reaproveitaria TypeScript/React do time, mas o projeto optou por priorizar consistência visual entre plataformas e performance de UI sobre reaproveitamento de linguagem
+- Expo simplificaria o CI (sem precisar de Android SDK completo para lint/typecheck), mas o Axiom já tem o toolchain Android disponível e o ganho não superou as vantagens do Flutter para este caso
+- Bare React Native exigiria Xcode/Android SDK configurados até para checagens básicas de CI, complicando o pipeline GitLab CI atual
+
+**Por que não nativo (Kotlin + Swift)?**
+- Dobraria o esforço de manutenção (duas bases de código, duas equipes/skillsets)
+- Sem reaproveitamento de lógica de UI entre plataformas
+
+### Trade-offs Aceitos
+
+- Dart é uma linguagem nova para o time (sem reaproveitamento direto do TypeScript do frontend web)
+- Ecossistema de pacotes menor que o do npm/React Native
+- Build de iOS exige macOS/Xcode — não validável no runner Linux atual do GitLab CI (só o build Android é verificado em `build:mobile`)
+
+**Quando reconsiderar?**
+- Se o time crescer com forte especialização React Native/TypeScript e pouca familiaridade com Dart
+- Se for necessário reaproveitar código de lógica de negócio diretamente entre frontend web e mobile (Flutter não compartilha nada com o TypeScript do `apps/frontend/`)
+
+---
+
 ## Resumo de Decisões
 
 | Decisão | Escolha | Razão Principal |
@@ -905,6 +954,7 @@ O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários
 | API Versioning | URL path | Clareza |
 | Backend Structure | Apps modulares | Separação de responsabilidades |
 | LLM | Multi-provider (Ollama/Groq/Anthropic) | Flexibilidade privacidade vs. qualidade |
+| Mobile | Flutter (Dart) | Codebase único Android/iOS, UI consistente |
 
 ## Princípios Orientadores
 

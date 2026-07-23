@@ -118,6 +118,23 @@ workflow:
         npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
       fi
 
+.flutter_base:
+  image: ghcr.io/cirruslabs/flutter:3.27.3
+  variables:
+    # Must live inside CI_PROJECT_DIR — GitLab's cache mechanism only persists
+    # paths under the project directory between jobs/pipelines.
+    PUB_CACHE: "$CI_PROJECT_DIR/.pub-cache"
+  cache:
+    key:
+      files:
+        - apps/mobile/pubspec.lock
+    paths:
+      - .pub-cache/
+      - apps/mobile/.dart_tool/
+  before_script:
+    - cd apps/mobile
+    - flutter pub get
+
 # Runner com acesso ao cluster via túnel — network_mode=host → acesso direto a 127.0.0.1:6443.
 # KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
 # Para gerar: base64 -w0 /etc/rancher/k3s/k3s.yaml
@@ -177,6 +194,20 @@ workflow:
         - apps/frontend/**/*
         - .gitlab-ci.yml
 
+# Same as above, scoped to apps/mobile/. Mobile has no deploy target yet, so
+# unlike backend/frontend this also covers its build job (see build:mobile) —
+# there is no branch-based build step to fall back to.
+.rules_verify_mobile:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - apps/mobile/**/*
+        - .gitlab-ci.yml
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
+      changes:
+        - apps/mobile/**/*
+        - .gitlab-ci.yml
+
 # ==============================================================================
 # STAGE: lint
 # ==============================================================================
@@ -214,6 +245,15 @@ lint:frontend:
         echo "npm run lint exited $LINT_STATUS, npm run format:check exited $FORMAT_STATUS"
         exit 1
       fi
+
+lint:mobile:
+  extends:
+    - .flutter_base
+    - .rules_verify_mobile
+  stage: lint
+  script:
+    - dart format --set-exit-if-changed .
+    - flutter analyze
 
 lint:migrations:
   extends:
@@ -346,6 +386,25 @@ lint:k8s:
       changes:
         - infra/k8s/**/*.yaml
         - .gitlab-ci.yml
+
+# ==============================================================================
+# STAGE: test
+# ==============================================================================
+
+test:mobile:
+  extends:
+    - .flutter_base
+    - .rules_verify_mobile
+  stage: test
+  script:
+    - flutter test --coverage
+  artifacts:
+    when: always
+    paths:
+      - apps/mobile/coverage/lcov.info
+    expire_in: 30 days
+
+# ==============================================================================
 # STAGE: build
 # ==============================================================================
 
@@ -621,6 +680,23 @@ build:frontend:
       - frontend-sbom.cdx.json
       - frontend-sbom.spdx.json
     expire_in: 90 days
+
+# Mobile has no deploy target yet, so unlike build:api/build:frontend this is
+# not a Docker build+push feeding a deploy job — it's a build-verification
+# check ("does the app still build") gated the same way as lint:mobile /
+# test:mobile, not by branch. Revisit once the module gets a real release
+# pipeline (app store / internal distribution).
+build:mobile:
+  extends:
+    - .flutter_base
+    - .rules_verify_mobile
+  stage: build
+  script:
+    - flutter build apk --debug
+  artifacts:
+    paths:
+      - apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+    expire_in: 7 days
 
 # ==============================================================================
 # STAGE: scan
@@ -1168,8 +1244,8 @@ seed:staging:
 #      20+ testes falhando com erro de login.
 #
 # Artefatos retidos por 7 dias:
-#   - e2e-results/          — relatório HTML e screenshots/vídeos dos testes
-#   - apps/frontend/test-results/ — saída bruta do Playwright
+#   - e2e-results/          — relatório HTML, JUnit e traces/screenshots dos
+#     testes (outputDir do Playwright aponta para dentro desta mesma pasta)
 #   - e2e-results/results.xml (JUnit) — integrado ao GitLab para exibição
 #     inline na UI de MR/pipeline
 #
@@ -1229,7 +1305,6 @@ seed:staging:
 #     when: always
 #     paths:
 #       - e2e-results/
-#       - apps/frontend/test-results/
 #     reports:
 #       junit: e2e-results/results.xml
 #     expire_in: 7 days
