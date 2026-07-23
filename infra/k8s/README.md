@@ -73,8 +73,11 @@ These steps are run **once** when provisioning the production environment. After
 > `DB_NAME`/`DB_USER`/`DB_PASSWORD` must correspond to a real role/database
 > already created on the external PostgreSQL VM — see
 > [documentation/database/infrastructure.md](../../documentation/database/infrastructure.md).
-> `DB_HOST`/`DB_PORT`/`DB_SSLMODE` (in `infra/k8s/base/configmap.yaml`) must
-> already point at that VM before applying step 2.
+> `DB_HOST`/`DB_PORT` are **not** in `infra/k8s/base/configmap.yaml` — they go
+> into the `axiom-secrets` Secret (`infra/k8s/base/secrets.yaml`, step 1
+> below) from the `DB_HOST`/`DB_PORT` env vars, same as CI does from the
+> `PRODUCTION_DB_HOST`/`PRODUCTION_DB_PORT` variables. Only `DB_SSLMODE` stays
+> in the ConfigMap.
 
 ```bash
 # 1. Secrets — infra/k8s/base/secrets.yaml uses ${VAR} placeholders
@@ -129,6 +132,8 @@ Required environment variables for secrets:
 | `STAGING_DB_NAME` | PostgreSQL database name (must exist on the external VM — see [documentation/database/infrastructure.md](../../documentation/database/infrastructure.md)) |
 | `STAGING_DB_USER` | PostgreSQL user (role already created on the external VM) |
 | `STAGING_DB_PASSWORD` | PostgreSQL password |
+| `STAGING_DB_HOST` | PostgreSQL host — self-managed, same VPS as k3s (not the VM's public IP if you later isolate it) |
+| `STAGING_DB_PORT` | PostgreSQL port |
 | `STAGING_SECRET_KEY` | Django `SECRET_KEY` (generate: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`) |
 | `STAGING_ENCRYPTION_KEY` | Fernet key (generate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`) |
 | `STAGING_SUPERUSER_USERNAME` | Django superuser username |
@@ -152,10 +157,11 @@ kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
 
 Namespace, RBAC, ClusterIssuers, network-policy, quota, redis, minio, ollama,
 api (single Deployment, no TLS — staging never mounts `minio-tls`), frontend,
-ingress — all in one shot. PostgreSQL is not applied here — it runs on the
-same external VM as production (see
+ingress — all in one shot. PostgreSQL is not applied here — it runs
+self-managed on the same VPS as production (see
 [documentation/database/infrastructure.md](../../documentation/database/infrastructure.md)),
-so `axiom-config`'s `DB_HOST` must already point at it:
+so `axiom-secrets`'s `DB_HOST`/`DB_PORT` (from step 1 above) must already
+point at it:
 
 ```bash
 kubectl apply -k infra/k8s/overlays/staging
