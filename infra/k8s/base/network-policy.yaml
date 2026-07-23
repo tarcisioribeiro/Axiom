@@ -90,30 +90,6 @@ spec:
         - protocol: TCP
           port: 6379
 ---
-# Allow the API to reach Ollama for LLM inference and embedding.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-api-to-ollama
-  namespace: axiom
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: network-policy
-spec:
-  podSelector:
-    matchLabels:
-      app: ollama
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: api
-      ports:
-        - protocol: TCP
-          port: 11434
----
 # Allow the nginx ingress controller to reach cert-manager ACME HTTP-01 solver pods.
 # These pods are created in the axiom namespace and also blocked by default-deny-ingress.
 # Without this policy, Let's Encrypt HTTP-01 challenges get 404 and TLS certs cannot be issued.
