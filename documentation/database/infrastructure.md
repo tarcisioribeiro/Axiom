@@ -6,11 +6,15 @@ completo (setup da VM, rede/segurança, backup e restore).
 
 ## Topologia
 
-O PostgreSQL **não roda dentro do cluster k3s**. Ele roda em uma VM externa,
-auto-gerenciada (não é um serviço gerenciado como RDS/Supabase/Neon), fora do
-cluster. Isso facilita consultas ad-hoc, manutenção (vacuum, reindex, extensões)
-e backup sem competir por recursos com os pods da aplicação nem depender de
+O PostgreSQL **não roda dentro do cluster k3s**. Ele roda auto-gerenciado
+(não é um serviço gerenciado como RDS/Supabase/Neon), fora do cluster. Isso
+facilita consultas ad-hoc, manutenção (vacuum, reindex, extensões) e backup
+sem competir por recursos com os pods da aplicação nem depender de
 `kubectl exec` para tudo.
+
+**Setup atual**: o Postgres roda diretamente **na mesma VPS que hospeda o
+k3s** (não em uma segunda VM) — ver [Rede e segurança](#rede-e-segurança-runbook)
+abaixo para o porquê disso dispensar VPN/firewall por enquanto.
 
 Um único servidor Postgres hospeda dois bancos:
 
@@ -23,15 +27,19 @@ Essa é a opção mais simples para um setup self-hosted de pequena escala — n
 exige uma segunda VM. Se no futuro for necessário isolar o "raio de explosão"
 entre staging e produção (ex.: não permitir que um bug em staging tenha
 qualquer acesso de rede ao servidor de produção), o caminho de reversão é
-barato: basta sobrescrever `DB_HOST`/`DB_SSLMODE` em
-`infra/k8s/overlays/staging/patches/configmap.yaml` (que já existe e já
-sobrescreve outras chaves do ConfigMap) apontando para uma segunda VM.
+barato: basta definir `STAGING_DB_HOST`/`STAGING_DB_PORT` com um valor
+diferente de `PRODUCTION_DB_HOST`/`PRODUCTION_DB_PORT` nas variáveis de
+CI/CD (GitLab → Settings → CI/CD → Variables) apontando para a segunda VM —
+nenhum arquivo do repositório precisa mudar.
 
 A aplicação Django e os scripts de backup já são agnósticos de onde o
 Postgres está — tudo é lido de `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/
-`DB_PASSWORD`/`DB_SSLMODE` via variáveis de ambiente (ConfigMap `axiom-config`
-+ Secret `axiom-secrets` no k8s, `.env` localmente). **Migrations e management
-commands não são afetados** por essa topologia.
+`DB_PASSWORD`/`DB_SSLMODE` via variáveis de ambiente. No k8s, `DB_HOST`/
+`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD` vêm do Secret `axiom-secrets`
+(injetado a partir das variáveis de CI/CD `STAGING_DB_*`/`PRODUCTION_DB_*` —
+nunca commitados em arquivo); só `DB_SSLMODE` (não sensível) vive no
+ConfigMap `axiom-config`. Localmente, tudo vem do `.env`. **Migrations e
+management commands não são afetados** por essa topologia.
 
 ## Setup manual da VM (runbook)
 
@@ -75,11 +83,33 @@ Postgres:
 
 ## Rede e segurança (runbook)
 
-A conectividade entre o cluster k3s e a VM do Postgres **não é resolvida
+A conectividade entre o cluster k3s e o Postgres **não é resolvida
 automaticamente por nenhum código deste repositório** — é uma etapa de
-infraestrutura executada manualmente. Duas opções, comparadas:
+infraestrutura executada manualmente.
 
-### Opção recomendada: túnel WireGuard
+### Setup atual: mesma VPS, sem túnel
+
+Como o Postgres roda na própria VPS que hospeda o k3s (não em uma VM
+separada), os pods alcançam o Postgres pelo IP público da VPS
+(`84.247.184.151`) na porta em que o Postgres foi colocado para escutar
+(`39102` no momento). Não há WireGuard nem allowlist de firewall configurados
+— o tráfego pod→host permanece dentro da própria máquina física/VPS.
+`DB_HOST`/`DB_PORT` vêm das variáveis de CI/CD `STAGING_DB_HOST`/
+`STAGING_DB_PORT` e `PRODUCTION_DB_HOST`/`PRODUCTION_DB_PORT` (masked no
+GitLab quando o valor permite — porta curta demais para ser mascarada),
+nunca de um arquivo commitado.
+
+Isso significa que a porta do Postgres fica acessível a partir de qualquer
+lugar que alcance o IP público da VPS, não só a partir do cluster — vale a
+pena, quando houver tempo, restringir isso com `ufw`/`iptables` (permitir só
+a sub-rede de pods do k3s, tipicamente `10.42.0.0/16` com Flannel) ou migrar
+para uma das opções abaixo caso o Postgres vá para uma VM separada no futuro.
+
+As duas opções a seguir (WireGuard e firewall-allowlist) descrevem como
+isolar o Postgres numa **segunda VM** — não são o setup atual, mas o caminho
+recomendado se/quando essa separação for feita.
+
+### Opção recomendada (se migrar para VM separada): túnel WireGuard
 
 O VPS onde roda o k3s tem **IP público dinâmico** (usa DuckDNS + cronjob de
 atualização — veja
@@ -102,8 +132,9 @@ dos dois lados — a comunicação passa a usar os IPs fixos da interface `wg0`:
    host    axiom_db          axiom_user          10.8.0.0/24    scram-sha-256
    host    axiom_staging_db  axiom_staging_user  10.8.0.0/24    scram-sha-256
    ```
-5. `DB_HOST` no ConfigMap (`infra/k8s/base/configmap.yaml`) aponta para o IP
-   da VM **na interface do túnel** (`10.8.0.1`), nunca o IP público.
+5. As variáveis de CI/CD `STAGING_DB_HOST`/`PRODUCTION_DB_HOST` passam a
+   apontar para o IP da VM **na interface do túnel** (`10.8.0.1`), nunca o
+   IP público.
 
 ### Alternativa: allowlist de firewall
 
@@ -139,8 +170,9 @@ O backup de produção roda automaticamente via CronJob k8s
 (`infra/k8s/overlays/production/backup-cronjob.yaml`, diário às 02:00 BRT),
 executando o script canônico `apps/api/scripts/backup.sh` — que já fazia
 `pg_dump --host="$PGHOST"` via rede (não `kubectl exec`), então não precisou
-de nenhuma mudança de lógica; apenas `PGHOST`/`PGPORT`/`PGSSLMODE` passaram a
-vir do ConfigMap `axiom-config` em vez de um valor fixo (`postgres-service`).
+de nenhuma mudança de lógica; apenas `PGHOST`/`PGPORT` passaram a vir do
+Secret `axiom-secrets` (via CI/CD) e `PGSSLMODE` do ConfigMap `axiom-config`,
+em vez de um valor fixo (`postgres-service`).
 
 - **RPO**: 24 horas (backup diário).
 - **RTO**: ≤ 4 horas (download do MinIO → decrypt → `pg_restore`).
@@ -152,11 +184,13 @@ vir do ConfigMap `axiom-config` em vez de um valor fixo (`postgres-service`).
 
 ### Puxar um backup de produção para a máquina local
 
-`infra/scripts/k8s-backup.sh` lê `DB_HOST`/`DB_PORT`/`DB_SSLMODE` do
-ConfigMap `axiom-config` e roda `pg_dump` diretamente pela rede (requer que a
-máquina que executa o script tenha acesso à VM do Postgres pelo mesmo túnel
-WireGuard/allowlist do runbook acima). O MinIO continua sendo acessado via
-`kubectl port-forward`, já que ele segue in-cluster.
+`infra/scripts/k8s-backup.sh` lê `DB_HOST`/`DB_PORT` do Secret
+`axiom-secrets` e `DB_SSLMODE` do ConfigMap `axiom-config`, depois roda
+`pg_dump` diretamente pela rede (requer que a máquina que executa o script
+tenha acesso ao Postgres — hoje, o IP público da VPS na porta configurada;
+se migrar para uma VM separada, pelo mesmo túnel WireGuard/allowlist do
+runbook acima). O MinIO continua sendo acessado via `kubectl port-forward`,
+já que ele segue in-cluster.
 
 ### Restaurar localmente (docker-compose)
 

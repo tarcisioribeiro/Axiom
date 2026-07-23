@@ -7,14 +7,13 @@ metadata:
     app.kubernetes.io/name: axiom
     app.kubernetes.io/component: config
 data:
-  # Database connection — external self-managed PostgreSQL VM, reached over
-  # the WireGuard tunnel (not the VM's public IP). See
-  # documentation/database/infrastructure.md for the network/security runbook.
-  DB_HOST: "10.8.0.1" # TODO: set to the real WireGuard tunnel IP of the Postgres VM
-  DB_PORT: "5432"
-  # "prefer" degrades gracefully if the VM has no TLS cert configured yet.
-  # Bump to "require" only if using the firewall-allowlist alternative
-  # (mandatory there) instead of the WireGuard tunnel.
+  # Database connection — DB_HOST/DB_PORT are intentionally NOT set here.
+  # PostgreSQL runs self-managed, outside the cluster, on the same VPS as k3s.
+  # Host/port are injected into the axiom-secrets Secret at deploy time from
+  # the STAGING_DB_HOST/STAGING_DB_PORT and PRODUCTION_DB_HOST/PRODUCTION_DB_PORT
+  # CI/CD variables (see deploy:staging / deploy:production in .gitlab-ci.yml)
+  # so the network topology is never committed to the repo.
+  # "prefer" degrades gracefully since the local Postgres has no TLS cert configured.
   DB_SSLMODE: "prefer"
 
   # API settings

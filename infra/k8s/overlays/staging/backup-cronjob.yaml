@@ -280,18 +280,18 @@ spec:
               image: postgres:16
               command: ["/bin/bash", "/scripts/backup.sh"]
               env:
-                # PostgreSQL connection — external self-managed VM, same
-                # DB_HOST/DB_PORT/DB_SSLMODE the API deployment uses (see
-                # axiom-config and documentation/database/infrastructure.md).
+                # PostgreSQL connection — self-managed, same VPS as k3s. Host/port
+                # come from axiom-secrets (injected from CI/CD variables), same as
+                # the API deployment's wait-for-postgres init container.
                 - name: PGHOST
                   valueFrom:
-                    configMapKeyRef:
-                      name: axiom-config
+                    secretKeyRef:
+                      name: axiom-secrets
                       key: DB_HOST
                 - name: PGPORT
                   valueFrom:
-                    configMapKeyRef:
-                      name: axiom-config
+                    secretKeyRef:
+                      name: axiom-secrets
                       key: DB_PORT
                 - name: PGSSLMODE
                   valueFrom:

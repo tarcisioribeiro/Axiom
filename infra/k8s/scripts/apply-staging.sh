@@ -39,9 +39,9 @@ NAMESPACE="axiom-staging"
 
 echo "==> Applying staging overlay (namespace, rbac, network-policy, quota,"
 echo "    redis, minio, ollama, api, frontend, ingress)..."
-echo "    PostgreSQL is NOT applied here — it runs on the same external"
-echo "    self-managed VM as production (see"
-echo "    documentation/database/infrastructure.md); axiom-config's DB_HOST"
+echo "    PostgreSQL is NOT applied here — it runs self-managed on the same"
+echo "    VPS as k3s (see documentation/database/infrastructure.md);"
+echo "    axiom-secrets' DB_HOST/DB_PORT (from secrets.yaml, step 5 above)"
 echo "    must already point at it before this script runs."
 kubectl apply -k infra/k8s/overlays/staging
 

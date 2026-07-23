@@ -94,15 +94,15 @@ DB_PASSWORD="$(read_secret DB_PASSWORD)"
 MINIO_USER="$(read_secret MINIO_ROOT_USER)"
 MINIO_PASS="$(read_secret MINIO_ROOT_PASSWORD)"
 
-# Host/porta/sslmode do Postgres externo, definidos no ConfigMap axiom-config
-# (mesmos valores usados pela aplicação — veja infra/k8s/base/configmap.yaml).
-DB_HOST="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
-    -o jsonpath='{.data.DB_HOST}' 2>/dev/null)"
-DB_PORT="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
-    -o jsonpath='{.data.DB_PORT}' 2>/dev/null)"
+# Host/porta do Postgres self-managed (mesma VPS do k3s), injetados em
+# axiom-secrets a partir das variáveis de CI/CD — veja deploy:staging /
+# deploy:production em .gitlab-ci.yml. DB_SSLMODE não é sensível e continua
+# no ConfigMap axiom-config.
+DB_HOST="$(read_secret DB_HOST)"
+DB_PORT="$(read_secret DB_PORT)"
 DB_SSLMODE="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
     -o jsonpath='{.data.DB_SSLMODE}' 2>/dev/null || echo 'prefer')"
-[[ -z "$DB_HOST" ]] && err "DB_HOST não encontrado no ConfigMap axiom-config"
+[[ -z "$DB_HOST" ]] && err "DB_HOST não encontrado em axiom-secrets"
 [[ -z "$DB_PORT" ]] && DB_PORT="5432"
 
 # Bucket definido no ConfigMap (fallback: axiom)

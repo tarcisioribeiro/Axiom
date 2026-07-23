@@ -6,11 +6,12 @@
 # overlays/staging patches values *down* and removes prod-only features that
 # don't apply to staging (see overlays/staging/kustomization.yaml).
 #
-# PostgreSQL is NOT here: it runs on an external self-managed VM, outside the
-# cluster, for both staging and production (see
-# documentation/database/infrastructure.md). DB_HOST/DB_PORT/DB_SSLMODE below
-# point at that VM; DB_NAME/DB_USER/DB_PASSWORD stay in the axiom-secrets
-# Secret as before.
+# PostgreSQL is NOT here: it runs self-managed on the same VPS as k3s, outside
+# the cluster, for both staging and production (see
+# documentation/database/infrastructure.md). DB_HOST/DB_PORT are deliberately
+# absent from configmap.yaml — they're injected into the axiom-secrets Secret
+# from CI/CD variables at deploy time instead, alongside DB_NAME/DB_USER/
+# DB_PASSWORD. Only DB_SSLMODE (non-sensitive) stays in the ConfigMap.
 #
 # The API Deployment(s) are intentionally NOT here: production uses a real
 # blue-green pair (api-blue/api-green) while staging uses a single Recreate

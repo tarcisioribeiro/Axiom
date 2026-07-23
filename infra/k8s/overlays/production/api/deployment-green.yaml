@@ -38,6 +38,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: axiom-config
+            - secretRef:
+                name: axiom-secrets
           command:
             - sh
             - -c
