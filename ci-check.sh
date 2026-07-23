@@ -199,10 +199,13 @@ check_node() {
 
 _install_docker_devdeps() {
 	log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
+	# Versões fixas (mesmas de apps/api/requirements-dev.txt) — instalar sem pin
+	# aqui já causou falsos-positivos de mypy no passado (django-stubs mais
+	# recente que o pinado infere tipos diferentes para querysets .values().annotate()).
 	docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api \
 		pip install --quiet --user \
-		mypy pytest pytest-cov pytest-django freezegun \
-		django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1
+		mypy==1.19.1 pytest==9.0.2 pytest-cov==7.0.0 pytest-django==4.12.0 freezegun==1.5.1 \
+		django-stubs==5.2.9 djangorestframework-stubs==3.16.8 >>"$LOG_FILE" 2>&1
 	# pip exits non-zero when a dependency is already satisfied at a conflicting version;
 	# ignore the exit code and verify importability directly instead.
 	if ! docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api python -m mypy --version >/dev/null 2>&1 || \
@@ -355,7 +358,7 @@ if ! $FRONTEND_ONLY; then
 		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
 		api bash -c \
-		'python -m mypy --version >/dev/null 2>&1 || pip install --quiet --user mypy django-stubs djangorestframework-stubs; python -m mypy .'
+		'python -m mypy --version >/dev/null 2>&1 || pip install --quiet --user mypy==1.19.1 django-stubs==5.2.9 djangorestframework-stubs==3.16.8; python -m mypy .'
 fi
 
 if ! $BACKEND_ONLY; then
@@ -372,7 +375,7 @@ if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
 	run_step_safe "test:backend" "pytest" \
 		docker compose -f "$SCRIPT_DIR/infra/docker/docker-compose.yml" --project-directory "$SCRIPT_DIR" exec -T api \
-		bash -c 'python -m pytest --version >/dev/null 2>&1 || pip install --quiet --user pytest pytest-cov pytest-django freezegun; export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
+		bash -c 'python -m pytest --version >/dev/null 2>&1 || pip install --quiet --user pytest==9.0.2 pytest-cov==7.0.0 pytest-django==4.12.0 freezegun==1.5.1; export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
 fi
 
 if ! $BACKEND_ONLY; then

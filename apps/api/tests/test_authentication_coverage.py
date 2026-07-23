@@ -616,12 +616,18 @@ class CookieTokenRefreshViewCoverageTest(APITestCase):
 
 class CookieTokenVerifyViewCoverageTest(APITestCase):
     def setUp(self):
+        # Avoid AnonRateThrottle (30/minute) bleeding over from other tests
+        # that hit anonymous endpoints earlier in the same test run.
+        cache.clear()
         self.client = APIClient()
         self.user = User.objects.create_user(
             username="cookieverifyuser",
             email="cookieverify@example.com",
             password="TestPass123!",
         )
+
+    def tearDown(self):
+        cache.clear()
 
     def test_missing_access_cookie_returns_401(self):
         resp = self.client.post(

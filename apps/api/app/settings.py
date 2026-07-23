@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "app",
+    "storage",
     "authentication",
     "accounts",
     "credit_cards",
@@ -225,7 +226,7 @@ MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "")
 if MINIO_ENDPOINT:
     STORAGES = {
         "default": {
-            "BACKEND": "app.storage.MinIOStorage",
+            "BACKEND": "storage.backends.MinIOStorage",
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",

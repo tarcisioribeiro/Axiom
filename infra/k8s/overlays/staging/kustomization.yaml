@@ -2,9 +2,11 @@
 # Axiom — Kustomize staging overlay
 # =============================================================================
 # Patches base/ down to the staging footprint: smaller resource requests/
-# limits and storage, no MinIO TLS, NodePort MinIO instead of ClusterIP,
-# staging-only ConfigMap values, and the single-Deployment (non-blue-green)
-# API. See each file under patches/ for the specific delta it captures.
+# limits and storage, staging-only ConfigMap values, and the single-Deployment
+# (non-blue-green) API. See each file under patches/ for the specific delta it
+# captures. MinIO is external to the cluster for both staging and production
+# (see documentation/storage/infrastructure.md) — there's no in-cluster MinIO
+# resource to patch here anymore.
 #
 # CI deploy command (see .gitlab-ci.yml deploy:staging):
 #   kubectl apply -k infra/k8s/overlays/staging
@@ -35,14 +37,6 @@ patches:
     target:
       kind: Deployment
       name: frontend
-  - path: patches/minio-deployment.json
-    target:
-      kind: Deployment
-      name: minio
-  - path: patches/minio-job.yaml
-  - path: patches/minio-service.yaml
-  - path: patches/minio-pvc.yaml
-  - path: patches/minio-tls.yaml
   - path: patches/api-logs-pvc.yaml
   - path: patches/api-static-pvc.yaml
   - path: patches/api-service.json
@@ -58,7 +52,3 @@ patches:
       name: axiom-ingress
   - path: patches/network-policy-remove-prometheus.yaml
   - path: patches/network-policy-remove-acme-solver.yaml
-  - path: patches/network-policy-backup.json
-    target:
-      kind: NetworkPolicy
-      name: allow-api-to-minio

@@ -22,9 +22,9 @@ from rest_framework.views import APIView
 
 from admin_panel.models import SystemConfig
 from admin_panel.serializers import SystemConfigSerializer
-from app.health import check_storage
 from security.models import ActivityLog
 from security.serializers import ActivityLogSerializer
+from storage.health import check_storage
 
 
 class AdminBaseView(APIView):

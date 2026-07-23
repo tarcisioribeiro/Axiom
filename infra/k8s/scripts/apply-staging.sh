@@ -28,8 +28,10 @@
 #      the exact command — it is created imperatively, never committed).
 #
 #   5. Secrets applied — infra/k8s/overlays/staging/secrets.yaml uses
-#      ${VAR} placeholders; export every STAGING_* variable it references,
-#      then:
+#      ${VAR} placeholders; export every STAGING_* variable it references
+#      (including STAGING_MINIO_ENDPOINT/STAGING_MINIO_EXTERNAL_ENDPOINT —
+#      MinIO runs external to the cluster, see
+#      documentation/storage/infrastructure.md), then:
 #        envsubst < infra/k8s/overlays/staging/secrets.yaml | kubectl apply -f -
 # =============================================================================
 
@@ -38,16 +40,16 @@ set -euo pipefail
 NAMESPACE="axiom-staging"
 
 echo "==> Applying staging overlay (namespace, rbac, network-policy, quota,"
-echo "    redis, minio, ollama, api, frontend, ingress)..."
-echo "    PostgreSQL is NOT applied here — it runs self-managed on the same"
-echo "    VPS as k3s (see documentation/database/infrastructure.md);"
-echo "    axiom-secrets' DB_HOST/DB_PORT (from secrets.yaml, step 5 above)"
-echo "    must already point at it before this script runs."
+echo "    redis, ollama, api, frontend, ingress)..."
+echo "    PostgreSQL and MinIO are NOT applied here — both run self-managed,"
+echo "    external to k3s (see documentation/database/infrastructure.md and"
+echo "    documentation/storage/infrastructure.md); axiom-secrets' DB_HOST/"
+echo "    DB_PORT/MINIO_ENDPOINT (from secrets.yaml, step 5 above) must"
+echo "    already point at them before this script runs."
 kubectl apply -k infra/k8s/overlays/staging
 
 echo "==> Waiting for rollouts..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
-kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
 echo ""
 echo "Staging bootstrap applied. API and frontend are on the placeholder"

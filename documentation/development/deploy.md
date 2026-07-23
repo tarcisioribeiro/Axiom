@@ -314,30 +314,29 @@ kubectl get secret axiom-secrets -n axiom-staging \
 
 ---
 
-#### `STAGING_MINIO_ENDPOINT`
+#### `STAGING_MINIO_ENDPOINT` e `STAGING_MINIO_EXTERNAL_ENDPOINT`
 
-Endpoint do MinIO de staging **acessível a partir do runner de CI**. O runner
-roda como container Docker no próprio VPS, portanto deve-se usar o IP público
-do VPS na porta NodePort exposta pelo serviço MinIO.
+O MinIO roda fora do cluster k3s, em um host externo self-managed (veja
+[documentation/storage/infrastructure.md](../storage/infrastructure.md)) —
+não há mais NodePort nem Service em cluster para alcançá-lo. Ambas as
+variáveis apontam para o mesmo host MinIO externo:
 
-**Como obter:**
+- `STAGING_MINIO_ENDPOINT` — usada pelo backend Django (via Secret
+  `axiom-secrets`) e pelos jobs de backup/CI para operações internas
+  (upload/download de objetos).
+- `STAGING_MINIO_EXTERNAL_ENDPOINT` — usada para assinar URLs pré-assinadas
+  que o navegador acessa diretamente; em staging pode ficar igual a
+  `STAGING_MINIO_ENDPOINT`, ou vazia para que o Django faça proxy dos
+  arquivos (veja `storage/media_proxy.py`).
 
-```bash
-# IP público do VPS
-curl -s ifconfig.me
+**Formato do valor:** `<hostname-do-minio-externo>` (sem `http://`/`https://`
+— o esquema é controlado por `MINIO_USE_SSL` no ConfigMap).
 
-# NodePort do serviço MinIO
-kubectl get svc minio-service -n axiom-staging \
-  -o jsonpath='{.spec.ports[?(@.port==9000)].nodePort}'
-```
+Exemplo: `minio.tjtux.duckdns.org`
 
-**Formato do valor:** `http://<IP_PUBLICO_VPS>:<NODEPORT>`
-
-Exemplo: `http://84.247.184.151:30900`
-
-> Não use `https://` nem a URL do ingress para esta variável — o MinIO interno
-> do cluster não serve TLS no NodePort. O ingress não expõe a porta 9000 por
-> padrão.
+Como o certificado é público e confiável (Let's Encrypt/reverse proxy — veja
+o runbook de storage), não é necessário nenhum bundle de CA customizado nem
+flag `--insecure` em nenhum client `mc`.
 
 | Configuração | Valor |
 |---|---|
@@ -689,9 +688,11 @@ export STAGING_SUPERUSER_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/')"
 # Redis
 export STAGING_REDIS_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/')"
 
-# MinIO
+# MinIO (host externo — veja documentation/storage/infrastructure.md)
 export STAGING_MINIO_ROOT_USER="minioadmin"
 export STAGING_MINIO_ROOT_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/')"
+export STAGING_MINIO_ENDPOINT="minio.tjtux.duckdns.org"
+export STAGING_MINIO_EXTERNAL_ENDPOINT="minio.tjtux.duckdns.org"
 
 # Sentry (opcional — deixe vazio para desabilitar)
 export STAGING_SENTRY_DSN=""
@@ -715,9 +716,12 @@ kubectl get secret axiom-secrets -n axiom-staging
 
 ### 9. Aplicar os demais recursos de infraestrutura (staging)
 
-Namespace, RBAC, quota, network-policy, configmap, postgres, redis, minio,
-ollama e ingress — tudo de uma vez, via kustomize (ver `infra/k8s/README.md`
-para o detalhamento da estrutura `base/` + `overlays/`):
+Namespace, RBAC, quota, network-policy, configmap, redis, ollama e ingress —
+tudo de uma vez, via kustomize (ver `infra/k8s/README.md` para o
+detalhamento da estrutura `base/` + `overlays/`). PostgreSQL e MinIO não
+fazem parte deste overlay — ambos rodam externos ao cluster (veja
+[documentation/database/infrastructure.md](../database/infrastructure.md) e
+[documentation/storage/infrastructure.md](../storage/infrastructure.md)):
 
 ```bash
 kubectl apply -k infra/k8s/overlays/staging
@@ -757,6 +761,7 @@ Variáveis de CI/CD no GitLab (Settings → CI/CD → Variables):
 [ ] E2E_USERNAME                 *
 [ ] E2E_PASSWORD                 *
 [ ] STAGING_MINIO_ENDPOINT
+[ ] STAGING_MINIO_EXTERNAL_ENDPOINT
 [ ] STAGING_MINIO_ROOT_USER
 [ ] STAGING_MINIO_ROOT_PASSWORD
 [ ] STAGING_MINIO_ACCESS_KEY

@@ -57,7 +57,6 @@ kubectl get all -n axiom -o wide
 | Deployment   | Namespace    | Porta      | Notas                          |
 |--------------|--------------|------------|--------------------------------|
 | `redis`      | axiom   | 6379       | Redis 7, autenticado           |
-| `minio`      | axiom   | 9000/9001  | Object storage, TLS interno    |
 | `api-blue`   | axiom   | 39100      | Slot blue (blue-green)         |
 | `api-green`  | axiom   | 39100      | Slot green (blue-green)        |
 | `frontend`   | axiom   | 80         | Nginx servindo React           |
@@ -68,13 +67,13 @@ kubectl get all -n axiom -o wide
 | Service             | Namespace  | Porta(s)    |
 |---------------------|------------|-------------|
 | `redis-service`     | axiom | 6379        |
-| `minio-service`     | axiom | 9000, 9001  |
 | `api-service`       | axiom | 39100       |
 | `frontend-service`  | axiom | 80          |
 
-> PostgreSQL não aparece nessas tabelas — ele roda fora do cluster, em uma VM
-> externa. Veja a seção 3 e
-> [documentation/database/infrastructure.md](../database/infrastructure.md).
+> PostgreSQL e MinIO não aparecem nessas tabelas — ambos rodam fora do
+> cluster, em hosts externos. Veja as seções 3 e 7,
+> [documentation/database/infrastructure.md](../database/infrastructure.md)
+> e [documentation/storage/infrastructure.md](../storage/infrastructure.md).
 
 ---
 
@@ -564,115 +563,33 @@ kubectl rollout status deployment/frontend -n axiom --timeout=60s
 
 ## 7. MinIO
 
-### Inspecionar
+O MinIO **não roda dentro do cluster** — ele fica em um host externo
+auto-gerenciado, com certificado TLS público confiável. Veja
+[documentation/storage/infrastructure.md](../storage/infrastructure.md)
+para a topologia completa, o runbook de setup/CORS e o procedimento de
+backup/restore. Não há mais pod, Deployment, Service, PVC ou Certificate
+de MinIO neste cluster — os comandos `kubectl get/describe/logs/exec/
+port-forward` de outras seções deste documento não se aplicam ao MinIO.
+
+`MINIO_BUCKET_NAME`/`MINIO_USE_SSL` estão em `axiom-config`
+(`kubectl get configmap axiom-config -n axiom -o yaml`); endpoint/
+credenciais estão em `axiom-secrets` (ver seção 9 — Secrets e senhas).
 
 ```bash
-# Ver pod do MinIO
-kubectl get pod -l app=minio -n axiom
-
-# Ver detalhes do pod
-kubectl describe pod -l app=minio -n axiom
-
-# Ver o deployment
-kubectl get deployment minio -n axiom
-kubectl describe deployment minio -n axiom
-
-# Ver o service (portas 9000 API e 9001 console)
-kubectl get svc minio-service -n axiom
-kubectl describe svc minio-service -n axiom
-```
-
-### Logs
-
-```bash
-# Logs do MinIO em tempo real
-kubectl logs -f -l app=minio -n axiom
-
-# Últimas 100 linhas
-kubectl logs -l app=minio -n axiom --tail=100
-
-# Logs do container anterior (após crash)
-kubectl logs -l app=minio -n axiom --previous
-```
-
-### Port-forward
-
-```bash
-# Expor a API do MinIO (porta 9000) e o console (porta 9001)
-kubectl port-forward svc/minio-service 9000:9000 9001:9001 -n axiom
-
-# Acessar o console no browser: https://localhost:9001
-# (certificado auto-assinado — aceite o aviso de segurança)
-
-# Acessar via mc (MinIO client) após o port-forward
-mc alias set local https://localhost:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD> --insecure
-mc ls local/axiom --insecure
-```
-
-### Acesso ao shell do MinIO (mc client)
-
-```bash
-# Abrir shell no pod do MinIO
-kubectl exec -it -n axiom \
-  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- sh
-
-# Listar buckets via mc (dentro do pod)
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- sh -c 'mc --insecure alias set local https://localhost:9000 \
-    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure ls local/'
-
-# Listar objetos no bucket axiom
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- sh -c 'mc --insecure alias set local https://localhost:9000 \
-    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure ls local/axiom/'
+# Acessar via mc (MinIO client) diretamente pela rede
+mc alias set axiom-minio https://<MINIO_ENDPOINT> <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD>
+mc ls axiom-minio/axiom
 
 # Ver tamanho do bucket
-kubectl exec -n axiom \
-  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- sh -c 'mc --insecure alias set local https://localhost:9000 \
-    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure du local/axiom'
+mc du axiom-minio/axiom
+
+# Verificar health
+curl https://<MINIO_ENDPOINT>/minio/health/ready
+curl https://<MINIO_ENDPOINT>/minio/health/live
 ```
 
-### TLS do MinIO
-
-```bash
-# Ver o secret com o certificado TLS do MinIO
-kubectl get secret minio-tls -n axiom
-kubectl describe secret minio-tls -n axiom
-
-# Ver datas de validade do certificado
-kubectl get secret minio-tls -n axiom \
-  -o jsonpath='{.data.tls\.crt}' | base64 -d | \
-  openssl x509 -noout -dates
-
-# Verificar health do MinIO via port-forward
-kubectl port-forward svc/minio-service 9000:9000 -n axiom &
-curl -k https://localhost:9000/minio/health/ready
-curl -k https://localhost:9000/minio/health/live
-```
-
-### Reiniciar o MinIO
-
-```bash
-kubectl rollout restart deployment/minio -n axiom
-kubectl rollout status deployment/minio -n axiom --timeout=60s
-```
-
-### Job de inicialização do MinIO (criar bucket)
-
-```bash
-# Executar o job de init para criar o bucket axiom (se ainda não existir)
-kubectl apply -f infra/k8s/base/minio/deployment.yaml -n axiom
-
-# Ver status do job
-kubectl get job minio-init -n axiom
-
-# Ver logs do job
-kubectl logs -l app=minio-init -n axiom
-```
+Reiniciar/gerenciar o serviço MinIO é feito no próprio host
+(`systemctl restart minio`), não via `kubectl rollout`.
 
 ---
 
@@ -741,10 +658,9 @@ kubectl exec -n axiom \
 ### Restaurar backup encriptado
 
 ```bash
-# 1. Baixar o backup do MinIO via port-forward
-kubectl port-forward svc/minio-service 9000:9000 -n axiom &
-mc alias set prod https://localhost:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD> --insecure
-mc --insecure cp prod/axiom-backups/db/db_backup_<TIMESTAMP>.dump.enc .
+# 1. Baixar o backup do MinIO externo (acesso direto, sem port-forward)
+mc alias set prod https://<MINIO_ENDPOINT> <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD>
+mc cp prod/axiom-backups/db/db_backup_<TIMESTAMP>.dump.enc .
 
 # 2. Descriptografar
 export BACKUP_ENCRYPTION_KEY="<chave>"
@@ -917,10 +833,6 @@ kubectl get ingress -n axiom
 # Ver detalhes do ingress de produção
 kubectl describe ingress -n axiom
 
-# Ver ingress do MinIO
-kubectl get ingress -n axiom -l app.kubernetes.io/component=minio
-kubectl describe ingress minio-ingress -n axiom
-
 # Ver ingress de staging
 kubectl get ingress -n axiom-staging
 kubectl describe ingress -n axiom-staging
@@ -1050,7 +962,6 @@ kubectl get pvc -n axiom-staging
 
 # Ver detalhes de um PVC específico
 kubectl describe pvc redis-pvc -n axiom
-kubectl describe pvc minio-pvc -n axiom
 kubectl describe pvc backup-pvc -n axiom
 kubectl describe pvc api-media-pvc -n axiom
 kubectl describe pvc api-logs-pvc -n axiom
@@ -1065,20 +976,21 @@ kubectl exec -n axiom \
   -- df -h
 ```
 
-> Não há PVC de Postgres neste cluster — o disco do banco é gerenciado na
-> própria VM externa (veja
-> [documentation/database/infrastructure.md](../database/infrastructure.md)).
+> Não há PVC de Postgres nem de MinIO neste cluster — ambos os discos são
+> gerenciados nos respectivos hosts externos (veja
+> [documentation/database/infrastructure.md](../database/infrastructure.md)
+> e [documentation/storage/infrastructure.md](../storage/infrastructure.md)).
 
 ### Expandir um PVC (se o StorageClass suportar)
 
 ```bash
-# Exemplo: expandir o PVC do MinIO de 10Gi para 20Gi
-kubectl patch pvc minio-pvc -n axiom \
+# Exemplo: expandir o PVC do Redis de 1Gi para 2Gi
+kubectl patch pvc redis-pvc -n axiom \
   --type='json' \
-  -p='[{"op":"replace","path":"/spec/resources/requests/storage","value":"20Gi"}]'
+  -p='[{"op":"replace","path":"/spec/resources/requests/storage","value":"2Gi"}]'
 
 # Acompanhar a expansão
-kubectl describe pvc minio-pvc -n axiom | grep -A5 Conditions
+kubectl describe pvc redis-pvc -n axiom | grep -A5 Conditions
 ```
 
 ---
@@ -1268,10 +1180,11 @@ kubectl port-forward svc/frontend-service 8081:80 -n axiom-staging
 
 # Redis de staging
 kubectl port-forward svc/redis-service 26379:6379 -n axiom-staging
-
-# MinIO de staging (API + console)
-kubectl port-forward svc/minio-service 29000:9000 29001:9001 -n axiom-staging
 ```
+
+> MinIO não tem port-forward — é externo ao cluster, acessado diretamente
+> via `mc alias set` contra `MINIO_ENDPOINT` (veja
+> [documentation/storage/infrastructure.md](../storage/infrastructure.md)).
 
 ### Extrair senhas de staging
 
@@ -1311,7 +1224,6 @@ kubectl get secret axiom-secrets -n axiom-staging -o json | \
 kubectl logs -f -l app=api -n axiom-staging
 kubectl logs -f -l app=frontend -n axiom-staging
 kubectl logs -f -l app=redis -n axiom-staging
-kubectl logs -f -l app=minio -n axiom-staging
 ```
 
 ### Backup manual de staging
@@ -1330,7 +1242,6 @@ kubectl logs -f -l app=axiom-backup -n axiom-staging
 kubectl rollout restart deployment/api -n axiom-staging
 kubectl rollout restart deployment/frontend -n axiom-staging
 kubectl rollout restart deployment/redis -n axiom-staging
-kubectl rollout restart deployment/minio -n axiom-staging
 ```
 
 ### Django manage.py em staging
@@ -1399,10 +1310,10 @@ kubectl exec -n axiom \
   $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- nc -zv redis-service 6379
 
-# Testar se a API consegue chegar ao MinIO
+# Testar se a API consegue chegar ao MinIO externo
 kubectl exec -n axiom \
   $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
-  -- nc -zv minio-service 9000
+  -- sh -c 'nc -zv "$MINIO_ENDPOINT" 443'
 ```
 
 ### Diagnosticar problemas de recursos
@@ -1433,7 +1344,6 @@ kubectl get all -l app.kubernetes.io/name=axiom -n axiom
 kubectl get all -l app.kubernetes.io/component=redis -n axiom
 kubectl get all -l app.kubernetes.io/component=api -n axiom
 kubectl get all -l app.kubernetes.io/component=frontend -n axiom
-kubectl get all -l app.kubernetes.io/component=minio -n axiom
 kubectl get all -l app.kubernetes.io/component=backup -n axiom
 ```
 
@@ -1479,7 +1389,6 @@ kubectl get serviceaccount -n axiom
 # Ver detalhes de uma ServiceAccount
 kubectl describe serviceaccount sa-api -n axiom
 kubectl describe serviceaccount sa-redis -n axiom
-kubectl describe serviceaccount sa-minio -n axiom
 kubectl describe serviceaccount sa-backup -n axiom
 ```
 
@@ -1505,7 +1414,6 @@ bash infra/k8s/scripts/apply-staging.sh
 
 # Aplicar um manifesto específico (compartilhado entre ambientes, em base/)
 kubectl apply -f infra/k8s/base/redis/deployment.yaml
-kubectl apply -f infra/k8s/base/minio/deployment.yaml
 kubectl apply -f infra/k8s/base/network-policy.yaml
 kubectl apply -f infra/k8s/base/resource-quota.yaml
 

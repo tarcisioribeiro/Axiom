@@ -708,14 +708,15 @@ Para produção simples, usar **Docker Compose + Nginx como reverse proxy + Let'
 Esta decisão foi superada: a produção hoje roda em **Kubernetes (k3s)**, com
 deploy blue-green da API (`infra/k8s/overlays/production/`), staging em
 overlay próprio (`infra/k8s/overlays/staging/`), ingress nginx + cert-manager
-para TLS, e o PostgreSQL rodando fora do cluster, em uma VM externa
-auto-gerenciada (não mais como Deployment in-cluster). Docker Compose
-continua sendo usado apenas para desenvolvimento local
-(`infra/docker/docker-compose.yml`).
+para TLS, e tanto o PostgreSQL quanto o MinIO rodando fora do cluster, em
+hosts externos auto-gerenciados (nenhum dos dois é mais um Deployment
+in-cluster). Docker Compose continua sendo usado apenas para desenvolvimento
+local (`infra/docker/docker-compose.yml`).
 
 Fontes atuais de verdade:
 - [documentation/development/deploy.md](../development/deploy.md) — pipeline de deploy k3s/blue-green
 - [documentation/database/infrastructure.md](../database/infrastructure.md) — topologia do PostgreSQL externo
+- [documentation/storage/infrastructure.md](../storage/infrastructure.md) — topologia do MinIO externo
 
 ---
 

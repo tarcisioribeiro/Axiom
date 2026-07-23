@@ -4,54 +4,11 @@
 #
 # Prerequisites: cert-manager must be installed in the cluster before these
 # apply — see infra/k8s/README.md.
----
-# Bootstrap: self-signed ClusterIssuer used only to mint the internal CA.
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: minio-selfsigned-issuer
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: tls
-spec:
-  selfSigned: {}
----
-# Internal CA certificate.
-# cert-manager places this secret in the cert-manager namespace so that the
-# ClusterIssuer of type `ca` (below) can reference it.
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: minio-internal-ca
-  namespace: cert-manager
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: tls
-spec:
-  isCA: true
-  commonName: minio-internal-ca
-  secretName: minio-internal-ca
-  duration: 87600h    # 10 years — rotate manually if CA is compromised
-  renewBefore: 720h
-  privateKey:
-    algorithm: ECDSA
-    size: 256
-  issuerRef:
-    name: minio-selfsigned-issuer
-    kind: ClusterIssuer
----
-# CA-backed ClusterIssuer — used to sign MinIO service certificates.
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: internal-ca-issuer
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: tls
-spec:
-  ca:
-    # Secret must be in the cert-manager namespace (default cluster-resource-namespace).
-    secretName: minio-internal-ca
+#
+# There is no internal self-signed CA here anymore: it used to exist only to
+# issue MinIO's in-cluster TLS certificate. MinIO now runs external to the
+# cluster with a publicly-trusted certificate (see
+# documentation/storage/infrastructure.md), so that machinery was removed.
 ---
 # cert-manager ClusterIssuer — Let's Encrypt Staging (safe for testing)
 apiVersion: cert-manager.io/v1
