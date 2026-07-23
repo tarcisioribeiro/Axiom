@@ -14,6 +14,9 @@ paths = [
   '''setup-env\.sh$''',
   # Documentation files contain example/placeholder values for illustration purposes
   '''documentation/''',
+  # infra/k8s/README.md shows empty-string env var placeholders (e.g. GROQ_API_KEY="")
+  # in provisioning examples, not real secrets
+  '''infra/k8s/README\.md$''',
 ]
 # Plain strings required by gitleaks (not TOML tables)
 # Django/Fernet key placeholders in documentation

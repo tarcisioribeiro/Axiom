@@ -361,6 +361,10 @@ lint:k8s:
 #   STAGING_MINIO_ROOT_PASSWORD    — MinIO root password for the staging environment (masked variable)
 #   STAGING_MINIO_ENDPOINT         — external MinIO host used by staging (see documentation/storage/infrastructure.md)
 #   STAGING_MINIO_EXTERNAL_ENDPOINT — public-facing MinIO hostname for presigned URLs (staging)
+#   STAGING_OLLAMA_BASE_URL        — external Ollama host used by staging (see documentation/llm/infrastructure.md)
+#   STAGING_GROQ_API_KEY           — optional Groq API key, LLM cloud fallback (masked variable)
+#   STAGING_ANTHROPIC_API_KEY      — optional Anthropic API key, LLM cloud fallback (masked variable)
+#   STAGING_OPENAI_API_KEY         — optional OpenAI API key, LLM cloud fallback (masked variable)
 #   STAGING_SUPERUSER_USERNAME     — username of the staging Django superuser (seeded via deploy:staging)
 #   STAGING_SUPERUSER_PASSWORD     — password of the staging Django superuser (masked variable)
 #   PRODUCTION_SUPERUSER_USERNAME  — username of the production Django superuser (for smoke test JWT)
@@ -708,7 +712,8 @@ deploy:staging:
                  STAGING_SECRET_KEY STAGING_ENCRYPTION_KEY \
                  STAGING_SUPERUSER_USERNAME STAGING_SUPERUSER_EMAIL STAGING_SUPERUSER_PASSWORD \
                  STAGING_MINIO_ROOT_USER STAGING_MINIO_ROOT_PASSWORD \
-                 STAGING_MINIO_ENDPOINT STAGING_MINIO_EXTERNAL_ENDPOINT; do
+                 STAGING_MINIO_ENDPOINT STAGING_MINIO_EXTERNAL_ENDPOINT \
+                 STAGING_OLLAMA_BASE_URL; do
         val=$(eval echo "\$$var")
         if [ -z "$val" ]; then
           echo "ERROR: required CI variable $var is not set. Aborting to avoid overwriting a working secret."
@@ -732,6 +737,10 @@ deploy:staging:
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=MINIO_ENDPOINT="$STAGING_MINIO_ENDPOINT"
         --from-literal=MINIO_EXTERNAL_ENDPOINT="$STAGING_MINIO_EXTERNAL_ENDPOINT"
+        --from-literal=OLLAMA_BASE_URL="$STAGING_OLLAMA_BASE_URL"
+        --from-literal=GROQ_API_KEY="${STAGING_GROQ_API_KEY:-}"
+        --from-literal=ANTHROPIC_API_KEY="${STAGING_ANTHROPIC_API_KEY:-}"
+        --from-literal=OPENAI_API_KEY="${STAGING_OPENAI_API_KEY:-}"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
         --dry-run=client -o yaml | kubectl apply -f -
     - |
@@ -740,14 +749,16 @@ deploy:staging:
         --docker-username="$GHCR_USERNAME" \
         --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
-    # PostgreSQL e MinIO rodam self-managed, externos ao cluster, com
-    # DB_HOST/DB_PORT/MINIO_ENDPOINT sincronizados a partir das variáveis de
-    # CI acima — nunca commitados em arquivo. Este job não sincroniza a senha
-    # do banco automaticamente: se STAGING_DB_PASSWORD for rotacionado, rode
-    # manualmente na VM: ALTER USER <STAGING_DB_USER> WITH PASSWORD '<nova-senha>';
-    # Veja documentation/database/infrastructure.md e
-    # documentation/storage/infrastructure.md para os runbooks completos.
-    # Renderiza o overlay inteiro (redis, ollama, rbac,
+    # PostgreSQL, MinIO e Ollama rodam self-managed, externos ao cluster, com
+    # DB_HOST/DB_PORT/MINIO_ENDPOINT/OLLAMA_BASE_URL sincronizados a partir das
+    # variáveis de CI acima — nunca commitados em arquivo. Este job não
+    # sincroniza a senha do banco automaticamente: se STAGING_DB_PASSWORD for
+    # rotacionado, rode manualmente na VM:
+    # ALTER USER <STAGING_DB_USER> WITH PASSWORD '<nova-senha>';
+    # Veja documentation/database/infrastructure.md,
+    # documentation/storage/infrastructure.md e
+    # documentation/llm/infrastructure.md para os runbooks completos.
+    # Renderiza o overlay inteiro (redis, rbac,
     # network-policy, quota, ingress, configmap, frontend) de uma vez só.
     # O frontend entra no build com a tag placeholder 0.0.0 — substituída aqui
     # via sed antes do apply, pelo mesmo motivo de sempre: nunca deixar uma
@@ -756,17 +767,6 @@ deploy:staging:
       kubectl kustomize infra/k8s/overlays/staging \
         | sed "s|image: .*axiom-frontend:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
         | kubectl apply -f -
-    # Força rollout para limpar condição ProgressDeadlineExceeded residual de
-    # deploys anteriores — o pod template do Ollama não muda entre ciclos, então
-    # kubectl apply não incrementa a generation nem reseta a condição por conta própria.
-    - kubectl -n axiom-staging rollout restart deployment/ollama
-    # Não bloqueia o deploy no Ollama: no VPS com recursos limitados o rollout pode
-    # ultrapassar 600s facilmente (terminate old pod + pull image + start server).
-    # A API tem circuit breaker para Ollama — se não estiver pronto, as funcionalidades
-    # de IA degradam graciosamente mas a aplicação continua funcionando.
-    - |
-      kubectl -n axiom-staging rollout status deployment/ollama --timeout=600s \
-        || echo "AVISO: rollout do Ollama não completou em 600s — deploy segue. LLM pode estar temporariamente indisponível."
     # API: Deployment único (sem blue-green em staging). Mesma lógica de sed
     # de sempre — ver comentário acima sobre a tag placeholder.
     - |
@@ -774,7 +774,7 @@ deploy:staging:
         infra/k8s/overlays/staging/api/deployment.yaml | kubectl apply -f -
     # Força nova revisão mesmo em retentativas do mesmo SHA (sem mudança de image
     # tag, kubectl apply não incrementa a generation nem reseta a condição
-    # ProgressDeadlineExceeded — mesmo problema corrigido no Ollama acima).
+    # ProgressDeadlineExceeded residual de deploys anteriores).
     - kubectl -n axiom-staging rollout resume deployment/api deployment/frontend
     - kubectl -n axiom-staging rollout restart deployment/api deployment/frontend
     - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
@@ -1389,7 +1389,8 @@ deploy:production:
                  PRODUCTION_SUPERUSER_USERNAME PRODUCTION_SUPERUSER_EMAIL \
                  PRODUCTION_SUPERUSER_PASSWORD \
                  PRODUCTION_MINIO_ROOT_USER PRODUCTION_MINIO_ROOT_PASSWORD \
-                 PRODUCTION_MINIO_ENDPOINT PRODUCTION_MINIO_EXTERNAL_ENDPOINT; do
+                 PRODUCTION_MINIO_ENDPOINT PRODUCTION_MINIO_EXTERNAL_ENDPOINT \
+                 PRODUCTION_OLLAMA_BASE_URL; do
         val=$(eval echo "\$$var")
         if [ -z "$val" ]; then
           echo "ERROR: required CI variable $var is not set. Aborting deploy."
@@ -1415,6 +1416,10 @@ deploy:production:
         --from-literal=MINIO_ROOT_PASSWORD="$PRODUCTION_MINIO_ROOT_PASSWORD" \
         --from-literal=MINIO_ENDPOINT="$PRODUCTION_MINIO_ENDPOINT" \
         --from-literal=MINIO_EXTERNAL_ENDPOINT="$PRODUCTION_MINIO_EXTERNAL_ENDPOINT" \
+        --from-literal=OLLAMA_BASE_URL="$PRODUCTION_OLLAMA_BASE_URL" \
+        --from-literal=GROQ_API_KEY="${PRODUCTION_GROQ_API_KEY:-}" \
+        --from-literal=ANTHROPIC_API_KEY="${PRODUCTION_ANTHROPIC_API_KEY:-}" \
+        --from-literal=OPENAI_API_KEY="${PRODUCTION_OPENAI_API_KEY:-}" \
         --from-literal=SENTRY_DSN="${PRODUCTION_SENTRY_DSN:-}" \
         --dry-run=client -o yaml | kubectl apply -f -
     - |
@@ -1425,10 +1430,11 @@ deploy:production:
         --dry-run=client -o yaml | kubectl apply -f -
     # ── 2. Apply the full overlay (idempotent — safe on every run) ───────────────
     # Renders namespace, configmap, rbac, network-policy, quota, ingress,
-    # redis, ollama and frontend in one shot (PostgreSQL and MinIO both run on
+    # redis and frontend in one shot (PostgreSQL, MinIO and Ollama all run on
     # external self-managed hosts, not in this overlay — see
-    # documentation/database/infrastructure.md and
-    # documentation/storage/infrastructure.md). The frontend
+    # documentation/database/infrastructure.md,
+    # documentation/storage/infrastructure.md and
+    # documentation/llm/infrastructure.md). The frontend
     # placeholder image (0.0.0) is substituted before it ever reaches the
     # cluster, same reasoning as always: never let a placeholder-image
     # revision become the rollback target.
@@ -1439,7 +1445,6 @@ deploy:production:
       kubectl kustomize infra/k8s/overlays/production \
         | sed "s|image: .*axiom-frontend:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
         | kubectl apply -f -
-    - kubectl -n axiom rollout status deployment/ollama --timeout=600s
     # ── 3. Sync blue-green Deployment specs + Service ────────────────────────────
     # Always apply the manifest so spec changes (volumes, probes, env) propagate.
     # The image tag is preserved from whatever is currently running so we don't
@@ -1500,6 +1505,10 @@ deploy:production:
 #   PRODUCTION_MINIO_ROOT_PASSWORD  — MinIO root password (masked)
 #   PRODUCTION_MINIO_ENDPOINT       — external MinIO host (see documentation/storage/infrastructure.md)
 #   PRODUCTION_MINIO_EXTERNAL_ENDPOINT — public-facing MinIO hostname for presigned URLs
+#   PRODUCTION_OLLAMA_BASE_URL      — external Ollama host (see documentation/llm/infrastructure.md)
+#   PRODUCTION_GROQ_API_KEY         — optional Groq API key, LLM cloud fallback (masked)
+#   PRODUCTION_ANTHROPIC_API_KEY    — optional Anthropic API key, LLM cloud fallback (masked)
+#   PRODUCTION_OPENAI_API_KEY       — optional OpenAI API key, LLM cloud fallback (masked)
 #   PRODUCTION_REDIS_PASSWORD       — Redis password (optional, masked)
 #   PRODUCTION_SENTRY_DSN           — Sentry DSN (optional)
 # ==============================================================================

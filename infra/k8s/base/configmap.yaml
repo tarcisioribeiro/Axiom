@@ -37,8 +37,13 @@ data:
   MINIO_BUCKET_NAME: "axiom"
   MINIO_USE_SSL: "true"
 
-  # Ollama — LLM local implantado no mesmo namespace (deployment: ollama).
-  OLLAMA_BASE_URL: "http://ollama-service:11434"
+  # Ollama — self-hosted, externo ao cluster (ver
+  # documentation/llm/infrastructure.md). OLLAMA_BASE_URL é intencionalmente
+  # NÃO definido aqui: é injetado no Secret axiom-secrets no deploy a partir
+  # das variáveis de CI/CD STAGING_OLLAMA_BASE_URL/PRODUCTION_OLLAMA_BASE_URL
+  # (ver deploy:staging / deploy:production em .gitlab-ci.yml), então a
+  # topologia de rede nunca é commitada no repositório. OLLAMA_MODEL/
+  # OLLAMA_EMBED_MODEL/LLM_PROVIDER (não sensíveis) continuam aqui.
   OLLAMA_MODEL: "mistral:7b-instruct"
   OLLAMA_EMBED_MODEL: "nomic-embed-text"
   LLM_PROVIDER: "ollama"

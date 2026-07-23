@@ -522,8 +522,9 @@ class AdminEmailTestView(AdminBaseView):
 
 # Deployments de aplicação reiniciados pelo painel. 404s são ignorados
 # automaticamente, então a mesma lista funciona em produção (api-blue/green)
-# e em staging (api).
-_APP_DEPLOYMENTS = ["api", "api-blue", "api-green", "frontend", "ollama"]
+# e em staging (api). Ollama não está na lista — roda fora do cluster (ver
+# documentation/llm/infrastructure.md).
+_APP_DEPLOYMENTS = ["api", "api-blue", "api-green", "frontend"]
 
 
 def _restart_deployments() -> dict[str, Any]:

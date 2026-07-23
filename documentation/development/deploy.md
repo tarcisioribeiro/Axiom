@@ -694,6 +694,14 @@ export STAGING_MINIO_ROOT_PASSWORD="$(openssl rand -base64 24 | tr -d '=+/')"
 export STAGING_MINIO_ENDPOINT="minio.tjtux.duckdns.org"
 export STAGING_MINIO_EXTERNAL_ENDPOINT="minio.tjtux.duckdns.org"
 
+# Ollama (host externo — veja documentation/llm/infrastructure.md)
+export STAGING_OLLAMA_BASE_URL="http://ollama.tjtux.duckdns.org:11434"
+
+# Providers cloud de fallback do LLM (opcionais — deixe vazio para desabilitar)
+export STAGING_GROQ_API_KEY=""
+export STAGING_ANTHROPIC_API_KEY=""
+export STAGING_OPENAI_API_KEY=""
+
 # Sentry (opcional — deixe vazio para desabilitar)
 export STAGING_SENTRY_DSN=""
 ```
@@ -716,12 +724,13 @@ kubectl get secret axiom-secrets -n axiom-staging
 
 ### 9. Aplicar os demais recursos de infraestrutura (staging)
 
-Namespace, RBAC, quota, network-policy, configmap, redis, ollama e ingress —
+Namespace, RBAC, quota, network-policy, configmap, redis e ingress —
 tudo de uma vez, via kustomize (ver `infra/k8s/README.md` para o
-detalhamento da estrutura `base/` + `overlays/`). PostgreSQL e MinIO não
-fazem parte deste overlay — ambos rodam externos ao cluster (veja
-[documentation/database/infrastructure.md](../database/infrastructure.md) e
-[documentation/storage/infrastructure.md](../storage/infrastructure.md)):
+detalhamento da estrutura `base/` + `overlays/`). PostgreSQL, MinIO e Ollama
+não fazem parte deste overlay — os três rodam externos ao cluster (veja
+[documentation/database/infrastructure.md](../database/infrastructure.md),
+[documentation/storage/infrastructure.md](../storage/infrastructure.md) e
+[documentation/llm/infrastructure.md](../llm/infrastructure.md)):
 
 ```bash
 kubectl apply -k infra/k8s/overlays/staging

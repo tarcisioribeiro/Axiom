@@ -1,6 +1,6 @@
 # Configuração LLM / Ollama
 
-O sistema de agentes do Axiom (`apps/api/agents/`) suporta dois provedores de LLM: **Ollama** (local, privado) e **Anthropic Claude** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin.
+O sistema de agentes do Axiom (`apps/api/agents/`) suporta quatro provedores de LLM: **Ollama** (self-hosted, privado), **Groq**, **Anthropic Claude** e **OpenAI** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin. Em staging/produção o Ollama roda fora do cluster k8s — ver [`documentation/llm/infrastructure.md`](../llm/infrastructure.md) para o runbook de instalação e topologia de rede.
 
 ## Índice
 
@@ -17,6 +17,8 @@ O sistema de agentes do Axiom (`apps/api/agents/`) suporta dois provedores de LL
   - [Obtendo a Chave de API](#obtendo-a-chave-de-api)
   - [Escolhendo o Modelo Claude](#escolhendo-o-modelo-claude)
   - [Valores para o Painel Admin](#valores-para-o-painel-admin-anthropic)
+- [Configurando Groq (nuvem)](#configurando-groq-nuvem)
+- [Configurando OpenAI (nuvem)](#configurando-openai-nuvem)
 - [Verificando a Configuração](#verificando-a-configuração)
 - [Monitoramento dos Agentes](#monitoramento-dos-agentes)
 - [Solução de Problemas](#solução-de-problemas)
@@ -45,18 +47,25 @@ O sistema de agentes do Axiom (`apps/api/agents/`) suporta dois provedores de LL
 | `OLLAMA_EMBED_MODEL` | Modelo Ollama (Embedding) | Não | Não | — |
 | `LLM_TIMEOUT_CHAT` | Timeout Chat (segundos) | Não | Não | `120` |
 | `LLM_TIMEOUT_EMBED` | Timeout Embedding (segundos) | Não | Não | `30` |
+| `GROQ_API_KEY` | Chave API Groq 🔒 | **Sim** | Não | — |
+| `GROQ_MODEL` | Modelo Groq | Não | Não | — |
 | `ANTHROPIC_API_KEY` | Chave API Anthropic 🔒 | **Sim** | Não | — |
 | `ANTHROPIC_MODEL` | Modelo Anthropic | Não | Não | — |
+| `OPENAI_API_KEY` | Chave API OpenAI 🔒 | **Sim** | Não | — |
+| `OPENAI_MODEL` | Modelo OpenAI | Não | Não | — |
 
-> 🔒 `ANTHROPIC_API_KEY` é armazenada criptografada e exibida como `••••••••`.
+> 🔒 `GROQ_API_KEY`, `ANTHROPIC_API_KEY` e `OPENAI_API_KEY` são armazenadas criptografadas e exibidas como `••••••••`.
 
 ### Descrição detalhada de cada chave
 
 **`LLM_PROVIDER`**
 Define qual provedor o sistema de agentes usa.
-- `ollama` — usa instância local do Ollama; as chaves `ANTHROPIC_*` são ignoradas.
-- `anthropic` — usa a API do Claude; as chaves `OLLAMA_*` são ignoradas.
+- `ollama` — usa a instância self-hosted do Ollama; as chaves `GROQ_*`/`ANTHROPIC_*`/`OPENAI_*` são ignoradas.
+- `groq` — usa a API da Groq (compatível com OpenAI); as demais chaves de provider são ignoradas.
+- `anthropic` — usa a API do Claude; as demais chaves de provider são ignoradas.
+- `openai` — usa a API da OpenAI; as demais chaves de provider são ignoradas.
 - **Requer restart** para propagar ao processo Django.
+- `LLM_FALLBACK_PROVIDERS` (opcional) define providers de fallback em ordem, separados por vírgula, caso o provider ativo falhe (ex: `groq,anthropic`).
 
 **`OLLAMA_BASE_URL`**
 Endereço HTTP do servidor Ollama. Dentro do Docker Compose, o service name é `ollama`, portanto o padrão `http://ollama:11434` funciona sem alteração. Para usar um Ollama instalado no host (fora do Docker), use `http://host.docker.internal:11434`.
@@ -188,6 +197,41 @@ ANTHROPIC_MODEL   = claude-sonnet-4-6
 ```
 
 Com `LLM_PROVIDER=anthropic`, as chaves `OLLAMA_*` são ignoradas. O Ollama pode permanecer rodando sem impacto.
+
+---
+
+## Configurando Groq (nuvem)
+
+Groq expõe uma API compatível com o formato OpenAI (`api.groq.com/openai/v1`), gratuita com limite de tokens/min — boa opção de fallback rápido.
+
+1. Crie uma conta em [console.groq.com](https://console.groq.com) e gere uma chave em **API Keys**.
+2. No painel admin, preencha:
+
+```
+LLM_PROVIDER = groq
+GROQ_API_KEY = gsk_...
+GROQ_MODEL   = llama-3.1-8b-instant
+```
+
+Modelos recomendados: `llama-3.1-8b-instant` (rápido), `llama-3.3-70b-versatile` (melhor qualidade), `gemma2-9b-it`.
+
+---
+
+## Configurando OpenAI (nuvem)
+
+1. Crie uma conta em [platform.openai.com](https://platform.openai.com) e gere uma chave em **API Keys**.
+2. **Copie a chave imediatamente** — ela só é exibida uma vez. Começa com `sk-`.
+3. No painel admin, preencha:
+
+```
+LLM_PROVIDER = openai
+OPENAI_API_KEY = sk-...
+OPENAI_MODEL   = gpt-4o-mini
+```
+
+Modelos recomendados: `gpt-4o-mini` (rápido e barato, tarefas simples), `gpt-4o` (melhor qualidade, análises complexas).
+
+> **⚠️ Segurança**: nunca commite a chave em código. O painel admin armazena o valor criptografado no banco de dados.
 
 ---
 

@@ -10,8 +10,9 @@ from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.db.models import Sum
 from django.utils import timezone
+
+from agents.providers import financial_provider
 
 _TTL_BUDGET = 60
 
@@ -43,18 +44,8 @@ def get_budget_status(
     if cached is not None:
         return cached
 
-    from budgets.models import Budget
-    from expenses.models import Expense
-
-    budgets = list(
-        Budget.objects.filter(
-            created_by=user,
-            month=target_month,
-            year=target_year,
-            is_deleted=False,
-        ).values(
-            "category", "limit_amount", "rollover_amount", "rollover_enabled"
-        )
+    budgets = financial_provider.budgets_for_period(
+        user, target_year, target_month
     )
 
     if expense_start is not None and expense_end is not None:
@@ -68,32 +59,21 @@ def get_budget_status(
 
     result = []
     for budget in budgets:
-        spent = (
-            Expense.objects.filter(
-                created_by=user,
-                category=budget["category"],
-                date__range=(period_start, period_end),
-                is_deleted=False,
-                related_transfer__isnull=True,
-            ).aggregate(total=Sum("value"))["total"]
-            or 0
+        spent = financial_provider.expense_total_for_category(
+            user, budget["category"], period_start, period_end
         )
         effective_limit = float(budget["limit_amount"]) + float(
             budget["rollover_amount"] or 0
         )
-        pct = (
-            (float(spent) / effective_limit * 100)
-            if effective_limit > 0
-            else 0
-        )
+        pct = (spent / effective_limit * 100) if effective_limit > 0 else 0
         result.append(
             {
                 "category": budget["category"],
                 "limit": effective_limit,
-                "spent": float(spent),
-                "remaining": max(0.0, effective_limit - float(spent)),
+                "spent": spent,
+                "remaining": max(0.0, effective_limit - spent),
                 "percentage": round(pct, 1),
-                "overbudget": float(spent) > effective_limit,
+                "overbudget": spent > effective_limit,
             }
         )
 

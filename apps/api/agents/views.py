@@ -36,6 +36,7 @@ from agents.core.base_agent import AgentContext
 from agents.core.memory import ConversationMemory
 from agents.core.router import AgentRouter
 from agents.models import AgentConversation
+from agents.providers import library_provider, security_provider
 from agents.serializers import (
     AgentAskSerializer,
     AgentConversationSerializer,
@@ -718,9 +719,7 @@ class CategoryClassifyView(APIView):
                 .lower()
             )
 
-            from security.models import PASSWORD_CATEGORIES
-
-            valid = {c[0] for c in PASSWORD_CATEGORIES}
+            valid = security_provider.valid_password_categories()
             category = category_raw if category_raw in valid else "other"
             return Response({"category": category, "confidence": "llm"})
         except Exception:
@@ -762,15 +761,11 @@ class SuggestContinuationView(APIView):
         context_suffix = ""
         if book_id:
             try:
-                from library.models import Book
-
-                book = Book.objects.filter(
-                    pk=book_id, is_deleted=False
-                ).first()
-                if book:
+                book_title = library_provider.book_title_by_id(book_id)
+                if book_title:
                     context_suffix = (
                         f"\n\n[Contexto: o usuário está escrevendo"
-                        f" sobre o livro '{book.title}'.]"
+                        f" sobre o livro '{book_title}'.]"
                     )
             except Exception:
                 pass

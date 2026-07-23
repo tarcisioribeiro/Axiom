@@ -7,6 +7,7 @@ from django.utils import timezone
 from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
+from agents.providers import library_provider
 
 _TRIGGER_WORDS = [
     "livro",
@@ -39,6 +40,7 @@ class LibraryAgent(BaseAgent):
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-sonnet-4-6"
     groq_model = "llama-3.3-70b-versatile"
+    openai_model = "gpt-4o"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
@@ -94,13 +96,7 @@ class LibraryAgent(BaseAgent):
         end: date | None = None,
     ) -> list[dict[str, Any]]:
         try:
-            from library.models import Book
-
-            qs = Book.objects.filter(owner__user=user, is_deleted=False)
-            if start is not None and end is not None:
-                qs = qs.filter(updated_at__date__range=(start, end))
-            books = qs.values("title", "genre").order_by("-updated_at")[:10]
-            return [dict(b) for b in books]
+            return library_provider.recent_books(user, start, end, limit=10)
         except Exception:
             return []
 

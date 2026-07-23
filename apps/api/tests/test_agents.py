@@ -79,6 +79,53 @@ class TestLLMClientChat(TestCase):
         self.assertEqual(json_payload["model"], "global-default")
 
 
+def _cfg_openai(key: str, default: object = None) -> object:
+    if key == "LLM_PROVIDER":
+        return "openai"
+    if key == "OPENAI_API_KEY":
+        return "test-key"
+    if key == "OPENAI_MODEL":
+        return "gpt-4o-mini"
+    return default
+
+
+class TestLLMClientOpenAI(TestCase):
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_openai)
+    @patch("requests.post")
+    def test_chat_dispatches_to_openai(
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "openai response"}}]
+        }
+        mock_post.return_value = mock_response
+
+        messages = [{"role": "user", "content": "Hello"}]
+        result = LLMClient.chat(messages)
+
+        self.assertEqual(result, "openai response")
+        mock_post.assert_called_once()
+        call = mock_post.call_args
+        self.assertEqual(
+            call.args[0], "https://api.openai.com/v1/chat/completions"
+        )
+        self.assertEqual(call.kwargs["json"]["model"], "gpt-4o-mini")
+        self.assertEqual(
+            call.kwargs["headers"]["Authorization"], "Bearer test-key"
+        )
+
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_openai)
+    def test_is_available_checks_openai_api_key(
+        self, _mock_cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        self.assertTrue(LLMClient.is_available())
+
+
 class _SyncThread:
     """Replaces threading.Thread in tests — runs target synchronously on
     start()."""

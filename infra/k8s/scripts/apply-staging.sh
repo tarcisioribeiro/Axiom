@@ -40,12 +40,12 @@ set -euo pipefail
 NAMESPACE="axiom-staging"
 
 echo "==> Applying staging overlay (namespace, rbac, network-policy, quota,"
-echo "    redis, ollama, api, frontend, ingress)..."
-echo "    PostgreSQL and MinIO are NOT applied here — both run self-managed,"
-echo "    external to k3s (see documentation/database/infrastructure.md and"
-echo "    documentation/storage/infrastructure.md); axiom-secrets' DB_HOST/"
-echo "    DB_PORT/MINIO_ENDPOINT (from secrets.yaml, step 5 above) must"
-echo "    already point at them before this script runs."
+echo "    redis, api, frontend, ingress)..."
+echo "    PostgreSQL, MinIO and Ollama are NOT applied here — all three run"
+echo "    self-managed, external to k3s (see documentation/database/infrastructure.md,"
+echo "    documentation/storage/infrastructure.md and documentation/llm/infrastructure.md);"
+echo "    axiom-secrets' DB_HOST/DB_PORT/MINIO_ENDPOINT/OLLAMA_BASE_URL (from"
+echo "    secrets.yaml, step 5 above) must already point at them before this script runs."
 kubectl apply -k infra/k8s/overlays/staging
 
 echo "==> Waiting for rollouts..."

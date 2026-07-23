@@ -506,6 +506,7 @@ OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 LLM_TIMEOUT_CHAT = int(os.getenv("LLM_TIMEOUT_CHAT", "120"))
 LLM_TIMEOUT_EMBED = int(os.getenv("LLM_TIMEOUT_EMBED", "30"))
 # ANTHROPIC_MODEL and ANTHROPIC_API_KEY must be set when LLM_PROVIDER=anthropic
+# OPENAI_MODEL and OPENAI_API_KEY must be set when LLM_PROVIDER=openai
 
 # ============================================================================
 # Celery / Async Tasks

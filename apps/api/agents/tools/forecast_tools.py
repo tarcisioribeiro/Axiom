@@ -3,23 +3,12 @@ from datetime import timedelta
 from typing import Any, cast
 
 from django.contrib.auth.models import User
-from django.db.models import Avg
 from django.utils import timezone
+
+from agents.providers import financial_provider
 
 
 def get_account_balances(user: User) -> list[dict[str, Any]]:
-    from accounts.models import Account
-
-    accounts = Account.objects.filter(
-        owner__user=user,
-        is_active=True,
-        is_deleted=False,
-    ).values(
-        "account_name",
-        "institution_name",
-        "current_balance",
-        "minimum_balance",
-    )
     return [
         {
             "name": str(a["account_name"]),
@@ -27,7 +16,7 @@ def get_account_balances(user: User) -> list[dict[str, Any]]:
             "balance": float(a["current_balance"]),
             "minimum": float(a["minimum_balance"]),
         }
-        for a in accounts
+        for a in financial_provider.account_balances(user)
     ]
 
 
@@ -35,16 +24,10 @@ def get_fixed_expenses_upcoming(
     user: User, days: int = 30
 ) -> list[dict[str, Any]]:
     """Retorna despesas fixas que vencem nos próximos N dias."""
-    from expenses.models import FixedExpense
-
     today = timezone.now().date()
     upcoming = []
 
-    fixed = FixedExpense.objects.filter(
-        created_by=user,
-        is_active=True,
-        is_deleted=False,
-    ).values("description", "default_value", "due_day", "category")
+    fixed = financial_provider.fixed_expenses_active(user)
 
     for fe in fixed:
         due_day = fe["due_day"]
@@ -87,20 +70,8 @@ def get_expected_revenues(user: User, days: int = 30) -> list[dict[str, Any]]:
     """
     Retorna receitas recorrentes históricas para estimar entradas futuras.
     """
-    from revenues.models import Revenue
-
     cutoff = timezone.now().date() - timedelta(days=90)
-    recurring = (
-        Revenue.objects.filter(
-            created_by=user,
-            date__gte=cutoff,
-            is_deleted=False,
-            recurring=True,
-            related_transfer__isnull=True,
-        )
-        .values("description", "category", "source")
-        .annotate(avg_value=Avg("value"))
-    )
+    recurring = financial_provider.recurring_revenues_avg(user, cutoff)
     return [
         {
             "description": r["description"],

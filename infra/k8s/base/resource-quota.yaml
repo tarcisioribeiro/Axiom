@@ -14,7 +14,12 @@ spec:
     # CPU: sum of all pod requests/limits across the namespace
     requests.cpu: "8"
     limits.cpu: "16"
-    # Memory: Ollama alone needs 4Gi request + 8Gi limit; other services add ~2Gi/4Gi.
+    # Memory: sized with headroom for HPA scale-up across api (blue/green),
+    # frontend and redis. Ollama used to need 4Gi request + 8Gi limit on its
+    # own here, but it now runs external to the cluster (see
+    # documentation/llm/infrastructure.md) — this quota has not been
+    # re-tightened since, so there's currently more headroom than the
+    # remaining in-cluster workloads need.
     requests.memory: 8Gi
     limits.memory: 16Gi
     # Workload count caps
