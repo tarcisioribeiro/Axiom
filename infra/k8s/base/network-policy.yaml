@@ -90,38 +90,6 @@ spec:
         - protocol: TCP
           port: 6379
 ---
-# Allow the API, backup job, and MinIO init job to reach MinIO.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-api-to-minio
-  namespace: axiom
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: network-policy
-spec:
-  podSelector:
-    matchLabels:
-      app: minio
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: api
-        - podSelector:
-            matchLabels:
-              app: axiom-backup
-        - podSelector:
-            matchLabels:
-              app: minio-init
-      ports:
-        - protocol: TCP
-          port: 9000
-        - protocol: TCP
-          port: 9001
----
 # Allow the API to reach Ollama for LLM inference and embedding.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -145,34 +113,6 @@ spec:
       ports:
         - protocol: TCP
           port: 11434
----
-# Allow the nginx ingress controller to reach MinIO for API (9000) and Console (9001).
-# Without this, the default-deny-ingress blocks the ingress controller and every
-# request to minio.tjtux.duckdns.org / minio-console.tjtux.duckdns.org returns 502.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-ingress-to-minio
-  namespace: axiom
-  labels:
-    app.kubernetes.io/name: axiom
-    app.kubernetes.io/component: network-policy
-spec:
-  podSelector:
-    matchLabels:
-      app: minio
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
-      ports:
-        - protocol: TCP
-          port: 9000
-        - protocol: TCP
-          port: 9001
 ---
 # Allow the nginx ingress controller to reach cert-manager ACME HTTP-01 solver pods.
 # These pods are created in the axiom namespace and also blocked by default-deny-ingress.

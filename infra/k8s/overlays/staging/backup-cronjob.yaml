@@ -19,7 +19,7 @@
 #
 #   Required keys:
 #     BACKUP_ENCRYPTION_KEY  Random 32+ char passphrase for AES-256 encryption.
-#     MINIO_ENDPOINT         e.g. http://minio-service:9000
+#     MINIO_ENDPOINT         external MinIO host, e.g. https://minio.example.com
 #     MINIO_ACCESS_KEY       MinIO access key
 #     MINIO_SECRET_KEY       MinIO secret key
 #

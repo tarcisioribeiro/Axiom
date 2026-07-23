@@ -60,6 +60,7 @@ known_first_party = [
     "agents",
     "bank_reconciliation",
     "webhooks",
+    "storage",
 ]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
@@ -95,7 +96,7 @@ omit = [
     # Infrastructure/operational modules — not unit-testable
     "app/metrics.py",
     "app/celery.py",
-    "app/storage.py",
+    "storage/backends.py",
     # Celery background tasks — require a Celery worker; not unit-testable
     "*/tasks.py",
     # Development/tooling files — not application code

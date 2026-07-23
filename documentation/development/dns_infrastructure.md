@@ -21,7 +21,7 @@ do VPS onde o cluster k3s está instalado.
 |------------|-------------------------------------------|-------------------|
 | Produção   | `axiom.tjtux.duckdns.org`            | Frontend + API    |
 | Staging    | `axiom-staging.tjtux.duckdns.org`    | Frontend + API    |
-| MinIO      | `minio.tjtux.duckdns.org`                 | Object storage    |
+| MinIO      | `minio.tjtux.duckdns.org`                 | Object storage (host externo, não passa pelo ingress do k3s — veja [documentation/storage/infrastructure.md](../storage/infrastructure.md)) |
 
 ---
 
@@ -116,8 +116,10 @@ O roteamento segue a ordem de prioridade abaixo (avaliada de cima para baixo):
 | `/ready` | `api-service:39100` (readiness) |
 | `/`      | `frontend-service:80` (React)   |
 
-O MinIO tem um ingress próprio em `k8s/minio/ingress.yaml` apontando para
-`minio-service:9000` com `backend-protocol: HTTPS` (cert auto-assinado interno).
+O MinIO não tem mais ingress no k3s — ele roda em um host externo ao cluster,
+com seu próprio certificado TLS público confiável (Let's Encrypt/reverse
+proxy), fora do roteamento do nginx-ingress acima. Veja
+[documentation/storage/infrastructure.md](../storage/infrastructure.md).
 
 ---
 

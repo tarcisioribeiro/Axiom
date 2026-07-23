@@ -90,10 +90,6 @@ spec:
               mountPath: /app/logs
             - name: staticfiles
               mountPath: /app/staticfiles
-            - name: minio-ca
-              mountPath: /etc/ssl/minio/ca.crt
-              subPath: ca.crt
-              readOnly: true
           resources:
             requests:
               memory: "512Mi"
@@ -147,9 +143,3 @@ spec:
         - name: staticfiles
           persistentVolumeClaim:
             claimName: api-static-pvc
-        - name: minio-ca
-          secret:
-            secretName: minio-tls
-            items:
-              - key: ca.crt
-                path: ca.crt

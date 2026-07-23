@@ -3,15 +3,16 @@
 # k8s-backup.sh — Backup de produção Kubernetes → arquivo local
 # =============================================================================
 # Exporta: dump PostgreSQL (via rede, no Postgres externo ao cluster) +
-#          arquivos MinIO (ainda in-cluster)
+#          arquivos MinIO (via rede, no MinIO externo ao cluster)
 # Saída  : backups/backup_YYYYMMDD_HHMMSS.tar.gz
 #
-# O PostgreSQL roda fora do cluster (VM auto-gerenciada — veja
-# documentation/database/infrastructure.md), então esta máquina precisa ter
-# acesso de rede a ele (túnel WireGuard ou allowlist de firewall, conforme o
-# runbook) para que o pg_dump abaixo funcione.
+# PostgreSQL e MinIO rodam fora do cluster (self-managed — veja
+# documentation/database/infrastructure.md e
+# documentation/storage/infrastructure.md), então esta máquina precisa ter
+# acesso de rede a ambos (túnel WireGuard ou allowlist de firewall, conforme
+# o runbook) para que o pg_dump e o mc mirror abaixo funcionem.
 #
-# Dependências: kubectl (contexto configurado, só para MinIO/ConfigMap),
+# Dependências: kubectl (contexto configurado, só para ler Secret/ConfigMap),
 #               pg_dump (cliente PostgreSQL), mc (MinIO Client)
 # Uso: ./infra/scripts/k8s-backup.sh
 # =============================================================================
@@ -25,7 +26,6 @@ BACKUP_BASE="${REPO_ROOT}/backups"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 WORK_DIR="${BACKUP_BASE}/backup_${TIMESTAMP}"
 ARCHIVE="${BACKUP_BASE}/backup_${TIMESTAMP}.tar.gz"
-MINIO_PF_PORT=19000  # porta local para port-forward (diferente do MinIO local: 39105)
 
 # MinIO Client pode colidir com o Midnight Commander (/usr/bin/mc).
 # Procura em ~/bin/mc primeiro; depois mcli; depois mc no PATH verificando a versão.
@@ -45,21 +45,7 @@ MC="$(resolve_mc)" || err "MinIO Client (mc/mcli) não encontrado. Instale de ht
 log()  { echo "[$(date '+%H:%M:%S')] $*"; }
 err()  { echo "[$(date '+%H:%M:%S')] ERRO: $*" >&2; exit 1; }
 
-wait_port() {
-    local port="$1" max=15 i
-    for i in $(seq 1 "$max"); do
-        if (echo >/dev/tcp/localhost/"$port") 2>/dev/null; then return 0; fi
-        sleep 1
-    done
-    return 1
-}
-
 cleanup() {
-    if [[ -n "${PF_PID:-}" ]]; then
-        log "Encerrando port-forward (PID ${PF_PID})..."
-        kill "$PF_PID" 2>/dev/null || true
-        wait "$PF_PID" 2>/dev/null || true
-    fi
     # Remove diretório de trabalho apenas se o arquivo final foi criado
     if [[ -f "$ARCHIVE" && -d "$WORK_DIR" ]]; then
         rm -rf "$WORK_DIR"
@@ -94,10 +80,9 @@ DB_PASSWORD="$(read_secret DB_PASSWORD)"
 MINIO_USER="$(read_secret MINIO_ROOT_USER)"
 MINIO_PASS="$(read_secret MINIO_ROOT_PASSWORD)"
 
-# Host/porta do Postgres self-managed (mesma VPS do k3s), injetados em
-# axiom-secrets a partir das variáveis de CI/CD — veja deploy:staging /
-# deploy:production em .gitlab-ci.yml. DB_SSLMODE não é sensível e continua
-# no ConfigMap axiom-config.
+# Host/porta do Postgres self-managed, injetados em axiom-secrets a partir
+# das variáveis de CI/CD — veja deploy:staging / deploy:production em
+# .gitlab-ci.yml. DB_SSLMODE não é sensível e continua no ConfigMap axiom-config.
 DB_HOST="$(read_secret DB_HOST)"
 DB_PORT="$(read_secret DB_PORT)"
 DB_SSLMODE="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
@@ -105,13 +90,19 @@ DB_SSLMODE="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
 [[ -z "$DB_HOST" ]] && err "DB_HOST não encontrado em axiom-secrets"
 [[ -z "$DB_PORT" ]] && DB_PORT="5432"
 
+# Endpoint do MinIO self-managed, externo ao cluster, injetado em
+# axiom-secrets da mesma forma que DB_HOST/DB_PORT (veja
+# documentation/storage/infrastructure.md).
+MINIO_ENDPOINT="$(read_secret MINIO_ENDPOINT)"
+[[ -z "$MINIO_ENDPOINT" ]] && err "MINIO_ENDPOINT não encontrado em axiom-secrets"
+
 # Bucket definido no ConfigMap (fallback: axiom)
 MINIO_BUCKET="$(kubectl get configmap axiom-config -n "$NAMESPACE" \
     -o jsonpath='{.data.MINIO_BUCKET_NAME}' 2>/dev/null || echo 'axiom')"
 [[ -z "$MINIO_BUCKET" ]] && MINIO_BUCKET="axiom"
 
 log "Banco de dados : ${DB_NAME} (usuário: ${DB_USER}) em ${DB_HOST}:${DB_PORT}"
-log "Bucket MinIO   : ${MINIO_BUCKET}"
+log "MinIO          : ${MINIO_ENDPOINT} (bucket: ${MINIO_BUCKET})"
 
 # ── Criar diretório de trabalho ───────────────────────────────────────────────
 mkdir -p "${WORK_DIR}/minio"
@@ -136,34 +127,20 @@ PGSSLMODE="$DB_SSLMODE" PGPASSWORD="$DB_PASSWORD" \
 DUMP_SIZE="$(du -sh "${WORK_DIR}/database.dump" | cut -f1)"
 log "pg_dump concluído — tamanho: ${DUMP_SIZE}"
 
-# ── Backup MinIO via port-forward ─────────────────────────────────────────────
-log "Iniciando port-forward para MinIO (localhost:${MINIO_PF_PORT} → minio-service:9000)..."
-kubectl port-forward svc/minio-service -n "$NAMESPACE" "${MINIO_PF_PORT}:9000" \
-    >/dev/null 2>&1 &
-PF_PID=$!
-
-log "Aguardando port-forward ficar disponível..."
-wait_port "$MINIO_PF_PORT" \
-    || err "Port-forward não ficou disponível após 15 segundos (PID ${PF_PID})"
-
-# MinIO no K8s usa TLS auto-assinado; --insecure ignora validação do certificado
-log "Configurando alias mc 'k8s-minio' (HTTPS com cert auto-assinado)..."
-"$MC" --insecure alias set k8s-minio \
-    "https://localhost:${MINIO_PF_PORT}" \
+# ── Backup MinIO via rede direta ──────────────────────────────────────────────
+log "Conectando ao MinIO externo em ${MINIO_ENDPOINT}..."
+log "Configurando alias mc 'k8s-minio' (certificado público confiável)..."
+"$MC" alias set k8s-minio \
+    "https://${MINIO_ENDPOINT}" \
     "$MINIO_USER" "$MINIO_PASS" \
     --api S3v4 \
     >/dev/null
 
 log "Espelhando bucket '${MINIO_BUCKET}' → ${WORK_DIR}/minio/ ..."
-"$MC" --insecure mirror --preserve "k8s-minio/${MINIO_BUCKET}" "${WORK_DIR}/minio/"
+"$MC" mirror --preserve "k8s-minio/${MINIO_BUCKET}" "${WORK_DIR}/minio/"
 
 MINIO_SIZE="$(du -sh "${WORK_DIR}/minio" | cut -f1)"
 log "Mirror MinIO concluído — tamanho: ${MINIO_SIZE}"
-
-# Encerra port-forward antes de comprimir
-kill "$PF_PID" 2>/dev/null || true
-wait "$PF_PID" 2>/dev/null || true
-PF_PID=""
 
 # ── Gravar metadados ──────────────────────────────────────────────────────────
 cat > "${WORK_DIR}/metadata.json" <<EOF
@@ -174,6 +151,7 @@ cat > "${WORK_DIR}/metadata.json" <<EOF
   "db_user": "${DB_USER}",
   "db_host": "${DB_HOST}",
   "db_port": "${DB_PORT}",
+  "minio_endpoint": "${MINIO_ENDPOINT}",
   "minio_bucket": "${MINIO_BUCKET}"
 }
 EOF

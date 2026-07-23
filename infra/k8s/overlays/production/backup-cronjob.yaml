@@ -17,7 +17,7 @@
 #     BACKUP_ENCRYPTION_KEY  Random 32+ char passphrase for AES-256 encryption.
 #                            NEVER change this after encrypting data — older
 #                            backups will become unrecoverable.
-#     MINIO_ENDPOINT         e.g. http://minio-service:9000
+#     MINIO_ENDPOINT         external MinIO host, e.g. https://minio.example.com
 #     MINIO_ACCESS_KEY       MinIO / S3 access key
 #     MINIO_SECRET_KEY       MinIO / S3 secret key
 #
@@ -144,7 +144,7 @@ data:
     # ─────────────────────────────────────────────────────────────────────────────
     #   PGPASSWORD            PostgreSQL password
     #   BACKUP_ENCRYPTION_KEY AES-256 passphrase
-    #   MINIO_ENDPOINT        MinIO/S3 endpoint, e.g. http://minio:9000
+    #   MINIO_ENDPOINT        external MinIO/S3 endpoint, e.g. https://minio.example.com
     #   MINIO_ACCESS_KEY      MinIO/S3 access key
     #   MINIO_SECRET_KEY      MinIO/S3 secret key
     #

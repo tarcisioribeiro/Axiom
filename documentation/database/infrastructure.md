@@ -179,8 +179,8 @@ em vez de um valor fixo (`postgres-service`).
 - **Retenção GFS**: 7 diários / 4 semanais / 3 mensais.
 - **Criptografia**: AES-256-CBC (PBKDF2, 600k iterações), chave em
   `BACKUP_ENCRYPTION_KEY`.
-- **Armazenamento**: MinIO, que continua rodando dentro do cluster
-  (`minio-service`), sem alteração.
+- **Armazenamento**: MinIO, que também roda fora do cluster (self-managed —
+  veja [documentation/storage/infrastructure.md](../storage/infrastructure.md)).
 
 ### Puxar um backup de produção para a máquina local
 
@@ -189,8 +189,9 @@ em vez de um valor fixo (`postgres-service`).
 `pg_dump` diretamente pela rede (requer que a máquina que executa o script
 tenha acesso ao Postgres — hoje, o IP público da VPS na porta configurada;
 se migrar para uma VM separada, pelo mesmo túnel WireGuard/allowlist do
-runbook acima). O MinIO continua sendo acessado via `kubectl port-forward`,
-já que ele segue in-cluster.
+runbook acima). O MinIO é acessado da mesma forma — diretamente pela rede,
+sem `kubectl port-forward` — veja
+[documentation/storage/infrastructure.md](../storage/infrastructure.md).
 
 ### Restaurar localmente (docker-compose)
 

@@ -111,7 +111,7 @@ if settings.DEBUG:
 if getattr(settings, "MINIO_ENDPOINT", "") and not os.getenv(
     "MINIO_EXTERNAL_ENDPOINT"
 ):
-    from app.media_proxy import MediaProxyView
+    from storage.media_proxy import MediaProxyView
 
     urlpatterns += [
         path(

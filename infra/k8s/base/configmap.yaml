@@ -24,14 +24,18 @@ data:
   # Include both http (local Kind dev) and https (production via ingress TLS).
   CORS_ALLOWED_ORIGINS: "http://localhost:39101,http://127.0.0.1:39101,http://frontend-service,https://axiom.tjtux.duckdns.org"
 
-  # MinIO object storage
-  MINIO_ENDPOINT: "minio-service:9000"
-  MINIO_EXTERNAL_ENDPOINT: "minio.tjtux.duckdns.org"
+  # MinIO object storage — runs external to the cluster (see
+  # documentation/storage/infrastructure.md). MINIO_ENDPOINT/
+  # MINIO_EXTERNAL_ENDPOINT are intentionally NOT set here: they're injected
+  # into the axiom-secrets Secret at deploy time from the
+  # STAGING_MINIO_ENDPOINT/STAGING_MINIO_EXTERNAL_ENDPOINT and
+  # PRODUCTION_MINIO_ENDPOINT/PRODUCTION_MINIO_EXTERNAL_ENDPOINT CI/CD
+  # variables (see deploy:staging / deploy:production in .gitlab-ci.yml), so
+  # the network topology is never committed to the repo. MinIO's TLS
+  # certificate is publicly trusted (Let's Encrypt / reverse proxy), so no
+  # custom CA bundle path is needed anymore.
   MINIO_BUCKET_NAME: "axiom"
   MINIO_USE_SSL: "true"
-  # Path to the internal CA cert mounted from the minio-tls Secret (see k8s/api/deployment.yaml).
-  # Used by Django's S3 storage backend to verify the self-signed MinIO TLS certificate.
-  MINIO_CA_BUNDLE: "/etc/ssl/minio/ca.crt"
 
   # Ollama — LLM local implantado no mesmo namespace (deployment: ollama).
   OLLAMA_BASE_URL: "http://ollama-service:11434"
