@@ -957,8 +957,16 @@ backup:staging:
         --from-literal=MINIO_ACCESS_KEY="$STAGING_MINIO_BACKUP_ACCESS_KEY" \
         --from-literal=MINIO_SECRET_KEY="$STAGING_MINIO_BACKUP_SECRET_KEY" \
         --dry-run=client -o yaml | kubectl apply -f -
-    # Ensure the sa-backup service account and CronJob/PVC/ConfigMap exist
-    - kubectl apply -k infra/k8s/overlays/staging
+    # Ensure the CronJob/PVC/ConfigMap exist. NOTE: deliberately NOT running
+    # `kubectl apply -k infra/k8s/overlays/staging` here — that renders the
+    # base api/frontend Deployments with their placeholder `:0.0.0` image
+    # (the real tag is substituted via sed only in deploy:staging, a hard
+    # `needs:` dependency of this job that has already applied the full
+    # overlay correctly). Re-applying the raw kustomize output here overwrote
+    # the just-deployed image with the placeholder, breaking staging with
+    # ImagePullBackOff on every run of this job — see incident #18382.
+    # sa-backup (required below) comes from base/serviceaccounts.yaml, also
+    # already applied by deploy:staging.
     - kubectl apply -f infra/k8s/overlays/staging/backup-cronjob.yaml
     # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
     - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
@@ -967,14 +975,35 @@ backup:staging:
     - |
       kubectl -n axiom-staging create job "$JOB_NAME" \
         --from=cronjob/axiom-db-backup-staging
+    # Stream the pod's logs to a file in the background as soon as it appears.
+    # A fast-failing pod is deleted by the Job controller within seconds of
+    # hitting backoffLimit (confirmed in incident #18382), so querying logs
+    # by label AFTER the wait below is too late — "No resources found" tells
+    # us nothing. Tailing live from the moment the pod is scheduled preserves
+    # the failure output regardless of how quickly the pod disappears.
+    - |
+      : > backup-job.log
+      (
+        for _ in $(seq 1 60); do
+          POD=$(kubectl -n axiom-staging get pods -l "job-name=${JOB_NAME}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+          [ -n "$POD" ] && break
+          sleep 2
+        done
+        [ -n "$POD" ] && kubectl -n axiom-staging logs -f "$POD" >> backup-job.log 2>&1
+      ) &
+      LOG_PID=$!
     - |
       kubectl -n axiom-staging wait \
-        --for=condition=complete "job/${JOB_NAME}" --timeout=600s \
-      || {
-        echo "--- backup job logs ---"
-        kubectl -n axiom-staging logs -l "job-name=${JOB_NAME}" --tail=100 || true
+        --for=condition=complete "job/${JOB_NAME}" --timeout=600s
+      WAIT_STATUS=$?
+      sleep 2
+      kill "$LOG_PID" 2>/dev/null || true
+      wait "$LOG_PID" 2>/dev/null || true
+      echo "--- backup job logs ---"
+      cat backup-job.log || true
+      if [ "$WAIT_STATUS" -ne 0 ]; then
         exit 1
-      }
+      fi
     - echo "Staging backup job ${JOB_NAME} completed successfully."
   after_script:
     - rm -f /tmp/kubeconfig
@@ -1390,10 +1419,16 @@ test:backup-restore:
     - until pg_isready -h postgres -p 5432; do sleep 1; done
     - mkdir -p "$BACKUP_DIR"
     - |
-      mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
-        "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY" --insecure 2>/dev/null \
-      || mc alias set "$MINIO_ALIAS" \
-        "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
+      # STAGING_MINIO_ENDPOINT is a bare host:port (same convention as
+      # apps/api/app/settings.py) — mc requires a scheme, so add one if
+      # missing rather than assuming the variable already has it (see
+      # incident #18382: this exact gap made backup:staging fail silently).
+      MC_ENDPOINT="$STAGING_MINIO_ENDPOINT"
+      case "$MC_ENDPOINT" in
+        http://*|https://*) ;;
+        *) MC_ENDPOINT="http://${MC_ENDPOINT}" ;;
+      esac
+      mc alias set "$MINIO_ALIAS" "$MC_ENDPOINT" \
         "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY"
     - |
       LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/" --json \

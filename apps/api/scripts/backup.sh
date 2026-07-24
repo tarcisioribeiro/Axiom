@@ -51,7 +51,10 @@
 #   PGPASSWORD            PostgreSQL password
 #   BACKUP_ENCRYPTION_KEY AES-256 passphrase for new backups (keep secret;
 #                         rotate via rekey-backups.sh — see Key Rotation below)
-#   MINIO_ENDPOINT        MinIO/S3 endpoint, e.g. http://minio:9000
+#   MINIO_ENDPOINT        MinIO/S3 endpoint. Accepts either a bare host:port
+#                         (e.g. minio:9000 — scheme added from MINIO_USE_SSL
+#                         below, same convention as apps/api/app/settings.py)
+#                         or a full URL with scheme (e.g. http://minio:9000).
 #   MINIO_ACCESS_KEY      MinIO/S3 access key
 #   MINIO_SECRET_KEY      MinIO/S3 secret key
 #
@@ -63,6 +66,8 @@
 #   DB_USER              (default: postgres)
 #   BACKUP_DIR           (default: /backups)
 #   MINIO_BUCKET         (default: axiom-backups)
+#   MINIO_USE_SSL         (default: false) — scheme used when MINIO_ENDPOINT
+#                         has none: "true" -> https://, else http://
 #   KEEP_DAILY           (default: 7)   — daily backups to keep locally
 #   KEEP_WEEKLY          (default: 4)   — one-per-week backups to keep locally
 #   KEEP_MONTHLY         (default: 3)   — one-per-month backups to keep locally
@@ -99,6 +104,7 @@ PGPORT="${PGPORT:-5432}"
 MINIO_BUCKET="${MINIO_BUCKET:-axiom-backups}"
 MC_BIN="${MC_BIN:-/usr/local/bin/mc}"
 BACKUP_KEY_VERSION="${BACKUP_KEY_VERSION:-v1}"
+MINIO_USE_SSL="${MINIO_USE_SSL:-false}"
 
 # GFS (Grandfather-Father-Son) retention policy
 KEEP_DAILY="${KEEP_DAILY:-7}"
@@ -113,6 +119,18 @@ export PGHOST PGPORT PGPASSWORD
 : "${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}"
 : "${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}"
 : "${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}"
+
+# mc (MinIO client) requires a full URL with scheme, but MINIO_ENDPOINT is
+# conventionally passed as a bare host:port across this codebase (see
+# apps/api/app/settings.py, which builds AWS_S3_ENDPOINT_URL the same way) —
+# normalize it here instead of assuming callers already include the scheme.
+if [[ "$MINIO_ENDPOINT" != http://* && "$MINIO_ENDPOINT" != https://* ]]; then
+    if [[ "$MINIO_USE_SSL" == "true" ]]; then
+        MINIO_ENDPOINT="https://${MINIO_ENDPOINT}"
+    else
+        MINIO_ENDPOINT="http://${MINIO_ENDPOINT}"
+    fi
+fi
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'
@@ -220,13 +238,19 @@ log "Unencrypted dump removed"
 # ─────────────────────────────────────────────────────────────────────────────
 log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
 
-# Configure mc alias (stdout/stderr suppressed to avoid leaking credentials)
-"$MC_BIN" alias set axiom-storage \
+# Configure mc alias (stdout/stderr captured, not shown, to avoid leaking
+# credentials — but checked, so a bad endpoint/credential fails fast here
+# instead of surfacing as a confusing "mc cp" failure two steps later).
+if ! MC_ALIAS_OUTPUT=$("$MC_BIN" alias set axiom-storage \
     "$MINIO_ENDPOINT" \
     "$MINIO_ACCESS_KEY" \
     "$MINIO_SECRET_KEY" \
-    --api S3v4 \
-    > /dev/null 2>&1
+    --api S3v4 2>&1); then
+    error "Failed to configure mc alias for ${MINIO_ENDPOINT} — check MINIO_ENDPOINT/MINIO_USE_SSL"
+    error "$MC_ALIAS_OUTPUT"
+    echo "failed:minio_alias:${DATE}" > "$STATUS_FILE"
+    exit 1
+fi
 
 # Ensure bucket exists (idempotent)
 "$MC_BIN" mb --ignore-existing "axiom-storage/${MINIO_BUCKET}" > /dev/null 2>&1 || true
