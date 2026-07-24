@@ -26,7 +26,7 @@ Axiom/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, agents, exchange_rates, webhooks, admin_panel
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel
 
 **Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances. `personal_planning` also includes workout tracking (exercises, workout plans, days, sessions, sets) and nutrition tracking (foods, meal types, menu options, meal logs) under the same app.
 
@@ -37,6 +37,8 @@ Axiom/
 **Webhooks** (`apps/api/webhooks/`): Outbound webhook system. Users configure `Webhook` endpoints subscribed to specific events. Call `dispatch_event(event, payload, user=user)` from `webhooks.dispatch` to trigger deliveries. Payloads are signed with HMAC-SHA256 in the `X-Axiom-Signature` header. Deliveries are queued via Celery with retry logic. Event types include: `expense.created/updated/deleted`, `revenue.*`, `transfer.created`, `loan.*`, `budget.exceeded`, `vault.deposit/withdrawal`, `health_score.updated`.
 
 **Admin Panel** (`apps/api/admin_panel/`): `SystemConfig` model stores encrypted system configuration (LLM keys, email, MinIO, backup settings) editable via Django Admin. Values marked `is_secret=True` are stored encrypted with `ENCRYPTION_KEY`. Access via Django Admin at `/admin/`, not the frontend `/admin/` route.
+
+**Monthly Planning** (`apps/api/monthly_planning/`): `MonthlyPlan` model holds per-user, per-month/year overrides on top of the base financial data — `extra_revenues`/`extra_expenses` (JSON), `budget_overrides`, `fixed_revenue_overrides`, `fixed_expense_overrides`, `bill_overrides`, and `budget_disabled_categories`, plus an `applied_at` timestamp. Endpoints: `monthly-plan/summary/`, `monthly-plan/<pk>/`, `monthly-plan/<pk>/apply/`.
 
 **Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`. The same file also defines shared choice tuples reused across apps: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
