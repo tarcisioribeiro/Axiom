@@ -13,8 +13,10 @@ FROM postgres:16-alpine
 
 ARG TARGETARCH=amd64
 
-# Install bash (for backup.sh's bash-isms), dcron, curl, and tzdata
-RUN apk add --no-cache bash dcron curl tzdata
+# Install bash (for backup.sh's bash-isms), dcron, curl, tzdata, and openssl
+# (backup.sh/verify-backup.sh/rekey-backups.sh all shell out to `openssl enc`
+# for AES-256 encryption — postgres:16-alpine does not bundle it by default).
+RUN apk add --no-cache bash dcron curl tzdata openssl
 
 # Install MinIO client — architecture-aware
 RUN curl -fsSL \

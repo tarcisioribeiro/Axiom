@@ -80,7 +80,13 @@ if [ "$#" -gt 0 ]; then
   exec "$@"
 else
   echo "🚀 Iniciando servidor com Gunicorn..."
+  # Com múltiplos workers, cada processo Gunicorn mantém seu próprio registro
+  # Prometheus em memória — sem o modo multiprocess, cada scrape em /metrics
+  # reflete só o worker que respondeu à requisição, não o total real.
+  # gunicorn.conf.py usa este diretório para agregar métricas entre workers.
+  export PROMETHEUS_MULTIPROC_DIR="${PROMETHEUS_MULTIPROC_DIR:-/tmp/prometheus-multiproc}"
   exec gunicorn app.wsgi:application \
+    --config /app/gunicorn.conf.py \
     --bind 0.0.0.0:${API_PORT:-39100} \
     --workers ${GUNICORN_WORKERS:-4} \
     --timeout ${GUNICORN_TIMEOUT:-120} \
