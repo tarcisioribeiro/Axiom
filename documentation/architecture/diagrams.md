@@ -30,17 +30,30 @@ graph TB
         subgraph "Docker Compose / Kubernetes"
             FE["frontend\nnginx:39101\nReact SPA"]
             API["api\nDjango + Gunicorn\n:39100"]
-            DB["db\nPostgreSQL 16\n:39102"]
+            WORKER["worker (axiom-worker)\nceleryworker --concurrency=2"]
+            BEAT["queue (axiom-queue)\ncelery beat (DatabaseScheduler)"]
+            DB["db\nPostgreSQL 16 + pgvector\n:39102"]
             REDIS["redis\nRedis 7\n:39103"]
             MINIO["minio\nMinIO\n:39105 (API)\n:39106 (Console)"]
+            BACKUP["db-backup\nencrypted pg_dump → MinIO (daily)"]
         end
     end
+
+    OLLAMA["Ollama host\n(self-managed, external)"]
 
     Browser["Navegador"] -->|"HTTP/HTTPS :39101"| FE
     FE -->|"API calls /api/v1/*"| API
     API -->|"SQL"| DB
     API -->|"Cache / Session"| REDIS
     API -->|"Object Storage"| MINIO
+    API -->|"Broker / Result Backend"| REDIS
+    API -.->|"LLM_PROVIDER=ollama"| OLLAMA
+    WORKER -->|"Broker"| REDIS
+    WORKER --> DB
+    BEAT -->|"Schedules (django_celery_beat)"| DB
+    BEAT -->|"Enqueue"| REDIS
+    BACKUP -->|"pg_dump"| DB
+    BACKUP -->|"Upload"| MINIO
     Browser -.->|"Swagger /api/docs/"| API
 ```
 
@@ -117,8 +130,12 @@ graph LR
         Transfers["transfers"]
         Loans["loans"]
         Payables["payables"]
+        Receivables["receivables"]
         Vaults["vaults"]
         Budgets["budgets"]
+        BankReconciliation["bank_reconciliation"]
+        MonthlyPlanning["monthly_planning"]
+        ExchangeRates["exchange_rates"]
         Dashboard["dashboard"]
     end
 
@@ -148,6 +165,13 @@ graph LR
         Authentication["authentication"]
         Members["members"]
         Notifications["notifications"]
+        Webhooks["webhooks"]
+        AdminPanel["admin_panel"]
+    end
+
+    subgraph Agents["Agentes de IA (agents/)"]
+        AgentsCore["core (router, llm_client, memory)"]
+        AgentsProviders["providers (única porta p/ outras apps)"]
     end
 
     BaseModel --> Finance
@@ -171,6 +195,12 @@ graph LR
     CreditCards --> Dashboard
 
     Authentication --> Members
+
+    AgentsProviders -.->|"única porta de leitura"| Finance
+    AgentsProviders -.->|"única porta de leitura"| Security
+    AgentsProviders -.->|"única porta de leitura"| Library
+    AgentsProviders -.->|"única porta de leitura"| Planning
+    AgentsCore --> AgentsProviders
 ```
 
 ---
@@ -687,7 +717,7 @@ graph TB
         subgraph Core["Core"]
             ROUTER["AgentRouter\n(keyword + semantic)"]
             BASE["BaseAgent\n(can_handle / build_context / build_prompt)"]
-            LLMC["LLMClient\n(Ollama | Groq | Anthropic)"]
+            LLMC["LLMClient\n(Ollama | Groq | Anthropic | OpenAI)"]
             MEM["ConversationMemory\n(Redis)"]
             TEMP["parse_temporal_intent\n(datas relativas)"]
         end
@@ -713,9 +743,10 @@ graph TB
     subgraph Storage["Storage"]
         PG[("PostgreSQL\nAgentConversation\nAgentEmbedding")]
         REDIS[("Redis\nConversationMemory")]
-        OLLAMA["Ollama\n(LLM local)"]
+        OLLAMA["Ollama\n(LLM local / self-managed)"]
         GROQ["Groq API\n(cloud)"]
         ANT["Anthropic API\n(cloud)"]
+        OPENAI["OpenAI API\n(cloud)"]
     end
 
     SVC -->|"POST /stream/ SSE"| STMV
@@ -746,6 +777,7 @@ graph TB
     LLMC -->|ollama| OLLAMA
     LLMC -->|groq| GROQ
     LLMC -->|anthropic| ANT
+    LLMC -->|openai| OPENAI
     LLMC -->|embeddings| OLLAMA
 ```
 

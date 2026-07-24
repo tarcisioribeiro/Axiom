@@ -215,6 +215,27 @@ Disponível apenas para administradores do servidor. Oferece:
 
 ---
 
+## Estrutura do Projeto
+
+O Axiom é um monorepo organizado em `apps/` (backend, frontend e mobile) e `infra/` (Docker Compose, Kubernetes e scripts de operação):
+
+```
+Axiom/
+├── apps/
+│   ├── api/          # Backend Django REST Framework (porta 39100)
+│   ├── frontend/     # Frontend React + TypeScript (porta 39101)
+│   └── mobile/       # App Flutter (scaffolding — ver documentation/mobile/README.md)
+├── infra/
+│   ├── k8s/          # Manifests Kubernetes (kustomize base + overlays)
+│   ├── docker/       # docker-compose.yml + Dockerfiles auxiliares (ex.: db-backup)
+│   └── scripts/      # Scripts de backup/restore e migração
+├── documentation/    # Documentação técnica completa
+├── e2e/              # Testes end-to-end (Playwright)
+└── .env              # Variáveis de ambiente da raiz
+```
+
+Mais detalhes sobre camadas, padrões arquiteturais e diagramas em [`documentation/architecture/`](documentation/architecture/overview.md).
+
 ## Documentação Técnica
 
 A documentação completa para desenvolvedores está disponível em [`documentation/`](documentation/README.md).

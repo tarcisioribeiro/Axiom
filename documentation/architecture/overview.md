@@ -49,6 +49,7 @@ graph TB
         Ollama[Ollama local]
         Groq[Groq cloud]
         Anthropic[Anthropic Claude]
+        OpenAI[OpenAI]
     end
 
     Browser --> UI
@@ -86,48 +87,68 @@ graph TB
     AI --> Ollama
     AI -.-> Groq
     AI -.-> Anthropic
+    AI -.-> OpenAI
 ```
 
 ## Estrutura do Monorepo
 
 O projeto organiza o código em dois grandes agrupamentos na raiz — `apps/`
-(código de produto) e `infra/` (operação) — preparados para acomodar os
-novos módulos da iniciativa atual (mobile, banco de dados, storage, LLM):
+(código de produto: backend, frontend e mobile) e `infra/` (operação: Kubernetes,
+Docker Compose e scripts) — além de `documentation/` e `e2e/`:
 
 ```
 Axiom/
 ├── apps/
-│   ├── api/                # Backend Django
-│   │   ├── accounts/       # Gestão de contas bancárias
-│   │   ├── credit_cards/   # Gestão de cartões de crédito
-│   │   ├── expenses/       # Controle de despesas
-│   │   ├── revenues/       # Controle de receitas
-│   │   ├── loans/          # Gestão de empréstimos
-│   │   ├── transfers/      # Transferências bancárias
-│   │   ├── dashboard/      # Dashboard financeiro
-│   │   ├── security/       # Módulo de segurança (senhas)
-│   │   ├── library/        # Biblioteca de livros
-│   │   ├── agents/         # Módulo de agentes de IA / LLM (RAG)
-│   │   ├── exchange_rates/ # Módulo de câmbio (banco de taxas BRL)
-│   │   ├── authentication/ # Sistema de autenticação
-│   │   ├── members/        # Sistema de membros
-│   │   └── app/            # Configuração central
-│   ├── frontend/           # Frontend React
+│   ├── api/                    # Backend Django (porta 39100)
+│   │   ├── accounts/           # Contas bancárias
+│   │   ├── credit_cards/       # Cartões de crédito e faturas
+│   │   ├── expenses/           # Despesas
+│   │   ├── revenues/           # Receitas
+│   │   ├── loans/              # Empréstimos
+│   │   ├── transfers/          # Transferências entre contas
+│   │   ├── payables/           # Contas a pagar
+│   │   ├── receivables/        # Contas a receber
+│   │   ├── vaults/             # Cofres (poupança com objetivo)
+│   │   ├── budgets/            # Orçamentos por categoria
+│   │   ├── bank_reconciliation/ # Conciliação bancária (OFX/CSV)
+│   │   ├── monthly_planning/   # Overrides de planejamento mensal
+│   │   ├── exchange_rates/     # Cotações BRL (BCB PTAX)
+│   │   ├── dashboard/          # Dashboard e métricas financeiras
+│   │   ├── security/           # Cofre de senhas (sub-apps: passwords,
+│   │   │                       # stored_cards, stored_accounts, archives,
+│   │   │                       # activity_logs)
+│   │   ├── library/            # Biblioteca pessoal (sub-apps: books,
+│   │   │                       # authors, publishers, readings, summaries)
+│   │   ├── personal_planning/  # Hábitos, metas, treinos e nutrição
+│   │   ├── notifications/      # Notificações internas
+│   │   ├── webhooks/           # Webhooks outbound assinados (HMAC)
+│   │   ├── agents/             # Agentes de IA / LLM (RAG via pgvector)
+│   │   ├── admin_panel/        # Configuração de sistema (Django Admin)
+│   │   ├── authentication/     # JWT, 2FA, verificação de e-mail
+│   │   ├── members/            # Sistema unificado de pessoas/membros
+│   │   └── app/                # Configuração central, BaseModel, criptografia
+│   ├── frontend/                # Frontend React (porta 39101)
 │   │   ├── src/
-│   │   │   ├── components/ # Componentes React
-│   │   │   ├── pages/      # Páginas/rotas
-│   │   │   ├── services/   # Camada de serviços
-│   │   │   ├── stores/     # Estado global (Zustand)
-│   │   │   ├── types/      # Definições TypeScript
-│   │   │   └── utils/      # Utilitários
-│   │   └── public/         # Arquivos estáticos
-│   └── mobile/              # Reservado para o futuro app mobile (sem código ainda)
+│   │   │   ├── components/     # common/ e ui/ (Radix + Tailwind)
+│   │   │   ├── pages/          # Páginas/rotas (lazy-loaded)
+│   │   │   ├── services/       # Camada de serviços (BaseService + Axios)
+│   │   │   ├── stores/         # Estado global (Zustand)
+│   │   │   ├── hooks/          # Hooks compartilhados
+│   │   │   ├── lib/            # Utilitários (formatters, animations, etc.)
+│   │   │   ├── config/         # Constantes, traduções de dados, endpoints
+│   │   │   ├── i18n/           # Localização de UI (react-i18next)
+│   │   │   ├── types/          # Definições TypeScript
+│   │   │   └── test/           # Setup de testes (Vitest)
+│   │   └── public/             # Arquivos estáticos
+│   └── mobile/                  # App Flutter (scaffolding — login screen
+│                                 # estático, sem integração de API ainda)
 ├── infra/
-│   ├── k8s/                 # Manifests Kubernetes (kustomize base + overlays)
-│   ├── docker/               # docker-compose.yml + Dockerfiles auxiliares (db-backup)
-│   └── scripts/              # Scripts de backup/restore e migração
-├── .env                      # Variáveis de ambiente
-└── documentation/             # Documentação do projeto
+│   ├── k8s/                     # Manifests Kubernetes (kustomize base + overlays)
+│   ├── docker/                   # docker-compose.yml + Dockerfiles auxiliares (db-backup)
+│   └── scripts/                  # Scripts de backup/restore e migração
+├── documentation/                 # Documentação do projeto
+├── e2e/                           # Especificações Playwright (E2E)
+└── .env                           # Variáveis de ambiente da raiz
 ```
 
 ### Vantagens do Monorepo
@@ -142,20 +163,21 @@ Axiom/
 
 ### 1. Camada de Apresentação (Frontend)
 
-**Tecnologias**: React 18, TypeScript, TailwindCSS, Zustand
+**Tecnologias**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, React Router v7, Recharts, Framer Motion
 
 A camada de apresentação é responsável pela interface do usuário e interações. Utiliza componentes React funcionais com hooks e TypeScript para tipagem forte.
 
 **Componentes principais**:
 
-- **UI Components**: Componentes reutilizáveis baseados em shadcn/ui (Radix)
-- **Pages**: Componentes de página que representam rotas
+- **UI Components**: Componentes reutilizáveis baseados em Radix UI (`components/ui/`)
+- **Pages**: Componentes de página que representam rotas, todos lazy-loaded (`React.lazy()` + `Suspense`)
 - **Layout Components**: Estrutura de layout (Sidebar, Header, etc.)
 - **Feature Components**: Componentes específicos de funcionalidades
 
 **Estado**:
 
-- **Global**: Zustand para autenticação e dados compartilhados
+- **Servidor**: TanStack Query v5 para dados remotos (cache, invalidação, refetch) — ver [Frontend Data-Fetching & Caching](../../CLAUDE.md#frontend-data-fetching--caching)
+- **Global**: Zustand para autenticação, notificações e estado de UI compartilhado
 - **Local**: React hooks (useState, useReducer) para estado de componente
 - **Formulários**: React Hook Form + Zod para validação
 
@@ -189,43 +211,48 @@ export const accountsService = {
 
 ### 3. Camada de Backend (Django)
 
-**Tecnologias**: Django 5.2.5, Django REST Framework 3.16.1
+**Tecnologias**: Django 5.2.16, Django REST Framework 3.16.1
 
-O backend é organizado em apps Django independentes, cada um com responsabilidade específica. Segue o padrão MVT (Model-View-Template) do Django, adaptado para API REST.
+O backend é organizado em apps Django independentes, cada um com responsabilidade específica. Usa views genéricas do DRF (não ViewSets) através dos mixins `BaseListCreateView` / `BaseRetrieveUpdateDestroyView`.
 
 **Estrutura de cada app**:
 
 ```
 app_name/
-├── models.py          # Modelos de dados (ORM)
-├── serializers.py     # Serialização DRF
-├── views.py           # ViewSets (lógica de endpoints)
-├── urls.py            # Roteamento de URLs
-├── permissions.py     # Permissões customizadas
+├── models.py          # Modelos de dados (ORM), estendem BaseModel
+├── serializers.py     # Serialização DRF (ModelSerializer)
+├── views.py           # Views genéricas (list/create, retrieve/update/destroy)
+├── urls.py            # Roteamento sob /api/v1/
+├── signals.py         # Sinais Django (quando aplicável, registrados em apps.py)
 ├── admin.py           # Interface administrativa
 └── tests.py           # Testes unitários
 ```
 
 **Apps principais**:
 
-**Core Financial**:
-- `accounts`: Contas bancárias
-- `credit_cards`: Cartões e faturas
-- `expenses`: Despesas
-- `revenues`: Receitas
-- `loans`: Empréstimos
-- `transfers`: Transferências
-- `dashboard`: Métricas e visualizações
+**Financeiro**:
+- `accounts`, `credit_cards`, `expenses`, `revenues`, `loans`, `transfers`
+- `payables`, `receivables`: contas a pagar/receber
+- `vaults`: cofres com objetivo (poupança)
+- `budgets`: orçamentos por categoria
+- `bank_reconciliation`: conciliação de extratos OFX/CSV
+- `monthly_planning`: overrides de planejamento mensal
+- `exchange_rates`: cotações BRL (BCB PTAX)
+- `dashboard`: métricas e visualizações agregadas
 
-**System**:
-- `authentication`: JWT, login, logout
-- `members`: Sistema unificado de pessoas
-- `app`: Configuração central, criptografia
+**Sistema**:
+- `authentication`: JWT, 2FA (TOTP), verificação de e-mail
+- `members`: sistema unificado de pessoas
+- `notifications`: notificações internas
+- `webhooks`: entregas outbound assinadas (HMAC-SHA256)
+- `admin_panel`: configuração de sistema (chaves LLM, e-mail, MinIO, backups)
+- `app`: configuração central, `BaseModel`, criptografia (`FieldEncryption`)
 
-**Extended**:
-- `security`: Senhas, arquivos confidenciais, logs
-- `library`: Livros, autores, editoras, resumos
-- `ai_assistant`: RAG, busca semântica, chat
+**Estendidos** (multi-módulo — split em sub-packages):
+- `security`: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`
+- `library`: `books`, `authors`, `publishers`, `readings`, `summaries`
+- `personal_planning`: hábitos/rotinas, metas, treinos, nutrição
+- `agents`: 6 agentes de IA especializados (finance, budget, forecast, insight, library, planning), RAG via pgvector
 
 ### 4. Camada de Middleware
 
@@ -272,6 +299,11 @@ Configurado via `LLM_PROVIDER` — padrão: **Ollama local**.
 **Anthropic** (cloud premium):
 - Chat: `claude-haiku-4-5-20251001` (ou Sonnet/Opus)
 - Requer `ANTHROPIC_API_KEY`; embeddings sempre via Ollama
+
+**OpenAI** (cloud alternativo):
+- Requer `OPENAI_API_KEY` / `OPENAI_MODEL`; embeddings sempre via Ollama
+
+`LLM_FALLBACK_PROVIDERS` permite encadear provedores de fallback caso o primário falhe (ex.: `groq,anthropic`).
 
 ## Padrões Arquiteturais
 
@@ -324,53 +356,56 @@ O API Client do frontend é um singleton que garante configuração única de in
 
 **Responsabilidade**: Gestão financeira completa
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, dashboard
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, budgets, bank_reconciliation, monthly_planning, exchange_rates, dashboard
 
 **Funcionalidades principais**:
 - CRUD de contas bancárias e cartões
-- Registro e categorização de despesas/receitas
+- Registro e categorização de despesas/receitas, com contas a pagar/receber
 - Sistema de empréstimos com amortização
-- Transferências entre contas
+- Transferências entre contas, cofres com objetivo e orçamentos por categoria
+- Conciliação de extratos bancários (OFX/CSV) e cotações BRL (BCB PTAX)
 - Dashboard com métricas e gráficos
 
 ### Módulo Security
 
-**Responsabilidade**: Armazenamento seguro de credenciais
+**Responsabilidade**: Armazenamento seguro de credenciais (cofre de senhas)
 
-**App**: security
+**App**: `security`, dividido nos sub-pacotes `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`
 
 **Funcionalidades principais**:
-- Gerenciamento de senhas criptografadas
+- Gerenciamento de senhas criptografadas, com geração e compartilhamento via link temporário
 - Armazenamento de cartões e contas bancárias
 - Arquivos confidenciais criptografados
-- Logs de auditoria de acesso
-- Sistema de categorias e tags
+- Logs de auditoria de acesso (imutáveis)
+- Dashboard de saúde das senhas (fracas/duplicadas)
 
 ### Módulo Library
 
 **Responsabilidade**: Biblioteca pessoal digital
 
-**App**: library
+**App**: `library`, dividido nos sub-pacotes `books`, `authors`, `publishers`, `readings`, `summaries`
 
 **Funcionalidades principais**:
-- Catálogo de livros com metadados completos
+- Catálogo de livros com metadados completos e leitor de PDF integrado
 - Gestão de autores e editoras
-- Resumos de leitura com busca semântica
-- Status e progresso de leitura
+- Resumos e highlights de leitura
+- Status, fila e progresso de leitura (velocidade, streak)
 - Dashboard com estatísticas
 
-### Módulo AI Assistant
+### Módulo Agents (Assistente de IA)
 
-**Responsabilidade**: Busca semântica e assistente inteligente
+**Responsabilidade**: Assistentes conversacionais com contexto dos dados do usuário
 
-**App**: ai_assistant
+**App**: `agents` (`apps/api/agents/`)
 
 **Funcionalidades principais**:
-- Busca unificada em todos os módulos
-- Geração de embeddings via Ollama (`nomic-embed-text`, 768 dims)
-- Busca vetorial com pgvector
-- Geração de respostas com Groq LLM
-- Interface de chat
+- 6 agentes de domínio (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`), selecionados automaticamente por `core/router.py`
+- Endpoints: `ask/` (síncrono), `stream/` (SSE), `history/`, `sessions/`, `status/`
+- Geração de embeddings via Ollama (`nomic-embed-text`, cache Redis)
+- Busca vetorial com pgvector (`tools/rag_tools.py`)
+- Múltiplos provedores de LLM (Ollama/Groq/Anthropic/OpenAI) com circuit breaker para Ollama
+- Persistência de conversas em Redis + PostgreSQL, com compressão/summarização de contexto
+- `providers/` é o único ponto do módulo autorizado a importar models de outras apps Django — ver `documentation/architecture/agents-llm-boundary.md`
 
 **Arquitetura RAG (Retrieval Augmented Generation)**:
 
@@ -379,21 +414,21 @@ sequenceDiagram
     participant User
     participant Frontend
     participant Backend
+    participant Router
     participant DB
-    participant Transformers
-    participant Groq
+    participant LLM
 
     User->>Frontend: Pergunta em linguagem natural
-    Frontend->>Backend: POST /api/v1/ai-assistant/ask/
-    Backend->>Backend: Extrai conteúdo de Finance/Security/Library
-    Backend->>Transformers: Gera embedding da pergunta
-    Transformers-->>Backend: Vector (384 dim)
-    Backend->>DB: Busca vetorial com pgvector
-    DB-->>Backend: Top-K resultados por similaridade
-    Backend->>Groq: Envia contexto + pergunta
-    Groq-->>Backend: Resposta gerada
-    Backend-->>Frontend: Resposta + fontes citadas
-    Frontend-->>User: Exibe resposta e fontes
+    Frontend->>Backend: POST /api/v1/agents/stream/ (SSE)
+    Backend->>Router: Seleciona agente (keyword + score semântico)
+    Router->>LLM: embed(pergunta)
+    LLM-->>Router: Vector (768 dim, nomic-embed-text)
+    Router->>DB: Busca vetorial com pgvector (top-K por domínio)
+    DB-->>Router: Resultados por similaridade
+    Backend->>LLM: stream_chat(contexto + pergunta)
+    LLM-->>Backend: Tokens em streaming
+    Backend-->>Frontend: SSE token a token
+    Frontend-->>User: Exibe resposta e fontes citadas
 ```
 
 ## Comunicação Entre Camadas
@@ -434,17 +469,17 @@ sequenceDiagram
 7. Serializer transforma em JSON
 8. Response é enviada ao frontend
 
-### Backend → Serviços Externos
+### Backend → Serviços Externos (LLM Providers)
 
-**Groq API**:
-- Protocolo: HTTPS
-- Autenticação: API Key
-- Rate limit: 6.000 req/min (tier gratuito)
+**Ollama** (padrão, self-managed):
+- Protocolo: HTTP, host configurável via `OLLAMA_BASE_URL`
+- Chat e embeddings locais — sem envio de dados para fora
+- Circuit breaker no `LLMClient` para lidar com indisponibilidade
 
-**Sentence Transformers**:
-- Local, sem comunicação externa
-- Modelo carregado em memória
-- Inferência rápida (~50ms por embedding)
+**Groq / Anthropic / OpenAI** (cloud, opcionais):
+- Protocolo: HTTPS, autenticação via API Key (`GROQ_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`)
+- Selecionados via `LLM_PROVIDER`, com fallback em cadeia via `LLM_FALLBACK_PROVIDERS`
+- Embeddings sempre via Ollama, independentemente do provedor de chat
 
 ## Escalabilidade e Performance
 
@@ -558,10 +593,11 @@ Três endpoints de saúde:
 
 ## Links Relacionados
 
-- [Fluxo de Dados](./fluxo-dados.md)
-- [Decisões Arquiteturais](./decisoes-arquiteturais.md)
-- [Documentação Backend](../03-backend/overview.md)
-- [Documentação Frontend](../04-frontend/overview.md)
-- [Documentação API](../05-api/endpoints.md)
-- [Banco de Dados](../06-database/modelo-dados.md)
-- [Autenticação e Segurança](../07-authentication-security/autenticacao.md)
+- [Fluxo de Dados](./data_flow.md)
+- [Decisões Arquiteturais](./architectural_decisions.md)
+- [Diagramas UML](./diagrams.md)
+- [Documentação Backend](../backend/README.md)
+- [Documentação Frontend](../frontend/README.md)
+- [Documentação API](../api/endpoints.md)
+- [Banco de Dados](../database/schema.md)
+- [Autenticação e Segurança](../authentication-security/authentication_flow.md)
