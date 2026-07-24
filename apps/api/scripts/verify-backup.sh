@@ -52,11 +52,12 @@ error()   { echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR:${NC} $*" >&2; }
 warning() { echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $*"; }
 
 # ── Cleanup trap — always drop the temp DB and remove temp files ───────────────
+TEMP_DIR=""
 TEMP_DUMP=""
 cleanup() {
     local exit_code=$?
-    if [ -n "$TEMP_DUMP" ] && [ -f "$TEMP_DUMP" ]; then
-        rm -f "$TEMP_DUMP"
+    if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
+        rm -rf "$TEMP_DIR"
         log "Temp dump file removed"
     fi
     # Drop temp database if it was created (suppress error if it doesn't exist)
@@ -135,7 +136,12 @@ if [ -z "$DECRYPT_KEY_FOR_VERIFY" ]; then
 fi
 
 # ── Step 2: Decrypt ────────────────────────────────────────────────────────────
-TEMP_DUMP=$(mktemp "${BACKUP_DIR}/verify_XXXXXX.dump")
+# Use a temp *directory* + fixed filename rather than a suffixed mktemp
+# template: BusyBox's mktemp (used in the Alpine-based db-backup image)
+# requires the template to end in XXXXXX with no trailing suffix, unlike
+# GNU mktemp (used in the Debian-based postgres:16 image in the K8s CronJob).
+TEMP_DIR=$(mktemp -d "${BACKUP_DIR}/verify_XXXXXX")
+TEMP_DUMP="${TEMP_DIR}/verify.dump"
 log "Step 2/5 — Decrypting backup..."
 
 if ! openssl enc -d -aes-256-cbc \

@@ -193,6 +193,7 @@ services:
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
       - /var/run/docker.sock:/var/run/docker.sock  # Docker socket para restart via painel admin
       - ./.env:/app/axiom.env  # Bind mount para reescrita de variáveis pelo painel admin
+      - ./backups:/backups:ro  # Somente leitura — necessário para /api/v1/health/backup/ e check_backup_health
     restart: unless-stopped
     healthcheck:
       test:

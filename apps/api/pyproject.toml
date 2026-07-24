@@ -149,6 +149,7 @@ module = [
     "mysql",
     "mysql.*",
     "prometheus_client",
+    "prometheus_client.*",
     "bank_reconciliation",
     "bank_reconciliation.*",
     "qrcode",

@@ -158,7 +158,11 @@ WSGI_APPLICATION = "app.wsgi.application"
 
 DATABASES: dict[str, dict[str, Any]] = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        # django_prometheus's wrapper is a drop-in replacement for the plain
+        # postgresql backend — it instruments query counts/latency/errors
+        # (django_db_* metrics) without changing connection behavior. The
+        # Grafana "Database Query Rate" panel depends on this.
+        "ENGINE": "django_prometheus.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("DB_PASSWORD"),
@@ -317,7 +321,10 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
+        # django_prometheus's wrapper subclasses django_redis's RedisCache —
+        # drop-in compatible, adds django_cache_get_total/hits/misses metrics.
+        # The Grafana "Cache Hit Ratio" panel depends on this.
+        "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
         "LOCATION": REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
