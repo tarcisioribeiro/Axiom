@@ -9,6 +9,8 @@ stages:
   - build
   - scan
   - deploy-staging
+  - smoke-staging
+  - test-e2e
   - deploy-production
   - smoke-production
   - cleanup
@@ -924,55 +926,58 @@ seed:staging:
 # download and verify.
 #
 # Required CI/CD variables:
-#   BACKUP_ENCRYPTION_KEY      — AES-256-CBC passphrase (masked)
-#   STAGING_MINIO_ROOT_USER    — MinIO root user for the staging environment
-#   STAGING_MINIO_ROOT_PASSWORD — MinIO root password (masked)
-#   STAGING_MINIO_ENDPOINT     — external MinIO host (see documentation/storage/infrastructure.md)
+#   BACKUP_ENCRYPTION_KEY          — AES-256-CBC passphrase (masked)
+#   STAGING_MINIO_BACKUP_ACCESS_KEY — dedicated backup IAM user, scoped read/write
+#                                     to the axiom-backups-staging bucket only
+#                                     (NOT the same credential as STAGING_MINIO_ROOT_USER,
+#                                     which is scoped to the app's own axiom-staging bucket)
+#   STAGING_MINIO_BACKUP_SECRET_KEY — secret key for the above (masked)
+#   STAGING_MINIO_ENDPOINT          — external MinIO host (see documentation/storage/infrastructure.md)
 # ==============================================================================
 
-# backup:staging:
-#   image:
-#     name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
-#     entrypoint: [""]
-#   stage: smoke-staging
-#   interruptible: false
-#   needs:
-#     - job: deploy:staging
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "develop"
-#   before_script:
-#     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
-#     - export KUBECONFIG=/tmp/kubeconfig
-#   script:
-#     # Upsert the backup secret (MINIO_ENDPOINT points to the external MinIO host)
-#     - |
-#       kubectl -n axiom-staging create secret generic axiom-backup-secrets \
-#         --from-literal=BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
-#         --from-literal=MINIO_ENDPOINT="$STAGING_MINIO_ENDPOINT" \
-#         --from-literal=MINIO_ACCESS_KEY="$STAGING_MINIO_ROOT_USER" \
-#         --from-literal=MINIO_SECRET_KEY="$STAGING_MINIO_ROOT_PASSWORD" \
-#         --dry-run=client -o yaml | kubectl apply -f -
-#     # Ensure the sa-backup service account and CronJob/PVC/ConfigMap exist
-#     - kubectl apply -k infra/k8s/overlays/staging
-#     - kubectl apply -f infra/k8s/overlays/staging/backup-cronjob.yaml
-#     # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
-#     - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
-#     # Delete stale job from a previous attempt of this pipeline (retry-safe).
-#     - kubectl -n axiom-staging delete job "$JOB_NAME" --ignore-not-found=true 2>/dev/null || true
-#     - |
-#       kubectl -n axiom-staging create job "$JOB_NAME" \
-#         --from=cronjob/axiom-db-backup-staging
-#     - |
-#       kubectl -n axiom-staging wait \
-#         --for=condition=complete "job/${JOB_NAME}" --timeout=600s \
-#       || {
-#         echo "--- backup job logs ---"
-#         kubectl -n axiom-staging logs -l "job-name=${JOB_NAME}" --tail=100 || true
-#         exit 1
-#       }
-#     - echo "Staging backup job ${JOB_NAME} completed successfully."
-#   after_script:
-#     - rm -f /tmp/kubeconfig
+backup:staging:
+  image:
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    entrypoint: [""]
+  stage: smoke-staging
+  interruptible: false
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  before_script:
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    # Upsert the backup secret (MINIO_ENDPOINT points to the external MinIO host)
+    - |
+      kubectl -n axiom-staging create secret generic axiom-backup-secrets \
+        --from-literal=BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
+        --from-literal=MINIO_ENDPOINT="$STAGING_MINIO_ENDPOINT" \
+        --from-literal=MINIO_ACCESS_KEY="$STAGING_MINIO_BACKUP_ACCESS_KEY" \
+        --from-literal=MINIO_SECRET_KEY="$STAGING_MINIO_BACKUP_SECRET_KEY" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    # Ensure the sa-backup service account and CronJob/PVC/ConfigMap exist
+    - kubectl apply -k infra/k8s/overlays/staging
+    - kubectl apply -f infra/k8s/overlays/staging/backup-cronjob.yaml
+    # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
+    - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
+    # Delete stale job from a previous attempt of this pipeline (retry-safe).
+    - kubectl -n axiom-staging delete job "$JOB_NAME" --ignore-not-found=true 2>/dev/null || true
+    - |
+      kubectl -n axiom-staging create job "$JOB_NAME" \
+        --from=cronjob/axiom-db-backup-staging
+    - |
+      kubectl -n axiom-staging wait \
+        --for=condition=complete "job/${JOB_NAME}" --timeout=600s \
+      || {
+        echo "--- backup job logs ---"
+        kubectl -n axiom-staging logs -l "job-name=${JOB_NAME}" --tail=100 || true
+        exit 1
+      }
+    - echo "Staging backup job ${JOB_NAME} completed successfully."
+  after_script:
+    - rm -f /tmp/kubeconfig
 
 # ==============================================================================
 # STAGE: smoke-staging
@@ -1343,94 +1348,94 @@ seed:staging:
 # "postgres").  Todos os comandos psql/pg_restore usam PGPASSWORD=trust.
 #
 # Variáveis necessárias:
-#   BACKUP_ENCRYPTION_KEY        — passphrase AES-256-CBC (masked)
-#   STAGING_MINIO_ENDPOINT       — endpoint MinIO acessível pelo runner
-#   STAGING_MINIO_ACCESS_KEY     — access key MinIO de staging
-#   STAGING_MINIO_SECRET_KEY     — secret key MinIO de staging (masked)
-#   STAGING_MINIO_BUCKET         — nome do bucket (padrão: axiom-backups)
+#   BACKUP_ENCRYPTION_KEY            — passphrase AES-256-CBC (masked)
+#   STAGING_MINIO_ENDPOINT           — endpoint MinIO acessível pelo runner
+#   STAGING_MINIO_BACKUP_ACCESS_KEY  — access key do usuário de backup dedicado (staging)
+#   STAGING_MINIO_BACKUP_SECRET_KEY  — secret key do usuário de backup dedicado (masked)
+#   STAGING_MINIO_BUCKET             — nome do bucket (axiom-backups-staging)
 # ==============================================================================
 
-# test:backup-restore:
-#   extends: .python_base
-#   stage: test-e2e
-#   interruptible: false
-#   needs:
-#     - job: deploy:staging
-#     - job: backup:staging
-#   services:
-#     - name: pgvector/pgvector:pg16
-#       alias: postgres
-#   variables:
-#     POSTGRES_DB: postgres
-#     POSTGRES_USER: postgres
-#     POSTGRES_PASSWORD: ci_backup_restore_pw  # gitleaks:allow
-#     POSTGRES_HOST_AUTH_METHOD: trust
-#     PGPASSWORD: ci_backup_restore_pw          # gitleaks:allow
-#     PGHOST: postgres
-#     PGPORT: "5432"
-#     DB_USER: postgres
-#     SECRET_KEY: "ci-insecure-key-not-for-production-use"  # gitleaks:allow
-#     DEBUG: "False"
-#     DJANGO_SETTINGS_MODULE: "app.settings"
-#     BACKUP_DIR: "/tmp/ci-backups"
-#     MIN_TABLE_COUNT: "20"
-#     MINIO_ALIAS: "staging-minio"
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "develop"
-#   before_script:
-#     - *python_before_script
-#     - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
-#     - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
-#     - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-#     - until pg_isready -h postgres -p 5432; do sleep 1; done
-#     - mkdir -p "$BACKUP_DIR"
-#     - |
-#       mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
-#         "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY" --insecure 2>/dev/null \
-#       || mc alias set "$MINIO_ALIAS" \
-#         "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
-#         "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
-#     - |
-#       LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups}/db/" --json \
-#         | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
-#       mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups}/db/${LATEST_FILE}" \
-#         "${BACKUP_DIR}/${LATEST_FILE}"
-#       echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
-#       echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
-#   script:
-#     - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
-#     - chmod +x apps/api/scripts/verify-backup.sh
-#     - |
-#       BACKUP_DIR="$BACKUP_DIR" \
-#       PGHOST="$PGHOST" PGPORT="$PGPORT" PGPASSWORD="$PGPASSWORD" \
-#       DB_USER="$DB_USER" MIN_TABLE_COUNT="$MIN_TABLE_COUNT" \
-#       BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
-#       apps/api/scripts/verify-backup.sh "$ENC_FILE"
-#     - |
-#       RESTORE_DB="axiom_managecheck_${CI_JOB_ID}"
-#       TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
-#       ENC_BASENAME=$(basename "$ENC_FILE")
-#       DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
-#       if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
-#         KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
-#         [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
-#       fi
-#       DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
-#         openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
-#           -pass "env:DECRYPT_KEY_FOR_VERIFY" \
-#           -in  "$ENC_FILE" -out "$TEMP_DUMP"
-#       createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
-#       pg_restore --host=postgres --port=5432 --username=postgres \
-#         --dbname="$RESTORE_DB" --no-owner --no-privileges \
-#         "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
-#       rm -f "$TEMP_DUMP"
-#       cd apps/api
-#       DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
-#         DB_USER=postgres DB_PASSWORD="" \
-#         python manage.py check --database default
-#       cd ..
-#       dropdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
-#   allow_failure: false
+test:backup-restore:
+  extends: .python_base
+  stage: test-e2e
+  interruptible: false
+  needs:
+    - job: deploy:staging
+    - job: backup:staging
+  services:
+    - name: pgvector/pgvector:pg16
+      alias: postgres
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ci_backup_restore_pw  # gitleaks:allow
+    POSTGRES_HOST_AUTH_METHOD: trust
+    PGPASSWORD: ci_backup_restore_pw          # gitleaks:allow
+    PGHOST: postgres
+    PGPORT: "5432"
+    DB_USER: postgres
+    SECRET_KEY: "ci-insecure-key-not-for-production-use"  # gitleaks:allow
+    DEBUG: "False"
+    DJANGO_SETTINGS_MODULE: "app.settings"
+    BACKUP_DIR: "/tmp/ci-backups"
+    MIN_TABLE_COUNT: "20"
+    MINIO_ALIAS: "staging-minio"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  before_script:
+    - *python_before_script
+    - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+    - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+    - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+    - until pg_isready -h postgres -p 5432; do sleep 1; done
+    - mkdir -p "$BACKUP_DIR"
+    - |
+      mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
+        "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY" --insecure 2>/dev/null \
+      || mc alias set "$MINIO_ALIAS" \
+        "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
+        "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY"
+    - |
+      LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/" --json \
+        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
+      mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/${LATEST_FILE}" \
+        "${BACKUP_DIR}/${LATEST_FILE}"
+      echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
+      echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
+  script:
+    - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
+    - chmod +x apps/api/scripts/verify-backup.sh
+    - |
+      BACKUP_DIR="$BACKUP_DIR" \
+      PGHOST="$PGHOST" PGPORT="$PGPORT" PGPASSWORD="$PGPASSWORD" \
+      DB_USER="$DB_USER" MIN_TABLE_COUNT="$MIN_TABLE_COUNT" \
+      BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
+      apps/api/scripts/verify-backup.sh "$ENC_FILE"
+    - |
+      RESTORE_DB="axiom_managecheck_${CI_JOB_ID}"
+      TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
+      ENC_BASENAME=$(basename "$ENC_FILE")
+      DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
+      if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+        KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
+        [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
+      fi
+      DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
+        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+          -pass "env:DECRYPT_KEY_FOR_VERIFY" \
+          -in  "$ENC_FILE" -out "$TEMP_DUMP"
+      createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
+      pg_restore --host=postgres --port=5432 --username=postgres \
+        --dbname="$RESTORE_DB" --no-owner --no-privileges \
+        "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
+      rm -f "$TEMP_DUMP"
+      cd apps/api
+      DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
+        DB_USER=postgres DB_PASSWORD="" \
+        python manage.py check --database default
+      cd ..
+      dropdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
+  allow_failure: false
 
 # ==============================================================================
 # STAGE: deploy-production

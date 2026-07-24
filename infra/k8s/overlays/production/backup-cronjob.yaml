@@ -628,13 +628,14 @@ spec:
                 # "Key Rotation" section and rekey-backups.sh.
                 - name: BACKUP_KEY_VERSION
                   value: "v1"
-                # GFS retention policy (replaces the old flat RETENTION_DAYS)
+                # Flat 7-day retention (no GFS weekly/monthly tiers — matches the
+                # MinIO bucket lifecycle expiry rule, also 7 days).
                 - name: KEEP_DAILY
                   value: "7"
                 - name: KEEP_WEEKLY
-                  value: "4"
+                  value: "0"
                 - name: KEEP_MONTHLY
-                  value: "3"
+                  value: "0"
                 - name: MC_BIN
                   value: "/tools/mc"
                 - name: TZ
