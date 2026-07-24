@@ -8,7 +8,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router';
 
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';

@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Award, BookOpen, Brain, Clock, Flame, PlayCircle, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';

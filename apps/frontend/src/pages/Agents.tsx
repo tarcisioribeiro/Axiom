@@ -22,7 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import remarkGfm from 'remark-gfm';
 
 import { PageContainer } from '@/components/common/PageContainer';

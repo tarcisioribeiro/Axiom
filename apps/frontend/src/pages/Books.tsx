@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 const BookReader = lazy(() => import('./BookReader'));
 

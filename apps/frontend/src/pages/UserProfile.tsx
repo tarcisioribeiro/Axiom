@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Bell, CheckCircle2, ChevronRight, Mail, Settings, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Badge } from '@/components/ui/badge';

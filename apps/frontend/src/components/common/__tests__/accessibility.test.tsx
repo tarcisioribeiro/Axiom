@@ -41,7 +41,7 @@ vi.mock('@/lib/animations', () => ({
 
 import { render } from '@testing-library/react';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, it, expect, vi } from 'vitest';
 
 import { EmptyState } from '@/components/common/EmptyState';

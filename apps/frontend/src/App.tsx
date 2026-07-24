@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import React, { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 
 import { AdminRoute } from './components/common/AdminRoute';
 import { EnvironmentBanner } from './components/common/EnvironmentBanner';

@@ -77,7 +77,7 @@ workflow:
   before_script: *python_before_script
 
 .node_base:
-  image: node:20-alpine
+  image: node:22-alpine
   variables:
     # Skip husky's git-hook install during npm ci — CI containers never use
     # the local git hooks the prepare script sets up, so let it no-op instead
@@ -103,7 +103,7 @@ workflow:
     # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
     # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
     # which is blocked on some CI runner networks.
-    # node:20-alpine ships without git — install it before git config runs.
+    # node:22-alpine ships without git — install it before git config runs.
     - apk add --no-cache git
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
@@ -318,6 +318,12 @@ lint:commits:
   stage: lint
   cache:
     policy: pull
+  # Only run on MRs targeting develop (feature/bugfix branches). A develop ->
+  # main promotion MR re-bundles commits that were already linted individually
+  # when they landed on develop, so re-running commitlint over that whole
+  # range just re-fails on old commits (including ones that predate this hook).
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != "main"
   # Fetch the full git history so every commit in the MR range is reachable.
   variables:
     GIT_DEPTH: 0
@@ -327,8 +333,6 @@ lint:commits:
     # .node_base) already cd's into apps/frontend/, so npx finds the config here.
     # .cjs extension is required because apps/frontend/package.json has "type":"module".
     - npx commitlint --from "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --to "$CI_COMMIT_SHA"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 lint:secrets:
   image:

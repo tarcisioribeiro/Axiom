@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
 import { FilterBar } from '@/components/common/FilterBar';

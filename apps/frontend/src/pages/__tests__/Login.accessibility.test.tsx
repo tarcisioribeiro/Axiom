@@ -26,7 +26,7 @@ import { render } from '@testing-library/react';
 import i18next from 'i18next';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import { initReactI18next } from 'react-i18next';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
