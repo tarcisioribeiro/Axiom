@@ -580,7 +580,7 @@ spec:
                       name: axiom-backup-secrets
                       key: MINIO_SECRET_KEY
                 - name: MINIO_BUCKET
-                  value: "axiom-backups"
+                  value: "axiom-backups-staging"
                 - name: BACKUP_DIR
                   value: "/backups"
                 # Key version label embedded in backup filenames (_kv<VER>).
@@ -589,11 +589,11 @@ spec:
                 - name: BACKUP_KEY_VERSION
                   value: "v1"
                 - name: KEEP_DAILY
-                  value: "3"
+                  value: "7"
                 - name: KEEP_WEEKLY
-                  value: "2"
+                  value: "0"
                 - name: KEEP_MONTHLY
-                  value: "1"
+                  value: "0"
                 - name: MC_BIN
                   value: "/tools/mc"
                 - name: TZ
