@@ -131,9 +131,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     queryKey: ['fixedRevenues'],
     queryFn: async () => {
       const data = await fixedRevenuesService.getAll();
-      const list: FixedRevenue[] = Array.isArray(data)
-        ? (data as unknown as FixedRevenue[])
-        : (data.results ?? []);
+      const list: FixedRevenue[] = Array.isArray(data) ? data : (data.results ?? []);
       return list.filter((fr) => fr.is_active);
     },
     staleTime: STALE_TIMES.DEFAULT_LIST,

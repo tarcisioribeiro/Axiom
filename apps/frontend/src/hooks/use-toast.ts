@@ -131,14 +131,6 @@ function _toast({ ...props }: Toast): ToastReturn {
 
 type ShorthandOpts = Partial<Omit<Toast, 'variant'>>;
 
-type ToastFn = {
-  (props: Toast): ToastReturn;
-  success: (title: string, opts?: ShorthandOpts) => ToastReturn;
-  error: (title: string, opts?: ShorthandOpts) => ToastReturn;
-  info: (title: string, opts?: ShorthandOpts) => ToastReturn;
-  warning: (title: string, opts?: ShorthandOpts) => ToastReturn;
-};
-
 _toast.success = (title: string, opts?: ShorthandOpts) =>
   _toast({ title, variant: 'success', ...opts });
 _toast.error = (title: string, opts?: ShorthandOpts) =>
@@ -148,7 +140,7 @@ _toast.info = (title: string, opts?: ShorthandOpts) =>
 _toast.warning = (title: string, opts?: ShorthandOpts) =>
   _toast({ title, variant: 'warning', ...opts });
 
-export const toast = _toast as ToastFn;
+export const toast = _toast;
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);

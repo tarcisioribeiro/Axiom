@@ -76,7 +76,7 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
   }): Promise<VaultTransaction[]> {
     const response = await apiClient.get<PaginatedResponse<VaultTransaction>>(
       API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS,
-      params as Record<string, unknown>
+      params
     );
     return response.results;
   }

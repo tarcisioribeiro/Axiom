@@ -411,11 +411,7 @@ export default function DebtPayoffPlanner({
                   </p>
                   <CurrencyInput
                     value={monthlyExtra || ''}
-                    onChange={(e) =>
-                      setMonthlyExtra(
-                        parseFloat((e.target as HTMLInputElement).value) || 0
-                      )
-                    }
+                    onChange={(e) => setMonthlyExtra(parseFloat(e.target.value) || 0)}
                     placeholder="0,00"
                   />
                   <p className="text-xs text-muted-foreground">

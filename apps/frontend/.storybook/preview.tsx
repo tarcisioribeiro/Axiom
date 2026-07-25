@@ -21,6 +21,7 @@ const withTheme: Decorator = (Story, context) => {
 };
 
 const preview: Preview = {
+  tags: ['autodocs'],
   globalTypes: {
     theme: {
       description: 'Theme',

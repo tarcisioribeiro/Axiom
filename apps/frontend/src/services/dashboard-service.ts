@@ -65,7 +65,7 @@ class DashboardService {
   ): Promise<CreditCardExpensesByCategory[]> {
     return apiClient.get<CreditCardExpensesByCategory[]>(
       '/api/v1/dashboard/credit-card-expenses-by-category/',
-      params as Record<string, unknown>
+      params
     );
   }
 
@@ -76,7 +76,7 @@ class DashboardService {
   async getCashFlowForecast(days: 30 | 60 | 90 = 30): Promise<CashFlowForecast> {
     return apiClient.get<CashFlowForecast>('/api/v1/dashboard/cash-flow-forecast/', {
       days,
-    } as Record<string, unknown>);
+    });
   }
 
   async getFinancialAlerts(): Promise<FinancialAlert[]> {
@@ -94,16 +94,13 @@ class DashboardService {
   }
 
   async getIRReport(year: number): Promise<IRReport> {
-    return apiClient.get<IRReport>('/api/v1/dashboard/ir-report/', { year } as Record<
-      string,
-      unknown
-    >);
+    return apiClient.get<IRReport>('/api/v1/dashboard/ir-report/', { year });
   }
 
   async getMonthlyStatement(year: number, month: number): Promise<MonthlyStatement> {
     return apiClient.get<MonthlyStatement>(
       API_CONFIG.ENDPOINTS.DASHBOARD_MONTHLY_STATEMENT,
-      { year, month } as Record<string, unknown>
+      { year, month }
     );
   }
 

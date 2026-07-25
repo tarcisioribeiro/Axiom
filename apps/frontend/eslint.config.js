@@ -4,8 +4,8 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
-import jsxA11y from 'eslint-plugin-jsx-a11y'
-import importPlugin from 'eslint-plugin-import'
+import jsxA11y from 'eslint-plugin-jsx-a11y-x'
+import importPlugin from 'eslint-plugin-import-x'
 
 export default defineConfig([
   globalIgnores(['dist', 'storybook-static', 'coverage']),
@@ -16,7 +16,7 @@ export default defineConfig([
       tseslint.configs.recommendedTypeChecked,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      jsxA11y.flatConfigs.recommended,
+      jsxA11y.configs.recommended,
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -41,6 +41,17 @@ export default defineConfig([
         caughtErrorsIgnorePattern: '^_',
       }],
       '@typescript-eslint/no-explicit-any': 'error',
+      // eslint-plugin-react-hooks v7.1 (required for ESLint 10 / the brace-expansion
+      // security fix — see package.json overrides) enables the React Compiler's
+      // stricter static analysis rules by default. They flag real pre-existing
+      // patterns across the codebase (e.g. setState-in-effect) that predate this
+      // upgrade; downgraded to warnings so the upgrade doesn't block CI while these
+      // get triaged and fixed incrementally.
+      'react-hooks/immutability': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/static-components': 'warn',
+      'react-hooks/refs': 'warn',
       'no-console': 'warn',
       'max-lines': ['warn', { max: 250, skipBlankLines: true, skipComments: true }],
       'no-restricted-syntax': [

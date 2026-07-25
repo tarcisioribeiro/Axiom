@@ -140,7 +140,7 @@ export function RevenuesFilters({
             <PopoverContent className="w-full p-sm">
               <div className="max-h-60 space-y-sm overflow-y-auto">
                 {accounts.map((account) => (
-                  // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+                  // eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions
                   <div
                     key={account.id}
                     className="flex cursor-pointer items-center gap-sm rounded p-sm hover:bg-accent"

@@ -182,10 +182,7 @@ export default function BankReconciliationDetail() {
       if (matchedExpenseId !== undefined) payload.matched_expense = matchedExpenseId;
       if (matchedRevenueId !== undefined) payload.matched_revenue = matchedRevenueId;
 
-      await bankReconciliationService.updateEntry(
-        entry.id,
-        payload as Partial<BankStatementEntry>
-      );
+      await bankReconciliationService.updateEntry(entry.id, payload);
 
       if (importData) {
         const updated = await bankReconciliationService.getImport(importData.id);

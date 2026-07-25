@@ -36,7 +36,7 @@ class MembersService extends BaseService<Member, MemberFormData> {
       ':id',
       String(memberId)
     );
-    return apiClient.get<MemberFinancialReport>(url, params as Record<string, unknown>);
+    return apiClient.get<MemberFinancialReport>(url, params);
   }
 
   async exportFinancialReportCsv(

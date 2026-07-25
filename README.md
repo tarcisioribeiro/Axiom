@@ -230,7 +230,6 @@ Axiom/
 │   ├── docker/       # docker-compose.yml + Dockerfiles auxiliares (ex.: db-backup)
 │   └── scripts/      # Scripts de backup/restore e migração
 ├── documentation/    # Documentação técnica completa
-├── e2e/              # Testes end-to-end (Playwright)
 └── .env              # Variáveis de ambiente da raiz
 ```
 
