@@ -36,7 +36,7 @@ class CreditCardInstallmentsService extends BaseService<
     while (hasMore) {
       const response = await apiClient.get<PaginatedResponse<CreditCardInstallment>>(
         this.endpoint,
-        { ...params, page } as Record<string, unknown>
+        { ...params, page }
       );
 
       allResults.push(...response.results);

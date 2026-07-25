@@ -45,15 +45,18 @@ variables:
 
 workflow:
   rules:
+    # MR validation pipeline — the only trigger for lint/typecheck/test jobs
+    # (see .rules_verify_backend/_frontend/_mobile below). A plain
+    # `git push` to a feature branch with no MR open must NOT create a
+    # pipeline at all; opening/updating the MR is what triggers validation.
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    # Always run the full branch pipeline on develop even when a develop→main
-    # MR is already open (e.g. opened manually). deploy:staging and the other
-    # develop-only jobs need a branch pipeline to run — an MR pipeline for
-    # develop→main is not enough.
+    # Branch pipelines are only needed for develop and main — they're the two
+    # branches that build/deploy. A develop→main promotion MR pipeline is not
+    # enough on its own to trigger deploy:staging (branch-scoped, not
+    # MR-scoped), so develop still needs its own branch pipeline even while
+    # such an MR is open.
     - if: $CI_COMMIT_BRANCH == "develop"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
-    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_BRANCH == "main"
 
 # ==============================================================================
 # Base job templates
@@ -122,6 +125,16 @@ workflow:
 
 .flutter_base:
   image: ghcr.io/cirruslabs/flutter:3.27.3
+  # GHCR intermittently resets the connection while the runner pulls the
+  # executor image itself ("read: connection reset by peer"), before the job
+  # container even starts — this surfaces as a runner_system_failure, not a
+  # script error, so retrying the job is the only way to recover (same
+  # mitigation as .build_base for the equivalent GHCR flakiness there).
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   variables:
     # Must live inside CI_PROJECT_DIR — GitLab's cache mechanism only persists
     # paths under the project directory between jobs/pipelines.
@@ -161,25 +174,21 @@ workflow:
 
 # ------------------------------------------------------------------------------
 # Shared rules for lint/typecheck/test jobs: these are verification steps, so
-# they only need to run once, when a merge request is actually being
-# validated — not again on every feature-branch push before the MR exists.
-# Once code lands on develop or main it has already been verified by the MR
-# pipeline that merged it; those branches only need to build and deploy.
+# they run only when a merge request is actually being validated — never on a
+# plain branch push before the MR exists (see the workflow: rules above,
+# which already prevent a pipeline from being created at all in that case;
+# the merge_request_event condition here is what then scopes which jobs run
+# inside the MR pipeline). Once code lands on develop or main it has already
+# been verified by the MR pipeline that merged it; those branches only need
+# to build and deploy.
 # Each variant is also scoped with `changes:` to the module it verifies, so a
 # frontend-only MR doesn't trigger backend lint/typecheck/test and vice versa.
 # Apply via `extends: [.base, .rules_verify_backend]` (or `_frontend`) on the
 # lint, typecheck, and test jobs for that area.
 # ------------------------------------------------------------------------------
-# Same verify-only scoping as .rules_verify_only, but additionally skipped
-# unless files relevant to the backend (or the pipeline definition itself)
-# changed. Apply to lint/typecheck jobs that only exercise apps/api/.
 .rules_verify_backend:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - apps/api/**/*
-        - .gitlab-ci.yml
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
       changes:
         - apps/api/**/*
         - .gitlab-ci.yml
@@ -191,10 +200,6 @@ workflow:
       changes:
         - apps/frontend/**/*
         - .gitlab-ci.yml
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
-      changes:
-        - apps/frontend/**/*
-        - .gitlab-ci.yml
 
 # Same as above, scoped to apps/mobile/. Mobile has no deploy target yet, so
 # unlike backend/frontend this also covers its build job (see build:mobile) —
@@ -202,10 +207,6 @@ workflow:
 .rules_verify_mobile:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - apps/mobile/**/*
-        - .gitlab-ci.yml
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
       changes:
         - apps/mobile/**/*
         - .gitlab-ci.yml
@@ -385,10 +386,6 @@ lint:k8s:
     when: script_failure
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - infra/k8s/**/*.yaml
-        - .gitlab-ci.yml
-    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "develop" && $CI_COMMIT_BRANCH != "main"
       changes:
         - infra/k8s/**/*.yaml
         - .gitlab-ci.yml

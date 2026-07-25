@@ -37,7 +37,7 @@ function PersonalDataForm({
         name,
         email: email || undefined,
         phone,
-      } as Parameters<typeof membersService.patch>[1]),
+      }),
     onSuccess: () => {
       toast({ title: t('userProfile.personalData.success') });
       void queryClient.invalidateQueries({ queryKey: ['members', 'me'] });

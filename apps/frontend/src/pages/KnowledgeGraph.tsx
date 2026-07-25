@@ -1088,7 +1088,7 @@ export default function KnowledgeGraph() {
                 width={dimensions.width}
                 height={dimensions.height}
                 backgroundColor="transparent"
-                nodeCanvasObject={nodeCanvasObject as never}
+                nodeCanvasObject={nodeCanvasObject}
                 nodePointerAreaPaint={(
                   node: GraphNode,
                   color: string,
@@ -1105,15 +1105,15 @@ export default function KnowledgeGraph() {
                   );
                   ctx.fill();
                 }}
-                linkColor={getLinkColor as never}
-                linkWidth={getLinkWidth as never}
-                linkLineDash={getLinkDash as never}
+                linkColor={getLinkColor}
+                linkWidth={getLinkWidth}
+                linkLineDash={getLinkDash}
                 linkDirectionalParticles={2}
                 linkDirectionalParticleWidth={(link: GraphLink) =>
                   link.type === 'explicit' ? 2.5 : 0
                 }
-                linkDirectionalParticleColor={getLinkColor as never}
-                onNodeClick={handleNodeClick as never}
+                linkDirectionalParticleColor={getLinkColor}
+                onNodeClick={handleNodeClick}
                 onNodeHover={(node: GraphNode | null) => setHoveredNode(node)}
                 onBackgroundClick={() => {
                   setSelectedNode(null);

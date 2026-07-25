@@ -32,7 +32,7 @@ class HibpService {
     const lines = response.suffixes.split('\n');
     for (const line of lines) {
       const [hashSuffix, countStr] = line.trim().split(':');
-      if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
+      if (hashSuffix?.toUpperCase() === suffix) {
         return { breached: true, count: parseInt(countStr ?? '1', 10) };
       }
     }

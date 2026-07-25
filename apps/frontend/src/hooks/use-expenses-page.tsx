@@ -255,7 +255,7 @@ export function useExpensesPage(opts?: {
   const { deletingIds: deletingExpenseIds, handleDelete: optimisticDelete } =
     useOptimisticDelete<Expense>({
       queryKey: ['expenses', params],
-      deleteFn: (id) => expensesService.delete(id as number),
+      deleteFn: (id) => expensesService.delete(id),
       getItemId: (e) => e.id,
       resourceName: t('pages.expenses.resource'),
       onSuccess: () => {

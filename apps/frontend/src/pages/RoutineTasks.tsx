@@ -50,10 +50,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
 import { routineTasksService } from '@/services/routine-tasks-service';
-import type {
-  RoutineTask,
-  RoutineTaskFormData as RoutineTaskApiFormData,
-} from '@/types';
+import type { RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
@@ -171,16 +168,13 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       };
 
       if (selectedTask) {
-        await routineTasksService.update(
-          selectedTask.id,
-          apiData as RoutineTaskApiFormData
-        );
+        await routineTasksService.update(selectedTask.id, apiData);
         toast({
           title: t('pages.routineTasks.updated'),
           description: t('pages.routineTasks.updatedDesc'),
         });
       } else {
-        await routineTasksService.create(apiData as RoutineTaskApiFormData);
+        await routineTasksService.create(apiData);
         toast({
           title: t('pages.routineTasks.created'),
           description: t('pages.routineTasks.createdDesc'),
