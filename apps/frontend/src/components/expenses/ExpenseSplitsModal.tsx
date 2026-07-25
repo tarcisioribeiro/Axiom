@@ -103,7 +103,7 @@ export function ExpenseSplitsModal({
   };
 
   const totalSplitValue = splits.reduce((acc, s) => acc + parseFloat(s.value), 0);
-  const expenseTotal = expense ? parseFloat(expense.value as unknown as string) : 0;
+  const expenseTotal = expense ? parseFloat(expense.value) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

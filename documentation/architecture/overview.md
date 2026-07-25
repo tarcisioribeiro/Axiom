@@ -147,7 +147,6 @@ Axiom/
 │   ├── docker/                   # docker-compose.yml + Dockerfiles auxiliares (db-backup)
 │   └── scripts/                  # Scripts de backup/restore e migração
 ├── documentation/                 # Documentação do projeto
-├── e2e/                           # Especificações Playwright (E2E)
 └── .env                           # Variáveis de ambiente da raiz
 ```
 

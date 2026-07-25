@@ -75,7 +75,7 @@ export function MealLogForm({
     formState: { errors },
   } = useForm<MealLogFormData>({
     defaultValues: {
-      meal_type: log?.meal_type ?? prefillMealTypeId ?? (0 as unknown as number),
+      meal_type: log?.meal_type ?? prefillMealTypeId ?? 0,
       menu_option: log?.menu_option ?? undefined,
       is_free_meal: log?.is_free_meal ?? false,
       date: log?.date ?? today,

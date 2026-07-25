@@ -1103,10 +1103,10 @@ export default function WorkoutPage() {
                   if (dialog.type === 'edit-day') {
                     await updateDayMutation.mutateAsync({
                       id: dialog.day.id,
-                      dayData: dayData as WorkoutDayFormData,
+                      dayData: dayData,
                     });
                   } else {
-                    await createDayMutation.mutateAsync(dayData as WorkoutDayFormData);
+                    await createDayMutation.mutateAsync(dayData);
                   }
                 }}
                 onCancel={() => setDialog(null)}

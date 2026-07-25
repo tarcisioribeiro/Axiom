@@ -20,7 +20,6 @@ Axiom/
 │   ├── docker/       # docker-compose.yml + auxiliary Dockerfiles (e.g. db-backup)
 │   └── scripts/      # Backup/restore and migration helper scripts
 ├── documentation/    # Project documentation
-├── e2e/              # Playwright end-to-end specs
 └── .env              # Root environment variables
 ```
 
@@ -177,7 +176,6 @@ npm run typecheck        # TypeScript type check only (no build)
 npm run test -- --run                         # All tests (single run)
 npm run test -- --run -t "test name"          # Single test by name
 npm run test:coverage                         # With coverage report
-npm run test:e2e                              # Playwright E2E tests (config exists, no tests yet)
 
 # Storybook
 npm run storybook                             # Dev server at port 6006
@@ -199,27 +197,30 @@ flutter build apk --debug              # Build verification (Android; iOS needs 
 
 ### CI/CD Validation (run before every push)
 
-A `ci-check.sh` script at the repo root simulates the full GitLab pipeline locally. **Run this after any change.** It does not cover the mobile module yet (`lint:mobile`/`test:mobile`/`build:mobile` run in GitLab CI only) — run the Flutter commands above directly for now.
+GitLab pipelines only trigger on an actual MR event or a push to `develop`/`main` (`workflow:` rules in `.gitlab-ci.yml`) — a plain `git push` on a feature branch with no MR open creates **no pipeline at all**. `ci-check.sh` at the repo root fills that gap: it interactively simulates the `lint` stage jobs that would run once you open the MR. **Run this after any change.** It does not cover the mobile module yet (`lint:mobile`/`test:mobile`/`build:mobile` run in GitLab CI only) — run the Flutter commands above directly for now.
 
 ```bash
 # Setup (one-time): create root .venv with dev dependencies
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r apps/api/requirements-dev.txt pip-audit
 
-# Run full pipeline simulation (lint → typecheck → test → secret-detection)
+# Run interactively — the script asks what to do:
+#   1) Run MR checks (lint stage — choose all / backend-only / frontend-only)
+#   2) Show the jobs that run on develop (informational only, not executed)
+#   3) Show the jobs that run on main (informational only, not executed)
+#   4) Run MR checks + show develop and main
+#   0) Exit
 source .venv/bin/activate && ./ci-check.sh
-
-# Scope options
-./ci-check.sh --backend-only
-./ci-check.sh --frontend-only
 ```
 
+The only flag is `--help`/`-h`; every other choice (scope, category) is made through the menu. If stdin isn't a TTY (e.g. invoked from a non-interactive context), the script skips the menu and runs the MR checks directly.
+
 The script requires:
-- Docker Compose running with the `api` service up
-- Node.js 20+ on the host with `apps/frontend/node_modules` present
+- Docker Compose running with the `api` service up (only needed for `lint:migrations`)
+- Node.js 20+ on the host with `apps/frontend/node_modules` present (only needed for the frontend checks)
 - `.venv` at the repo root (auto-created if missing)
 
-Stages covered: `lint:backend` (black/isort/flake8), `lint:migrations`, `lint:bandit`, `lint:pip-audit`, `lint:frontend` (eslint/prettier), `lint:npm-audit`, `typecheck:backend` (mypy via Docker), `typecheck:frontend` (tsc), `test:backend` (pytest via Docker), `test:frontend` (vitest).
+MR checks covered: `lint:backend` (black/isort/flake8), `lint:migrations`, `lint:bandit`, `lint:pip-audit`, `lint:frontend` (eslint/prettier), `lint:npm-audit`, `lint:k8s` (kubeconform, optional — skipped if not installed), `lint:commits` (commitlint, optional — approximated locally against the merge-base with `origin/develop`, since the exact MR diff range only exists inside a real MR pipeline), `lint:secrets` (gitleaks, optional locally, mandatory in GitLab CI). Note: `typecheck:backend`/`typecheck:frontend`/`test:backend`/`test:frontend` are **not** simulated because no job with those names currently exists in `.gitlab-ci.yml` — the pipeline does not run mypy/tsc/pytest/vitest today.
 
 After any change, also verify the Docker build passes:
 ```bash

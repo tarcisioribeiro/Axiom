@@ -19,7 +19,7 @@ class AuditLogService {
   }): Promise<{ results: AuditLogEntry[]; count: number }> {
     return apiClient.get<{ results: AuditLogEntry[]; count: number }>(
       API_CONFIG.ENDPOINTS.DASHBOARD_AUDIT_LOG,
-      params as Record<string, unknown>
+      params
     );
   }
 }
