@@ -20,7 +20,6 @@ Axiom/
 │   ├── docker/       # docker-compose.yml + auxiliary Dockerfiles (e.g. db-backup)
 │   └── scripts/      # Backup/restore and migration helper scripts
 ├── documentation/    # Project documentation
-├── e2e/              # Playwright end-to-end specs
 └── .env              # Root environment variables
 ```
 
@@ -177,7 +176,6 @@ npm run typecheck        # TypeScript type check only (no build)
 npm run test -- --run                         # All tests (single run)
 npm run test -- --run -t "test name"          # Single test by name
 npm run test:coverage                         # With coverage report
-npm run test:e2e                              # Playwright E2E tests (config exists, no tests yet)
 
 # Storybook
 npm run storybook                             # Dev server at port 6006

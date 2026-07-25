@@ -9,23 +9,22 @@ primeiro push.
 ## Visão geral do pipeline
 
 ```
-lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-load → test-e2e → promote → deploy-production → smoke-production
+lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-backup-restore → promote → deploy-production → smoke-production
 ```
 
-| Estágio             | Jobs                                                                                                                                      | Quando executa           |
-|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
-| `lint`              | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`, `lint:secrets`, `lint:k8s`           | todo push / MR           |
-| `typecheck`         | `typecheck:backend`, `typecheck:frontend`                                                                                                 | todo push / MR           |
-| `test`              | `test:backend`, `test:frontend`, `build:storybook`                                                                                       | todo push / MR           |
-| `build`             | `build:api`, `build:frontend`                                                                                                             | develop / main / tag     |
-| `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                                                        | develop / main / tag     |
-| `deploy-staging`    | `deploy:staging`, `seed:staging`                                                                                                          | develop                  |
-| `smoke-staging`     | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)                                     | develop                  |
-| `test-load`         | `test:load` (k6)                                                                                                                          | develop                  |
-| `test-e2e`          | `test:e2e` (Playwright), `test:backup-restore`                                                                                            | develop                  |
-| `promote`           | `promote:to_main` — abre ou atualiza MR develop→main automaticamente via GitLab API                                                       | develop                  |
-| `deploy-production` | `deploy:production` (**manual**)                                                                                                          | main                     |
-| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)                                              | main                     |
+| Estágio               | Jobs                                                                                                                                      | Quando executa           |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
+| `lint`                | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`, `lint:secrets`, `lint:k8s`           | todo push / MR           |
+| `typecheck`           | `typecheck:backend`, `typecheck:frontend`                                                                                                 | todo push / MR           |
+| `test`                | `test:backend`, `test:frontend`, `build:storybook`                                                                                       | todo push / MR           |
+| `build`               | `build:api`, `build:frontend`                                                                                                             | develop / main / tag     |
+| `scan`                | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                                                        | develop / main / tag     |
+| `deploy-staging`      | `deploy:staging`                                                                                                                          | develop                  |
+| `smoke-staging`       | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)                                     | develop                  |
+| `test-backup-restore` | `test:backup-restore`                                                                                                                     | develop                  |
+| `promote`             | `promote:to_main` — abre ou atualiza MR develop→main automaticamente via GitLab API                                                       | develop                  |
+| `deploy-production`   | `deploy:production` (**manual**)                                                                                                          | main                     |
+| `smoke-production`    | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)                                              | main                     |
 
 > Para detalhes sobre os procedimentos de rollback consulte o
 > [Runbook de Rollback](rollback.md).
@@ -138,8 +137,8 @@ echo ""
 
 #### `STAGING_URL`
 
-URL pública do ambiente de staging. Usada pelo smoke test, load test, E2E e pelo
-GitLab Environments.
+URL pública do ambiente de staging. Usada pelo smoke test e pelo GitLab
+Environments.
 
 **Valor:** `https://axiom-staging.tjtux.duckdns.org`
 
@@ -235,53 +234,6 @@ kubectl get secret axiom-secrets -n axiom \
 |----------------------------------|--------|-----------|
 | `PRODUCTION_SUPERUSER_USERNAME`  | Não    | Sim       |
 | `PRODUCTION_SUPERUSER_PASSWORD`  | Sim    | Sim       |
-
----
-
-### Variáveis manuais para testes de carga e E2E
-
----
-
-#### `K6_TEST_USERNAME` e `K6_TEST_PASSWORD`
-
-Credenciais de um usuário pré-criado no banco de staging para o teste de carga
-com k6. Este usuário deve ter dados suficientes para exercitar as rotas do
-`k6/load-test.js`.
-
-**Como criar o usuário:**
-
-```bash
-kubectl -n axiom-staging exec -it deployment/api -- \
-  python manage.py createsuperuser \
-  --username k6-load \
-  --email k6-load@staging.local
-```
-
-| Variável          | Masked | Protected |
-|-------------------|--------|-----------|
-| `K6_TEST_USERNAME`| Não    | Sim       |
-| `K6_TEST_PASSWORD`| Sim    | Sim       |
-
----
-
-#### `E2E_USERNAME` e `E2E_PASSWORD`
-
-Credenciais de um usuário pré-criado no banco de staging para os testes E2E com
-Playwright. Pode ser o mesmo usuário do k6 ou um separado.
-
-**Como criar o usuário:**
-
-```bash
-kubectl -n axiom-staging exec -it deployment/api -- \
-  python manage.py createsuperuser \
-  --username e2e-test \
-  --email e2e-test@staging.local
-```
-
-| Variável      | Masked | Protected |
-|---------------|--------|-----------|
-| `E2E_USERNAME`| Não    | Sim       |
-| `E2E_PASSWORD`| Sim    | Sim       |
 
 ---
 
@@ -765,10 +717,6 @@ Variáveis de CI/CD no GitLab (Settings → CI/CD → Variables):
 [ ] STAGING_SUPERUSER_PASSWORD   *
 [ ] PRODUCTION_SUPERUSER_USERNAME  **
 [ ] PRODUCTION_SUPERUSER_PASSWORD  **
-[ ] K6_TEST_USERNAME             *
-[ ] K6_TEST_PASSWORD             *
-[ ] E2E_USERNAME                 *
-[ ] E2E_PASSWORD                 *
 [ ] STAGING_MINIO_ENDPOINT
 [ ] STAGING_MINIO_EXTERNAL_ENDPOINT
 [ ] STAGING_MINIO_ROOT_USER
@@ -800,8 +748,7 @@ Push para develop
   → deploy:staging                 ← kubectl apply + set image → k3s reinicia os pods
   → smoke:staging                  ← curl /health/, /ready/ + login cookie + /api/v1/me/
   → backup:staging                 ← cria job K8s a partir do CronJob; aguarda conclusão
-  → test:load                      ← k6 contra staging
-  → test:e2e + test:backup-restore ← Playwright / baixa dump MinIO, pg_restore, manage.py check
+  → test:backup-restore            ← baixa dump do MinIO, pg_restore, manage.py check
 
 Push para main (+ aprovação manual)
   → (mesmos estágios acima até scan)
