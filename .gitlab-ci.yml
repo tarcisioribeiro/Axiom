@@ -1072,8 +1072,12 @@ smoke:staging:
 # Após os diagnósticos executa `rollout undo` em api e frontend, revertendo
 # ambos para a revisão anterior registrada no histórico do Deployment.
 # O job encerra com falha se o rollback não estabilizar dentro do timeout
-# (api: 120 s, frontend: 360 s), o que manterá o pipeline como FAILED e
-# alertará a equipe de que o cluster está em estado inconsistente.
+# (api: 1440 s, frontend: 360 s), o que manterá o pipeline como FAILED e
+# alertará a equipe de que o cluster está em estado inconsistente. O timeout
+# da api é igual ao usado em deploy:staging (não os 120s conservadores de
+# antes) porque o rollback recria o pod do zero e passa pela mesma
+# inicialização lenta (migrations, collectstatic, sincronização de
+# permissões) — 120s estourava mesmo com o rollback progredindo normalmente.
 #
 # Não possui `allow_failure: true` — um rollback mal-sucedido deve bloquear
 # qualquer promoção do develop para a main.
@@ -1103,7 +1107,7 @@ deploy:rollback:staging:
     - echo "Rolling back staging deployment..."
     - kubectl -n axiom-staging rollout undo deployment/api
     - kubectl -n axiom-staging rollout undo deployment/frontend
-    - kubectl -n axiom-staging rollout status deployment/api --timeout=120s
+    - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
     - kubectl -n axiom-staging rollout status deployment/frontend --timeout=360s
     - echo "Staging rollback complete."
   after_script:
@@ -1124,8 +1128,10 @@ deploy:rollback:staging:
 #   - Não coleta diagnósticos (assume que o operador já os tem)
 #   - Usa os mesmos comandos `rollout undo` que o rollback automático
 #
-# Timeouts conservadores (api: 120 s, frontend: 200 s) — suficientes para a
-# maioria dos clusters de staging, mas ajustáveis se o pull de imagem for lento.
+# Timeout da api igual ao de deploy:staging (1440 s) pelo mesmo motivo do
+# rollback automático: o pod é recriado do zero e passa pela inicialização
+# lenta completa (migrations, collectstatic, sincronização de permissões).
+# Frontend usa 200 s — sobem rápido, sem a mesma sequência pesada de boot.
 # ==============================================================================
 rollback:staging:
   image:
@@ -1150,7 +1156,7 @@ rollback:staging:
     - echo "Manual rollback triggered — rolling back staging deployment..."
     - kubectl -n axiom-staging rollout undo deployment/api
     - kubectl -n axiom-staging rollout undo deployment/frontend
-    - kubectl -n axiom-staging rollout status deployment/api --timeout=120s
+    - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
     - kubectl -n axiom-staging rollout status deployment/frontend --timeout=200s
     - echo "Staging rollback complete."
   after_script:
@@ -1583,7 +1589,12 @@ deploy:rollback:production:
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
       kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
-      kubectl -n axiom rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
+      # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
+      # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
+      # boot completo (migrations, collectstatic, sincronização de
+      # permissões) que um deploy novo, não pelos 120s que bastariam para
+      # um pod já quente.
+      kubectl -n axiom rollout status deployment/api-$ROLLBACK_SLOT --timeout=780s
       kubectl -n axiom patch svc api-service \
         --type=merge \
         -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
@@ -1642,7 +1653,12 @@ rollback:production:
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
       kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
-      kubectl -n axiom rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
+      # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
+      # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
+      # boot completo (migrations, collectstatic, sincronização de
+      # permissões) que um deploy novo, não pelos 120s que bastariam para
+      # um pod já quente.
+      kubectl -n axiom rollout status deployment/api-$ROLLBACK_SLOT --timeout=780s
       kubectl -n axiom patch svc api-service \
         --type=merge \
         -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
