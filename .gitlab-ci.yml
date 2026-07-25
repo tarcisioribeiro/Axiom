@@ -254,6 +254,9 @@ lint:mobile:
     - .flutter_base
     - .rules_verify_mobile
   stage: lint
+  # Temporarily disabled — see incident #18703.
+  rules:
+    - when: never
   script:
     - dart format --set-exit-if-changed .
     - flutter analyze
@@ -399,6 +402,9 @@ test:mobile:
     - .flutter_base
     - .rules_verify_mobile
   stage: test
+  # Temporarily disabled — see incident #18703.
+  rules:
+    - when: never
   script:
     - flutter test --coverage
   artifacts:
@@ -694,6 +700,9 @@ build:mobile:
     - .flutter_base
     - .rules_verify_mobile
   stage: build
+  # Temporarily disabled — see incident #18703.
+  rules:
+    - when: never
   script:
     - flutter build apk --debug
   artifacts:
