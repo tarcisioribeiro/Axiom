@@ -46,7 +46,7 @@ variables:
 workflow:
   rules:
     # MR validation pipeline — the only trigger for lint/typecheck/test jobs
-    # (see .rules_verify_backend/_frontend/_mobile below). A plain
+    # (see .rules_verify_backend/_frontend below). A plain
     # `git push` to a feature branch with no MR open must NOT create a
     # pipeline at all; opening/updating the MR is what triggers validation.
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -123,33 +123,6 @@ workflow:
         npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
       fi
 
-.flutter_base:
-  image: ghcr.io/cirruslabs/flutter:3.27.3
-  # GHCR intermittently resets the connection while the runner pulls the
-  # executor image itself ("read: connection reset by peer"), before the job
-  # container even starts — this surfaces as a runner_system_failure, not a
-  # script error, so retrying the job is the only way to recover (same
-  # mitigation as .build_base for the equivalent GHCR flakiness there).
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
-  variables:
-    # Must live inside CI_PROJECT_DIR — GitLab's cache mechanism only persists
-    # paths under the project directory between jobs/pipelines.
-    PUB_CACHE: "$CI_PROJECT_DIR/.pub-cache"
-  cache:
-    key:
-      files:
-        - apps/mobile/pubspec.lock
-    paths:
-      - .pub-cache/
-      - apps/mobile/.dart_tool/
-  before_script:
-    - cd apps/mobile
-    - flutter pub get
-
 # Runner com acesso ao cluster via túnel — network_mode=host → acesso direto a 127.0.0.1:6443.
 # KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
 # Para gerar: base64 -w0 /etc/rancher/k3s/k3s.yaml
@@ -201,16 +174,6 @@ workflow:
         - apps/frontend/**/*
         - .gitlab-ci.yml
 
-# Same as above, scoped to apps/mobile/. Mobile has no deploy target yet, so
-# unlike backend/frontend this also covers its build job (see build:mobile) —
-# there is no branch-based build step to fall back to.
-.rules_verify_mobile:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - apps/mobile/**/*
-        - .gitlab-ci.yml
-
 # ==============================================================================
 # STAGE: lint
 # ==============================================================================
@@ -248,15 +211,6 @@ lint:frontend:
         echo "npm run lint exited $LINT_STATUS, npm run format:check exited $FORMAT_STATUS"
         exit 1
       fi
-
-lint:mobile:
-  extends:
-    - .flutter_base
-    - .rules_verify_mobile
-  stage: lint
-  script:
-    - dart format --set-exit-if-changed .
-    - flutter analyze
 
 lint:migrations:
   extends:
@@ -389,23 +343,6 @@ lint:k8s:
       changes:
         - infra/k8s/**/*.yaml
         - .gitlab-ci.yml
-
-# ==============================================================================
-# STAGE: test
-# ==============================================================================
-
-test:mobile:
-  extends:
-    - .flutter_base
-    - .rules_verify_mobile
-  stage: test
-  script:
-    - flutter test --coverage
-  artifacts:
-    when: always
-    paths:
-      - apps/mobile/coverage/lcov.info
-    expire_in: 30 days
 
 # ==============================================================================
 # STAGE: build
@@ -683,23 +620,6 @@ build:frontend:
       - frontend-sbom.cdx.json
       - frontend-sbom.spdx.json
     expire_in: 90 days
-
-# Mobile has no deploy target yet, so unlike build:api/build:frontend this is
-# not a Docker build+push feeding a deploy job — it's a build-verification
-# check ("does the app still build") gated the same way as lint:mobile /
-# test:mobile, not by branch. Revisit once the module gets a real release
-# pipeline (app store / internal distribution).
-build:mobile:
-  extends:
-    - .flutter_base
-    - .rules_verify_mobile
-  stage: build
-  script:
-    - flutter build apk --debug
-  artifacts:
-    paths:
-      - apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
-    expire_in: 7 days
 
 # ==============================================================================
 # STAGE: scan
@@ -1409,7 +1329,7 @@ deploy:production:
     # The script reads the active slot from the Service selector, deploys the
     # new image to the inactive slot, waits for readiness, then switches
     # traffic and scales the old slot to 0 (kept for instant rollback).
-    - bash infra/k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" axiom api-service
+    - bash infra/k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" axiom api-service 2
     # ── 6. Frontend: wait for rollout to complete ────────────────────────────────
     - kubectl -n axiom rollout status deployment/frontend --timeout=120s
   after_script:
@@ -1588,7 +1508,7 @@ deploy:rollback:production:
         -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
-      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=2
       # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
       # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
       # boot completo (migrations, collectstatic, sincronização de
@@ -1652,7 +1572,7 @@ rollback:production:
         -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
-      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=2
       # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
       # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
       # boot completo (migrations, collectstatic, sincronização de

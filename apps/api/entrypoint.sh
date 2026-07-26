@@ -85,10 +85,18 @@ else
   # reflete só o worker que respondeu à requisição, não o total real.
   # gunicorn.conf.py usa este diretório para agregar métricas entre workers.
   export PROMETHEUS_MULTIPROC_DIR="${PROMETHEUS_MULTIPROC_DIR:-/tmp/prometheus-multiproc}"
+  # worker-class gthread: views como BookCoverStreamView/MemberPhotoStreamView
+  # fazem proxy síncrono de arquivos do MinIO (I/O-bound). Com workers "sync"
+  # (padrão), cada requisição de capa/foto bloqueia um processo inteiro até o
+  # MinIO responder; um burst de covers concorrentes (ex: lista de livros)
+  # esgota os workers e derruba o readiness probe. Threads liberam o processo
+  # para atender outras requisições enquanto aguarda I/O.
   exec gunicorn app.wsgi:application \
     --config /app/gunicorn.conf.py \
     --bind 0.0.0.0:${API_PORT:-39100} \
     --workers ${GUNICORN_WORKERS:-4} \
+    --worker-class gthread \
+    --threads ${GUNICORN_THREADS:-4} \
     --timeout ${GUNICORN_TIMEOUT:-120} \
     --access-logfile - \
     --error-logfile -

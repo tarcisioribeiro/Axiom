@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: api
     slot: blue
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 3
   # Must exceed the startupProbe budget (620s) so Kubernetes does not declare
   # ProgressDeadlineExceeded before the pod has had a chance to finish starting.

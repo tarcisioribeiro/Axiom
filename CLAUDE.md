@@ -197,7 +197,7 @@ flutter build apk --debug              # Build verification (Android; iOS needs 
 
 ### CI/CD Validation (run before every push)
 
-GitLab pipelines only trigger on an actual MR event or a push to `develop`/`main` (`workflow:` rules in `.gitlab-ci.yml`) — a plain `git push` on a feature branch with no MR open creates **no pipeline at all**. `ci-check.sh` at the repo root fills that gap: it interactively simulates the `lint` stage jobs that would run once you open the MR. **Run this after any change.** It does not cover the mobile module yet (`lint:mobile`/`test:mobile`/`build:mobile` run in GitLab CI only) — run the Flutter commands above directly for now.
+GitLab pipelines only trigger on an actual MR event or a push to `develop`/`main` (`workflow:` rules in `.gitlab-ci.yml`) — a plain `git push` on a feature branch with no MR open creates **no pipeline at all**. `ci-check.sh` at the repo root fills that gap: it interactively simulates the `lint` stage jobs that would run once you open the MR. **Run this after any change.** The mobile module has no CI jobs at all (removed — run the Flutter commands above directly for local lint/test/build).
 
 ```bash
 # Setup (one-time): create root .venv with dev dependencies

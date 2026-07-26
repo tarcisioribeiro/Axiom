@@ -202,6 +202,8 @@ function BookGridCard({
             src={book.cover}
             alt={t('pages.books.coverAlt', { title: book.title })}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <BookCoverPlaceholder title={book.title} genre={book.genre} />
@@ -790,6 +792,8 @@ export default function Books() {
                                       title: book.title,
                                     })}
                                     className="h-full w-full object-cover"
+                                    loading="lazy"
+                                    decoding="async"
                                   />
                                 ) : (
                                   <BookCoverPlaceholder
@@ -1054,11 +1058,13 @@ export default function Books() {
         </DialogContent>
       </Dialog>
 
-      {/* Quick Capture FAB */}
+      {/* Quick Capture FAB — offset left of the shared bottom-right corner
+          (right-24 instead of right-6) so it doesn't sit under the global
+          StudyTimer trigger, which anchors at bottom-6 right-6. */}
       {activeTab === 'books' && (
         <button
           onClick={() => setIsQuickCaptureOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-sm rounded-full bg-primary px-md py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
+          className="fixed bottom-6 right-24 z-40 flex items-center gap-sm rounded-full bg-primary px-md py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
           aria-label={t('pages.books.quickCapture.title')}
         >
           <CheckCircle className="h-4 w-4" />

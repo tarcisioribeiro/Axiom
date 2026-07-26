@@ -10,16 +10,16 @@
 # Known limitation — minReplicas vs. blue-green-switch.sh's scale-to-0:
 #   scripts/blue-green-switch.sh scales the OLD (now-inactive) slot down to
 #   0 replicas after every switch, specifically to keep an instant-rollback
-#   target at zero cost. With both HPAs applied and minReplicas: 1, the
-#   standby slot's HPA will notice replicas (0) < minReplicas (1) on its
-#   next reconcile (~15s) and scale it back up to 1 — silently undoing the
+#   target at zero cost. With both HPAs applied and minReplicas: 2, the
+#   standby slot's HPA will notice replicas (0) < minReplicas (2) on its
+#   next reconcile (~15s) and scale it back up to 2 — silently undoing the
 #   scale-to-0 step. HPA v2 only allows minReplicas: 0 for Object/External
 #   metrics (would need the alpha HPAScaleToZero gate + a non-Resource
 #   metric, e.g. via KEDA), not for plain CPU/memory Resource metrics as
 #   used here.
 #
 #   If you apply this file, either:
-#     a) accept the standby slot idling at 1 replica instead of 0 (simplest —
+#     a) accept the standby slot idling at 2 replicas instead of 0 (simplest —
 #        do nothing further), or
 #     b) delete the standby's HPA right after each switch so it stops
 #        fighting the scale-to-0 step, and (re)apply it for the new active
@@ -43,7 +43,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-blue
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 10
   metrics:
     - type: Resource
@@ -87,7 +87,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: api-green
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 10
   metrics:
     - type: Resource

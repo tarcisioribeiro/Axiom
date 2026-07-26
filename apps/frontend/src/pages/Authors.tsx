@@ -66,6 +66,8 @@ function AuthorCard({
                 src={author.photo}
                 alt={author.name}
                 className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted ring-2 ring-border">

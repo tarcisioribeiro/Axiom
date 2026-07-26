@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, RotateCcw, X, Timer } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -75,12 +76,21 @@ export function PomodoroTimer({
   const seconds = secondsLeft % 60;
   const timeStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  return (
+  // Rendered via portal: this card is mounted inside a draggable Kanban card
+  // (Framer Motion + dnd-kit both apply a CSS `transform` to that ancestor),
+  // which turns `position: fixed` into "fixed relative to that ancestor"
+  // instead of the viewport — making the panel drift with the card's own
+  // hover/drag transform. Portaling to document.body escapes that transformed
+  // containing block so the panel stays fixed to the viewport as intended.
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
-      className="fixed bottom-6 right-6 z-50 w-64 rounded-2xl border bg-card shadow-2xl"
+      // right-24 (not right-6) — clears the global StudyTimer trigger, which
+      // anchors at bottom-6 right-6 and would otherwise sit hidden directly
+      // underneath this panel.
+      className="fixed bottom-6 right-24 z-50 w-64 rounded-2xl border bg-card shadow-2xl"
     >
       <div
         className={cn(
@@ -157,7 +167,8 @@ export function PomodoroTimer({
           )}
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 

@@ -109,7 +109,10 @@ export function AgentChatWidget() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          'fixed bottom-lg right-lg z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors',
+          // Offset above the bottom-right corner (StudyTimer, page FABs like
+          // Books' quick-capture button all anchor at bottom-6/right-6) so
+          // this global widget doesn't sit on top of and block them.
+          'fixed bottom-[6.5rem] right-lg z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors',
           open
             ? 'bg-muted text-muted-foreground ring-2 ring-border'
             : 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -149,8 +152,8 @@ export function AgentChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed bottom-[5.5rem] right-lg z-50 flex w-80 flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl sm:w-96"
-            style={{ maxHeight: 'min(520px, calc(100vh - 7rem))' }}
+            className="fixed bottom-[10.5rem] right-lg z-50 flex w-80 flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl sm:w-96"
+            style={{ maxHeight: 'min(520px, calc(100vh - 12rem))' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b bg-primary/5 px-md py-sm">
