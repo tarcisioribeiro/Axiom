@@ -12,7 +12,7 @@
 #   4. Atomically patches api-service to route traffic to the new slot.
 #   5. Scales the OLD (previously active) slot down to 0 replicas to free
 #      resources. It is NOT deleted so rollback is instant:
-#        kubectl scale deployment/api-<old-slot> --replicas=1 -n <namespace>
+#        kubectl scale deployment/api-<old-slot> --replicas=2 -n <namespace>
 #        kubectl patch svc api-service -n <namespace> \
 #          -p '{"spec":{"selector":{"app":"api","slot":"<old-slot>"}}}'
 #
@@ -23,7 +23,7 @@
 #               registry.gitlab.com/org/axiom/api:abc1234
 #   NAMESPACE   Kubernetes namespace (default: axiom)
 #   SERVICE     Service name whose selector is toggled (default: api-service)
-#   REPLICAS    Replica count for the new slot (default: 1)
+#   REPLICAS    Replica count for the new slot (default: 2)
 #
 # Prerequisites:
 #   - kubectl configured and pointing at the target cluster.
@@ -37,7 +37,7 @@ set -euo pipefail
 NEW_IMAGE="${1:?Usage: $0 NEW_IMAGE [NAMESPACE] [SERVICE] [REPLICAS]}"
 NAMESPACE="${2:-axiom}"
 SERVICE="${3:-api-service}"
-REPLICAS="${4:-1}"
+REPLICAS="${4:-2}"
 
 TIMEOUT="${BLUE_GREEN_TIMEOUT:-780}"
 
@@ -117,7 +117,7 @@ if kube get hpa "api-$ACTIVE_SLOT-hpa" >/dev/null 2>&1; then
 fi
 
 log "  Rollback command:"
-log "    kubectl scale deployment/api-$ACTIVE_SLOT --replicas=1 -n $NAMESPACE"
+log "    kubectl scale deployment/api-$ACTIVE_SLOT --replicas=2 -n $NAMESPACE"
 log "    kubectl patch svc $SERVICE -n $NAMESPACE \\"
 log "      -p '{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ACTIVE_SLOT\"}}}'"
 log "════════════════════════════════════════════════════════"

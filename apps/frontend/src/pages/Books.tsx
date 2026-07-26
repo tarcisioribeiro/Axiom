@@ -202,6 +202,8 @@ function BookGridCard({
             src={book.cover}
             alt={t('pages.books.coverAlt', { title: book.title })}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <BookCoverPlaceholder title={book.title} genre={book.genre} />
@@ -790,6 +792,8 @@ export default function Books() {
                                       title: book.title,
                                     })}
                                     className="h-full w-full object-cover"
+                                    loading="lazy"
+                                    decoding="async"
                                   />
                                 ) : (
                                   <BookCoverPlaceholder
