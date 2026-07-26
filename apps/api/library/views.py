@@ -17,7 +17,7 @@ from django.db.models import (
     Q,
     Sum,
 )
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -599,8 +599,16 @@ class BookFileStreamView(APIView):
 
 
 class BookCoverStreamView(APIView):
-    """Proxy da capa do livro via Django, contornando acesso direto
-    ao MinIO."""
+    """Redireciona para a capa do livro.
+
+    Checa autorização (dono, não deletado) e então redireciona para
+    ``book.cover.url`` — URL pré-assinada do MinIO em produção/staging com
+    ``MINIO_EXTERNAL_ENDPOINT`` configurado (navegador busca direto no MinIO,
+    sem passar pelo Django), ou ``/media/<nome>`` roteado para
+    ``MediaProxyView`` quando não está. Evita segurar um worker do Gunicorn
+    por toda a duração da transferência do arquivo — importante em telas com
+    várias capas concorrentes (ex: listagem de livros).
+    """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Book.objects.all()
@@ -620,24 +628,14 @@ class BookCoverStreamView(APIView):
                 {"detail": "Este livro não possui capa."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        filename = book.cover.name.split("/")[-1]
-        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
-        mime_map = {
-            "jpg": "image/jpeg",
-            "jpeg": "image/jpeg",
-            "png": "image/png",
-            "webp": "image/webp",
-            "gif": "image/gif",
-        }
-        content_type = mime_map.get(ext, "image/jpeg")
         try:
-            file_obj = book.cover.open("rb")
+            url = book.cover.url
         except Exception:
             return Response(
                 {"detail": "Arquivo não encontrado no sistema de arquivos."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        response = FileResponse(file_obj, content_type=content_type)
+        response = HttpResponseRedirect(url)
         response["Cache-Control"] = "public, max-age=86400"
         return response
 
@@ -648,8 +646,8 @@ class BookCoverStreamView(APIView):
 
 
 class AuthorPhotoStreamView(APIView):
-    """Proxy da foto do autor via Django, contornando acesso direto
-    ao MinIO."""
+    """Redireciona para a foto do autor (ver docstring de
+    BookCoverStreamView)."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Author.objects.all()
@@ -669,24 +667,14 @@ class AuthorPhotoStreamView(APIView):
                 {"detail": "Este autor não possui foto."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        filename = author.photo.name.split("/")[-1]
-        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
-        mime_map = {
-            "jpg": "image/jpeg",
-            "jpeg": "image/jpeg",
-            "png": "image/png",
-            "webp": "image/webp",
-            "gif": "image/gif",
-        }
-        content_type = mime_map.get(ext, "image/jpeg")
         try:
-            file_obj = author.photo.open("rb")
+            url = author.photo.url
         except Exception:
             return Response(
                 {"detail": "Arquivo não encontrado no sistema de arquivos."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        response = FileResponse(file_obj, content_type=content_type)
+        response = HttpResponseRedirect(url)
         response["Cache-Control"] = "public, max-age=86400"
         return response
 

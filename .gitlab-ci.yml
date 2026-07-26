@@ -1409,7 +1409,7 @@ deploy:production:
     # The script reads the active slot from the Service selector, deploys the
     # new image to the inactive slot, waits for readiness, then switches
     # traffic and scales the old slot to 0 (kept for instant rollback).
-    - bash infra/k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" axiom api-service
+    - bash infra/k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" axiom api-service 2
     # ── 6. Frontend: wait for rollout to complete ────────────────────────────────
     - kubectl -n axiom rollout status deployment/frontend --timeout=120s
   after_script:
@@ -1588,7 +1588,7 @@ deploy:rollback:production:
         -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
-      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=2
       # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
       # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
       # boot completo (migrations, collectstatic, sincronização de
@@ -1652,7 +1652,7 @@ rollback:production:
         -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
       ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
       echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
-      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+      kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=2
       # Mesmo timeout usado por blue-green-switch.sh (BLUE_GREEN_TIMEOUT,
       # default 780s) — o slot volta de 0 réplicas, então passa pelo mesmo
       # boot completo (migrations, collectstatic, sincronização de
