@@ -30,7 +30,15 @@ def check_storage() -> dict[str, str]:
     try:
         use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
         protocol = "https" if use_ssl else "http"
-        endpoint_url = f"{protocol}://{minio_endpoint}"
+        # minio_endpoint may already carry its own scheme (see
+        # app/settings.py:AWS_S3_ENDPOINT_URL) — reusing it verbatim avoids
+        # producing a malformed "https://http://host:port" URL.
+        if minio_endpoint.startswith("http://") or minio_endpoint.startswith(
+            "https://"
+        ):
+            endpoint_url = minio_endpoint
+        else:
+            endpoint_url = f"{protocol}://{minio_endpoint}"
         bucket_name = cfg("MINIO_BUCKET_NAME") or getattr(
             settings, "AWS_STORAGE_BUCKET_NAME", "axiom"
         )
