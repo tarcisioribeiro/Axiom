@@ -636,7 +636,11 @@ class BookCoverStreamView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         response = HttpResponseRedirect(url)
-        response["Cache-Control"] = "public, max-age=86400"
+        # Must stay below the presigned URL's own expiry (MinIOStorage.url()
+        # defaults to 3600s) — caching the redirect longer than the signature
+        # lives means the browser replays an expired presigned URL and MinIO
+        # rejects it with 403, without ever asking us for a fresh one.
+        response["Cache-Control"] = "private, max-age=3600"
         return response
 
 
@@ -675,7 +679,9 @@ class AuthorPhotoStreamView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         response = HttpResponseRedirect(url)
-        response["Cache-Control"] = "public, max-age=86400"
+        # Same reasoning as BookCoverStreamView: must not outlive the
+        # presigned URL's expiry (default 3600s).
+        response["Cache-Control"] = "private, max-age=3600"
         return response
 
 

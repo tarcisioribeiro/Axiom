@@ -245,7 +245,19 @@ if MINIO_ENDPOINT:
     AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "axiom")
     _minio_use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
     _minio_scheme = "https" if _minio_use_ssl else "http"
-    AWS_S3_ENDPOINT_URL = f"{_minio_scheme}://{MINIO_ENDPOINT}"
+    # MINIO_ENDPOINT may already carry its own scheme (same convention as
+    # infra/scripts/*/backup-cronjob.yaml) for setups where the internal
+    # connection (this endpoint) and the external one (MINIO_EXTERNAL_ENDPOINT,
+    # used for presigned URLs) don't share the same TLS posture — e.g. staging
+    # talks to MinIO directly over plain HTTP while the public domain is
+    # HTTPS-terminated by a reverse proxy. Falls back to MINIO_USE_SSL when no
+    # scheme is present, so existing bare host:port values keep working.
+    if MINIO_ENDPOINT.startswith("http://") or MINIO_ENDPOINT.startswith(
+        "https://"
+    ):
+        AWS_S3_ENDPOINT_URL = MINIO_ENDPOINT
+    else:
+        AWS_S3_ENDPOINT_URL = f"{_minio_scheme}://{MINIO_ENDPOINT}"
     AWS_S3_REGION_NAME = "us-east-1"
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
