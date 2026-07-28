@@ -175,7 +175,7 @@ Secret `axiom-secrets` (via CI/CD) e `PGSSLMODE` do ConfigMap `axiom-config`,
 em vez de um valor fixo (`postgres-service`).
 
 - **RPO**: 24 horas (backup diário).
-- **RTO**: ≤ 4 horas (download do MinIO → decrypt → `pg_restore`).
+- **RTO**: ≤ 4 horas (download do MinIO → decrypt → gunzip → `psql -f`).
 - **Retenção GFS**: 7 diários / 4 semanais / 3 mensais.
 - **Criptografia**: AES-256-CBC (PBKDF2, 600k iterações), chave em
   `BACKUP_ENCRYPTION_KEY`.
@@ -203,22 +203,23 @@ ele só depende da estrutura do arquivo, não de como o dump foi produzido.
 ### Restaurar em produção/staging
 
 ```bash
-# 1. Baixar o dump criptografado do MinIO
-mc cp axiom-storage/axiom-backups/db/db_backup_<TS>.dump.enc .
+# 1. Baixar o arquivo criptografado do MinIO
+mc cp axiom-storage/axiom-backups/db/db_backup_<TS>_kv<VER>.sql.gz.enc .
 
 # 2. Decriptar (a chave precisa ser a mesma usada no backup)
 export BACKUP_ENCRYPTION_KEY="<chave>"
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
   -pass env:BACKUP_ENCRYPTION_KEY \
-  -in  db_backup_<TS>.dump.enc \
-  -out db_backup_<TS>.dump
+  -in  db_backup_<TS>_kv<VER>.sql.gz.enc \
+  -out db_backup_<TS>_kv<VER>.sql.gz
 
-# 3. Restaurar diretamente na VM externa
-pg_restore \
+# 3. Descompactar
+gunzip db_backup_<TS>_kv<VER>.sql.gz
+
+# 4. Restaurar diretamente na VM externa (dump SQL simples)
+psql \
   -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
-  --clean --if-exists --no-owner --no-privileges \
-  --verbose \
-  db_backup_<TS>.dump
+  -f db_backup_<TS>_kv<VER>.sql
 ```
 
 ## Fora de escopo

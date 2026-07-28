@@ -17,6 +17,12 @@ email = os.getenv("DJANGO_SUPERUSER_EMAIL")
 password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
 
 if django_username:
+    if not password:
+        raise SystemExit(
+            "DJANGO_SUPERUSER_PASSWORD é obrigatório quando "
+            "DJANGO_SUPERUSER_USERNAME está definido."
+        )
+
     user, created = User.objects.get_or_create(
         username=django_username,
         defaults={"email": email, "is_staff": True, "is_superuser": True},

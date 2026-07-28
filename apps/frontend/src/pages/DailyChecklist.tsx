@@ -389,7 +389,14 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     if (cards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
       const timer = setTimeout(() => {
         setShowCelebration(true);
-        toast({ title: t('pages.todayTasks.allDoneTitle') });
+        toast({
+          title: (
+            <span className="flex items-center gap-xs">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+              {t('pages.todayTasks.allDoneTitle')}
+            </span>
+          ),
+        });
       }, 0);
       prevDayRateRef.current = dayRate;
       return () => clearTimeout(timer);
@@ -1024,9 +1031,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">
-                    {t('pages.dailyChecklist.allDone')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
                     {t('pages.dailyChecklist.reflectionPrompt')}
                   </p>
                 </div>

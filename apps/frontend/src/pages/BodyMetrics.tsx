@@ -1,13 +1,17 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, subDays } from 'date-fns';
+import { differenceInYears, format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Activity,
+  BarChart3,
   Dumbbell,
   Edit,
+  Layers,
   Percent,
+  PieChart,
   Plus,
+  Ratio,
   Ruler,
   Scale,
   Trash2,
@@ -24,6 +28,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import { EnhancedBarChart } from '@/components/charts/EnhancedBarChart';
+import { EnhancedPieChart } from '@/components/charts/EnhancedPieChart';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -121,6 +127,26 @@ function calcNavyBodyFat(
   return null;
 }
 
+/**
+ * Protocolo de Pollock (Jackson & Pollock, 1978/1980 — popularizado por
+ * Pollock & Wilmore, 1984) de 7 dobras cutâneas.
+ * Densidade corporal a partir da soma das 7 dobras (mm) + idade,
+ * com equações distintas por sexo; % de gordura via equação de Siri.
+ */
+function calcPollockBodyFat(sex: string, age: number, sum7: number): number | null {
+  if (sum7 <= 0 || age <= 0) return null;
+
+  const bodyDensity =
+    sex === 'F'
+      ? 1.097 - 0.00046971 * sum7 + 0.00000056 * sum7 ** 2 - 0.00012828 * age
+      : 1.112 - 0.00043499 * sum7 + 0.00000055 * sum7 ** 2 - 0.00028826 * age;
+
+  if (bodyDensity <= 0) return null;
+
+  const bf = 495 / bodyDensity - 450;
+  return bf < 0 ? null : parseFloat(bf.toFixed(2));
+}
+
 function bmiCategory(
   bmi: number,
   t: (k: string) => string
@@ -143,6 +169,78 @@ function bmiStatVariant(bmi: number): 'success' | 'warning' | 'danger' | 'defaul
   return 'danger';
 }
 
+function calcWhr(waistCm: number, hipCm: number): number | null {
+  if (waistCm <= 0 || hipCm <= 0) return null;
+  return waistCm / hipCm;
+}
+
+function whrCategory(
+  whr: number,
+  sex: string,
+  t: (k: string) => string
+): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
+  if (sex === 'F') {
+    if (whr < 0.8) return { label: t('pages.bodyMetrics.whrLow'), variant: 'default' };
+    if (whr < 0.85)
+      return { label: t('pages.bodyMetrics.whrModerate'), variant: 'outline' };
+    return { label: t('pages.bodyMetrics.whrHigh'), variant: 'destructive' };
+  }
+  if (whr < 0.9) return { label: t('pages.bodyMetrics.whrLow'), variant: 'default' };
+  if (whr < 1.0)
+    return { label: t('pages.bodyMetrics.whrModerate'), variant: 'outline' };
+  return { label: t('pages.bodyMetrics.whrHigh'), variant: 'destructive' };
+}
+
+function whrStatVariant(
+  whr: number,
+  sex: string
+): 'success' | 'warning' | 'danger' | 'default' {
+  const high = sex === 'F' ? 0.85 : 1.0;
+  const moderate = sex === 'F' ? 0.8 : 0.9;
+  if (whr >= high) return 'danger';
+  if (whr >= moderate) return 'warning';
+  return 'success';
+}
+
+function sumFields(m: BodyMetric | null, fields: (keyof BodyMetric)[]): number | null {
+  if (!m) return null;
+  let sum = 0;
+  let hasAny = false;
+  for (const field of fields) {
+    const raw = m[field];
+    if (typeof raw === 'string' && raw !== '') {
+      sum += parseFloat(raw);
+      hasAny = true;
+    }
+  }
+  return hasAny ? sum : null;
+}
+
+const PERIMETRY_FIELDS: (keyof BodyMetric)[] = [
+  'neck_cm',
+  'shoulders_cm',
+  'chest_cm',
+  'abdomen_cm',
+  'waist_cm',
+  'hip_cm',
+  'arm_left_cm',
+  'arm_right_cm',
+  'thigh_left_cm',
+  'thigh_right_cm',
+  'calf_left_cm',
+  'calf_right_cm',
+];
+
+const SKINFOLD_FIELDS: (keyof BodyMetric)[] = [
+  'skinfold_triceps_mm',
+  'skinfold_subscapular_mm',
+  'skinfold_suprailiac_mm',
+  'skinfold_chest_mm',
+  'skinfold_midaxillary_mm',
+  'skinfold_abdominal_mm',
+  'skinfold_thigh_mm',
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(
@@ -156,15 +254,28 @@ function fmt(
   return `${n.toLocaleString('pt-BR', { maximumFractionDigits: decimals })}${unit ? ` ${unit}` : ''}`;
 }
 
-function varDesc(
+function trendData(
   current: string | null,
   previous: string | null,
-  unit: string
-): string | undefined {
+  period: string
+): { value: number; isPositive: boolean; period: string } | undefined {
   if (!current || !previous) return undefined;
-  const diff = parseFloat(current) - parseFloat(previous);
-  if (Math.abs(diff) < 0.01) return undefined;
-  return `${diff > 0 ? '↑' : '↓'} ${Math.abs(diff).toFixed(1)} ${unit} vs. anterior`;
+  const curr = parseFloat(current);
+  const prev = parseFloat(previous);
+  if (prev === 0) return undefined;
+  const pctChange = ((curr - prev) / Math.abs(prev)) * 100;
+  if (Math.abs(pctChange) < 0.05) return undefined;
+  return { value: parseFloat(pctChange.toFixed(1)), isPositive: pctChange > 0, period };
+}
+
+function armDisplay(m: BodyMetric | null): string | null {
+  if (!m) return null;
+  const l = m.arm_left_cm ? parseFloat(m.arm_left_cm) : null;
+  const r = m.arm_right_cm ? parseFloat(m.arm_right_cm) : null;
+  if (l !== null && r !== null) return ((l + r) / 2).toFixed(1);
+  if (l !== null) return l.toFixed(1);
+  if (r !== null) return r.toFixed(1);
+  return m.arm_cm;
 }
 
 // ── Form state ────────────────────────────────────────────────────────────────
@@ -175,8 +286,23 @@ interface MetricFormState {
   height_cm: string;
   waist_cm: string;
   neck_cm: string;
-  arm_cm: string;
   hip_cm: string;
+  shoulders_cm: string;
+  chest_cm: string;
+  abdomen_cm: string;
+  arm_left_cm: string;
+  arm_right_cm: string;
+  thigh_left_cm: string;
+  thigh_right_cm: string;
+  calf_left_cm: string;
+  calf_right_cm: string;
+  skinfold_triceps_mm: string;
+  skinfold_subscapular_mm: string;
+  skinfold_suprailiac_mm: string;
+  skinfold_chest_mm: string;
+  skinfold_midaxillary_mm: string;
+  skinfold_abdominal_mm: string;
+  skinfold_thigh_mm: string;
   notes: string;
 }
 
@@ -186,8 +312,23 @@ const emptyForm: MetricFormState = {
   height_cm: '',
   waist_cm: '',
   neck_cm: '',
-  arm_cm: '',
   hip_cm: '',
+  shoulders_cm: '',
+  chest_cm: '',
+  abdomen_cm: '',
+  arm_left_cm: '',
+  arm_right_cm: '',
+  thigh_left_cm: '',
+  thigh_right_cm: '',
+  calf_left_cm: '',
+  calf_right_cm: '',
+  skinfold_triceps_mm: '',
+  skinfold_subscapular_mm: '',
+  skinfold_suprailiac_mm: '',
+  skinfold_chest_mm: '',
+  skinfold_midaxillary_mm: '',
+  skinfold_abdominal_mm: '',
+  skinfold_thigh_mm: '',
   notes: '',
 };
 
@@ -198,8 +339,23 @@ function toFormState(m: BodyMetric): MetricFormState {
     height_cm: m.height_cm ?? '',
     waist_cm: m.waist_cm ?? '',
     neck_cm: m.neck_cm ?? '',
-    arm_cm: m.arm_cm ?? '',
     hip_cm: m.hip_cm ?? '',
+    shoulders_cm: m.shoulders_cm ?? '',
+    chest_cm: m.chest_cm ?? '',
+    abdomen_cm: m.abdomen_cm ?? '',
+    arm_left_cm: m.arm_left_cm ?? '',
+    arm_right_cm: m.arm_right_cm ?? '',
+    thigh_left_cm: m.thigh_left_cm ?? '',
+    thigh_right_cm: m.thigh_right_cm ?? '',
+    calf_left_cm: m.calf_left_cm ?? '',
+    calf_right_cm: m.calf_right_cm ?? '',
+    skinfold_triceps_mm: m.skinfold_triceps_mm ?? '',
+    skinfold_subscapular_mm: m.skinfold_subscapular_mm ?? '',
+    skinfold_suprailiac_mm: m.skinfold_suprailiac_mm ?? '',
+    skinfold_chest_mm: m.skinfold_chest_mm ?? '',
+    skinfold_midaxillary_mm: m.skinfold_midaxillary_mm ?? '',
+    skinfold_abdominal_mm: m.skinfold_abdominal_mm ?? '',
+    skinfold_thigh_mm: m.skinfold_thigh_mm ?? '',
     notes: m.notes,
   };
 }
@@ -293,6 +449,9 @@ export default function BodyMetrics() {
 
   const sex = member?.sex ?? 'M';
   const ownerId = member?.id ?? 0;
+  const age = member?.birth_date
+    ? differenceInYears(new Date(), parseISO(member.birth_date))
+    : null;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   // ── Cálculo em tempo real no formulário ────────────────────────────────────
@@ -304,13 +463,32 @@ export default function BodyMetrics() {
   const liveHip = parseFloat(form.hip_cm) || 0;
 
   const liveBmi = calcBmi(liveWeight, liveHeight);
-  const liveBodyFat = calcNavyBodyFat(
+
+  const skinfoldValues = [
+    form.skinfold_triceps_mm,
+    form.skinfold_subscapular_mm,
+    form.skinfold_suprailiac_mm,
+    form.skinfold_chest_mm,
+    form.skinfold_midaxillary_mm,
+    form.skinfold_abdominal_mm,
+    form.skinfold_thigh_mm,
+  ].map((v) => parseFloat(v) || 0);
+  const hasAllSkinfolds = skinfoldValues.every((v) => v > 0);
+  const liveSum7 = skinfoldValues.reduce((sum, v) => sum + v, 0);
+
+  const livePollockBodyFat =
+    hasAllSkinfolds && age !== null ? calcPollockBodyFat(sex, age, liveSum7) : null;
+  const liveNavyBodyFat = calcNavyBodyFat(
     sex,
     liveHeight,
     liveWaist,
     liveNeck,
     liveHip > 0 ? liveHip : null
   );
+
+  const liveBodyFat = livePollockBodyFat ?? liveNavyBodyFat;
+  const liveBodyFatMethod: 'pollock' | 'navy' | null =
+    livePollockBodyFat !== null ? 'pollock' : liveNavyBodyFat !== null ? 'navy' : null;
 
   // ── CRUD handlers ──────────────────────────────────────────────────────────
 
@@ -348,8 +526,24 @@ export default function BodyMetrics() {
       height_cm: form.height_cm || null,
       waist_cm: form.waist_cm || null,
       neck_cm: form.neck_cm || null,
-      arm_cm: form.arm_cm || null,
       hip_cm: form.hip_cm || null,
+      shoulders_cm: form.shoulders_cm || null,
+      chest_cm: form.chest_cm || null,
+      abdomen_cm: form.abdomen_cm || null,
+      arm_left_cm: form.arm_left_cm || null,
+      arm_right_cm: form.arm_right_cm || null,
+      thigh_left_cm: form.thigh_left_cm || null,
+      thigh_right_cm: form.thigh_right_cm || null,
+      calf_left_cm: form.calf_left_cm || null,
+      calf_right_cm: form.calf_right_cm || null,
+      skinfold_triceps_mm: form.skinfold_triceps_mm || null,
+      skinfold_subscapular_mm: form.skinfold_subscapular_mm || null,
+      skinfold_suprailiac_mm: form.skinfold_suprailiac_mm || null,
+      skinfold_chest_mm: form.skinfold_chest_mm || null,
+      skinfold_midaxillary_mm: form.skinfold_midaxillary_mm || null,
+      skinfold_abdominal_mm: form.skinfold_abdominal_mm || null,
+      skinfold_thigh_mm: form.skinfold_thigh_mm || null,
+      body_fat_method: liveBodyFatMethod,
       body_fat_pct: bfPct,
       notes: form.notes,
       owner: ownerId,
@@ -396,6 +590,13 @@ export default function BodyMetrics() {
     latest?.weight_kg && latest?.height_cm
       ? calcBmi(parseFloat(latest.weight_kg), parseFloat(latest.height_cm))
       : null;
+
+  const latestWhr =
+    latest?.waist_cm && latest?.hip_cm
+      ? calcWhr(parseFloat(latest.waist_cm), parseFloat(latest.hip_cm))
+      : null;
+  const sumPerimetryVal = sumFields(latest, PERIMETRY_FIELDS);
+  const sumSkinfoldVal = sumFields(latest, SKINFOLD_FIELDS);
 
   const locale = i18n.language === 'pt-BR' ? ptBR : undefined;
 
@@ -454,10 +655,10 @@ export default function BodyMetrics() {
                   value={fmt(latest.weight_kg, 'kg')}
                   icon={<Scale className="h-4 w-4" />}
                   accentColor="purple"
-                  description={varDesc(
+                  trend={trendData(
                     latest.weight_kg,
                     previous?.weight_kg ?? null,
-                    'kg'
+                    t('pages.bodyMetrics.vsPrevious')
                   )}
                 />
                 <StatCard
@@ -468,16 +669,30 @@ export default function BodyMetrics() {
                   description={
                     latestBmi !== null ? bmiCategory(latestBmi, t).label : undefined
                   }
+                  progressBar={
+                    latestBmi !== null
+                      ? {
+                          value: latestBmi,
+                          max: 40,
+                          color:
+                            bmiStatVariant(latestBmi) === 'success'
+                              ? 'success'
+                              : bmiStatVariant(latestBmi) === 'warning'
+                                ? 'warning'
+                                : 'danger',
+                        }
+                      : undefined
+                  }
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.bodyFat')}
                   value={fmt(latest.body_fat_pct, '%')}
                   icon={<Percent className="h-4 w-4" />}
                   accentColor="blue"
-                  description={varDesc(
+                  trend={trendData(
                     latest.body_fat_pct,
                     previous?.body_fat_pct ?? null,
-                    '%'
+                    t('pages.bodyMetrics.vsPrevious')
                   )}
                 />
                 <StatCard
@@ -485,25 +700,33 @@ export default function BodyMetrics() {
                   value={fmt(latest.waist_cm, 'cm')}
                   icon={<Ruler className="h-4 w-4" />}
                   accentColor="orange"
-                  description={varDesc(
+                  trend={trendData(
                     latest.waist_cm,
                     previous?.waist_cm ?? null,
-                    'cm'
+                    t('pages.bodyMetrics.vsPrevious')
                   )}
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.arm')}
-                  value={fmt(latest.arm_cm, 'cm')}
+                  value={fmt(armDisplay(latest), 'cm')}
                   icon={<Dumbbell className="h-4 w-4" />}
                   accentColor="green"
-                  description={varDesc(latest.arm_cm, previous?.arm_cm ?? null, 'cm')}
+                  trend={trendData(
+                    armDisplay(latest),
+                    armDisplay(previous),
+                    t('pages.bodyMetrics.vsPrevious')
+                  )}
                 />
                 <StatCard
                   title={t('pages.bodyMetrics.hip')}
                   value={fmt(latest.hip_cm, 'cm')}
                   icon={<Ruler className="h-4 w-4" />}
                   accentColor="red"
-                  description={varDesc(latest.hip_cm, previous?.hip_cm ?? null, 'cm')}
+                  trend={trendData(
+                    latest.hip_cm,
+                    previous?.hip_cm ?? null,
+                    t('pages.bodyMetrics.vsPrevious')
+                  )}
                 />
               </div>
             )}
@@ -703,6 +926,205 @@ export default function BodyMetrics() {
                     )}
                   </CardContent>
                 </Card>
+
+                {latest && (
+                  <Card className="mt-md">
+                    <CardHeader className="pb-sm">
+                      <CardTitle className="text-base">
+                        {t('pages.bodyMetrics.resultsTitle')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+                        <StatCard
+                          title={t('pages.bodyMetrics.whr')}
+                          value={latestWhr !== null ? latestWhr.toFixed(2) : '—'}
+                          icon={<Ratio className="h-4 w-4" />}
+                          variant={
+                            latestWhr !== null
+                              ? whrStatVariant(latestWhr, sex)
+                              : 'default'
+                          }
+                          description={
+                            latestWhr !== null
+                              ? whrCategory(latestWhr, sex, t).label
+                              : undefined
+                          }
+                        />
+                        <StatCard
+                          title={t('pages.bodyMetrics.sumPerimetryLabel')}
+                          value={fmt(sumPerimetryVal, 'cm')}
+                          icon={<Ruler className="h-4 w-4" />}
+                        />
+                        <StatCard
+                          title={t('pages.bodyMetrics.sumSkinfoldsLabel')}
+                          value={fmt(sumSkinfoldVal, 'mm')}
+                          icon={<Layers className="h-4 w-4" />}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {(() => {
+                  const latestWeight = latest?.weight_kg
+                    ? parseFloat(latest.weight_kg)
+                    : null;
+                  const latestFatPct = latest?.body_fat_pct
+                    ? parseFloat(latest.body_fat_pct)
+                    : null;
+                  const hasComposition = latestWeight !== null && latestFatPct !== null;
+                  const fatMassKg = hasComposition
+                    ? latestWeight * (latestFatPct / 100)
+                    : 0;
+                  const leanMassKg = hasComposition ? latestWeight - fatMassKg : 0;
+
+                  const pieData = [
+                    {
+                      name: t('pages.bodyMetrics.leanMass'),
+                      value: hasComposition
+                        ? parseFloat((100 - latestFatPct).toFixed(1))
+                        : 0,
+                    },
+                    {
+                      name: t('pages.bodyMetrics.fatMass'),
+                      value: hasComposition ? parseFloat(latestFatPct.toFixed(1)) : 0,
+                    },
+                  ];
+                  const barData = [
+                    {
+                      name: t('pages.bodyMetrics.leanMass'),
+                      value: parseFloat(leanMassKg.toFixed(1)),
+                    },
+                    {
+                      name: t('pages.bodyMetrics.fatMassKg'),
+                      value: parseFloat(fatMassKg.toFixed(1)),
+                    },
+                  ];
+
+                  const renderLegendRow = (
+                    items: { label: string; value: string; color: string }[]
+                  ) => (
+                    <div className="mb-md flex flex-wrap items-center justify-center gap-xl">
+                      {items.map((item) => (
+                        <div key={item.label} className="flex items-center gap-sm">
+                          <span
+                            className="h-8 w-1 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              {item.label}
+                            </p>
+                            <p className="text-sm font-bold text-foreground">
+                              {item.value}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+
+                  return (
+                    <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
+                      <Card>
+                        <CardHeader className="pb-sm">
+                          <CardTitle className="flex items-center gap-xs text-base">
+                            <PieChart className="h-4 w-4 text-muted-foreground" />
+                            {t('pages.bodyMetrics.fatPctChartTitle')}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {hasComposition ? (
+                            <>
+                              {renderLegendRow([
+                                {
+                                  label: t('pages.bodyMetrics.leanMass'),
+                                  value: `${pieData[0].value.toFixed(1)}%`,
+                                  color: semanticColors.success,
+                                },
+                                {
+                                  label: t('pages.bodyMetrics.fatMass'),
+                                  value: `${pieData[1].value.toFixed(1)}%`,
+                                  color: semanticColors.warning,
+                                },
+                              ])}
+                              <EnhancedPieChart
+                                data={pieData}
+                                dataKey="value"
+                                nameKey="name"
+                                colors={[
+                                  semanticColors.success,
+                                  semanticColors.warning,
+                                ]}
+                                formatter={(v) => `${Number(v).toFixed(1)}%`}
+                                showLegend={false}
+                                showSliceLabels
+                                height={280}
+                              />
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-xl text-center">
+                              <PieChart className="mb-sm h-8 w-8 text-muted-foreground/40" />
+                              <p className="text-sm text-muted-foreground">
+                                {t('pages.bodyMetrics.noDataForComposition')}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-sm">
+                          <CardTitle className="flex items-center gap-xs text-base">
+                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                            {t('pages.bodyMetrics.massChartTitle')}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {hasComposition ? (
+                            <>
+                              {renderLegendRow([
+                                {
+                                  label: t('pages.bodyMetrics.leanMass'),
+                                  value: `${barData[0].value.toFixed(1)} kg`,
+                                  color: semanticColors.success,
+                                },
+                                {
+                                  label: t('pages.bodyMetrics.fatMassKg'),
+                                  value: `${barData[1].value.toFixed(1)} kg`,
+                                  color: semanticColors.warning,
+                                },
+                              ])}
+                              <EnhancedBarChart
+                                data={barData}
+                                dataKey="value"
+                                nameKey="name"
+                                layout="horizontal"
+                                colors={[
+                                  semanticColors.success,
+                                  semanticColors.warning,
+                                ]}
+                                formatter={(v) => `${Number(v).toFixed(1)} kg`}
+                                nameFormatter={() => null}
+                                showValueLabels
+                                showCategoryAxisLabels={false}
+                                height={280}
+                              />
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-xl text-center">
+                              <BarChart3 className="mb-sm h-8 w-8 text-muted-foreground/40" />
+                              <p className="text-sm text-muted-foreground">
+                                {t('pages.bodyMetrics.noDataForComposition')}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  );
+                })()}
               </TabsContent>
 
               {/* ── Histórico ── */}
@@ -783,12 +1205,43 @@ export default function BodyMetrics() {
                                   </strong>
                                 </span>
                               )}
+                              {[
+                                ['shoulders_cm', 'shoulders'],
+                                ['chest_cm', 'chest'],
+                                ['abdomen_cm', 'abdomen'],
+                                ['arm_left_cm', 'armLeft'],
+                                ['arm_right_cm', 'armRight'],
+                                ['thigh_left_cm', 'thighLeft'],
+                                ['thigh_right_cm', 'thighRight'],
+                                ['calf_left_cm', 'calfLeft'],
+                                ['calf_right_cm', 'calfRight'],
+                              ].map(([field, labelKey]) => {
+                                const val = metric[field as keyof BodyMetric] as
+                                  | string
+                                  | null;
+                                if (!val) return null;
+                                return (
+                                  <span key={field}>
+                                    {t(`pages.bodyMetrics.${labelKey}`)}:{' '}
+                                    <strong className="text-foreground">
+                                      {fmt(val, 'cm')}
+                                    </strong>
+                                  </span>
+                                );
+                              })}
                               {metric.body_fat_pct && (
                                 <span>
                                   {t('pages.bodyMetrics.bodyFat')}:{' '}
                                   <strong className="text-foreground">
                                     {fmt(metric.body_fat_pct, '%')}
                                   </strong>
+                                  {metric.body_fat_method && (
+                                    <Badge variant="outline" className="ml-xs text-xs">
+                                      {metric.body_fat_method === 'pollock'
+                                        ? t('pages.bodyMetrics.pollockMethod')
+                                        : t('pages.bodyMetrics.navyMethod')}
+                                    </Badge>
+                                  )}
                                 </span>
                               )}
                             </div>
@@ -894,23 +1347,12 @@ export default function BodyMetrics() {
                 )}
               </FormSection>
 
-              {/* ── Circunferências → Gordura Corporal (Método Marinha) ── */}
-              <FormSection title={t('pages.bodyMetrics.sectionCircumferences')}>
+              {/* ── Perimetria (circunferências) ── */}
+              <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
                 <p className="mb-sm text-xs text-muted-foreground">
-                  {t('pages.bodyMetrics.navyMethodHint')}
+                  {t('pages.bodyMetrics.perimetryHint')}
                 </p>
                 <div className="grid grid-cols-2 gap-md">
-                  <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.waist')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="Ex: 80"
-                      value={form.waist_cm}
-                      onChange={setField('waist_cm')}
-                    />
-                  </div>
                   <div className="space-y-xs">
                     <Label>{t('pages.bodyMetrics.neck')} (cm)</Label>
                     <Input
@@ -923,14 +1365,44 @@ export default function BodyMetrics() {
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.arm')} (cm)</Label>
+                    <Label>{t('pages.bodyMetrics.shoulders')} (cm)</Label>
                     <Input
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 35"
-                      value={form.arm_cm}
-                      onChange={setField('arm_cm')}
+                      value={form.shoulders_cm}
+                      onChange={setField('shoulders_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.chest')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.chest_cm}
+                      onChange={setField('chest_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.abdomen')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.abdomen_cm}
+                      onChange={setField('abdomen_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.waist')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      placeholder="Ex: 80"
+                      value={form.waist_cm}
+                      onChange={setField('waist_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
@@ -949,7 +1421,150 @@ export default function BodyMetrics() {
                       onChange={setField('hip_cm')}
                     />
                   </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.armLeft')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.arm_left_cm}
+                      onChange={setField('arm_left_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.armRight')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.arm_right_cm}
+                      onChange={setField('arm_right_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.thighLeft')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.thigh_left_cm}
+                      onChange={setField('thigh_left_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.thighRight')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.thigh_right_cm}
+                      onChange={setField('thigh_right_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.calfLeft')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.calf_left_cm}
+                      onChange={setField('calf_left_cm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.calfRight')} (cm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.calf_right_cm}
+                      onChange={setField('calf_right_cm')}
+                    />
+                  </div>
                 </div>
+              </FormSection>
+
+              {/* ── Dobras Cutâneas → Gordura Corporal (Método Pollock 7 Dobras) ── */}
+              <FormSection
+                title={t('pages.bodyMetrics.sectionSkinfolds')}
+                icon={Layers}
+              >
+                <p className="mb-sm text-xs text-muted-foreground">
+                  {t('pages.bodyMetrics.pollockMethodHint')}
+                </p>
+                <div className="grid grid-cols-2 gap-md">
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldTriceps')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_triceps_mm}
+                      onChange={setField('skinfold_triceps_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldSubscapular')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_subscapular_mm}
+                      onChange={setField('skinfold_subscapular_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldSuprailiac')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_suprailiac_mm}
+                      onChange={setField('skinfold_suprailiac_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldChest')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_chest_mm}
+                      onChange={setField('skinfold_chest_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldMidaxillary')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_midaxillary_mm}
+                      onChange={setField('skinfold_midaxillary_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldAbdominal')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_abdominal_mm}
+                      onChange={setField('skinfold_abdominal_mm')}
+                    />
+                  </div>
+                  <div className="space-y-xs">
+                    <Label>{t('pages.bodyMetrics.skinfoldThigh')} (mm)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={form.skinfold_thigh_mm}
+                      onChange={setField('skinfold_thigh_mm')}
+                    />
+                  </div>
+                </div>
+
                 {liveBodyFat !== null ? (
                   <div className="mt-sm flex items-center gap-sm rounded-md border border-success/30 bg-success/10 px-md py-sm text-sm">
                     <span className="text-muted-foreground">
@@ -957,9 +1572,21 @@ export default function BodyMetrics() {
                     </span>
                     <strong>{liveBodyFat.toFixed(1)}%</strong>
                     <span className="text-xs text-muted-foreground">
-                      ({t('pages.bodyMetrics.navyMethod')})
+                      (
+                      {liveBodyFatMethod === 'pollock'
+                        ? t('pages.bodyMetrics.pollockMethod')
+                        : t('pages.bodyMetrics.navyMethod')}
+                      )
                     </span>
                   </div>
+                ) : hasAllSkinfolds && age === null ? (
+                  <p className="mt-sm text-xs text-muted-foreground">
+                    {t('pages.bodyMetrics.pollockMissingBirthDate')}
+                  </p>
+                ) : skinfoldValues.some((v) => v > 0) && !hasAllSkinfolds ? (
+                  <p className="mt-sm text-xs text-muted-foreground">
+                    {t('pages.bodyMetrics.pollockMethodIncomplete')}
+                  </p>
                 ) : liveWaist > 0 || liveNeck > 0 ? (
                   <p className="mt-sm text-xs text-muted-foreground">
                     {t('pages.bodyMetrics.navyMethodIncomplete')}
