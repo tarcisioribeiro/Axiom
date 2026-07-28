@@ -660,21 +660,24 @@ kubectl exec -n axiom \
 ```bash
 # 1. Baixar o backup do MinIO externo (acesso direto, sem port-forward)
 mc alias set prod https://<MINIO_ENDPOINT> <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD>
-mc cp prod/axiom-backups/db/db_backup_<TIMESTAMP>.dump.enc .
+mc cp prod/axiom-backups/db/db_backup_<TIMESTAMP>_kv<VER>.sql.gz.enc .
 
 # 2. Descriptografar
 export BACKUP_ENCRYPTION_KEY="<chave>"
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
   -pass env:BACKUP_ENCRYPTION_KEY \
-  -in  db_backup_<TIMESTAMP>.dump.enc \
-  -out db_backup_<TIMESTAMP>.dump
+  -in  db_backup_<TIMESTAMP>_kv<VER>.sql.gz.enc \
+  -out db_backup_<TIMESTAMP>_kv<VER>.sql.gz
 
-# 3. Restaurar diretamente na VM externa do Postgres (requer acesso de
-#    rede via WireGuard/allowlist — não é mais um port-forward de cluster)
-pg_restore \
+# 3. Descompactar
+gunzip db_backup_<TIMESTAMP>_kv<VER>.sql.gz
+
+# 4. Restaurar diretamente na VM externa do Postgres (dump SQL simples;
+#    requer acesso de rede via WireGuard/allowlist — não é mais um
+#    port-forward de cluster)
+psql \
   -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
-  --clean --if-exists --no-owner --no-privileges \
-  --verbose db_backup_<TIMESTAMP>.dump
+  -f db_backup_<TIMESTAMP>_kv<VER>.sql
 ```
 
 ### Limpar jobs de backup concluídos
@@ -1363,8 +1366,8 @@ kubectl describe configmap backup-script -n axiom
 ### Copiar arquivos para/de pods
 
 ```bash
-# Copiar arquivo do pod para o host (ex.: coletar um dump local)
-kubectl cp axiom/<nome-do-pod>:/backups/db_backup.dump ./db_backup.dump
+# Copiar arquivo do pod para o host (ex.: coletar um backup local)
+kubectl cp axiom/<nome-do-pod>:/backups/db_backup_<TIMESTAMP>_kv<VER>.sql.gz.enc ./db_backup.sql.gz.enc
 
 # Copiar arquivo do host para o pod
 kubectl cp ./meu-script.sh axiom/<nome-do-pod>:/tmp/meu-script.sh

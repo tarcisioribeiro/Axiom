@@ -3,15 +3,15 @@
 # Axiom Backup Verification Script
 # =============================================================================
 #
-# Decrypts the most recent local encrypted dump, restores it into a temporary
-# PostgreSQL database, validates the schema, then drops the temp database.
-# Writes the result to $BACKUP_DIR/.last_verification_status.
+# Decrypts the most recent local encrypted archive, restores the plain-SQL
+# dump into a temporary PostgreSQL database, validates the schema, then drops
+# the temp database. Writes the result to $BACKUP_DIR/.last_verification_status.
 #
 # Usage:
-#   /scripts/verify-backup.sh [path/to/dump.enc]
+#   /scripts/verify-backup.sh [path/to/dump.sql.gz.enc]
 #
 #   • If a path is given, that file is verified.
-#   • If omitted, the most recent db_backup_*.dump.enc in $BACKUP_DIR is used.
+#   • If omitted, the most recent db_backup_*.sql.gz.enc in $BACKUP_DIR is used.
 #
 # Required environment variables (same as backup.sh):
 #   PGPASSWORD            PostgreSQL password
@@ -53,12 +53,11 @@ warning() { echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $*"; 
 
 # ── Cleanup trap — always drop the temp DB and remove temp files ───────────────
 TEMP_DIR=""
-TEMP_DUMP=""
 cleanup() {
     local exit_code=$?
     if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
         rm -rf "$TEMP_DIR"
-        log "Temp dump file removed"
+        log "Temp files removed"
     fi
     # Drop temp database if it was created (suppress error if it doesn't exist)
     if psql \
@@ -94,7 +93,7 @@ log "═════════════════════════
 if [ $# -ge 1 ] && [ -f "$1" ]; then
     ENC_FILE="$1"
 else
-    ENC_FILE=$(find "$BACKUP_DIR" -maxdepth 1 -name 'db_backup_*.dump.enc' \
+    ENC_FILE=$(find "$BACKUP_DIR" -maxdepth 1 -name 'db_backup_*.sql.gz.enc' \
                | sort | tail -1)
 fi
 
@@ -108,11 +107,11 @@ ENC_SIZE=$(du -h "$ENC_FILE" | cut -f1)
 log "  File size : ${ENC_SIZE}"
 
 # ── Resolve decryption key ─────────────────────────────────────────────────────
-# Filenames include a key-version tag: db_backup_<TS>_kv<VER>.dump.enc
+# Filenames include a key-version tag: db_backup_<TS>_kv<VER>.sql.gz.enc
 # Try BACKUP_ENCRYPTION_KEY_<VER> first; fall back to BACKUP_ENCRYPTION_KEY.
 ENC_BASENAME=$(basename "$ENC_FILE")
 KEY_VERSION=""
-if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.sql\.gz\.enc$ ]]; then
     KEY_VERSION="${BASH_REMATCH[1]}"
 fi
 
@@ -135,37 +134,42 @@ if [ -z "$DECRYPT_KEY_FOR_VERIFY" ]; then
     exit 1
 fi
 
-# ── Step 2: Decrypt ────────────────────────────────────────────────────────────
-# Use a temp *directory* + fixed filename rather than a suffixed mktemp
+# ── Step 2: Decrypt + decompress ───────────────────────────────────────────────
+# Use a temp *directory* + fixed filenames rather than a suffixed mktemp
 # template: BusyBox's mktemp (used in the Alpine-based db-backup image)
 # requires the template to end in XXXXXX with no trailing suffix, unlike
 # GNU mktemp (used in the Debian-based postgres:16 image in the K8s CronJob).
 TEMP_DIR=$(mktemp -d "${BACKUP_DIR}/verify_XXXXXX")
-TEMP_DUMP="${TEMP_DIR}/verify.dump"
-log "Step 2/5 — Decrypting backup..."
+TEMP_GZ="${TEMP_DIR}/verify.sql.gz"
+TEMP_SQL="${TEMP_DIR}/verify.sql"
+log "Step 2/5 — Decrypting and decompressing backup..."
 
 if ! openssl enc -d -aes-256-cbc \
     -pbkdf2 \
     -iter 600000 \
     -pass "env:DECRYPT_KEY_FOR_VERIFY" \
     -in  "$ENC_FILE" \
-    -out "$TEMP_DUMP"; then
+    -out "$TEMP_GZ"; then
     error "Decryption failed — wrong key for version '${KEY_VERSION:-unknown}' or corrupt file"
     exit 1
 fi
 
-DUMP_SIZE=$(du -h "$TEMP_DUMP" | cut -f1)
-log "Decrypted: ${DUMP_SIZE}"
-
-# ── Step 3: Structural integrity — pg_restore --list ──────────────────────────
-log "Step 3/5 — Checking archive structure (pg_restore --list)..."
-
-OBJECT_COUNT=$(pg_restore --list "$TEMP_DUMP" 2>&1 | grep -c '^[0-9]' || echo "0")
-if (( OBJECT_COUNT == 0 )); then
-    error "pg_restore --list returned no objects — archive may be corrupt"
+if ! gunzip "$TEMP_GZ"; then
+    error "Decompression failed — corrupt gzip archive"
     exit 1
 fi
-log "Archive contains ${OBJECT_COUNT} objects"
+
+DUMP_SIZE=$(du -h "$TEMP_SQL" | cut -f1)
+log "Decrypted and decompressed: ${DUMP_SIZE}"
+
+# ── Step 3: Structural integrity ──────────────────────────────────────────────
+log "Step 3/5 — Checking dump completion trailer..."
+
+if [ ! -s "$TEMP_SQL" ] || ! tail -n 5 "$TEMP_SQL" | grep -q "PostgreSQL database dump complete"; then
+    error "Dump file is empty or missing its completion trailer — archive may be corrupt/truncated"
+    exit 1
+fi
+log "Completion trailer found"
 
 # ── Step 4: Restore to temp database ──────────────────────────────────────────
 log "Step 4/5 — Creating temp database '${VERIFY_DB}'..."
@@ -179,18 +183,15 @@ createdb \
 
 log "Restoring into '${VERIFY_DB}'..."
 
-if ! pg_restore \
+psql \
     --host="$PGHOST" \
     --port="$PGPORT" \
     --username="$DB_USER" \
     --dbname="$VERIFY_DB" \
-    --no-owner \
-    --no-privileges \
     --no-password \
-    "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning'; then
-    # pg_restore exits non-zero for warnings; only hard errors are fatal.
-    true
-fi
+    --set ON_ERROR_STOP=0 \
+    --file="$TEMP_SQL" \
+    > /dev/null
 
 log "Restore completed"
 

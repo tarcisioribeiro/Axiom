@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
+  LabelList,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -27,6 +28,10 @@ interface EnhancedBarChartProps {
   layout?: BarLayout;
   height?: number;
   nameFormatter?: (name: string) => string | null;
+  /** Mostra o valor formatado acima de cada barra. Default false. */
+  showValueLabels?: boolean;
+  /** Mostra os ticks de texto do eixo de categoria. Default true. */
+  showCategoryAxisLabels?: boolean;
 }
 
 /**
@@ -53,6 +58,8 @@ export const EnhancedBarChart = ({
   layout = 'vertical',
   height = 300,
   nameFormatter,
+  showValueLabels = false,
+  showCategoryAxisLabels = true,
 }: EnhancedBarChartProps) => {
   const dims = useChartDimensions();
 
@@ -119,8 +126,12 @@ export const EnhancedBarChart = ({
             <YAxis
               dataKey={nameKey}
               type="category"
-              width={yAxisWidth}
-              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
+              width={showCategoryAxisLabels ? yAxisWidth : 0}
+              tick={
+                showCategoryAxisLabels
+                  ? { fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }
+                  : false
+              }
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) =>
@@ -133,7 +144,11 @@ export const EnhancedBarChart = ({
             <XAxis
               dataKey={nameKey}
               type="category"
-              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
+              tick={
+                showCategoryAxisLabels
+                  ? { fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }
+                  : false
+              }
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
               tickFormatter={(value) =>
@@ -142,7 +157,13 @@ export const EnhancedBarChart = ({
               interval={0}
               angle={data.length > 5 ? -35 : 0}
               textAnchor={data.length > 5 ? 'end' : 'middle'}
-              height={data.length > 5 ? dims.xAxisHeightRotated : 30}
+              height={
+                showCategoryAxisLabels
+                  ? data.length > 5
+                    ? dims.xAxisHeightRotated
+                    : 30
+                  : 8
+              }
             />
             <YAxis
               type="number"
@@ -169,6 +190,18 @@ export const EnhancedBarChart = ({
           animationEasing="ease-out"
           maxBarSize={50}
         >
+          {showValueLabels && (
+            <LabelList
+              dataKey={dataKey}
+              position={layout === 'vertical' ? 'right' : 'top'}
+              formatter={(value: string | number | boolean | null | undefined) =>
+                typeof value === 'string' || typeof value === 'number'
+                  ? (formatter?.(value) ?? value)
+                  : ''
+              }
+              className="fill-foreground text-xs font-semibold"
+            />
+          )}
           {data.map((entry, index) => {
             const fillColor = customColors
               ? customColors(entry)
