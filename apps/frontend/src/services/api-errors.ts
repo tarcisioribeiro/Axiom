@@ -42,6 +42,20 @@ export class PermissionError extends Error {
   }
 }
 
+function isHtmlErrorResponse(response: AxiosError['response']): boolean {
+  const contentType = response?.headers?.['content-type'];
+  if (typeof contentType === 'string' && contentType.includes('text/html')) {
+    return true;
+  }
+
+  const data = response?.data;
+  return typeof data === 'string' && /^\s*<(!DOCTYPE html|html)/i.test(data);
+}
+
+function isDisallowedHostResponse(data: unknown): boolean {
+  return typeof data === 'string' && data.includes('DisallowedHost');
+}
+
 export function formatErrorMessage(data: unknown): string {
   if (typeof data === 'string') {
     return data;
@@ -80,6 +94,17 @@ export function handleAxiosError(error: AxiosError): Error {
   }
 
   const data = response.data;
+
+  if (isHtmlErrorResponse(response)) {
+    if (isDisallowedHostResponse(data)) {
+      return new Error(
+        'Este endereço não é reconhecido pelo servidor. Acesse o sistema por http://localhost:39101 ou http://127.0.0.1:39101.'
+      );
+    }
+    return new Error(
+      'O servidor retornou uma resposta inesperada. Tente novamente em instantes ou contate o suporte.'
+    );
+  }
 
   switch (response.status) {
     case 400: {
