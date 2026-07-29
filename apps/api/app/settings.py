@@ -54,7 +54,9 @@ if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
 # ALLOWED_HOSTS configurado via variavel de ambiente
 # Em producao, definir explicitamente os dominios permitidos
 # Exemplo: ALLOWED_HOSTS=axiom.com,api.axiom.com
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,axiom.localhost"
+).split(",")
 
 # Number of trusted reverse proxies in front of the application.
 # Set to 0 for direct (no-proxy) connections; 1 for a single
@@ -466,10 +468,13 @@ def _normalize_cors_origins(origins_str: str) -> list[str]:
     return origins
 
 
+_DEFAULT_CORS_ORIGINS = (
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "http://axiom.localhost:3000"
+)
 CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
-    os.getenv(
-        "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
-    )
+    os.getenv("CORS_ALLOWED_ORIGINS", _DEFAULT_CORS_ORIGINS)
 )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
