@@ -56,6 +56,14 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -118,14 +126,8 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
 
   if (isLoading) return <LoadingState />;
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />

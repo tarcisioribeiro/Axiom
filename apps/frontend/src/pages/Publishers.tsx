@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -59,9 +60,9 @@ function PublisherInitials({ name }: { name: string }) {
   );
 }
 
+const EMPTY_PUBLISHERS: Publisher[] = [];
+
 export default function Publishers() {
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPublisher, setSelectedPublisher] = useState<Publisher | undefined>();
@@ -69,27 +70,25 @@ export default function Publishers() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadPublishers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: publishers = EMPTY_PUBLISHERS, isLoading: loading } = useQuery({
+    queryKey: ['publishers'],
+    queryFn: async () => {
+      try {
+        return await publishersService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_PUBLISHERS;
+      }
+    },
+  });
 
-  const loadPublishers = async () => {
-    try {
-      setLoading(true);
-      const data = await publishersService.getAll();
-      setPublishers(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['publishers'] });
 
   const handleCreate = () => {
     setSelectedPublisher(undefined);
@@ -118,7 +117,7 @@ export default function Publishers() {
         title: t('pages.publishers.deleted'),
         description: t('pages.publishers.deletedDesc'),
       });
-      void loadPublishers();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -145,7 +144,7 @@ export default function Publishers() {
         });
       }
       setIsDialogOpen(false);
-      void loadPublishers();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

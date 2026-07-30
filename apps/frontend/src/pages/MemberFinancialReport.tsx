@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Download,
@@ -10,7 +11,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
@@ -32,7 +33,6 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
-  MemberFinancialReport,
   MemberReportExpense,
   MemberReportLoan,
   MemberReportPayable,
@@ -60,8 +60,6 @@ export default function MemberFinancialReportPage() {
   const { toast } = useToast();
   const chartColors = useChartColors();
 
-  const [report, setReport] = useState<MemberFinancialReport | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -69,29 +67,25 @@ export default function MemberFinancialReportPage() {
   const [appliedEnd, setAppliedEnd] = useState('');
   const memberId = Number(id);
 
-  const loadReport = useCallback(async () => {
-    if (!memberId) return;
-    try {
-      setIsLoading(true);
-      const data = await membersService.getFinancialReport(memberId, {
-        start_date: appliedStart || undefined,
-        end_date: appliedEnd || undefined,
-      });
-      setReport(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [memberId, appliedStart, appliedEnd, toast, t]);
-
-  useEffect(() => {
-    void loadReport();
-  }, [loadReport]);
+  const { data: report = null, isLoading } = useQuery({
+    queryKey: ['member-financial-report', memberId, appliedStart, appliedEnd],
+    queryFn: async () => {
+      try {
+        return await membersService.getFinancialReport(memberId, {
+          start_date: appliedStart || undefined,
+          end_date: appliedEnd || undefined,
+        });
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return null;
+      }
+    },
+    enabled: !!memberId,
+  });
 
   const handleExportCsv = async () => {
     if (!memberId) return;

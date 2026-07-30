@@ -1,7 +1,8 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Loader2, Share2, Trash2, Search, User, Check } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,9 @@ interface SharePasswordModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const EMPTY_TOKENS: CredentialShareToken[] = [];
+const EMPTY_MEMBERS: Member[] = [];
+
 const TTL_OPTIONS = [
   { value: '1', labelKey: 'expiresIn1h' as const },
   { value: '6', labelKey: 'expiresIn6h' as const },
@@ -71,8 +75,6 @@ export function SharePasswordModal({
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [memberSearch, setMemberSearch] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
@@ -82,27 +84,51 @@ export function SharePasswordModal({
   const [isCreating, setIsCreating] = useState(false);
   const [newShareUrl, setNewShareUrl] = useState<string | null>(null);
 
-  const [tokens, setTokens] = useState<CredentialShareToken[]>([]);
-  const [isLoadingTokens, setIsLoadingTokens] = useState(false);
+  const queryClient = useQueryClient();
 
-  const loadTokens = useCallback(async () => {
-    if (!password) return;
-    setIsLoadingTokens(true);
-    try {
-      const data = await credentialShareService.getTokens(password.id);
-      setTokens(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.sharePassword.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingTokens(false);
-    }
-  }, [password, t, toast]);
+  const { data: tokens = EMPTY_TOKENS, isLoading: isLoadingTokens } = useQuery({
+    queryKey: ['credential-share-tokens', password?.id],
+    queryFn: async () => {
+      if (!password) return EMPTY_TOKENS;
+      try {
+        return await credentialShareService.getTokens(password.id);
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.sharePassword.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_TOKENS;
+      }
+    },
+    enabled: open && !!password,
+  });
+  const refreshTokens = () =>
+    queryClient.invalidateQueries({
+      queryKey: ['credential-share-tokens', password?.id],
+    });
 
-  useEffect(() => {
+  const { data: members = EMPTY_MEMBERS, isLoading: isLoadingMembers } = useQuery({
+    queryKey: ['share-modal-members'],
+    queryFn: async () => {
+      try {
+        return await membersService.getAll();
+      } catch {
+        toast({
+          title: t('pages.sharePassword.loadMembersError'),
+          variant: 'destructive',
+        });
+        return EMPTY_MEMBERS;
+      }
+    },
+    enabled: open,
+  });
+
+  // Reinicia o formulário quando o dialog abre com uma nova senha (derivado
+  // durante o render — sem efeito).
+  const [lastResetKey, setLastResetKey] = useState({ open, password });
+  if (lastResetKey.open !== open || lastResetKey.password !== password) {
+    setLastResetKey({ open, password });
     if (open && password) {
       setStep(0);
       setDirection(1);
@@ -111,24 +137,8 @@ export function SharePasswordModal({
       setNewShareUrl(null);
       setTtlHours('24');
       setMaxUses('1');
-      void loadTokens();
     }
-  }, [open, password, loadTokens]);
-
-  useEffect(() => {
-    if (!open) return;
-    setIsLoadingMembers(true);
-    membersService
-      .getAll()
-      .then((data) => setMembers(data))
-      .catch(() => {
-        toast({
-          title: t('pages.sharePassword.loadMembersError'),
-          variant: 'destructive',
-        });
-      })
-      .finally(() => setIsLoadingMembers(false));
-  }, [open, t, toast]);
+  }
 
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(memberSearch.toLowerCase())
@@ -164,7 +174,7 @@ export function SharePasswordModal({
           `${window.location.origin}/share/${result.token}#key=${result.token_key}`
         );
       }
-      void loadTokens();
+      void refreshTokens();
     } catch (error: unknown) {
       toast({
         title: t('pages.sharePassword.createError'),
@@ -183,7 +193,7 @@ export function SharePasswordModal({
         title: t('pages.sharePassword.revoked'),
         description: t('pages.sharePassword.revokedDesc'),
       });
-      void loadTokens();
+      void refreshTokens();
     } catch (error: unknown) {
       toast({
         title: t('pages.sharePassword.revokeError'),

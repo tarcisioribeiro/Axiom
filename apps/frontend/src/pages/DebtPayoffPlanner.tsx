@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
+import type { CreditCardBill } from '@/types';
 
 type Strategy = 'snowball' | 'avalanche';
 
@@ -189,7 +190,7 @@ export default function DebtPayoffPlanner({
       });
     }
 
-    const billsByCard = new Map<number, typeof billsQuery.data>();
+    const billsByCard = new Map<number, CreditCardBill[]>();
     for (const bill of billsQuery.data ?? []) {
       const balance =
         parseFloat(bill.total_amount) - parseFloat(bill.paid_amount ?? '0');

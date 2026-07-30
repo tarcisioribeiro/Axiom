@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -14,7 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
@@ -217,11 +218,11 @@ function ReflectionCard({
   );
 }
 
+const EMPTY_REFLECTIONS: DailyReflection[] = [];
+
 export default function DailyReflections() {
   const { t } = useTranslation();
-  const [reflections, setReflections] = useState<DailyReflection[]>([]);
-  const [filtered, setFiltered] = useState<DailyReflection[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selected, setSelected] = useState<DailyReflection | undefined>();
@@ -238,39 +239,32 @@ export default function DailyReflections() {
     setEndDate(undefined);
   };
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: reflections = EMPTY_REFLECTIONS, isLoading } = useQuery({
+    queryKey: ['daily-reflections'],
+    queryFn: async () => {
+      try {
+        return await dailyReflectionsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.dailyReflections.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_REFLECTIONS;
+      }
+    },
+  });
 
-  useEffect(() => {
-    applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reflections, moodFilter, startDate, endDate]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await dailyReflectionsService.getAll();
-      setReflections(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dailyReflections.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const filtered = useMemo(() => {
     let result = [...reflections];
     if (moodFilter !== 'all') result = result.filter((r) => r.mood === moodFilter);
     if (startDate) result = result.filter((r) => new Date(r.date) >= startDate);
     if (endDate) result = result.filter((r) => new Date(r.date) <= endDate);
-    setFiltered(result);
-  };
+    return result;
+  }, [reflections, moodFilter, startDate, endDate]);
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['daily-reflections'] });
 
   const handleCreate = () => {
     setSelected(undefined);
@@ -297,7 +291,7 @@ export default function DailyReflections() {
         title: t('pages.dailyReflections.deleted'),
         description: t('pages.dailyReflections.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyReflections.deleteError'),
@@ -324,7 +318,7 @@ export default function DailyReflections() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyReflections.saveError'),

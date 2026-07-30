@@ -360,30 +360,38 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  useEffect(() => {
-    const initializeDate = async () => {
+  // Disparo inicial (uma vez por montagem) via useQuery — evita setState direto
+  // dentro de um useEffect puro, mantendo a lógica de carregamento inalterada.
+  useQuery({
+    queryKey: ['daily-checklist', 'init'],
+    queryFn: async () => {
+      await loadCurrentUserMember();
       try {
         const serverDate = await appService.getCurrentDate();
         setSelectedDate(serverDate);
       } catch {
         setSelectedDate(formatLocalDate(new Date()));
       }
-    };
-    void loadCurrentUserMember();
-    void initializeDate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      return true;
+    },
+  });
 
-  useEffect(() => {
-    if (ownerId > 0 && selectedDate) {
-      void loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, ownerId]);
+  useQuery({
+    queryKey: ['daily-checklist', 'data', selectedDate, ownerId],
+    queryFn: async () => {
+      await loadData();
+      return true;
+    },
+    enabled: ownerId > 0 && !!selectedDate,
+  });
 
-  useEffect(() => {
+  // Deriva os cards a partir de `instances` durante o render (sem efeito),
+  // permitindo que `setCards` continue editável localmente (drag-and-drop).
+  const [lastInstances, setLastInstances] = useState(instances);
+  if (instances !== lastInstances) {
+    setLastInstances(instances);
     setCards(instances.length > 0 ? convertInstancesToCards(instances) : []);
-  }, [instances]);
+  }
 
   useEffect(() => {
     if (cards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {

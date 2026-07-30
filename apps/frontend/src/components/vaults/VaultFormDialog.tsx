@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { FileText, Landmark, Percent, Power, TrendingUp, Wallet } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,15 @@ export function VaultFormDialog({
   const [formData, setFormData] = useState<VaultFormData>(makeDefaultForm(accounts));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
+  // Sincroniza o formulário com o vault selecionado (derivado durante o
+  // render — sem efeito — comparando com a última combinação vista).
+  const [lastSyncKey, setLastSyncKey] = useState({ selectedVault, accounts, open });
+  if (
+    lastSyncKey.selectedVault !== selectedVault ||
+    lastSyncKey.accounts !== accounts ||
+    lastSyncKey.open !== open
+  ) {
+    setLastSyncKey({ selectedVault, accounts, open });
     if (selectedVault) {
       setFormData({
         description: selectedVault.description,
@@ -69,7 +77,7 @@ export function VaultFormDialog({
     } else {
       setFormData(makeDefaultForm(accounts));
     }
-  }, [selectedVault, accounts, open]);
+  }
 
   const handleSubmit = async () => {
     try {

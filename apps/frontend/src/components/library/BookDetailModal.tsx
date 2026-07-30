@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookMarked,
   BookOpen,
@@ -85,6 +86,10 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   note: 'secondary',
   idea: 'outline',
 };
+
+const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
+const EMPTY_READINGS: Reading[] = [];
+const EMPTY_SUMMARIES: Summary[] = [];
 
 interface HighlightInlineFormProps {
   bookId: number;
@@ -449,22 +454,16 @@ export function BookDetailModal({
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
 
   // Highlights state
-  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
-  const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isExporting, setIsExporting] = useState(false);
 
   // Readings state
-  const [readings, setReadings] = useState<Reading[]>([]);
-  const [isLoadingReadings, setIsLoadingReadings] = useState(false);
   const [isReadingFormOpen, setIsReadingFormOpen] = useState(false);
   const [editingReading, setEditingReading] = useState<Reading | undefined>();
   const [isReadingSubmitting, setIsReadingSubmitting] = useState(false);
 
   // Summaries state
-  const [summaries, setSummaries] = useState<Summary[]>([]);
-  const [isLoadingSummaries, setIsLoadingSummaries] = useState(false);
   const [isSummaryFormOpen, setIsSummaryFormOpen] = useState(false);
   const [editingSummary, setEditingSummary] = useState<Summary | null>(null);
   const [summaryFormData, setSummaryFormData] = useState<SummaryFormData>({
@@ -479,19 +478,63 @@ export function BookDetailModal({
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  // Load data when tab changes
-  useEffect(() => {
-    if (book && open) {
-      if (activeTab === 'highlights') void loadHighlights();
-      if (activeTab === 'readings') void loadReadings();
-      if (activeTab === 'summaries') void loadSummaries();
+  const { data: highlights = EMPTY_HIGHLIGHTS, isLoading: isLoadingHighlights } =
+    useQuery({
+      queryKey: ['book-highlights', book?.id],
+      queryFn: async () => {
+        if (!book) return EMPTY_HIGHLIGHTS;
+        try {
+          return await bookHighlightsService.getByBook(book.id);
+        } catch {
+          return EMPTY_HIGHLIGHTS;
+        }
+      },
+      enabled: !!book && open && activeTab === 'highlights',
+    });
+  const refreshHighlights = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-highlights', book?.id] });
+
+  const { data: readings = EMPTY_READINGS, isLoading: isLoadingReadings } = useQuery({
+    queryKey: ['book-readings', book?.id],
+    queryFn: async () => {
+      if (!book) return EMPTY_READINGS;
+      try {
+        const data = await readingsService.getAll();
+        return data.filter((r) => r.book === book.id);
+      } catch {
+        return EMPTY_READINGS;
+      }
+    },
+    enabled: !!book && open && activeTab === 'readings',
+  });
+  const refreshReadings = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-readings', book?.id] });
+
+  const { data: summaries = EMPTY_SUMMARIES, isLoading: isLoadingSummaries } = useQuery(
+    {
+      queryKey: ['book-summaries', book?.id],
+      queryFn: async () => {
+        if (!book) return EMPTY_SUMMARIES;
+        try {
+          const data = await summariesService.getAll();
+          return data.filter((s) => s.book === book.id);
+        } catch {
+          return EMPTY_SUMMARIES;
+        }
+      },
+      enabled: !!book && open && activeTab === 'summaries',
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book, open, activeTab]);
+  );
+  const refreshSummaries = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-summaries', book?.id] });
 
   // Reset state when modal opens with a new book or initialTab changes
-  useEffect(() => {
+  // (derivado durante o render — sem efeito).
+  const [lastResetKey, setLastResetKey] = useState({ open, initialTab });
+  if (lastResetKey.open !== open || lastResetKey.initialTab !== initialTab) {
+    setLastResetKey({ open, initialTab });
     if (open) {
       setActiveTab(initialTab);
     } else {
@@ -502,33 +545,7 @@ export function BookDetailModal({
       setIsSummaryFormOpen(false);
       setEditingSummary(null);
     }
-  }, [open, initialTab]);
-
-  const loadHighlights = async () => {
-    if (!book) return;
-    setIsLoadingHighlights(true);
-    try {
-      const data = await bookHighlightsService.getByBook(book.id);
-      setHighlights(data);
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingHighlights(false);
-    }
-  };
-
-  const loadReadings = async () => {
-    if (!book) return;
-    setIsLoadingReadings(true);
-    try {
-      const data = await readingsService.getAll();
-      setReadings(data.filter((r) => r.book === book.id));
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingReadings(false);
-    }
-  };
+  }
 
   const handleReadingSubmit = async (data: ReadingFormData) => {
     if (!book) return;
@@ -549,7 +566,7 @@ export function BookDetailModal({
       }
       setIsReadingFormOpen(false);
       setEditingReading(undefined);
-      void loadReadings();
+      void refreshReadings();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -576,26 +593,13 @@ export function BookDetailModal({
         title: t('pages.readings.deleted'),
         description: t('pages.readings.deletedDesc'),
       });
-      void loadReadings();
+      void refreshReadings();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-    }
-  };
-
-  const loadSummaries = async () => {
-    if (!book) return;
-    setIsLoadingSummaries(true);
-    try {
-      const data = await summariesService.getAll();
-      setSummaries(data.filter((s) => s.book === book.id));
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingSummaries(false);
     }
   };
 
@@ -661,7 +665,7 @@ export function BookDetailModal({
       }
       setIsSummaryFormOpen(false);
       setEditingSummary(null);
-      void loadSummaries();
+      void refreshSummaries();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -688,7 +692,7 @@ export function BookDetailModal({
         title: t('pages.summaries.deleted'),
         description: t('pages.summaries.deletedDesc'),
       });
-      void loadSummaries();
+      void refreshSummaries();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -709,7 +713,7 @@ export function BookDetailModal({
     if (!confirmed) return;
     try {
       await bookHighlightsService.delete(id);
-      void loadHighlights();
+      void refreshHighlights();
     } catch (error: unknown) {
       toast({
         title: t('pages.books.detail.highlightDeleteError'),
@@ -1072,7 +1076,7 @@ export function BookDetailModal({
                   ownerId={book.owner}
                   onSaved={() => {
                     setShowAddForm(false);
-                    void loadHighlights();
+                    void refreshHighlights();
                   }}
                   onCancel={() => setShowAddForm(false)}
                 />
@@ -1097,7 +1101,7 @@ export function BookDetailModal({
                         highlight={h}
                         onSaved={() => {
                           setEditingHighlight(undefined);
-                          void loadHighlights();
+                          void refreshHighlights();
                         }}
                         onCancel={() => setEditingHighlight(undefined)}
                       />

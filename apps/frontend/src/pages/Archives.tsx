@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -12,7 +13,7 @@ import {
   Calendar,
   Tag,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -50,9 +51,7 @@ const TYPE_CONFIG: Record<string, { icon: string; border: string }> = {
 
 export default function Archives() {
   const { t } = useTranslation();
-  const [archives, setArchives] = useState<Archive[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isContentDialogOpen, setIsContentDialogOpen] = useState(false);
   const [selectedArchive, setSelectedArchive] = useState<Archive | undefined>();
@@ -68,30 +67,27 @@ export default function Archives() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [archivesData, membersData] = await Promise.all([
-        archivesService.getAll(),
-        membersService.getAll(),
-      ]);
-      setArchives(archivesData);
-      setMembers(membersData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ['archives'],
+    queryFn: async () => {
+      try {
+        const [archivesData, membersData] = await Promise.all([
+          archivesService.getAll(),
+          membersService.getAll(),
+        ]);
+        return { archives: archivesData, members: membersData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { archives: [] as Archive[], members: [] as Member[] };
+      }
+    },
+  });
+  const archives = data?.archives ?? [];
+  const members = data?.members ?? [];
 
   const handleCreate = () => {
     setSelectedArchive(undefined);
@@ -147,7 +143,7 @@ export default function Archives() {
         title: t('pages.archives.deleted'),
         description: t('pages.archives.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['archives'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -281,7 +277,7 @@ export default function Archives() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['archives'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -296,7 +292,11 @@ export default function Archives() {
   const handleToggleFavorite = async (id: number) => {
     try {
       const updated = await archivesService.toggleFavorite(id);
-      setArchives((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      queryClient.setQueryData<typeof data>(['archives'], (prev) =>
+        prev
+          ? { ...prev, archives: prev.archives.map((a) => (a.id === id ? updated : a)) }
+          : prev
+      );
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

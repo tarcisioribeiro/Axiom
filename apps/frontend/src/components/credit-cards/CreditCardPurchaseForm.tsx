@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } =
+  const { register, handleSubmit, setValue, control } =
     useForm<CreditCardPurchaseFormData>({
       defaultValues: {
         description: '',
@@ -66,9 +66,12 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
     });
 
   // Watch valores para cálculo de parcela
-  const watchedTotalValue = watch('total_value');
-  const watchedTotalInstallments = watch('total_installments');
-  const watchedCard = watch('card');
+  const watchedTotalValue = useWatch({ control, name: 'total_value' });
+  const watchedTotalInstallments = useWatch({ control, name: 'total_installments' });
+  const watchedCard = useWatch({ control, name: 'card' });
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedPurchaseDate = useWatch({ control, name: 'purchase_date' });
+  const watchedPurchaseTime = useWatch({ control, name: 'purchase_time' });
 
   // Calcular valor por parcela
   const installmentValue = useMemo(() => {
@@ -229,19 +232,19 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.categoryLabel')}</Label>
           <Select
-            value={watch('category') || ''}
+            value={watchedCategory || ''}
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              {watch('category') ? (
+              {watchedCategory ? (
                 <span className="flex items-center gap-2">
                   {(() => {
-                    const TrigIcon = EXPENSE_CATEGORY_ICONS[watch('category')];
+                    const TrigIcon = EXPENSE_CATEGORY_ICONS[watchedCategory];
                     return TrigIcon ? (
                       <TrigIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     ) : null;
                   })()}
-                  <span>{translate('expenseCategories', watch('category'))}</span>
+                  <span>{translate('expenseCategories', watchedCategory)}</span>
                 </span>
               ) : (
                 <SelectValue placeholder={t('common.fields.selectCategory')} />
@@ -269,7 +272,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             {t('pages.creditCardExpenses.form.purchaseDateLabel')}
           </Label>
           <DatePicker
-            value={watch('purchase_date')}
+            value={watchedPurchaseDate}
             onChange={(date) =>
               setValue('purchase_date', date ? formatLocalDate(date) : '')
             }
@@ -283,7 +286,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
           </Label>
           <TimePicker
-            value={watch('purchase_time')}
+            value={watchedPurchaseTime}
             onChange={(t) => setValue('purchase_time', t ?? '')}
             disabled={isLoading}
           />
@@ -292,7 +295,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.cardLabel')}</Label>
           <Select
-            value={watch('card')?.toString() || ''}
+            value={watchedCard?.toString() || ''}
             onValueChange={(v) => setValue('card', parseInt(v))}
             disabled={isEditMode}
           >

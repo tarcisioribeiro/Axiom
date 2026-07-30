@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
+import { KcalBar } from './KcalBar';
+
 interface MealEntry {
   meal_type: string;
   is_free_meal: boolean;
@@ -48,18 +50,6 @@ export interface DailyCaloricSummaryData {
 interface Props {
   data: DailyCaloricSummaryData | undefined;
   isLoading: boolean;
-}
-
-function KcalBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-      <div
-        className={cn('h-full rounded-full transition-all duration-500', color)}
-        style={{ width: `${pct}%` }}
-      />
-    </div>
-  );
 }
 
 export function DailyCaloricSummaryCard({ data, isLoading }: Props) {

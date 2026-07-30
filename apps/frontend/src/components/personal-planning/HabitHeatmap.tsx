@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -99,33 +100,26 @@ interface TooltipState {
   y: number;
 }
 
+const EMPTY_DAYS: HeatmapDay[] = [];
+
 export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
-  const [data, setData] = useState<HeatmapDay[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await habitHeatmapService.getHeatmap({
+  const { data: heatmapData, isLoading } = useQuery({
+    queryKey: ['habit-heatmap', year, taskId, selectedCategory],
+    queryFn: () =>
+      habitHeatmapService.getHeatmap({
         year,
         ...(taskId !== undefined ? { task_id: taskId } : {}),
         ...(selectedCategory ? { category: selectedCategory } : {}),
-      });
-      setData(result.data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [year, taskId, selectedCategory]);
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+      }),
+  });
+  const data = heatmapData?.data ?? EMPTY_DAYS;
 
   const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
     t(`pages.planningDashboard.weekdayShort.${i}`)

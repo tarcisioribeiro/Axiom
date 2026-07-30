@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   CheckSquare,
@@ -12,9 +13,8 @@ import {
   Save,
   Bookmark,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -62,10 +62,17 @@ interface RoutineTasksProps {
   embedded?: boolean;
 }
 
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { t } = useTranslation();
-  const [tasks, setTasks] = useState<RoutineTask[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<RoutineTask | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,37 +95,24 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   });
   const ownerId = member?.id ?? 0;
 
-  const handleSaveAsTemplate = () => {
-    if (tasks.length === 0) return;
-    setSaveTemplateTask('all');
-    setTemplateName(`Rotina ${new Date().toLocaleDateString('pt-BR')}`);
-  };
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['routine-tasks'],
+    queryFn: async () => {
       const tasksData = await routineTasksService.getAll();
-      const sorted = [...tasksData].sort((a, b) => {
+      return [...tasksData].sort((a, b) => {
         if (!a.default_time && !b.default_time) return 0;
         if (!a.default_time) return 1;
         if (!b.default_time) return -1;
         return a.default_time.localeCompare(b.default_time);
       });
-      setTasks(sorted);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const handleSaveAsTemplate = () => {
+    if (tasks.length === 0) return;
+    setSaveTemplateTask('all');
+    setTemplateName(`Rotina ${new Date().toLocaleDateString('pt-BR')}`);
   };
 
   const handleCreate = () => {
@@ -148,7 +142,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         title: t('pages.routineTasks.deleted'),
         description: t('pages.routineTasks.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.deleteError'),
@@ -182,7 +176,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.saveError'),
@@ -211,7 +205,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   };
 
   const handleImported = async (createdIds: number[]) => {
-    await loadData();
+    await queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     const idSet = new Set(createdIds);
     setHighlightedIds(idSet);
     setTimeout(() => setHighlightedIds(new Set()), 5000);
@@ -479,14 +473,8 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     return <LoadingState />;
   }
 
-  const Wrapper = embedded
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
         <div className="flex items-center gap-sm">
           <DropdownMenu>

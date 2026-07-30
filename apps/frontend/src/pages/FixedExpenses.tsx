@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -11,7 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -49,12 +49,21 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const EMPTY_FIXED_EXPENSES: FixedExpense[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+const EMPTY_CARDS: CreditCard[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function FixedExpenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<FixedExpense | undefined>();
@@ -73,10 +82,39 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['fixed-expenses'],
+    queryFn: async () => {
+      try {
+        const [expensesData, accountsData, cardsData] = await Promise.all([
+          fixedExpensesService.getAll(),
+          accountsService.getAll(),
+          creditCardsService.getAll(),
+        ]);
+        return {
+          fixedExpenses: expensesData,
+          accounts: accountsData,
+          creditCards: cardsData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          fixedExpenses: EMPTY_FIXED_EXPENSES,
+          accounts: EMPTY_ACCOUNTS,
+          creditCards: EMPTY_CARDS,
+        };
+      }
+    },
+  });
+  const fixedExpenses = pageData?.fixedExpenses ?? EMPTY_FIXED_EXPENSES;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+  const creditCards = pageData?.creditCards ?? EMPTY_CARDS;
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-expenses'] });
 
   const openHistory = async (item: FixedExpense) => {
     setHistoryItem(item);
@@ -89,28 +127,6 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       setHistoryExpenses([]);
     } finally {
       setHistoryLoading(false);
-    }
-  };
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [expensesData, accountsData, cardsData] = await Promise.all([
-        fixedExpensesService.getAll(),
-        accountsService.getAll(),
-        creditCardsService.getAll(),
-      ]);
-      setFixedExpenses(expensesData);
-      setAccounts(accountsData);
-      setCreditCards(cardsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -131,7 +147,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -159,7 +175,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         title: t('pages.fixedExpenses.deleted'),
         description: t('pages.fixedExpenses.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -238,14 +254,8 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
     },
   ];
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.fixedExpenses.title')}
         icon={<Calendar className="h-6 w-6" />}
@@ -501,7 +511,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         isOpen={isLaunchDialogOpen}
         onClose={() => setIsLaunchDialogOpen(false)}
         fixedExpenses={fixedExpenses.filter((e) => e.is_active)}
-        onSuccess={loadData}
+        onSuccess={refresh}
       />
 
       {/* History Dialog */}

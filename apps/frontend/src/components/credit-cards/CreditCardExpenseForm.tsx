@@ -11,7 +11,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +64,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } =
+  const { register, handleSubmit, setValue, control } =
     useForm<CreditCardExpenseFormData>({
       defaultValues: {
         description: '',
@@ -80,10 +80,13 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
       },
     });
 
-  const watchedValue = watch('value');
-  const watchedTotalInstallments = watch('total_installments');
-  const watchedCard = watch('card');
-  const watchedCategory = watch('category');
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedTotalInstallments = useWatch({ control, name: 'total_installments' });
+  const watchedCard = useWatch({ control, name: 'card' });
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedBill = useWatch({ control, name: 'bill' });
 
   const installmentValue =
     watchedTotalInstallments > 0
@@ -343,7 +346,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               {t('pages.creditCardExpenses.form.purchaseDateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('pages.creditCardExpenses.form.purchaseDatePlaceholder')}
               disabled={isLoading}
@@ -356,7 +359,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
@@ -368,7 +371,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               {t('pages.creditCardExpenses.form.cardLabel')}
             </Label>
             <Select
-              value={watch('card')?.toString() || ''}
+              value={watchedCard?.toString() || ''}
               onValueChange={(v) => setValue('card', parseInt(v))}
               disabled={isLoading || !!expense}
             >
@@ -413,7 +416,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               {t('pages.creditCardExpenses.form.billAssociatedLabel')}
             </Label>
             <Select
-              value={watch('bill')?.toString() || 'none'}
+              value={watchedBill?.toString() || 'none'}
               onValueChange={(v) => setValue('bill', v === 'none' ? null : parseInt(v))}
               disabled={filteredBills.length === 0 || isLoading}
             >

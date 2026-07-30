@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,11 @@ export const LaunchExpensesDialog = ({
     };
   });
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog abre (derivado durante o render —
+  // sem efeito — comparando com a última transição de `isOpen`).
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  if (isOpen !== lastIsOpen) {
+    setLastIsOpen(isOpen);
     if (isOpen) {
       // Set default month to current
       setSelectedMonth(monthOptions[0].value);
@@ -72,8 +76,7 @@ export const LaunchExpensesDialog = ({
       // Initialize all expenses as selected
       setSelectedExpenseIds(new Set(fixedExpenses.map((exp) => exp.id)));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, fixedExpenses]);
+  }
 
   const toggleExpenseSelection = (expenseId: number) => {
     setSelectedExpenseIds((prev) => {

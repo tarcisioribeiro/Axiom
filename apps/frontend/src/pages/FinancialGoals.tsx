@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarDays,
   CheckCircle2,
@@ -15,7 +16,7 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -50,6 +51,7 @@ import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { FINANCIAL_GOAL_CATEGORY_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -286,13 +288,14 @@ function GoalCard({
 
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
 
+const EMPTY_GOALS: FinancialGoalListItem[] = [];
+const EMPTY_VAULTS: Vault[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
 export default function FinancialGoals() {
   const { t } = useTranslation();
-  const todayTimestamp = useMemo(() => Date.now(), []);
-  const [goals, setGoals] = useState<FinancialGoalListItem[]>([]);
-  const [vaults, setVaults] = useState<Vault[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const todayTimestamp = useNow();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isVaultsDialogOpen, setIsVaultsDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<FinancialGoal | undefined>();
@@ -318,32 +321,32 @@ export default function FinancialGoals() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['financial-goals'],
+    queryFn: async () => {
+      try {
+        const [goalsData, vaultsData, accountsData] = await Promise.all([
+          financialGoalsService.getAll(),
+          vaultsService.getAll({ is_active: true }),
+          accountsService.getAll(),
+        ]);
+        return { goals: goalsData, vaults: vaultsData, accounts: accountsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { goals: EMPTY_GOALS, vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
+      }
+    },
+  });
+  const goals = pageData?.goals ?? EMPTY_GOALS;
+  const vaults = pageData?.vaults ?? EMPTY_VAULTS;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [goalsData, vaultsData, accountsData] = await Promise.all([
-        financialGoalsService.getAll(),
-        vaultsService.getAll({ is_active: true }),
-        accountsService.getAll(),
-      ]);
-      setGoals(goalsData);
-      setVaults(vaultsData);
-      setAccounts(accountsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['financial-goals'] });
 
   const handleCreate = () => {
     setSelectedGoal(undefined);
@@ -399,7 +402,7 @@ export default function FinancialGoals() {
           title: t('pages.financialGoals.deleted'),
           description: t('pages.financialGoals.deletedDesc'),
         });
-        void loadData();
+        void refresh();
       } catch (error: unknown) {
         toast({
           title: t('common.messages.deleteError'),
@@ -437,7 +440,7 @@ export default function FinancialGoals() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -492,7 +495,7 @@ export default function FinancialGoals() {
         description: t('pages.financialGoals.vaultsUpdatedDesc'),
       });
       setIsVaultsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -518,7 +521,7 @@ export default function FinancialGoals() {
           description: `${response.progress_percentage.toFixed(1)}% (${formatCurrency(response.current_value)} / ${formatCurrency(response.target_value)})`,
         });
       }
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),

@@ -1898,9 +1898,13 @@ function ExerciseList({
   const queryClient = useQueryClient();
   const [items, setItems] = useState<WorkoutExercise[]>(exercises);
 
-  React.useEffect(() => {
+  // Sincroniza `items` com a prop `exercises` (derivado durante o render —
+  // sem efeito), preservando a reordenação otimista local via drag-and-drop.
+  const [lastExercises, setLastExercises] = useState(exercises);
+  if (exercises !== lastExercises) {
+    setLastExercises(exercises);
     setItems(exercises);
-  }, [exercises]);
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 
