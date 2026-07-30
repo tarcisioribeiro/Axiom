@@ -205,6 +205,41 @@ export default function WeeklyPlanning() {
           </div>
         </PageHeader>
 
+        {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
+          <div className="mb-md rounded-lg border border-warning/30 bg-warning/5 p-md">
+            <div className="flex items-center gap-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+              <p className="text-sm text-warning">
+                <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
+                {t('weeklyPlanning.overloadWarning', {
+                  time: formatMinutes(OVERLOAD_MINUTES),
+                })}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="mb-md flex flex-wrap items-center gap-sm text-xs text-muted-foreground">
+          <span>{t('weeklyPlanning.legend', 'Legenda')}:</span>
+          <span className="flex items-center gap-xs">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+            {t('weeklyPlanning.statusCompleted', 'Concluído')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Clock className="h-3.5 w-3.5 text-warning" />
+            {t('weeklyPlanning.statusInProgress', 'Em andamento')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Circle className="h-3.5 w-3.5" />
+            {t('weeklyPlanning.statusPending', 'Pendente')}
+          </span>
+          <span className="flex items-center gap-xs">
+            <Zap className="h-3.5 w-3.5 text-warning" />
+            {t('weeklyPlanning.overloadedDay', 'Dia sobrecarregado')}
+          </span>
+        </div>
+
         {/* Week summary */}
         <div className="mb-md grid grid-cols-3 gap-md">
           <Card>
@@ -371,41 +406,6 @@ export default function WeeklyPlanning() {
               </Card>
             );
           })}
-        </div>
-
-        {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
-          <div className="mt-md rounded-lg border border-warning/30 bg-warning/5 p-md">
-            <div className="flex items-center gap-sm">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
-              <p className="text-sm text-warning">
-                <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
-                {t('weeklyPlanning.overloadWarning', {
-                  time: formatMinutes(OVERLOAD_MINUTES),
-                })}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div className="mt-md flex flex-wrap items-center gap-sm text-xs text-muted-foreground">
-          <span>{t('weeklyPlanning.legend', 'Legenda')}:</span>
-          <span className="flex items-center gap-xs">
-            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-            {t('weeklyPlanning.statusCompleted', 'Concluído')}
-          </span>
-          <span className="flex items-center gap-xs">
-            <Clock className="h-3.5 w-3.5 text-warning" />
-            {t('weeklyPlanning.statusInProgress', 'Em andamento')}
-          </span>
-          <span className="flex items-center gap-xs">
-            <Circle className="h-3.5 w-3.5" />
-            {t('weeklyPlanning.statusPending', 'Pendente')}
-          </span>
-          <span className="flex items-center gap-xs">
-            <Zap className="h-3.5 w-3.5 text-warning" />
-            {t('weeklyPlanning.overloadedDay', 'Dia sobrecarregado')}
-          </span>
         </div>
       </PageContainer>
     </AnimatedPage>

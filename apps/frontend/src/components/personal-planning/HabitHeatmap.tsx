@@ -340,22 +340,25 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
         </div>
       )}
 
-      {/* Tooltip (portal-less, fixed position) */}
-      {tooltip && (
-        <div
-          style={{
-            position: 'fixed',
-            left: tooltip.x,
-            top: tooltip.y - 8,
-            transform: 'translate(-50%, -100%)',
-            pointerEvents: 'none',
-            zIndex: 9999,
-          }}
-          className="rounded-md border bg-popover px-sm py-xs text-xs text-popover-foreground shadow-md"
-        >
-          {tooltip.text}
-        </div>
-      )}
+      {/* Tooltip — portaled to body so position:fixed resolves against the
+          viewport instead of a transformed ancestor (e.g. Radix DialogContent) */}
+      {tooltip &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltip.x,
+              top: tooltip.y - 8,
+              transform: 'translate(-50%, -100%)',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            className="rounded-md border bg-popover px-sm py-xs text-xs text-popover-foreground shadow-md"
+          >
+            {tooltip.text}
+          </div>,
+          document.body
+        )}
 
       {/* Legend */}
       <div className="flex items-center gap-xs text-xs text-muted-foreground">

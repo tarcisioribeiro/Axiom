@@ -1,6 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -20,11 +20,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate } from '@/lib/utils';
-import type { WorkoutDay } from '@/types/workout';
+import type { WorkoutDay, WorkoutSession } from '@/types/workout';
 
 const LOAD_UNITS = ['kg', 'lb'] as const;
 
 interface SessionSetValues {
+  id?: number;
   set_number: number;
   load: string;
   load_unit: string;
@@ -34,6 +35,7 @@ interface SessionSetValues {
 }
 
 interface SessionExerciseValues {
+  id?: number;
   exercise_name: string;
   sets_target: number;
   reps_target_min: number;
@@ -54,6 +56,7 @@ interface WorkoutSessionFormValues {
 interface WorkoutSessionFormProps {
   workoutDays: WorkoutDay[];
   ownerId: number;
+  session?: WorkoutSession;
   onSubmit: (data: WorkoutSessionFormValues) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -73,6 +76,7 @@ function newSet(setNumber: number): SessionSetValues {
 export function WorkoutSessionForm({
   workoutDays,
   ownerId: _ownerId,
+  session,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -84,25 +88,62 @@ export function WorkoutSessionForm({
 
   const { register, handleSubmit, control, watch, setValue } =
     useForm<WorkoutSessionFormValues>({
-      defaultValues: {
-        workout_day: '',
-        date: today,
-        started_at: '',
-        finished_at: '',
-        notes: '',
-        exercises: [],
-      },
+      defaultValues: session
+        ? {
+            workout_day: session.workout_day ? String(session.workout_day) : '',
+            date: session.date,
+            started_at: session.started_at ?? '',
+            finished_at: session.finished_at ?? '',
+            notes: session.notes ?? '',
+            exercises: [...session.session_exercises]
+              .sort((a, b) => a.order - b.order)
+              .map((ex) => ({
+                id: ex.id,
+                exercise_name: ex.exercise_name,
+                sets_target: ex.sets_target,
+                reps_target_min: ex.reps_target_min,
+                reps_target_max: ex.reps_target_max,
+                order: ex.order,
+                sets: [...ex.sets]
+                  .sort((a, b) => a.set_number - b.set_number)
+                  .map((s) => ({
+                    id: s.id,
+                    set_number: s.set_number,
+                    load: s.load ?? '',
+                    load_unit: s.load_unit,
+                    reps_done: s.reps_done != null ? String(s.reps_done) : '',
+                    completed: s.completed,
+                    notes: s.notes ?? '',
+                  })),
+              })),
+          }
+        : {
+            workout_day: '',
+            date: today,
+            started_at: '',
+            finished_at: '',
+            notes: '',
+            exercises: [],
+          },
     });
 
   const {
     fields: exerciseFields,
     append: appendExercise,
     remove: removeExercise,
-  } = useFieldArray({ control, name: 'exercises' });
+  } = useFieldArray({ control, name: 'exercises', keyName: 'fieldKey' });
 
   const selectedDayId = watch('workout_day');
 
+  // Skip on initial mount so editing a session doesn't get its loaded
+  // sets/reps clobbered by the workout day's template — this effect should
+  // only react to the user explicitly changing the day dropdown afterwards.
+  const didMountRef = useRef(false);
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     if (selectedDayId) {
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
@@ -211,7 +252,7 @@ export function WorkoutSessionForm({
         <div className="max-h-80 space-y-sm overflow-y-auto pr-1">
           {exerciseFields.map((exField, exIdx) => (
             <ExerciseBlock
-              key={exField.id}
+              key={exField.fieldKey}
               exIdx={exIdx}
               control={control}
               register={register}
@@ -273,6 +314,7 @@ function ExerciseBlock({
   } = useFieldArray({
     control,
     name: `exercises.${exIdx}.sets`,
+    keyName: 'fieldKey',
   });
 
   return (
@@ -304,7 +346,7 @@ function ExerciseBlock({
         </div>
         {setFields.map((setField, sIdx) => (
           <div
-            key={setField.id}
+            key={setField.fieldKey}
             className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center gap-xs"
           >
             <span className="text-center text-xs font-medium text-muted-foreground">

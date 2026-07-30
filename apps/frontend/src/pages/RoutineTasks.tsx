@@ -12,6 +12,7 @@ import {
   Save,
   Bookmark,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -47,8 +48,10 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
+import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import type { RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -68,7 +71,9 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | null>(null);
+  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | 'all' | null>(
+    null
+  );
   const [templateName, setTemplateName] = useState('');
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
@@ -76,21 +81,17 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { showConfirm } = useAlertDialog();
   const { isExporting, exportPDF, exportExcel } = useRoutineExport();
 
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
+
   const handleSaveAsTemplate = () => {
     if (tasks.length === 0) return;
-    const templateName = `Rotina ${new Date().toLocaleDateString('pt-BR')}`;
-    const stored = JSON.parse(
-      localStorage.getItem('axiom-user-routine-templates') ?? '[]'
-    ) as Array<{ name: string; tasks: RoutineTask[]; savedAt: string }>;
-    stored.unshift({ name: templateName, tasks, savedAt: new Date().toISOString() });
-    localStorage.setItem(
-      'axiom-user-routine-templates',
-      JSON.stringify(stored.slice(0, 10))
-    );
-    toast({
-      title: t('pages.routineTasks.templates.saved'),
-      description: templateName,
-    });
+    setSaveTemplateTask('all');
+    setTemplateName(`Rotina ${new Date().toLocaleDateString('pt-BR')}`);
   };
 
   useEffect(() => {
@@ -216,6 +217,22 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
 
+  const mapTaskToTemplatePayload = (task: RoutineTask) => ({
+    name: task.name,
+    description: task.description,
+    category: task.category,
+    icon: task.icon,
+    periodicity: task.periodicity,
+    weekday: task.weekday,
+    day_of_month: task.day_of_month,
+    custom_weekdays: task.custom_weekdays,
+    target_quantity: task.target_quantity,
+    unit: task.unit,
+    default_time: task.default_time,
+    daily_occurrences: task.daily_occurrences,
+    is_active: true,
+  });
+
   const handleSaveTemplate = async () => {
     if (!saveTemplateTask || !templateName.trim()) return;
     setIsSavingTemplate(true);
@@ -223,27 +240,14 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       const { userRoutineTemplatesService } =
         await import('@/services/user-routine-templates-service');
       const name = templateName.trim();
+      const isAllTasks = saveTemplateTask === 'all';
+      const sourceTasks = isAllTasks ? tasks : [saveTemplateTask];
       await userRoutineTemplatesService.create({
         name,
-        description: saveTemplateTask.description || '',
-        icon: saveTemplateTask.icon || '',
-        tasks: [
-          {
-            name: saveTemplateTask.name,
-            description: saveTemplateTask.description,
-            category: saveTemplateTask.category,
-            icon: saveTemplateTask.icon,
-            periodicity: saveTemplateTask.periodicity,
-            weekday: saveTemplateTask.weekday,
-            day_of_month: saveTemplateTask.day_of_month,
-            custom_weekdays: saveTemplateTask.custom_weekdays,
-            target_quantity: saveTemplateTask.target_quantity,
-            unit: saveTemplateTask.unit,
-            default_time: saveTemplateTask.default_time,
-            daily_occurrences: saveTemplateTask.daily_occurrences,
-            is_active: true,
-          },
-        ],
+        description: isAllTasks ? '' : saveTemplateTask.description || '',
+        icon: isAllTasks ? '' : saveTemplateTask.icon || '',
+        tasks: sourceTasks.map(mapTaskToTemplatePayload),
+        owner: ownerId,
       });
       setSaveTemplateTask(null);
       setTemplateName('');

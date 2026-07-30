@@ -41,7 +41,7 @@ class FinanceAgent(BaseAgent):
     description = "Análise de despesas, receitas e padrões de consumo"
     ollama_model = "qwen2.5:7b"
     anthropic_model = "claude-haiku-4-5-20251001"
-    groq_model = "llama-3.3-70b-specdec"
+    groq_model = "llama-3.3-70b-versatile"
     openai_model = "gpt-4o-mini"
 
     def can_handle(self, query: str) -> float:

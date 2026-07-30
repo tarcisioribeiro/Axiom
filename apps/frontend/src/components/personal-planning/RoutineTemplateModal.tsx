@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
+import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import { userRoutineTemplatesService } from '@/services/user-routine-templates-service';
@@ -306,6 +309,14 @@ export function RoutineTemplateModal({
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
+
   const [activeTab, setActiveTab] = useState('system');
 
   const [templates, setTemplates] = useState<RoutineTemplate[]>([]);
@@ -491,6 +502,7 @@ export function RoutineTemplateModal({
         name: newName.trim(),
         description: newDesc.trim() || undefined,
         tasks,
+        owner: ownerId,
       });
       setUserTemplates((prev) => [created, ...prev]);
       setShowCreateDialog(false);

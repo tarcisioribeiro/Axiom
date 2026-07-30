@@ -39,6 +39,15 @@ class Command(BaseCommand):
             dest="username",
             help="Processa apenas o usuário especificado",
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            dest="force",
+            help=(
+                "Reprocessa registros que já possuem embedding"
+                " (por padrão eles são pulados)"
+            ),
+        )
 
     def handle(self, *args, **options):
         from agents.core.llm_client import LLMClient
@@ -87,7 +96,9 @@ class Command(BaseCommand):
             "planning": self._process_planning,
             "library": self._process_library,
         }
-        generated, errors = handlers[domain](user, options["batch_size"])
+        generated, errors = handlers[domain](
+            user, options["batch_size"], options["force"]
+        )
         self.stdout.write(
             self.style.SUCCESS(
                 f"  Domínio {domain}: {generated} embeddings"
@@ -95,26 +106,43 @@ class Command(BaseCommand):
             )
         )
 
+    def _already_embedded(self, user: User, source_type: str) -> set:
+        """IDs de fonte que já têm embedding — usado para pular reprocessamento
+        em execuções repetidas (ex: toda subida do container)."""
+        from agents.models import AgentEmbedding
+
+        return set(
+            AgentEmbedding.objects.filter(
+                user=user, source_type=source_type
+            ).values_list("source_id", flat=True)
+        )
+
     # -------------------------------------------------------------------------
     # Finance domain: expenses + revenues
     # -------------------------------------------------------------------------
 
-    def _process_finance(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _process_finance(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         generated, errors = 0, 0
-        g, e = self._embed_expenses(user, batch_size)
+        g, e = self._embed_expenses(user, batch_size, force)
         generated += g
         errors += e
-        g, e = self._embed_revenues(user, batch_size)
+        g, e = self._embed_revenues(user, batch_size, force)
         generated += g
         errors += e
         return generated, errors
 
-    def _embed_expenses(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_expenses(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from expenses.models import Expense
 
         qs = Expense.objects.filter(created_by=user, is_deleted=False).values(
             "uuid", "value", "category", "merchant", "date", "description"
         )
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "expense"))
         total = qs.count()
         generated, errors = 0, 0
 
@@ -142,12 +170,16 @@ class Command(BaseCommand):
 
         return generated, errors
 
-    def _embed_revenues(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_revenues(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from revenues.models import Revenue
 
         qs = Revenue.objects.filter(created_by=user, is_deleted=False).values(
             "uuid", "value", "category", "date", "description"
         )
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "revenue"))
         total = qs.count()
         generated, errors = 0, 0
 
@@ -178,7 +210,9 @@ class Command(BaseCommand):
     # Budget domain
     # -------------------------------------------------------------------------
 
-    def _process_budget(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _process_budget(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from django.db.models import Sum
 
         from budgets.models import Budget
@@ -187,6 +221,8 @@ class Command(BaseCommand):
         qs = Budget.objects.filter(created_by=user, is_deleted=False).values(
             "uuid", "category", "limit_amount", "month", "year"
         )
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "budget"))
         total = qs.count()
         generated, errors = 0, 0
 
@@ -235,23 +271,27 @@ class Command(BaseCommand):
     # -------------------------------------------------------------------------
 
     def _process_planning(
-        self, user: User, batch_size: int
+        self, user: User, batch_size: int, force: bool
     ) -> tuple[int, int]:
         generated, errors = 0, 0
-        g, e = self._embed_routines(user, batch_size)
+        g, e = self._embed_routines(user, batch_size, force)
         generated += g
         errors += e
-        g, e = self._embed_goals(user, batch_size)
+        g, e = self._embed_goals(user, batch_size, force)
         generated += g
         errors += e
         return generated, errors
 
-    def _embed_routines(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_routines(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from personal_planning.models import RoutineTask
 
         qs = RoutineTask.objects.filter(
             owner__user=user, is_deleted=False
         ).values("uuid", "name", "description", "periodicity")
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "routine"))
         total = qs.count()
         generated, errors = 0, 0
 
@@ -279,7 +319,9 @@ class Command(BaseCommand):
 
         return generated, errors
 
-    def _embed_goals(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_goals(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from personal_planning.models import Goal
 
         qs = Goal.objects.filter(owner__user=user, is_deleted=False).values(
@@ -290,6 +332,8 @@ class Command(BaseCommand):
             "target_value",
             "end_date",
         )
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "goal"))
         total = qs.count()
         generated, errors = 0, 0
 
@@ -328,19 +372,23 @@ class Command(BaseCommand):
     # Library domain: summaries, reading notes, highlights
     # -------------------------------------------------------------------------
 
-    def _process_library(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _process_library(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         generated, errors = 0, 0
         for handler in (
             self._embed_summaries,
             self._embed_reading_notes,
             self._embed_highlights,
         ):
-            g, e = handler(user, batch_size)
+            g, e = handler(user, batch_size, force)
             generated += g
             errors += e
         return generated, errors
 
-    def _embed_summaries(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_summaries(
+        self, user: User, batch_size: int, force: bool
+    ) -> tuple[int, int]:
         from library.models import Summary
 
         qs = (
@@ -348,6 +396,10 @@ class Command(BaseCommand):
             .select_related("book")
             .values("uuid", "title", "text", "book__title")
         )
+        if not force:
+            qs = qs.exclude(
+                uuid__in=self._already_embedded(user, "book_summary")
+            )
         total = qs.count()
         generated, errors = 0, 0
 
@@ -372,7 +424,7 @@ class Command(BaseCommand):
         return generated, errors
 
     def _embed_reading_notes(
-        self, user: User, batch_size: int
+        self, user: User, batch_size: int, force: bool
     ) -> tuple[int, int]:
         from library.models import Reading
 
@@ -383,6 +435,10 @@ class Command(BaseCommand):
             .select_related("book")
             .values("uuid", "notes", "reading_date", "book__title")
         )
+        if not force:
+            qs = qs.exclude(
+                uuid__in=self._already_embedded(user, "reading_note")
+            )
         total = qs.count()
         generated, errors = 0, 0
 
@@ -409,7 +465,7 @@ class Command(BaseCommand):
         return generated, errors
 
     def _embed_highlights(
-        self, user: User, batch_size: int
+        self, user: User, batch_size: int, force: bool
     ) -> tuple[int, int]:
         from library.models import BookHighlight
 
@@ -418,6 +474,8 @@ class Command(BaseCommand):
             .select_related("book")
             .values("uuid", "text", "book__title")
         )
+        if not force:
+            qs = qs.exclude(uuid__in=self._already_embedded(user, "highlight"))
         total = qs.count()
         generated, errors = 0, 0
 

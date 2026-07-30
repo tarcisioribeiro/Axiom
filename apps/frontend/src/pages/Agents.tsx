@@ -447,16 +447,25 @@ export default function Agents() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
-  const [sessionId] = useState(() => {
-    const stored = localStorage.getItem('axiom-agent-session-id');
-    if (stored) return stored;
-    const id = crypto.randomUUID();
-    localStorage.setItem('axiom-agent-session-id', id);
-    return id;
+  // One session id per agent — keeps each agent's conversation separate so
+  // switching agents never mixes their histories under the same session.
+  const [sessionsByAgent, setSessionsByAgent] = useState<
+    Partial<Record<AgentName, string>>
+  >(() => {
+    const stored = localStorage.getItem('axiom-agent-sessions-by-agent');
+    if (!stored) return {};
+    try {
+      return JSON.parse(stored) as Partial<Record<AgentName, string>>;
+    } catch {
+      return {};
+    }
   });
   const [query, setQuery] = useState(() => searchParams.get('context') ?? '');
   const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [viewMode, setViewMode] = useState<'selector' | 'chat'>('selector');
+
+  const sessionId = selectedAgent ? sessionsByAgent[selectedAgent] : undefined;
 
   const [showHistory, setShowHistory] = useState(false);
 
@@ -488,8 +497,9 @@ export default function Agents() {
 
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['agents', 'history', sessionId],
-    queryFn: () => agentService.getHistory(sessionId),
+    queryFn: () => agentService.getHistory(sessionId as string),
     staleTime: 0,
+    enabled: !!sessionId,
   });
 
   const messages = useMemo(() => historyData?.results ?? [], [historyData?.results]);
@@ -535,7 +545,7 @@ export default function Agents() {
 
   const handleSend = async () => {
     const trimmed = query.trim();
-    if (!trimmed || isStreaming || !selectedAgent) return;
+    if (!trimmed || isStreaming || !selectedAgent || !sessionId) return;
 
     setConversationStarted(true);
     setQuery('');
@@ -552,6 +562,7 @@ export default function Agents() {
   };
 
   const handleClearHistory = async () => {
+    if (!sessionId) return;
     const confirmed = await showConfirm({
       title: t('pages.agents.clearHistory'),
       description: t('pages.agents.clearConfirm'),
@@ -569,9 +580,20 @@ export default function Agents() {
   const handleSelectAgent = (key: AgentName) => {
     setSelectedAgent(key);
     setConversationStarted(true);
+    setViewMode('chat');
+    setSessionsByAgent((prev) => {
+      if (prev[key]) return prev;
+      const next = { ...prev, [key]: crypto.randomUUID() };
+      localStorage.setItem('axiom-agent-sessions-by-agent', JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleChangeAgent = () => {
+    // The current conversation is preserved in sessionsByAgent/Redis — this
+    // only navigates back to the selector so the user can start a fresh chat
+    // with a different agent.
+    setViewMode('selector');
     setConversationStarted(false);
     setSelectedAgent(null);
   };
@@ -596,8 +618,7 @@ export default function Agents() {
   const isLlmUnavailable = status !== undefined && !status.available;
   const inputDisabled = isStreaming || isLlmUnavailable || !selectedAgent;
   const showStreamingBubble = isStreaming || (accumulatedText.length > 0 && !error);
-  const showSelector =
-    !conversationStarted && messages.length === 0 && !showStreamingBubble;
+  const showSelector = viewMode === 'selector';
 
   return (
     <PageContainer>
