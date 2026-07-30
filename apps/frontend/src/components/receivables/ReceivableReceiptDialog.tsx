@@ -1,5 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, CalendarClock, Wallet } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -44,6 +46,7 @@ export function ReceivableReceiptDialog({
 }: ReceivableReceiptDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const now = useNow();
   const today = new Date().toISOString().split('T')[0];
   const [form, setForm] = useState({
     value: '',
@@ -52,8 +55,6 @@ export function ReceivableReceiptDialog({
     notes: '',
   });
   const [scheduled, setScheduled] = useState(false);
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const remaining = receivable
@@ -61,23 +62,20 @@ export function ReceivableReceiptDialog({
     : 0;
   const isFutureDate = form.date > today;
 
-  useEffect(() => {
-    if (!form.account || !form.date || !form.value) {
-      setProjectedBalance(null);
-      return;
-    }
-    if (!isFutureDate && !scheduled) {
-      setProjectedBalance(null);
-      return;
-    }
-    const accountId = parseInt(form.account);
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(accountId, form.date)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [form.account, form.date, form.value, isFutureDate, scheduled]);
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', form.account, form.date],
+    queryFn: async () => {
+      const accountId = parseInt(form.account);
+      try {
+        const data = await accountsService.getProjectedBalance(accountId, form.date);
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled:
+      !!form.account && !!form.date && !!form.value && (isFutureDate || scheduled),
+  });
 
   const handleSubmit = async () => {
     if (!receivable) return;
@@ -122,7 +120,6 @@ export function ReceivableReceiptDialog({
   const handleClose = (open: boolean) => {
     if (!open) {
       setScheduled(false);
-      setProjectedBalance(null);
       onClose();
     }
   };
@@ -205,7 +202,7 @@ export function ReceivableReceiptDialog({
             </Label>
             <DatePicker
               value={form.date}
-              minDate={scheduled ? new Date(Date.now() + 86400000) : undefined}
+              minDate={scheduled ? new Date(now + 86400000) : undefined}
               onChange={(date) =>
                 setForm((f) => ({ ...f, date: date ? formatLocalDate(date) : '' }))
               }

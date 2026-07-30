@@ -124,6 +124,7 @@ export interface UserRoutineTemplateFormData {
   description?: string;
   icon?: string;
   tasks: RoutineTemplateTask[];
+  owner: number;
 }
 
 export interface UserRoutineTemplateImportResult {

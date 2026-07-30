@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarDays,
@@ -16,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -93,8 +94,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
-  const [eligiblePayables, setEligiblePayables] = useState<Payable[]>([]);
   const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
     []
   );
@@ -109,7 +108,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     register,
     handleSubmit,
     setValue,
-    watch,
+    getValues,
+    control,
     formState: { errors },
   } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema) as Resolver<ExpenseFormData>,
@@ -127,6 +127,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       related_payable: null,
       fixed_expense_template: null,
     },
+  });
+
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedPayed = useWatch({ control, name: 'payed' });
+  const watchedAccount = useWatch({ control, name: 'account' });
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedMerchant = useWatch({ control, name: 'merchant' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedRelatedLoan = useWatch({ control, name: 'related_loan' });
+  const watchedRelatedPayable = useWatch({ control, name: 'related_payable' });
+  const watchedFixedExpenseTemplate = useWatch({
+    control,
+    name: 'fixed_expense_template',
   });
 
   useEffect(() => {
@@ -154,25 +168,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     void loadRules();
   }, [expense, setValue]);
 
-  useEffect(() => {
-    if (loans && currentUserMember) {
-      const filtered = loans.filter(
-        (loan) =>
-          loan.benefited === currentUserMember.id &&
-          loan.status !== 'paid' &&
-          loan.status !== 'cancelled'
-      );
-      setEligibleLoans(filtered);
-    }
+  const eligibleLoans = useMemo(() => {
+    if (!loans || !currentUserMember) return [];
+    return loans.filter(
+      (loan) =>
+        loan.benefited === currentUserMember.id &&
+        loan.status !== 'paid' &&
+        loan.status !== 'cancelled'
+    );
   }, [loans, currentUserMember]);
 
-  useEffect(() => {
-    if (payables) {
-      const filtered = payables.filter(
-        (p) => p.status === 'active' || p.status === 'overdue'
-      );
-      setEligiblePayables(filtered);
-    }
+  const eligiblePayables = useMemo(() => {
+    if (!payables) return [];
+    return payables.filter((p) => p.status === 'active' || p.status === 'overdue');
   }, [payables]);
 
   useEffect(() => {
@@ -195,7 +203,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   }, [expense, accounts, setValue]);
 
   const fetchAiSuggestion = async (merchant: string) => {
-    const description = watch('description');
+    const description = getValues('description');
     if (!merchant.trim() && !description?.trim()) return;
 
     if (aiSuggestionAbortRef.current) aiSuggestionAbortRef.current.abort();
@@ -213,7 +221,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           setTimeout(() => reject(new Error('timeout')), 10000)
         ),
       ]);
-      const currentCat = watch('category');
+      const currentCat = getValues('category');
       const categoryIsEmpty =
         !currentCat || currentCat === 'others' || currentCat === '';
       if (result.method === 'rule' && categoryIsEmpty) {
@@ -247,7 +255,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             rule.merchant_contains.toLowerCase().includes(lower)
         );
         if (matched) {
-          const currentCategory = watch('category');
+          const currentCategory = getValues('category');
           if (
             !currentCategory ||
             currentCategory === 'others' ||
@@ -273,28 +281,24 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   }, [expense, prefillData, setValue]);
 
-  const watchedPayed = watch('payed');
-  const watchedAccount = watch('account');
-  const watchedValue = watch('value');
-  const watchedDate = watch('date');
   const today = formatLocalDate(new Date());
   const isFutureDate = watchedDate > today;
 
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
-
-  useEffect(() => {
-    if (!watchedAccount || !watchedDate || !(watchedValue > 0) || !isFutureDate) {
-      setProjectedBalance(null);
-      return;
-    }
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(watchedAccount, watchedDate)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [watchedAccount, watchedDate, watchedValue, isFutureDate]);
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', watchedAccount, watchedDate],
+    queryFn: async () => {
+      try {
+        const data = await accountsService.getProjectedBalance(
+          watchedAccount,
+          watchedDate
+        );
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!watchedAccount && !!watchedDate && watchedValue > 0 && isFutureDate,
+  });
 
   const balanceInfo = useMemo(() => {
     if (isFutureDate) return null;
@@ -388,7 +392,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </Label>
             <Input
               id="merchant"
-              value={watch('merchant') ?? ''}
+              value={watchedMerchant ?? ''}
               onChange={(e) => handleMerchantChange(e.target.value)}
               placeholder={t('pages.expenses.form.merchantPlaceholder')}
               disabled={isLoading}
@@ -450,7 +454,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               {t('pages.expenses.form.dateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('common.fields.selectDate')}
               disabled={isLoading}
@@ -466,7 +470,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               {t('pages.expenses.form.horaryLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
@@ -487,7 +491,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </Label>
             <div className="relative">
               <Select
-                value={watch('category') || ''}
+                value={watchedCategory || ''}
                 onValueChange={(v) => {
                   setValue('category', v);
                   setAiSuggestion(null);
@@ -556,7 +560,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               {t('pages.expenses.form.accountLabel')}
             </Label>
             <Select
-              value={watch('account')?.toString() || ''}
+              value={watchedAccount?.toString() || ''}
               onValueChange={(v) => setValue('account', parseInt(v))}
             >
               <SelectTrigger>
@@ -621,7 +625,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     {t('pages.expenses.form.relatedLoanLabel')}
                   </Label>
                   <Select
-                    value={watch('related_loan')?.toString() || 'none'}
+                    value={watchedRelatedLoan?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue('related_loan', v === 'none' ? null : parseInt(v))
                     }
@@ -652,7 +656,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     {t('pages.expenses.form.relatedPayableLabel')}
                   </Label>
                   <Select
-                    value={watch('related_payable')?.toString() || 'none'}
+                    value={watchedRelatedPayable?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue('related_payable', v === 'none' ? null : parseInt(v))
                     }
@@ -683,7 +687,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     {t('pages.expenses.form.relatedFixedExpenseLabel')}
                   </Label>
                   <Select
-                    value={watch('fixed_expense_template')?.toString() || 'none'}
+                    value={watchedFixedExpenseTemplate?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue(
                         'fixed_expense_template',

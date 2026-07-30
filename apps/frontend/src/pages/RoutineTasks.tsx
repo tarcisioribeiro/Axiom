@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   CheckSquare,
@@ -13,7 +14,7 @@ import {
   Bookmark,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -47,8 +48,10 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
+import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import type { RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -59,16 +62,25 @@ interface RoutineTasksProps {
   embedded?: boolean;
 }
 
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { t } = useTranslation();
-  const [tasks, setTasks] = useState<RoutineTask[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<RoutineTask | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | null>(null);
+  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | 'all' | null>(
+    null
+  );
   const [templateName, setTemplateName] = useState('');
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
@@ -76,48 +88,31 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { showConfirm } = useAlertDialog();
   const { isExporting, exportPDF, exportExcel } = useRoutineExport();
 
-  const handleSaveAsTemplate = () => {
-    if (tasks.length === 0) return;
-    const templateName = `Rotina ${new Date().toLocaleDateString('pt-BR')}`;
-    const stored = JSON.parse(
-      localStorage.getItem('axiom-user-routine-templates') ?? '[]'
-    ) as Array<{ name: string; tasks: RoutineTask[]; savedAt: string }>;
-    stored.unshift({ name: templateName, tasks, savedAt: new Date().toISOString() });
-    localStorage.setItem(
-      'axiom-user-routine-templates',
-      JSON.stringify(stored.slice(0, 10))
-    );
-    toast({
-      title: t('pages.routineTasks.templates.saved'),
-      description: templateName,
-    });
-  };
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['routine-tasks'],
+    queryFn: async () => {
       const tasksData = await routineTasksService.getAll();
-      const sorted = [...tasksData].sort((a, b) => {
+      return [...tasksData].sort((a, b) => {
         if (!a.default_time && !b.default_time) return 0;
         if (!a.default_time) return 1;
         if (!b.default_time) return -1;
         return a.default_time.localeCompare(b.default_time);
       });
-      setTasks(sorted);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const handleSaveAsTemplate = () => {
+    if (tasks.length === 0) return;
+    setSaveTemplateTask('all');
+    setTemplateName(`Rotina ${new Date().toLocaleDateString('pt-BR')}`);
   };
 
   const handleCreate = () => {
@@ -147,7 +142,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         title: t('pages.routineTasks.deleted'),
         description: t('pages.routineTasks.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.deleteError'),
@@ -181,7 +176,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.saveError'),
@@ -210,11 +205,27 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   };
 
   const handleImported = async (createdIds: number[]) => {
-    await loadData();
+    await queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     const idSet = new Set(createdIds);
     setHighlightedIds(idSet);
     setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
+
+  const mapTaskToTemplatePayload = (task: RoutineTask) => ({
+    name: task.name,
+    description: task.description,
+    category: task.category,
+    icon: task.icon,
+    periodicity: task.periodicity,
+    weekday: task.weekday,
+    day_of_month: task.day_of_month,
+    custom_weekdays: task.custom_weekdays,
+    target_quantity: task.target_quantity,
+    unit: task.unit,
+    default_time: task.default_time,
+    daily_occurrences: task.daily_occurrences,
+    is_active: true,
+  });
 
   const handleSaveTemplate = async () => {
     if (!saveTemplateTask || !templateName.trim()) return;
@@ -223,27 +234,14 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       const { userRoutineTemplatesService } =
         await import('@/services/user-routine-templates-service');
       const name = templateName.trim();
+      const isAllTasks = saveTemplateTask === 'all';
+      const sourceTasks = isAllTasks ? tasks : [saveTemplateTask];
       await userRoutineTemplatesService.create({
         name,
-        description: saveTemplateTask.description || '',
-        icon: saveTemplateTask.icon || '',
-        tasks: [
-          {
-            name: saveTemplateTask.name,
-            description: saveTemplateTask.description,
-            category: saveTemplateTask.category,
-            icon: saveTemplateTask.icon,
-            periodicity: saveTemplateTask.periodicity,
-            weekday: saveTemplateTask.weekday,
-            day_of_month: saveTemplateTask.day_of_month,
-            custom_weekdays: saveTemplateTask.custom_weekdays,
-            target_quantity: saveTemplateTask.target_quantity,
-            unit: saveTemplateTask.unit,
-            default_time: saveTemplateTask.default_time,
-            daily_occurrences: saveTemplateTask.daily_occurrences,
-            is_active: true,
-          },
-        ],
+        description: isAllTasks ? '' : saveTemplateTask.description || '',
+        icon: isAllTasks ? '' : saveTemplateTask.icon || '',
+        tasks: sourceTasks.map(mapTaskToTemplatePayload),
+        owner: ownerId,
       });
       setSaveTemplateTask(null);
       setTemplateName('');
@@ -475,14 +473,8 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     return <LoadingState />;
   }
 
-  const Wrapper = embedded
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
         <div className="flex items-center gap-sm">
           <DropdownMenu>

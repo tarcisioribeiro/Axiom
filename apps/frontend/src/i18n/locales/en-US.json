@@ -3822,7 +3822,6 @@
         "saveBtn": "Save Template",
         "saveSuccess": "Template saved!",
         "saveSuccessDesc": "The template \"{{name}}\" was saved successfully.",
-        "saved": "Template saved locally",
         "systemTab": "System Templates",
         "myTab": "My Templates",
         "taskCount": "task(s)",
@@ -4878,7 +4877,15 @@
         "console_backend": "Console backend active (development)",
         "email_host_not_configured": "EMAIL_HOST not configured",
         "storage_successful": "Storage connection successful",
-        "storage_unreachable": "Storage endpoint unreachable"
+        "storage_unreachable": "Storage endpoint unreachable",
+        "circuit_breaker_open": "Circuit open after consecutive failures — Ollama requests temporarily paused",
+        "ollama_dns_failure": "Failed to resolve the Ollama host (DNS). Check the address configured in OLLAMA_BASE_URL.",
+        "ollama_connection_refused": "Connection refused by the Ollama host. Check that the service is running and the port is correct.",
+        "ollama_timeout": "Timed out connecting to Ollama. The server may be overloaded or unreachable on the network.",
+        "ollama_http_error": "Ollama responded with an unexpected HTTP error.",
+        "ollama_unreachable": "Ollama is unreachable. Check network connectivity to the configured host.",
+        "ollama_invalid_response": "Ollama returned a response in an invalid format.",
+        "ollama_unknown_error": "Unknown error while checking Ollama."
       }
     },
     "adminIntegrations": {

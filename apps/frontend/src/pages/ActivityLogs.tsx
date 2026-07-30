@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
@@ -18,7 +19,7 @@ import {
   Share2,
   Activity,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { ElementType } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -123,33 +124,26 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
 };
 
 export default function ActivityLogs() {
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await activityLogsService.getAll();
-      setLogs(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ['activity-logs'],
+    queryFn: async () => {
+      try {
+        return await activityLogsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return [] as ActivityLog[];
+      }
+    },
+  });
 
   const groupedLogs = useMemo(() => {
     const map = new Map<string, ActivityLog[]>();

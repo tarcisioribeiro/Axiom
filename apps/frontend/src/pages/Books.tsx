@@ -21,7 +21,7 @@ import {
   Brain,
   CheckCircle,
 } from 'lucide-react';
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -320,10 +320,6 @@ function BookGridCard({
 }
 
 export default function Books() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
@@ -364,6 +360,34 @@ export default function Books() {
   });
   const ownerId = member?.id ?? 0;
 
+  const { data: booksData, isLoading } = useQuery({
+    queryKey: ['books'],
+    queryFn: async () => {
+      try {
+        const [booksData, authorsData, publishersData] = await Promise.all([
+          booksService.getAll(),
+          authorsService.getAll(),
+          publishersService.getAll(),
+        ]);
+        return { books: booksData, authors: authorsData, publishers: publishersData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          books: [] as Book[],
+          authors: [] as Author[],
+          publishers: [] as Publisher[],
+        };
+      }
+    },
+  });
+  const books = booksData?.books ?? [];
+  const authors = booksData?.authors ?? [];
+  const publishers = booksData?.publishers ?? [];
+
   const quickCaptureMutation = useMutation({
     mutationFn: (data: { book: number; pages_read: number }) =>
       readingsService.create({
@@ -379,7 +403,6 @@ export default function Books() {
       setQuickCaptureBookId('');
       setQuickCapturePages('');
       void queryClient.invalidateQueries({ queryKey: ['books'] });
-      void loadData();
     },
     onError: (error: unknown) => {
       toast({
@@ -395,33 +418,6 @@ export default function Books() {
     const pages = Number(quickCapturePages);
     if (!bookId || !pages || pages <= 0) return;
     quickCaptureMutation.mutate({ book: bookId, pages_read: pages });
-  };
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [booksData, authorsData, publishersData] = await Promise.all([
-        booksService.getAll(),
-        authorsService.getAll(),
-        publishersService.getAll(),
-      ]);
-      setBooks(booksData);
-      setAuthors(authorsData);
-      setPublishers(publishersData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const openDetail = (book: Book, tab: DetailTab = 'info') => {
@@ -464,7 +460,7 @@ export default function Books() {
         title: t('pages.books.deleted'),
         description: t('pages.books.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -514,7 +510,7 @@ export default function Books() {
         });
       }
       setIsFormOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,7 +21,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -350,11 +351,26 @@ interface GoalsProps {
   embedded?: boolean;
 }
 
+const EMPTY_GOALS: Goal[] = [];
+const EMPTY_TASKS: RoutineTask[] = [];
+
+function Wrapper({
+  embedded,
+  children,
+}: {
+  embedded: boolean;
+  children: React.ReactNode;
+}) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function Goals({ embedded = false }: GoalsProps) {
   const { t } = useTranslation();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [tasks, setTasks] = useState<RoutineTask[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedGoal, setSelectedGoal] = useState<Goal | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -364,30 +380,29 @@ export default function Goals({ embedded = false }: GoalsProps) {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['goals'],
+    queryFn: async () => {
+      try {
+        const [goalsData, tasksData] = await Promise.all([
+          goalsService.getAll(),
+          routineTasksService.getAll(),
+        ]);
+        return { goals: goalsData, tasks: tasksData };
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.goals.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { goals: EMPTY_GOALS, tasks: EMPTY_TASKS };
+      }
+    },
+  });
+  const goals = pageData?.goals ?? EMPTY_GOALS;
+  const tasks = pageData?.tasks ?? EMPTY_TASKS;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [goalsData, tasksData] = await Promise.all([
-        goalsService.getAll(),
-        routineTasksService.getAll(),
-      ]);
-      setGoals(goalsData);
-      setTasks(tasksData);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.goals.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['goals'] });
 
   const handleCreate = () => {
     setSelectedGoal(undefined);
@@ -414,7 +429,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         title: t('pages.goals.deleted'),
         description: t('pages.goals.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.goals.deleteError'),
@@ -431,7 +446,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         title: t('pages.goals.recalculated'),
         description: t('pages.goals.recalculatedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.goals.recalculateError'),
@@ -457,7 +472,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
       });
       setFailureGoal(undefined);
       setFailureDate('');
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.goals.failureError'),
@@ -484,7 +499,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         title: t('pages.goals.restartSuccess'),
         description: t('pages.goals.restartSuccessDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.goals.restartError'),
@@ -516,7 +531,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.goals.saveError'),
@@ -575,14 +590,8 @@ export default function Goals({ embedded = false }: GoalsProps) {
     onRestart: (g: Goal) => void handleRestart(g),
   };
 
-  const Wrapper = embedded
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.goals.title')}
         icon={<Trophy />}

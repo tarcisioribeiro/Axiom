@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -12,7 +13,7 @@ import {
   Wallet,
   CalendarDays,
 } from 'lucide-react';
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -80,12 +81,20 @@ function getDefaultMonth(): string {
   return `${y}-${m}`;
 }
 
+const EMPTY_REVENUES: FixedRevenue[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function FixedRevenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [fixedRevenues, setFixedRevenues] = useState<FixedRevenue[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [stats, setStats] = useState<FixedRevenueStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedRevenue, setSelectedRevenue] = useState<FixedRevenue | undefined>();
@@ -105,35 +114,42 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     notes: '',
   });
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['fixed-revenues'],
+    queryFn: async () => {
+      try {
+        const [revenuesData, accountsData, statsData] = await Promise.all([
+          fixedRevenuesService.getAll(),
+          accountsService.getAll(),
+          fixedRevenuesService.getStats(),
+        ]);
+        const revenues: FixedRevenue[] = Array.isArray(revenuesData)
+          ? (revenuesData as FixedRevenue[])
+          : (revenuesData.results ?? []);
+        return {
+          fixedRevenues: revenues,
+          accounts: accountsData,
+          stats: statsData as FixedRevenueStats,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          fixedRevenues: EMPTY_REVENUES,
+          accounts: EMPTY_ACCOUNTS,
+          stats: null as FixedRevenueStats | null,
+        };
+      }
+    },
+  });
+  const fixedRevenues = pageData?.fixedRevenues ?? EMPTY_REVENUES;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+  const stats = pageData?.stats ?? null;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [revenuesData, accountsData, statsData] = await Promise.all([
-        fixedRevenuesService.getAll(),
-        accountsService.getAll(),
-        fixedRevenuesService.getStats(),
-      ]);
-      const revenues = Array.isArray(revenuesData)
-        ? revenuesData
-        : ((revenuesData as { results: FixedRevenue[] }).results ?? []);
-      setFixedRevenues(revenues);
-      setAccounts(accountsData);
-      setStats(statsData as FixedRevenueStats);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
 
   const openCreate = () => {
     setSelectedRevenue(undefined);
@@ -185,7 +201,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -212,7 +228,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         title: t('pages.fixedRevenues.deleted'),
         description: t('pages.fixedRevenues.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -299,14 +315,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     0
   );
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.fixedRevenues.title')}
         icon={<Calendar className="h-6 w-6" />}
@@ -681,7 +691,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         isOpen={isLaunchDialogOpen}
         onClose={() => setIsLaunchDialogOpen(false)}
         fixedRevenues={activeRevenues}
-        onSuccess={loadData}
+        onSuccess={refresh}
       />
     </Wrapper>
   );
@@ -711,7 +721,11 @@ function LaunchRevenuesDialog({
   const years = Array.from({ length: 3 }, (_, i) => currentYear + i);
   const [monthPart, yearPart] = selectedMonth.split('-');
 
-  useEffect(() => {
+  // Reinicia os valores/seleção sempre que o dialog abre (derivado durante o
+  // render — sem efeito — comparando com a última transição de `isOpen`).
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  if (isOpen !== lastIsOpen) {
+    setLastIsOpen(isOpen);
     if (isOpen) {
       const defaults: Record<number, number> = {};
       const ids = new Set<number>();
@@ -722,7 +736,7 @@ function LaunchRevenuesDialog({
       setRevenueValues(defaults);
       setSelectedIds(ids);
     }
-  }, [isOpen, fixedRevenues]);
+  }
 
   const handleSubmit = async () => {
     if (!selectedMonth || selectedIds.size === 0) return;

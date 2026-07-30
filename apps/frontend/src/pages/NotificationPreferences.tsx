@@ -1,5 +1,6 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Mail, BellOff, BellRing, Loader2, Save, Zap } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -76,34 +77,32 @@ function ChannelBadge({ channel }: { channel: NotificationChannel }) {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
+const EMPTY_PREFERENCES: NotificationPreference[] = [];
+
 export default function NotificationPreferences() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<
     Record<NotificationType, NotificationChannel>
   >({} as Record<NotificationType, NotificationChannel>);
 
-  const load = useCallback(async () => {
-    try {
-      const data = await notificationPreferencesService.getAll();
-      setPreferences(data);
-    } catch (err) {
-      toast({
-        title: t('pages.notificationPreferences.loadError'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast, t]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { data: preferences = EMPTY_PREFERENCES, isLoading } = useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: async () => {
+      try {
+        return await notificationPreferencesService.getAll();
+      } catch (err) {
+        toast({
+          title: t('pages.notificationPreferences.loadError'),
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        });
+        return EMPTY_PREFERENCES;
+      }
+    },
+  });
 
   function getChannel(notificationType: NotificationType): NotificationChannel {
     if (notificationType in pendingChanges) return pendingChanges[notificationType];
@@ -138,15 +137,20 @@ export default function NotificationPreferences() {
           const updated = await notificationPreferencesService.update(existing.id, {
             channel,
           });
-          setPreferences((prev) =>
-            prev.map((p) => (p.id === existing.id ? updated : p))
+          queryClient.setQueryData<NotificationPreference[]>(
+            ['notification-preferences'],
+            (prev = EMPTY_PREFERENCES) =>
+              prev.map((p) => (p.id === existing.id ? updated : p))
           );
         } else {
           const created = await notificationPreferencesService.create({
             notification_type: notificationType as NotificationType,
             channel,
           });
-          setPreferences((prev) => [...prev, created]);
+          queryClient.setQueryData<NotificationPreference[]>(
+            ['notification-preferences'],
+            (prev = EMPTY_PREFERENCES) => [...prev, created]
+          );
         }
       }
       setPendingChanges({} as Record<NotificationType, NotificationChannel>);

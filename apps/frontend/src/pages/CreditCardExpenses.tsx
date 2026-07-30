@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -65,17 +66,26 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const EMPTY_PURCHASES: CreditCardPurchase[] = [];
+const EMPTY_INSTALLMENTS: CreditCardInstallment[] = [];
+const EMPTY_CARDS: CreditCard[] = [];
+const EMPTY_BILLS: CreditCardBill[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function CreditCardExpenses({
   embedded = false,
 }: {
   embedded?: boolean;
 }) {
   const { t } = useTranslation();
-  const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
-  const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [bills, setBills] = useState<CreditCardBill[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isInstallmentDialogOpen, setIsInstallmentDialogOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<
@@ -100,22 +110,6 @@ export default function CreditCardExpenses({
   const { user } = useAuthStore();
   const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (cardFilter === 'all') {
-      setExtraSubLabel(null);
-    } else {
-      const card = creditCards.find((c) => c.id.toString() === cardFilter);
-      setExtraSubLabel(card?.name ?? null);
-    }
-    return () => setExtraSubLabel(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardFilter, creditCards]);
-
   // Mapeamento de abreviações de mês para número
   const MONTH_TO_NUMBER: Record<string, number> = {
     Jan: 1,
@@ -131,6 +125,54 @@ export default function CreditCardExpenses({
     Nov: 11,
     Dec: 12,
   };
+
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['credit-card-expenses'],
+    queryFn: async () => {
+      try {
+        const [purchasesData, installmentsData, cardsData, billsData] =
+          await Promise.all([
+            creditCardPurchasesService.getAll(),
+            creditCardInstallmentsService.getAll(),
+            creditCardsService.getAll(),
+            creditCardBillsService.getAll(),
+          ]);
+        return {
+          purchases: purchasesData,
+          installments: installmentsData,
+          creditCards: cardsData,
+          bills: billsData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          purchases: EMPTY_PURCHASES,
+          installments: EMPTY_INSTALLMENTS,
+          creditCards: EMPTY_CARDS,
+          bills: EMPTY_BILLS,
+        };
+      }
+    },
+  });
+  const purchases = pageData?.purchases ?? EMPTY_PURCHASES;
+  const installments = pageData?.installments ?? EMPTY_INSTALLMENTS;
+  const creditCards = pageData?.creditCards ?? EMPTY_CARDS;
+  const bills = pageData?.bills ?? EMPTY_BILLS;
+
+  useEffect(() => {
+    if (cardFilter === 'all') {
+      setExtraSubLabel(null);
+    } else {
+      const card = creditCards.find((c) => c.id.toString() === cardFilter);
+      setExtraSubLabel(card?.name ?? null);
+    }
+    return () => setExtraSubLabel(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardFilter, creditCards]);
 
   // Faturas filtradas pelo cartão selecionado e ordenadas (abertas primeiro em ordem crescente, depois fechadas/pagas em ordem crescente)
   const availableBills = useMemo(() => {
@@ -160,8 +202,49 @@ export default function CreditCardExpenses({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, bills]);
 
-  // Reset bill filter when card changes
-  useEffect(() => {
+  // Seleciona automaticamente o primeiro cartão e sua primeira fatura aberta
+  // assim que os dados chegam pela primeira vez (derivado durante o render,
+  // sem efeito — roda uma única vez por carregamento de `creditCards`).
+  const [autoSelectedFor, setAutoSelectedFor] = useState<CreditCard[] | undefined>();
+  if (!autoSelectedFor && creditCards.length > 0) {
+    setAutoSelectedFor(creditCards);
+    const firstCardId = creditCards[0].id.toString();
+    setCardFilter(firstCardId);
+    const firstCardBills = bills.filter(
+      (b) => b.credit_card.toString() === firstCardId
+    );
+    const sortedBills = [...firstCardBills].sort((a, b) => {
+      const aMonth = MONTH_TO_NUMBER[a.month] || 1;
+      const bMonth = MONTH_TO_NUMBER[b.month] || 1;
+      const aIsOpen = a.status !== 'paid' && a.status !== 'closed';
+      const bIsOpen = b.status !== 'paid' && b.status !== 'closed';
+      if (aIsOpen && !bIsOpen) return -1;
+      if (!aIsOpen && bIsOpen) return 1;
+      const aDate = new Date(parseInt(a.year), aMonth - 1);
+      const bDate = new Date(parseInt(b.year), bMonth - 1);
+      return aDate.getTime() - bDate.getTime();
+    });
+    const firstOpenBill = sortedBills.find(
+      (b) => b.status !== 'paid' && b.status !== 'closed'
+    );
+    if (firstOpenBill) {
+      setBillFilter(firstOpenBill.id.toString());
+    } else if (sortedBills.length > 0) {
+      setBillFilter(sortedBills[0].id.toString());
+    }
+  }
+
+  // Reseta o filtro de fatura quando o cartão muda e a fatura selecionada
+  // deixa de pertencer a ele (derivado durante o render).
+  const [lastBillResetKey, setLastBillResetKey] = useState<{
+    cardFilter: string;
+    availableBills: CreditCardBill[];
+  } | null>(null);
+  if (
+    lastBillResetKey?.cardFilter !== cardFilter ||
+    lastBillResetKey.availableBills !== availableBills
+  ) {
+    setLastBillResetKey({ cardFilter, availableBills });
     if (cardFilter !== 'all') {
       const currentBillValid = availableBills.some(
         (b) => b.id.toString() === billFilter
@@ -170,7 +253,7 @@ export default function CreditCardExpenses({
         setBillFilter('all');
       }
     }
-  }, [cardFilter, availableBills, billFilter]);
+  }
 
   const getCardDisplayName = (cardId: number) => {
     const card = creditCards.find((c) => c.id === cardId);
@@ -193,92 +276,6 @@ export default function CreditCardExpenses({
       return `${card.name} **** ${last4}`;
     }
     return 'N/A';
-  };
-
-  const loadData = async (preserveFilters = false) => {
-    try {
-      setIsLoading(true);
-      // Salvar filtros atuais se necessário
-      const currentCardFilter = cardFilter;
-      const currentBillFilter = billFilter;
-
-      const [purchasesData, installmentsData, cardsData, billsData] = await Promise.all(
-        [
-          creditCardPurchasesService.getAll(),
-          creditCardInstallmentsService.getAll(),
-          creditCardsService.getAll(),
-          creditCardBillsService.getAll(),
-        ]
-      );
-      setPurchases(purchasesData);
-      setInstallments(installmentsData);
-      setCreditCards(cardsData);
-      setBills(billsData);
-
-      // Se deve preservar filtros e eles são válidos, restaurá-los
-      if (preserveFilters) {
-        // Verificar se o cartão selecionado ainda existe
-        const cardStillExists =
-          currentCardFilter === 'all' ||
-          cardsData.some((c) => c.id.toString() === currentCardFilter);
-        if (cardStillExists) {
-          setCardFilter(currentCardFilter);
-          // Verificar se a fatura selecionada ainda existe e pertence ao cartão
-          const billStillValid =
-            currentBillFilter === 'all' ||
-            billsData.some(
-              (b) =>
-                b.id.toString() === currentBillFilter &&
-                (currentCardFilter === 'all' ||
-                  b.credit_card.toString() === currentCardFilter)
-            );
-          if (billStillValid) {
-            setBillFilter(currentBillFilter);
-          }
-        }
-        return;
-      }
-
-      // Selecionar automaticamente o primeiro cartão e sua primeira fatura ABERTA
-      if (cardsData.length > 0) {
-        const firstCardId = cardsData[0].id.toString();
-        setCardFilter(firstCardId);
-
-        // Encontrar a primeira fatura ABERTA do primeiro cartão (não paga e não fechada)
-        const firstCardBills = billsData.filter(
-          (b) => b.credit_card.toString() === firstCardId
-        );
-        // Ordenar: abertas primeiro (por data crescente), depois fechadas/pagas
-        const sortedBills = [...firstCardBills].sort((a, b) => {
-          const aMonth = MONTH_TO_NUMBER[a.month] || 1;
-          const bMonth = MONTH_TO_NUMBER[b.month] || 1;
-          const aIsOpen = a.status !== 'paid' && a.status !== 'closed';
-          const bIsOpen = b.status !== 'paid' && b.status !== 'closed';
-          if (aIsOpen && !bIsOpen) return -1;
-          if (!aIsOpen && bIsOpen) return 1;
-          const aDate = new Date(parseInt(a.year), aMonth - 1);
-          const bDate = new Date(parseInt(b.year), bMonth - 1);
-          return aDate.getTime() - bDate.getTime();
-        });
-        // Selecionar a primeira fatura aberta, ou a primeira se todas estiverem fechadas
-        const firstOpenBill = sortedBills.find(
-          (b) => b.status !== 'paid' && b.status !== 'closed'
-        );
-        if (firstOpenBill) {
-          setBillFilter(firstOpenBill.id.toString());
-        } else if (sortedBills.length > 0) {
-          setBillFilter(sortedBills[0].id.toString());
-        }
-      }
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Filtrar parcelas
@@ -385,7 +382,7 @@ export default function CreditCardExpenses({
       }
 
       setIsDialogOpen(false);
-      void loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -439,7 +436,7 @@ export default function CreditCardExpenses({
         title: t('pages.creditCardExpenses.deleted'),
         description: t('pages.creditCardExpenses.deletedDesc'),
       });
-      void loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -460,7 +457,7 @@ export default function CreditCardExpenses({
           : t('pages.creditCardExpenses.installmentPaid'),
         description: t('pages.creditCardExpenses.installmentStatusDesc'),
       });
-      void loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.updateError'),
@@ -486,7 +483,7 @@ export default function CreditCardExpenses({
         description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
-      void loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -526,7 +523,7 @@ export default function CreditCardExpenses({
         description: t('pages.creditCardExpenses.installmentLinkedDesc'),
       });
       setIsAssignBillDialogOpen(false);
-      void loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -669,14 +666,8 @@ export default function CreditCardExpenses({
     (c) => c.key !== 'due_date'
   );
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.creditCardExpenses.title')}
         icon={<ShoppingCart />}

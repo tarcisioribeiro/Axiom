@@ -421,12 +421,14 @@ export default function WorkoutPage() {
     finished_at: string;
     notes: string;
     exercises: Array<{
+      id?: number;
       exercise_name: string;
       sets_target: number;
       reps_target_min: number;
       reps_target_max: number;
       order: number;
       sets: Array<{
+        id?: number;
         set_number: number;
         load: string;
         load_unit: string;
@@ -436,6 +438,74 @@ export default function WorkoutPage() {
       }>;
     }>;
   }
+
+  /**
+   * Reconciles the nested exercises/sets submitted from the session edit form
+   * against what the session originally had, issuing create/update/delete
+   * calls only for what actually changed instead of always recreating.
+   */
+  const reconcileSessionExercises = async (
+    sessionId: number,
+    originalExercises: WorkoutSession['session_exercises'],
+    submittedExercises: SessionFormData['exercises']
+  ) => {
+    const originalById = new Map(originalExercises.map((ex) => [ex.id, ex]));
+    const submittedIds = new Set(
+      submittedExercises.filter((ex) => ex.id != null).map((ex) => ex.id)
+    );
+    const exerciseIdsToDelete = originalExercises
+      .filter((ex) => !submittedIds.has(ex.id))
+      .map((ex) => ex.id);
+
+    await Promise.all([
+      ...exerciseIdsToDelete.map((id) => workoutSessionExerciseService.delete(id)),
+      ...submittedExercises.map(async (ex, exIdx) => {
+        const payload = {
+          session: sessionId,
+          exercise_name: ex.exercise_name,
+          sets_target: ex.sets_target,
+          reps_target_min: ex.reps_target_min,
+          reps_target_max: ex.reps_target_max,
+          order: exIdx,
+          owner: ownerId,
+        };
+
+        const exerciseId =
+          ex.id != null
+            ? await workoutSessionExerciseService
+                .update(ex.id, payload)
+                .then(() => ex.id as number)
+            : await workoutSessionExerciseService.create(payload).then((r) => r.id);
+
+        const originalSets = ex.id != null ? (originalById.get(ex.id)?.sets ?? []) : [];
+        const submittedSetIds = new Set(
+          ex.sets.filter((s) => s.id != null).map((s) => s.id)
+        );
+        const setIdsToDelete = originalSets
+          .filter((s) => !submittedSetIds.has(s.id))
+          .map((s) => s.id);
+
+        await Promise.all([
+          ...setIdsToDelete.map((id) => workoutSessionSetService.delete(id)),
+          ...ex.sets.map((s, sIdx) => {
+            const setPayload = {
+              session_exercise: exerciseId,
+              set_number: sIdx + 1,
+              load: s.load || undefined,
+              load_unit: s.load_unit,
+              reps_done: s.reps_done ? Number(s.reps_done) : undefined,
+              completed: s.completed,
+              notes: s.notes || undefined,
+              owner: ownerId,
+            };
+            return s.id != null
+              ? workoutSessionSetService.update(s.id, setPayload)
+              : workoutSessionSetService.create(setPayload);
+          }),
+        ]);
+      }),
+    ]);
+  };
 
   const createSessionMutation = useMutation({
     mutationFn: async (data: SessionFormData) => {
@@ -485,6 +555,47 @@ export default function WorkoutPage() {
       toast({
         title: t('pages.workoutSessions.sessionCreated'),
         description: t('pages.workoutSessions.sessionCreatedDesc'),
+      });
+      setDialog(null);
+    },
+    onError: (err: unknown) => {
+      toast({
+        title: t('pages.workoutSessions.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateSessionMutation = useMutation({
+    mutationFn: async ({
+      id,
+      data,
+      original,
+    }: {
+      id: number;
+      data: SessionFormData;
+      original: WorkoutSession;
+    }) => {
+      const session = await workoutSessionService.update(id, {
+        workout_day:
+          data.workout_day && data.workout_day !== 'none'
+            ? Number(data.workout_day)
+            : undefined,
+        date: data.date,
+        started_at: data.started_at || undefined,
+        finished_at: data.finished_at || undefined,
+        notes: data.notes || undefined,
+        owner: ownerId,
+      });
+      await reconcileSessionExercises(id, original.session_exercises, data.exercises);
+      return session;
+    },
+    onSuccess: () => {
+      void invalidateSessions();
+      toast({
+        title: t('pages.workoutSessions.sessionUpdated'),
+        description: t('pages.workoutSessions.sessionUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -1143,11 +1254,22 @@ export default function WorkoutPage() {
               <WorkoutSessionForm
                 workoutDays={allDaysList}
                 ownerId={ownerId}
+                session={dialog.type === 'edit-session' ? dialog.session : undefined}
                 onSubmit={async (data) => {
-                  await createSessionMutation.mutateAsync(data);
+                  if (dialog.type === 'edit-session') {
+                    await updateSessionMutation.mutateAsync({
+                      id: dialog.session.id,
+                      data,
+                      original: dialog.session,
+                    });
+                  } else {
+                    await createSessionMutation.mutateAsync(data);
+                  }
                 }}
                 onCancel={() => setDialog(null)}
-                isLoading={createSessionMutation.isPending}
+                isLoading={
+                  createSessionMutation.isPending || updateSessionMutation.isPending
+                }
               />
             )}
 
@@ -1776,9 +1898,13 @@ function ExerciseList({
   const queryClient = useQueryClient();
   const [items, setItems] = useState<WorkoutExercise[]>(exercises);
 
-  React.useEffect(() => {
+  // Sincroniza `items` com a prop `exercises` (derivado durante o render —
+  // sem efeito), preservando a reordenação otimista local via drag-and-drop.
+  const [lastExercises, setLastExercises] = useState(exercises);
+  if (exercises !== lastExercises) {
+    setLastExercises(exercises);
     setItems(exercises);
-  }, [exercises]);
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 

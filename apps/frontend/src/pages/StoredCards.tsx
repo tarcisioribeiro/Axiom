@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -12,7 +13,7 @@ import {
   Star,
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -81,12 +82,12 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
 
 const DEFAULT_FLAG: FlagConfig = FLAG_CONFIG.OTHER;
 
+const EMPTY_CARDS: StoredCreditCard[] = [];
+const EMPTY_CREDIT_CARDS: CreditCard[] = [];
+
 export default function StoredCards() {
   const navigate = useNavigate();
-  const [cards, setCards] = useState<StoredCreditCard[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<StoredCreditCard | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,32 +103,39 @@ export default function StoredCards() {
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data, isLoading } = useQuery({
+    queryKey: ['stored-cards'],
+    queryFn: async () => {
+      try {
+        const [cardsData, creditCardsData, memberData] = await Promise.all([
+          storedCardsService.getAll(),
+          creditCardsService.getAll(),
+          membersService.getCurrentUserMember(),
+        ]);
+        return {
+          cards: cardsData,
+          creditCards: creditCardsData,
+          currentUserMember: memberData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          cards: EMPTY_CARDS,
+          creditCards: EMPTY_CREDIT_CARDS,
+          currentUserMember: null as Member | null,
+        };
+      }
+    },
+  });
+  const cards = data?.cards ?? EMPTY_CARDS;
+  const creditCards = data?.creditCards ?? EMPTY_CREDIT_CARDS;
+  const currentUserMember = data?.currentUserMember ?? null;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [cardsData, creditCardsData, memberData] = await Promise.all([
-        storedCardsService.getAll(),
-        creditCardsService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setCards(cardsData);
-      setCreditCards(creditCardsData);
-      setCurrentUserMember(memberData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['stored-cards'] });
 
   const handleCreate = () => {
     setSelectedCard(undefined);
@@ -156,7 +164,7 @@ export default function StoredCards() {
         title: t('pages.storedCards.deleted'),
         description: t('pages.storedCards.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -242,7 +250,7 @@ export default function StoredCards() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -257,7 +265,11 @@ export default function StoredCards() {
   const handleToggleFavorite = async (id: number) => {
     try {
       const updated = await storedCardsService.toggleFavorite(id);
-      setCards((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      queryClient.setQueryData<typeof data>(['stored-cards'], (prev) =>
+        prev
+          ? { ...prev, cards: prev.cards.map((c) => (c.id === id ? updated : c)) }
+          : prev
+      );
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -59,13 +60,21 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const EMPTY_BILLS: CreditCardBill[] = [];
+const EMPTY_CARDS: CreditCard[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function CreditCardBills({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [bills, setBills] = useState<CreditCardBill[]>([]);
-  const [filteredBills, setFilteredBills] = useState<CreditCardBill[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isRenegotiateDialogOpen, setIsRenegotiateDialogOpen] = useState(false);
@@ -81,6 +90,34 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const { user } = useAuthStore();
   const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
 
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['credit-card-bills'],
+    queryFn: async () => {
+      try {
+        const [billsData, cardsData, accountsData] = await Promise.all([
+          creditCardBillsService.getAll(),
+          creditCardsService.getAll(),
+          accountsService.getAll(),
+        ]);
+        return { bills: billsData, creditCards: cardsData, accounts: accountsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          bills: EMPTY_BILLS,
+          creditCards: EMPTY_CARDS,
+          accounts: EMPTY_ACCOUNTS,
+        };
+      }
+    },
+  });
+  const bills = pageData?.bills ?? EMPTY_BILLS;
+  const creditCards = pageData?.creditCards ?? EMPTY_CARDS;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+
   useEffect(() => {
     if (cardFilter === 'all') {
       setExtraSubLabel(null);
@@ -91,39 +128,6 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     return () => setExtraSubLabel(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, creditCards]);
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    filterBills();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardFilter, statusFilter, yearFilter, bills]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [billsData, cardsData, accountsData] = await Promise.all([
-        creditCardBillsService.getAll(),
-        creditCardsService.getAll(),
-        accountsService.getAll(),
-      ]);
-      setBills(billsData);
-      setFilteredBills(billsData);
-      setCreditCards(cardsData);
-      setAccounts(accountsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Mapeamento de abreviações de mês para número
   const MONTH_TO_NUMBER: Record<string, number> = {
@@ -141,7 +145,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     Dec: 12,
   };
 
-  const filterBills = () => {
+  const filteredBills = useMemo(() => {
     let filtered = [...bills];
     if (cardFilter !== 'all') {
       filtered = filtered.filter((b) => b.credit_card.toString() === cardFilter);
@@ -188,8 +192,9 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       return aDate.getTime() - bDate.getTime();
     });
 
-    setFilteredBills(filtered);
-  };
+    return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bills, cardFilter, statusFilter, yearFilter]);
 
   const handleSubmit = async (data: CreditCardBillFormData) => {
     try {
@@ -208,7 +213,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -248,7 +253,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         title: t('pages.creditCardBills.deleted'),
         description: t('pages.creditCardBills.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -283,7 +288,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         }),
       });
       setIsPaymentDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.payError'),
@@ -316,7 +321,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         }),
       });
       setIsRenegotiateDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.renegotiateError'),
@@ -344,7 +349,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         title: t('pages.creditCardBills.reopened'),
         description: t('pages.creditCardBills.reopenedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.reopenError'),
@@ -470,14 +475,8 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     },
   ];
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
         <div className="flex flex-wrap items-center gap-sm">
           <Select value={cardFilter} onValueChange={setCardFilter}>

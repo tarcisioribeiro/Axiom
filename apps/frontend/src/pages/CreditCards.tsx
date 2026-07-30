@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Plus,
@@ -151,11 +152,21 @@ function sortBills(bills: CreditCardBill[]): CreditCardBill[] {
   });
 }
 
+const EMPTY_CREDIT_CARDS: CreditCard[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+const EMPTY_BILLS: CreditCardBill[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function CreditCards({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CreditCard | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,7 +174,6 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
 
-  const [allBills, setAllBills] = useState<CreditCardBill[]>([]);
   const [hubCard, setHubCard] = useState<CreditCard | undefined>();
   const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
 
@@ -185,39 +195,40 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
 
+  const { data: cardsPageData, isLoading } = useQuery({
+    queryKey: ['credit-cards'],
+    queryFn: async () => {
+      try {
+        const [cardsData, accountsData, billsData] = await Promise.all([
+          creditCardsService.getAll(),
+          accountsService.getAll(),
+          creditCardBillsService.getAll(),
+        ]);
+        return { creditCards: cardsData, accounts: accountsData, allBills: billsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          creditCards: [] as CreditCard[],
+          accounts: [] as Account[],
+          allBills: [] as CreditCardBill[],
+        };
+      }
+    },
+  });
+  const creditCards = cardsPageData?.creditCards ?? EMPTY_CREDIT_CARDS;
+  const accounts = cardsPageData?.accounts ?? EMPTY_ACCOUNTS;
+  const allBills = cardsPageData?.allBills ?? EMPTY_BILLS;
+
   const billAssociatedAccount = useMemo(() => {
     if (!selectedBill) return undefined;
     const card = creditCards.find((c) => c.id === selectedBill.credit_card);
     if (!card) return undefined;
     return accounts.find((a) => a.id === card.associated_account);
   }, [selectedBill, creditCards, accounts]);
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [cardsData, accountsData, billsData] = await Promise.all([
-        creditCardsService.getAll(),
-        accountsService.getAll(),
-        creditCardBillsService.getAll(),
-      ]);
-      setCreditCards(cardsData);
-      setAccounts(accountsData);
-      setAllBills(billsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = async (data: CreditCardFormData) => {
     try {
@@ -236,7 +247,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -278,7 +289,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
         title: t('pages.creditCards.deleted'),
         description: t('pages.creditCards.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -511,18 +522,12 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
     return `**** ${digitsOnly.slice(-4)}`;
   };
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   if (isLoading) {
     return <LoadingState />;
   }
 
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.creditCards.title')}
         icon={<CreditCardIcon />}
@@ -980,11 +985,11 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
         accounts={accounts}
         onClose={() => setHubCard(undefined)}
         onCardUpdated={() => {
-          void loadData();
+          void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
           setHubCard(undefined);
         }}
         onCardDeleted={() => {
-          void loadData();
+          void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
         }}
       />
     </Wrapper>

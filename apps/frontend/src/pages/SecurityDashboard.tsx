@@ -401,13 +401,15 @@ export default function SecurityDashboard() {
   const { isCompleted } = useVaultOnboarding();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    // Show onboarding wizard on first visit
+  // Mostra o assistente de onboarding na primeira visita (checagem única,
+  // derivada durante o render — sem efeito).
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
+  if (!hasCheckedOnboarding) {
+    setHasCheckedOnboarding(true);
     if (!isCompleted()) {
       setShowOnboarding(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['securityDashboard'],

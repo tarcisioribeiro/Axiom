@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -210,11 +211,10 @@ interface HighlightsTabProps {
   onCreateClose: () => void;
 }
 
+const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
+const EMPTY_BOOKS: Book[] = [];
+
 export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProps) {
-  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [ownerId, setOwnerId] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -224,33 +224,33 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['highlights-tab'],
+    queryFn: async () => {
+      try {
+        const [highlightsData, booksData, member] = await Promise.all([
+          bookHighlightsService.getAll(),
+          booksService.getAll(),
+          membersService.getCurrentUserMember(),
+        ]);
+        return { highlights: highlightsData, books: booksData, ownerId: member.id };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { highlights: EMPTY_HIGHLIGHTS, books: EMPTY_BOOKS, ownerId: 0 };
+      }
+    },
+  });
+  const highlights = pageData?.highlights ?? EMPTY_HIGHLIGHTS;
+  const books = pageData?.books ?? EMPTY_BOOKS;
+  const ownerId = pageData?.ownerId ?? 0;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [highlightsData, booksData, member] = await Promise.all([
-        bookHighlightsService.getAll(),
-        booksService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setHighlights(highlightsData);
-      setBooks(booksData);
-      setOwnerId(member.id);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['highlights-tab'] });
 
   const handleEdit = (highlight: BookHighlight) => {
     setEditingHighlight(highlight);
@@ -269,7 +269,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
     try {
       await bookHighlightsService.delete(id);
       toast({ title: t('pages.highlights.deleted') });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -291,7 +291,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       }
       onCreateClose();
       setIsEditOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

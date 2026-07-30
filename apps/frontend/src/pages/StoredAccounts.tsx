@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -13,7 +14,7 @@ import {
   Wallet,
   Building2,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -89,12 +90,12 @@ function getInstitutionInitials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+const EMPTY_ACCOUNTS: StoredBankAccount[] = [];
+const EMPTY_FINANCE_ACCOUNTS: Account[] = [];
+
 export default function StoredAccounts() {
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState<StoredBankAccount[]>([]);
-  const [financeAccounts, setFinanceAccounts] = useState<Account[]>([]);
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<
     StoredBankAccount | undefined
@@ -112,32 +113,40 @@ export default function StoredAccounts() {
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data, isLoading } = useQuery({
+    queryKey: ['stored-accounts'],
+    queryFn: async () => {
+      try {
+        const [accountsData, financeAccountsData, memberData] = await Promise.all([
+          storedAccountsService.getAll(),
+          accountsService.getAll(),
+          membersService.getCurrentUserMember(),
+        ]);
+        return {
+          accounts: accountsData,
+          financeAccounts: financeAccountsData,
+          currentUserMember: memberData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          accounts: EMPTY_ACCOUNTS,
+          financeAccounts: EMPTY_FINANCE_ACCOUNTS,
+          currentUserMember: null as Member | null,
+        };
+      }
+    },
+  });
+  const accounts = data?.accounts ?? EMPTY_ACCOUNTS;
+  const financeAccounts = data?.financeAccounts ?? EMPTY_FINANCE_ACCOUNTS;
+  const currentUserMember = data?.currentUserMember ?? null;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [accountsData, financeAccountsData, memberData] = await Promise.all([
-        storedAccountsService.getAll(),
-        accountsService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setAccounts(accountsData);
-      setFinanceAccounts(financeAccountsData);
-      setCurrentUserMember(memberData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['stored-accounts'] });
 
   const handleCreate = () => {
     setSelectedAccount(undefined);
@@ -166,7 +175,7 @@ export default function StoredAccounts() {
         title: t('pages.storedAccounts.deleted'),
         description: t('pages.storedAccounts.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -260,7 +269,7 @@ export default function StoredAccounts() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -275,7 +284,11 @@ export default function StoredAccounts() {
   const handleToggleFavorite = async (id: number) => {
     try {
       const updated = await storedAccountsService.toggleFavorite(id);
-      setAccounts((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      queryClient.setQueryData<typeof data>(['stored-accounts'], (prev) =>
+        prev
+          ? { ...prev, accounts: prev.accounts.map((a) => (a.id === id ? updated : a)) }
+          : prev
+      );
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

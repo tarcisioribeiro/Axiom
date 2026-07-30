@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';
 
@@ -45,12 +45,11 @@ export default function Register() {
   const {
     register,
     handleSubmit,
-    watch,
     control,
     formState: { errors },
   } = useForm<RegisterFormData>();
 
-  const password = watch('password');
+  const password = useWatch({ control, name: 'password' });
 
   const onSubmit = async (data: RegisterFormData) => {
     if (data.password !== data.confirmPassword) {

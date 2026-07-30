@@ -13,8 +13,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, GripVertical, Clock } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -100,37 +101,34 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
   );
 }
 
+const EMPTY_QUEUE: Book[] = [];
+const QUERY_KEY = ['reading-queue'];
+
 export function ReadingQueueTab() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  useEffect(() => {
-    void loadQueue();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadQueue = async () => {
-    try {
-      setIsLoading(true);
-      const data = await booksService.getReadingQueue();
-      setBooks(data);
-    } catch (err) {
-      toast({
-        title: t('pages.readingQueue.errorLoad'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: books = EMPTY_QUEUE, isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      try {
+        return await booksService.getReadingQueue();
+      } catch (err) {
+        toast({
+          title: t('pages.readingQueue.errorLoad'),
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        });
+        return EMPTY_QUEUE;
+      }
+    },
+  });
 
   const persistOrder = useCallback(
     (ordered: Book[]) => {
@@ -156,7 +154,7 @@ export function ReadingQueueTab() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setBooks((prev) => {
+    queryClient.setQueryData<Book[]>(QUERY_KEY, (prev = EMPTY_QUEUE) => {
       const oldIndex = prev.findIndex((b) => b.id === active.id);
       const newIndex = prev.findIndex((b) => b.id === over.id);
       const reordered = arrayMove(prev, oldIndex, newIndex);

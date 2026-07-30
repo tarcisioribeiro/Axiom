@@ -5,7 +5,11 @@ import { logger } from '@/lib/logger';
 import { authService } from '@/services/auth-service';
 import type { LoginCredentials, Permission, User } from '@/types';
 
-import { enrichUserWithMemberData } from './auth-helpers';
+import {
+  buildAdminUser,
+  buildMemberUser,
+  enrichUserWithMemberData,
+} from './auth-helpers';
 
 let loadUserDataPromise: Promise<void> | null = null;
 
@@ -60,15 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await authService.getUserPermissions();
 
       if (is_superuser) {
-        const adminUser: User = {
-          id: 0,
-          username: credentials.username,
-          email: '',
-          first_name: 'Admin',
-          last_name: '',
-          groups: [],
-          is_superuser: true,
-        };
+        const adminUser = buildAdminUser(credentials.username);
         authService.saveUserData(adminUser);
         authService.savePermissions([]);
         set({
@@ -84,14 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       authService.savePermissions(permissionsResponse);
 
-      let user: User = {
-        id: 1,
-        username: credentials.username,
-        email: '',
-        first_name: '',
-        last_name: '',
-        groups: ['Membros'],
-      };
+      let user = buildMemberUser(credentials.username);
 
       user = await enrichUserWithMemberData(user, '[AuthStore] login:');
       authService.saveUserData(user);
@@ -131,15 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await authService.getUserPermissions();
 
       if (is_superuser) {
-        const adminUser: User = {
-          id: 0,
-          username: '',
-          email: '',
-          first_name: 'Admin',
-          last_name: '',
-          groups: [],
-          is_superuser: true,
-        };
+        const adminUser = buildAdminUser('');
         authService.saveUserData(adminUser);
         authService.savePermissions([]);
         set({
@@ -156,14 +137,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       authService.savePermissions(permissionsResponse);
-      let user: User = {
-        id: 1,
-        username: '',
-        email: '',
-        first_name: '',
-        last_name: '',
-        groups: ['Membros'],
-      };
+      let user = buildMemberUser('');
       user = await enrichUserWithMemberData(user, '[AuthStore] verify2FA:');
       authService.saveUserData(user);
       set({

@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
@@ -12,8 +13,8 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const { register, handleSubmit, setValue, watch } = useForm<TransferFormData>({
+  const { register, handleSubmit, setValue, control } = useForm<TransferFormData>({
     defaultValues: transfer
       ? {
           description: transfer.description,
@@ -83,17 +84,32 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         },
   });
 
-  const watchedOriginAccount = watch('origin_account');
-  const watchedDestinyAccount = watch('destiny_account');
-  const watchedTransfered = watch('transfered');
-  const watchedValue = watch('value');
-  const watchedDate = watch('date');
-  const watchedCategory = watch('category') || 'pix';
+  const watchedOriginAccount = useWatch({ control, name: 'origin_account' });
+  const watchedDestinyAccount = useWatch({ control, name: 'destiny_account' });
+  const watchedTransfered = useWatch({ control, name: 'transfered' });
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedCategoryRaw = useWatch({ control, name: 'category' });
+  const watchedCategory = watchedCategoryRaw || 'pix';
   const today = formatLocalDate(new Date());
   const isFutureDate = watchedDate > today;
 
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', watchedOriginAccount, watchedDate],
+    queryFn: async () => {
+      try {
+        const data = await accountsService.getProjectedBalance(
+          watchedOriginAccount,
+          watchedDate
+        );
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!watchedOriginAccount && !!watchedDate && !!watchedValue && isFutureDate,
+  });
 
   const balanceInfo = useMemo(() => {
     if (isFutureDate) return null;
@@ -130,22 +146,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   ]);
 
   useEffect(() => {
-    if (!watchedOriginAccount || !watchedDate || !watchedValue || !isFutureDate) {
-      setProjectedBalance(null);
-      return;
-    }
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(watchedOriginAccount, watchedDate)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [watchedOriginAccount, watchedDate, watchedValue, isFutureDate]);
-
-  useEffect(() => {
     if (!transfer && accounts.length > 0) {
-      const currentOrigin = watch('origin_account');
-      const currentDestiny = watch('destiny_account');
+      const currentOrigin = watchedOriginAccount;
+      const currentDestiny = watchedDestinyAccount;
       if (!currentOrigin && accounts.length > 0)
         setValue('origin_account', accounts[0].id);
       if (!currentDestiny && accounts.length > 1) {
@@ -159,8 +162,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
 
   useEffect(() => {
     if (!transfer && watchedOriginAccount && accounts.length > 1) {
-      const currentDestiny = watch('destiny_account');
-      if (currentDestiny === watchedOriginAccount) {
+      if (watchedDestinyAccount === watchedOriginAccount) {
         const newDestiny = accounts.find((a) => a.id !== watchedOriginAccount);
         if (newDestiny) setValue('destiny_account', newDestiny.id);
       }
@@ -169,8 +171,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   }, [watchedOriginAccount]);
 
   const handleSwapAccounts = () => {
-    const origin = watch('origin_account');
-    const destiny = watch('destiny_account');
+    const origin = watchedOriginAccount;
+    const destiny = watchedDestinyAccount;
     setValue('origin_account', destiny);
     setValue('destiny_account', origin);
   };
@@ -367,7 +369,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               {t('pages.transfers.form.dateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('pages.transfers.form.datePlaceholder')}
               disabled={isLoading}
@@ -380,7 +382,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               {t('pages.transfers.form.timeLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />

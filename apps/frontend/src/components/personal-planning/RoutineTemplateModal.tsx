@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
+import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import { userRoutineTemplatesService } from '@/services/user-routine-templates-service';
@@ -298,6 +301,9 @@ function UserTemplateList({
   );
 }
 
+const EMPTY_TEMPLATES: RoutineTemplate[] = [];
+const EMPTY_USER_TEMPLATES: UserRoutineTemplate[] = [];
+
 export function RoutineTemplateModal({
   open,
   onOpenChange,
@@ -306,14 +312,52 @@ export function RoutineTemplateModal({
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
+
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
+
   const [activeTab, setActiveTab] = useState('system');
 
-  const [templates, setTemplates] = useState<RoutineTemplate[]>([]);
-  const [isLoadingSystem, setIsLoadingSystem] = useState(false);
+  const { data: templates = EMPTY_TEMPLATES, isLoading: isLoadingSystem } = useQuery({
+    queryKey: ['routine-templates', 'system'],
+    queryFn: async () => {
+      try {
+        return await routineTemplatesService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.routineTasks.templates.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_TEMPLATES;
+      }
+    },
+    enabled: open,
+  });
   const [importingSystemId, setImportingSystemId] = useState<string | null>(null);
 
-  const [userTemplates, setUserTemplates] = useState<UserRoutineTemplate[]>([]);
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const { data: userTemplates = EMPTY_USER_TEMPLATES, isLoading: isLoadingUser } =
+    useQuery({
+      queryKey: ['routine-templates', 'user'],
+      queryFn: async () => {
+        try {
+          return await userRoutineTemplatesService.getAll();
+        } catch (error: unknown) {
+          toast({
+            title: t('pages.routineTasks.templates.loadError'),
+            description: getErrorMessage(error),
+            variant: 'destructive',
+          });
+          return EMPTY_USER_TEMPLATES;
+        }
+      },
+      enabled: open,
+    });
   const [importingUserId, setImportingUserId] = useState<number | null>(null);
 
   // Create template state
@@ -325,46 +369,6 @@ export function RoutineTemplateModal({
   const [isLoadingAllTasks, setIsLoadingAllTasks] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [taskSearch, setTaskSearch] = useState('');
-
-  useEffect(() => {
-    if (open) {
-      void loadSystemTemplates();
-      void loadUserTemplates();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  const loadSystemTemplates = async () => {
-    try {
-      setIsLoadingSystem(true);
-      const data = await routineTemplatesService.getAll();
-      setTemplates(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.templates.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingSystem(false);
-    }
-  };
-
-  const loadUserTemplates = async () => {
-    try {
-      setIsLoadingUser(true);
-      const data = await userRoutineTemplatesService.getAll();
-      setUserTemplates(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.templates.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingUser(false);
-    }
-  };
 
   const handleImportSystem = async (template: RoutineTemplate) => {
     setImportingSystemId(template.id);
@@ -491,8 +495,12 @@ export function RoutineTemplateModal({
         name: newName.trim(),
         description: newDesc.trim() || undefined,
         tasks,
+        owner: ownerId,
       });
-      setUserTemplates((prev) => [created, ...prev]);
+      queryClient.setQueryData<UserRoutineTemplate[]>(
+        ['routine-templates', 'user'],
+        (prev = EMPTY_USER_TEMPLATES) => [created, ...prev]
+      );
       setShowCreateDialog(false);
       toast({
         title: t('pages.routineTasks.templates.createSuccess'),
@@ -523,7 +531,10 @@ export function RoutineTemplateModal({
     if (!confirmed) return;
     try {
       await userRoutineTemplatesService.delete(id);
-      setUserTemplates((prev) => prev.filter((t) => t.id !== id));
+      queryClient.setQueryData<UserRoutineTemplate[]>(
+        ['routine-templates', 'user'],
+        (prev = EMPTY_USER_TEMPLATES) => prev.filter((t) => t.id !== id)
+      );
       toast({ title: t('pages.routineTasks.templates.deleted') });
     } catch (error: unknown) {
       toast({

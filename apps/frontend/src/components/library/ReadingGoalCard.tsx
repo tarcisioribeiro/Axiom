@@ -1,7 +1,8 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -248,42 +249,42 @@ interface ReadingGoalCardProps {
   onGoalChange?: () => void;
 }
 
+const EMPTY_GOALS: ReadingGoal[] = [];
+
 export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   const { t } = useTranslation();
-  const [goals, setGoals] = useState<ReadingGoal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<ReadingGoal | undefined>();
   const [celebrationId, setCelebrationId] = useState<number | null>(null);
   const { toast } = useToast();
   const { showDelete } = useAlertDialog();
+  const queryClient = useQueryClient();
 
   const currentYear = new Date().getFullYear();
 
-  useEffect(() => {
-    void loadGoals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: goals = EMPTY_GOALS, isLoading } = useQuery({
+    queryKey: ['reading-goals', currentYear],
+    queryFn: async () => {
+      try {
+        const data = await readingGoalsService.getAll({ year: currentYear });
+        const yearGoals = data.filter((g) => g.year === currentYear);
 
-  const loadGoals = async () => {
-    try {
-      setIsLoading(true);
-      const data = await readingGoalsService.getAll({ year: currentYear });
-      const yearGoals = data.filter((g) => g.year === currentYear);
-      setGoals(yearGoals);
-
-      const completed = yearGoals.find((g) => g.progress_percentage >= 100);
-      if (completed) {
-        setCelebrationId(completed.id);
-        setTimeout(() => setCelebrationId(null), 1200);
+        const completed = yearGoals.find((g) => g.progress_percentage >= 100);
+        if (completed) {
+          setCelebrationId(completed.id);
+          setTimeout(() => setCelebrationId(null), 1200);
+        }
+        return yearGoals;
+      } catch {
+        // silently fail — goals are optional
+        return EMPTY_GOALS;
       }
-    } catch {
-      // silently fail — goals are optional
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['reading-goals', currentYear] });
 
   const openNewGoal = () => {
     setEditingGoal(undefined);
@@ -309,7 +310,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
     try {
       await readingGoalsService.delete(goal.id);
       toast({ title: t('pages.libraryDashboard.readingGoals.deleted') });
-      await loadGoals();
+      await refresh();
       onGoalChange?.();
     } catch (error) {
       toast({
@@ -357,7 +358,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
         ),
       ]);
 
-      await loadGoals();
+      await refresh();
 
       toast({
         title: editingGoal

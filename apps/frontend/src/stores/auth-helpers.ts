@@ -2,6 +2,29 @@ import { logger } from '@/lib/logger';
 import { membersService } from '@/services/members-service';
 import type { User } from '@/types';
 
+export function buildAdminUser(username: string): User {
+  return {
+    id: 0,
+    username,
+    email: '',
+    first_name: 'Admin',
+    last_name: '',
+    groups: [],
+    is_superuser: true,
+  };
+}
+
+export function buildMemberUser(username: string): User {
+  return {
+    id: 1,
+    username,
+    email: '',
+    first_name: '',
+    last_name: '',
+    groups: ['Membros'],
+  };
+}
+
 export async function enrichUserWithMemberData(
   user: User,
   logPrefix = '[AuthStore]'

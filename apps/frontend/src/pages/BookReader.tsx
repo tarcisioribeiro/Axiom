@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import Epub, { type Book as EpubBook, type Rendition } from 'epubjs';
 import {
   BookOpen,
@@ -54,7 +55,7 @@ import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
 import { readingsService } from '@/services/readings-service';
-import type { Book, BookHighlight, BookHighlightFormData } from '@/types';
+import type { BookHighlight, BookHighlightFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
@@ -597,11 +598,6 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const [book, setBook] = useState<Book | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<'epub' | 'pdf' | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   const [theme, setTheme] = useState<ReaderTheme>(
     () => (localStorage.getItem('reader-theme') as ReaderTheme) ?? 'light'
   );
@@ -625,8 +621,6 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAnnotationForm, setShowAnnotationForm] = useState(false);
-  const [annotations, setAnnotations] = useState<BookHighlight[]>([]);
-  const [ownerId, setOwnerId] = useState<number>(0);
 
   // PDF pagination (lifted from PdfReader so the toolbar can own the nav)
   const [numPages, setNumPages] = useState(0);
@@ -638,57 +632,80 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
   const [latestReadingId, setLatestReadingId] = useState<number | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!bookId) return;
-    void loadAll(parseInt(bookId));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookId]);
+  const { data: loadResult, isLoading } = useQuery({
+    queryKey: ['book-reader', bookId],
+    queryFn: async () => {
+      const id = parseInt(bookId ?? '0');
+      try {
+        const [bookData, fileData, readingsData, highlights, member] =
+          await Promise.all([
+            booksService.getById(id),
+            booksService.getBookFileUrl(id),
+            readingsService.getAll({ book: id }),
+            bookHighlightsService.getByBook(id),
+            membersService.getCurrentUserMember(),
+          ]);
 
-  const loadAll = async (id: number) => {
-    try {
-      setIsLoading(true);
-      const [bookData, fileData, readingsData, highlights, member] = await Promise.all([
-        booksService.getById(id),
-        booksService.getBookFileUrl(id),
-        readingsService.getAll({ book: id }),
-        bookHighlightsService.getByBook(id),
-        membersService.getCurrentUserMember(),
-      ]);
+        // Stream via Django proxy (same-origin) to avoid CORS restrictions from PDF.js worker
+        const streamUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.BOOK_FILE_STREAM}${id}/file/stream/`;
+        const ext = fileData.name.split('.').pop()?.toLowerCase();
+        const isEpub = ext === 'epub';
+        const latest =
+          readingsData.length > 0
+            ? [...readingsData].sort(
+                (a, b) =>
+                  new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+              )[0]
+            : null;
 
-      setBook(bookData);
-      // Stream via Django proxy (same-origin) to avoid CORS restrictions from PDF.js worker
-      const streamUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.BOOK_FILE_STREAM}${id}/file/stream/`;
-      setFileUrl(streamUrl);
-      setAnnotations(highlights);
-      setOwnerId(member.id);
-
-      const ext = fileData.name.split('.').pop()?.toLowerCase();
-      const isEpub = ext === 'epub';
-      setFileType(isEpub ? 'epub' : 'pdf');
-
-      if (readingsData.length > 0) {
-        const latest = [...readingsData].sort(
-          (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        )[0];
-        setLatestReadingId(latest.id);
-        if (latest.current_page) {
-          setCurrentPage(latest.current_page);
-          setPageInput(String(latest.current_page));
-        }
-        if (isEpub && latest.current_cfi) {
-          setCurrentCfi(latest.current_cfi);
-        }
+        return {
+          book: bookData,
+          fileUrl: streamUrl,
+          fileType: isEpub ? 'epub' : 'pdf',
+          highlights,
+          ownerId: member.id,
+          latest,
+          isEpub,
+        };
+      } catch (err) {
+        toast({
+          title: 'Erro ao carregar livro',
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        });
+        return null;
       }
-    } catch (err) {
-      toast({
-        title: 'Erro ao carregar livro',
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+    },
+    enabled: !!bookId,
+  });
+
+  const book = loadResult?.book ?? null;
+  const fileUrl = loadResult?.fileUrl ?? null;
+  const fileType = loadResult?.fileType ?? null;
+  const ownerId = loadResult?.ownerId ?? 0;
+
+  const [annotations, setAnnotations] = useState<BookHighlight[]>([]);
+  const [lastHighlights, setLastHighlights] = useState(loadResult?.highlights);
+  if (loadResult?.highlights !== lastHighlights) {
+    setLastHighlights(loadResult?.highlights);
+    setAnnotations(loadResult?.highlights ?? []);
+  }
+
+  const [lastLatest, setLastLatest] = useState(loadResult?.latest);
+  if (loadResult?.latest !== lastLatest) {
+    setLastLatest(loadResult?.latest);
+    const latest = loadResult?.latest;
+    if (latest) {
+      setLatestReadingId(latest.id);
+      if (latest.current_page) {
+        setCurrentPage(latest.current_page);
+        setPageInput(String(latest.current_page));
+      }
+      if (loadResult?.isEpub && latest.current_cfi) {
+        setCurrentCfi(latest.current_cfi);
+      }
     }
-  };
+  }
 
   const saveProgress = useCallback(
     (page: number, cfi?: string) => {

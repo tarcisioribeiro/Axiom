@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   BarChart3,
@@ -12,7 +13,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -68,12 +69,12 @@ function MemberInitials({ name, sex }: { name: string; sex: string }) {
   );
 }
 
+const EMPTY_MEMBERS: Member[] = [];
+
 export default function Members() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [currentUserMemberId, setCurrentUserMemberId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,32 +82,32 @@ export default function Members() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['members'],
+    queryFn: async () => {
+      try {
+        const [data, currentUserMemberId] = await Promise.all([
+          membersService.getAll(),
+          membersService
+            .getCurrentUserMember()
+            .then((m) => m.id)
+            .catch(() => null),
+        ]);
+        return { members: data, currentUserMemberId };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { members: EMPTY_MEMBERS, currentUserMemberId: null };
+      }
+    },
+  });
+  const members = pageData?.members ?? EMPTY_MEMBERS;
+  const currentUserMemberId = pageData?.currentUserMemberId ?? null;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [data] = await Promise.all([
-        membersService.getAll(),
-        membersService
-          .getCurrentUserMember()
-          .then((m) => setCurrentUserMemberId(m.id))
-          .catch(() => setCurrentUserMemberId(null)),
-      ]);
-      setMembers(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['members'] });
 
   const handleSubmit = async (data: MemberFormData) => {
     try {
@@ -125,7 +126,7 @@ export default function Members() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -152,7 +153,7 @@ export default function Members() {
         title: t('pages.members.deleted'),
         description: t('pages.members.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),

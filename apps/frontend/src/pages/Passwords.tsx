@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Plus,
@@ -29,7 +29,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -588,10 +588,10 @@ function DetailPanel({
   );
 }
 
+const EMPTY_PASSWORDS: Password[] = [];
+
 export default function Passwords() {
-  const [passwords, setPasswords] = useState<Password[]>([]);
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<Password | undefined>();
   const [detailPassword, setDetailPassword] = useState<Password | null>(null);
@@ -620,7 +620,7 @@ export default function Passwords() {
     register,
     handleSubmit: rhfHandleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     setError,
     formState: { errors },
@@ -639,10 +639,41 @@ export default function Passwords() {
     },
   });
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedTotpEnabled = useWatch({ control, name: 'totp_enabled' });
+
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['passwords'],
+    queryFn: async () => {
+      try {
+        const [passwordsData, memberData] = await Promise.all([
+          passwordsService.getAll(),
+          membersService.getCurrentUserMember().catch(() => null),
+        ]);
+        return { passwords: passwordsData, currentUserMember: memberData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { passwords: EMPTY_PASSWORDS, currentUserMember: null as Member | null };
+      }
+    },
+  });
+  const passwords = pageData?.passwords ?? EMPTY_PASSWORDS;
+  const currentUserMember = pageData?.currentUserMember ?? null;
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['passwords'] });
+
+  // Reinicia o countdown quando nada está revelado (derivado durante o
+  // render — sem efeito — comparando com a última transição).
+  const hasRevealed = revealedAt.size > 0;
+  const [lastHasRevealed, setLastHasRevealed] = useState(hasRevealed);
+  if (hasRevealed !== lastHasRevealed) {
+    setLastHasRevealed(hasRevealed);
+    if (!hasRevealed) setCountdown(new Map());
+  }
 
   // Auto-hide revealed passwords after 30 seconds with countdown
   useEffect(() => {
@@ -651,7 +682,6 @@ export default function Passwords() {
         clearInterval(autoHideInterval.current);
         autoHideInterval.current = null;
       }
-      setCountdown(new Map());
       return;
     }
 
@@ -695,26 +725,6 @@ export default function Passwords() {
       if (autoHideInterval.current) clearInterval(autoHideInterval.current);
     };
   }, [revealedAt]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [passwordsData, memberData] = await Promise.all([
-        passwordsService.getAll(),
-        membersService.getCurrentUserMember().catch(() => null),
-      ]);
-      setPasswords(passwordsData);
-      setCurrentUserMember(memberData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCreate = () => {
     if (!currentUserMember) {
@@ -774,7 +784,7 @@ export default function Passwords() {
       if (detailPassword?.id === id) {
         setDetailPassword(null);
       }
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -869,7 +879,7 @@ export default function Passwords() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -888,7 +898,14 @@ export default function Passwords() {
   const handleToggleFavorite = async (id: number) => {
     try {
       const updated = await passwordsService.toggleFavorite(id);
-      setPasswords((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      queryClient.setQueryData<typeof pageData>(['passwords'], (prev) =>
+        prev
+          ? {
+              ...prev,
+              passwords: prev.passwords.map((p) => (p.id === id ? updated : p)),
+            }
+          : prev
+      );
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -1284,7 +1301,7 @@ export default function Passwords() {
           open={isImportOpen}
           onOpenChange={(open) => {
             setIsImportOpen(open);
-            if (!open) void loadData();
+            if (!open) void refresh();
           }}
         >
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
@@ -1392,7 +1409,7 @@ export default function Passwords() {
               <div className="space-y-sm">
                 <Label htmlFor="category">{t('common.fields.category')} *</Label>
                 <Select
-                  value={watch('category')}
+                  value={watchedCategory}
                   onValueChange={(value) => setValue('category', value)}
                 >
                   <SelectTrigger>
@@ -1452,7 +1469,7 @@ export default function Passwords() {
                     className="h-4 w-4 rounded border accent-primary"
                   />
                 </div>
-                {watch('totp_enabled') && (
+                {watchedTotpEnabled && (
                   <div className="mt-sm space-y-xs">
                     <Label htmlFor="totp_secret">
                       {t('pages.passwords.totpSecret', {

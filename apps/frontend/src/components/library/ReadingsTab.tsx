@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Edit,
@@ -10,7 +11,7 @@ import {
   BarChart2,
   CalendarRange,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -100,7 +101,11 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog abre/fecha (derivado durante o
+  // render — sem efeito — comparando com a última transição de `isOpen`).
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  if (isOpen !== lastIsOpen) {
+    setLastIsOpen(isOpen);
     if (!isOpen) {
       setSelectedBook(0);
       setStartDate('');
@@ -108,7 +113,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
     } else if (books.length === 1) {
       setSelectedBook(books[0].id);
     }
-  }, [isOpen, books]);
+  }
 
   const handleSubmit = async () => {
     if (!selectedBook || !startDate || !endDate) {
@@ -229,10 +234,10 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const EMPTY_READINGS: Reading[] = [];
+const EMPTY_BOOKS: Book[] = [];
+
 export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
-  const [readings, setReadings] = useState<Reading[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchDebounce, setSearchDebounce] = useState('');
   const [selectedReading, setSelectedReading] = useState<Reading | undefined>();
@@ -243,6 +248,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   // Debounce search
   useEffect(() => {
@@ -250,33 +256,31 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
     return () => clearTimeout(id);
   }, [searchTerm]);
 
-  const loadData = useCallback(
-    async (search?: string) => {
+  const { data: pageData, isLoading: loading } = useQuery({
+    queryKey: ['readings-tab', searchDebounce],
+    queryFn: async () => {
       try {
-        setLoading(true);
-        const params = search ? { search } : undefined;
+        const params = searchDebounce ? { search: searchDebounce } : undefined;
         const [readingsData, booksData] = await Promise.all([
           readingsService.getAllPages(params),
           booksService.getAllPages(),
         ]);
-        setReadings(readingsData);
-        setBooks(booksData);
+        return { readings: readingsData, books: booksData };
       } catch (error: unknown) {
         toast({
           title: t('common.messages.loadError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
-      } finally {
-        setLoading(false);
+        return { readings: EMPTY_READINGS, books: EMPTY_BOOKS };
       }
     },
-    [toast, t]
-  );
+  });
+  const readings = pageData?.readings ?? EMPTY_READINGS;
+  const books = pageData?.books ?? EMPTY_BOOKS;
 
-  useEffect(() => {
-    void loadData(searchDebounce || undefined);
-  }, [searchDebounce, loadData]);
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['readings-tab', searchDebounce] });
 
   const handleCreateOpen = () => {
     if (books.length === 0) {
@@ -291,10 +295,13 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
     setSelectedReading(undefined);
   };
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog de criação abre (derivado durante
+  // o render — sem efeito — comparando com a última transição de `isCreateOpen`).
+  const [lastIsCreateOpen, setLastIsCreateOpen] = useState(isCreateOpen);
+  if (isCreateOpen !== lastIsCreateOpen) {
+    setLastIsCreateOpen(isCreateOpen);
     if (isCreateOpen) handleCreateOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreateOpen]);
+  }
 
   const handleEdit = (reading: Reading) => {
     setSelectedReading(reading);
@@ -317,7 +324,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         title: t('pages.readings.deleted'),
         description: t('pages.readings.deletedDesc'),
       });
-      void loadData(searchDebounce || undefined);
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -345,7 +352,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
       }
       onCreateClose();
       setIsEditOpen(false);
-      void loadData(searchDebounce || undefined);
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -534,7 +541,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         isOpen={isMarkAsReadOpen}
         onClose={() => {
           setIsMarkAsReadOpen(false);
-          void loadData(searchDebounce || undefined);
+          void refresh();
         }}
         books={books}
       />

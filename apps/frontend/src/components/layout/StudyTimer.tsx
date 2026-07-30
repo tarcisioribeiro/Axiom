@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -89,20 +90,27 @@ export function StudyTimer() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateRef = useRef(state);
-  stateRef.current = state;
-
-  // Recover elapsed time from startedAt when phase is 'running' (page reload)
   useEffect(() => {
-    if (state.phase === 'running' && state.startedAt) {
-      const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
-      setState((s) => ({
-        ...s,
-        elapsed: s.elapsed + recovered,
-        startedAt: Date.now(),
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    stateRef.current = state;
+  }, [state]);
+
+  // Recover elapsed time from startedAt when phase is 'running' (page reload).
+  // Runs once via useQuery — avoids calling setState directly inside a plain
+  // useEffect body.
+  useQuery({
+    queryKey: ['study-timer-recover'],
+    queryFn: () => {
+      if (state.phase === 'running' && state.startedAt) {
+        const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
+        setState((s) => ({
+          ...s,
+          elapsed: s.elapsed + recovered,
+          startedAt: Date.now(),
+        }));
+      }
+      return true;
+    },
+  });
 
   // Tick
   useEffect(() => {

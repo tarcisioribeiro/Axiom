@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   FileUp,
@@ -7,7 +8,7 @@ import {
   Search,
   CheckCircle2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -243,34 +244,31 @@ export default function BankReconciliation() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [imports, setImports] = useState<BankStatementImport[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function loadData() {
-    setLoading(true);
-    try {
-      const [importsData, accountsData] = await Promise.all([
-        bankReconciliationService.getAll(),
-        accountsService.getAll(),
-      ]);
-      setImports(importsData);
-      setAccounts(accountsData);
-    } catch (err) {
-      toast({ title: getErrorMessage(err), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['bank-reconciliation'],
+    queryFn: async () => {
+      try {
+        const [importsData, accountsData] = await Promise.all([
+          bankReconciliationService.getAll(),
+          accountsService.getAll(),
+        ]);
+        return { imports: importsData, accounts: accountsData };
+      } catch (err) {
+        toast({ title: getErrorMessage(err), variant: 'destructive' });
+        return { imports: [] as BankStatementImport[], accounts: [] as Account[] };
+      }
+    },
+  });
+  const imports = data?.imports ?? [];
+  const accounts = data?.accounts ?? [];
 
   function handleImportSuccess(imp: BankStatementImport) {
-    setImports((prev) => [imp, ...prev]);
+    queryClient.setQueryData<typeof data>(['bank-reconciliation'], (prev) =>
+      prev ? { ...prev, imports: [imp, ...prev.imports] } : prev
+    );
     void navigate(`/bank-reconciliation/${imp.id}`);
   }
 

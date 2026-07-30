@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, Shield, Users, Check, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -24,54 +25,45 @@ interface AppPermissions {
   permissions: Permission[];
 }
 
+const EMPTY_MEMBERS: Member[] = [];
+const EMPTY_APPS: AppPermissions[] = [];
+
 export default function Permissions() {
   const { t } = useTranslation();
-  const [members, setMembers] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberPermissions, setMemberPermissions] = useState<Set<string>>(new Set());
-  const [availableApps, setAvailableApps] = useState<AppPermissions[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    void loadInitialData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadInitialData = async () => {
-    try {
-      setIsLoading(true);
-
-      // Carregar membros e permissões disponíveis em paralelo
-      const [membersData, permissionsData] = await Promise.all([
-        membersService.getAll(),
-        permissionsService.getAvailablePermissions(),
-      ]);
-
-      setMembers(membersData);
-
-      // Organizar permissões por app
-      const apps: AppPermissions[] = Object.entries(permissionsData).map(
-        ([appCode, permissions]) => ({
-          name: t(`pages.permissions.apps.${appCode}`, { defaultValue: appCode }),
-          code: appCode,
-          permissions: permissions,
-        })
-      );
-
-      setAvailableApps(apps);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.permissions.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['permissions'],
+    queryFn: async () => {
+      try {
+        const [membersData, permissionsData] = await Promise.all([
+          membersService.getAll(),
+          permissionsService.getAvailablePermissions(),
+        ]);
+        const apps: AppPermissions[] = Object.entries(permissionsData).map(
+          ([appCode, permissions]) => ({
+            name: t(`pages.permissions.apps.${appCode}`, { defaultValue: appCode }),
+            code: appCode,
+            permissions: permissions,
+          })
+        );
+        return { members: membersData, availableApps: apps };
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.permissions.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { members: EMPTY_MEMBERS, availableApps: EMPTY_APPS };
+      }
+    },
+  });
+  const members = pageData?.members ?? EMPTY_MEMBERS;
+  const availableApps = pageData?.availableApps ?? EMPTY_APPS;
 
   const loadMemberPermissions = async (member: Member) => {
     setSelectedMember(member);

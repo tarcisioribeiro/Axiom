@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Edit,
@@ -11,7 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -174,8 +175,6 @@ function AuthorCard({
 }
 
 export default function Authors() {
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
@@ -184,27 +183,23 @@ export default function Authors() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadAuthors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadAuthors = async () => {
-    try {
-      setLoading(true);
-      const data = await authorsService.getAll();
-      setAuthors(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: authors = [], isLoading: loading } = useQuery({
+    queryKey: ['authors'],
+    queryFn: async () => {
+      try {
+        return await authorsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return [] as Author[];
+      }
+    },
+  });
 
   const handleCreate = () => {
     setSelectedAuthor(undefined);
@@ -235,7 +230,7 @@ export default function Authors() {
         title: t('pages.authors.deleted'),
         description: t('pages.authors.deletedDesc'),
       });
-      void loadAuthors();
+      void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -266,7 +261,7 @@ export default function Authors() {
         await authorsService.uploadPhoto(author.id, pendingPhotoFile);
       }
       setIsDialogOpen(false);
-      void loadAuthors();
+      void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
