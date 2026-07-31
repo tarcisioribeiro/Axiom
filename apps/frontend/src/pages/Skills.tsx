@@ -87,23 +87,23 @@ function SkillCard({
       animate="visible"
       exit="exit"
       layout
-      className="group flex flex-col gap-sm rounded-lg border border-border bg-card p-md shadow-sm transition-shadow hover:shadow-md"
+      className="group gap-sm border-border bg-card p-md flex flex-col rounded-lg border shadow-sm transition-shadow hover:shadow-md"
     >
-      <div className="flex items-start justify-between gap-sm">
-        <div className="flex min-w-0 flex-1 items-center gap-sm">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Brain className="h-5 w-5 text-primary" />
+      <div className="gap-sm flex items-start justify-between">
+        <div className="gap-sm flex min-w-0 flex-1 items-center">
+          <div className="bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+            <Brain className="text-primary h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{skill.name}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t(`pages.skills.category.${skill.category}`)}
             </p>
           </div>
         </div>
         <span
           className={cn(
-            'shrink-0 rounded-full border px-sm py-0.5 text-xs font-semibold',
+            'px-sm shrink-0 rounded-full border py-0.5 text-xs font-semibold',
             STATUS_COLORS[skill.status]
           )}
         >
@@ -113,25 +113,25 @@ function SkillCard({
 
       <div className="flex items-center justify-between">
         <ProficiencyDots level={skill.proficiency_level} />
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {t(`pages.skills.proficiency.${skill.proficiency}`)}
         </span>
       </div>
 
       {skill.notes && (
-        <p className="line-clamp-2 text-xs text-muted-foreground">{skill.notes}</p>
+        <p className="text-muted-foreground line-clamp-2 text-xs">{skill.notes}</p>
       )}
 
       {(skill.books.length > 0 || skill.courses.length > 0) && (
-        <div className="space-y-xs border-t border-border/40 pt-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-xs border-border/40 pt-xs border-t">
+          <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
             {t('pages.skills.developedWith')}
           </p>
-          <div className="flex flex-wrap gap-xs">
+          <div className="gap-xs flex flex-wrap">
             {skill.books.slice(0, 2).map((b) => (
               <span
                 key={b.id}
-                className="flex items-center gap-0.5 rounded-full bg-primary/10 px-xs py-0.5 text-[10px] text-primary"
+                className="bg-primary/10 px-xs text-primary flex items-center gap-0.5 rounded-full py-0.5 text-[10px]"
               >
                 <BookOpen className="h-2.5 w-2.5" />
                 {b.title.length > 18 ? b.title.slice(0, 18) + '…' : b.title}
@@ -140,14 +140,14 @@ function SkillCard({
             {skill.courses.slice(0, 2).map((c) => (
               <span
                 key={c.id}
-                className="flex items-center gap-0.5 rounded-full bg-info/10 px-xs py-0.5 text-[10px] text-info"
+                className="bg-info/10 px-xs text-info flex items-center gap-0.5 rounded-full py-0.5 text-[10px]"
               >
                 <GraduationCap className="h-2.5 w-2.5" />
                 {c.title.length > 18 ? c.title.slice(0, 18) + '…' : c.title}
               </span>
             ))}
             {skill.books.length + skill.courses.length > 4 && (
-              <span className="rounded-full bg-muted px-xs py-0.5 text-[10px] text-muted-foreground">
+              <span className="bg-muted px-xs text-muted-foreground rounded-full py-0.5 text-[10px]">
                 +{skill.books.length + skill.courses.length - 4}
               </span>
             )}
@@ -155,11 +155,11 @@ function SkillCard({
         </div>
       )}
 
-      <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 flex-1 gap-xs text-xs"
+          className="gap-xs h-7 flex-1 text-xs"
           onClick={() => onEdit(skill)}
         >
           <Edit className="h-3 w-3" />
@@ -168,7 +168,7 @@ function SkillCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 gap-xs text-xs"
+          className="gap-xs h-7 text-xs"
           title={t('pages.skills.history.viewHistory')}
           onClick={() => onViewHistory(skill)}
         >
@@ -177,7 +177,7 @@ function SkillCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 flex-1 gap-xs text-xs text-destructive hover:text-destructive"
+          className="gap-xs text-destructive hover:text-destructive h-7 flex-1 text-xs"
           onClick={() => onDelete(skill)}
         >
           <Trash2 className="h-3 w-3" />
@@ -287,7 +287,7 @@ export default function Skills() {
         <PageHeader
           title={t('pages.skills.title')}
           subtitle={t('pages.skills.subtitle')}
-          icon={<Brain className="h-6 w-6 text-primary" />}
+          icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             <Button
               onClick={() => {
@@ -303,7 +303,7 @@ export default function Skills() {
         />
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-md">
+        <div className="gap-md grid grid-cols-3">
           {[
             {
               label: t('common.actions.total'),
@@ -323,23 +323,23 @@ export default function Skills() {
           ].map(({ label, value, color }) => (
             <div
               key={label}
-              className="flex items-center gap-md rounded-lg border border-border bg-card p-md"
+              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Brain className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
+                <Brain className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className={cn('text-xl font-bold', color)}>{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-muted-foreground text-xs">{label}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Search + View Toggle */}
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               className="pl-9"
               placeholder={t('pages.skills.searchPlaceholder')}
@@ -347,12 +347,12 @@ export default function Skills() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex rounded-lg border border-border">
+          <div className="border-border flex rounded-lg border">
             <button
               type="button"
               onClick={() => setViewMode('list')}
               className={cn(
-                'rounded-l-lg px-md py-sm transition-colors',
+                'px-md py-sm rounded-l-lg transition-colors',
                 viewMode === 'list'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
@@ -364,7 +364,7 @@ export default function Skills() {
               type="button"
               onClick={() => setViewMode('radar')}
               className={cn(
-                'rounded-r-lg px-md py-sm transition-colors',
+                'px-md py-sm rounded-r-lg transition-colors',
                 viewMode === 'radar'
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
@@ -379,15 +379,15 @@ export default function Skills() {
         {isLoading ? (
           <LoadingState />
         ) : viewMode === 'radar' ? (
-          <div className="grid gap-md lg:grid-cols-2">
+          <div className="gap-md grid lg:grid-cols-2">
             <SkillsRadarChart skills={skills} />
             <div className="space-y-sm">
               {skills.slice(0, 8).map((skill) => (
                 <div
                   key={skill.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-card px-md py-sm"
+                  className="border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border"
                 >
-                  <div className="flex items-center gap-sm">
+                  <div className="gap-sm flex items-center">
                     <ProficiencyDots level={skill.proficiency_level} />
                     <span className="text-sm font-medium">{skill.name}</span>
                   </div>
@@ -403,11 +403,11 @@ export default function Skills() {
             title={
               search ? t('pages.skills.emptySearch') : t('pages.skills.emptyState')
             }
-            icon={<Brain className="h-10 w-10 text-muted-foreground" />}
+            icon={<Brain className="text-muted-foreground h-10 w-10" />}
           />
         ) : (
           <AnimatePresence>
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {skills.map((skill) => (
                 <SkillCard
                   key={skill.id}
@@ -433,9 +433,9 @@ export default function Skills() {
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <div className="flex items-center gap-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                  <Brain className="h-4 w-4 text-primary" />
+              <div className="gap-sm flex items-center">
+                <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <Brain className="text-primary h-4 w-4" />
                 </div>
                 <div>
                   <DialogTitle>
@@ -473,8 +473,8 @@ export default function Skills() {
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-sm">
-                <Clock className="h-4 w-4 text-primary" />
+              <DialogTitle className="gap-sm flex items-center">
+                <Clock className="text-primary h-4 w-4" />
                 {t('pages.skills.history.title')}
                 {historySkill && (
                   <span className="text-muted-foreground">— {historySkill.name}</span>
@@ -487,30 +487,30 @@ export default function Skills() {
             {historyLoading ? (
               <LoadingState />
             ) : !historyData?.results?.length ? (
-              <p className="py-lg text-center text-sm text-muted-foreground">
+              <p className="py-lg text-muted-foreground text-center text-sm">
                 {t('pages.skills.history.noHistory')}
               </p>
             ) : (
               <div className="relative space-y-0 pl-5">
-                <div className="absolute left-2 top-0 h-full w-px bg-border" />
+                <div className="bg-border absolute top-0 left-2 h-full w-px" />
                 {historyData.results.map((entry, i) => (
-                  <div key={entry.id} className="relative pb-md">
+                  <div key={entry.id} className="pb-md relative">
                     <div
                       className={cn(
-                        'absolute -left-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background',
+                        'border-background absolute -left-3 flex h-5 w-5 items-center justify-center rounded-full border-2',
                         i === 0 ? 'bg-primary' : 'bg-muted'
                       )}
                     >
-                      <div className="h-2 w-2 rounded-full bg-background" />
+                      <div className="bg-background h-2 w-2 rounded-full" />
                     </div>
                     <div className="ml-md">
                       <p className="text-sm font-medium">
                         {t(`pages.skills.proficiency.${entry.proficiency}`)}
-                        <span className="ml-xs text-xs font-normal text-muted-foreground">
+                        <span className="ml-xs text-muted-foreground text-xs font-normal">
                           · {t(`pages.skills.status.${entry.status}`)}
                         </span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {new Date(entry.created_at).toLocaleDateString()}
                       </p>
                     </div>

@@ -67,13 +67,13 @@ function StepIndicator({ current }: { current: Step }) {
   const order: Record<Step, number> = { upload: 0, preview: 1, summary: 2 };
 
   return (
-    <div className="flex items-center gap-sm text-sm">
+    <div className="gap-sm flex items-center text-sm">
       {steps.map((s, i) => (
-        <span key={s.key} className="flex items-center gap-sm">
+        <span key={s.key} className="gap-sm flex items-center">
           <span
             className={
               order[current] >= order[s.key]
-                ? 'font-semibold text-primary'
+                ? 'text-primary font-semibold'
                 : 'text-muted-foreground'
             }
           >
@@ -168,7 +168,7 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
               if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
             }}
           >
-            <FileUp className="mb-3 h-10 w-10 text-muted-foreground" />
+            <FileUp className="text-muted-foreground mb-3 h-10 w-10" />
             {file ? (
               <p className="text-sm font-medium">{file.name}</p>
             ) : (
@@ -176,7 +176,7 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
                 <p className="text-sm font-medium">
                   {t('pages.bankStatementImport.upload.dropPrompt')}
                 </p>
-                <p className="mt-xs text-xs text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-xs">
                   {t('pages.bankStatementImport.upload.dropFormats')}
                 </p>
               </>
@@ -326,9 +326,9 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
                     </TableCell>
                     <TableCell>
                       {entry.transaction_type === 'credit' ? (
-                        <TrendingUp className="h-4 w-4 text-success" />
+                        <TrendingUp className="text-success h-4 w-4" />
                       ) : (
-                        <TrendingDown className="h-4 w-4 text-destructive" />
+                        <TrendingDown className="text-destructive h-4 w-4" />
                       )}
                     </TableCell>
                     <TableCell>
@@ -348,7 +348,7 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
                   <TableRow>
                     <TableCell
                       colSpan={5}
-                      className="py-xl text-center text-muted-foreground"
+                      className="py-xl text-muted-foreground text-center"
                     >
                       {t('pages.bankStatementImport.preview.noTransactions')}
                     </TableCell>
@@ -385,36 +385,36 @@ function SummaryStep({ summary }: { summary: SummaryData }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-sm">
-          <CheckCircle2 className="h-5 w-5 text-success" />
+        <CardTitle className="gap-sm flex items-center">
+          <CheckCircle2 className="text-success h-5 w-5" />
           {t('pages.bankStatementImport.summary.cardTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-md">
-        <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-          <div className="rounded-lg border p-md text-center">
+        <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
+          <div className="p-md rounded-lg border text-center">
             <p className="text-2xl font-bold">{summary.total}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.bankStatementImport.summary.totalDetected')}
             </p>
           </div>
-          <div className="rounded-lg border border-success/30 bg-success/5 p-md text-center">
-            <p className="text-2xl font-bold text-success">{summary.imported}</p>
-            <p className="text-xs text-muted-foreground">
+          <div className="border-success/30 bg-success/5 p-md rounded-lg border text-center">
+            <p className="text-success text-2xl font-bold">{summary.imported}</p>
+            <p className="text-muted-foreground text-xs">
               {t('pages.bankStatementImport.summary.imported')}
             </p>
           </div>
-          <div className="rounded-lg border p-md text-center">
-            <p className="text-2xl font-bold text-muted-foreground">
+          <div className="p-md rounded-lg border text-center">
+            <p className="text-muted-foreground text-2xl font-bold">
               {summary.ignored}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.bankStatementImport.summary.ignoredDuplicates')}
             </p>
           </div>
-          <div className="rounded-lg border border-primary/30 bg-primary/5 p-md text-center">
-            <p className="text-2xl font-bold text-primary">{summary.matched}</p>
-            <p className="text-xs text-muted-foreground">
+          <div className="border-primary/30 bg-primary/5 p-md rounded-lg border text-center">
+            <p className="text-primary text-2xl font-bold">{summary.matched}</p>
+            <p className="text-muted-foreground text-xs">
               {t('pages.bankStatementImport.summary.autoLinked')}
             </p>
           </div>

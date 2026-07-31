@@ -377,22 +377,22 @@ export default function PersonalPlanningDashboard() {
             key={card.route + card.titleKey}
             onClick={() => void navigate(card.route)}
             className={cn(
-              'flex flex-col items-start gap-sm rounded-lg border p-md text-left transition-all hover:scale-[1.02]',
+              'gap-sm p-md flex flex-col items-start rounded-lg border text-left transition-all hover:scale-[1.02]',
               card.bg
             )}
           >
             <card.icon className={cn('h-6 w-6', card.color)} />
             <div>
               <p className="text-sm font-semibold">{t(card.titleKey)}</p>
-              <p className="text-xs text-muted-foreground">{t(card.subtitleKey)}</p>
+              <p className="text-muted-foreground text-xs">{t(card.subtitleKey)}</p>
             </div>
           </button>
         ))}
       </div>
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
-      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
-        <Card className="flex items-center gap-md p-5">
+      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+        <Card className="gap-md flex items-center p-5">
           <CircularProgress
             value={todayRate}
             size={80}
@@ -401,12 +401,12 @@ export default function PersonalPlanningDashboard() {
           >
             <div className="flex flex-col items-center leading-none">
               <span className="text-lg font-bold">{stats.completed_tasks_today}</span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 /{stats.total_tasks_today}
               </span>
             </div>
           </CircularProgress>
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-muted-foreground text-sm font-medium">
             {t('pages.planningDashboard.todayTasks')}
           </p>
         </Card>
@@ -431,77 +431,77 @@ export default function PersonalPlanningDashboard() {
       </div>
 
       {/* Linha 2: Objetivos ativos | Melhor Sequência | Sequência atual | Objetivos Completados */}
-      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
+      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
         <StatCard
           title={t('pages.planningDashboard.activeGoals')}
           value={stats.active_goals}
           icon={<Target className="h-4 w-4" />}
         />
 
-        <Card className="flex items-center gap-md p-5">
+        <Card className="gap-md flex items-center p-5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/15">
             <Flame className="h-5 w-5 text-orange-500" />
           </div>
           <div>
-            <p className="text-2xl font-bold leading-none">
+            <p className="text-2xl leading-none font-bold">
               {stats.best_streak}
-              <span className="ml-xs text-sm font-normal text-muted-foreground">
+              <span className="ml-xs text-muted-foreground text-sm font-normal">
                 {t('pages.planningDashboard.days')}
               </span>
             </p>
-            <p className="mt-xs text-sm text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-sm">
               {t('pages.planningDashboard.bestStreak')}
             </p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-md p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-            <Award className="h-5 w-5 text-primary" />
+        <Card className="gap-md flex items-center p-5">
+          <div className="bg-primary/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+            <Award className="text-primary h-5 w-5" />
           </div>
           <div>
-            <p className="text-2xl font-bold leading-none">
+            <p className="text-2xl leading-none font-bold">
               {stats.current_streak}
-              <span className="ml-xs text-sm font-normal text-muted-foreground">
+              <span className="ml-xs text-muted-foreground text-sm font-normal">
                 {t('pages.planningDashboard.days')}
               </span>
             </p>
-            <p className="mt-xs text-sm text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-sm">
               {t('pages.planningDashboard.currentStreak')}
             </p>
           </div>
         </Card>
 
         {gamification && (
-          <Card className="col-span-1 flex flex-col gap-sm p-5 sm:col-span-2 lg:col-span-2">
+          <Card className="gap-sm col-span-1 flex flex-col p-5 sm:col-span-2 lg:col-span-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                  <Zap className="h-5 w-5 text-primary" />
+              <div className="gap-sm flex items-center">
+                <div className="bg-primary/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                  <Zap className="text-primary h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-bold leading-none">
+                  <p className="text-xl leading-none font-bold">
                     {t('pages.planningDashboard.level')} {gamification.current_level}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     {gamification.total_xp} XP · {gamification.tasks_completed_total}{' '}
                     {t('pages.planningDashboard.tasksCompleted')}
                   </p>
                 </div>
               </div>
               {gamification.badges.length > 0 && (
-                <div className="flex -space-x-xs">
+                <div className="-space-x-xs flex">
                   {gamification.badges.slice(0, 5).map((b) => (
                     <span
                       key={b.slug}
                       title={b.name}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-sm"
+                      className="border-background bg-muted flex h-7 w-7 items-center justify-center rounded-full border text-sm"
                     >
-                      <Trophy className="h-3.5 w-3.5 text-primary" />
+                      <Trophy className="text-primary h-3.5 w-3.5" />
                     </span>
                   ))}
                   {gamification.badges.length > 5 && (
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-xs font-medium text-muted-foreground">
+                    <span className="border-background bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium">
                       +{gamification.badges.length - 5}
                     </span>
                   )}
@@ -509,16 +509,16 @@ export default function PersonalPlanningDashboard() {
               )}
             </div>
             <div>
-              <div className="mb-xs flex justify-between text-xs text-muted-foreground">
+              <div className="mb-xs text-muted-foreground flex justify-between text-xs">
                 <span>{gamification.xp_in_level} XP</span>
                 <span>
                   {gamification.xp_needed_for_next_level} XP{' '}
                   {t('pages.planningDashboard.toNextLevel')}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-2 overflow-hidden rounded-full">
                 <div
-                  className="h-full rounded-full bg-primary transition-all"
+                  className="bg-primary h-full rounded-full transition-all"
                   style={{
                     width: `${Math.min(gamification.level_progress_pct, 100)}%`,
                   }}
@@ -538,34 +538,34 @@ export default function PersonalPlanningDashboard() {
       {/* Linha 2b: XP Semanal */}
       <Card>
         <CardHeader className="pb-sm">
-          <CardTitle className="flex items-center gap-sm text-sm">
-            <Zap className="h-4 w-4 text-warning" />
+          <CardTitle className="gap-sm flex items-center text-sm">
+            <Zap className="text-warning h-4 w-4" />
             {t('pages.planningDashboard.weeklyXP')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-lg">
-            <div className="flex items-center gap-sm">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning/15">
-                <Star className="h-5 w-5 text-warning" />
+          <div className="gap-lg flex items-center">
+            <div className="gap-sm flex items-center">
+              <div className="bg-warning/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                <Star className="text-warning h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold leading-none">{weeklyXP.xp}</p>
-                <p className="mt-xs text-xs text-muted-foreground">
+                <p className="text-2xl leading-none font-bold">{weeklyXP.xp}</p>
+                <p className="mt-xs text-muted-foreground text-xs">
                   {t('pages.planningDashboard.xpLabel')}
                 </p>
               </div>
             </div>
-            <div className="flex-1 space-y-xs">
-              <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="space-y-xs flex-1">
+              <div className="text-muted-foreground flex justify-between text-xs">
                 <span>
                   {t('pages.planningDashboard.xpProgress', { level: weeklyXP.level })}
                 </span>
                 <span>{weeklyXP.xpInLevel}/100 XP</span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-3 overflow-hidden rounded-full">
                 <motion.div
-                  className="h-full rounded-full bg-warning"
+                  className="bg-warning h-full rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${weeklyXP.xpInLevel}%` }}
                   transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -574,7 +574,7 @@ export default function PersonalPlanningDashboard() {
             </div>
             {weeklyXP.streak > 3 && (
               <motion.div
-                className="flex items-center gap-xs rounded-full bg-orange-500/15 px-sm py-xs"
+                className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/15"
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -592,11 +592,11 @@ export default function PersonalPlanningDashboard() {
       <button
         type="button"
         onClick={() => setWorkoutNutritionOpen((v) => !v)}
-        className="flex w-full items-center gap-3 py-sm text-left"
+        className="py-sm flex w-full items-center gap-3 text-left"
         aria-expanded={workoutNutritionOpen}
       >
-        <div className="h-px flex-1 bg-border" />
-        <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="bg-border h-px flex-1" />
+        <span className="gap-xs text-muted-foreground flex items-center text-xs font-medium tracking-wider uppercase">
           {t('pages.planningDashboard.sectionWorkoutNutrition')}
           <ChevronDown
             className={cn(
@@ -605,7 +605,7 @@ export default function PersonalPlanningDashboard() {
             )}
           />
         </span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="bg-border h-px flex-1" />
       </button>
 
       <AnimatePresence initial={false}>
@@ -626,27 +626,27 @@ export default function PersonalPlanningDashboard() {
               />
 
               {/* Linha 3: Treinos */}
-              <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+              <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
                 {/* Card: Resumo de Treinos */}
                 <Card>
                   <CardHeader className="pb-sm">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-sm text-sm">
-                        <Dumbbell className="h-4 w-4 text-category-health" />
+                      <CardTitle className="gap-sm flex items-center text-sm">
+                        <Dumbbell className="text-category-health h-4 w-4" />
                         {t('pages.planningDashboard.workoutsTitle')}
                       </CardTitle>
                       <Link
                         to="/planning/workout"
-                        className="rounded-md bg-primary/10 px-sm py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                        className="bg-primary/10 px-sm text-primary hover:bg-primary/20 rounded-md py-0.5 text-xs font-medium transition-colors"
                       >
                         {t('pages.planningDashboard.ctaLogWorkout')}
                       </Link>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                    <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <Dumbbell className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.sessions30d')}
@@ -656,19 +656,19 @@ export default function PersonalPlanningDashboard() {
                           {workoutStats.sessions30d}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <Activity className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.thisWeek')}
                           </span>
                         </div>
-                        <span className="text-2xl font-bold text-info">
+                        <span className="text-info text-2xl font-bold">
                           {workoutStats.sessionsWeek}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <Timer className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.totalTime30d')}
@@ -680,8 +680,8 @@ export default function PersonalPlanningDashboard() {
                             : '—'}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <ClipboardList className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.activeWorkoutPlan')}
@@ -695,7 +695,7 @@ export default function PersonalPlanningDashboard() {
                             {workoutStats.activePlanName}
                           </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-muted-foreground text-sm">
                             {t('common.actions.none')}
                           </span>
                         )}
@@ -703,15 +703,15 @@ export default function PersonalPlanningDashboard() {
                     </div>
 
                     {workoutStats.activePlanName && (
-                      <div className="mt-md flex items-center gap-lg border-t pt-md text-sm text-muted-foreground">
+                      <div className="mt-md gap-lg pt-md text-muted-foreground flex items-center border-t text-sm">
                         <span>
-                          <span className="font-semibold text-foreground">
+                          <span className="text-foreground font-semibold">
                             {workoutStats.activePlanDays}
                           </span>{' '}
                           {t('pages.planningDashboard.days')}
                         </span>
                         <span>
-                          <span className="font-semibold text-foreground">
+                          <span className="text-foreground font-semibold">
                             {workoutStats.activePlanExercises}
                           </span>{' '}
                           {t('pages.planningDashboard.planExercises')}
@@ -725,33 +725,33 @@ export default function PersonalPlanningDashboard() {
                 <Card>
                   <CardHeader className="pb-sm">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-sm text-sm">
-                        <UtensilsCrossed className="h-4 w-4 text-category-health" />
+                      <CardTitle className="gap-sm flex items-center text-sm">
+                        <UtensilsCrossed className="text-category-health h-4 w-4" />
                         {t('pages.planningDashboard.nutritionTitle')}
                       </CardTitle>
                       <Link
                         to="/planning/nutrition"
-                        className="rounded-md bg-success/10 px-sm py-0.5 text-xs font-medium text-success transition-colors hover:bg-success/20"
+                        className="bg-success/10 px-sm text-success hover:bg-success/20 rounded-md py-0.5 text-xs font-medium transition-colors"
                       >
                         {t('pages.planningDashboard.ctaLogMeal')}
                       </Link>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-3 gap-md">
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                    <div className="gap-md grid grid-cols-3">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <Utensils className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.mealsToday')}
                           </span>
                         </div>
-                        <span className="text-2xl font-bold text-success">
+                        <span className="text-success text-2xl font-bold">
                           {nutritionStats.todayMeals}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <Calendar className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.thisWeek')}
@@ -761,8 +761,8 @@ export default function PersonalPlanningDashboard() {
                           {nutritionStats.weekMeals}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-center gap-sm text-muted-foreground">
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm text-muted-foreground flex items-center">
                           <ClipboardList className="h-4 w-4" />
                           <span className="text-xs">
                             {t('pages.planningDashboard.activeMealTypes')}
@@ -775,7 +775,7 @@ export default function PersonalPlanningDashboard() {
                     </div>
 
                     {nutritionStats.byMealTypeData.length > 0 && (
-                      <div className="mt-md space-y-sm border-t pt-md">
+                      <div className="mt-md space-y-sm pt-md border-t">
                         {nutritionStats.byMealTypeData
                           .sort((a, b) => b.count - a.count)
                           .slice(0, 4)
@@ -784,13 +784,13 @@ export default function PersonalPlanningDashboard() {
                             const pct = Math.round((item.count / max) * 100);
                             return (
                               <div key={i} className="flex items-center gap-3">
-                                <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">
+                                <span className="text-muted-foreground w-28 shrink-0 truncate text-xs">
                                   {item.name}
                                 </span>
-                                <div className="flex flex-1 items-center gap-sm">
-                                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                                <div className="gap-sm flex flex-1 items-center">
+                                  <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                                     <div
-                                      className="h-full rounded-full bg-primary/70 transition-all"
+                                      className="bg-primary/70 h-full rounded-full transition-all"
                                       style={{ width: `${pct}%` }}
                                     />
                                   </div>
@@ -815,11 +815,11 @@ export default function PersonalPlanningDashboard() {
       <button
         type="button"
         onClick={() => setDetailedAnalysisOpen((v) => !v)}
-        className="flex w-full items-center gap-3 py-sm text-left"
+        className="py-sm flex w-full items-center gap-3 text-left"
         aria-expanded={detailedAnalysisOpen}
       >
-        <div className="h-px flex-1 bg-border" />
-        <span className="flex items-center gap-xs text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="bg-border h-px flex-1" />
+        <span className="gap-xs text-muted-foreground flex items-center text-xs font-medium tracking-wider uppercase">
           {t('pages.planningDashboard.sectionDetailedAnalysis')}
           <ChevronDown
             className={cn(
@@ -828,7 +828,7 @@ export default function PersonalPlanningDashboard() {
             )}
           />
         </span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="bg-border h-px flex-1" />
       </button>
 
       <AnimatePresence initial={false}>
@@ -843,11 +843,11 @@ export default function PersonalPlanningDashboard() {
           >
             <div className="space-y-lg">
               {/* Linha 4: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência | Treinos/dia */}
-              <div className="grid grid-cols-1 gap-lg lg:grid-cols-4">
+              <div className="gap-lg grid grid-cols-1 lg:grid-cols-4">
                 {weeklyProgressData.length > 0 && (
                   <Card className="lg:col-span-1">
                     <CardHeader className="pb-sm">
-                      <CardTitle className="flex items-center gap-sm text-sm">
+                      <CardTitle className="gap-sm flex items-center text-sm">
                         <TrendingUp className="h-4 w-4" />
                         {t('pages.planningDashboard.weeklyProgress')}
                       </CardTitle>
@@ -903,7 +903,7 @@ export default function PersonalPlanningDashboard() {
                 {tasksByCategoryData.length > 0 && (
                   <Card className="lg:col-span-1">
                     <CardHeader className="pb-sm">
-                      <CardTitle className="flex items-center gap-sm text-sm">
+                      <CardTitle className="gap-sm flex items-center text-sm">
                         <ListTodo className="h-4 w-4" />
                         {t('pages.planningDashboard.tasksByCategory')}
                       </CardTitle>
@@ -935,7 +935,7 @@ export default function PersonalPlanningDashboard() {
                   stats.active_goals_progress.length > 0 && (
                     <Card className="lg:col-span-1">
                       <CardHeader className="pb-sm">
-                        <CardTitle className="flex items-center gap-sm text-sm">
+                        <CardTitle className="gap-sm flex items-center text-sm">
                           <Flag className="h-4 w-4" />
                           {t('pages.planningDashboard.activeGoalsProgress')}
                         </CardTitle>
@@ -968,7 +968,7 @@ export default function PersonalPlanningDashboard() {
                                     <p className="truncate text-sm font-medium">
                                       {goal.title}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-muted-foreground text-xs">
                                       {goal.current_value} / {goal.target_value}
                                     </p>
                                   </div>
@@ -982,7 +982,7 @@ export default function PersonalPlanningDashboard() {
 
                 <Card className="lg:col-span-1">
                   <CardHeader className="pb-sm">
-                    <CardTitle className="flex items-center gap-sm text-sm">
+                    <CardTitle className="gap-sm flex items-center text-sm">
                       <Activity className="h-4 w-4" />
                       {t('pages.planningDashboard.habitConsistency')}
                     </CardTitle>
@@ -997,7 +997,7 @@ export default function PersonalPlanningDashboard() {
               {workoutByDayData.length > 0 && (
                 <Card>
                   <CardHeader className="pb-sm">
-                    <CardTitle className="flex items-center gap-sm text-sm">
+                    <CardTitle className="gap-sm flex items-center text-sm">
                       <Dumbbell className="h-4 w-4" />
                       {t('pages.planningDashboard.workoutsByDayTitle')}
                     </CardTitle>
@@ -1028,22 +1028,22 @@ export default function PersonalPlanningDashboard() {
                 <Card>
                   <CardHeader className="pb-sm">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-sm text-sm">
-                        <Activity className="h-4 w-4 text-info" />
+                      <CardTitle className="gap-sm flex items-center text-sm">
+                        <Activity className="text-info h-4 w-4" />
                         {t('pages.planningDashboard.reflectionCorrelationTitle', {
                           defaultValue: 'Humor × Conclusão de Tarefas',
                         })}
                       </CardTitle>
                       <Link
                         to="/planning/reflections"
-                        className="rounded-md bg-muted px-sm py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        className="bg-muted px-sm text-muted-foreground hover:text-foreground rounded-md py-0.5 text-xs font-medium transition-colors"
                       >
                         {t('pages.planningDashboard.ctaReflect')}
                       </Link>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-md">
+                    <div className="gap-md flex flex-wrap">
                       {reflectionCorrelation.map((entry) => {
                         const parts = entry.date.split('-');
                         const dateLabel = `${parts[2]}/${parts[1]}`;
@@ -1063,24 +1063,24 @@ export default function PersonalPlanningDashboard() {
                         return (
                           <div
                             key={entry.date}
-                            className="flex min-w-[120px] flex-1 flex-col gap-xs rounded-lg border p-sm"
+                            className="gap-xs p-sm flex min-w-[120px] flex-1 flex-col rounded-lg border"
                           >
-                            <div className="flex items-center justify-between gap-xs">
-                              <span className="text-xs text-muted-foreground">
+                            <div className="gap-xs flex items-center justify-between">
+                              <span className="text-muted-foreground text-xs">
                                 {dateLabel}
                               </span>
                               {entry.mood && (
                                 <span
-                                  className={`rounded-full px-xs py-0.5 text-xs font-medium ${moodColor}`}
+                                  className={`px-xs rounded-full py-0.5 text-xs font-medium ${moodColor}`}
                                 >
                                   {entry.mood_display}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-xs">
-                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className="gap-xs flex items-center">
+                              <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                                 <div
-                                  className="h-full rounded-full bg-primary transition-all"
+                                  className="bg-primary h-full rounded-full transition-all"
                                   style={{ width: `${barWidth}%` }}
                                 />
                               </div>
@@ -1098,10 +1098,10 @@ export default function PersonalPlanningDashboard() {
 
               {/* Linha 6: Desempenho Dia Por Semana | Insight de Hábitos */}
               {analytics && (
-                <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+                <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-sm">
+                      <CardTitle className="gap-sm flex items-center">
                         <BarChart3 className="h-5 w-5" />
                         {t('pages.planningDashboard.weekdayAnalytics')}
                       </CardTitle>
@@ -1110,13 +1110,13 @@ export default function PersonalPlanningDashboard() {
                       <div className="space-y-sm">
                         {analytics.completion_by_weekday.map((day) => (
                           <div key={day.weekday} className="flex items-center gap-3">
-                            <span className="w-28 shrink-0 text-sm text-muted-foreground">
+                            <span className="text-muted-foreground w-28 shrink-0 text-sm">
                               {t(`pages.planningDashboard.weekdayShort.${day.weekday}`)}
                             </span>
-                            <div className="flex flex-1 items-center gap-sm">
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className="gap-sm flex flex-1 items-center">
+                              <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                                 <div
-                                  className="h-full rounded-full bg-primary transition-all"
+                                  className="bg-primary h-full rounded-full transition-all"
                                   style={{ width: `${day.rate ?? 0}%` }}
                                 />
                               </div>
@@ -1127,7 +1127,7 @@ export default function PersonalPlanningDashboard() {
                           </div>
                         ))}
                       </div>
-                      <p className="mt-3 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground mt-3 text-xs">
                         {t('pages.planningDashboard.analyticsPeriod', {
                           days: analytics.period_days,
                         })}
@@ -1138,7 +1138,7 @@ export default function PersonalPlanningDashboard() {
                   {analytics.insights.length > 0 && (
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-sm">
+                        <CardTitle className="gap-sm flex items-center">
                           <Lightbulb className="h-5 w-5" />
                           {t('pages.planningDashboard.insights')}
                         </CardTitle>
@@ -1174,10 +1174,10 @@ export default function PersonalPlanningDashboard() {
                             return (
                               <li
                                 key={i}
-                                className="flex items-start justify-between gap-sm text-sm leading-relaxed"
+                                className="gap-sm flex items-start justify-between text-sm leading-relaxed"
                               >
-                                <div className="flex gap-sm">
-                                  <span className="mt-0.5 shrink-0 text-primary">
+                                <div className="gap-sm flex">
+                                  <span className="text-primary mt-0.5 shrink-0">
                                     •
                                   </span>
                                   <span>{renderInsight(insight, t)}</span>
@@ -1186,7 +1186,7 @@ export default function PersonalPlanningDashboard() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-auto shrink-0 px-sm py-xs text-xs text-primary hover:text-primary"
+                                    className="px-sm py-xs text-primary hover:text-primary h-auto shrink-0 text-xs"
                                     onClick={insightCTA.onClick}
                                   >
                                     {insightCTA.label}
@@ -1196,28 +1196,28 @@ export default function PersonalPlanningDashboard() {
                             );
                           })}
                         </ul>
-                        <div className="flex flex-wrap gap-sm border-t pt-sm">
+                        <div className="gap-sm pt-sm flex flex-wrap border-t">
                           <Link
                             to="/planning/daily-checklist"
-                            className="rounded-md bg-primary/10 px-sm py-xs text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                            className="bg-primary/10 px-sm py-xs text-primary hover:bg-primary/20 rounded-md text-xs font-medium transition-colors"
                           >
                             {t('pages.planningDashboard.ctaChecklist')}
                           </Link>
                           <Link
                             to="/planning/tasks-goals"
-                            className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                            className="bg-muted px-sm py-xs text-muted-foreground hover:bg-muted/80 hover:text-foreground rounded-md text-xs font-medium transition-colors"
                           >
                             {t('pages.planningDashboard.ctaTasks')}
                           </Link>
                           <Link
                             to="/planning/reflections"
-                            className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                            className="bg-muted px-sm py-xs text-muted-foreground hover:bg-muted/80 hover:text-foreground rounded-md text-xs font-medium transition-colors"
                           >
                             {t('pages.planningDashboard.ctaReflect')}
                           </Link>
                           <Link
                             to="/planning/emotional-wellness"
-                            className="rounded-md bg-rose-500/10 px-sm py-xs text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/20"
+                            className="px-sm py-xs rounded-md bg-rose-500/10 text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/20"
                           >
                             Bem-Estar Emocional
                           </Link>

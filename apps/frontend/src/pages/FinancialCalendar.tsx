@@ -255,7 +255,7 @@ export default function FinancialCalendar({
         subtitle={t('financialCalendar.subtitle')}
       />
 
-      <div className="mt-md rounded-lg border bg-muted/30 px-md py-sm text-sm font-medium text-muted-foreground">
+      <div className="mt-md bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
         {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}
       </div>
 
@@ -288,7 +288,7 @@ export default function FinancialCalendar({
             {weekdayLabels.map((d) => (
               <div
                 key={d}
-                className="py-sm text-center text-xs font-semibold uppercase text-muted-foreground"
+                className="py-sm text-muted-foreground text-center text-xs font-semibold uppercase"
               >
                 {d}
               </div>
@@ -311,7 +311,7 @@ export default function FinancialCalendar({
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
                   className={cn(
-                    'min-h-[80px] rounded-lg border p-xs text-left transition-colors',
+                    'p-xs min-h-[80px] rounded-lg border text-left transition-colors',
                     isCurrentMonth
                       ? 'bg-card hover:bg-accent/50'
                       : 'bg-muted/20 text-muted-foreground',
@@ -339,7 +339,7 @@ export default function FinancialCalendar({
                         />
                       ))}
                       {dayEvents.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                           +{dayEvents.length - 3}
                         </span>
                       )}
@@ -350,11 +350,11 @@ export default function FinancialCalendar({
             })}
           </div>
 
-          <div className="mt-md flex flex-wrap gap-md">
+          <div className="mt-md gap-md flex flex-wrap">
             {(Object.keys(EVENT_COLORS) as EventType[]).map((type) => (
               <div
                 key={type}
-                className="flex items-center gap-xs text-xs text-muted-foreground"
+                className="gap-xs text-muted-foreground flex items-center text-xs"
               >
                 <span
                   className={cn('h-2.5 w-2.5 rounded-full', EVENT_DOT_COLORS[type])}
@@ -384,7 +384,7 @@ export default function FinancialCalendar({
           </CardHeader>
           <CardContent>
             {selectedDayEvents.length === 0 ? (
-              <p className="py-md text-center text-sm text-muted-foreground">
+              <p className="py-md text-muted-foreground text-center text-sm">
                 {t('financialCalendar.noEvents')}
               </p>
             ) : (
@@ -393,11 +393,11 @@ export default function FinancialCalendar({
                   <div
                     key={ev.id}
                     className={cn(
-                      'flex items-center justify-between rounded-lg border p-sm',
+                      'p-sm flex items-center justify-between rounded-lg border',
                       EVENT_COLORS[ev.type]
                     )}
                   >
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       <Badge
                         variant="outline"
                         className={cn('border text-xs', EVENT_COLORS[ev.type])}

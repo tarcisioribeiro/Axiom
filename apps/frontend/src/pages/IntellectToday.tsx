@@ -99,10 +99,10 @@ export default function IntellectToday() {
         <PageHeader
           title={t('pages.intellectToday.title')}
           subtitle={t('pages.intellectToday.subtitle')}
-          icon={<Brain className="h-6 w-6 text-primary" />}
+          icon={<Brain className="text-primary h-6 w-6" />}
         />
 
-        <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
           <StatCard
             title={t('pages.intellectToday.weekProgress')}
             value={stats?.total_sessions ?? 0}
@@ -123,18 +123,18 @@ export default function IntellectToday() {
           />
         </div>
 
-        <div className="grid gap-md lg:grid-cols-2">
+        <div className="gap-md grid lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-sm font-semibold">
-                <BookOpen className="h-4 w-4 text-primary" />
+              <CardTitle className="gap-sm flex items-center text-sm font-semibold">
+                <BookOpen className="text-primary h-4 w-4" />
                 {t('pages.intellectToday.activeBook')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {activeBook ? (
                 <div className="space-y-md">
-                  <div className="flex gap-md">
+                  <div className="gap-md flex">
                     {activeBook.cover ? (
                       <img
                         src={activeBook.cover}
@@ -142,13 +142,13 @@ export default function IntellectToday() {
                         className="h-20 w-14 shrink-0 rounded object-cover shadow"
                       />
                     ) : (
-                      <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded border bg-muted">
-                        <BookOpen className="h-6 w-6 text-muted-foreground" />
+                      <div className="bg-muted flex h-20 w-14 shrink-0 items-center justify-center rounded border">
+                        <BookOpen className="text-muted-foreground h-6 w-6" />
                       </div>
                     )}
-                    <div className="min-w-0 flex-1 space-y-xs">
+                    <div className="space-y-xs min-w-0 flex-1">
                       <p className="truncate font-semibold">{activeBook.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="text-muted-foreground truncate text-xs">
                         {activeBook.authors_names.join(', ')}
                       </p>
                       {activeBook.reading_progress > 0 && (
@@ -157,7 +157,7 @@ export default function IntellectToday() {
                             value={activeBook.reading_progress}
                             className="h-1.5"
                           />
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {activeBook.reading_progress}%
                           </p>
                         </div>
@@ -165,7 +165,7 @@ export default function IntellectToday() {
                     </div>
                   </div>
                   <Button
-                    className="w-full gap-sm"
+                    className="gap-sm w-full"
                     onClick={() => void navigate('/library/books')}
                   >
                     <BookOpen className="h-4 w-4" />
@@ -176,7 +176,7 @@ export default function IntellectToday() {
                 <EmptyState
                   title={t('pages.intellectToday.noActiveBook')}
                   description={t('pages.intellectToday.startReading')}
-                  icon={<BookOpen className="h-8 w-8 text-muted-foreground" />}
+                  icon={<BookOpen className="text-muted-foreground h-8 w-8" />}
                 />
               )}
             </CardContent>
@@ -184,8 +184,8 @@ export default function IntellectToday() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-sm font-semibold">
-                <PlayCircle className="h-4 w-4 text-primary" />
+              <CardTitle className="gap-sm flex items-center text-sm font-semibold">
+                <PlayCircle className="text-primary h-4 w-4" />
                 {t('pages.intellectToday.activeCourse')}
               </CardTitle>
             </CardHeader>
@@ -194,7 +194,7 @@ export default function IntellectToday() {
                 <div className="space-y-md">
                   <div className="space-y-xs">
                     <p className="font-semibold">{activeCourse.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {activeCourse.platform_display}
                     </p>
                     <div className="space-y-xs">
@@ -202,14 +202,14 @@ export default function IntellectToday() {
                         value={activeCourse.progress_percentage}
                         className="h-1.5"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {activeCourse.progress_percentage}% —{' '}
                         {activeCourse.completed_lessons}/{activeCourse.total_lessons}
                       </p>
                     </div>
                   </div>
                   <Button
-                    className="w-full gap-sm"
+                    className="gap-sm w-full"
                     variant="outline"
                     onClick={() => void navigate('/intellect/courses')}
                   >
@@ -221,7 +221,7 @@ export default function IntellectToday() {
                 <EmptyState
                   title={t('pages.intellectToday.noCourse')}
                   description={t('pages.intellectToday.startCourse')}
-                  icon={<PlayCircle className="h-8 w-8 text-muted-foreground" />}
+                  icon={<PlayCircle className="text-muted-foreground h-8 w-8" />}
                 />
               )}
             </CardContent>
@@ -230,16 +230,16 @@ export default function IntellectToday() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-sm text-sm font-semibold">
-              <Zap className="h-4 w-4 text-primary" />
+            <CardTitle className="gap-sm flex items-center text-sm font-semibold">
+              <Zap className="text-primary h-4 w-4" />
               {t('pages.intellectToday.quickActions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
+            <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
               <Button
                 variant="outline"
-                className="flex flex-col gap-xs py-md"
+                className="gap-xs py-md flex flex-col"
                 onClick={() => void navigate('/library/books')}
               >
                 <BookOpen className="h-5 w-5" />
@@ -247,7 +247,7 @@ export default function IntellectToday() {
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col gap-xs py-md"
+                className="gap-xs py-md flex flex-col"
                 onClick={() => void navigate('/library/flashcards')}
               >
                 <Brain className="h-5 w-5" />
@@ -255,7 +255,7 @@ export default function IntellectToday() {
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col gap-xs py-md"
+                className="gap-xs py-md flex flex-col"
                 onClick={() => void navigate('/library/books')}
               >
                 <PlayCircle className="h-5 w-5" />
@@ -265,7 +265,7 @@ export default function IntellectToday() {
               </Button>
               <Button
                 variant="outline"
-                className="flex flex-col gap-xs py-md"
+                className="gap-xs py-md flex flex-col"
                 onClick={() => void navigate('/intellect/courses')}
               >
                 <Zap className="h-5 w-5" />
@@ -278,31 +278,31 @@ export default function IntellectToday() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-sm text-sm font-semibold">
-                <Flame className="h-4 w-4 text-warning" />
+              <CardTitle className="gap-sm flex items-center text-sm font-semibold">
+                <Flame className="text-warning h-4 w-4" />
                 {t('pages.intellectToday.streak')}
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             {stats?.reading_streak.current_streak ? (
-              <div className="flex items-center gap-md">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-warning/10 text-warning">
+              <div className="gap-md flex items-center">
+                <div className="bg-warning/10 text-warning flex h-14 w-14 items-center justify-center rounded-full">
                   <Flame className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-warning">
+                  <p className="text-warning text-2xl font-bold">
                     {t('pages.intellectToday.days', {
                       count: stats.reading_streak.current_streak,
                     })}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.intellectToday.weekProgress')}
                   </p>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {t('pages.intellectToday.noStreak')}
               </p>
             )}
@@ -313,8 +313,8 @@ export default function IntellectToday() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-sm text-sm font-semibold">
-                  <Award className="h-4 w-4 text-primary" />
+                <CardTitle className="gap-sm flex items-center text-sm font-semibold">
+                  <Award className="text-primary h-4 w-4" />
                   {t('pages.intellectToday.badges')}
                 </CardTitle>
                 <Button
@@ -328,11 +328,11 @@ export default function IntellectToday() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-sm">
+              <div className="gap-sm flex flex-wrap">
                 {recentBadges.map((badge) => (
                   <span
                     key={badge.id}
-                    className={`inline-flex items-center gap-xs rounded-full border px-sm py-xs text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
+                    className={`gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
                   >
                     <Award className="h-3 w-3 shrink-0" />
                     {badge.code_display}

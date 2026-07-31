@@ -158,7 +158,7 @@ export default function Vaults() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
             <Zap className="mr-sm h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
@@ -170,23 +170,23 @@ export default function Vaults() {
         </div>
       </PageHeader>
 
-      <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-3">
-        <Card className="border-t-2 border-t-success">
+      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-3">
+        <Card className="border-t-success border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <PiggyBank className="h-4 w-4 text-success" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <PiggyBank className="text-success h-4 w-4" />
               {t('pages.vaults.totalBalance')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalBalance)}
             </div>
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-amber-500">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
               <Sparkles className="h-4 w-4 text-amber-500" />
               {t('pages.vaults.totalYield')}
             </CardTitle>
@@ -197,15 +197,15 @@ export default function Vaults() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-t-2 border-t-info">
+        <Card className="border-t-info border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <TrendingUp className="h-4 w-4 text-info" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <TrendingUp className="text-info h-4 w-4" />
               {t('pages.vaults.pendingYield')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-info">
+            <div className="text-info text-2xl font-bold">
               {formatCurrency(totalPendingYield)}
             </div>
           </CardContent>
@@ -215,12 +215,12 @@ export default function Vaults() {
       {isLoading ? (
         <LoadingState />
       ) : vaults.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
           <Vault className="mb-md h-12 w-12" />
           <p>{t('pages.vaults.emptyState')}</p>
         </div>
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {vaults.map((vault, index) => (
             <VaultCard
               key={vault.id}

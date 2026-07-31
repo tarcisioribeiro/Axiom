@@ -151,10 +151,10 @@ export function ReadingGoalModal({
             title={t('pages.libraryDashboard.readingGoals.sectionGoal')}
             icon={Target}
           >
-            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               <div className="space-y-sm">
-                <Label htmlFor="year" className="flex items-center gap-xs">
-                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="year" className="gap-xs flex items-center">
+                  <Target className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formYear')}
                 </Label>
                 <Input
@@ -168,13 +168,13 @@ export function ReadingGoalModal({
                   disabled={isLoading}
                 />
                 {errors.year && (
-                  <p className="text-sm text-destructive">{errors.year.message}</p>
+                  <p className="text-destructive text-sm">{errors.year.message}</p>
                 )}
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="name" className="flex items-center gap-xs">
-                  <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="name" className="gap-xs flex items-center">
+                  <Target className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formName')}
                 </Label>
                 <Input
@@ -185,11 +185,11 @@ export function ReadingGoalModal({
                   )}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.readingGoals.formNameHint')}
                 </p>
                 {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name.message}</p>
+                  <p className="text-destructive text-sm">{errors.name.message}</p>
                 )}
               </div>
             </div>
@@ -199,10 +199,10 @@ export function ReadingGoalModal({
             title={t('pages.libraryDashboard.readingGoals.sectionQuantities')}
             icon={BookOpen}
           >
-            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               <div className="space-y-sm">
-                <Label htmlFor="books_goal" className="flex items-center gap-xs">
-                  <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="books_goal" className="gap-xs flex items-center">
+                  <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formBooksGoal')}
                 </Label>
                 <Input
@@ -215,21 +215,21 @@ export function ReadingGoalModal({
                   })}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.readingGoals.formBooksGoalHint', {
                     year: currentYear,
                   })}
                 </p>
                 {errors.books_goal && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {errors.books_goal.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="pages_goal" className="flex items-center gap-xs">
-                  <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="pages_goal" className="gap-xs flex items-center">
+                  <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formPagesGoal')}
                 </Label>
                 <Input
@@ -245,11 +245,11 @@ export function ReadingGoalModal({
                   )}
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.readingGoals.formPagesGoalHint')}
                 </p>
                 {errors.pages_goal && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {errors.pages_goal.message}
                   </p>
                 )}
@@ -263,7 +263,7 @@ export function ReadingGoalModal({
           >
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.readingGoals.formLiteraryTypesHint')}
                 </p>
                 {availableValues.length > 0 && (
@@ -272,7 +272,7 @@ export function ReadingGoalModal({
                     variant="outline"
                     size="sm"
                     onClick={addLtg}
-                    className="h-7 gap-xs text-xs"
+                    className="gap-xs h-7 text-xs"
                     disabled={isLoading}
                   >
                     <Plus className="h-3 w-3" />
@@ -284,9 +284,9 @@ export function ReadingGoalModal({
               {ltgDrafts.length > 0 && (
                 <div className="space-y-sm">
                   {ltgDrafts.map((draft, index) => (
-                    <div key={index} className="flex items-center gap-sm">
+                    <div key={index} className="gap-sm flex items-center">
                       <select
-                        className="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-xs text-sm shadow-sm"
+                        className="border-input bg-background py-xs flex h-9 flex-1 rounded-md border px-3 text-sm shadow-sm"
                         value={draft.literary_type}
                         onChange={(e) =>
                           updateLtg(index, 'literary_type', e.target.value)
@@ -331,7 +331,7 @@ export function ReadingGoalModal({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 shrink-0 text-destructive"
+                        className="text-destructive h-9 w-9 shrink-0"
                         onClick={() => removeLtg(index)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -343,7 +343,7 @@ export function ReadingGoalModal({
             </div>
           </FormSection>
 
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button
               type="button"
               variant="outline"

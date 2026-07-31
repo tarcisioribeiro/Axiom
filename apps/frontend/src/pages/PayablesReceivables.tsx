@@ -19,18 +19,18 @@ export default function PayablesReceivables() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="payables" className="flex-1 gap-xs">
+          <TabsTrigger value="payables" className="gap-xs flex-1">
             <Receipt className="h-4 w-4" />
             {t('pages.payables.title')}
           </TabsTrigger>
-          <TabsTrigger value="receivables" className="flex-1 gap-xs">
+          <TabsTrigger value="receivables" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
             {t('pages.receivables.title')}
           </TabsTrigger>

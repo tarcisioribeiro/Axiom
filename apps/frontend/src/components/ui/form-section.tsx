@@ -17,12 +17,12 @@ export function FormSection({
 }: FormSectionProps) {
   return (
     <div className={cn('space-y-md', className)}>
-      <div className="flex items-center gap-xs">
-        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="gap-xs flex items-center">
+        {Icon && <Icon className="text-muted-foreground h-3.5 w-3.5" />}
+        <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {title}
         </span>
-        <div className="h-px flex-1 bg-border/50" />
+        <div className="bg-border/50 h-px flex-1" />
       </div>
       <div className="space-y-md">{children}</div>
     </div>

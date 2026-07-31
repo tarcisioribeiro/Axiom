@@ -23,24 +23,24 @@ export function CollapsibleSection({
   className,
 }: CollapsibleSectionProps) {
   return (
-    <div className={cn('rounded-lg border border-border bg-card', className)}>
+    <div className={cn('border-border bg-card rounded-lg border', className)}>
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-sm px-md py-sm text-left transition-colors hover:bg-muted/40"
+        className="gap-sm px-md py-sm hover:bg-muted/40 flex w-full items-center justify-between text-left transition-colors"
         aria-expanded={open}
       >
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           {icon && (
-            <span className="flex h-6 w-6 items-center justify-center text-primary">
+            <span className="text-primary flex h-6 w-6 items-center justify-center">
               {icon}
             </span>
           )}
-          <span className="text-sm font-semibold text-foreground">{title}</span>
+          <span className="text-foreground text-sm font-semibold">{title}</span>
         </div>
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-200',
             open && 'rotate-180'
           )}
         />
@@ -56,7 +56,7 @@ export function CollapsibleSection({
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="border-t border-border p-md">{children}</div>
+            <div className="border-border p-md border-t">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>

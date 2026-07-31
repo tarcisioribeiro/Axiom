@@ -70,7 +70,7 @@ const BADGE_LEVEL_COLORS: Record<string, string> = {
 function BadgeChip({ badge }: { badge: IntellectBadge }) {
   return (
     <span
-      className={`inline-flex items-center gap-xs rounded-full border px-sm py-xs text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
+      className={`gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
     >
       <Award className="h-3 w-3 shrink-0" />
       {badge.code_display}
@@ -418,12 +418,12 @@ export default function LibraryDashboard() {
 
   return (
     <PageContainer>
-      <div className="flex flex-wrap items-start justify-between gap-md">
+      <div className="gap-md flex flex-wrap items-start justify-between">
         <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
-        <div className="flex flex-wrap items-center gap-sm">
+        <div className="gap-sm flex flex-wrap items-center">
           {/* Unified Learning Streak */}
           {(unifiedStreak.readingStreak > 0 || unifiedStreak.longestStreak > 0) && (
-            <div className="flex items-center gap-sm rounded-lg border border-orange-200 bg-orange-50 px-md py-sm dark:border-orange-900 dark:bg-orange-950/30">
+            <div className="gap-sm px-md py-sm flex items-center rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30">
               <Flame className="h-4 w-4 text-orange-500" />
               <div className="text-xs">
                 <span className="font-bold text-orange-600 dark:text-orange-400">
@@ -445,11 +445,11 @@ export default function LibraryDashboard() {
           {/* Study Timer */}
           <button
             onClick={() => setTimerOpen((v) => !v)}
-            className="flex items-center gap-sm rounded-md border px-3 py-sm text-sm text-muted-foreground hover:bg-muted"
+            className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
           >
             <Timer className="h-4 w-4" />
             {timerRunning ? (
-              <span className="font-mono text-primary">{timerDisplay}</span>
+              <span className="text-primary font-mono">{timerDisplay}</span>
             ) : (
               t('pages.libraryDashboard.studyTimer')
             )}
@@ -457,7 +457,7 @@ export default function LibraryDashboard() {
 
           <button
             onClick={exportCSV}
-            className="flex items-center gap-sm rounded-md border px-3 py-sm text-sm text-muted-foreground hover:bg-muted"
+            className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
             title={t('pages.libraryDashboard.exportCSVTitle')}
           >
             <Download className="h-4 w-4" />
@@ -468,22 +468,22 @@ export default function LibraryDashboard() {
 
       {/* Study Timer Panel */}
       {timerOpen && (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-card px-lg py-md shadow-sm">
-          <div className="flex items-center gap-md">
+        <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border shadow-sm">
+          <div className="gap-md flex items-center">
             <div className="text-center">
-              <p className="font-mono text-4xl font-bold tabular-nums text-foreground">
+              <p className="text-foreground font-mono text-4xl font-bold tabular-nums">
                 {timerDisplay}
               </p>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {timerMode === 'study'
                   ? t('pages.libraryDashboard.studyMode')
                   : t('pages.libraryDashboard.breakMode')}
               </p>
             </div>
-            <div className="flex gap-sm">
+            <div className="gap-sm flex">
               <button
                 onClick={() => setTimerRunning((v) => !v)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full"
               >
                 {timerRunning ? (
                   <Pause className="h-4 w-4" />
@@ -496,20 +496,20 @@ export default function LibraryDashboard() {
                   setTimerRunning(false);
                   setTimerSeconds(timerMode === 'study' ? 25 * 60 : 5 * 60);
                 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground hover:bg-muted"
+                className="border-border bg-background text-muted-foreground hover:bg-muted flex h-9 w-9 items-center justify-center rounded-full border"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
             </div>
           </div>
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             <button
               onClick={() => {
                 setTimerMode('study');
                 setTimerRunning(false);
                 setTimerSeconds(25 * 60);
               }}
-              className={`rounded-md px-sm py-xs text-xs ${timerMode === 'study' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+              className={`px-sm py-xs rounded-md text-xs ${timerMode === 'study' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               25 min
             </button>
@@ -519,7 +519,7 @@ export default function LibraryDashboard() {
                 setTimerRunning(false);
                 setTimerSeconds(5 * 60);
               }}
-              className={`rounded-md px-sm py-xs text-xs ${timerMode === 'break' ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}`}
+              className={`px-sm py-xs rounded-md text-xs ${timerMode === 'break' ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               5 min
             </button>
@@ -528,7 +528,7 @@ export default function LibraryDashboard() {
       )}
 
       {/* Block 1: Métricas + Status de Leitura (esquerda) | Meta de Leitura (direita) */}
-      <div className="grid grid-cols-1 gap-md lg:grid-cols-3">
+      <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
         <CollapsibleSection
           title={t('pages.libraryDashboard.overview')}
           icon={<BookOpen className="h-4 w-4" />}
@@ -536,7 +536,7 @@ export default function LibraryDashboard() {
           onToggle={() => toggle('overview')}
           className="lg:col-span-2"
         >
-          <div className="flex flex-col gap-md">
+          <div className="gap-md flex flex-col">
             {/* Métricas Principais */}
             <Card>
               <CardHeader className="pb-sm">
@@ -545,9 +545,9 @@ export default function LibraryDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-md sm:grid-cols-5">
-                  <div className="flex flex-col gap-xs">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                <div className="gap-md grid grid-cols-2 sm:grid-cols-5">
+                  <div className="gap-xs flex flex-col">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       <BookOpen className="h-4 w-4" />
                       <span className="text-xs">
                         {t('pages.libraryDashboard.books')}
@@ -557,8 +557,8 @@ export default function LibraryDashboard() {
                       {stats?.total_books || 0}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-xs">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                  <div className="gap-xs flex flex-col">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       <User className="h-4 w-4" />
                       <span className="text-xs">
                         {t('pages.libraryDashboard.authors')}
@@ -568,8 +568,8 @@ export default function LibraryDashboard() {
                       {stats?.total_authors || 0}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-xs">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                  <div className="gap-xs flex flex-col">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       <Building2 className="h-4 w-4" />
                       <span className="text-xs">
                         {t('pages.libraryDashboard.publishers')}
@@ -579,8 +579,8 @@ export default function LibraryDashboard() {
                       {stats?.total_publishers || 0}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-xs">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                  <div className="gap-xs flex flex-col">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       <FileText className="h-4 w-4" />
                       <span className="text-xs">
                         {t('pages.libraryDashboard.pagesRead')}
@@ -590,8 +590,8 @@ export default function LibraryDashboard() {
                       {stats?.total_pages_read || 0}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-xs">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                  <div className="gap-xs flex flex-col">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       <Star className="h-4 w-4" />
                       <span className="text-xs">
                         {t('pages.libraryDashboard.averageRating')}
@@ -612,19 +612,19 @@ export default function LibraryDashboard() {
                   {t('pages.libraryDashboard.readingStatus')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col justify-between gap-md">
+              <CardContent className="gap-md flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <BookMarked className="h-5 w-5 text-info" />
+                    <BookMarked className="text-info h-5 w-5" />
                     <span className="text-sm font-medium">
                       {t('pages.libraryDashboard.reading')}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-info">
+                    <span className="text-info text-2xl font-bold">
                       {stats?.books_reading || 0}
                     </span>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.libraryDashboard.inProgressSubtitle')}
                     </p>
                   </div>
@@ -632,16 +632,16 @@ export default function LibraryDashboard() {
                 <div className="border-t" />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <BookOpen className="h-5 w-5 text-warning" />
+                    <BookOpen className="text-warning h-5 w-5" />
                     <span className="text-sm font-medium">
                       {t('pages.libraryDashboard.toRead')}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-warning">
+                    <span className="text-warning text-2xl font-bold">
                       {stats?.books_to_read || 0}
                     </span>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.libraryDashboard.inQueueSubtitle')}
                     </p>
                   </div>
@@ -649,16 +649,16 @@ export default function LibraryDashboard() {
                 <div className="border-t" />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <BookCheck className="h-5 w-5 text-success" />
+                    <BookCheck className="text-success h-5 w-5" />
                     <span className="text-sm font-medium">
                       {t('pages.libraryDashboard.read')}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-success">
+                    <span className="text-success text-2xl font-bold">
                       {stats?.books_read || 0}
                     </span>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.libraryDashboard.completedCount', {
                         count: stats?.books_read || 0,
                       })}
@@ -682,15 +682,15 @@ export default function LibraryDashboard() {
       {stats?.monthly_comparison && (
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <TrendingUp className="h-4 w-4 text-primary" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <TrendingUp className="text-primary h-4 w-4" />
               {t('pages.libraryDashboard.monthAnalysis.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <FileText className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.monthAnalysis.totalPages')}
@@ -699,12 +699,12 @@ export default function LibraryDashboard() {
                 <span className="text-2xl font-bold">
                   {stats.monthly_comparison.current_month.pages_read}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.monthAnalysis.pagesUnit')}
                 </span>
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <CalendarClock className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.monthAnalysis.dailyAverage')}
@@ -716,12 +716,12 @@ export default function LibraryDashboard() {
                     new Date().getDate()
                   ).toFixed(1)}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.monthAnalysis.pagesPerDay')}
                 </span>
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <Flame className="h-4 w-4 text-orange-500" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.monthAnalysis.bestDay')}
@@ -731,7 +731,7 @@ export default function LibraryDashboard() {
                   {stats.most_productive_day?.weekday_display ?? '—'}
                 </span>
                 {stats.most_productive_day && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {t('pages.libraryDashboard.monthAnalysis.pagesOnBestDay', {
                       count: stats.most_productive_day.total_pages,
                     })}
@@ -746,17 +746,17 @@ export default function LibraryDashboard() {
       {/* Intelecto: Cursos — métricas principais */}
       <Card>
         <CardHeader className="pb-sm">
-          <div className="flex items-center gap-sm">
-            <GraduationCap className="h-4 w-4 text-category-intellect" />
+          <div className="gap-sm flex items-center">
+            <GraduationCap className="text-category-intellect h-4 w-4" />
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.coursesTitle')}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-md sm:grid-cols-6">
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+          <div className="gap-md grid grid-cols-2 sm:grid-cols-6">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <BookOpen className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.totalCourses')}
@@ -764,30 +764,30 @@ export default function LibraryDashboard() {
               </div>
               <span className="text-2xl font-bold">{courseStats.total}</span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Play className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.coursesInProgress')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-info">
+              <span className="text-info text-2xl font-bold">
                 {courseStats.inProgress}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <CheckCircle2 className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.coursesCompleted')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-success">
+              <span className="text-success text-2xl font-bold">
                 {courseStats.completed}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Clock className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.coursesInvestedHours')}
@@ -797,19 +797,19 @@ export default function LibraryDashboard() {
                 {courseStats.investedHours.toFixed(0)}h
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <TrendingUp className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.completionRate')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-category-intellect">
+              <span className="text-category-intellect text-2xl font-bold">
                 {courseStats.completionRate.toFixed(0)}%
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Zap className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.avgProgress')}
@@ -818,7 +818,7 @@ export default function LibraryDashboard() {
               <span className="text-2xl font-bold">
                 {courseStats.avgProgress.toFixed(0)}%
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {t('pages.libraryDashboard.inProgressSubtitle')}
               </span>
             </div>
@@ -826,7 +826,7 @@ export default function LibraryDashboard() {
 
           {/* Barra de progresso visual por status */}
           {courseStats.total > 0 && (
-            <div className="mt-md space-y-sm border-t pt-md">
+            <div className="mt-md space-y-sm pt-md border-t">
               {[
                 {
                   label: t('pages.libraryDashboard.courseStatusCompleted'),
@@ -854,11 +854,11 @@ export default function LibraryDashboard() {
                   const pct = (s.count / courseStats.total) * 100;
                   return (
                     <div key={s.label} className="flex items-center gap-3">
-                      <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground w-28 shrink-0 text-xs">
                         {s.label}
                       </span>
-                      <div className="flex flex-1 items-center gap-sm">
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="gap-sm flex flex-1 items-center">
+                        <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                           <div
                             className={`h-full rounded-full transition-all ${s.colorClass}`}
                             style={{ width: `${pct}%` }}
@@ -877,10 +877,10 @@ export default function LibraryDashboard() {
       </Card>
 
       {/* Cursos: distribuição por categoria e plataforma */}
-      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+      <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
+            <CardTitle className="gap-sm flex items-center text-sm">
               <GraduationCap className="h-4 w-4" />
               {t('pages.libraryDashboard.coursesByCategory')}
             </CardTitle>
@@ -904,7 +904,7 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
+            <CardTitle className="gap-sm flex items-center text-sm">
               <Play className="h-4 w-4" />
               {t('pages.libraryDashboard.coursesByPlatform')}
             </CardTitle>
@@ -930,17 +930,17 @@ export default function LibraryDashboard() {
       {/* Intelecto: Habilidades — métricas principais */}
       <Card>
         <CardHeader className="pb-sm">
-          <div className="flex items-center gap-sm">
-            <Brain className="h-4 w-4 text-category-intellect" />
+          <div className="gap-sm flex items-center">
+            <Brain className="text-category-intellect h-4 w-4" />
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.skillsTitle')}
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+          <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Brain className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.totalSkills')}
@@ -948,36 +948,36 @@ export default function LibraryDashboard() {
               </div>
               <span className="text-2xl font-bold">{skillStats.total}</span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Award className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.skillsMastered')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-success">
+              <span className="text-success text-2xl font-bold">
                 {skillStats.mastered}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <TrendingUp className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.skillsEvolving')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-warning">
+              <span className="text-warning text-2xl font-bold">
                 {skillStats.evolving}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Zap className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.skillsLearning')}
                 </span>
               </div>
-              <span className="text-2xl font-bold text-info">
+              <span className="text-info text-2xl font-bold">
                 {skillStats.learning}
               </span>
             </div>
@@ -985,8 +985,8 @@ export default function LibraryDashboard() {
 
           {/* Distribuição por proficiência */}
           {skillStats.byProficiencyData.length > 0 && (
-            <div className="mt-md space-y-sm border-t pt-md">
-              <p className="mb-sm text-xs font-semibold text-muted-foreground">
+            <div className="mt-md space-y-sm pt-md border-t">
+              <p className="mb-sm text-muted-foreground text-xs font-semibold">
                 {t('pages.libraryDashboard.proficiencyDistribution')}
               </p>
               {skillStats.byProficiencyData.map((item, i) => {
@@ -996,13 +996,13 @@ export default function LibraryDashboard() {
                 const pct = max > 0 ? (item.count / max) * 100 : 0;
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground w-28 shrink-0 text-xs">
                       {item.name}
                     </span>
-                    <div className="flex flex-1 items-center gap-sm">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="gap-sm flex flex-1 items-center">
+                      <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                         <div
-                          className="h-full rounded-full bg-category-intellect/70 transition-all"
+                          className="bg-category-intellect/70 h-full rounded-full transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -1019,10 +1019,10 @@ export default function LibraryDashboard() {
       </Card>
 
       {/* Habilidades: distribuição por categoria + status */}
-      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+      <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
+            <CardTitle className="gap-sm flex items-center text-sm">
               <Brain className="h-4 w-4" />
               {t('pages.libraryDashboard.skillsByCategory')}
             </CardTitle>
@@ -1046,7 +1046,7 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
+            <CardTitle className="gap-sm flex items-center text-sm">
               <Award className="h-4 w-4" />
               {t('pages.libraryDashboard.skillsByProficiency')}
             </CardTitle>
@@ -1101,8 +1101,8 @@ export default function LibraryDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Clock className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.readingTime')}
@@ -1111,12 +1111,12 @@ export default function LibraryDashboard() {
               <span className="text-2xl font-bold">
                 {stats?.total_reading_time_hours || 0}h
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {t('pages.libraryDashboard.readingTimeTotal')}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <FileText className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.avgPerBook')}
@@ -1125,12 +1125,12 @@ export default function LibraryDashboard() {
               <span className="text-2xl font-bold">
                 {stats?.average_pages_per_book?.toFixed(0) || 0}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {t('pages.libraryDashboard.pagesPerBook')}
               </span>
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <User className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.mostReadAuthor')}
@@ -1144,20 +1144,20 @@ export default function LibraryDashboard() {
                   >
                     {stats.most_read_author.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {t('pages.libraryDashboard.booksReadCount', {
                       count: stats.most_read_author.books_count,
                     })}
                   </span>
                 </>
               ) : (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {t('pages.libraryDashboard.noAuthor')}
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-xs">
-              <div className="flex items-center gap-sm text-muted-foreground">
+            <div className="gap-xs flex flex-col">
+              <div className="gap-sm text-muted-foreground flex items-center">
                 <Building2 className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.mostReadPublisher')}
@@ -1171,14 +1171,14 @@ export default function LibraryDashboard() {
                   >
                     {stats.most_read_publisher.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {t('pages.libraryDashboard.booksReadCount', {
                       count: stats.most_read_publisher.books_count,
                     })}
                   </span>
                 </>
               ) : (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {t('pages.libraryDashboard.noAuthor')}
                 </span>
               )}
@@ -1194,21 +1194,21 @@ export default function LibraryDashboard() {
         open={sections.skills}
         onToggle={() => toggle('skills')}
       >
-        <div className="flex flex-col gap-md">
+        <div className="gap-md flex flex-col">
           {/* Intelecto: Habilidades — métricas principais */}
           <Card>
             <CardHeader className="pb-sm">
-              <div className="flex items-center gap-sm">
-                <Brain className="h-4 w-4 text-category-intellect" />
+              <div className="gap-sm flex items-center">
+                <Brain className="text-category-intellect h-4 w-4" />
                 <CardTitle className="text-sm font-medium">
                   {t('pages.libraryDashboard.skillsTitle')}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
                     <Brain className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.totalSkills')}
@@ -1216,36 +1216,36 @@ export default function LibraryDashboard() {
                   </div>
                   <span className="text-2xl font-bold">{skillStats.total}</span>
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
                     <Award className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.skillsMastered')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-success">
+                  <span className="text-success text-2xl font-bold">
                     {skillStats.mastered}
                   </span>
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
                     <TrendingUp className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.skillsEvolving')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-warning">
+                  <span className="text-warning text-2xl font-bold">
                     {skillStats.evolving}
                   </span>
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
                     <Zap className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.skillsLearning')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-info">
+                  <span className="text-info text-2xl font-bold">
                     {skillStats.learning}
                   </span>
                 </div>
@@ -1253,8 +1253,8 @@ export default function LibraryDashboard() {
 
               {/* Distribuição por proficiência */}
               {skillStats.byProficiencyData.length > 0 && (
-                <div className="mt-md space-y-sm border-t pt-md">
-                  <p className="mb-sm text-xs font-semibold text-muted-foreground">
+                <div className="mt-md space-y-sm pt-md border-t">
+                  <p className="mb-sm text-muted-foreground text-xs font-semibold">
                     {t('pages.libraryDashboard.proficiencyDistribution')}
                   </p>
                   {skillStats.byProficiencyData.map((item, i) => {
@@ -1264,13 +1264,13 @@ export default function LibraryDashboard() {
                     const pct = max > 0 ? (item.count / max) * 100 : 0;
                     return (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                        <span className="text-muted-foreground w-28 shrink-0 text-xs">
                           {item.name}
                         </span>
-                        <div className="flex flex-1 items-center gap-sm">
-                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div className="gap-sm flex flex-1 items-center">
+                          <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                             <div
-                              className="h-full rounded-full bg-category-intellect/70 transition-all"
+                              className="bg-category-intellect/70 h-full rounded-full transition-all"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -1287,10 +1287,10 @@ export default function LibraryDashboard() {
           </Card>
 
           {/* Habilidades: distribuição por categoria + status */}
-          <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
             <Card>
               <CardHeader className="pb-sm">
-                <CardTitle className="flex items-center gap-sm text-sm">
+                <CardTitle className="gap-sm flex items-center text-sm">
                   <Brain className="h-4 w-4" />
                   {t('pages.libraryDashboard.skillsByCategory')}
                 </CardTitle>
@@ -1314,7 +1314,7 @@ export default function LibraryDashboard() {
 
             <Card>
               <CardHeader className="pb-sm">
-                <CardTitle className="flex items-center gap-sm text-sm">
+                <CardTitle className="gap-sm flex items-center text-sm">
                   <Award className="h-4 w-4" />
                   {t('pages.libraryDashboard.skillsByProficiency')}
                 </CardTitle>
@@ -1384,8 +1384,8 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <Clock className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.readingTime')}
@@ -1394,12 +1394,12 @@ export default function LibraryDashboard() {
                 <span className="text-2xl font-bold">
                   {stats?.total_reading_time_hours || 0}h
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.readingTimeTotal')}
                 </span>
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <FileText className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.avgPerBook')}
@@ -1408,12 +1408,12 @@ export default function LibraryDashboard() {
                 <span className="text-2xl font-bold">
                   {stats?.average_pages_per_book?.toFixed(0) || 0}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.libraryDashboard.pagesPerBook')}
                 </span>
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <User className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.mostReadAuthor')}
@@ -1427,20 +1427,20 @@ export default function LibraryDashboard() {
                     >
                       {stats.most_read_author.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {t('pages.libraryDashboard.booksReadCount', {
                         count: stats.most_read_author.books_count,
                       })}
                     </span>
                   </>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     {t('pages.libraryDashboard.noAuthor')}
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
+              <div className="gap-xs flex flex-col">
+                <div className="gap-sm text-muted-foreground flex items-center">
                   <Building2 className="h-4 w-4" />
                   <span className="text-xs">
                     {t('pages.libraryDashboard.mostReadPublisher')}
@@ -1454,14 +1454,14 @@ export default function LibraryDashboard() {
                     >
                       {stats.most_read_publisher.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {t('pages.libraryDashboard.booksReadCount', {
                         count: stats.most_read_publisher.books_count,
                       })}
                     </span>
                   </>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm">
                     {t('pages.libraryDashboard.noAuthor')}
                   </span>
                 )}
@@ -1478,7 +1478,7 @@ export default function LibraryDashboard() {
         open={sections.sessions}
         onToggle={() => toggle('sessions')}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           {/* Sessões & Ritmo */}
           <Card>
             <CardHeader className="pb-sm">
@@ -1488,8 +1488,8 @@ export default function LibraryDashboard() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {/* Streak em destaque */}
-              <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-sm dark:bg-orange-950/20">
-                <div className="flex items-center gap-sm">
+              <div className="py-sm flex items-center justify-between rounded-lg bg-orange-50 px-3 dark:bg-orange-950/20">
+                <div className="gap-sm flex items-center">
                   <Flame className="h-5 w-5 text-orange-500" />
                   <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
                     {t('pages.libraryDashboard.currentStreak')}
@@ -1544,7 +1544,7 @@ export default function LibraryDashboard() {
               ).map(({ icon, label, value }, i, arr) => (
                 <div key={label}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-sm text-muted-foreground">
+                    <div className="gap-sm text-muted-foreground flex items-center">
                       {icon}
                       <span className="text-sm">{label}</span>
                     </div>
@@ -1566,16 +1566,16 @@ export default function LibraryDashboard() {
             <CardContent>
               {!stats?.current_reading_books ||
               stats.current_reading_books.length === 0 ? (
-                <div className="flex h-full items-center justify-center py-xl text-sm text-muted-foreground">
+                <div className="py-xl text-muted-foreground flex h-full items-center justify-center text-sm">
                   {t('pages.libraryDashboard.completionNoBook')}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {stats.current_reading_books.map((book, i, arr) => (
                     <div key={book.title}>
-                      <div className="flex flex-col gap-xs">
-                        <div className="flex items-start gap-sm">
-                          <BookMarked className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+                      <div className="gap-xs flex flex-col">
+                        <div className="gap-sm flex items-start">
+                          <BookMarked className="text-info mt-0.5 h-4 w-4 shrink-0" />
                           <p
                             className="truncate text-sm font-medium"
                             title={book.title}
@@ -1585,13 +1585,13 @@ export default function LibraryDashboard() {
                         </div>
                         <div className="ml-lg flex flex-col gap-0.5">
                           {book.estimated_days_to_finish !== null ? (
-                            <div className="flex flex-wrap items-baseline gap-sm">
+                            <div className="gap-sm flex flex-wrap items-baseline">
                               <span className="text-lg font-bold">
                                 {t('pages.libraryDashboard.completionDaysLabel', {
                                   count: book.estimated_days_to_finish,
                                 })}
                               </span>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 {t('pages.libraryDashboard.completionForecast', {
                                   date: format(
                                     addDays(new Date(), book.estimated_days_to_finish),
@@ -1602,11 +1602,11 @@ export default function LibraryDashboard() {
                               </span>
                             </div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {t('pages.libraryDashboard.completionNoPace')}
                             </span>
                           )}
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             {book.pages_read} / {book.total_pages}{' '}
                             {t('pages.libraryDashboard.pagesUnit')}
                             {book.total_pages > 0 && (
@@ -1637,7 +1637,7 @@ export default function LibraryDashboard() {
         open={sections.monthly}
         onToggle={() => toggle('monthly')}
       >
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+        <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
@@ -1677,7 +1677,7 @@ export default function LibraryDashboard() {
                   ];
 
                   return (
-                    <div className="grid grid-cols-3 gap-md">
+                    <div className="gap-md grid grid-cols-3">
                       {metrics.map(({ label, unit, curr, prev, change }) => {
                         const data = [
                           { name: currLabel, value: curr },
@@ -1686,7 +1686,7 @@ export default function LibraryDashboard() {
                         return (
                           <div
                             key={label}
-                            className="flex flex-col items-center gap-sm"
+                            className="gap-sm flex flex-col items-center"
                           >
                             <p className="text-xs font-semibold">{label}</p>
                             <ResponsiveContainer width="100%" height={130}>
@@ -1717,22 +1717,22 @@ export default function LibraryDashboard() {
                               </BarChart>
                             </ResponsiveContainer>
                             {change === null ? (
-                              <div className="flex items-center gap-xs text-xs text-muted-foreground">
+                              <div className="gap-xs text-muted-foreground flex items-center text-xs">
                                 <Minus className="h-3 w-3" />
                                 <span>—</span>
                               </div>
                             ) : change > 0 ? (
-                              <div className="flex items-center gap-xs text-xs text-success">
+                              <div className="gap-xs text-success flex items-center text-xs">
                                 <TrendingUp className="h-3 w-3" />
                                 <span>+{change}%</span>
                               </div>
                             ) : change < 0 ? (
-                              <div className="flex items-center gap-xs text-xs text-destructive">
+                              <div className="gap-xs text-destructive flex items-center text-xs">
                                 <TrendingDown className="h-3 w-3" />
                                 <span>{change}%</span>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-xs text-xs text-muted-foreground">
+                              <div className="gap-xs text-muted-foreground flex items-center text-xs">
                                 <Minus className="h-3 w-3" />
                                 <span>0%</span>
                               </div>
@@ -1770,7 +1770,7 @@ export default function LibraryDashboard() {
                     return (
                       <div key={item.genre} className="space-y-xs">
                         <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-sm">
+                          <div className="gap-sm flex items-center">
                             <span
                               className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
                               style={{ backgroundColor: COLORS[index] }}
@@ -1781,7 +1781,7 @@ export default function LibraryDashboard() {
                           </div>
                           <span className="text-xs">{item.total_time_hours}h</span>
                         </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                           <div
                             className="h-full rounded-full transition-all"
                             style={{ width: `${pct}%`, backgroundColor: COLORS[index] }}
@@ -1804,7 +1804,7 @@ export default function LibraryDashboard() {
         open={sections.genres}
         onToggle={() => toggle('genres')}
       >
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+        <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
           {/* Livros por Gênero */}
           <Card>
             <CardHeader>
@@ -1862,7 +1862,7 @@ export default function LibraryDashboard() {
         open={sections.timeline}
         onToggle={() => toggle('timeline')}
       >
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+        <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
@@ -1960,7 +1960,7 @@ export default function LibraryDashboard() {
         open={sections.ratings}
         onToggle={() => toggle('ratings')}
       >
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+        <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
@@ -1994,7 +1994,7 @@ export default function LibraryDashboard() {
               </p>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-lg md:grid-cols-3">
+              <div className="gap-lg grid grid-cols-1 md:grid-cols-3">
                 <div>
                   <h4 className="mb-3 text-sm font-semibold">
                     {t('pages.libraryDashboard.byLanguage')}
@@ -2056,13 +2056,13 @@ export default function LibraryDashboard() {
           {badges.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-sm">
+                <CardTitle className="gap-sm flex items-center">
                   <Award className="h-5 w-5" />
                   {t('pages.libraryDashboard.badges.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-wrap gap-sm">
+                <div className="gap-sm flex flex-wrap">
                   {badges.map((badge) => (
                     <BadgeChip key={badge.id} badge={badge} />
                   ))}

@@ -67,11 +67,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Fallback padrao
       return (
-        <div className="flex min-h-[400px] items-center justify-center p-md">
+        <div className="p-md flex min-h-[400px] items-center justify-center">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-md w-fit rounded-full bg-destructive/10 p-3">
-                <AlertTriangle className="h-8 w-8 text-destructive" />
+              <div className="mb-md bg-destructive/10 mx-auto w-fit rounded-full p-3">
+                <AlertTriangle className="text-destructive h-8 w-8" />
               </div>
               <CardTitle className="text-xl">Algo deu errado</CardTitle>
             </CardHeader>
@@ -80,18 +80,18 @@ export class ErrorBoundary extends Component<Props, State> {
                 Ocorreu um erro inesperado ao carregar este componente.
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="rounded-lg bg-muted p-3 text-left text-sm">
+                <details className="bg-muted rounded-lg p-3 text-left text-sm">
                   <summary className="mb-sm cursor-pointer font-medium">
                     Detalhes do erro (desenvolvimento)
                   </summary>
-                  <pre className="overflow-auto whitespace-pre-wrap text-xs text-destructive">
+                  <pre className="text-destructive overflow-auto text-xs whitespace-pre-wrap">
                     {this.state.error.message}
                     {'\n\n'}
                     {this.state.error.stack}
                   </pre>
                 </details>
               )}
-              <div className="flex justify-center gap-sm">
+              <div className="gap-sm flex justify-center">
                 <Button onClick={this.handleRetry} variant="default">
                   <RefreshCw className="mr-sm h-4 w-4" />
                   Tentar novamente

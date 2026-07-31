@@ -19,7 +19,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-xs">
+    <div className="gap-xs flex items-center">
       <DatePicker
         value={startDate}
         onChange={onStartChange}
@@ -27,7 +27,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         clearable
       />
       <ArrowRight
-        className="h-3 w-3 shrink-0 text-muted-foreground/40"
+        className="text-muted-foreground/40 h-3 w-3 shrink-0"
         aria-hidden="true"
       />
       <DatePicker

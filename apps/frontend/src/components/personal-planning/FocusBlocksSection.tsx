@@ -102,11 +102,11 @@ export function FocusBlocksSection({
 
   return (
     <div className="space-y-sm">
-      <div className="flex items-center gap-sm">
-        <LayoutList className="h-4 w-4 text-primary" />
+      <div className="gap-sm flex items-center">
+        <LayoutList className="text-primary h-4 w-4" />
         <span className="text-sm font-semibold">{t('pages.focusBlocks.title')}</span>
         {blocks.length > 0 && (
-          <span className="rounded-full bg-primary/10 px-xs py-0.5 text-xs font-medium text-primary">
+          <span className="bg-primary/10 px-xs text-primary rounded-full py-0.5 text-xs font-medium">
             {blocks.length}
           </span>
         )}
@@ -114,7 +114,7 @@ export function FocusBlocksSection({
           variant="ghost"
           size="sm"
           onClick={() => setAddingBlock(true)}
-          className="ml-auto h-7 gap-xs px-sm text-xs"
+          className="gap-xs px-sm ml-auto h-7 text-xs"
         >
           <Plus className="h-3 w-3" />
           {t('pages.focusBlocks.addBlock')}
@@ -122,9 +122,9 @@ export function FocusBlocksSection({
       </div>
 
       {blocks.length === 0 && !addingBlock && (
-        <div className="rounded-lg border border-dashed bg-muted/20 px-md py-md text-center">
-          <LayoutList className="mx-auto mb-xs h-5 w-5 text-muted-foreground/40" />
-          <p className="text-xs text-muted-foreground">
+        <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
+          <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />
+          <p className="text-muted-foreground text-xs">
             {t('pages.focusBlocks.emptyState')}
           </p>
         </div>
@@ -145,7 +145,7 @@ export function FocusBlocksSection({
       ))}
 
       {addingBlock && (
-        <div className="flex gap-sm">
+        <div className="gap-sm flex">
           <Input
             ref={inputRef}
             value={newBlockName}

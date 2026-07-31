@@ -84,15 +84,15 @@ export default function ShareCredential() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-md">
-      <div className="w-full max-w-md space-y-md">
+    <div className="bg-background p-md flex min-h-screen items-center justify-center">
+      <div className="space-y-md w-full max-w-md">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-md flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-            <KeyRound className="h-7 w-7 text-primary" />
+          <div className="mb-md bg-primary/10 mx-auto flex h-14 w-14 items-center justify-center rounded-full">
+            <KeyRound className="text-primary h-7 w-7" />
           </div>
           <h1 className="text-2xl font-bold">{t('pages.shareCredential.title')}</h1>
-          <p className="mt-xs text-sm text-muted-foreground">
+          <p className="mt-xs text-muted-foreground text-sm">
             {t('pages.shareCredential.subtitle')}
           </p>
         </div>
@@ -101,7 +101,7 @@ export default function ShareCredential() {
         {state === 'loading' && (
           <Card>
             <CardContent className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
             </CardContent>
           </Card>
         )}
@@ -130,11 +130,11 @@ export default function ShareCredential() {
             </CardHeader>
             <CardContent className="space-y-md">
               <div className="space-y-xs">
-                <p className="text-xs font-medium uppercase text-muted-foreground">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
                   {t('pages.shareCredential.username')}
                 </p>
-                <div className="flex items-center gap-sm">
-                  <code className="flex-1 rounded bg-muted px-3 py-sm text-sm">
+                <div className="gap-sm flex items-center">
+                  <code className="bg-muted py-sm flex-1 rounded px-3 text-sm">
                     {credential.username}
                   </code>
                   <Button
@@ -148,11 +148,11 @@ export default function ShareCredential() {
               </div>
 
               <div className="space-y-xs">
-                <p className="text-xs font-medium uppercase text-muted-foreground">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
                   {t('pages.shareCredential.password')}
                 </p>
-                <div className="flex items-center gap-sm">
-                  <code className="flex-1 rounded bg-muted px-3 py-sm text-sm">
+                <div className="gap-sm flex items-center">
+                  <code className="bg-muted py-sm flex-1 rounded px-3 text-sm">
                     {showPassword ? credential.password : '••••••••••••'}
                   </code>
                   <Button
@@ -176,14 +176,14 @@ export default function ShareCredential() {
 
               {credential.site && (
                 <div className="space-y-xs">
-                  <p className="text-xs font-medium uppercase text-muted-foreground">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
                     {t('pages.shareCredential.site')}
                   </p>
                   <a
                     href={credential.site}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-xs text-sm text-primary hover:underline"
+                    className="gap-xs text-primary flex items-center text-sm hover:underline"
                   >
                     <ExternalLink className="h-3 w-3" />
                     {credential.site}
@@ -198,11 +198,11 @@ export default function ShareCredential() {
         {state === 'expired' && (
           <Card className="border-destructive/50">
             <CardContent className="flex flex-col items-center gap-3 py-10">
-              <AlertTriangle className="h-10 w-10 text-destructive" />
+              <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
                 {t('pages.shareCredential.expiredTitle')}
               </p>
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-center text-sm">
                 {errorMessage || t('pages.shareCredential.expiredDesc')}
               </p>
             </CardContent>
@@ -213,11 +213,11 @@ export default function ShareCredential() {
         {state === 'not_found' && (
           <Card className="border-destructive/50">
             <CardContent className="flex flex-col items-center gap-3 py-10">
-              <AlertTriangle className="h-10 w-10 text-destructive" />
+              <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
                 {t('pages.shareCredential.notFoundTitle')}
               </p>
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-center text-sm">
                 {t('pages.shareCredential.notFoundDesc')}
               </p>
             </CardContent>
@@ -228,18 +228,18 @@ export default function ShareCredential() {
         {state === 'error' && (
           <Card className="border-destructive/50">
             <CardContent className="flex flex-col items-center gap-3 py-10">
-              <AlertTriangle className="h-10 w-10 text-destructive" />
+              <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
                 {t('pages.shareCredential.errorTitle')}
               </p>
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-center text-sm">
                 {t('pages.shareCredential.errorDesc')}
               </p>
             </CardContent>
           </Card>
         )}
 
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-center text-xs">
           {t('pages.shareCredential.footer')}
         </p>
       </div>

@@ -141,10 +141,10 @@ export function StoredAccountForm({
         title={t('pages.storedAccounts.form.sectionIdentification')}
         icon={Building2}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.nameLabel')}
             </Label>
             <Input
@@ -154,19 +154,19 @@ export function StoredAccountForm({
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.institutionLabel')}
             </Label>
             <div className="relative">
               <button
                 type="button"
-                className="flex h-10 w-full cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="border-input bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2"
                 onClick={() => setShowBankDropdown((v) => !v)}
               >
                 {(() => {
@@ -191,11 +191,11 @@ export function StoredAccountForm({
               </button>
 
               {showBankDropdown && (
-                <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover shadow-md">
-                  <div className="flex items-center gap-xs border-b border-border p-sm">
-                    <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="border-border bg-popover absolute z-50 mt-1 w-full rounded-md border shadow-md">
+                  <div className="gap-xs border-border p-sm flex items-center border-b">
+                    <Search className="text-muted-foreground h-3.5 w-3.5" />
                     <input
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
                       placeholder={t('pages.storedAccounts.form.bankSearchPlaceholder')}
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}
@@ -208,7 +208,7 @@ export function StoredAccountForm({
                         <button
                           key={inst.value}
                           type="button"
-                          className="flex w-full items-center gap-2 px-md py-sm text-sm hover:bg-muted"
+                          className="px-md py-sm hover:bg-muted flex w-full items-center gap-2 text-sm"
                           onClick={() => {
                             setValue('institution_name', inst.value);
                             setValue('institution_code', inst.ispb || '');
@@ -219,7 +219,7 @@ export function StoredAccountForm({
                           <InstIcon className="h-4 w-4 shrink-0" />
                           <span className="flex-1 text-left">{inst.label}</span>
                           {inst.ispb && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {inst.ispb}
                             </span>
                           )}
@@ -227,7 +227,7 @@ export function StoredAccountForm({
                       );
                     })}
                     {filteredInstitutions.length === 0 && (
-                      <p className="px-md py-sm text-sm text-muted-foreground">
+                      <p className="px-md py-sm text-muted-foreground text-sm">
                         {t('common.noResults')}
                       </p>
                     )}
@@ -236,7 +236,7 @@ export function StoredAccountForm({
               )}
             </div>
             {errors.institution_name && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.institution_name.message}
               </p>
             )}
@@ -244,8 +244,8 @@ export function StoredAccountForm({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.typeLabel')}
             </Label>
             <Select
@@ -276,7 +276,7 @@ export function StoredAccountForm({
               </SelectContent>
             </Select>
             {errors.account_type && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.account_type.message}
               </p>
             )}
@@ -288,10 +288,10 @@ export function StoredAccountForm({
         title={t('pages.storedAccounts.form.sectionAccountData')}
         icon={Hash}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="account_number" className="flex items-center gap-xs">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="account_number" className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.numberLabel')}
             </Label>
             <Input
@@ -301,15 +301,15 @@ export function StoredAccountForm({
               disabled={isLoading}
             />
             {errors.account_number && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.account_number.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="agency" className="flex items-center gap-xs">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="agency" className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.agencyLabel')}
             </Label>
             <Input
@@ -319,17 +319,17 @@ export function StoredAccountForm({
               disabled={isLoading}
             />
             {errors.agency && (
-              <p className="mt-xs text-sm text-destructive">{errors.agency.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.agency.message}</p>
             )}
           </div>
         </div>
       </FormSection>
 
       <FormSection title={t('pages.storedAccounts.form.sectionPasswords')} icon={Lock}>
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           <div className="space-y-sm">
-            <Label htmlFor="password" className="flex items-center gap-xs">
-              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="password" className="gap-xs flex items-center">
+              <Lock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.password1Label')}
             </Label>
             <div className="relative">
@@ -348,7 +348,7 @@ export function StoredAccountForm({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3"
+                className="absolute top-0 right-0 h-full px-3"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -359,20 +359,20 @@ export function StoredAccountForm({
               </Button>
             </div>
             {errors.password && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.password.message}
               </p>
             )}
             {account && (
-              <p className="mt-xs text-xs text-warning">
+              <p className="mt-xs text-warning text-xs">
                 {t('pages.storedAccounts.form.keepCurrentPassword')}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="digital_password" className="flex items-center gap-xs">
-              <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="digital_password" className="gap-xs flex items-center">
+              <Lock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.password2Label')}
             </Label>
             <div className="relative">
@@ -391,7 +391,7 @@ export function StoredAccountForm({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3"
+                className="absolute top-0 right-0 h-full px-3"
                 onClick={() => setShowSecondPassword(!showSecondPassword)}
               >
                 {showSecondPassword ? (
@@ -402,7 +402,7 @@ export function StoredAccountForm({
               </Button>
             </div>
             {errors.digital_password && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.digital_password.message}
               </p>
             )}
@@ -413,8 +413,8 @@ export function StoredAccountForm({
       {financeAccounts.length > 0 && (
         <FormSection title={t('pages.storedAccounts.form.sectionLink')} icon={Link2}>
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Link2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedAccounts.form.financeAccountLabel')}
             </Label>
             <Select
@@ -439,7 +439,7 @@ export function StoredAccountForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.storedAccounts.form.financeAccountHint')}
             </p>
           </div>
@@ -448,8 +448,8 @@ export function StoredAccountForm({
 
       <FormSection title={t('pages.storedAccounts.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="notes" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="notes" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.storedAccounts.form.notesLabel')}
           </Label>
           <Textarea
@@ -460,12 +460,12 @@ export function StoredAccountForm({
             disabled={isLoading}
           />
           {errors.notes && (
-            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
           )}
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

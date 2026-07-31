@@ -9,7 +9,7 @@ export function AppVersionBadge({ className }: AppVersionBadgeProps) {
   return (
     <span
       className={cn(
-        'select-none font-mono text-[11px] text-muted-foreground/50',
+        'text-muted-foreground/50 font-mono text-[11px] select-none',
         className
       )}
       aria-label={`Versão ${APP_VERSION}`}

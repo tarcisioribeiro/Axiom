@@ -89,8 +89,8 @@ export function StatementExportModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <div className="flex items-center gap-sm">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/10 text-primary flex h-9 w-9 items-center justify-center rounded-lg">
               <FileText className="h-4 w-4" />
             </div>
             <div>
@@ -128,8 +128,8 @@ export function StatementExportModal({
             </div>
           </div>
 
-          <div className="space-y-xs rounded-lg border border-border/60 bg-muted/20 px-3 py-sm text-xs text-muted-foreground">
-            <p className="font-medium text-foreground/70">
+          <div className="space-y-xs border-border/60 bg-muted/20 py-sm text-muted-foreground rounded-lg border px-3 text-xs">
+            <p className="text-foreground/70 font-medium">
               {t('pages.dashboard.statementModal.includesTitle')}
             </p>
             <ul className="list-none space-y-0.5">
@@ -140,7 +140,7 @@ export function StatementExportModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-sm pt-sm">
+        <div className="gap-sm pt-sm flex justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

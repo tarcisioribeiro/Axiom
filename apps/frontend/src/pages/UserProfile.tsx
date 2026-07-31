@@ -31,16 +31,16 @@ export default function UserProfile() {
 
   return (
     <PageContainer>
-      <div className="relative mb-xl overflow-hidden rounded-2xl border border-border/60 bg-card">
+      <div className="mb-xl border-border/60 bg-card relative overflow-hidden rounded-2xl border">
         <div className="from-primary/8 to-primary/4 absolute inset-0 bg-gradient-to-br via-transparent" />
-        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
+        <div className="bg-primary/5 absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl" />
         <div className="bg-primary/8 absolute -bottom-8 -left-8 h-32 w-32 rounded-full blur-2xl" />
 
-        <div className="relative flex flex-col gap-md p-lg sm:flex-row sm:items-center sm:gap-lg sm:p-xl">
+        <div className="gap-md p-lg sm:gap-lg sm:p-xl relative flex flex-col sm:flex-row sm:items-center">
           <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
 
-          <div className="flex-1 space-y-xs">
-            <div className="flex flex-wrap items-center gap-sm">
+          <div className="space-y-xs flex-1">
+            <div className="gap-sm flex flex-wrap items-center">
               <h1 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h1>
               {emailVerified && (
                 <Badge className="bg-green-500/15 text-green-600 hover:bg-green-500/15">
@@ -50,12 +50,12 @@ export default function UserProfile() {
               )}
             </div>
             {email && (
-              <p className="flex items-center gap-sm text-sm text-muted-foreground">
+              <p className="gap-sm text-muted-foreground flex items-center text-sm">
                 <Mail className="h-3.5 w-3.5" />
                 {email}
               </p>
             )}
-            <p className="flex items-center gap-sm text-xs text-muted-foreground">
+            <p className="gap-sm text-muted-foreground flex items-center text-xs">
               <Settings className="h-3 w-3" />
               {t('userProfile.subtitle')}
             </p>
@@ -74,7 +74,7 @@ export default function UserProfile() {
           description={t('userProfile.security.description')}
         >
           <TwoFactorRow />
-          <div className="h-px bg-border" />
+          <div className="bg-border h-px" />
           <PasswordSection />
         </Section>
 
@@ -84,14 +84,14 @@ export default function UserProfile() {
           description={t('pages.notificationPreferences.subtitle')}
         >
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('nav.notificationPreferences')}
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={() => void navigate('/settings/notifications')}
-              className="flex items-center gap-xs"
+              className="gap-xs flex items-center"
             >
               {t('common.actions.edit')}
               <ChevronRight className="h-3.5 w-3.5" />

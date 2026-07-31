@@ -211,7 +211,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.creditCardBills.form.sectionBasic')}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
             <Select
@@ -349,7 +349,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   placeholder="0.00"
                   className="font-semibold"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.form.totalAmountHint')}
                 </p>
               </div>
@@ -365,7 +365,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   {...register('minimum_payment', { valueAsNumber: true })}
                   placeholder="0.00"
                   disabled
-                  className="font-semibold text-warning"
+                  className="text-warning font-semibold"
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.minPaymentHint')}
@@ -383,7 +383,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   {...register('paid_amount', { valueAsNumber: true })}
                   placeholder="0.00"
                   disabled
-                  className="font-semibold text-success"
+                  className="text-success font-semibold"
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.paidAmountHint')}
@@ -408,7 +408,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -344,7 +344,7 @@ export default function StoredAccounts() {
 
         {!isLoading && filteredAccounts.length === 0 ? (
           <EmptyState
-            icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
+            icon={<Building2 className="text-muted-foreground h-12 w-12" />}
             message={
               searchTerm
                 ? t('pages.storedAccounts.emptySearch')
@@ -352,7 +352,7 @@ export default function StoredAccounts() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2 xl:grid-cols-3">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {filteredAccounts.map((acc) => {
               const typeCfg =
                 ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
@@ -376,10 +376,10 @@ export default function StoredAccounts() {
                         {initials}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold leading-tight">
+                        <p className="truncate leading-tight font-semibold">
                           {acc.name}
                         </p>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="text-muted-foreground truncate text-sm">
                           {translate('institutions', acc.institution_name)}
                         </p>
                       </div>
@@ -394,16 +394,16 @@ export default function StoredAccounts() {
 
                   <CardContent className="space-y-3 pt-0">
                     {/* Account details */}
-                    <div className="space-y-sm rounded-lg bg-muted/40 px-3 py-sm">
+                    <div className="space-y-sm bg-muted/40 py-sm rounded-lg px-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                           {t('pages.storedAccounts.columns.number')}
                         </span>
                         <span className="font-mono">{acc.account_number_masked}</span>
                       </div>
                       {acc.agency && (
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                             {t('pages.storedAccounts.columns.agency')}
                           </span>
                           <span className="font-mono">{acc.agency}</span>
@@ -413,13 +413,13 @@ export default function StoredAccounts() {
 
                     {/* Passwords section */}
                     {revealed ? (
-                      <div className="space-y-sm rounded-lg border border-primary/20 bg-primary/5 px-3 py-sm">
+                      <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
                         {revealed.password && (
-                          <div className="flex items-center justify-between gap-sm text-sm">
-                            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                               {t('pages.storedAccounts.password1')}
                             </span>
-                            <div className="flex items-center gap-xs">
+                            <div className="gap-xs flex items-center">
                               <span className="font-mono">{revealed.password}</span>
                               <Button
                                 size="sm"
@@ -439,11 +439,11 @@ export default function StoredAccounts() {
                           </div>
                         )}
                         {revealed.password2 && (
-                          <div className="flex items-center justify-between gap-sm text-sm">
-                            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                               {t('pages.storedAccounts.password2')}
                             </span>
-                            <div className="flex items-center gap-xs">
+                            <div className="gap-xs flex items-center">
                               <span className="font-mono">{revealed.password2}</span>
                               <Button
                                 size="sm"
@@ -464,22 +464,22 @@ export default function StoredAccounts() {
                         )}
                       </div>
                     ) : (
-                      <div className="rounded-lg bg-muted/40 px-3 py-sm">
-                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <div className="bg-muted/40 py-sm rounded-lg px-3">
+                        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                           {t('pages.storedAccounts.columns.passwords')}
                         </p>
-                        <p className="mt-0.5 font-mono text-sm text-muted-foreground">
+                        <p className="text-muted-foreground mt-0.5 font-mono text-sm">
                           ••••••••
                         </p>
                       </div>
                     )}
 
                     {/* Footer: finance link + actions */}
-                    <div className="flex items-center justify-between gap-sm pt-xs">
+                    <div className="gap-sm pt-xs flex items-center justify-between">
                       <div className="min-w-0">
                         {acc.finance_account_name && (
                           <button
-                            className="flex items-center gap-0.5 truncate text-xs text-primary hover:underline"
+                            className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
                             onClick={(e) => {
                               e.stopPropagation();
                               void navigate('/finance/accounts');
@@ -578,7 +578,7 @@ export default function StoredAccounts() {
                           aria-label={t('common.actions.delete')}
                         >
                           <Trash2
-                            className="h-3.5 w-3.5 text-destructive"
+                            className="text-destructive h-3.5 w-3.5"
                             aria-hidden="true"
                           />
                         </Button>

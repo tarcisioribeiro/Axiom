@@ -92,22 +92,22 @@ function DimensionBar({
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5 font-medium">
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+          <Icon className="text-muted-foreground h-3.5 w-3.5" />
           {t(`pages.dashboard.healthScore.dimensions.${dimension}`, {
             defaultValue: value.label,
           })}
         </div>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground tabular-nums">
           {value.score.toFixed(1)} / {value.max}
         </span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+      <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
         <div
           className={cn('h-full rounded-full transition-all duration-700', barColor)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
+      {detail && <p className="text-muted-foreground text-xs">{detail}</p>}
     </div>
   );
 }
@@ -132,11 +132,11 @@ export function HealthScore() {
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-3">
-            <div className="mx-auto h-16 w-16 rounded-full bg-muted" />
-            <div className="h-3 w-full rounded bg-muted" />
-            <div className="h-3 w-full rounded bg-muted" />
-            <div className="h-3 w-full rounded bg-muted" />
-            <div className="h-3 w-full rounded bg-muted" />
+            <div className="bg-muted mx-auto h-16 w-16 rounded-full" />
+            <div className="bg-muted h-3 w-full rounded" />
+            <div className="bg-muted h-3 w-full rounded" />
+            <div className="bg-muted h-3 w-full rounded" />
+            <div className="bg-muted h-3 w-full rounded" />
           </div>
         </CardContent>
       </Card>
@@ -146,7 +146,7 @@ export function HealthScore() {
   if (isError || !data) {
     return (
       <Card>
-        <CardContent className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
           <AlertCircle className="h-4 w-4" />
           {t('pages.dashboard.healthScore.loadError')}
         </CardContent>
@@ -178,13 +178,13 @@ export function HealthScore() {
           >
             <span
               className={cn(
-                'text-3xl font-bold tabular-nums leading-none',
+                'text-3xl leading-none font-bold tabular-nums',
                 gradeColors.color
               )}
             >
               {data.grade}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {data.score.toFixed(0)}/100
             </span>
           </div>

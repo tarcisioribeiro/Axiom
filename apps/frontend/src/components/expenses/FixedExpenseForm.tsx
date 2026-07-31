@@ -120,10 +120,10 @@ export const FixedExpenseForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="description" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -135,8 +135,8 @@ export const FixedExpenseForm = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="merchant" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="merchant" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.merchantLabel')}
             </Label>
             <Input
@@ -148,8 +148,8 @@ export const FixedExpenseForm = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.categoryLabel')}
             </Label>
             <Select
@@ -169,7 +169,7 @@ export const FixedExpenseForm = ({
                     <SelectItem key={key} value={key}>
                       <span className="flex items-center gap-2">
                         {Icon && (
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                         )}
                         {translate('expenseCategories', key)}
                       </span>
@@ -184,10 +184,10 @@ export const FixedExpenseForm = ({
 
       {/* Seção: Valores & Vencimento */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="default_value" className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="default_value" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.defaultValueLabel')}
             </Label>
             <CurrencyInput
@@ -202,8 +202,8 @@ export const FixedExpenseForm = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="due_day" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="due_day" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.dueDayLabel')}
             </Label>
             <Input
@@ -220,9 +220,9 @@ export const FixedExpenseForm = ({
 
       {/* Seção: Tipo de Pagamento */}
       <FormSection title={t('common.form.sections.paymentType')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {(['account', 'credit_card'] as const).map((type) => {
                 const Icon = type === 'account' ? Wallet : CreditCard;
                 const label =
@@ -235,7 +235,7 @@ export const FixedExpenseForm = ({
                     type="button"
                     onClick={() => setPaymentType(type)}
                     disabled={isLoading}
-                    className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                    className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                       paymentType === type
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -247,15 +247,15 @@ export const FixedExpenseForm = ({
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.fixedExpenses.form.paymentTypeHint')}
             </p>
           </div>
 
           {paymentType === 'account' ? (
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedExpenses.form.accountLabel')}
               </Label>
               <Select
@@ -279,8 +279,8 @@ export const FixedExpenseForm = ({
             </div>
           ) : (
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedExpenses.form.creditCardLabel')}
               </Label>
               <Select
@@ -301,15 +301,15 @@ export const FixedExpenseForm = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.fixedExpenses.form.creditCardHint')}
               </p>
             </div>
           )}
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.paymentMethodLabel')}
             </Label>
             <Select
@@ -343,8 +343,8 @@ export const FixedExpenseForm = ({
       <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
         <div className="space-y-md">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.notesLabel')}
             </Label>
             <Textarea
@@ -356,7 +356,7 @@ export const FixedExpenseForm = ({
           </div>
 
           <div className="space-y-sm">
-            <div className="flex items-center gap-sm">
+            <div className="gap-sm flex items-center">
               <Checkbox
                 id="is_active"
                 checked={watchedIsActive}
@@ -367,13 +367,13 @@ export const FixedExpenseForm = ({
                 {t('pages.fixedExpenses.form.isActiveLabel')}
               </Label>
             </div>
-            <p className="ml-6 text-xs text-muted-foreground">
+            <p className="text-muted-foreground ml-6 text-xs">
               {t('pages.fixedExpenses.form.isActiveHint')}
             </p>
           </div>
 
           <div className="space-y-sm">
-            <div className="flex items-center gap-sm">
+            <div className="gap-sm flex items-center">
               <Checkbox
                 id="allow_value_edit"
                 checked={watchedAllowValueEdit}
@@ -384,14 +384,14 @@ export const FixedExpenseForm = ({
                 {t('pages.fixedExpenses.form.allowValueEditLabel')}
               </Label>
             </div>
-            <p className="ml-6 text-xs text-muted-foreground">
+            <p className="text-muted-foreground ml-6 text-xs">
               {t('pages.fixedExpenses.form.allowValueEditHint')}
             </p>
           </div>
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -126,17 +126,17 @@ export function MealTypeForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
-          <UtensilsCrossed className="h-5 w-5 text-category-nutrition" />
+      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <UtensilsCrossed className="text-category-nutrition h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-nutrition">
+          <p className="text-category-nutrition text-sm font-semibold">
             {mealType
               ? t('pages.nutritionMealTypes.editMealTypeTitle')
               : t('pages.nutritionMealTypes.newMealTypeTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.nutritionMealTypes.newMealTypeDesc')}
           </p>
         </div>
@@ -153,13 +153,13 @@ export function MealTypeForm({
           className={cn(errors.name && 'border-destructive')}
         />
         {errors.name && (
-          <p className="mt-xs text-xs text-destructive">{t('common.required')}</p>
+          <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
         )}
       </FormSection>
 
       {/* Horário */}
       <FormSection title={t('pages.nutritionMealTypes.suggestedTime')} icon={Clock}>
-        <div className="flex items-center gap-md">
+        <div className="gap-md flex items-center">
           <TimePicker
             value={watch('suggested_time') || undefined}
             onChange={(t) => setValue('suggested_time', t ?? '')}
@@ -168,7 +168,7 @@ export function MealTypeForm({
           {suggestedTime && (
             <div
               className={cn(
-                'flex items-center gap-xs text-sm font-medium',
+                'gap-xs flex items-center text-sm font-medium',
                 period.color
               )}
             >
@@ -180,17 +180,17 @@ export function MealTypeForm({
       </FormSection>
 
       {/* Status e Ordem */}
-      <div className="grid grid-cols-[1fr_auto] items-start gap-md">
+      <div className="gap-md grid grid-cols-[1fr_auto] items-start">
         <div className="space-y-sm">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
             {t('pages.nutritionMealTypes.mealTypeActive')}
           </span>
-          <div className="grid grid-cols-2 gap-sm">
+          <div className="gap-sm grid grid-cols-2">
             <button
               type="button"
               onClick={() => setValue('is_active', true)}
               className={cn(
-                'flex items-center justify-center gap-xs rounded-lg border-2 px-sm py-xs text-xs font-medium transition-all',
+                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition-all',
                 isActive
                   ? 'border-success bg-success/10 text-success'
                   : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
@@ -203,7 +203,7 @@ export function MealTypeForm({
               type="button"
               onClick={() => setValue('is_active', false)}
               className={cn(
-                'flex items-center justify-center gap-xs rounded-lg border-2 px-sm py-xs text-xs font-medium transition-all',
+                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition-all',
                 !isActive
                   ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
                   : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/20'
@@ -215,7 +215,7 @@ export function MealTypeForm({
           </div>
         </div>
         <div className="space-y-sm">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
             {t('pages.nutritionMealTypes.mealTypeOrder')}
           </span>
           <Input
@@ -227,7 +227,7 @@ export function MealTypeForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

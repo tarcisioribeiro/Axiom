@@ -364,7 +364,7 @@ export function useExpensesPage(opts?: {
       label: t('pages.expenses.columns.amount'),
       align: 'right',
       render: (expense) => (
-        <span className="font-semibold text-destructive">
+        <span className="text-destructive font-semibold">
           {formatCurrency(expense.value)}
         </span>
       ),
@@ -382,14 +382,14 @@ export function useExpensesPage(opts?: {
       key: 'category',
       label: t('pages.expenses.columns.category'),
       render: (expense) => (
-        <div className="flex items-center gap-xs">
+        <div className="gap-xs flex items-center">
           <Badge variant="secondary">
             {translate('expenseCategories', expense.category)}
           </Badge>
           {expense.auto_categorized && (
             <Badge
               variant="outline"
-              className="px-xs py-0 text-xs text-muted-foreground"
+              className="px-xs text-muted-foreground py-0 text-xs"
             >
               Auto
             </Badge>

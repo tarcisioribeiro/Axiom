@@ -102,10 +102,10 @@ export function StoredCardForm({
         title={t('pages.storedCards.form.sectionIdentification')}
         icon={CreditCardIcon}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <CreditCardIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.nameLabel')}
             </Label>
             <Input
@@ -115,13 +115,13 @@ export function StoredCardForm({
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="cardholder_name" className="flex items-center gap-xs">
-              <CreditCardIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="cardholder_name" className="gap-xs flex items-center">
+              <CreditCardIcon className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.holderLabel')}
             </Label>
             <Input
@@ -131,15 +131,15 @@ export function StoredCardForm({
               disabled={isLoading}
             />
             {errors.cardholder_name && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.cardholder_name.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="flag" className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="flag" className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.brandLabel')}
             </Label>
             <Select
@@ -166,17 +166,17 @@ export function StoredCardForm({
               </SelectContent>
             </Select>
             {errors.flag && (
-              <p className="mt-xs text-sm text-destructive">{errors.flag.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.flag.message}</p>
             )}
           </div>
         </div>
       </FormSection>
 
       <FormSection title={t('pages.storedCards.form.sectionSensitive')} icon={Shield}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="card_number" className="flex items-center gap-xs">
-              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="card_number" className="gap-xs flex items-center">
+              <Shield className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.numberLabel')}
             </Label>
             <Input
@@ -191,25 +191,25 @@ export function StoredCardForm({
               disabled={isLoading}
             />
             {errors.card_number && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.card_number.message}
               </p>
             )}
             {!card && (
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {t('pages.storedCards.form.numberHint')}
               </p>
             )}
             {card && (
-              <p className="mt-xs text-xs text-warning">
+              <p className="mt-xs text-warning text-xs">
                 {t('pages.storedCards.form.keepCurrentNumber')}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="security_code" className="flex items-center gap-xs">
-              <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="security_code" className="gap-xs flex items-center">
+              <Shield className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.cvvLabel')}
             </Label>
             <Input
@@ -224,12 +224,12 @@ export function StoredCardForm({
               disabled={isLoading}
             />
             {errors.security_code && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.security_code.message}
               </p>
             )}
             {card && (
-              <p className="mt-xs text-xs text-warning">
+              <p className="mt-xs text-warning text-xs">
                 {t('pages.storedCards.form.keepCurrentCvv')}
               </p>
             )}
@@ -241,10 +241,10 @@ export function StoredCardForm({
         title={t('pages.storedCards.form.sectionExpiry')}
         icon={CalendarDays}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.expiryMonthLabel')}
             </Label>
             <Select
@@ -264,15 +264,15 @@ export function StoredCardForm({
               </SelectContent>
             </Select>
             {errors.expiration_month && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.expiration_month.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.expiryYearLabel')}
             </Label>
             <Select
@@ -292,7 +292,7 @@ export function StoredCardForm({
               </SelectContent>
             </Select>
             {errors.expiration_year && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.expiration_year.message}
               </p>
             )}
@@ -303,8 +303,8 @@ export function StoredCardForm({
       {creditCards.length > 0 && (
         <FormSection title={t('pages.storedCards.form.sectionLink')} icon={Link2}>
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Link2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.storedCards.form.financeCardLabel')}
             </Label>
             <Select
@@ -326,7 +326,7 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.storedCards.form.financeCardHint')}
             </p>
           </div>
@@ -335,8 +335,8 @@ export function StoredCardForm({
 
       <FormSection title={t('pages.storedCards.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="notes" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="notes" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.storedCards.form.notesLabel')}
           </Label>
           <Textarea
@@ -347,12 +347,12 @@ export function StoredCardForm({
             disabled={isLoading}
           />
           {errors.notes && (
-            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
           )}
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -42,7 +42,7 @@ export function StarRating({
 
   return (
     <div
-      className={cn('flex gap-xs', className)}
+      className={cn('gap-xs flex', className)}
       onMouseLeave={() => !disabled && setHoverValue(null)}
     >
       {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (
@@ -54,7 +54,7 @@ export function StarRating({
           onMouseEnter={() => !disabled && setHoverValue(rating)}
           aria-label={`${rating} estrela${rating > 1 ? 's' : ''}`}
           className={cn(
-            'rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+            'focus:ring-ring rounded-sm transition-colors duration-150 focus:ring-2 focus:ring-offset-1 focus:outline-none',
             disabled
               ? 'cursor-not-allowed opacity-50'
               : 'cursor-pointer hover:scale-110'
@@ -66,7 +66,7 @@ export function StarRating({
               'transition-colors duration-150',
               rating <= displayValue
                 ? 'fill-star text-star'
-                : 'fill-transparent hover:text-star/50'
+                : 'hover:text-star/50 fill-transparent'
             )}
             aria-hidden="true"
           />
@@ -76,7 +76,7 @@ export function StarRating({
         <button
           type="button"
           onClick={() => onChange?.(null)}
-          className="ml-sm text-xs transition-colors hover:text-destructive"
+          className="ml-sm hover:text-destructive text-xs transition-colors"
         >
           Limpar
         </button>

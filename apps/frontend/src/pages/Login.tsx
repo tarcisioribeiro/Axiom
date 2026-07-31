@@ -47,17 +47,17 @@ export default function Login() {
   // Etapa 2FA
   if (requires2FA) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-md">
-        <ThemeToggle className="absolute right-4 top-4" />
-        <AppVersionBadge className="absolute bottom-4 right-4" />
+      <div className="bg-muted/30 p-md relative flex min-h-screen items-center justify-center">
+        <ThemeToggle className="absolute top-4 right-4" />
+        <AppVersionBadge className="absolute right-4 bottom-4" />
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-md text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 ring-1 ring-inset ring-primary/20">
-              <ShieldCheck className="h-7 w-7 text-primary" aria-hidden="true" />
+            <div className="bg-primary/10 ring-primary/20 mx-auto flex h-14 w-14 items-center justify-center rounded-full ring-1 ring-inset">
+              <ShieldCheck className="text-primary h-7 w-7" aria-hidden="true" />
             </div>
             <div>
-              <div className="mb-xs flex items-center justify-center gap-xs">
-                <span className="rounded-full bg-muted px-sm py-0.5 text-xs text-muted-foreground">
+              <div className="mb-xs gap-xs flex items-center justify-center">
+                <span className="bg-muted px-sm text-muted-foreground rounded-full py-0.5 text-xs">
                   {t('auth.twoFactor.step', { defaultValue: 'Etapa 2 de 2' })}
                 </span>
               </div>
@@ -66,7 +66,7 @@ export default function Login() {
                   defaultValue: 'Verificação em duas etapas',
                 })}
               </h2>
-              <p className="mt-xs text-sm text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-sm">
                 {t('auth.twoFactor.description', {
                   defaultValue: 'Digite o código do seu aplicativo autenticador.',
                 })}
@@ -76,7 +76,7 @@ export default function Login() {
           <CardContent>
             <form onSubmit={handleVerify2FA} className="space-y-md">
               {error && (
-                <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
+                <div className="border-destructive bg-destructive/10 px-md text-destructive rounded-lg border py-3 text-sm">
                   {error}
                 </div>
               )}
@@ -97,7 +97,7 @@ export default function Login() {
                   required
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('auth.twoFactor.backupHint', {
                     defaultValue: 'Você também pode usar um código de backup.',
                   })}
@@ -123,7 +123,7 @@ export default function Login() {
                   });
                   setTwoFactorCode('');
                 }}
-                className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                className="text-muted-foreground hover:text-primary text-sm hover:underline"
               >
                 {t('auth.twoFactor.back', { defaultValue: '← Voltar ao login' })}
               </button>
@@ -135,9 +135,9 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-md">
-      <ThemeToggle className="absolute right-4 top-4" />
-      <AppVersionBadge className="absolute bottom-4 right-4" />
+    <div className="bg-muted/30 p-md relative flex min-h-screen items-center justify-center">
+      <ThemeToggle className="absolute top-4 right-4" />
+      <AppVersionBadge className="absolute right-4 bottom-4" />
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
@@ -148,7 +148,7 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-md">
             {error && (
-              <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
+              <div className="border-destructive bg-destructive/10 px-md text-destructive rounded-lg border py-3 text-sm">
                 {error}
               </div>
             )}
@@ -182,7 +182,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   aria-label={
                     showPassword
                       ? t('auth.login.hidePassword')
@@ -207,7 +207,7 @@ export default function Login() {
           <div className="mt-md text-center">
             <Link
               to="/forgot-password"
-              className="text-sm text-muted-foreground hover:text-primary hover:underline"
+              className="text-muted-foreground hover:text-primary text-sm hover:underline"
             >
               {t('auth.login.forgotPassword')}
             </Link>
@@ -215,7 +215,7 @@ export default function Login() {
 
           <div className="mt-md text-center text-sm">
             <span>{t('auth.login.noAccount')} </span>
-            <Link to="/register" className="font-medium text-primary hover:underline">
+            <Link to="/register" className="text-primary font-medium hover:underline">
               {t('auth.login.register')}
             </Link>
           </div>

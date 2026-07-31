@@ -32,19 +32,19 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       initial="initial"
       animate="animate"
       aria-label={title ?? text}
-      className="flex flex-col items-center justify-center gap-md rounded-lg border border-dashed bg-card/50 px-xl py-16 text-center"
+      className="gap-md bg-card/50 px-xl flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center"
     >
       {icon && (
         <div
           data-testid="icon-container"
-          className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 [&>svg]:h-7 [&>svg]:w-7"
+          className="bg-primary/10 text-primary ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1 ring-inset [&>svg]:h-7 [&>svg]:w-7"
         >
           {icon}
         </div>
       )}
       <div className="space-y-xs">
         {title && <h3 className="text-base font-semibold">{title}</h3>}
-        {text && <p className="text-sm text-muted-foreground">{text}</p>}
+        {text && <p className="text-muted-foreground text-sm">{text}</p>}
       </div>
       {action &&
         (React.isValidElement(action) ? (

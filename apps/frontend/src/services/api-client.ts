@@ -95,8 +95,7 @@ class ApiClient {
           originalRequest._retryCount = (originalRequest._retryCount ?? 0) + 1;
           if (originalRequest._retryCount <= MAX_RETRIES) {
             const retryAfterHeader = error.response.headers?.['retry-after'] as
-              | string
-              | undefined;
+              string | undefined;
             const delayMs = retryAfterHeader
               ? parseInt(retryAfterHeader, 10) * 1000
               : Math.pow(2, originalRequest._retryCount) * 1000;

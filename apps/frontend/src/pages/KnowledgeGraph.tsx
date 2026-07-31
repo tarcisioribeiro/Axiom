@@ -181,17 +181,17 @@ function NodeDetailPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 320, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="absolute right-0 top-0 z-20 flex h-full w-80 flex-col border-l border-border bg-card shadow-2xl"
+      className="border-border bg-card absolute top-0 right-0 z-20 flex h-full w-80 flex-col border-l shadow-2xl"
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between border-b border-border px-md py-sm"
+        className="border-border px-md py-sm flex items-center justify-between border-b"
         style={{
           borderLeftColor: `hsl(var(${nodeColorVar}))`,
           borderLeftWidth: 3,
         }}
       >
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
             style={{
@@ -201,24 +201,24 @@ function NodeDetailPanel({
             <span>{NODE_ICONS[node.type]}</span>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t(`pages.knowledgeGraph.nodeTypes.${node.type}`)}
             </p>
-            <p className="line-clamp-2 text-sm font-semibold leading-tight">
+            <p className="line-clamp-2 text-sm leading-tight font-semibold">
               {node.label}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-muted-foreground transition-colors hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
       {/* Metadata */}
-      <div className="flex-1 overflow-y-auto p-md">
+      <div className="p-md flex-1 overflow-y-auto">
         <div className="space-y-sm">
           {node.type === 'book' && node.metadata && (
             <>
@@ -276,10 +276,10 @@ function NodeDetailPanel({
               )}
               {node.metadata.progress_percentage !== undefined && (
                 <div>
-                  <p className="mb-xs text-xs text-muted-foreground">
+                  <p className="mb-xs text-muted-foreground text-xs">
                     {t('pages.knowledgeGraph.meta.progress')}
                   </p>
-                  <div className="h-1.5 rounded-full bg-muted">
+                  <div className="bg-muted h-1.5 rounded-full">
                     <div
                       className="h-1.5 rounded-full"
                       style={{
@@ -288,7 +288,7 @@ function NodeDetailPanel({
                       }}
                     />
                   </div>
-                  <p className="mt-xs text-right text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-right text-xs">
                     {node.metadata.progress_percentage}%
                   </p>
                 </div>
@@ -344,7 +344,7 @@ function NodeDetailPanel({
         {/* Explicit links */}
         {explicitLinks.length > 0 && (
           <div className="mt-lg">
-            <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
               {t('pages.knowledgeGraph.explicitConnections')}
             </p>
             <div className="space-y-sm">
@@ -359,9 +359,9 @@ function NodeDetailPanel({
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-md bg-muted/40 px-sm py-xs"
+                    className="bg-muted/40 px-sm py-xs flex items-center justify-between rounded-md"
                   >
-                    <div className="flex min-w-0 items-center gap-xs">
+                    <div className="gap-xs flex min-w-0 items-center">
                       <span
                         className="h-2 w-2 shrink-0 rounded-full"
                         style={{
@@ -369,14 +369,14 @@ function NodeDetailPanel({
                         }}
                       />
                       <span className="truncate text-xs">{other.label}</span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground shrink-0 text-xs">
                         ({link.relation_display ?? link.relation})
                       </span>
                     </div>
                     {link.link_id && (
                       <button
                         onClick={() => onDeleteLink(link.link_id!)}
-                        className="ml-xs shrink-0 text-destructive/60 transition-colors hover:text-destructive"
+                        className="ml-xs text-destructive/60 hover:text-destructive shrink-0 transition-colors"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -390,7 +390,7 @@ function NodeDetailPanel({
       </div>
 
       {/* Actions */}
-      <div className="border-t border-border p-md">
+      <div className="border-border p-md border-t">
         <Tooltip
           content={
             linkingFrom?.id === node.id
@@ -418,8 +418,8 @@ function NodeDetailPanel({
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-sm">
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="gap-sm flex items-start justify-between">
+      <span className="text-muted-foreground text-xs">{label}</span>
       <span className="text-right text-xs font-medium capitalize">{value}</span>
     </div>
   );
@@ -456,14 +456,14 @@ function CreateLinkModal({
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
-        className="w-96 rounded-lg border border-border bg-card p-lg shadow-2xl"
+        className="border-border bg-card p-lg w-96 rounded-lg border shadow-2xl"
       >
         <h3 className="mb-md text-base font-semibold">
           {t('pages.knowledgeGraph.createLinkModal.title')}
         </h3>
-        <div className="mb-md flex items-center gap-sm text-sm">
+        <div className="mb-md gap-sm flex items-center text-sm">
           <span
-            className="rounded-md px-sm py-0.5 text-xs font-medium"
+            className="px-sm rounded-md py-0.5 text-xs font-medium"
             style={{
               backgroundColor: `hsl(var(${NODE_COLOR_VARS[from.type]}) / 0.2)`,
               color: `hsl(var(${NODE_COLOR_VARS[from.type]}))`,
@@ -473,7 +473,7 @@ function CreateLinkModal({
           </span>
           <span className="text-muted-foreground">→</span>
           <span
-            className="rounded-md px-sm py-0.5 text-xs font-medium"
+            className="px-sm rounded-md py-0.5 text-xs font-medium"
             style={{
               backgroundColor: `hsl(var(${NODE_COLOR_VARS[to.type]}) / 0.2)`,
               color: `hsl(var(${NODE_COLOR_VARS[to.type]}))`,
@@ -483,15 +483,15 @@ function CreateLinkModal({
           </span>
         </div>
 
-        <div className="mb-lg grid grid-cols-3 gap-sm">
+        <div className="mb-lg gap-sm grid grid-cols-3">
           {ALL_RELATIONS.map((key) => (
             <button
               key={key}
               onClick={() => setRelation(key)}
               className={cn(
-                'rounded-md border px-sm py-xs text-xs transition-all',
+                'px-sm py-xs rounded-md border text-xs transition-all',
                 relation === key
-                  ? 'border-transparent text-background'
+                  ? 'text-background border-transparent'
                   : 'border-border bg-muted/30 text-foreground hover:bg-muted'
               )}
               style={
@@ -507,7 +507,7 @@ function CreateLinkModal({
           ))}
         </div>
 
-        <div className="flex justify-end gap-sm">
+        <div className="gap-sm flex justify-end">
           <Button variant="ghost" size="sm" onClick={onCancel}>
             {t('pages.knowledgeGraph.createLinkModal.cancel')}
           </Button>
@@ -909,15 +909,15 @@ export default function KnowledgeGraph() {
           icon={<Network className="h-5 w-5" />}
         />
 
-        <div className="relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-lg border border-border bg-card">
+        <div className="border-border bg-card relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-lg border">
           {/* Left sidebar */}
-          <div className="z-10 flex w-52 shrink-0 flex-col gap-md border-r border-border bg-card p-md">
+          <div className="gap-md border-border bg-card p-md z-10 flex w-52 shrink-0 flex-col border-r">
             {/* Suggest links button */}
             <Tooltip content={t('pages.knowledgeGraph.suggestLinks')} side="right">
               <button
                 onClick={() => setShowSuggestions((v) => !v)}
                 className={cn(
-                  'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs font-medium transition-colors',
+                  'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs font-medium transition-colors',
                   showSuggestions
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -930,17 +930,17 @@ export default function KnowledgeGraph() {
 
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
               <Input
                 placeholder={t('pages.knowledgeGraph.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 pl-xl text-xs"
+                className="pl-xl h-8 text-xs"
               />
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -949,7 +949,7 @@ export default function KnowledgeGraph() {
 
             {/* Node type filters */}
             <div>
-              <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
                 {t('pages.knowledgeGraph.nodeTypesFilter')}
               </p>
               <div className="space-y-xs">
@@ -960,7 +960,7 @@ export default function KnowledgeGraph() {
                     key={type}
                     onClick={() => toggleType(type)}
                     className={cn(
-                      'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs transition-all',
+                      'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition-all',
                       activeTypes.has(type)
                         ? 'bg-muted/60 text-foreground'
                         : 'text-muted-foreground opacity-50 hover:opacity-75'
@@ -973,7 +973,7 @@ export default function KnowledgeGraph() {
                       }}
                     />
                     {t(`pages.knowledgeGraph.nodeTypes.${type}`)}
-                    <span className="ml-auto text-muted-foreground">
+                    <span className="text-muted-foreground ml-auto">
                       {filteredGraphData.nodes.filter((n) => n.type === type).length}
                     </span>
                   </button>
@@ -982,7 +982,7 @@ export default function KnowledgeGraph() {
             </div>
 
             {/* Highlights toggle */}
-            <div className="border-t border-border pt-md">
+            <div className="border-border pt-md border-t">
               <button
                 onClick={() => {
                   setIncludeHighlights((v) => !v);
@@ -991,7 +991,7 @@ export default function KnowledgeGraph() {
                   }
                 }}
                 className={cn(
-                  'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs transition-all',
+                  'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition-all',
                   includeHighlights
                     ? 'bg-muted/60 text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -1007,7 +1007,7 @@ export default function KnowledgeGraph() {
                 >
                   <div
                     className={cn(
-                      'mt-0.5 h-3 w-3 rounded-full bg-background shadow transition-transform',
+                      'bg-background mt-0.5 h-3 w-3 rounded-full shadow transition-transform',
                       includeHighlights ? 'translate-x-3.5' : 'translate-x-0.5'
                     )}
                   />
@@ -1016,18 +1016,18 @@ export default function KnowledgeGraph() {
             </div>
 
             {/* Stats */}
-            <div className="mt-auto border-t border-border pt-md text-xs text-muted-foreground">
+            <div className="border-border pt-md text-muted-foreground mt-auto border-t text-xs">
               <div className="flex justify-between">
                 <span>{t('pages.knowledgeGraph.stats.nodes')}</span>
-                <span className="font-medium text-foreground">{stats.nodes}</span>
+                <span className="text-foreground font-medium">{stats.nodes}</span>
               </div>
               <div className="flex justify-between">
                 <span>{t('pages.knowledgeGraph.stats.connections')}</span>
-                <span className="font-medium text-foreground">{stats.links}</span>
+                <span className="text-foreground font-medium">{stats.links}</span>
               </div>
               <div className="flex justify-between">
                 <span>{t('pages.knowledgeGraph.stats.explicit')}</span>
-                <span className="font-medium text-foreground">{stats.explicit}</span>
+                <span className="text-foreground font-medium">{stats.explicit}</span>
               </div>
             </div>
           </div>
@@ -1041,17 +1041,17 @@ export default function KnowledgeGraph() {
             )}
           >
             {isLoading ? (
-              <div className="flex h-full flex-col items-center justify-center gap-md text-muted-foreground">
+              <div className="gap-md text-muted-foreground flex h-full flex-col items-center justify-center">
                 <Network className="h-12 w-12 animate-pulse" />
                 <p className="text-sm">{t('pages.knowledgeGraph.loading')}</p>
               </div>
             ) : filteredGraphData.nodes.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-md px-xl text-center text-muted-foreground">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-inset ring-primary/20">
-                  <Sparkles className="h-8 w-8 text-primary" />
+              <div className="gap-md px-xl text-muted-foreground flex h-full flex-col items-center justify-center text-center">
+                <div className="bg-primary/10 ring-primary/20 flex h-16 w-16 items-center justify-center rounded-2xl ring-1 ring-inset">
+                  <Sparkles className="text-primary h-8 w-8" />
                 </div>
                 <div className="space-y-xs">
-                  <p className="text-base font-semibold text-foreground">
+                  <p className="text-foreground text-base font-semibold">
                     {search
                       ? t('pages.knowledgeGraph.emptySearch')
                       : t('pages.knowledgeGraph.empty')}
@@ -1063,17 +1063,17 @@ export default function KnowledgeGraph() {
                   )}
                 </div>
                 {!search && (
-                  <div className="flex items-center gap-sm">
+                  <div className="gap-sm flex items-center">
                     <Link
                       to="/library/books"
-                      className="flex items-center gap-xs rounded-md border border-border bg-card px-md py-xs text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
                       {t('pages.knowledgeGraph.emptyCtaBooks')}
                     </Link>
                     <Link
                       to="/library/courses"
-                      className="flex items-center gap-xs rounded-md border border-border bg-card px-md py-xs text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
                     >
                       <GraduationCap className="h-3.5 w-3.5" />
                       {t('pages.knowledgeGraph.emptyCtaCourses')}
@@ -1130,39 +1130,39 @@ export default function KnowledgeGraph() {
 
             {/* Suggest links panel */}
             {showSuggestions && (
-              <div className="absolute right-md top-md z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg">
-                <div className="flex items-center justify-between border-b border-border px-md py-sm">
+              <div className="right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
+                <div className="border-border px-md py-sm flex items-center justify-between border-b">
                   <p className="text-sm font-semibold">
                     {t('pages.knowledgeGraph.suggestionsPanel')}
                   </p>
                   <button
                     onClick={() => setShowSuggestions(false)}
-                    className="rounded p-0.5 hover:bg-muted"
+                    className="hover:bg-muted rounded p-0.5"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="custom-scrollbar flex-1 overflow-y-auto p-sm">
+                <div className="custom-scrollbar p-sm flex-1 overflow-y-auto">
                   {suggestLoading ? (
-                    <p className="py-md text-center text-xs text-muted-foreground">
+                    <p className="py-md text-muted-foreground text-center text-xs">
                       {t('pages.knowledgeGraph.loadingSuggestions')}
                     </p>
                   ) : !suggestData?.suggestions?.length ? (
-                    <p className="py-md text-center text-xs text-muted-foreground">
+                    <p className="py-md text-muted-foreground text-center text-xs">
                       {t('pages.knowledgeGraph.noSuggestions')}
                     </p>
                   ) : (
                     <div className="space-y-xs">
                       {suggestData.suggestions.map((s, i) => (
-                        <div key={i} className="rounded-md border border-border p-sm">
+                        <div key={i} className="border-border p-sm rounded-md border">
                           <p className="truncate text-xs font-medium">
                             {s.source_title}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             → {s.target_title}
                           </p>
                           <div className="mt-xs flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {t('pages.knowledgeGraph.similarity')}:{' '}
                               {Math.round(s.similarity * 100)}%
                             </span>
@@ -1178,7 +1178,7 @@ export default function KnowledgeGraph() {
                                   owner: memberData.id,
                                 });
                               }}
-                              className="rounded px-xs py-0.5 text-xs text-primary hover:bg-primary/10"
+                              className="px-xs text-primary hover:bg-primary/10 rounded py-0.5 text-xs"
                             >
                               {t('pages.knowledgeGraph.addLink')}
                             </button>
@@ -1192,11 +1192,11 @@ export default function KnowledgeGraph() {
             )}
 
             {/* Zoom controls */}
-            <div className="absolute bottom-md right-md flex flex-col gap-xs">
+            <div className="bottom-md right-md gap-xs absolute flex flex-col">
               <Tooltip content={t('pages.knowledgeGraph.exportPNG')} side="left">
                 <button
                   onClick={handleExportPNG}
-                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:text-foreground"
+                  className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
                 >
                   <Download className="h-3.5 w-3.5" />
                 </button>
@@ -1208,7 +1208,7 @@ export default function KnowledgeGraph() {
                   } | null;
                   g?.zoom(1.5, 300);
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:text-foreground"
+                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <ZoomIn className="h-3.5 w-3.5" />
               </button>
@@ -1219,13 +1219,13 @@ export default function KnowledgeGraph() {
                   } | null;
                   g?.zoom(0.67, 300);
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:text-foreground"
+                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => graphRef.current?.zoomToFit(400)}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:text-foreground"
+                className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
               </button>
@@ -1238,7 +1238,7 @@ export default function KnowledgeGraph() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute left-1/2 top-md flex -translate-x-1/2 items-center gap-sm rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
+                  className="top-md gap-sm border-accent/40 bg-accent/10 px-md py-xs text-accent absolute left-1/2 flex -translate-x-1/2 items-center rounded-full border text-xs backdrop-blur-sm"
                 >
                   <Link2 className="h-3 w-3 shrink-0" />
                   <span>
@@ -1250,7 +1250,7 @@ export default function KnowledgeGraph() {
                     </strong>
                   </span>
                   <span className="mx-xs text-accent/40">·</span>
-                  <kbd className="rounded border border-accent/30 bg-accent/10 px-xs py-0.5 font-mono text-[10px]">
+                  <kbd className="border-accent/30 bg-accent/10 px-xs rounded border py-0.5 font-mono text-[10px]">
                     Esc
                   </kbd>
                   <button
@@ -1284,31 +1284,31 @@ export default function KnowledgeGraph() {
         </div>
 
         {/* Legend */}
-        <div className="mt-sm flex flex-wrap items-center gap-md px-xs">
+        <div className="mt-sm gap-md px-xs flex flex-wrap items-center">
           {ALL_NODE_TYPES.filter((tp) => tp !== 'highlight' || includeHighlights).map(
             (type) => (
-              <div key={type} className="flex items-center gap-xs">
+              <div key={type} className="gap-xs flex items-center">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{
                     backgroundColor: `hsl(var(${NODE_COLOR_VARS[type]}))`,
                   }}
                 />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t(`pages.knowledgeGraph.nodeTypes.${type}`)}
                 </span>
               </div>
             )
           )}
-          <div className="ml-auto flex items-center gap-xs">
-            <div className="h-px w-6 border-b border-dashed border-muted-foreground/50" />
-            <span className="text-xs text-muted-foreground">
+          <div className="gap-xs ml-auto flex items-center">
+            <div className="border-muted-foreground/50 h-px w-6 border-b border-dashed" />
+            <span className="text-muted-foreground text-xs">
               {t('pages.knowledgeGraph.legend.explicit')}
             </span>
           </div>
-          <div className="flex items-center gap-xs">
-            <div className="h-px w-6 border-b border-muted-foreground/30" />
-            <span className="text-xs text-muted-foreground">
+          <div className="gap-xs flex items-center">
+            <div className="border-muted-foreground/30 h-px w-6 border-b" />
+            <span className="text-muted-foreground text-xs">
               {t('pages.knowledgeGraph.legend.implicit')}
             </span>
           </div>

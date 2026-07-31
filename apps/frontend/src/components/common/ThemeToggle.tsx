@@ -87,17 +87,17 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         <Button
           variant="ghost"
           size="icon"
-          className={cn('transition-all hover:bg-secondary', className)}
+          className={cn('hover:bg-secondary transition-all', className)}
           aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
         >
           {isDark ? (
             <Sun
-              className="h-5 w-5 text-warning transition-transform duration-200 hover:rotate-12"
+              className="text-warning h-5 w-5 transition-transform duration-200 hover:rotate-12"
               aria-hidden="true"
             />
           ) : (
             <Moon
-              className="h-5 w-5 text-primary transition-transform duration-200 hover:rotate-12"
+              className="text-primary h-5 w-5 transition-transform duration-200 hover:rotate-12"
               aria-hidden="true"
             />
           )}
@@ -105,7 +105,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
           Modo Claro
         </DropdownMenuLabel>
 
@@ -115,10 +115,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
             <DropdownMenuItem
               key={variant.id}
               onClick={() => setLightVariant(variant.id)}
-              className="flex cursor-pointer items-center gap-sm"
+              className="gap-sm flex cursor-pointer items-center"
             >
               <span
-                className="h-4 w-4 flex-shrink-0 rounded-full border border-border/50"
+                className="border-border/50 h-4 w-4 flex-shrink-0 rounded-full border"
                 style={{
                   background: `linear-gradient(135deg, ${variant.bg} 50%, ${variant.primary} 50%)`,
                 }}
@@ -126,7 +126,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
               />
               <span className="flex-1">{variant.label}</span>
               {isActive && (
-                <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                <Check className="text-primary h-3.5 w-3.5" aria-hidden="true" />
               )}
             </DropdownMenuItem>
           );
@@ -134,7 +134,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">
+        <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
           Modo Escuro
         </DropdownMenuLabel>
 
@@ -144,10 +144,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
             <DropdownMenuItem
               key={variant.id}
               onClick={() => setDarkVariant(variant.id)}
-              className="flex cursor-pointer items-center gap-sm"
+              className="gap-sm flex cursor-pointer items-center"
             >
               <span
-                className="h-4 w-4 flex-shrink-0 rounded-full border border-border/50"
+                className="border-border/50 h-4 w-4 flex-shrink-0 rounded-full border"
                 style={{
                   background: `linear-gradient(135deg, ${variant.bg} 50%, ${variant.primary} 50%)`,
                 }}
@@ -155,7 +155,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
               />
               <span className="flex-1">{variant.label}</span>
               {isActive && (
-                <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                <Check className="text-primary h-3.5 w-3.5" aria-hidden="true" />
               )}
             </DropdownMenuItem>
           );

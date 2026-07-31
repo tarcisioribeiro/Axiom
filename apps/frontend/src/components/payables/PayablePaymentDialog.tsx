@@ -205,7 +205,7 @@ export function PayablePaymentDialog({
                 setScheduled(false);
                 setForm((f) => ({ ...f, date: today }));
               }}
-              className={`flex flex-1 items-center justify-center gap-xs py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center text-sm transition-colors ${
                 !scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -217,7 +217,7 @@ export function PayablePaymentDialog({
             <button
               type="button"
               onClick={() => setScheduled(true)}
-              className={`flex flex-1 items-center justify-center gap-xs border-l py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
                 scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -282,7 +282,7 @@ export function PayablePaymentDialog({
 
           {/* Valor excede restante */}
           {isValueExceedsRemaining && parseFloat(form.value) > 0 && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-sm text-sm text-destructive">
+            <div className="border-destructive/30 bg-destructive/10 p-sm text-destructive flex items-start gap-2 rounded-md border text-sm">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
                 {t('pages.payables.payment.exceedsRemaining', {
@@ -295,7 +295,7 @@ export function PayablePaymentDialog({
           {/* Saldo projetado ou alerta para data futura / agendamento */}
           {(isFutureDate || scheduled) && form.account && form.value && (
             <div
-              className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
                 futureBalanceInfo && !futureBalanceInfo.canPay
                   ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : futureBalanceInfo?.isUsingOverdraft
@@ -334,7 +334,7 @@ export function PayablePaymentDialog({
           {/* Alerta de saldo insuficiente (pagamento imediato) */}
           {balanceInfo && parseFloat(form.value) > 0 && (
             <div
-              className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
                 !balanceInfo.canPay
                   ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : 'border-warning/30 bg-warning/10 text-warning'

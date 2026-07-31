@@ -162,7 +162,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs opacity-60">{t('common.fields.name')}</p>
-                <p className="text-sm font-semibold uppercase tracking-wider">
+                <p className="text-sm font-semibold tracking-wider uppercase">
                   {watchedOnCardName || '—'}
                 </p>
               </div>
@@ -177,18 +177,18 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
           </div>
         </div>
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/5" />
         <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/5" />
       </div>
 
       {/* Tabs */}
-      <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+      <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
-            className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+            className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
               activeTab === id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -203,10 +203,10 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
       {/* Tab: Dados do Cartão */}
       {activeTab === 'card' && (
         <FormSection title={t('pages.creditCards.form.tabCardData')} icon={CreditCard}>
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.nameLabel')}
               </Label>
               <Input
@@ -217,8 +217,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <User className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <User className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.onCardNameLabel')}
               </Label>
               <Input
@@ -229,17 +229,17 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.flagLabel')}
               </Label>
-              <div className="grid grid-cols-3 gap-xs">
+              <div className="gap-xs grid grid-cols-3">
                 {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
                   <button
                     key={k}
                     type="button"
                     onClick={() => setValue('flag', k)}
-                    className={`rounded border p-xs text-xs font-semibold transition-all ${
+                    className={`p-xs rounded border text-xs font-semibold transition-all ${
                       watchedFlag === k
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
@@ -252,8 +252,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cardNumberLabel')}
               </Label>
               <Input
@@ -267,15 +267,15 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                 disabled={isLoading}
               />
               {creditCard && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCards.form.cardNumberHiddenHint')}
                 </p>
               )}
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Lock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.cvvLabel')}
               </Label>
               <Input
@@ -288,8 +288,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.validationDateLabel')}
               </Label>
               <DatePicker
@@ -308,10 +308,10 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
       {/* Tab: Configurações */}
       {activeTab === 'settings' && (
         <FormSection title={t('pages.creditCards.form.tabSettings')} icon={Settings}>
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.creditLimitLabel')}
               </Label>
               <CurrencyInput
@@ -324,8 +324,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.maxLimitLabel')}
               </Label>
               <CurrencyInput
@@ -336,8 +336,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.associatedAccountLabel')}
               </Label>
               <Select
@@ -358,8 +358,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.dueDayLabel')}
               </Label>
               <Input
@@ -372,8 +372,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.closingDayLabel')}
               </Label>
               <Input
@@ -386,8 +386,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.interestRateLabel')}
               </Label>
               <Input
@@ -400,8 +400,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.annualFeeLabel')}
               </Label>
               <CurrencyInput
@@ -414,8 +414,8 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </div>
 
             <div className="space-y-sm md:col-span-2">
-              <Label className="flex items-center gap-xs">
-                <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Settings className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.creditCards.form.notesLabel')}
               </Label>
               <Textarea
@@ -429,7 +429,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
         </FormSection>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

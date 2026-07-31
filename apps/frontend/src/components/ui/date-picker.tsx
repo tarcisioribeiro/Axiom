@@ -164,7 +164,7 @@ export function DatePicker({
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       {/* Ícone do calendário */}
-      <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-primary/70" />
+      <CalendarIcon className="text-primary/70 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2" />
 
       {/* Input do Flatpickr */}
       <input
@@ -174,10 +174,10 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'h-10 w-full py-sm pl-10 pr-10',
-          'rounded-md border border-input bg-background',
-          'text-sm text-foreground placeholder:text-foreground',
-          'focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring',
+          'py-sm h-10 w-full pr-10 pl-10',
+          'border-input bg-background rounded-md border',
+          'text-foreground placeholder:text-foreground text-sm',
+          'focus:border-primary focus:ring-ring focus:ring-2 focus:outline-none',
           'transition-all duration-200',
           'hover:border-primary/40',
           disabled && 'cursor-not-allowed opacity-50'
@@ -191,7 +191,7 @@ export function DatePicker({
           onClick={handleClear}
           aria-label="Limpar data"
           className={cn(
-            'absolute right-3 top-1/2 z-10 -translate-y-1/2',
+            'absolute top-1/2 right-3 z-10 -translate-y-1/2',
             'h-5 w-5 rounded-full',
             'flex items-center justify-center',
             'hover:text-destructive',

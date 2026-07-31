@@ -134,19 +134,19 @@ function GoalCard({
     { icon: React.ReactNode; color: string; ringColor: string }
   > = {
     reduce_expenses: {
-      icon: <TrendingDown className="h-5 w-5 text-warning" />,
+      icon: <TrendingDown className="text-warning h-5 w-5" />,
       color: 'text-warning',
       ringColor: 'hsl(var(--warning))',
     },
     increase_revenue: {
-      icon: <TrendingUp className="h-5 w-5 text-info" />,
+      icon: <TrendingUp className="text-info h-5 w-5" />,
       color: 'text-info',
       ringColor: 'hsl(var(--info))',
     },
   };
 
   const config = categoryConfig[goal.category] ?? {
-    icon: <PiggyBank className="h-5 w-5 text-success" />,
+    icon: <PiggyBank className="text-success h-5 w-5" />,
     color: 'text-success',
     ringColor: 'hsl(var(--success))',
   };
@@ -165,18 +165,18 @@ function GoalCard({
     >
       <CardContent className="p-md">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             {config.icon}
             <div>
-              <p className="font-semibold leading-tight">{goal.description}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="leading-tight font-semibold">{goal.description}</p>
+              <p className="text-muted-foreground text-xs">
                 {t(`pages.financialGoals.categories.${goal.category}`, {
                   defaultValue: goal.category_display,
                 })}
               </p>
             </div>
           </div>
-          <div className="flex gap-xs">
+          <div className="gap-xs flex">
             <Button
               variant="ghost"
               size="icon"
@@ -184,7 +184,7 @@ function GoalCard({
               aria-label={t('pages.financialGoals.manageVaults')}
               title={t('pages.financialGoals.manageVaults')}
             >
-              <Link className="h-4 w-4 text-info" aria-hidden="true" />
+              <Link className="text-info h-4 w-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
@@ -194,7 +194,7 @@ function GoalCard({
               title={t('pages.financialGoals.checkCompletion')}
               disabled={goal.is_completed}
             >
-              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+              <CheckCircle2 className="text-success h-4 w-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
@@ -212,13 +212,13 @@ function GoalCard({
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
 
         {/* Anel de progresso centralizado */}
-        <div className="relative my-md flex justify-center">
+        <div className="my-md relative flex justify-center">
           <ProgressRing pct={pct} size={80} color={config.ringColor} />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className={`text-sm font-bold ${config.color}`}>
@@ -274,7 +274,7 @@ function GoalCard({
 
         {/* Conquista */}
         {goal.is_completed && (
-          <div className="mt-sm flex items-center justify-center gap-xs text-success">
+          <div className="mt-sm gap-xs text-success flex items-center justify-center">
             <CheckCircle2 className="h-4 w-4" />
             <span className="text-xs font-semibold">
               {t('pages.financialGoals.goalCompletedLabel')}
@@ -562,11 +562,11 @@ export default function FinancialGoals() {
       />
 
       {/* Summary Cards */}
-      <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-4">
-        <Card className="border-t-2 border-t-primary">
+      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-4">
+        <Card className="border-t-primary border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <Target className="h-4 w-4 text-primary" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <Target className="text-primary h-4 w-4" />
               {t('pages.financialGoals.activeGoals')}
             </CardTitle>
           </CardHeader>
@@ -574,36 +574,36 @@ export default function FinancialGoals() {
             <div className="text-2xl font-bold">{activeGoals.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-t-2 border-t-success">
+        <Card className="border-t-success border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <CheckCircle2 className="h-4 w-4 text-success" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <CheckCircle2 className="text-success h-4 w-4" />
               {t('pages.financialGoals.completedGoals')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {completedGoals.length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-t-2 border-t-success">
+        <Card className="border-t-success border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <PiggyBank className="h-4 w-4 text-success" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <PiggyBank className="text-success h-4 w-4" />
               {t('pages.financialGoals.accumulatedAmount')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalCurrentValue)}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-t-2 border-t-muted-foreground">
+        <Card className="border-t-muted-foreground border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <TrendingUp className="text-muted-foreground h-4 w-4" />
               {t('pages.financialGoals.totalAmount')}
             </CardTitle>
           </CardHeader>
@@ -617,12 +617,12 @@ export default function FinancialGoals() {
       {isLoading ? (
         <LoadingState />
       ) : goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
           <Target className="mb-md h-12 w-12" />
           <p>{t('pages.financialGoals.emptyState')}</p>
         </div>
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => (
             <GoalCard
               key={goal.id}
@@ -658,8 +658,8 @@ export default function FinancialGoals() {
             <FormSection title={t('common.form.sections.basicInfo')} icon={Target}>
               <div className="space-y-md">
                 <div className="space-y-sm">
-                  <Label htmlFor="description" className="flex items-center gap-xs">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="description" className="gap-xs flex items-center">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
                     {t('common.fields.description')} *
                   </Label>
                   <Input
@@ -674,11 +674,11 @@ export default function FinancialGoals() {
 
                 {/* Grid visual de categorias */}
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('common.fields.category')} *
                   </Label>
-                  <div className="grid grid-cols-3 gap-xs">
+                  <div className="gap-xs grid grid-cols-3">
                     {CATEGORIES.map((cat) => (
                       <button
                         key={cat.value}
@@ -686,7 +686,7 @@ export default function FinancialGoals() {
                         onClick={() =>
                           setFormData({ ...formData, category: cat.value })
                         }
-                        className={`flex items-center gap-xs rounded border px-sm py-xs text-xs font-medium transition-all ${
+                        className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition-all ${
                           formData.category === cat.value
                             ? 'border-primary bg-primary/10 text-primary'
                             : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
@@ -710,8 +710,8 @@ export default function FinancialGoals() {
 
                 {formData.category === 'reduce_expenses' && (
                   <div className="space-y-sm">
-                    <Label className="flex items-center gap-xs">
-                      <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="gap-xs flex items-center">
+                      <Tag className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
                     </Label>
                     <Select
@@ -732,7 +732,7 @@ export default function FinancialGoals() {
                           const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
                           return (
                             <SelectItem key={cat.key} value={cat.key}>
-                              <span className="flex items-center gap-sm">
+                              <span className="gap-sm flex items-center">
                                 {CatIcon && <CatIcon className="h-4 w-4" />}
                                 {translate('expenseCategories', cat.key)}
                               </span>
@@ -746,8 +746,8 @@ export default function FinancialGoals() {
 
                 {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
                   <div className="space-y-sm">
-                    <Label className="flex items-center gap-xs">
-                      <Link className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="gap-xs flex items-center">
+                      <Link className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.financialGoals.form.linkedAccountLabel')}
                     </Label>
                     <Select
@@ -781,10 +781,10 @@ export default function FinancialGoals() {
 
             {/* Seção: Valores e Prazo */}
             <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-              <div className="grid grid-cols-2 gap-md">
-                <div className="col-span-2 space-y-sm">
-                  <Label htmlFor="target_value" className="flex items-center gap-xs">
-                    <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <div className="gap-md grid grid-cols-2">
+                <div className="space-y-sm col-span-2">
+                  <Label htmlFor="target_value" className="gap-xs flex items-center">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.financialGoals.targetValueLabel')}
                   </Label>
                   <CurrencyInput
@@ -800,9 +800,9 @@ export default function FinancialGoals() {
                   />
                 </div>
 
-                <div className="col-span-2 space-y-sm">
-                  <Label htmlFor="target_date" className="flex items-center gap-xs">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="space-y-sm col-span-2">
+                  <Label htmlFor="target_date" className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.financialGoals.targetDateLabel')}
                   </Label>
                   <DatePicker
@@ -825,13 +825,13 @@ export default function FinancialGoals() {
               <div className="space-y-md">
                 {/* Cofres associados */}
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <PiggyBank className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.financialGoals.associatedVaults')}
                   </Label>
-                  <div className="max-h-[140px] space-y-xs overflow-y-auto rounded-md border border-border/60 p-sm">
+                  <div className="space-y-xs border-border/60 p-sm max-h-[140px] overflow-y-auto rounded-md border">
                     {vaults.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {t('pages.financialGoals.noVaults')}
                       </p>
                     ) : (
@@ -856,14 +856,14 @@ export default function FinancialGoals() {
                                 });
                               }
                             }}
-                            className={`flex w-full items-center justify-between rounded px-sm py-xs text-left text-sm transition-colors ${
+                            className={`px-sm py-xs flex w-full items-center justify-between rounded text-left text-sm transition-colors ${
                               isSelected
                                 ? 'bg-primary/10 text-primary'
                                 : 'hover:bg-muted/50'
                             }`}
                           >
                             <span>{vault.description}</span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {formatCurrency(parseFloat(vault.current_balance))}
                             </span>
                           </button>
@@ -874,8 +874,8 @@ export default function FinancialGoals() {
                 </div>
 
                 <div className="space-y-sm">
-                  <Label htmlFor="notes" className="flex items-center gap-xs">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="notes" className="gap-xs flex items-center">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
                     {t('common.fields.notes')}
                   </Label>
                   <Textarea
@@ -894,9 +894,9 @@ export default function FinancialGoals() {
                   onClick={() =>
                     setFormData({ ...formData, is_active: !formData.is_active })
                   }
-                  className={`flex w-full items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+                  className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
                     formData.is_active
-                      ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                      ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                       : 'border-border/60 bg-muted/20 opacity-70'
                   }`}
                 >
@@ -913,7 +913,7 @@ export default function FinancialGoals() {
                     <p className="text-sm font-medium">
                       {t('pages.financialGoals.activeGoal')}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground mt-0.5 text-xs">
                       {formData.is_active
                         ? t('pages.financialGoals.activeGoalDesc')
                         : t('pages.financialGoals.inactiveGoalDesc')}
@@ -955,16 +955,16 @@ export default function FinancialGoals() {
                 })}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[300px] space-y-sm overflow-y-auto rounded-md border p-3">
+          <div className="space-y-sm max-h-[300px] overflow-y-auto rounded-md border p-3">
             {vaults.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {t('pages.financialGoals.noVaults')}
               </p>
             ) : (
               vaults.map((vault) => (
                 <div
                   key={vault.id}
-                  className="flex items-center gap-sm rounded p-sm hover:bg-muted/50"
+                  className="gap-sm p-sm hover:bg-muted/50 flex items-center rounded"
                 >
                   <Checkbox
                     id={`manage-vault-${vault.id}`}
@@ -978,15 +978,15 @@ export default function FinancialGoals() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium">{vault.description}</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {vault.account_name}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-success">
+                        <div className="text-success font-semibold">
                           {formatCurrency(parseFloat(vault.current_balance))}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           +{formatCurrency(parseFloat(vault.accumulated_yield))}{' '}
                           {t('pages.financialGoals.yields')}
                         </div>

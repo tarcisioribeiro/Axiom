@@ -39,7 +39,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="flex items-center gap-sm text-destructive">
+        <CardTitle className="gap-sm text-destructive flex items-center">
           <ShieldOff className="h-5 w-5" />
           {t('pages.twoFactor.disableBtn')}
         </CardTitle>

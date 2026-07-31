@@ -85,13 +85,13 @@ export function VaultSimulatorDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
+          <DialogTitle className="gap-sm flex items-center">
             <TrendingUp className="h-5 w-5" />
             {t('pages.vaultSimulator.title')} — {vault?.description}
           </DialogTitle>
           <DialogDescription>{t('pages.vaults.simulatorDesc')}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-md sm:grid-cols-2">
+        <div className="gap-md grid sm:grid-cols-2">
           <div className="space-y-xs">
             <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
             <Input
@@ -147,36 +147,36 @@ export function VaultSimulatorDialog({
             : t('pages.vaultSimulator.calculate')}
         </Button>
         {results && results.length > 0 && (
-          <div className="space-y-3 rounded-lg border p-md">
+          <div className="p-md space-y-3 rounded-lg border">
             {results.map((s, idx) => (
               <div
                 key={`${simFormId}-${idx}`}
-                className="grid grid-cols-2 gap-sm text-sm"
+                className="gap-sm grid grid-cols-2 text-sm"
               >
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.vaultSimulator.columns.totalInvested')}
                   </p>
                   <p className="font-semibold">{formatCurrency(s.total_invested)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.vaultSimulator.columns.yield')}
                   </p>
-                  <p className="font-semibold text-success">
+                  <p className="text-success font-semibold">
                     {formatCurrency(s.total_yield)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.vaultSimulator.columns.finalBalance')}
                   </p>
-                  <p className="text-lg font-bold text-primary">
+                  <p className="text-primary text-lg font-bold">
                     {formatCurrency(s.final_balance)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.vaultSimulator.columns.term')}
                   </p>
                   <p className="font-semibold">
@@ -187,7 +187,7 @@ export function VaultSimulatorDialog({
             ))}
             {chartData.length > 0 && (
               <div className="space-y-xs">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.vaults.simulatorFinalBalance', {
                     months: results[0].months,
                   })}
@@ -204,7 +204,7 @@ export function VaultSimulatorDialog({
                         <div
                           key={i}
                           title={`${d.label}: ${formatCurrency(d.value)}`}
-                          className="flex-1 rounded-sm bg-primary/60 transition-colors hover:bg-primary"
+                          className="bg-primary/60 hover:bg-primary flex-1 rounded-sm transition-colors"
                           style={{ height: `${pct}%`, minHeight: '2px' }}
                         />
                       );

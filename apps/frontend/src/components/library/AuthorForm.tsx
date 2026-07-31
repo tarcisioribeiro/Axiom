@@ -117,7 +117,7 @@ export function AuthorForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Foto do autor */}
-      <div className="flex flex-col items-center gap-sm">
+      <div className="gap-sm flex flex-col items-center">
         <div className="relative">
           {photoPreview ? (
             <img
@@ -126,15 +126,15 @@ export function AuthorForm({
               className="h-24 w-24 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-              <UserCircle className="h-12 w-12 text-muted-foreground" />
+            <div className="bg-muted flex h-24 w-24 items-center justify-center rounded-full">
+              <UserCircle className="text-muted-foreground h-12 w-12" />
             </div>
           )}
           {photoPreview && (
             <button
               type="button"
               onClick={handleRemovePhoto}
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+              className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
               aria-label={t('pages.authors.form.removePhoto')}
             >
               <X className="h-3 w-3" />
@@ -152,7 +152,7 @@ export function AuthorForm({
           />
           <label
             htmlFor="author-photo"
-            className="cursor-pointer text-sm text-primary underline-offset-4 hover:underline"
+            className="text-primary cursor-pointer text-sm underline-offset-4 hover:underline"
           >
             {photoPreview
               ? t('pages.authors.form.changePhoto')
@@ -162,10 +162,10 @@ export function AuthorForm({
       </div>
 
       <FormSection title={t('pages.authors.form.sectionPersonal')} icon={User}>
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           <div className="space-y-sm">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <User className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.nameLabel')}
             </Label>
             <Input
@@ -175,13 +175,13 @@ export function AuthorForm({
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Globe className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.nationalityLabel')}
             </Label>
             <Select
@@ -204,7 +204,7 @@ export function AuthorForm({
               </SelectContent>
             </Select>
             {errors.nationality && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.nationality.message}
               </p>
             )}
@@ -213,10 +213,10 @@ export function AuthorForm({
       </FormSection>
 
       <FormSection title={t('pages.authors.form.sectionLifeDates')} icon={CalendarDays}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="birth_year" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="birth_year" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.birthYearLabel')}
             </Label>
             <Input
@@ -227,15 +227,15 @@ export function AuthorForm({
               disabled={isLoading}
             />
             {errors.birth_year && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.birth_year.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.birthEraLabel')}
             </Label>
             <Select
@@ -257,15 +257,15 @@ export function AuthorForm({
               </SelectContent>
             </Select>
             {errors.birth_era && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.birth_era.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="death_year" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="death_year" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.deathYearLabel')}
             </Label>
             <Input
@@ -276,15 +276,15 @@ export function AuthorForm({
               disabled={isLoading}
             />
             {errors.death_year && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.death_year.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.deathEraLabel')}
             </Label>
             <Select
@@ -308,7 +308,7 @@ export function AuthorForm({
               </SelectContent>
             </Select>
             {errors.death_era && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.death_era.message}
               </p>
             )}
@@ -318,8 +318,8 @@ export function AuthorForm({
 
       <FormSection title={t('pages.authors.form.sectionAbout')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="biography" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="biography" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.authors.form.biographyLabel')}
           </Label>
           <Textarea
@@ -330,12 +330,12 @@ export function AuthorForm({
             disabled={isLoading}
           />
           {errors.biography && (
-            <p className="mt-xs text-sm text-destructive">{errors.biography.message}</p>
+            <p className="mt-xs text-destructive text-sm">{errors.biography.message}</p>
           )}
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

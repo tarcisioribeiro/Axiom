@@ -31,20 +31,20 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
       {/* Versão desktop - todos os items */}
-      <ol className="hidden items-center gap-xs text-sm md:flex">
+      <ol className="gap-xs hidden items-center text-sm md:flex">
         {breadcrumbs.map((item, index) => {
           const isLast = index === breadcrumbs.length - 1;
           const Icon = item.icon;
 
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-xs">
+            <li key={`${item.label}-${index}`} className="gap-xs flex items-center">
               {index > 0 && (
-                <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
               )}
               {item.href && !isLast ? (
                 <Link
                   to={item.href}
-                  className="flex items-center gap-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className="gap-sm text-muted-foreground hover:text-foreground flex items-center transition-colors"
                 >
                   {Icon && <Icon className="h-4 w-4" />}
                   <span>{item.label}</span>
@@ -52,8 +52,8 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
               ) : (
                 <span
                   className={cn(
-                    'flex items-center gap-sm',
-                    isLast ? 'font-medium text-foreground' : 'text-muted-foreground'
+                    'gap-sm flex items-center',
+                    isLast ? 'text-foreground font-medium' : 'text-muted-foreground'
                   )}
                   aria-current={isLast ? 'page' : undefined}
                 >
@@ -67,19 +67,19 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
       </ol>
 
       {/* Versão mobile - apenas item atual */}
-      <div className="flex items-center gap-sm text-sm md:hidden">
+      <div className="gap-sm flex items-center text-sm md:hidden">
         {breadcrumbs.length > 1 && (
           <>
             <Link
               to={breadcrumbs[breadcrumbs.length - 2].href ?? '/'}
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               aria-label={t('common.navigation.backTo', {
                 label: breadcrumbs[breadcrumbs.length - 2].label,
               })}
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>
-            <span className="font-medium text-foreground">
+            <span className="text-foreground font-medium">
               {breadcrumbs[breadcrumbs.length - 1].label}
             </span>
           </>

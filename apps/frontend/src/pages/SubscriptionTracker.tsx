@@ -24,10 +24,7 @@ const SUBSCRIPTION_CATEGORIES = new Set([
 ]);
 
 type SubscriptionGroup =
-  | 'digital_signs'
-  | 'entertainment'
-  | 'bills_and_services'
-  | 'other';
+  'digital_signs' | 'entertainment' | 'bills_and_services' | 'other';
 
 function getGroup(category: string): SubscriptionGroup {
   if (category === 'digital signs') return 'digital_signs';
@@ -110,7 +107,7 @@ export default function SubscriptionTracker({
         subtitle={t('subscriptions.subtitle')}
       />
 
-      <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-2">
+      <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-2">
         <StatCard
           title={t('subscriptions.monthlyTotal')}
           value={formatCurrency(monthlyTotal)}
@@ -159,26 +156,26 @@ export default function SubscriptionTracker({
                         <div
                           key={sub.id}
                           className={cn(
-                            'flex items-center justify-between rounded-lg border p-sm transition-colors',
+                            'p-sm flex items-center justify-between rounded-lg border transition-colors',
                             soon ? 'border-warning/40 bg-warning/5' : 'bg-muted/20'
                           )}
                         >
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-sm">
+                            <div className="gap-sm flex items-center">
                               <span className="truncate text-sm font-medium">
                                 {sub.description}
                               </span>
                               {soon && (
                                 <Badge
                                   variant="outline"
-                                  className="border-warning/40 text-xs text-warning"
+                                  className="border-warning/40 text-warning text-xs"
                                 >
                                   <AlertTriangle className="mr-xs h-3 w-3" />
                                   {t('subscriptions.dueSoon')}
                                 </Badge>
                               )}
                             </div>
-                            <div className="mt-xs flex items-center gap-sm text-xs text-muted-foreground">
+                            <div className="mt-xs gap-sm text-muted-foreground flex items-center text-xs">
                               <span>{translateCategory(sub.category, 'expense')}</span>
                               <span>·</span>
                               <span>

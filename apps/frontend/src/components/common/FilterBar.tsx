@@ -30,19 +30,19 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const chips = activeFilters?.filter(Boolean) ?? [];
   return (
     <div className={cn('space-y-xs', className)}>
-      <div className="flex flex-wrap items-center gap-sm rounded-lg border bg-muted/40 px-3 py-sm">
-        <div className="flex shrink-0 items-center gap-xs text-muted-foreground">
+      <div className="gap-sm bg-muted/40 py-sm flex flex-wrap items-center rounded-lg border px-3">
+        <div className="gap-xs text-muted-foreground flex shrink-0 items-center">
           <SlidersHorizontal className="h-3.5 w-3.5" />
           <span className="text-xs font-medium">{t('common.actions.filter')}</span>
         </div>
-        <div className="h-4 w-px shrink-0 bg-border" />
-        <div className="flex flex-1 flex-wrap items-center gap-sm">{children}</div>
+        <div className="bg-border h-4 w-px shrink-0" />
+        <div className="gap-sm flex flex-1 flex-wrap items-center">{children}</div>
         {hasActiveFilters && onClear && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="h-7 shrink-0 gap-xs px-sm text-xs text-muted-foreground hover:text-foreground"
+            className="gap-xs px-sm text-muted-foreground hover:text-foreground h-7 shrink-0 text-xs"
           >
             <X className="h-3 w-3" />
             {t('common.actions.clearFilters')}
@@ -50,17 +50,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         )}
       </div>
       {chips.length > 0 && (
-        <div className="flex flex-wrap gap-xs px-xs">
+        <div className="gap-xs px-xs flex flex-wrap">
           {chips.map((chip) => (
             <span
               key={chip.key}
-              className="inline-flex items-center gap-xs rounded-full border border-primary/30 bg-primary/10 px-sm py-0.5 text-xs text-primary"
+              className="gap-xs border-primary/30 bg-primary/10 px-sm text-primary inline-flex items-center rounded-full border py-0.5 text-xs"
             >
               {chip.label}
               <button
                 type="button"
                 onClick={chip.onRemove}
-                className="ml-0.5 rounded-full hover:text-primary/60"
+                className="hover:text-primary/60 ml-0.5 rounded-full"
                 aria-label={t('common.actions.remove')}
               >
                 <X className="h-2.5 w-2.5" />

@@ -174,7 +174,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
         subtitle={t('netWorth.subtitle')}
       />
 
-      <div className="mt-md grid grid-cols-1 gap-md md:grid-cols-3">
+      <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-3">
         <StatCard
           title={t('netWorth.netWorthLabel')}
           value={formatCurrency(netWorth)}
@@ -196,7 +196,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
         />
       </div>
 
-      <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
+      <div className="mt-md gap-md grid grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-sm">
             <CardTitle as="h2">
@@ -221,37 +221,37 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
         <div className="space-y-md">
           <Card>
             <CardHeader className="pb-sm">
-              <div className="flex items-center gap-sm">
-                <TrendingUp className="h-4 w-4 text-success" />
+              <div className="gap-sm flex items-center">
+                <TrendingUp className="text-success h-4 w-4" />
                 <CardTitle as="h3" className="text-base">
                   {t('netWorth.assetsSection')}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-sm">
-              <div className="flex items-center justify-between rounded-lg bg-success/5 p-sm">
-                <div className="flex items-center gap-sm">
-                  <Wallet className="h-4 w-4 text-success" />
+              <div className="bg-success/5 p-sm flex items-center justify-between rounded-lg">
+                <div className="gap-sm flex items-center">
+                  <Wallet className="text-success h-4 w-4" />
                   <span className="text-sm">{t('netWorth.bankAccounts')}</span>
                 </div>
-                <span className="font-semibold text-success">
+                <span className="text-success font-semibold">
                   {formatCurrency(totalBankAssets)}
                 </span>
               </div>
               {positiveAccounts.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between px-sm text-xs text-muted-foreground"
+                  className="px-sm text-muted-foreground flex items-center justify-between text-xs"
                 >
                   <span>{a.account_name}</span>
-                  <span className="font-medium text-success">
+                  <span className="text-success font-medium">
                     {formatCurrency(parseFloat(a.balance))}
                   </span>
                 </div>
               ))}
               {totalVaultAssets > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-blue-500/5 p-sm">
-                  <div className="flex items-center gap-sm">
+                <div className="p-sm flex items-center justify-between rounded-lg bg-blue-500/5">
+                  <div className="gap-sm flex items-center">
                     <VaultIcon className="h-4 w-4 text-blue-500" />
                     <span className="text-sm">{t('netWorth.vaults')}</span>
                   </div>
@@ -261,8 +261,8 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                 </div>
               )}
               {totalLentLoanAssets > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-teal-500/5 p-sm">
-                  <div className="flex items-center gap-sm">
+                <div className="p-sm flex items-center justify-between rounded-lg bg-teal-500/5">
+                  <div className="gap-sm flex items-center">
                     <HandCoins className="h-4 w-4 text-teal-500" />
                     <span className="text-sm">{t('netWorth.lentLoans')}</span>
                   </div>
@@ -272,7 +272,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                 </div>
               )}
               {totalAssets === 0 && (
-                <p className="py-md text-center text-sm text-muted-foreground">
+                <p className="py-md text-muted-foreground text-center text-sm">
                   {t('netWorth.noAssets')}
                 </p>
               )}
@@ -281,8 +281,8 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
 
           <Card>
             <CardHeader className="pb-sm">
-              <div className="flex items-center gap-sm">
-                <TrendingDown className="h-4 w-4 text-destructive" />
+              <div className="gap-sm flex items-center">
+                <TrendingDown className="text-destructive h-4 w-4" />
                 <CardTitle as="h3" className="text-base">
                   {t('netWorth.liabilitiesSection')}
                 </CardTitle>
@@ -290,19 +290,19 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
             </CardHeader>
             <CardContent className="space-y-sm">
               {totalLoanLiabilities > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
-                  <div className="flex items-center gap-sm">
-                    <HandCoins className="h-4 w-4 text-destructive" />
+                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                  <div className="gap-sm flex items-center">
+                    <HandCoins className="text-destructive h-4 w-4" />
                     <span className="text-sm">{t('netWorth.loans')}</span>
                   </div>
-                  <span className="font-semibold text-destructive">
+                  <span className="text-destructive font-semibold">
                     {formatCurrency(totalLoanLiabilities)}
                   </span>
                 </div>
               )}
               {totalCreditCardLiabilities > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-orange-500/5 p-sm">
-                  <div className="flex items-center gap-sm">
+                <div className="p-sm flex items-center justify-between rounded-lg bg-orange-500/5">
+                  <div className="gap-sm flex items-center">
                     <CreditCard className="h-4 w-4 text-orange-500" />
                     <span className="text-sm">{t('netWorth.creditCards')}</span>
                   </div>
@@ -312,12 +312,12 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                 </div>
               )}
               {totalOverdraftLiabilities > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
-                  <div className="flex items-center gap-sm">
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                  <div className="gap-sm flex items-center">
+                    <AlertTriangle className="text-destructive h-4 w-4" />
                     <span className="text-sm">{t('netWorth.overdraft')}</span>
                   </div>
-                  <span className="font-semibold text-destructive">
+                  <span className="text-destructive font-semibold">
                     {formatCurrency(totalOverdraftLiabilities)}
                   </span>
                 </div>
@@ -326,10 +326,10 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                 overdraftAccounts.map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between px-sm text-xs text-muted-foreground"
+                    className="px-sm text-muted-foreground flex items-center justify-between text-xs"
                   >
                     <span>{a.account_name}</span>
-                    <span className="font-medium text-destructive">
+                    <span className="text-destructive font-medium">
                       {formatCurrency(parseFloat(a.balance))}
                     </span>
                   </div>

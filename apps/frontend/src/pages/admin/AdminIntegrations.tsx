@@ -22,10 +22,10 @@ export default function AdminIntegrations() {
     <div>
       <div className="mb-lg flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-foreground text-2xl font-bold">
             {t('pages.adminIntegrations.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('pages.adminIntegrations.subtitle')}
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function AdminIntegrations() {
             void queryClient.invalidateQueries({ queryKey: ['admin', 'integrations'] });
           }}
           disabled={isLoading}
-          className="flex items-center gap-sm rounded-lg border border-border bg-card px-3 py-sm text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+          className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
         >
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
           {t('pages.adminIntegrations.testAll')}
@@ -44,12 +44,12 @@ export default function AdminIntegrations() {
 
       {/* LLM provider info */}
       {data && (
-        <div className="mb-md rounded-lg border border-border bg-card px-md py-3">
-          <div className="flex flex-wrap items-center gap-md text-sm">
+        <div className="mb-md border-border bg-card px-md rounded-lg border py-3">
+          <div className="gap-md flex flex-wrap items-center text-sm">
             <span className="text-muted-foreground">
               {t('pages.adminIntegrations.activeProvider')}
             </span>
-            <span className="font-semibold uppercase text-foreground">
+            <span className="text-foreground font-semibold uppercase">
               {data.llm_provider}
             </span>
             {data.llm_provider === 'ollama' && data.ollama_model && (
@@ -57,7 +57,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="font-mono text-foreground">{data.ollama_model}</span>
+                <span className="text-foreground font-mono">{data.ollama_model}</span>
               </>
             )}
             {data.llm_provider === 'anthropic' && data.anthropic_model && (
@@ -65,7 +65,7 @@ export default function AdminIntegrations() {
                 <span className="text-muted-foreground">
                   {t('pages.adminIntegrations.model')}
                 </span>
-                <span className="font-mono text-foreground">
+                <span className="text-foreground font-mono">
                   {data.anthropic_model}
                 </span>
               </>
@@ -74,7 +74,7 @@ export default function AdminIntegrations() {
         </div>
       )}
 
-      <div className="grid gap-md md:grid-cols-2">
+      <div className="gap-md grid md:grid-cols-2">
         <IntegrationCard
           name={t('pages.adminIntegrations.services.database')}
           icon={Database}

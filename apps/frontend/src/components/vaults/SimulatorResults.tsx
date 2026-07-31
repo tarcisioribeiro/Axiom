@@ -43,10 +43,10 @@ interface TooltipProps {
 function SimulatorTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border bg-card p-3 shadow-lg">
-      <p className="mb-sm text-sm font-medium text-muted-foreground">{label}</p>
+    <div className="bg-card rounded-lg border p-3 shadow-lg">
+      <p className="mb-sm text-muted-foreground text-sm font-medium">{label}</p>
       {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-sm text-sm">
+        <div key={entry.name} className="gap-sm flex items-center text-sm">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: entry.color }}
@@ -100,15 +100,15 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
 
   return (
     <div className="mt-lg space-y-lg">
-      <div className="flex items-center gap-3 py-sm">
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="py-sm flex items-center gap-3">
+        <div className="bg-border h-px flex-1" />
+        <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
           Projeção calculada
         </span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="bg-border h-px flex-1" />
       </div>
 
-      <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+      <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
         {results.map((scenario) => (
           <Card
             key={scenario.name}
@@ -119,7 +119,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
           >
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-muted-foreground text-sm font-medium">
                   {scenario.name}
                 </CardTitle>
                 {scenario.name === bestScenarioName && (
@@ -130,18 +130,18 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="rounded-lg bg-primary/5 p-3 text-center">
-                <p className="text-xs text-muted-foreground">
+              <div className="bg-primary/5 rounded-lg p-3 text-center">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.vaultSimulator.accumulation')}
                 </p>
-                <p className="text-xl font-bold text-primary">
+                <p className="text-primary text-xl font-bold">
                   {formatCurrency(scenario.final_balance)}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   em {getProjectedDate(scenario.months)}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-sm text-xs">
+              <div className="gap-sm grid grid-cols-2 text-xs">
                 <div>
                   <p className="text-muted-foreground">
                     {t('pages.vaultSimulator.totalInvested')}
@@ -222,7 +222,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                 iconType="circle"
                 iconSize={8}
                 formatter={(value) => (
-                  <span className="text-sm text-foreground/80">{value}</span>
+                  <span className="text-foreground/80 text-sm">{value}</span>
                 )}
               />
               {results.map((scenario, idx) => (
@@ -295,7 +295,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                 return (
                   <TableRow key={`${tableId}-${idx}`}>
                     <TableCell>
-                      <div className="flex items-center gap-sm">
+                      <div className="gap-sm flex items-center">
                         <span
                           className="inline-block h-3 w-3 rounded-full"
                           style={{ backgroundColor: chartColors[idx] }}
@@ -312,7 +312,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                     <TableCell className="text-right">
                       {scenario.annual_rate.toFixed(2).replace('.', ',')}%
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-right">
                       {scenario.monthly_rate.toFixed(4).replace('.', ',')}%
                     </TableCell>
                     <TableCell className="text-right">
@@ -325,7 +325,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                     </TableCell>
                     <TableCell className="text-right text-green-600 dark:text-green-400">
                       <div>{formatCurrency(scenario.total_yield)}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         +{yieldPct.toFixed(1).replace('.', ',')}%
                       </div>
                     </TableCell>

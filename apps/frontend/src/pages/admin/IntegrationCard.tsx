@@ -80,22 +80,22 @@ export function IntegrationCard({
   const StatusIcon = cfg.icon;
 
   return (
-    <div className={cn('rounded-lg border bg-card p-5', cfg.bg)}>
+    <div className={cn('bg-card rounded-lg border p-5', cfg.bg)}>
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-card shadow-sm">
-            <Icon className="h-5 w-5 text-foreground" />
+          <div className="bg-card flex h-10 w-10 items-center justify-center rounded-lg shadow-sm">
+            <Icon className="text-foreground h-5 w-5" />
           </div>
           <div>
-            <p className="font-semibold text-foreground">{name}</p>
+            <p className="text-foreground font-semibold">{name}</p>
             {loading ? (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.adminIntegrations.checking')}
               </p>
             ) : (
               <p
                 className={cn(
-                  'flex items-center gap-xs text-xs font-medium',
+                  'gap-xs flex items-center text-xs font-medium',
                   cfg.color
                 )}
               >
@@ -106,18 +106,18 @@ export function IntegrationCard({
           </div>
         </div>
         {loading && (
-          <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+          <RefreshCw className="text-muted-foreground h-4 w-4 animate-spin" />
         )}
       </div>
       {check?.message && (
-        <p className="mb-sm text-sm text-muted-foreground">{check.message}</p>
+        <p className="mb-sm text-muted-foreground text-sm">{check.message}</p>
       )}
       {check?.models && check.models.length > 0 && (
-        <div className="flex flex-wrap gap-xs">
+        <div className="gap-xs flex flex-wrap">
           {check.models.map((m) => (
             <span
               key={m}
-              className="rounded-full bg-card px-sm py-0.5 font-mono text-xs text-foreground shadow-sm"
+              className="bg-card px-sm text-foreground rounded-full py-0.5 font-mono text-xs shadow-sm"
             >
               {m}
             </span>
@@ -170,11 +170,11 @@ export function OllamaRestartPanel() {
   });
 
   return (
-    <div className="mt-3 border-t border-border pt-3">
+    <div className="border-border mt-3 border-t pt-3">
       <button
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending || redirecting}
-        className="flex items-center gap-xs rounded-lg border border-border bg-card px-3 py-sm text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+        className="gap-xs border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
       >
         {mutation.isPending || redirecting ? (
           <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -213,23 +213,23 @@ export function EmailTestPanel() {
   });
 
   return (
-    <div className="mt-3 border-t border-border pt-3">
-      <p className="mb-sm text-sm font-medium text-foreground">
+    <div className="border-border mt-3 border-t pt-3">
+      <p className="mb-sm text-foreground text-sm font-medium">
         {t('pages.adminIntegrations.sendTestEmail')}
       </p>
-      <div className="flex gap-sm">
+      <div className="gap-sm flex">
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('pages.adminIntegrations.emailPlaceholder')}
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          className="border-border bg-background py-sm text-foreground focus:ring-primary flex-1 rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
           onKeyDown={(e) => e.key === 'Enter' && email && mutation.mutate(email)}
         />
         <button
           onClick={() => email && mutation.mutate(email)}
           disabled={!email || mutation.isPending}
-          className="flex items-center gap-xs rounded-lg bg-primary px-3 py-sm text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="gap-xs bg-primary py-sm text-primary-foreground hover:bg-primary/90 flex items-center rounded-lg px-3 text-sm font-medium disabled:opacity-50"
         >
           {mutation.isPending ? (
             <RefreshCw className="h-3.5 w-3.5 animate-spin" />

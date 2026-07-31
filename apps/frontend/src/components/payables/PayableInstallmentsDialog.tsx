@@ -34,18 +34,18 @@ export function PayableInstallmentsDialog({
           <DialogDescription>{payable?.description}</DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <div className="py-xl text-center text-sm text-muted-foreground">
+          <div className="py-xl text-muted-foreground text-center text-sm">
             {t('common.actions.loading')}
           </div>
         ) : installments.length === 0 ? (
-          <div className="py-xl text-center text-sm text-muted-foreground">
+          <div className="py-xl text-muted-foreground text-center text-sm">
             {t('pages.payables.installments.emptyState')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
+                <tr className="text-muted-foreground border-b text-left">
                   <th className="pb-sm pr-md">
                     {t('pages.payables.installments.number')}
                   </th>

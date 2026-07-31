@@ -84,7 +84,7 @@ function ConditionRow({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-sm rounded-lg border border-border/60 bg-muted/20 p-sm">
+    <div className="gap-sm border-border/60 bg-muted/20 p-sm grid grid-cols-[1fr_1fr_1fr_auto] rounded-lg border">
       <Select
         value={condition.field}
         onValueChange={(v) =>
@@ -149,7 +149,7 @@ function ConditionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        className="text-muted-foreground hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeCondition')}
       >
@@ -172,7 +172,7 @@ function ActionRow({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-[1fr_1fr_auto] gap-sm rounded-lg border border-border/60 bg-muted/20 p-sm">
+    <div className="gap-sm border-border/60 bg-muted/20 p-sm grid grid-cols-[1fr_1fr_auto] rounded-lg border">
       <Select
         value={action.type}
         onValueChange={(v) =>
@@ -219,7 +219,7 @@ function ActionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        className="text-muted-foreground hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeAction')}
       >
@@ -299,7 +299,7 @@ function RuleFormDialog({
 
         <form onSubmit={handleSubmit} className="space-y-lg">
           {/* Básico */}
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm md:col-span-2">
               <Label htmlFor="rule-name">
                 {t('pages.automationRules.form.nameLabel')}
@@ -356,7 +356,7 @@ function RuleFormDialog({
               </Select>
             </div>
 
-            <div className="flex items-center gap-sm">
+            <div className="gap-sm flex items-center">
               <StatusToggle
                 value={isActive ? 'active' : 'inactive'}
                 onChange={(v) => setIsActive(v === 'active')}
@@ -380,7 +380,7 @@ function RuleFormDialog({
           {/* Condições */}
           <div className="space-y-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                 {t('pages.automationRules.conditions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addCondition}>
@@ -404,7 +404,7 @@ function RuleFormDialog({
           {/* Ações */}
           <div className="space-y-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                 {t('pages.automationRules.actions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addAction}>
@@ -474,21 +474,21 @@ function RuleLogsDialog({
         {isLoading ? (
           <LoadingState />
         ) : logs.length === 0 ? (
-          <p className="py-md text-center text-sm text-muted-foreground">
+          <p className="py-md text-muted-foreground text-center text-sm">
             {t('pages.automationRules.noLogs')}
           </p>
         ) : (
-          <div className="max-h-96 space-y-sm overflow-y-auto">
+          <div className="space-y-sm max-h-96 overflow-y-auto">
             {logs.map((log) => (
               <div
                 key={log.id}
-                className="rounded-lg border border-border/60 bg-muted/20 p-sm text-sm"
+                className="border-border/60 bg-muted/20 p-sm rounded-lg border text-sm"
               >
                 <p className="font-medium">{log.expense_description}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {new Date(log.created_at).toLocaleString('pt-BR')}
                 </p>
-                <div className="mt-xs flex flex-wrap gap-xs">
+                <div className="mt-xs gap-xs flex flex-wrap">
                   {log.actions_applied.map((a, i) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       {a}
@@ -521,10 +521,10 @@ function RuleCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border border-border/60 bg-card p-md transition-all hover:shadow-sm">
-      <div className="flex items-start justify-between gap-sm">
+    <div className="border-border/60 bg-card p-md rounded-lg border transition-all hover:shadow-sm">
+      <div className="gap-sm flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <span className="font-semibold">{rule.name}</span>
             <Badge
               variant="outline"
@@ -543,14 +543,14 @@ function RuleCard({
             </Badge>
           </div>
           {rule.description && (
-            <p className="mt-xs text-sm text-muted-foreground">{rule.description}</p>
+            <p className="mt-xs text-muted-foreground text-sm">{rule.description}</p>
           )}
-          <p className="mt-xs text-xs text-muted-foreground">
+          <p className="mt-xs text-muted-foreground text-xs">
             {rule.apply_count} {t('pages.automationRules.applied')}
           </p>
         </div>
 
-        <div className="flex items-center gap-xs">
+        <div className="gap-xs flex items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -599,7 +599,7 @@ function RuleCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-7 w-7"
             onClick={() => onDelete(rule.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -620,19 +620,19 @@ function RuleCard({
       </div>
 
       {expanded && (
-        <div className="mt-md grid gap-sm border-t border-border/40 pt-md md:grid-cols-2">
+        <div className="mt-md gap-sm border-border/40 pt-md grid border-t md:grid-cols-2">
           <div>
-            <p className="mb-xs text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-xs text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.automationRules.conditions')} (
               {rule.logic === 'all' ? 'AND' : 'OR'})
             </p>
             <div className="space-y-xs">
               {rule.conditions.map((c, i) => (
-                <div key={i} className="flex items-center gap-xs text-sm">
+                <div key={i} className="gap-xs flex items-center text-sm">
                   <Badge variant="outline" className="text-xs">
                     {t(`pages.automationRules.fields.${c.field}`)}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {t(`pages.automationRules.operators.${c.operator}`)}
                   </span>
                   <span className="font-mono text-xs font-medium">
@@ -645,12 +645,12 @@ function RuleCard({
             </div>
           </div>
           <div>
-            <p className="mb-xs text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-xs text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.automationRules.actions')}
             </p>
             <div className="space-y-xs">
               {rule.actions.map((a, i) => (
-                <div key={i} className="flex items-center gap-xs text-sm">
+                <div key={i} className="gap-xs flex items-center text-sm">
                   <Badge variant="secondary" className="text-xs">
                     {t(`pages.automationRules.actionTypes.${a.type}`)}
                   </Badge>
@@ -799,7 +799,7 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
         title={t('pages.automationRules.title')}
         subtitle={t('pages.automationRules.subtitle')}
         actions={
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             <Button
               variant="outline"
               size="sm"

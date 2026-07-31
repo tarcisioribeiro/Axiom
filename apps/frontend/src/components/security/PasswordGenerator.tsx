@@ -126,7 +126,7 @@ export function PasswordGenerator({
             max={128}
             value={length}
             onChange={(e) => setLength(parseInt(e.target.value, 10))}
-            className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+            className="bg-muted accent-primary h-2 flex-1 cursor-pointer appearance-none rounded-lg"
           />
           <Input
             type="number"
@@ -146,7 +146,7 @@ export function PasswordGenerator({
           compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
         )}
       >
-        <div className="flex items-center space-x-sm">
+        <div className="space-x-sm flex items-center">
           <Checkbox
             id="gen-upper"
             checked={uppercase}
@@ -156,7 +156,7 @@ export function PasswordGenerator({
             {t('pages.passwords.generator.uppercase')}
           </Label>
         </div>
-        <div className="flex items-center space-x-sm">
+        <div className="space-x-sm flex items-center">
           <Checkbox
             id="gen-lower"
             checked={lowercase}
@@ -166,7 +166,7 @@ export function PasswordGenerator({
             {t('pages.passwords.generator.lowercase')}
           </Label>
         </div>
-        <div className="flex items-center space-x-sm">
+        <div className="space-x-sm flex items-center">
           <Checkbox
             id="gen-numbers"
             checked={numbers}
@@ -176,7 +176,7 @@ export function PasswordGenerator({
             {t('pages.passwords.generator.numbers')}
           </Label>
         </div>
-        <div className="flex items-center space-x-sm">
+        <div className="space-x-sm flex items-center">
           <Checkbox
             id="gen-special"
             checked={specialCharacters}
@@ -186,7 +186,7 @@ export function PasswordGenerator({
             {t('pages.passwords.generator.special')}
           </Label>
         </div>
-        <div className="flex items-center space-x-sm">
+        <div className="space-x-sm flex items-center">
           <Checkbox
             id="gen-ambiguous"
             checked={excludeAmbiguous}
@@ -216,8 +216,8 @@ export function PasswordGenerator({
       {/* Result */}
       {generatedPassword && (
         <div className="space-y-3">
-          <div className="flex items-center gap-sm rounded-lg bg-muted p-3">
-            <code className="flex-1 select-all break-all font-mono text-sm">
+          <div className="gap-sm bg-muted flex items-center rounded-lg p-3">
+            <code className="flex-1 font-mono text-sm break-all select-all">
               {generatedPassword}
             </code>
             <Button size="sm" variant="ghost" onClick={handleCopy} className="shrink-0">
@@ -233,14 +233,14 @@ export function PasswordGenerator({
           {strengthInfo && (
             <div className="space-y-xs">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {t('pages.passwords.generator.strengthLabel')}
                 </span>
                 <Badge variant={strengthInfo.badgeVariant}>
                   {t(strengthInfo.labelKey)}
                 </Badge>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all duration-300',

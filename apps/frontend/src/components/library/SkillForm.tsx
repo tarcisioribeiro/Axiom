@@ -106,14 +106,14 @@ function ProficiencySelector({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-5 gap-sm">
+    <div className="gap-sm grid grid-cols-5">
       {PROFICIENCY_LEVELS.map(({ value: lvl, dots }) => (
         <button
           key={lvl}
           type="button"
           onClick={() => onChange(lvl)}
           className={cn(
-            'flex flex-col items-center gap-xs rounded-lg border-2 p-sm transition-all',
+            'gap-xs p-sm flex flex-col items-center rounded-lg border-2 transition-all',
             value === lvl
               ? 'border-category-intellect bg-category-intellect/10 shadow-sm'
               : 'border-border bg-background hover:border-category-intellect/40 hover:bg-category-intellect/5'
@@ -136,7 +136,7 @@ function ProficiencySelector({
           </div>
           <span
             className={cn(
-              'text-center text-[10px] font-medium leading-tight',
+              'text-center text-[10px] leading-tight font-medium',
               value === lvl ? 'text-category-intellect' : 'text-muted-foreground'
             )}
           >
@@ -230,8 +230,8 @@ export function SkillForm({
                 const Icon = CATEGORY_ICONS[c];
                 return (
                   <SelectItem key={c} value={c}>
-                    <div className="flex items-center gap-xs">
-                      <Icon className="h-3.5 w-3.5 text-category-intellect" />
+                    <div className="gap-xs flex items-center">
+                      <Icon className="text-category-intellect h-3.5 w-3.5" />
                       {t(`pages.skills.category.${c}`)}
                     </div>
                   </SelectItem>
@@ -253,14 +253,14 @@ export function SkillForm({
 
         <div className="space-y-sm">
           <Label>{t('pages.skills.form.statusLabel')}</Label>
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             {STATUSES.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setValue('status', s)}
                 className={cn(
-                  'flex-1 rounded-lg border-2 px-sm py-sm text-xs font-semibold transition-all',
+                  'px-sm py-sm flex-1 rounded-lg border-2 text-xs font-semibold transition-all',
                   currentStatus === s
                     ? STATUS_COLORS[s]
                     : 'border-border bg-background text-muted-foreground hover:border-border/80'
@@ -283,14 +283,14 @@ export function SkillForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-category-intellect text-white hover:bg-category-intellect/90"
+          className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {t('common.actions.save')}
         </Button>

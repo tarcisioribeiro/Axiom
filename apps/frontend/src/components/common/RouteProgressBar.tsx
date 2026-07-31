@@ -32,7 +32,7 @@ export const RouteProgressBar = () => {
 
   return (
     <motion.div
-      className="pointer-events-none fixed left-0 top-0 z-toast h-[2px] bg-primary"
+      className="z-toast bg-primary pointer-events-none fixed top-0 left-0 h-[2px]"
       animate={controls}
       initial={{ width: '0%', opacity: 0 }}
     />

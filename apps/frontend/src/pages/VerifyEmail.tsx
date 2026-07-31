@@ -40,8 +40,8 @@ export default function VerifyEmail() {
   }, [token, navigate, isAuthenticated]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
-      <ThemeToggle className="absolute right-4 top-4" />
+    <div className="from-background to-secondary/30 p-md relative flex min-h-screen items-center justify-center bg-gradient-to-br">
+      <ThemeToggle className="absolute top-4 right-4" />
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
@@ -51,22 +51,22 @@ export default function VerifyEmail() {
         </CardHeader>
         <CardContent className="space-y-md text-center">
           {status === 'verifying' && (
-            <div className="flex flex-col items-center gap-md py-md">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">
+            <div className="gap-md py-md flex flex-col items-center">
+              <Loader2 className="text-primary h-10 w-10 animate-spin" />
+              <p className="text-muted-foreground text-sm">
                 {t('auth.verifyEmail.verifying')}
               </p>
             </div>
           )}
 
           {status === 'success' && (
-            <div className="flex flex-col items-center gap-md py-md">
+            <div className="gap-md py-md flex flex-col items-center">
               <CheckCircle2 className="h-10 w-10 text-green-500" />
               <div>
                 <p className="font-semibold text-green-700 dark:text-green-400">
                   {t('auth.verifyEmail.successTitle')}
                 </p>
-                <p className="mt-xs text-sm text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-sm">
                   {t('auth.verifyEmail.successDesc')}
                 </p>
               </div>
@@ -82,19 +82,19 @@ export default function VerifyEmail() {
           )}
 
           {status === 'error' && (
-            <div className="flex flex-col items-center gap-md py-md">
-              <XCircle className="h-10 w-10 text-destructive" />
+            <div className="gap-md py-md flex flex-col items-center">
+              <XCircle className="text-destructive h-10 w-10" />
               <div>
-                <p className="font-semibold text-destructive">
+                <p className="text-destructive font-semibold">
                   {t('auth.verifyEmail.errorTitle')}
                 </p>
-                <p className="mt-xs text-sm text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-sm">
                   {t('auth.verifyEmail.errorDesc')}
                 </p>
               </div>
               <Link
                 to="/login"
-                className="text-sm font-medium text-primary hover:underline"
+                className="text-primary text-sm font-medium hover:underline"
               >
                 {t('auth.verifyEmail.backToLogin')}
               </Link>

@@ -29,9 +29,9 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
         <CardDescription>{t('pages.twoFactor.backupDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="relative rounded-md border bg-muted p-md font-mono text-sm">
+        <div className="bg-muted p-md relative rounded-md border font-mono text-sm">
           {visible ? (
-            <div className="grid grid-cols-2 gap-sm">
+            <div className="gap-sm grid grid-cols-2">
               {codes.map((code, i) => (
                 <span key={i} className="tracking-widest">
                   {code}
@@ -39,16 +39,16 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-sm">
+            <div className="gap-sm grid grid-cols-2">
               {codes.map((_, i) => (
-                <span key={i} className="tracking-widest text-muted-foreground">
+                <span key={i} className="text-muted-foreground tracking-widest">
                   ••••••••••
                 </span>
               ))}
             </div>
           )}
         </div>
-        <div className="flex gap-sm">
+        <div className="gap-sm flex">
           <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
             {visible ? (
               <>
@@ -63,7 +63,7 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {copied ? (
               <>
-                <Check className="mr-sm h-4 w-4 text-success" />{' '}
+                <Check className="mr-sm text-success h-4 w-4" />{' '}
                 {t('common.messages.copied')}
               </>
             ) : (

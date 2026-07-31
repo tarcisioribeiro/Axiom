@@ -86,10 +86,10 @@ function FlipCard({
           flipped ? '[transform:rotateY(180deg)]' : ''
         )}
       >
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg border bg-card p-lg text-center [backface-visibility:hidden]">
+        <div className="bg-card p-lg absolute inset-0 flex items-center justify-center rounded-lg border text-center [backface-visibility:hidden]">
           <p className="text-lg font-medium">{card.front}</p>
         </div>
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg border bg-primary/5 p-lg text-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
+        <div className="bg-primary/5 p-lg absolute inset-0 flex [transform:rotateY(180deg)] items-center justify-center rounded-lg border text-center [backface-visibility:hidden]">
           <p className="text-lg">{card.back}</p>
         </div>
       </div>
@@ -192,10 +192,10 @@ export default function Flashcards() {
         <PageHeader
           title={t('pages.flashcards.title')}
           subtitle={t('pages.flashcards.subtitle')}
-          icon={<Brain className="h-6 w-6 text-primary" />}
+          icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             mode === 'list' ? (
-              <div className="flex gap-sm">
+              <div className="gap-sm flex">
                 <Button variant="outline" onClick={() => setCreateOpen(true)}>
                   <Plus className="mr-sm h-4 w-4" />
                   {t('pages.flashcards.newCard')}
@@ -223,7 +223,7 @@ export default function Flashcards() {
           }
         />
 
-        <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+        <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
           <StatCard
             title={t('pages.flashcards.stats.total')}
             value={totalCount}
@@ -261,7 +261,7 @@ export default function Flashcards() {
             >
               {currentCard ? (
                 <>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center justify-between text-sm">
                     <span>
                       {reviewIndex + 1} / {due.length}
                     </span>
@@ -277,7 +277,7 @@ export default function Flashcards() {
                   />
 
                   {!flipped && (
-                    <p className="text-center text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-center text-sm">
                       {t('pages.flashcards.flipCard')}
                     </p>
                   )}
@@ -287,7 +287,7 @@ export default function Flashcards() {
                       <p className="text-center text-sm font-medium">
                         {t('pages.flashcards.rating.label')}
                       </p>
-                      <div className="grid grid-cols-3 gap-sm sm:grid-cols-6">
+                      <div className="gap-sm grid grid-cols-3 sm:grid-cols-6">
                         {([0, 1, 2, 3, 4, 5] as const).map((r) => (
                           <button
                             key={r}
@@ -295,7 +295,7 @@ export default function Flashcards() {
                             onClick={() => handleRating(r)}
                             disabled={reviewMutation.isPending}
                             className={cn(
-                              'rounded-md px-sm py-sm text-xs font-semibold transition-opacity disabled:opacity-50',
+                              'px-sm py-sm rounded-md text-xs font-semibold transition-opacity disabled:opacity-50',
                               RATING_COLORS[r]
                             )}
                           >
@@ -310,7 +310,7 @@ export default function Flashcards() {
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
                   description={t('pages.flashcards.emptyReview.description')}
-                  icon={<Star className="h-10 w-10 text-muted-foreground" />}
+                  icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               )}
             </motion.div>
@@ -331,14 +331,14 @@ export default function Flashcards() {
                 <EmptyState
                   title={t('pages.flashcards.empty.title')}
                   description={t('pages.flashcards.empty.description')}
-                  icon={<Brain className="h-10 w-10 text-muted-foreground" />}
+                  icon={<Brain className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
+                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
                   {cards.map((card) => (
                     <Card key={card.id}>
                       <CardHeader className="pb-xs">
-                        <div className="flex items-start justify-between gap-sm">
+                        <div className="gap-sm flex items-start justify-between">
                           <Badge
                             variant={STATUS_BADGE_VARIANT[card.status]}
                             className="text-xs"
@@ -346,7 +346,7 @@ export default function Flashcards() {
                             {t(`pages.flashcards.status.${card.status}`)}
                           </Badge>
                           {card.book_title && (
-                            <span className="max-w-[120px] truncate text-xs text-muted-foreground">
+                            <span className="text-muted-foreground max-w-[120px] truncate text-xs">
                               {card.book_title}
                             </span>
                           )}
@@ -354,19 +354,19 @@ export default function Flashcards() {
                       </CardHeader>
                       <CardContent className="space-y-sm">
                         <div>
-                          <p className="mb-xs text-xs font-medium text-muted-foreground">
+                          <p className="mb-xs text-muted-foreground text-xs font-medium">
                             {t('pages.flashcards.front')}
                           </p>
                           <p className="text-sm">{card.front}</p>
                         </div>
-                        <div className="border-t pt-sm">
-                          <p className="mb-xs text-xs font-medium text-muted-foreground">
+                        <div className="pt-sm border-t">
+                          <p className="mb-xs text-muted-foreground text-xs font-medium">
                             {t('pages.flashcards.back')}
                           </p>
-                          <p className="text-sm text-muted-foreground">{card.back}</p>
+                          <p className="text-muted-foreground text-sm">{card.back}</p>
                         </div>
                         {card.next_review && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {t('pages.flashcards.nextReview')}:{' '}
                             {new Date(card.next_review).toLocaleDateString('pt-BR')}
                           </p>
@@ -383,15 +383,15 @@ export default function Flashcards() {
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
                   description={t('pages.flashcards.emptyReview.description')}
-                  icon={<Star className="h-10 w-10 text-muted-foreground" />}
+                  icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
+                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
                   {due.map((card) => (
                     <Card key={card.id} className="border-warning/30">
                       <CardContent className="space-y-sm pt-md">
                         <p className="text-sm font-medium">{card.front}</p>
-                        <p className="text-xs text-muted-foreground">{card.back}</p>
+                        <p className="text-muted-foreground text-xs">{card.back}</p>
                       </CardContent>
                     </Card>
                   ))}
@@ -404,8 +404,8 @@ export default function Flashcards() {
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-sm">
-                <Brain className="h-4 w-4 text-primary" />
+              <DialogTitle className="gap-sm flex items-center">
+                <Brain className="text-primary h-4 w-4" />
                 {t('pages.flashcards.newCard')}
               </DialogTitle>
             </DialogHeader>
@@ -428,7 +428,7 @@ export default function Flashcards() {
                   required
                 />
               </div>
-              <div className="flex justify-end gap-sm">
+              <div className="gap-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"

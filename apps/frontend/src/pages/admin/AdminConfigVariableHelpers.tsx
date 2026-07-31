@@ -24,21 +24,21 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex-shrink-0 rounded p-0.5 text-muted-foreground/60 transition-colors hover:text-muted-foreground"
+          className="text-muted-foreground/60 hover:text-muted-foreground flex-shrink-0 rounded p-0.5 transition-colors"
           aria-label={t('pages.adminConfig.helpAriaLabel')}
         >
           <HelpCircle className="h-3.5 w-3.5" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" side="bottom" className="w-80 space-y-sm text-sm">
-        <p className="leading-snug text-foreground">{hint}</p>
+      <PopoverContent align="start" side="bottom" className="space-y-sm w-80 text-sm">
+        <p className="text-foreground leading-snug">{hint}</p>
 
         {helper.accepted_values && (
           <div>
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.acceptedValues')}
             </span>
-            <p className="mt-0.5 font-mono text-xs text-foreground/80">
+            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
               {helper.accepted_values}
             </p>
           </div>
@@ -46,10 +46,10 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
 
         {helper.default_value && (
           <div>
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.default')}
             </span>
-            <p className="mt-0.5 font-mono text-xs text-foreground/80">
+            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
               {helper.default_value}
             </p>
           </div>
@@ -57,17 +57,17 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
 
         {helper.example && (
           <div>
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               {t('pages.adminConfig.popover.example')}
             </span>
-            <p className="mt-0.5 font-mono text-xs text-foreground/80">
+            <p className="text-foreground/80 mt-0.5 font-mono text-xs">
               {helper.example}
             </p>
           </div>
         )}
 
         {warning && (
-          <div className="flex gap-sm rounded-lg border border-amber-500/30 bg-amber-500/10 px-sm py-sm">
+          <div className="gap-sm px-sm py-sm flex rounded-lg border border-amber-500/30 bg-amber-500/10">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
             <p className="text-xs leading-snug text-amber-700 dark:text-amber-400">
               {warning}

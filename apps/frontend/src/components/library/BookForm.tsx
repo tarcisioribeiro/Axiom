@@ -214,12 +214,12 @@ export function BookForm({
     >
       {/* Capa do livro */}
       <div>
-        <Label className="flex items-center gap-xs">
-          <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+        <Label className="gap-xs flex items-center">
+          <ImagePlus className="text-muted-foreground h-3.5 w-3.5" />
           {t('pages.books.form.coverLabel')}
         </Label>
-        <div className="mt-sm flex items-start gap-md">
-          <div className="relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted shadow-sm">
+        <div className="mt-sm gap-md flex items-start">
+          <div className="bg-muted relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border shadow-sm">
             {coverPreview ? (
               <>
                 <img
@@ -230,17 +230,17 @@ export function BookForm({
                 <button
                   type="button"
                   onClick={handleRemoveCover}
-                  className="absolute right-1 top-1 rounded-full bg-background/80 p-0.5 hover:bg-background"
+                  className="bg-background/80 hover:bg-background absolute top-1 right-1 rounded-full p-0.5"
                   aria-label={t('pages.books.form.removeCover')}
                 >
                   <X className="h-3 w-3" />
                 </button>
               </>
             ) : (
-              <ImagePlus className="h-8 w-8 text-muted-foreground" />
+              <ImagePlus className="text-muted-foreground h-8 w-8" />
             )}
           </div>
-          <div className="flex flex-col gap-sm">
+          <div className="gap-sm flex flex-col">
             <input
               ref={fileInputRef}
               type="file"
@@ -260,7 +260,7 @@ export function BookForm({
                 ? t('pages.books.form.coverChangeBtn')
                 : t('pages.books.form.coverSelectBtn')}
             </Button>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.books.form.coverHint')}
             </p>
           </div>
@@ -268,10 +268,10 @@ export function BookForm({
       </div>
 
       <FormSection title={t('pages.books.form.sectionIdentification')} icon={BookOpen}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="title" className="flex items-center gap-xs">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="title" className="gap-xs flex items-center">
+              <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.titleLabel')}
             </Label>
             <Input
@@ -281,13 +281,13 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.title && (
-              <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="isbn" className="flex items-center gap-xs">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="isbn" className="gap-xs flex items-center">
+              <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.isbnLabel')}
             </Label>
             <Input
@@ -298,13 +298,13 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.isbn && (
-              <p className="mt-xs text-sm text-destructive">{errors.isbn.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.isbn.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="series_name" className="flex items-center gap-xs">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="series_name" className="gap-xs flex items-center">
+              <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.seriesLabel')}
             </Label>
             <Input
@@ -314,7 +314,7 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.series_name && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.series_name.message}
               </p>
             )}
@@ -322,8 +322,8 @@ export function BookForm({
 
           {watch('series_name') && (
             <div className="space-y-sm">
-              <Label htmlFor="series_order" className="flex items-center gap-xs">
-                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="series_order" className="gap-xs flex items-center">
+                <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.form.seriesOrderLabel')}
               </Label>
               <Input
@@ -337,7 +337,7 @@ export function BookForm({
                 disabled={isLoading}
               />
               {errors.series_order && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.series_order.message}
                 </p>
               )}
@@ -347,21 +347,21 @@ export function BookForm({
       </FormSection>
 
       <FormSection title={t('pages.books.form.sectionClassification')} icon={Tag}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           {/* Adaptação visual: toggle de mídia */}
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.mediaTypeLabel')}
             </Label>
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setValue('media_type', value)}
                   disabled={isLoading}
-                  className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                     mediaType === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -373,15 +373,15 @@ export function BookForm({
               ))}
             </div>
             {errors.media_type && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.media_type.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.genreLabel')}
             </Label>
             <Select
@@ -407,13 +407,13 @@ export function BookForm({
               </SelectContent>
             </Select>
             {errors.genre && (
-              <p className="mt-xs text-sm text-destructive">{errors.genre.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.genre.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.literaryTypeLabel')}
             </Label>
             <Select
@@ -439,15 +439,15 @@ export function BookForm({
               </SelectContent>
             </Select>
             {errors.literarytype && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.literarytype.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.languageLabel')}
             </Label>
             <Select
@@ -470,7 +470,7 @@ export function BookForm({
               </SelectContent>
             </Select>
             {errors.language && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.language.message}
               </p>
             )}
@@ -479,10 +479,10 @@ export function BookForm({
       </FormSection>
 
       <FormSection title={t('pages.books.form.sectionAuthorPublisher')} icon={User2}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <User2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <User2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.authorsLabel')}
             </Label>
             <Select
@@ -501,7 +501,7 @@ export function BookForm({
               </SelectContent>
             </Select>
             {selectedAuthors.length > 0 && (
-              <div className="mt-sm flex flex-wrap gap-sm">
+              <div className="mt-sm gap-sm flex flex-wrap">
                 {selectedAuthors.map((authorId) => {
                   const author = authors.find((a) => a.id === authorId);
                   return author ? (
@@ -523,13 +523,13 @@ export function BookForm({
               </div>
             )}
             {errors.authors && (
-              <p className="mt-xs text-sm text-destructive">{errors.authors.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.authors.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <User2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <User2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.publisherLabel')}
             </Label>
             <Select
@@ -549,15 +549,15 @@ export function BookForm({
               </SelectContent>
             </Select>
             {errors.publisher && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.publisher.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="pages" className="flex items-center gap-xs">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="pages" className="gap-xs flex items-center">
+              <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.pagesLabel')}
             </Label>
             <Input
@@ -570,13 +570,13 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.pages && (
-              <p className="mt-xs text-sm text-destructive">{errors.pages.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.pages.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="edition" className="flex items-center gap-xs">
-              <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="edition" className="gap-xs flex items-center">
+              <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.editionLabel')}
             </Label>
             <Input
@@ -586,13 +586,13 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.edition && (
-              <p className="mt-xs text-sm text-destructive">{errors.edition.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.edition.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <User2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <User2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.publishDateLabel')}
             </Label>
             <DatePicker
@@ -604,7 +604,7 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.publish_date && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.publish_date.message}
               </p>
             )}
@@ -615,21 +615,21 @@ export function BookForm({
       {/* Arquivo digital — aparece condicionalmente ao selecionar mídia Digital */}
       {mediaType === 'Dig' && (
         <div>
-          <Label className="flex items-center gap-xs">
-            <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="gap-xs flex items-center">
+            <Upload className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.books.form.bookFileLabel')}
           </Label>
-          <div className="mt-sm flex items-center gap-md">
-            <div className="flex min-w-0 flex-1 items-center gap-sm rounded-md border bg-muted px-3 py-sm">
-              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="truncate text-sm text-muted-foreground">
+          <div className="mt-sm gap-md flex items-center">
+            <div className="gap-sm bg-muted py-sm flex min-w-0 flex-1 items-center rounded-md border px-3">
+              <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
+              <span className="text-muted-foreground truncate text-sm">
                 {bookFileName ?? t('pages.books.form.bookFileNone')}
               </span>
               {bookFileName && (
                 <button
                   type="button"
                   onClick={handleRemoveBookFile}
-                  className="ml-auto shrink-0 rounded-full p-0.5 hover:bg-background"
+                  className="hover:bg-background ml-auto shrink-0 rounded-full p-0.5"
                   aria-label={t('pages.books.form.removeBookFile')}
                 >
                   <X className="h-3 w-3" />
@@ -657,20 +657,20 @@ export function BookForm({
                 : t('pages.books.form.bookFileSelectBtn')}
             </Button>
           </div>
-          <p className="mt-xs text-xs text-muted-foreground">
+          <p className="mt-xs text-muted-foreground text-xs">
             {t('pages.books.form.bookFileHint')}
           </p>
         </div>
       )}
 
       <FormSection title={t('pages.books.form.sectionReading')} icon={Star}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Star className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Star className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.readStatusLabel')}
             </Label>
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {READ_STATUS_VALUES.map((value) => (
                 <button
                   key={value}
@@ -697,8 +697,8 @@ export function BookForm({
 
           {watch('read_status') === 'paused' && (
             <div className="space-y-sm md:col-span-2">
-              <Label htmlFor="pause_reason" className="flex items-center gap-xs">
-                <Star className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="pause_reason" className="gap-xs flex items-center">
+                <Star className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.form.pauseReasonLabel')}
               </Label>
               <Textarea
@@ -709,7 +709,7 @@ export function BookForm({
                 disabled={isLoading}
               />
               {errors.pause_reason && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.pause_reason.message}
                 </p>
               )}
@@ -718,7 +718,7 @@ export function BookForm({
 
           {!book && (
             <div className="space-y-3 md:col-span-2">
-              <div className="flex items-center gap-sm">
+              <div className="gap-sm flex items-center">
                 <Checkbox
                   id="already-read"
                   checked={alreadyRead}
@@ -737,10 +737,10 @@ export function BookForm({
               </div>
 
               {alreadyRead && (
-                <div className="grid grid-cols-2 gap-md rounded-md border p-3">
+                <div className="gap-md grid grid-cols-2 rounded-md border p-3">
                   <div>
-                    <Label className="flex items-center gap-xs">
-                      <Star className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="gap-xs flex items-center">
+                      <Star className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.books.form.startDateLabel')}
                     </Label>
                     <DatePicker
@@ -753,8 +753,8 @@ export function BookForm({
                     />
                   </div>
                   <div>
-                    <Label className="flex items-center gap-xs">
-                      <Star className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Label className="gap-xs flex items-center">
+                      <Star className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.books.form.endDateLabel')}
                     </Label>
                     <DatePicker
@@ -764,7 +764,7 @@ export function BookForm({
                       disabled={isLoading}
                     />
                     {endDate && startDate && endDate < startDate && (
-                      <p className="mt-xs text-sm text-destructive">
+                      <p className="mt-xs text-destructive text-sm">
                         {t('pages.books.form.endDateError')}
                       </p>
                     )}
@@ -776,8 +776,8 @@ export function BookForm({
 
           {(watch('read_status') === 'read' || alreadyRead) && (
             <div className="space-y-sm md:col-span-2">
-              <Label className="flex items-center gap-xs">
-                <Star className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Star className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.form.ratingLabel')}
               </Label>
               <StarRating
@@ -787,7 +787,7 @@ export function BookForm({
                 className="mt-sm"
               />
               {errors.rating && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.rating.message}
                 </p>
               )}
@@ -798,8 +798,8 @@ export function BookForm({
 
       <FormSection title={t('pages.books.form.sectionSynopsis')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="synopsis" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="synopsis" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.books.form.synopsisLabel')}
           </Label>
           <Textarea
@@ -810,12 +810,12 @@ export function BookForm({
             disabled={isLoading}
           />
           {errors.synopsis && (
-            <p className="mt-xs text-sm text-destructive">{errors.synopsis.message}</p>
+            <p className="mt-xs text-destructive text-sm">{errors.synopsis.message}</p>
           )}
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

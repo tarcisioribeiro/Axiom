@@ -45,7 +45,7 @@ export function LoanAmortizationDialog({
         </DialogHeader>
         <div className="mb-md flex items-center gap-3">
           <Label>{t('pages.loans.amortization.method')}:</Label>
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             {(['price', 'sac'] as const).map((m) => (
               <Button
                 key={m}
@@ -59,18 +59,18 @@ export function LoanAmortizationDialog({
           </div>
         </div>
         {isLoading ? (
-          <div className="py-xl text-center text-sm text-muted-foreground">
+          <div className="py-xl text-muted-foreground text-center text-sm">
             {t('pages.loans.amortization.loading')}
           </div>
         ) : !amortization ? (
-          <div className="py-xl text-center text-sm text-muted-foreground">
+          <div className="py-xl text-muted-foreground text-center text-sm">
             {t('pages.loans.amortization.noData')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
+                <tr className="text-muted-foreground border-b text-left">
                   <th className="pb-sm pr-3">#</th>
                   <th className="pb-sm pr-3">
                     {t('pages.loans.amortization.dueDate')}

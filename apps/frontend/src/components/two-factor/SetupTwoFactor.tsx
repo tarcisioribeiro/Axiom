@@ -55,7 +55,7 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     return (
       <Card>
         <CardContent className="flex h-48 items-center justify-center">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {t('pages.twoFactor.loading')}
           </span>
         </CardContent>
@@ -66,7 +66,7 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
   if (setupError || !setupData) {
     return (
       <Card>
-        <CardContent className="py-xl text-center text-sm text-destructive">
+        <CardContent className="py-xl text-destructive text-center text-sm">
           {t('pages.twoFactor.invalidCode')}
         </CardContent>
       </Card>
@@ -84,17 +84,17 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
         <CardDescription>{t('pages.twoFactor.step1Desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-lg">
-        <div className="flex flex-col items-center gap-md">
+        <div className="gap-md flex flex-col items-center">
           <img
             src={setupData.qr_code}
             alt="QR Code 2FA"
-            className="h-48 w-48 rounded-md border bg-white p-sm"
+            className="p-sm h-48 w-48 rounded-md border bg-white"
           />
-          <div className="w-full max-w-xs space-y-xs">
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-xs w-full max-w-xs">
+            <p className="text-muted-foreground text-xs">
               {t('pages.twoFactor.step1')}:
             </p>
-            <code className="block break-all rounded bg-muted px-3 py-sm text-xs">
+            <code className="bg-muted py-sm block rounded px-3 text-xs break-all">
               {setupData.manual_entry_key}
             </code>
           </div>

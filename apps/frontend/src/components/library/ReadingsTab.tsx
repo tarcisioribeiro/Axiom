@@ -66,19 +66,19 @@ function BookProgressBar({ book, readings }: BookProgressProps) {
 
   return (
     <div className="space-y-xs">
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex justify-between text-xs">
         <span className="truncate font-medium">{book.title}</span>
         <span className="ml-sm shrink-0">
           {totalRead}/{book.pages} ({pct.toFixed(0)}%)
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-primary transition-all"
+          className="bg-primary h-full rounded-full transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-muted-foreground text-[10px]">
         {t('pages.readings.sessionsCount', { count: bookReadings.length })}
       </p>
     </div>
@@ -197,7 +197,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             <div className="space-y-sm">
               <Label>{t('pages.readings.markAsRead.startDateLabel')}</Label>
               <DatePicker
@@ -216,7 +216,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button variant="outline" onClick={onClose}>
               {t('pages.readings.markAsRead.cancelBtn')}
             </Button>
@@ -404,11 +404,11 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
       {showProgress ? (
         booksWithReadings.length === 0 ? (
           <EmptyState
-            icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+            icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
             message={t('pages.readings.noReadingsProgress')}
           />
         ) : (
-          <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+          <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
             {booksWithReadings.map((book) => (
               <Card key={book.id}>
                 <CardContent className="pt-md">
@@ -420,7 +420,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         )
       ) : readings.length === 0 ? (
         <EmptyState
-          icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+          icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.readings.emptySearch')
@@ -428,20 +428,20 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {readings.map((reading) => (
             <Card key={reading.id}>
               <CardHeader className="pb-sm">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-xs flex items-center gap-sm">
+                    <div className="mb-xs gap-sm flex items-center">
                       <BookOpen className="h-4 w-4 flex-shrink-0" />
                       <CardTitle className="truncate text-base">
                         {reading.book_title}
                       </CardTitle>
                     </div>
-                    <div className="flex flex-wrap items-center gap-sm text-xs">
-                      <div className="flex items-center gap-xs">
+                    <div className="gap-sm flex flex-wrap items-center text-xs">
+                      <div className="gap-xs flex items-center">
                         <Calendar className="h-3 w-3" />
                         {formatDate(reading.reading_date, 'dd/MM/yyyy')}
                       </div>
@@ -449,7 +449,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                         {t('pages.readings.pagesRead', { count: reading.pages_read })}
                       </Badge>
                       {reading.reading_time > 0 && (
-                        <div className="flex items-center gap-xs text-muted-foreground">
+                        <div className="gap-xs text-muted-foreground flex items-center">
                           <Clock className="h-3 w-3" />
                           {reading.reading_time}min
                         </div>
@@ -466,7 +466,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-shrink-0 gap-xs">
+                  <div className="gap-xs flex flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"

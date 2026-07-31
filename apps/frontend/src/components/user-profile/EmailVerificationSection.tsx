@@ -38,12 +38,12 @@ export function EmailVerificationSection({
       title={t('userProfile.emailVerification.title')}
       description={t('userProfile.emailVerification.description')}
     >
-      <div className="flex items-center justify-between gap-md">
+      <div className="gap-md flex items-center justify-between">
         <div className="flex items-center gap-3">
           {emailVerified ? (
             <CheckCircle2 className="h-5 w-5 text-green-500" />
           ) : (
-            <Mail className="h-5 w-5 text-muted-foreground" />
+            <Mail className="text-muted-foreground h-5 w-5" />
           )}
           <div>
             <p className="text-sm font-medium">

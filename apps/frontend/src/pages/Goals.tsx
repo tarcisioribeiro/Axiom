@@ -177,8 +177,8 @@ function GoalCard({
             <TypeIcon className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-semibold leading-tight">{goal.title}</h3>
-            <p className="text-xs text-muted-foreground">
+            <h3 className="truncate leading-tight font-semibold">{goal.title}</h3>
+            <p className="text-muted-foreground text-xs">
               {t(`pages.goals.goalTypes.${goal.goal_type}`, {
                 defaultValue: goal.goal_type_display,
               })}
@@ -186,27 +186,27 @@ function GoalCard({
           </div>
         </div>
 
-        <div className="mb-md flex items-center gap-md">
+        <div className="mb-md gap-md flex items-center">
           <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
             <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
           </CircularProgress>
-          <div className="flex-1 space-y-xs">
+          <div className="space-y-xs flex-1">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {t('pages.goals.columns.progress')}
               </span>
-              <div className="flex items-center gap-xs font-medium">
+              <div className="gap-xs flex items-center font-medium">
                 {pct >= 80 ? (
-                  <TrendingUp className="h-3.5 w-3.5 text-success" />
+                  <TrendingUp className="text-success h-3.5 w-3.5" />
                 ) : pct < 30 ? (
-                  <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+                  <TrendingDown className="text-destructive h-3.5 w-3.5" />
                 ) : null}
                 <span>
                   {displayValue} / {goal.target_value}
                 </span>
               </div>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted h-2 overflow-hidden rounded-full">
               <motion.div
                 className={cn(
                   'h-full rounded-full',
@@ -228,11 +228,11 @@ function GoalCard({
 
         {/* Pace indicator + days remaining */}
         {(paceStatus || daysRemaining !== null) && (
-          <div className="mb-3 flex flex-wrap items-center gap-xs">
+          <div className="gap-xs mb-3 flex flex-wrap items-center">
             {paceStatus && (
               <span
                 className={cn(
-                  'flex items-center gap-xs rounded px-sm py-0.5 text-xs font-medium',
+                  'gap-xs px-sm flex items-center rounded py-0.5 text-xs font-medium',
                   paceConfig[paceStatus].className
                 )}
               >
@@ -247,7 +247,7 @@ function GoalCard({
             {daysRemaining !== null && (
               <span
                 className={cn(
-                  'flex items-center gap-xs rounded px-sm py-0.5 text-xs font-medium',
+                  'gap-xs px-sm flex items-center rounded py-0.5 text-xs font-medium',
                   daysRemaining < 7
                     ? 'bg-destructive/10 text-destructive'
                     : daysRemaining < 14
@@ -267,7 +267,7 @@ function GoalCard({
         {/* Completion badge */}
         {isCompleted && (
           <motion.div
-            className="mb-3 flex items-center gap-sm text-success"
+            className="gap-sm text-success mb-3 flex items-center"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
@@ -288,7 +288,7 @@ function GoalCard({
           >
             {t(`pages.goals.form.statusOptions.${goal.status}`)}
           </Badge>
-          <div className="flex gap-xs">
+          <div className="gap-xs flex">
             {isAutoType && goal.status === 'active' && (
               <Button
                 variant="ghost"
@@ -297,7 +297,7 @@ function GoalCard({
                 title={t('pages.goals.recalculateBtn')}
                 aria-label={t('pages.goals.recalculateBtn')}
               >
-                <RefreshCw className="h-4 w-4 text-primary" />
+                <RefreshCw className="text-primary h-4 w-4" />
               </Button>
             )}
             {isAutoType && goal.status === 'active' && (
@@ -308,7 +308,7 @@ function GoalCard({
                 title={t('pages.goals.registerFailureBtn')}
                 aria-label={t('pages.goals.registerFailureBtn')}
               >
-                <AlertTriangle className="h-4 w-4 text-warning" />
+                <AlertTriangle className="text-warning h-4 w-4" />
               </Button>
             )}
             {goal.status === 'active' && (
@@ -319,7 +319,7 @@ function GoalCard({
                 title={t('pages.goals.restartBtn')}
                 aria-label={t('pages.goals.restartBtn')}
               >
-                <RotateCcw className="h-4 w-4 text-muted-foreground" />
+                <RotateCcw className="text-muted-foreground h-4 w-4" />
               </Button>
             )}
             <Button
@@ -338,7 +338,7 @@ function GoalCard({
               title={t('common.actions.delete')}
               aria-label={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" />
+              <Trash2 className="text-destructive h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -604,7 +604,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         {goals.length > 0 && (
           <button
             onClick={exportGoalsCSV}
-            className="flex items-center gap-xs rounded-md border border-border px-sm py-xs text-xs text-muted-foreground transition-colors hover:bg-muted"
+            className="gap-xs border-border px-sm py-xs text-muted-foreground hover:bg-muted flex items-center rounded-md border text-xs transition-colors"
             title={t('common.actions.exportCSV')}
           >
             <Download className="h-3.5 w-3.5" />
@@ -628,11 +628,11 @@ export default function Goals({ embedded = false }: GoalsProps) {
         <div className="space-y-xl">
           {activeGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-info" />
+              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
+                <span className="bg-info h-2 w-2 rounded-full" />
                 {t('pages.goals.sectionActive')} ({activeGoals.length})
               </h2>
-              <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+              <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
                 {activeGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}
@@ -642,11 +642,11 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
           {completedGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-success" />
+              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
+                <span className="bg-success h-2 w-2 rounded-full" />
                 {t('pages.goals.sectionCompleted')} ({completedGoals.length})
               </h2>
-              <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+              <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
                 {completedGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}
@@ -656,11 +656,11 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
           {otherGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
+                <span className="bg-muted-foreground h-2 w-2 rounded-full" />
                 {t('pages.goals.sectionOther')} ({otherGoals.length})
               </h2>
-              <div className="grid gap-md opacity-70 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="gap-md grid opacity-70 sm:grid-cols-2 lg:grid-cols-3">
                 {otherGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}

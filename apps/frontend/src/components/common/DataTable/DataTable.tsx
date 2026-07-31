@@ -155,7 +155,7 @@ export function DataTable<T>({
       return <EmptyState {...emptyState} />;
     }
     return (
-      <div className="rounded-lg border bg-card p-12 text-center">
+      <div className="bg-card rounded-lg border p-12 text-center">
         <p>{t('common.table.noData')}</p>
       </div>
     );
@@ -184,7 +184,7 @@ export function DataTable<T>({
   return (
     <div className="space-y-md">
       {/* Mobile card list */}
-      <div className="block overflow-hidden rounded-lg border bg-card md:hidden">
+      <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
         <div className="divide-y">
           {data.map((item) => (
             <div key={keyExtractor(item)}>
@@ -195,9 +195,9 @@ export function DataTable<T>({
                   {columns.map((column) => (
                     <div
                       key={column.key}
-                      className="flex items-start justify-between gap-sm"
+                      className="gap-sm flex items-start justify-between"
                     >
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground shrink-0 text-xs">
                         {column.label}
                       </span>
                       <span className={`text-sm ${getAlignClass(column.align)}`}>
@@ -206,7 +206,7 @@ export function DataTable<T>({
                     </div>
                   ))}
                   {actions && (
-                    <div className="flex justify-end pt-xs">{actions(item)}</div>
+                    <div className="pt-xs flex justify-end">{actions(item)}</div>
                   )}
                 </div>
               )}
@@ -216,10 +216,10 @@ export function DataTable<T>({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
+      <div className="bg-card hidden overflow-hidden rounded-lg border md:block">
         <div className="custom-scrollbar overflow-x-auto">
           <table className="w-full">
-            <thead className="border-b bg-muted/50">
+            <thead className="bg-muted/50 border-b">
               <tr>
                 {columns.map((column) => (
                   <th
@@ -235,7 +235,7 @@ export function DataTable<T>({
                     {column.sortable && sorting ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-xs rounded hover:text-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="gap-xs hover:text-foreground/70 focus:ring-ring inline-flex items-center rounded focus:ring-2 focus:outline-none"
                         onClick={() => sorting.onSort(column.key)}
                       >
                         {column.label}
@@ -268,7 +268,7 @@ export function DataTable<T>({
                         rowRefs.current[index] = el;
                       }}
                       tabIndex={0}
-                      className={`transition-colors hover:bg-muted/30 focus:bg-muted/40 focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
+                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
                       onKeyDown={(e) => handleRowKeyDown(e, index)}
                       animate={
                         isDeleting
@@ -312,13 +312,13 @@ export function DataTable<T>({
           );
           return (
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {t('common.table.showing', {
                   count: currentCount,
                   total: pagination.total,
                 })}
               </p>
-              <div className="flex items-center gap-sm">
+              <div className="gap-sm flex items-center">
                 <Button
                   variant="outline"
                   size="sm"
@@ -328,7 +328,7 @@ export function DataTable<T>({
                 >
                   <ChevronLeft />
                 </Button>
-                <span className="text-sm text-muted-foreground" aria-live="polite">
+                <span className="text-muted-foreground text-sm" aria-live="polite">
                   {t('common.table.pageOf', { page: pagination.page, totalPages })}
                 </span>
                 <Button

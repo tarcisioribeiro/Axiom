@@ -52,10 +52,10 @@ export const MemberForm: React.FC<MemberFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Identificação Pessoal */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={User}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <User className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.nameLabel')}
             </Label>
             <Input
@@ -67,8 +67,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="document" className="flex items-center gap-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="document" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.documentLabel')}
             </Label>
             <Input
@@ -80,18 +80,18 @@ export const MemberForm: React.FC<MemberFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <User className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.sexLabel')}
             </Label>
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {(['M', 'F'] as const).map((sex) => (
                 <button
                   key={sex}
                   type="button"
                   onClick={() => setValue('sex', sex)}
                   disabled={isLoading}
-                  className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                     watchedSex === sex
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -107,8 +107,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="phone" className="flex items-center gap-xs">
-              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="phone" className="gap-xs flex items-center">
+              <Phone className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.phoneLabel')}
             </Label>
             <Input
@@ -120,8 +120,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="email" className="flex items-center gap-xs">
-              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="email" className="gap-xs flex items-center">
+              <Mail className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.members.form.emailLabel')}
             </Label>
             <Input
@@ -137,7 +137,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
 
       {/* Seção: Permissões & Papel */}
       <FormSection title={t('common.form.sections.paymentConfig')} icon={Shield}>
-        <div className="grid grid-cols-1 gap-sm md:grid-cols-2">
+        <div className="gap-sm grid grid-cols-1 md:grid-cols-2">
           <div
             role="button"
             tabIndex={isLoading ? -1 : 0}
@@ -146,9 +146,9 @@ export const MemberForm: React.FC<MemberFormProps> = ({
               if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
                 setValue('is_creditor', !watchedIsCreditor);
             }}
-            className={`flex cursor-pointer items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition-all ${
               watchedIsCreditor
-                ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
+                ? 'border-primary/50 bg-primary/5 ring-primary/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'
             } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
           >
@@ -164,7 +164,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                 </span>
                 <div
                   className={cn(
-                    'flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary shadow',
+                    'border-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border shadow',
                     watchedIsCreditor
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-background',
@@ -174,7 +174,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                   {watchedIsCreditor && <Check className="h-3 w-3" />}
                 </div>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {t('pages.members.stats.creditorsSubtitle')}
               </p>
             </div>
@@ -188,9 +188,9 @@ export const MemberForm: React.FC<MemberFormProps> = ({
               if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
                 setValue('is_benefited', !watchedIsBenefited);
             }}
-            className={`flex cursor-pointer items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition-all ${
               watchedIsBenefited
-                ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'
             } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
           >
@@ -206,7 +206,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                 </span>
                 <div
                   className={cn(
-                    'flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary shadow',
+                    'border-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border shadow',
                     watchedIsBenefited
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-background',
@@ -216,7 +216,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                   {watchedIsBenefited && <Check className="h-3 w-3" />}
                 </div>
               </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {t('pages.members.stats.beneficiariesSubtitle')}
               </p>
             </div>
@@ -224,8 +224,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         </div>
 
         <div className="space-y-sm">
-          <Label htmlFor="notes" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="notes" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.members.form.notesLabel')}
           </Label>
           <Textarea
@@ -238,7 +238,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

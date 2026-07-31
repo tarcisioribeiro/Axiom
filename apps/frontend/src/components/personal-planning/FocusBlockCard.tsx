@@ -69,16 +69,16 @@ export function FocusBlockCard({
             : 'border-l-muted-foreground/20 bg-card'
       )}
     >
-      <div className="flex items-center gap-sm px-md py-sm">
+      <div className="gap-sm px-md py-sm flex items-center">
         <button
           type="button"
           onClick={() => onToggleCollapse(block.id)}
-          className="flex flex-1 items-center gap-sm text-left"
+          className="gap-sm flex flex-1 items-center text-left"
         >
           {block.collapsed ? (
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <ChevronRight className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
           ) : (
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <ChevronDown className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
           )}
           <span className="text-sm font-semibold">{block.name}</span>
         </button>
@@ -86,7 +86,7 @@ export function FocusBlockCard({
         {total > 0 && (
           <span
             className={cn(
-              'rounded-full px-xs py-0.5 text-xs font-medium tabular-nums',
+              'px-xs rounded-full py-0.5 text-xs font-medium tabular-nums',
               isAllDone
                 ? 'bg-success/15 text-success'
                 : 'bg-muted text-muted-foreground'
@@ -100,14 +100,14 @@ export function FocusBlockCard({
           type="button"
           onClick={() => onDeleteBlock(block.id)}
           title={t('pages.focusBlocks.deleteBlock')}
-          className="ml-xs shrink-0 text-muted-foreground/40 transition-colors hover:text-destructive"
+          className="ml-xs text-muted-foreground/40 hover:text-destructive shrink-0 transition-colors"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
 
       {total > 0 && (
-        <div className="mx-md mb-xs h-1 overflow-hidden rounded-full bg-muted/50">
+        <div className="mx-md mb-xs bg-muted/50 h-1 overflow-hidden rounded-full">
           <div
             className={cn(
               'h-full rounded-full transition-all duration-500',
@@ -121,7 +121,7 @@ export function FocusBlockCard({
       {!block.collapsed && (
         <div className="px-md pb-md pt-xs">
           {blockTasks.length === 0 ? (
-            <p className="py-xs text-xs text-muted-foreground">
+            <p className="py-xs text-muted-foreground text-xs">
               {t('pages.focusBlocks.noTasks')}
             </p>
           ) : (
@@ -130,17 +130,17 @@ export function FocusBlockCard({
                 <div
                   key={task.id}
                   className={cn(
-                    'group flex items-center gap-sm rounded-md px-sm py-xs transition-colors',
+                    'group gap-sm px-sm py-xs flex items-center rounded-md transition-colors',
                     task.status === 'completed' ? 'bg-success/5' : 'hover:bg-muted/40'
                   )}
                 >
                   <button
                     type="button"
                     onClick={() => onToggleTaskComplete(task)}
-                    className="shrink-0 text-muted-foreground transition-colors hover:text-primary"
+                    className="text-muted-foreground hover:text-primary shrink-0 transition-colors"
                   >
                     {task.status === 'completed' ? (
-                      <CheckCircle2 className="h-4 w-4 text-success" />
+                      <CheckCircle2 className="text-success h-4 w-4" />
                     ) : (
                       <Circle className="h-4 w-4" />
                     )}
@@ -155,7 +155,7 @@ export function FocusBlockCard({
                     {task.task_name}
                   </span>
                   {task.time_display && (
-                    <span className="text-xs text-muted-foreground/70">
+                    <span className="text-muted-foreground/70 text-xs">
                       {task.time_display}
                     </span>
                   )}
@@ -163,7 +163,7 @@ export function FocusBlockCard({
                     type="button"
                     onClick={() => onRemoveTask(block.id, task.id)}
                     title={t('pages.focusBlocks.removeTask')}
-                    className="shrink-0 text-transparent transition-colors hover:!text-destructive group-hover:text-muted-foreground/50"
+                    className="hover:!text-destructive group-hover:text-muted-foreground/50 shrink-0 text-transparent transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -178,7 +178,7 @@ export function FocusBlockCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mt-sm h-7 gap-xs border border-dashed px-sm text-xs text-muted-foreground hover:border-primary hover:text-primary"
+                  className="mt-sm gap-xs px-sm text-muted-foreground hover:border-primary hover:text-primary h-7 border border-dashed text-xs"
                 >
                   <Plus className="h-3 w-3" />
                   {t('pages.focusBlocks.addTask')}

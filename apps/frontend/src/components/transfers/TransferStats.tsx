@@ -20,51 +20,51 @@ export function TransferStats({
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-      <Card className="overflow-hidden border-t-2 border-t-info/60">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+    <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+      <Card className="border-t-info/60 overflow-hidden border-t-2">
+        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <p className="text-sm font-medium">
             {t('pages.transfers.stats.totalAmount')}
           </p>
-          <div className="rounded-lg bg-info/10 p-sm ring-1 ring-info/20">
-            <Banknote className="h-4 w-4 text-info" />
+          <div className="bg-info/10 p-sm ring-info/20 rounded-lg ring-1">
+            <Banknote className="text-info h-4 w-4" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-info">
+          <div className="text-info text-2xl font-bold">
             {formatCurrency(totalVolume)}
           </div>
-          <p className="mt-xs text-xs text-muted-foreground">
+          <p className="mt-xs text-muted-foreground text-xs">
             {t('pages.transfers.stats.transfersCount', { count: totalCount })}
           </p>
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-t-2 border-t-success/60">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <Card className="border-t-success/60 overflow-hidden border-t-2">
+        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <p className="text-sm font-medium">{t('pages.transfers.stats.completed')}</p>
-          <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-            <CheckCircle2 className="h-4 w-4 text-success" />
+          <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+            <CheckCircle2 className="text-success h-4 w-4" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-success">{completedCount}</div>
-          <p className="mt-xs text-xs text-muted-foreground">
+          <div className="text-success text-2xl font-bold">{completedCount}</div>
+          <p className="mt-xs text-muted-foreground text-xs">
             {t('pages.transfers.stats.completedSubtitle')}
           </p>
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-t-2 border-t-warning/60">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <Card className="border-t-warning/60 overflow-hidden border-t-2">
+        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <p className="text-sm font-medium">{t('pages.transfers.stats.pending')}</p>
-          <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-            <Clock className="h-4 w-4 text-warning" />
+          <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+            <Clock className="text-warning h-4 w-4" />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-warning">{pendingCount}</div>
-          <p className="mt-xs text-xs text-muted-foreground">
+          <div className="text-warning text-2xl font-bold">{pendingCount}</div>
+          <p className="mt-xs text-muted-foreground text-xs">
             {t('pages.transfers.stats.pendingSubtitle')}
           </p>
         </CardContent>

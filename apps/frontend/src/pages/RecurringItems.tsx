@@ -20,22 +20,22 @@ export default function RecurringItems() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="fixed-expenses" className="flex-1 gap-xs">
+          <TabsTrigger value="fixed-expenses" className="gap-xs flex-1">
             <CalendarClock className="h-4 w-4" />
             {t('pages.fixedExpenses.title')}
           </TabsTrigger>
-          <TabsTrigger value="fixed-revenues" className="flex-1 gap-xs">
+          <TabsTrigger value="fixed-revenues" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
             {t('pages.fixedRevenues.title')}
           </TabsTrigger>
-          <TabsTrigger value="subscriptions" className="flex-1 gap-xs">
+          <TabsTrigger value="subscriptions" className="gap-xs flex-1">
             <RefreshCcw className="h-4 w-4" />
             {t('nav.items.subscriptions')}
           </TabsTrigger>

@@ -90,24 +90,24 @@ export const EnhancedPieChart = ({
     if (!payload) return null;
 
     return (
-      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 px-sm">
+      <ul className="px-sm mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
         {payload.map((entry, index) => {
           const value = Number(entry.payload[dataKey] || 0);
           const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
 
           return (
-            <li key={`legend-${index}`} className="flex items-center gap-sm text-xs">
+            <li key={`legend-${index}`} className="gap-sm flex items-center text-xs">
               <span
                 className="h-3 w-3 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}
               />
               <span
-                className={`truncate text-foreground/70 ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[110px]'}`}
+                className={`text-foreground/70 truncate ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[110px]'}`}
                 title={entry.value}
               >
                 {truncateLabel(entry.value, dims.truncateXAxisLabel)}
               </span>
-              <span className="font-semibold tabular-nums text-foreground">
+              <span className="text-foreground font-semibold tabular-nums">
                 {percent}%
               </span>
             </li>

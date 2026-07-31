@@ -11,7 +11,7 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-muted', className)}
+      className={cn('bg-muted animate-pulse rounded-md', className)}
       aria-hidden="true"
     />
   );
@@ -22,7 +22,7 @@ export function Skeleton({ className }: SkeletonProps) {
  */
 export function SkeletonStatCard() {
   return (
-    <div className="rounded-lg border bg-card p-lg">
+    <div className="bg-card p-lg rounded-lg border">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-10 w-10 rounded-full" />
@@ -60,13 +60,13 @@ export function SkeletonTable({
 }) {
   return (
     <div
-      className="rounded-lg border bg-card"
+      className="bg-card rounded-lg border"
       role="status"
       aria-label="Carregando tabela"
     >
       {/* Header */}
-      <div className="border-b p-md">
-        <div className="flex gap-md">
+      <div className="p-md border-b">
+        <div className="gap-md flex">
           {Array.from({ length: columns }).map((_, i) => (
             <Skeleton key={i} className="h-4 flex-1" />
           ))}
@@ -75,7 +75,7 @@ export function SkeletonTable({
       {/* Rows */}
       <div className="divide-y">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex gap-md p-md">
+          <div key={i} className="gap-md p-md flex">
             {Array.from({ length: columns }).map((_, j) => (
               <Skeleton key={j} className="h-4 flex-1" />
             ))}
@@ -91,10 +91,10 @@ export function SkeletonTable({
  */
 export function SkeletonCard() {
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-md">
+    <div className="bg-card p-md space-y-3 rounded-lg border">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-full" />
-        <div className="flex-1 space-y-sm">
+        <div className="space-y-sm flex-1">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/2" />
         </div>
@@ -142,18 +142,18 @@ export function SkeletonDashboard() {
   return (
     <div className="space-y-lg" role="status" aria-label="Carregando dashboard">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+      <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <SkeletonStatCard key={i} />
         ))}
       </div>
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-        <div className="rounded-lg border bg-card p-lg">
+      <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
+        <div className="bg-card p-lg rounded-lg border">
           <Skeleton className="mb-md h-6 w-32" />
           <Skeleton className="h-64 w-full" />
         </div>
-        <div className="rounded-lg border bg-card p-lg">
+        <div className="bg-card p-lg rounded-lg border">
           <Skeleton className="mb-md h-6 w-32" />
           <Skeleton className="h-64 w-full" />
         </div>
@@ -174,7 +174,7 @@ export function SkeletonPage() {
         <Skeleton className="h-10 w-32" />
       </div>
       {/* Filters */}
-      <div className="flex gap-md">
+      <div className="gap-md flex">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
