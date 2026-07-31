@@ -75,6 +75,17 @@ WORKDIR /app
 COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
 
+# pip is a build-time tool only — the app never imports it at runtime. Strip it
+# (and its bundled/vendored copies of msgpack, setuptools, etc., pinned to
+# whatever versions ship with this pip release) from the production image so
+# vulnerability scanners don't flag CVEs in code that's never executed here.
+# See GHSA-6v7p-g79w-8964 (msgpack) / CVE-2025-47273 (setuptools), both only
+# reachable through pip's internal vendor bundle, not the app's own pinned
+# msgpack==1.2.1 / setuptools==83.0.0 from requirements.txt.
+RUN find /usr/local/lib/python3.12/site-packages -maxdepth 1 -iname 'pip-*.dist-info' -exec rm -rf {} + && \
+    rm -rf /usr/local/lib/python3.12/site-packages/pip && \
+    rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.12
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 
