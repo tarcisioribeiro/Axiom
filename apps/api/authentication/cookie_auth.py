@@ -21,6 +21,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from app.request_utils import request_data
+
 from .throttles import LoginRateThrottle
 
 
@@ -72,7 +74,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             {
                 "message": "Login realizado com sucesso",
                 "user": {
-                    "username": request.data.get("username"),
+                    "username": request_data(request).get("username"),
                 },
             },
             status=status.HTTP_200_OK,

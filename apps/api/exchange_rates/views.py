@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app.request_utils import request_data
 from exchange_rates.models import CURRENCY_CHOICES, ExchangeRate
 
 
@@ -40,9 +41,10 @@ class ConvertCurrencyView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request: Request) -> Response:
-        amount_raw = request.data.get("amount")
-        from_currency = (request.data.get("from") or "").upper()
-        to_currency = (request.data.get("to") or "BRL").upper()
+        data = request_data(request)
+        amount_raw = data.get("amount")
+        from_currency = (data.get("from") or "").upper()
+        to_currency = (data.get("to") or "BRL").upper()
 
         if not amount_raw or not from_currency:
             return Response(

@@ -22,6 +22,7 @@ from rest_framework.views import APIView
 
 from admin_panel.models import SystemConfig
 from admin_panel.serializers import SystemConfigSerializer
+from app.request_utils import request_data
 from security.models import ActivityLog
 from security.serializers import ActivityLogSerializer
 from storage.health import check_storage
@@ -132,7 +133,7 @@ class SystemConfigDetailView(AdminBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        value = request.data.get("value")
+        value = request_data(request).get("value")
         if value is None:
             return Response(
                 {"error": "Campo 'value' é obrigatório."},
@@ -512,7 +513,7 @@ class AdminEmailTestView(AdminBaseView):
     """POST /api/v1/admin/email/test/ — envia email de teste."""
 
     def post(self, request: Request) -> Response:
-        to_email = request.data.get("to_email")
+        to_email = request_data(request).get("to_email")
         if not to_email:
             return Response(
                 {"error": "Campo 'to_email' é obrigatório."},
@@ -695,7 +696,7 @@ class AdminRestartAllView(AdminBaseView):
     """
 
     def post(self, request: Request) -> Response:
-        mode = (request.data.get("mode") or "auto").lower()
+        mode = (request_data(request).get("mode") or "auto").lower()
 
         if mode == "docker":
             result = _restart_via_docker_socket()
