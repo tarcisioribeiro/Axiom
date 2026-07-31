@@ -143,11 +143,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue
-                placeholder={t(
-                  'pages.creditCardExpenses.installmentForm.billPlaceholder'
-                )}
-              />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="false">{t('common.status.pending')}</SelectItem>

@@ -1581,6 +1581,7 @@
       "paidValue": "Valor Pago:",
       "remainingBalance": "Saldo Restante:",
       "registrationDate": "Data de Registro:",
+      "dueDate": "Vencimento:",
       "responsible": "Responsável:",
       "payBtn": "Pagar",
       "installmentsBtn": "Parcelas",
