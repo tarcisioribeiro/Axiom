@@ -339,7 +339,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                   {payable.due_date && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {t('pages.loans.dueDate')}
+                        {t('pages.payables.dueDate')}
                       </span>
                       <span className="font-medium">
                         {formatDate(payable.due_date, 'dd/MM/yyyy')}

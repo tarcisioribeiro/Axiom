@@ -54,3 +54,11 @@ qrcode==8.2
 anthropic==0.120.2
 # pgvector: VectorField nativo para Django + pgvector extension no PostgreSQL
 pgvector==0.3.3
+
+# Transitive dependency security pins — these aren't imported directly, but
+# pinning them here forces the fixed version even when the pulling package
+# (redis/celery -> msgpack; pip's build env -> setuptools) hasn't bumped its
+# own floor yet. See apps/api/Dockerfile comment on PIP_CACHE_BUST for why
+# this is necessary instead of relying on weekly cache-bust re-resolution.
+msgpack==1.2.1        # GHSA-6v7p-g79w-8964
+setuptools==83.0.0    # CVE-2025-47273, PYSEC-2026-3447

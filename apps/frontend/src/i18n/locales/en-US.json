@@ -1571,6 +1571,7 @@
       "paidValue": "Paid Value:",
       "remainingBalance": "Remaining Balance:",
       "registrationDate": "Registration Date:",
+      "dueDate": "Due date:",
       "responsible": "Responsible:",
       "payBtn": "Pay",
       "installmentsBtn": "Installments",

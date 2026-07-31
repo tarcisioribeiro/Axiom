@@ -106,22 +106,22 @@ function BillStatusBadge({ status }: { status: CreditCardBill['status'] }) {
   > = {
     open: {
       variant: 'secondary',
-      label: t('pages.creditCardBills.status.open'),
+      label: t('pages.creditCardExpenses.status.open'),
       icon: <CircleDot className="h-3 w-3" />,
     },
     paid: {
       variant: 'default',
-      label: t('pages.creditCardBills.status.paid'),
+      label: t('pages.creditCardExpenses.status.paid'),
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     overdue: {
       variant: 'destructive',
-      label: t('pages.creditCardBills.status.overdue'),
+      label: t('pages.creditCardExpenses.status.overdue'),
       icon: <AlertTriangle className="h-3 w-3" />,
     },
     closed: {
       variant: 'outline',
-      label: t('pages.creditCardBills.status.closed'),
+      label: t('pages.creditCardExpenses.status.closed'),
       icon: <RotateCcw className="h-3 w-3" />,
     },
   };
@@ -606,7 +606,7 @@ export function CreditCardDetailSheet({
                         setIsPaymentOpen(true);
                       }}
                     >
-                      {t('pages.creditCardBills.payBtn')}
+                      {t('pages.creditCardBills.payForm.payBtn')}
                     </Button>
                   )}
                 </div>
@@ -669,7 +669,7 @@ export function CreditCardDetailSheet({
               </div>
               {billsQuery.isLoading ? (
                 <div className="text-muted-foreground flex h-32 items-center justify-center">
-                  {t('common.loading')}
+                  {t('common.actions.loading')}
                 </div>
               ) : allBills.length === 0 ? (
                 <div className="gap-sm text-muted-foreground flex h-32 flex-col items-center justify-center">
@@ -704,7 +704,7 @@ export function CreditCardDetailSheet({
                               size="icon"
                               variant="ghost"
                               className="h-7 w-7"
-                              title={t('pages.creditCardBills.payBtn')}
+                              title={t('pages.creditCardBills.payForm.payBtn')}
                               onClick={() => {
                                 setBillToPay(bill);
                                 setIsPaymentOpen(true);
@@ -760,7 +760,7 @@ export function CreditCardDetailSheet({
             >
               {purchasesQuery.isLoading ? (
                 <div className="text-muted-foreground flex h-32 items-center justify-center">
-                  {t('common.loading')}
+                  {t('common.actions.loading')}
                 </div>
               ) : purchases.length === 0 ? (
                 <div className="gap-sm text-muted-foreground flex h-32 flex-col items-center justify-center">
@@ -874,7 +874,7 @@ export function CreditCardDetailSheet({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.creditCardBills.payBtn')}</DialogTitle>
+            <DialogTitle>{t('pages.creditCardBills.payForm.payBtn')}</DialogTitle>
           </DialogHeader>
           {billToPay && (
             <BillPaymentForm
