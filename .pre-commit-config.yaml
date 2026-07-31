@@ -17,7 +17,7 @@ repos:
 
   # Python formatting — config in apps/api/pyproject.toml [tool.black]
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 26.5.1
     hooks:
       - id: black
         files: ^apps/api/
@@ -26,7 +26,7 @@ repos:
 
   # Import sorting — config in apps/api/pyproject.toml [tool.isort]
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 8.0.1
     hooks:
       - id: isort
         files: ^apps/api/
@@ -35,7 +35,7 @@ repos:
 
   # Linting — config in apps/api/.flake8
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         files: ^apps/api/
@@ -55,20 +55,20 @@ repos:
         files: ^apps/api/
         exclude: ^apps/api/.*/migrations/
         additional_dependencies:
-          - mypy==1.19.1
-          - django-stubs==5.2.9
-          - djangorestframework-stubs==3.16.8
-          - Django==5.2.14
-          - djangorestframework==3.16.1
-          - cryptography==46.0.7
+          - mypy==2.3.0
+          - django-stubs==6.0.7
+          - djangorestframework-stubs==3.17.1
+          - Django==6.0.7
+          - djangorestframework==3.17.1
+          - cryptography==49.0.0
           - python-dotenv==1.2.2
-          - rapidfuzz==3.14.3
+          - rapidfuzz==3.14.5
           - pgvector==0.3.3
-          - psycopg2-binary==2.9.10
-          - pyotp==2.9.0
-          - qrcode==8.0
-          - celery==5.5.3
-          - django-celery-beat==2.8.1
+          - psycopg2-binary==2.9.12
+          - pyotp==2.10.0
+          - qrcode==8.2
+          - celery==5.6.3
+          - django-celery-beat==2.9.0
 
   # Commit message linting
   - repo: local
@@ -79,6 +79,6 @@ repos:
         entry: commitlint --edit --config apps/frontend/commitlint.config.cjs
         pass_filenames: false
         additional_dependencies:
-          - '@commitlint/cli@19'
-          - '@commitlint/config-conventional@19'
+          - '@commitlint/cli@21'
+          - '@commitlint/config-conventional@21'
         stages: [commit-msg]
