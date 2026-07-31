@@ -1,6 +1,48 @@
 @import 'tailwindcss';
 @config '../tailwind.config.js';
 
+/* Nossos tokens --spacing-{xs,sm,md,lg,xl} colidem, por nome, com a escala
+   nomeada padrão do Tailwind para max-width e min-width (container sizes).
+   Em Tailwind v4 (com ou sem @config), quando existe uma chave de spacing
+   com o mesmo nome, esses utilitários passam a resolver para
+   var(--spacing-...) em vez de var(--container-...) — redefinir
+   --container-... em @theme não é suficiente para corrigir isso (o
+   utilitário gerado já aponta para --spacing-...). A correção é
+   sobrescrever as classes geradas diretamente, depois da camada @import,
+   para que vençam na cascata. */
+@layer utilities {
+  .max-w-xs {
+    max-width: 20rem;
+  }
+  .max-w-sm {
+    max-width: 24rem;
+  }
+  .max-w-md {
+    max-width: 28rem;
+  }
+  .max-w-lg {
+    max-width: 32rem;
+  }
+  .max-w-xl {
+    max-width: 36rem;
+  }
+  .min-w-xs {
+    min-width: 20rem;
+  }
+  .min-w-sm {
+    min-width: 24rem;
+  }
+  .min-w-md {
+    min-width: 28rem;
+  }
+  .min-w-lg {
+    min-width: 32rem;
+  }
+  .min-w-xl {
+    min-width: 36rem;
+  }
+}
+
 @layer base {
   /* Tema Claro - Alucard Classic (Dracula Light Theme Oficial) */
   :root {
