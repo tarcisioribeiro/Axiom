@@ -98,7 +98,7 @@ function CourseCard({
       animate="visible"
       exit="exit"
       layout
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-md"
       onClick={() => onOpen(course)}
       role="button"
       tabIndex={0}
@@ -107,17 +107,17 @@ function CourseCard({
       }}
     >
       {/* Header band */}
-      <div className="flex items-center gap-sm bg-primary/10 px-md pb-sm pt-md">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+      <div className="gap-sm bg-primary/10 px-md pb-sm pt-md flex items-center">
+        <div className="bg-primary/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
           {(() => {
             const PlatformIcon =
               PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
-            return <PlatformIcon className="h-5 w-5 text-primary" />;
+            return <PlatformIcon className="text-primary h-5 w-5" />;
           })()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{course.title}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-sm leading-tight font-semibold">{course.title}</p>
+          <p className="text-muted-foreground text-xs">
             {t(`pages.courses.platform.${course.platform}`)}
           </p>
         </div>
@@ -127,14 +127,14 @@ function CourseCard({
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-sm px-md py-sm">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-xs">
+      <div className="gap-sm px-md py-sm flex flex-1 flex-col">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span className="gap-xs flex items-center">
             <Layers className="h-3.5 w-3.5" />
             {course.completed_lessons}/{course.total_lessons}{' '}
             {t('pages.courses.stats.lessons').toLowerCase()}
           </span>
-          <span className="flex items-center gap-xs">
+          <span className="gap-xs flex items-center">
             <Timer className="h-3.5 w-3.5" />
             {course.invested_hours.toFixed(1)}h
           </span>
@@ -145,13 +145,13 @@ function CourseCard({
             <span className="text-muted-foreground">
               {t('pages.courses.stats.progress')}
             </span>
-            <span className="font-semibold text-primary">
+            <span className="text-primary font-semibold">
               {course.progress_percentage}%
             </span>
           </div>
           <Progress
             value={course.progress_percentage}
-            className="h-1.5 bg-primary/20"
+            className="bg-primary/20 h-1.5"
           />
         </div>
 
@@ -161,11 +161,11 @@ function CourseCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-xs border-t border-border/50 px-md py-sm opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs border-border/50 px-md py-sm flex border-t opacity-0 transition-opacity group-hover:opacity-100">
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 gap-xs text-xs"
+          className="gap-xs h-7 text-xs"
           onClick={(e) => {
             e.stopPropagation();
             onAskIntellect(course);
@@ -177,7 +177,7 @@ function CourseCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 flex-1 gap-xs text-xs"
+          className="gap-xs h-7 flex-1 text-xs"
           onClick={(e) => {
             e.stopPropagation();
             onEdit(course);
@@ -189,7 +189,7 @@ function CourseCard({
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 flex-1 gap-xs text-xs text-destructive hover:text-destructive"
+          className="gap-xs text-destructive hover:text-destructive h-7 flex-1 text-xs"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(course);
@@ -347,7 +347,7 @@ export default function Courses() {
         <PageHeader
           title={t('pages.courses.title')}
           subtitle={t('pages.courses.subtitle')}
-          icon={<GraduationCap className="h-6 w-6 text-primary" />}
+          icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
             <Button
               onClick={openNew}
@@ -360,7 +360,7 @@ export default function Courses() {
         />
 
         {/* Stats strip */}
-        <div className="grid grid-cols-3 gap-md">
+        <div className="gap-md grid grid-cols-3">
           {[
             {
               label: t('pages.courses.filters.in_progress'),
@@ -380,14 +380,14 @@ export default function Courses() {
           ].map(({ label, value, icon: Icon }) => (
             <div
               key={label}
-              className="flex items-center gap-md rounded-lg border border-border bg-card p-md"
+              className="gap-md border-border bg-card p-md flex items-center rounded-lg border"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Icon className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
+                <Icon className="text-primary h-5 w-5" />
               </div>
               <div>
                 <p className="text-xl font-bold">{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-muted-foreground text-xs">{label}</p>
               </div>
             </div>
           ))}
@@ -396,8 +396,8 @@ export default function Courses() {
         {/* Study hours this week */}
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <Clock className="h-4 w-4 text-primary" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <Clock className="text-primary h-4 w-4" />
               {t('pages.courses.studyHours.title')}
             </CardTitle>
           </CardHeader>
@@ -410,8 +410,8 @@ export default function Courses() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `${value}h`,
+                  formatter={(value) => [
+                    `${Number(value)}h`,
                     t('pages.courses.studyHours.hours'),
                   ]}
                 />
@@ -426,16 +426,16 @@ export default function Courses() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <p className="mt-xs text-center text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-center text-xs">
               {t('pages.courses.studyHours.subtitle')}
             </p>
           </CardContent>
         </Card>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-sm">
+        <div className="gap-sm flex flex-wrap items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               className="pl-9"
               placeholder={t('pages.courses.searchPlaceholder')}
@@ -443,14 +443,14 @@ export default function Courses() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-xs">
+          <div className="gap-xs flex">
             {STATUS_FILTER_KEYS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setStatusFilter(s)}
                 className={cn(
-                  'rounded-lg px-md py-xs text-xs font-medium transition-colors',
+                  'px-md py-xs rounded-lg text-xs font-medium transition-colors',
                   statusFilter === s
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -473,7 +473,7 @@ export default function Courses() {
               search ? t('pages.courses.emptySearch') : t('pages.courses.emptyState')
             }
             message={!search ? t('pages.courses.emptyStateDesc') : undefined}
-            icon={<GraduationCap className="h-10 w-10 text-muted-foreground" />}
+            icon={<GraduationCap className="text-muted-foreground h-10 w-10" />}
             action={
               !search
                 ? {
@@ -486,7 +486,7 @@ export default function Courses() {
           />
         ) : (
           <AnimatePresence>
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {courses.map((course) => (
                 <CourseCard
                   key={course.id}
@@ -516,9 +516,9 @@ export default function Courses() {
         >
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <div className="flex items-center gap-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                  <GraduationCap className="h-4 w-4 text-primary" />
+              <div className="gap-sm flex items-center">
+                <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
+                  <GraduationCap className="text-primary h-4 w-4" />
                 </div>
                 <div>
                   <DialogTitle>

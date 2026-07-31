@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@config '../tailwind.config.js';
 
 @layer base {
   /* Tema Claro - Alucard Classic (Dracula Light Theme Oficial) */
@@ -1341,40 +1340,41 @@
   }
 }
 
+/* Sombras adaptáveis — usam tokens CSS para suporte a temas futuros.
+   @utility (não @layer utilities) para que variantes como hover: funcionem. */
+@utility shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, var(--shadow-opacity-soft));
+}
+
+@utility shadow-medium {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow-opacity-medium));
+}
+
+@utility shadow-strong {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, var(--shadow-opacity-strong));
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
 @layer utilities {
   /* Gradientes adaptáveis */
   .gradient-primary {
-    @apply bg-gradient-to-br from-primary to-accent;
+    @apply from-primary to-accent bg-gradient-to-br;
   }
 
   .gradient-secondary {
-    @apply bg-gradient-to-br from-info to-success;
+    @apply from-info to-success bg-gradient-to-br;
   }
 
   .gradient-warning {
-    @apply bg-gradient-to-br from-warning to-destructive;
+    @apply from-warning to-destructive bg-gradient-to-br;
   }
 
   /* Glass effect adaptável ao tema */
   .glass-effect {
-    @apply border border-border/40 bg-card/60 backdrop-blur-xl;
-  }
-
-  /* Sombras adaptáveis — usam tokens CSS para suporte a temas futuros */
-  .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, var(--shadow-opacity-soft));
-  }
-
-  .shadow-medium {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow-opacity-medium));
-  }
-
-  .shadow-strong {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, var(--shadow-opacity-strong));
-  }
-
-  .shadow-card-hover {
-    box-shadow: var(--shadow-card-hover);
+    @apply border-border/40 bg-card/60 border backdrop-blur-xl;
   }
 
   /* Agent badge colors — semantic tokens via category CSS variables, sem hardcode */
@@ -1452,16 +1452,16 @@
 
   /* Hover effects */
   .hover-lift {
-    @apply transition-transform duration-fast hover:-translate-y-1;
+    @apply duration-fast transition-transform hover:-translate-y-1;
   }
 
   .hover-glow {
-    @apply hover:shadow-medium transition-shadow duration-normal;
+    @apply hover:shadow-medium duration-normal transition-shadow;
   }
 
   /* Focus rings com melhor contraste */
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
   }
 
   /* Sidebar text com contraste total */
@@ -1655,7 +1655,7 @@
 
   /* Legendas e metadados */
   .caption {
-    @apply font-sans text-xs text-muted-foreground;
+    @apply text-muted-foreground font-sans text-xs;
   }
 
   /* ── Tokens de tamanho de ícone ────────────────────────────────────── */

@@ -52,7 +52,7 @@ function CircularScore({ score }: CircularScoreProps) {
   const label = t(`pages.vaultHealth.levels.${levelKey}`);
 
   return (
-    <div className="flex flex-col items-center gap-sm">
+    <div className="gap-sm flex flex-col items-center">
       <svg width="140" height="140" viewBox="0 0 140 140">
         <circle
           cx="70"
@@ -123,7 +123,7 @@ function IssueCount({ icon, count, label, color, severity }: IssueCountProps) {
     info: 'bg-muted',
   };
   return (
-    <div className="flex flex-col items-center gap-xs rounded-lg border p-3">
+    <div className="gap-xs flex flex-col items-center rounded-lg border p-3">
       <div
         className={`flex h-10 w-10 items-center justify-center rounded-full ${bgMap[severity]}`}
         style={{ color }}
@@ -131,7 +131,7 @@ function IssueCount({ icon, count, label, color, severity }: IssueCountProps) {
         {icon}
       </div>
       <span className="text-xl font-bold">{count}</span>
-      <span className="text-center text-xs text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-center text-xs">{label}</span>
     </div>
   );
 }
@@ -157,13 +157,13 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
 
   return (
     <div
-      className={`flex flex-col gap-xs rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between ${hasCritical ? 'border-destructive/30 bg-destructive/5' : ''}`}
+      className={`gap-xs flex flex-col rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between ${hasCritical ? 'border-destructive/30 bg-destructive/5' : ''}`}
     >
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{pw.title}</p>
-        <p className="truncate text-xs text-muted-foreground">{pw.username}</p>
+        <p className="text-muted-foreground truncate text-xs">{pw.username}</p>
       </div>
-      <div className="flex flex-wrap items-center gap-xs">
+      <div className="gap-xs flex flex-wrap items-center">
         {pw.issues.map((issue) => (
           <Badge key={issue} variant={severityVariant[issue] ?? 'outline'}>
             {t(`pages.vaultHealth.issues.${issue}`, { defaultValue: issue })}
@@ -172,7 +172,7 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 gap-xs text-xs"
+          className="gap-xs h-7 text-xs"
           onClick={() => onNavigate(pw.id)}
         >
           {t('common.update', { defaultValue: 'Atualizar' })}
@@ -201,8 +201,8 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
 
   return (
     <div className="space-y-sm">
-      <div className="flex items-center gap-sm">
-        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+      <div className="gap-sm flex items-center">
+        <TrendingUp className="text-muted-foreground h-4 w-4" />
         <p className="text-sm font-medium">
           {t('pages.vaultHealth.scoreHistory', { defaultValue: 'Evolução do Score' })}
         </p>
@@ -234,7 +234,7 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
               borderRadius: 6,
               fontSize: 12,
             }}
-            formatter={(v: number) => [v, 'Score']}
+            formatter={(v) => [Number(v), 'Score']}
           />
           <Area
             type="monotone"
@@ -291,20 +291,20 @@ export function VaultHealthSection() {
       {/* Section 1 — Score header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-sm">
+          <CardTitle className="gap-sm flex items-center">
             <ShieldCheck className="h-5 w-5" />
             {t('pages.vaultHealth.title')}
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {total_passwords === 0
               ? t('pages.vaultHealth.noPasswords')
               : t('pages.vaultHealth.analysisOf', { count: total_passwords })}
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center gap-lg sm:flex-row sm:items-start sm:justify-around">
+          <div className="gap-lg flex flex-col items-center sm:flex-row sm:items-start sm:justify-around">
             <CircularScore score={score} />
-            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+            <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
               <IssueCount
                 icon={<ShieldAlert className="h-5 w-5" />}
                 count={issues_summary.weak}
@@ -342,7 +342,7 @@ export function VaultHealthSection() {
       {criticalPasswords.length > 0 && (
         <Card className="border-destructive/30">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-base text-destructive">
+            <CardTitle className="gap-sm text-destructive flex items-center text-base">
               <ShieldAlert className="h-4 w-4" />
               {t('pages.vaultHealth.criticalIssues', {
                 defaultValue: 'Senhas Críticas',
@@ -353,7 +353,7 @@ export function VaultHealthSection() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-60 space-y-sm overflow-y-auto pr-xs">
+            <div className="space-y-sm pr-xs max-h-60 overflow-y-auto">
               {criticalPasswords.map((pw) => (
                 <PasswordRow
                   key={pw.id}
@@ -370,8 +370,8 @@ export function VaultHealthSection() {
       {otherIssues.length > 0 && (
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-base">
-              <AlertTriangle className="h-4 w-4 text-warning" />
+            <CardTitle className="gap-sm flex items-center text-base">
+              <AlertTriangle className="text-warning h-4 w-4" />
               {t('pages.vaultHealth.needsAttention')}
               <Badge variant="secondary" className="ml-auto">
                 {otherIssues.length}
@@ -379,7 +379,7 @@ export function VaultHealthSection() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-60 space-y-sm overflow-y-auto pr-xs">
+            <div className="space-y-sm pr-xs max-h-60 overflow-y-auto">
               {otherIssues.map((pw) => (
                 <PasswordRow
                   key={pw.id}
@@ -395,7 +395,7 @@ export function VaultHealthSection() {
       {/* Section 4 — All good */}
       {problematic_passwords.length === 0 && total_passwords > 0 && (
         <Card>
-          <CardContent className="flex flex-col items-center gap-sm py-lg">
+          <CardContent className="gap-sm py-lg flex flex-col items-center">
             <CheckCircle2 className="text-chart-2 h-10 w-10" />
             <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
           </CardContent>
