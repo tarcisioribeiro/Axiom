@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Download,
@@ -10,7 +11,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
@@ -32,7 +33,6 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
-  MemberFinancialReport,
   MemberReportExpense,
   MemberReportLoan,
   MemberReportPayable,
@@ -60,8 +60,6 @@ export default function MemberFinancialReportPage() {
   const { toast } = useToast();
   const chartColors = useChartColors();
 
-  const [report, setReport] = useState<MemberFinancialReport | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -69,29 +67,25 @@ export default function MemberFinancialReportPage() {
   const [appliedEnd, setAppliedEnd] = useState('');
   const memberId = Number(id);
 
-  const loadReport = useCallback(async () => {
-    if (!memberId) return;
-    try {
-      setIsLoading(true);
-      const data = await membersService.getFinancialReport(memberId, {
-        start_date: appliedStart || undefined,
-        end_date: appliedEnd || undefined,
-      });
-      setReport(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [memberId, appliedStart, appliedEnd, toast, t]);
-
-  useEffect(() => {
-    void loadReport();
-  }, [loadReport]);
+  const { data: report = null, isLoading } = useQuery({
+    queryKey: ['member-financial-report', memberId, appliedStart, appliedEnd],
+    queryFn: async () => {
+      try {
+        return await membersService.getFinancialReport(memberId, {
+          start_date: appliedStart || undefined,
+          end_date: appliedEnd || undefined,
+        });
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return null;
+      }
+    },
+    enabled: !!memberId,
+  });
 
   const handleExportCsv = async () => {
     if (!memberId) return;
@@ -144,18 +138,18 @@ export default function MemberFinancialReportPage() {
       </div>
 
       {/* Member identity header */}
-      <div className="mb-lg overflow-hidden rounded-lg border bg-gradient-to-r from-primary/10 via-transparent to-transparent p-lg">
-        <div className="flex items-center gap-md">
-          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+      <div className="mb-lg from-primary/10 p-lg overflow-hidden rounded-lg border bg-gradient-to-r via-transparent to-transparent">
+        <div className="gap-md flex items-center">
+          <div className="bg-primary text-primary-foreground flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-2xl font-bold">
             {report.member.name?.charAt(0).toUpperCase() ?? '?'}
           </div>
           <div>
             <h2 className="text-2xl font-bold">{report.member.name}</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('pages.memberFinancialReport.subtitle')}
             </p>
             {appliedStart && appliedEnd && (
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {formatDate(appliedStart)} a {formatDate(appliedEnd)}
               </p>
             )}
@@ -174,8 +168,8 @@ export default function MemberFinancialReportPage() {
         }}
         className="mb-lg"
       >
-        <div className="flex flex-wrap items-end gap-sm">
-          <div className="flex flex-col gap-xs">
+        <div className="gap-sm flex flex-wrap items-end">
+          <div className="gap-xs flex flex-col">
             <Label htmlFor="start-date" className="text-xs">
               Data Inicial
             </Label>
@@ -185,7 +179,7 @@ export default function MemberFinancialReportPage() {
               className="w-40"
             />
           </div>
-          <div className="flex flex-col gap-xs">
+          <div className="gap-xs flex flex-col">
             <Label htmlFor="end-date" className="text-xs">
               Data Final
             </Label>
@@ -209,54 +203,54 @@ export default function MemberFinancialReportPage() {
       </FilterBar>
 
       {/* Summary Cards */}
-      <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
-        <div className="overflow-hidden rounded-lg border-t-2 border-t-success">
+      <div className="mb-lg gap-md grid grid-cols-1 sm:grid-cols-3">
+        <div className="border-t-success overflow-hidden rounded-lg border-t-2">
           <StatCard
             title={t('pages.memberFinancialReport.revenues')}
             value={formatCurrency(summary.total_revenues)}
-            icon={<TrendingUp className="h-5 w-5 text-success" />}
+            icon={<TrendingUp className="text-success h-5 w-5" />}
             variant="success"
           />
         </div>
-        <div className="overflow-hidden rounded-lg border-t-2 border-t-destructive">
+        <div className="border-t-destructive overflow-hidden rounded-lg border-t-2">
           <StatCard
             title={t('pages.memberFinancialReport.expenses')}
             value={formatCurrency(summary.total_expenses)}
-            icon={<TrendingDown className="h-5 w-5 text-destructive" />}
+            icon={<TrendingDown className="text-destructive h-5 w-5" />}
             variant="danger"
           />
         </div>
-        <div className="overflow-hidden rounded-lg border-t-2 border-t-warning">
+        <div className="border-t-warning overflow-hidden rounded-lg border-t-2">
           <StatCard
             title={t('pages.memberFinancialReport.payables')}
             value={formatCurrency(summary.total_payables)}
-            icon={<Receipt className="h-5 w-5 text-warning" />}
+            icon={<Receipt className="text-warning h-5 w-5" />}
             variant="warning"
           />
         </div>
       </div>
 
-      <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
+      <div className="mb-lg gap-md grid grid-cols-1 sm:grid-cols-3">
         <StatCard
           title={t('pages.memberFinancialReport.loansReceived')}
           value={formatCurrency(summary.total_loans_as_benefited)}
-          icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
+          icon={<HandCoins className="text-muted-foreground h-5 w-5" />}
         />
         <StatCard
           title={t('pages.memberFinancialReport.loansGranted')}
           value={formatCurrency(summary.total_loans_as_creditor)}
-          icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
+          icon={<HandCoins className="text-muted-foreground h-5 w-5" />}
         />
         <StatCard
           title={t('pages.memberFinancialReport.transfers')}
           value={formatCurrency(summary.total_transfers)}
-          icon={<ArrowLeftRight className="h-5 w-5 text-muted-foreground" />}
+          icon={<ArrowLeftRight className="text-muted-foreground h-5 w-5" />}
         />
       </div>
 
       {/* Expense Pie Chart */}
       {pieData.length > 0 && (
-        <div className="mb-lg overflow-hidden rounded-lg border bg-card p-md">
+        <div className="mb-lg bg-card p-md overflow-hidden rounded-lg border">
           <h3 className="mb-md text-base font-semibold">
             {t('pages.memberFinancialReport.expensesByCategory')}
           </h3>
@@ -277,41 +271,41 @@ export default function MemberFinancialReportPage() {
       {/* Transaction Tabs */}
       <Tabs defaultValue="expenses" className="flex flex-1 flex-col">
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="expenses" className="flex-1 gap-xs">
+          <TabsTrigger value="expenses" className="gap-xs flex-1">
             <TrendingDown className="h-4 w-4" />
             Despesas
             <Badge variant="secondary" className="text-xs">
               {report.expenses.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="revenues" className="flex-1 gap-xs">
+          <TabsTrigger value="revenues" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
             Receitas
             <Badge variant="secondary" className="text-xs">
               {report.revenues.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="loans_benefited" className="flex-1 gap-xs">
+          <TabsTrigger value="loans_benefited" className="gap-xs flex-1">
             <HandCoins className="h-4 w-4" />
             Emp. Recebidos
             <Badge variant="secondary" className="text-xs">
               {report.loans_as_benefited.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="loans_creditor" className="flex-1 gap-xs">
+          <TabsTrigger value="loans_creditor" className="gap-xs flex-1">
             <HandCoins className="h-4 w-4" />
             Emp. Concedidos
             <Badge variant="secondary" className="text-xs">
               {report.loans_as_creditor.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="payables" className="flex-1 gap-xs">
+          <TabsTrigger value="payables" className="gap-xs flex-1">
             <Receipt className="h-4 w-4" />A Pagar
             <Badge variant="secondary" className="text-xs">
               {report.payables.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="transfers" className="flex-1 gap-xs">
+          <TabsTrigger value="transfers" className="gap-xs flex-1">
             <ArrowLeftRight className="h-4 w-4" />
             Transferências
             <Badge variant="secondary" className="text-xs">
@@ -369,7 +363,7 @@ function EmptyRows() {
     <tr>
       <td
         colSpan={99}
-        className="px-lg py-xl text-center text-sm text-muted-foreground"
+        className="px-lg py-xl text-muted-foreground text-center text-sm"
       >
         Nenhum registro encontrado
       </td>
@@ -395,7 +389,7 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
   const { t } = useTranslation();
   return (
     <TableWrapper>
-      <thead className="border-b bg-muted/50">
+      <thead className="bg-muted/50 border-b">
         <tr>
           <Th>{t('common.fields.description')}</Th>
           <Th>{t('common.fields.amount')}</Th>
@@ -410,9 +404,9 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
           <EmptyRows />
         ) : (
           items.map((item) => (
-            <tr key={item.id} className="transition-colors hover:bg-muted/30">
+            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
               <Td>{item.description}</Td>
-              <Td className="font-medium text-destructive">
+              <Td className="text-destructive font-medium">
                 {formatCurrency(item.value)}
               </Td>
               <Td>{formatDate(item.date)}</Td>
@@ -435,7 +429,7 @@ function RevenuesTable({ items }: { items: MemberReportRevenue[] }) {
   const { t } = useTranslation();
   return (
     <TableWrapper>
-      <thead className="border-b bg-muted/50">
+      <thead className="bg-muted/50 border-b">
         <tr>
           <Th>{t('common.fields.description')}</Th>
           <Th>{t('common.fields.amount')}</Th>
@@ -450,9 +444,9 @@ function RevenuesTable({ items }: { items: MemberReportRevenue[] }) {
           <EmptyRows />
         ) : (
           items.map((item) => (
-            <tr key={item.id} className="transition-colors hover:bg-muted/30">
+            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
               <Td>{item.description}</Td>
-              <Td className="font-medium text-success">{formatCurrency(item.value)}</Td>
+              <Td className="text-success font-medium">{formatCurrency(item.value)}</Td>
               <Td>{formatDate(item.date)}</Td>
               <Td>{item.category}</Td>
               <Td className="text-muted-foreground">{item.source || '—'}</Td>
@@ -483,7 +477,7 @@ function LoansTable({
   const { t } = useTranslation();
   return (
     <TableWrapper>
-      <thead className="border-b bg-muted/50">
+      <thead className="bg-muted/50 border-b">
         <tr>
           <Th>{t('common.fields.description')}</Th>
           <Th>{t('common.fields.amount')}</Th>
@@ -498,7 +492,7 @@ function LoansTable({
           <EmptyRows />
         ) : (
           items.map((item) => (
-            <tr key={item.id} className="transition-colors hover:bg-muted/30">
+            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
               <Td>{item.description}</Td>
               <Td className="font-medium">{formatCurrency(item.value)}</Td>
               <Td>{formatCurrency(item.payed_value)}</Td>
@@ -521,7 +515,7 @@ function PayablesTable({ items }: { items: MemberReportPayable[] }) {
   const { t } = useTranslation();
   return (
     <TableWrapper>
-      <thead className="border-b bg-muted/50">
+      <thead className="bg-muted/50 border-b">
         <tr>
           <Th>{t('common.fields.description')}</Th>
           <Th>{t('pages.memberFinancialReport.totalAmount')}</Th>
@@ -536,7 +530,7 @@ function PayablesTable({ items }: { items: MemberReportPayable[] }) {
           <EmptyRows />
         ) : (
           items.map((item) => (
-            <tr key={item.id} className="transition-colors hover:bg-muted/30">
+            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
               <Td>{item.description}</Td>
               <Td className="font-medium">{formatCurrency(item.value)}</Td>
               <Td>{formatCurrency(item.paid_value)}</Td>
@@ -567,7 +561,7 @@ function TransfersTable({ items }: { items: MemberReportTransfer[] }) {
   const { t } = useTranslation();
   return (
     <TableWrapper>
-      <thead className="border-b bg-muted/50">
+      <thead className="bg-muted/50 border-b">
         <tr>
           <Th>{t('common.fields.description')}</Th>
           <Th>{t('common.fields.amount')}</Th>
@@ -581,7 +575,7 @@ function TransfersTable({ items }: { items: MemberReportTransfer[] }) {
           <EmptyRows />
         ) : (
           items.map((item) => (
-            <tr key={item.id} className="transition-colors hover:bg-muted/30">
+            <tr key={item.id} className="hover:bg-muted/30 transition-colors">
               <Td>{item.description}</Td>
               <Td className="font-medium">{formatCurrency(item.value)}</Td>
               <Td>{formatDate(item.date)}</Td>

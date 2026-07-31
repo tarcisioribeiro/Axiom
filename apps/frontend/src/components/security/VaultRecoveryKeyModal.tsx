@@ -98,7 +98,7 @@ export function VaultRecoveryKeyModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
+          <DialogTitle className="gap-sm flex items-center">
             <Key className="h-4 w-4" />
             {mode === 'generate'
               ? t('userProfile.security.recoveryKey.generateTitle')
@@ -115,14 +115,14 @@ export function VaultRecoveryKeyModal({
           <div className="space-y-md">
             {!generatedKey ? (
               <>
-                <div className="flex items-start gap-sm rounded-lg border border-warning/40 bg-warning/10 p-sm text-sm text-warning">
+                <div className="gap-sm border-warning/40 bg-warning/10 p-sm text-warning flex items-start rounded-lg border text-sm">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{t('userProfile.security.recoveryKey.generateWarning')}</span>
                 </div>
                 <Button
                   onClick={() => void handleGenerate()}
                   disabled={loading}
-                  className="w-full gap-sm"
+                  className="gap-sm w-full"
                 >
                   <Key className="h-4 w-4" />
                   {loading
@@ -132,13 +132,13 @@ export function VaultRecoveryKeyModal({
               </>
             ) : (
               <>
-                <div className="flex items-start gap-sm rounded-lg border border-destructive/40 bg-destructive/10 p-sm text-sm text-destructive">
+                <div className="gap-sm border-destructive/40 bg-destructive/10 p-sm text-destructive flex items-start rounded-lg border text-sm">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{t('userProfile.security.recoveryKey.oneTimeWarning')}</span>
                 </div>
                 <div className="space-y-xs">
                   <Label>{t('userProfile.security.recoveryKey.yourKey')}</Label>
-                  <div className="flex gap-sm">
+                  <div className="gap-sm flex">
                     <Input
                       value={generatedKey}
                       readOnly
@@ -146,13 +146,13 @@ export function VaultRecoveryKeyModal({
                     />
                     <Button variant="outline" size="icon" onClick={handleCopy}>
                       {copied ? (
-                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        <CheckCircle2 className="text-success h-4 w-4" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('userProfile.security.recoveryKey.saveHint')}
                   </p>
                 </div>

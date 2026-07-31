@@ -15,7 +15,13 @@ interface EnhancedPieChartProps {
   colors: string[];
   customColors?: (entry: ChartDataPoint) => string;
   height?: number;
+  /** Exibe a legenda inferior padrão. Default true. */
+  showLegend?: boolean;
+  /** Desenha o percentual de cada fatia sobre o próprio arco. Default false. */
+  showSliceLabels?: boolean;
 }
+
+const RADIAN = Math.PI / 180;
 
 /**
  * Gráfico de pizza aprimorado
@@ -36,8 +42,38 @@ export const EnhancedPieChart = ({
   colors,
   customColors,
   height = 300,
+  showLegend = true,
+  showSliceLabels = false,
 }: EnhancedPieChartProps) => {
   const dims = useChartDimensions();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderSliceLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props as {
+      cx: number;
+      cy: number;
+      midAngle: number;
+      innerRadius: number;
+      outerRadius: number;
+      percent: number;
+    };
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="text-xs font-bold"
+        style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.35))' }}
+      >
+        {`${(percent * 100).toFixed(1)}%`}
+      </text>
+    );
+  };
 
   // Calcula o total para percentuais na legenda
   const total = useMemo(
@@ -54,24 +90,24 @@ export const EnhancedPieChart = ({
     if (!payload) return null;
 
     return (
-      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 px-sm">
+      <ul className="px-sm mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2">
         {payload.map((entry, index) => {
           const value = Number(entry.payload[dataKey] || 0);
           const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
 
           return (
-            <li key={`legend-${index}`} className="flex items-center gap-sm text-xs">
+            <li key={`legend-${index}`} className="gap-sm flex items-center text-xs">
               <span
                 className="h-3 w-3 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}
               />
               <span
-                className={`truncate text-foreground/70 ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[110px]'}`}
+                className={`text-foreground/70 truncate ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[110px]'}`}
                 title={entry.value}
               >
                 {truncateLabel(entry.value, dims.truncateXAxisLabel)}
               </span>
-              <span className="font-semibold tabular-nums text-foreground">
+              <span className="text-foreground font-semibold tabular-nums">
                 {percent}%
               </span>
             </li>
@@ -96,6 +132,8 @@ export const EnhancedPieChart = ({
           animationBegin={0}
           animationDuration={700}
           animationEasing="ease-out"
+          label={showSliceLabels ? renderSliceLabel : undefined}
+          labelLine={false}
         >
           {data.map((entry, index) => {
             const fillColor = customColors
@@ -123,7 +161,9 @@ export const EnhancedPieChart = ({
           wrapperStyle={{ outline: 'none' }}
         />
 
-        <Legend content={renderLegend} verticalAlign="bottom" align="center" />
+        {showLegend && (
+          <Legend content={renderLegend} verticalAlign="bottom" align="center" />
+        )}
       </PieChart>
     </ResponsiveContainer>
   );

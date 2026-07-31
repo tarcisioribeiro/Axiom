@@ -19,21 +19,21 @@ export function TwoFactorRow() {
   const isActive = data?.is_active ?? false;
 
   return (
-    <div className="flex items-center justify-between gap-md">
+    <div className="gap-md flex items-center justify-between">
       <div className="flex items-center gap-3">
         {isActive ? (
           <ShieldCheck className="h-5 w-5 text-green-500" />
         ) : (
-          <ShieldOff className="h-5 w-5 text-muted-foreground" />
+          <ShieldOff className="text-muted-foreground h-5 w-5" />
         )}
         <div>
           <p className="text-sm font-medium">{t('userProfile.security.twoFactor')}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('userProfile.security.twoFactorDesc')}
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-sm">
+      <div className="gap-sm flex shrink-0 items-center">
         <Badge
           variant={isActive ? 'default' : 'outline'}
           className={

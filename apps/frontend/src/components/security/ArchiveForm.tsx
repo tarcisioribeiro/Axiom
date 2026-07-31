@@ -162,10 +162,10 @@ export function ArchiveForm({
         title={t('pages.archives.form.sectionIdentification')}
         icon={FileText}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="title" className="flex items-center gap-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="title" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.titleLabel')}
             </Label>
             <Input
@@ -175,13 +175,13 @@ export function ArchiveForm({
               disabled={isLoading}
             />
             {errors.title && (
-              <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <FolderOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.categoryLabel')}
             </Label>
             <Select
@@ -209,7 +209,7 @@ export function ArchiveForm({
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.category.message}
               </p>
             )}
@@ -221,11 +221,11 @@ export function ArchiveForm({
         <div className="space-y-md">
           {/* Adaptação visual: toggle de tipo com ícones */}
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Upload className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.typeLabel')}
             </Label>
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
                 <button
                   key={value}
@@ -246,7 +246,7 @@ export function ArchiveForm({
               ))}
             </div>
             {errors.archive_type && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.archive_type.message}
               </p>
             )}
@@ -254,8 +254,8 @@ export function ArchiveForm({
 
           {watchedArchiveType === 'text' ? (
             <div className="space-y-sm">
-              <Label htmlFor="text_content" className="flex items-center gap-xs">
-                <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="text_content" className="gap-xs flex items-center">
+                <MoreHorizontal className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.archives.form.contentLabel')}
               </Label>
               <Textarea
@@ -267,28 +267,28 @@ export function ArchiveForm({
                 disabled={isLoading}
               />
               {errors.text_content && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.text_content.message}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.archives.form.textContentHint')}
               </p>
             </div>
           ) : (
             <div className="space-y-sm">
-              <Label htmlFor="file" className="flex items-center gap-xs">
-                <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="file" className="gap-xs flex items-center">
+                <Upload className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.archives.form.fileLabel')}
                 {!archive && ' *'}
               </Label>
               <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
               {archive ? (
-                <p className="text-xs text-warning">
+                <p className="text-warning text-xs">
                   {t('pages.archives.form.fileHintEdit')}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.archives.form.fileHintNew')}
                 </p>
               )}
@@ -298,10 +298,10 @@ export function ArchiveForm({
       </FormSection>
 
       <FormSection title={t('pages.archives.form.sectionOrganization')} icon={Tag}>
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           <div className="space-y-sm">
-            <Label htmlFor="tags" className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="tags" className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.tagsLabel')}
             </Label>
             <Input
@@ -311,16 +311,16 @@ export function ArchiveForm({
               disabled={isLoading}
             />
             {errors.tags && (
-              <p className="mt-xs text-sm text-destructive">{errors.tags.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.tags.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.archives.form.tagsHint')}
             </p>
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="notes" className="flex items-center gap-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="notes" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.notesLabel')}
             </Label>
             <Textarea
@@ -331,13 +331,13 @@ export function ArchiveForm({
               disabled={isLoading}
             />
             {errors.notes && (
-              <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
             )}
           </div>
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

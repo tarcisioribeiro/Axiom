@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const { showAlert } = useAlertDialog();
   const { t } = useTranslation();
   const [isCalculating, setIsCalculating] = useState(false);
-  const { register, handleSubmit, setValue, watch, reset } =
+  const { register, handleSubmit, setValue, reset, control } =
     useForm<CreditCardBillFormData>({
       defaultValues: bill
         ? {
@@ -67,6 +68,17 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
             closed: false,
           },
     });
+
+  const watchedCreditCard = useWatch({ control, name: 'credit_card' });
+  const watchedYear = useWatch({ control, name: 'year' });
+  const watchedMonth = useWatch({ control, name: 'month' });
+  const watchedInvoiceBeginningDate = useWatch({
+    control,
+    name: 'invoice_beginning_date',
+  });
+  const watchedInvoiceEndingDate = useWatch({ control, name: 'invoice_ending_date' });
+  const watchedDueDate = useWatch({ control, name: 'due_date' });
+  const watchedPaymentDate = useWatch({ control, name: 'payment_date' });
 
   // Função para calcular valores automaticamente
   const calculateBillAmounts = async (billId?: number) => {
@@ -98,31 +110,36 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (bill && creditCards.length > 0) {
-      reset({
-        credit_card: bill.credit_card,
-        year: bill.year,
-        month: bill.month,
-        invoice_beginning_date: bill.invoice_beginning_date,
-        invoice_ending_date: bill.invoice_ending_date,
-        closed: bill.closed,
-        total_amount: parseFloat(bill.total_amount),
-        minimum_payment: parseFloat(bill.minimum_payment),
-        paid_amount: parseFloat(bill.paid_amount),
-        interest_charged: parseFloat(bill.interest_charged),
-        late_fee: parseFloat(bill.late_fee),
-        status: bill.status,
-        due_date: bill.due_date || '',
-        payment_date: bill.payment_date || '',
-      });
-      // Calcular valores automaticamente ao carregar fatura existente
-      void calculateBillAmounts(bill.id);
-    } else if (creditCards.length > 0) {
-      setValue('credit_card', creditCards[0].id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bill, creditCards, setValue, reset]);
+  // Dispara reset/cálculo inicial via useQuery — evita setState direto dentro
+  // de um useEffect puro, mantendo a lógica inalterada.
+  useQuery({
+    queryKey: ['credit-card-bill-form-init', bill?.id, creditCards.length],
+    queryFn: async () => {
+      if (bill && creditCards.length > 0) {
+        reset({
+          credit_card: bill.credit_card,
+          year: bill.year,
+          month: bill.month,
+          invoice_beginning_date: bill.invoice_beginning_date,
+          invoice_ending_date: bill.invoice_ending_date,
+          closed: bill.closed,
+          total_amount: parseFloat(bill.total_amount),
+          minimum_payment: parseFloat(bill.minimum_payment),
+          paid_amount: parseFloat(bill.paid_amount),
+          interest_charged: parseFloat(bill.interest_charged),
+          late_fee: parseFloat(bill.late_fee),
+          status: bill.status,
+          due_date: bill.due_date || '',
+          payment_date: bill.payment_date || '',
+        });
+        // Calcular valores automaticamente ao carregar fatura existente
+        await calculateBillAmounts(bill.id);
+      } else if (creditCards.length > 0) {
+        setValue('credit_card', creditCards[0].id);
+      }
+      return true;
+    },
+  });
 
   const handleFormSubmit = async (data: CreditCardBillFormData) => {
     if (!data.credit_card || data.credit_card === 0) {
@@ -194,11 +211,11 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.creditCardBills.form.sectionBasic')}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
             <Select
-              value={watch('credit_card') > 0 ? watch('credit_card').toString() : ''}
+              value={watchedCreditCard > 0 ? watchedCreditCard.toString() : ''}
               onValueChange={(v) => setValue('credit_card', parseInt(v))}
             >
               <SelectTrigger>
@@ -235,7 +252,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
           <div className="space-y-sm">
             <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
-            <Select value={watch('year')} onValueChange={(v) => setValue('year', v)}>
+            <Select value={watchedYear} onValueChange={(v) => setValue('year', v)}>
               <SelectTrigger>
                 <SelectValue
                   placeholder={t('pages.creditCardBills.form.yearPlaceholder')}
@@ -253,7 +270,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
           <div className="space-y-sm">
             <Label>{t('pages.creditCardBills.form.monthLabel')}</Label>
-            <Select value={watch('month')} onValueChange={(v) => setValue('month', v)}>
+            <Select value={watchedMonth} onValueChange={(v) => setValue('month', v)}>
               <SelectTrigger>
                 <SelectValue
                   placeholder={t('pages.creditCardBills.form.monthPlaceholder')}
@@ -274,7 +291,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               {t('pages.creditCardBills.form.startDateLabel')}
             </Label>
             <DatePicker
-              value={watch('invoice_beginning_date')}
+              value={watchedInvoiceBeginningDate}
               onChange={(date) =>
                 setValue('invoice_beginning_date', date ? formatLocalDate(date) : '')
               }
@@ -288,7 +305,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               {t('pages.creditCardBills.form.endDateLabel')}
             </Label>
             <DatePicker
-              value={watch('invoice_ending_date')}
+              value={watchedInvoiceEndingDate}
               onChange={(date) =>
                 setValue('invoice_ending_date', date ? formatLocalDate(date) : '')
               }
@@ -302,7 +319,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               {t('pages.creditCardBills.form.dueDateLabel')}
             </Label>
             <DatePicker
-              value={watch('due_date')}
+              value={watchedDueDate}
               onChange={(date) =>
                 setValue('due_date', date ? formatLocalDate(date) : '')
               }
@@ -332,7 +349,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   placeholder="0.00"
                   className="font-semibold"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.form.totalAmountHint')}
                 </p>
               </div>
@@ -348,7 +365,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   {...register('minimum_payment', { valueAsNumber: true })}
                   placeholder="0.00"
                   disabled
-                  className="font-semibold text-warning"
+                  className="text-warning font-semibold"
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.minPaymentHint')}
@@ -366,7 +383,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   {...register('paid_amount', { valueAsNumber: true })}
                   placeholder="0.00"
                   disabled
-                  className="font-semibold text-success"
+                  className="text-success font-semibold"
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.paidAmountHint')}
@@ -378,7 +395,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                   {t('pages.creditCardBills.form.paymentDateLabel')}
                 </Label>
                 <DatePicker
-                  value={watch('payment_date')}
+                  value={watchedPaymentDate}
                   onChange={(date) =>
                     setValue('payment_date', date ? formatLocalDate(date) : '')
                   }
@@ -391,7 +408,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

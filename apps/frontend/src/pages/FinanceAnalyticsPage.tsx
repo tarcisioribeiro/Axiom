@@ -19,18 +19,18 @@ export default function FinanceAnalyticsPage() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="insights" className="flex-1 gap-xs">
+          <TabsTrigger value="insights" className="gap-xs flex-1">
             <BarChart3 className="h-4 w-4" />
             {t('nav.items.spendingInsights')}
           </TabsTrigger>
-          <TabsTrigger value="comparison" className="flex-1 gap-xs">
+          <TabsTrigger value="comparison" className="gap-xs flex-1">
             <GitCompareArrows className="h-4 w-4" />
             {t('nav.items.monthComparison')}
           </TabsTrigger>

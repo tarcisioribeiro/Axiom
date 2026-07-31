@@ -106,22 +106,22 @@ function BillStatusBadge({ status }: { status: CreditCardBill['status'] }) {
   > = {
     open: {
       variant: 'secondary',
-      label: t('pages.creditCardBills.status.open'),
+      label: t('pages.creditCardExpenses.status.open'),
       icon: <CircleDot className="h-3 w-3" />,
     },
     paid: {
       variant: 'default',
-      label: t('pages.creditCardBills.status.paid'),
+      label: t('pages.creditCardExpenses.status.paid'),
       icon: <CheckCircle2 className="h-3 w-3" />,
     },
     overdue: {
       variant: 'destructive',
-      label: t('pages.creditCardBills.status.overdue'),
+      label: t('pages.creditCardExpenses.status.overdue'),
       icon: <AlertTriangle className="h-3 w-3" />,
     },
     closed: {
       variant: 'outline',
-      label: t('pages.creditCardBills.status.closed'),
+      label: t('pages.creditCardExpenses.status.closed'),
       icon: <RotateCcw className="h-3 w-3" />,
     },
   };
@@ -427,18 +427,18 @@ export function CreditCardDetailSheet({
           {/* Card hero header */}
           <div
             className={cn(
-              'relative bg-gradient-to-br px-lg pb-xl pt-lg',
+              'px-lg pb-xl pt-lg relative bg-gradient-to-br',
               brandGradient
             )}
           >
             <DialogHeader className="mb-md">
-              <DialogTitle className="flex items-center gap-sm text-lg">
+              <DialogTitle className="gap-sm flex items-center text-lg">
                 <CreditCardIcon className="h-5 w-5" />
                 {card.name}
               </DialogTitle>
             </DialogHeader>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-lg">
+              <div className="gap-lg flex items-center">
                 <div className="relative">
                   <UsageArc pct={usagePct} size={64} />
                   <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
@@ -447,29 +447,29 @@ export function CreditCardDetailSheet({
                 </div>
                 <div className="space-y-xs">
                   <div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.creditCards.limit')}
                     </p>
-                    <p className="text-2xl font-bold text-success">
+                    <p className="text-success text-2xl font-bold">
                       {formatCurrency(available)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.creditCards.ofLimit', { value: formatCurrency(limit) })}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-xs">
                   <div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.creditCardHub.usedCredit')}
                     </p>
-                    <p className="text-xl font-semibold text-destructive">
+                    <p className="text-destructive text-xl font-semibold">
                       {formatCurrency(used)}
                     </p>
                   </div>
                   {openBill && (
                     <div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {t('pages.creditCardHub.currentBill')}
                       </p>
                       <p
@@ -486,16 +486,16 @@ export function CreditCardDetailSheet({
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-xs">
+              <div className="gap-xs flex flex-col items-end">
                 <Badge variant="secondary" className="text-sm">
                   {translate('cardBrands', card.flag)}
                 </Badge>
                 {card.card_number_masked && (
-                  <p className="font-mono text-xs text-muted-foreground">
+                  <p className="text-muted-foreground font-mono text-xs">
                     {card.card_number_masked}
                   </p>
                 )}
-                <div className="flex items-center gap-xs text-xs text-muted-foreground">
+                <div className="gap-xs text-muted-foreground flex items-center text-xs">
                   <CalendarDays className="h-3 w-3" />
                   <span>
                     {t('pages.creditCards.dueDay')} {card.due_day}
@@ -533,20 +533,20 @@ export function CreditCardDetailSheet({
             {/* Summary Tab */}
             <TabsContent
               value="summary"
-              className="mt-md flex-1 overflow-y-auto px-lg pb-lg"
+              className="mt-md px-lg pb-lg flex-1 overflow-y-auto"
             >
-              <div className="grid gap-md sm:grid-cols-2">
-                <div className="rounded-lg border bg-card p-md">
-                  <div className="flex items-center gap-sm text-success">
+              <div className="gap-md grid sm:grid-cols-2">
+                <div className="bg-card p-md rounded-lg border">
+                  <div className="gap-sm text-success flex items-center">
                     <Wallet className="h-4 w-4" />
                     <p className="text-sm font-medium">
                       {t('pages.creditCards.stats.availableCredit')}
                     </p>
                   </div>
-                  <p className="mt-xs text-2xl font-bold text-success">
+                  <p className="mt-xs text-success text-2xl font-bold">
                     {formatCurrency(available)}
                   </p>
-                  <div className="mt-sm h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="mt-sm bg-muted h-1.5 w-full overflow-hidden rounded-full">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
@@ -560,17 +560,17 @@ export function CreditCardDetailSheet({
                     />
                   </div>
                 </div>
-                <div className="rounded-lg border bg-card p-md">
-                  <div className="flex items-center gap-sm text-destructive">
+                <div className="bg-card p-md rounded-lg border">
+                  <div className="gap-sm text-destructive flex items-center">
                     <TrendingDown className="h-4 w-4" />
                     <p className="text-sm font-medium">
                       {t('pages.creditCardHub.usedCredit')}
                     </p>
                   </div>
-                  <p className="mt-xs text-2xl font-bold text-destructive">
+                  <p className="mt-xs text-destructive text-2xl font-bold">
                     {formatCurrency(used)}
                   </p>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.creditCards.usedPercent', {
                       percent: Math.round(usagePct),
                     })}
@@ -579,10 +579,10 @@ export function CreditCardDetailSheet({
               </div>
 
               {openBill && (
-                <div className="mt-md rounded-lg border border-warning/40 bg-warning/5 p-md">
+                <div className="mt-md border-warning/40 bg-warning/5 p-md rounded-lg border">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-sm">
-                      <DollarSign className="h-4 w-4 text-warning" />
+                    <div className="gap-sm flex items-center">
+                      <DollarSign className="text-warning h-4 w-4" />
                       <p className="font-medium">
                         {t('pages.creditCardHub.currentBill')}
                       </p>
@@ -593,7 +593,7 @@ export function CreditCardDetailSheet({
                     {formatCurrency(parseFloat(openBill.total_amount))}
                   </p>
                   {openBill.due_date && (
-                    <p className="mt-xs text-sm text-muted-foreground">
+                    <p className="mt-xs text-muted-foreground text-sm">
                       {t('pages.creditCardHub.dueOn')} {formatDate(openBill.due_date)}
                     </p>
                   )}
@@ -606,7 +606,7 @@ export function CreditCardDetailSheet({
                         setIsPaymentOpen(true);
                       }}
                     >
-                      {t('pages.creditCardBills.payBtn')}
+                      {t('pages.creditCardBills.payForm.payBtn')}
                     </Button>
                   )}
                 </div>
@@ -614,26 +614,26 @@ export function CreditCardDetailSheet({
 
               {recentBills.length > 0 && (
                 <div className="mt-md">
-                  <p className="mb-sm text-sm font-medium text-muted-foreground">
+                  <p className="mb-sm text-muted-foreground text-sm font-medium">
                     {t('pages.creditCardHub.recentBills')}
                   </p>
                   <div className="space-y-xs">
                     {recentBills.map((bill) => (
                       <div
                         key={bill.id}
-                        className="flex items-center justify-between rounded-md border bg-card px-md py-sm"
+                        className="bg-card px-md py-sm flex items-center justify-between rounded-md border"
                       >
                         <div>
                           <p className="text-sm font-medium">
                             {translate('months', bill.month)}/{bill.year}
                           </p>
                           {bill.due_date && (
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               {formatDate(bill.due_date)}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-sm">
+                        <div className="gap-sm flex items-center">
                           <p className="text-sm font-semibold">
                             {formatCurrency(parseFloat(bill.total_amount))}
                           </p>
@@ -649,10 +649,10 @@ export function CreditCardDetailSheet({
             {/* Bills Tab */}
             <TabsContent
               value="bills"
-              className="mt-md flex-1 overflow-y-auto px-lg pb-lg"
+              className="mt-md px-lg pb-lg flex-1 overflow-y-auto"
             >
               <div className="mb-md flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   {allBills.length} {t('pages.creditCardHub.billsFound')}
                 </p>
                 <Button
@@ -668,11 +668,11 @@ export function CreditCardDetailSheet({
                 </Button>
               </div>
               {billsQuery.isLoading ? (
-                <div className="flex h-32 items-center justify-center text-muted-foreground">
-                  {t('common.loading')}
+                <div className="text-muted-foreground flex h-32 items-center justify-center">
+                  {t('common.actions.loading')}
                 </div>
               ) : allBills.length === 0 ? (
-                <div className="flex h-32 flex-col items-center justify-center gap-sm text-muted-foreground">
+                <div className="gap-sm text-muted-foreground flex h-32 flex-col items-center justify-center">
                   <Receipt className="h-8 w-8 opacity-40" />
                   <p className="text-sm">{t('pages.creditCardHub.noBills')}</p>
                 </div>
@@ -681,19 +681,19 @@ export function CreditCardDetailSheet({
                   {allBills.map((bill) => (
                     <div
                       key={bill.id}
-                      className="flex items-center justify-between rounded-md border bg-card px-md py-sm"
+                      className="bg-card px-md py-sm flex items-center justify-between rounded-md border"
                     >
                       <div>
                         <p className="text-sm font-medium">
                           {translate('months', bill.month)}/{bill.year}
                         </p>
                         {bill.due_date && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {formatDate(bill.due_date)}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-sm">
+                      <div className="gap-sm flex items-center">
                         <p className="text-sm font-semibold">
                           {formatCurrency(parseFloat(bill.total_amount))}
                         </p>
@@ -704,13 +704,13 @@ export function CreditCardDetailSheet({
                               size="icon"
                               variant="ghost"
                               className="h-7 w-7"
-                              title={t('pages.creditCardBills.payBtn')}
+                              title={t('pages.creditCardBills.payForm.payBtn')}
                               onClick={() => {
                                 setBillToPay(bill);
                                 setIsPaymentOpen(true);
                               }}
                             >
-                              <DollarSign className="h-3.5 w-3.5 text-success" />
+                              <DollarSign className="text-success h-3.5 w-3.5" />
                             </Button>
                           )}
                           {bill.status === 'paid' && (
@@ -743,7 +743,7 @@ export function CreditCardDetailSheet({
                             title={t('common.actions.delete')}
                             onClick={() => void handleDeleteBill(bill.id)}
                           >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            <Trash2 className="text-destructive h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </div>
@@ -756,32 +756,32 @@ export function CreditCardDetailSheet({
             {/* Purchases Tab */}
             <TabsContent
               value="purchases"
-              className="mt-md flex-1 overflow-y-auto px-lg pb-lg"
+              className="mt-md px-lg pb-lg flex-1 overflow-y-auto"
             >
               {purchasesQuery.isLoading ? (
-                <div className="flex h-32 items-center justify-center text-muted-foreground">
-                  {t('common.loading')}
+                <div className="text-muted-foreground flex h-32 items-center justify-center">
+                  {t('common.actions.loading')}
                 </div>
               ) : purchases.length === 0 ? (
-                <div className="flex h-32 flex-col items-center justify-center gap-sm text-muted-foreground">
+                <div className="gap-sm text-muted-foreground flex h-32 flex-col items-center justify-center">
                   <ShoppingCart className="h-8 w-8 opacity-40" />
                   <p className="text-sm">{t('pages.creditCardHub.noPurchases')}</p>
                 </div>
               ) : (
                 <div className="space-y-xs">
-                  <p className="mb-sm text-sm font-medium text-muted-foreground">
+                  <p className="mb-sm text-muted-foreground text-sm font-medium">
                     {purchases.length} {t('pages.creditCardHub.purchasesFound')}
                   </p>
                   {purchases.map((purchase) => (
                     <div
                       key={purchase.id}
-                      className="flex items-start justify-between rounded-md border bg-card px-md py-sm"
+                      className="bg-card px-md py-sm flex items-start justify-between rounded-md border"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">
                           {purchase.description}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {purchase.merchant && `${purchase.merchant} · `}
                           {formatDate(purchase.purchase_date)}
                           {purchase.total_installments > 1 && (
@@ -796,7 +796,7 @@ export function CreditCardDetailSheet({
                           {formatCurrency(purchase.total_value)}
                         </p>
                         {purchase.total_installments > 1 && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {formatCurrency(purchase.installment_value)}/
                             {t('pages.creditCardHub.installment')}
                           </p>
@@ -811,7 +811,7 @@ export function CreditCardDetailSheet({
             {/* Settings Tab */}
             <TabsContent
               value="settings"
-              className="mt-md flex-1 overflow-y-auto px-lg pb-lg"
+              className="mt-md px-lg pb-lg flex-1 overflow-y-auto"
             >
               <CreditCardForm
                 creditCard={card}
@@ -820,8 +820,8 @@ export function CreditCardDetailSheet({
                 onCancel={onClose}
                 isLoading={saveMutation.isPending}
               />
-              <div className="mt-lg border-t pt-lg">
-                <p className="mb-sm text-sm font-medium text-destructive">
+              <div className="mt-lg pt-lg border-t">
+                <p className="mb-sm text-destructive text-sm font-medium">
                   {t('pages.creditCardHub.dangerZone')}
                 </p>
                 <Button
@@ -874,7 +874,7 @@ export function CreditCardDetailSheet({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.creditCardBills.payBtn')}</DialogTitle>
+            <DialogTitle>{t('pages.creditCardBills.payForm.payBtn')}</DialogTitle>
           </DialogHeader>
           {billToPay && (
             <BillPaymentForm

@@ -78,20 +78,20 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="custom-scrollbar max-h-[90vh] w-full max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
+          <DialogTitle className="gap-sm flex items-center">
             <Calculator className="h-5 w-5" />
             {t('components.installmentSimulator.title')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-md">
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             <div className="space-y-xs">
               <Label htmlFor="sim-principal">
                 {t('components.installmentSimulator.purchaseValue')}
               </Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-xs">
                   R$
                 </span>
                 <Input
@@ -118,21 +118,21 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
                   className="pr-8"
                   inputMode="decimal"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
                   %
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('components.installmentSimulator.rateHint')}
               </p>
             </div>
           </div>
 
           {results.length > 0 && (
-            <div className="overflow-hidden rounded-lg border border-border">
+            <div className="border-border overflow-hidden rounded-lg border">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-muted/50 text-left text-xs text-muted-foreground">
+                  <tr className="bg-muted/50 text-muted-foreground text-left text-xs">
                     <th className="px-md py-sm font-medium">
                       {t('components.installmentSimulator.installments')}
                     </th>
@@ -157,7 +157,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
                     return (
                       <tr
                         key={r.installments}
-                        className="border-t border-border transition-colors hover:bg-muted/30"
+                        className="border-border hover:bg-muted/30 border-t transition-colors"
                       >
                         <td className="px-md py-sm font-medium">
                           {r.installments === 1
@@ -188,7 +188,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
                               <span className="opacity-70">({pct.toFixed(1)}%)</span>
                             </span>
                           ) : (
-                            <span className="text-xs text-success">
+                            <span className="text-success text-xs">
                               {t('components.installmentSimulator.noInterest')}
                             </span>
                           )}
@@ -202,7 +202,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
           )}
 
           {!principalNum && (
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-center text-sm">
               {t('components.installmentSimulator.enterValue')}
             </p>
           )}

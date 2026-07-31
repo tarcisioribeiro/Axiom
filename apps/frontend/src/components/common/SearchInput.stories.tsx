@@ -37,7 +37,7 @@ export const Interactive: Story = {
       <div className="space-y-sm">
         <SearchInput value={value} onValueChange={setValue} />
         {value && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Buscando por: <strong>{value}</strong>
           </p>
         )}

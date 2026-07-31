@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Edit,
@@ -11,7 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -59,19 +60,19 @@ function AuthorCard({
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-sm">
+        <div className="gap-sm flex items-start justify-between">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {author.photo ? (
               <img
                 src={author.photo}
                 alt={author.name}
-                className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border"
+                className="ring-border h-16 w-16 shrink-0 rounded-full object-cover ring-2"
                 loading="lazy"
                 decoding="async"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted ring-2 ring-border">
-                <UserCircle className="h-9 w-9 text-muted-foreground" />
+              <div className="bg-muted ring-border flex h-16 w-16 shrink-0 items-center justify-center rounded-full ring-2">
+                <UserCircle className="text-muted-foreground h-9 w-9" />
               </div>
             )}
             <div className="min-w-0">
@@ -85,7 +86,7 @@ function AuthorCard({
               </CardDescription>
             </div>
           </div>
-          <div className="flex shrink-0 gap-xs">
+          <div className="gap-xs flex shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -98,7 +99,7 @@ function AuthorCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive h-8 w-8"
               onClick={() => onDelete(author.id)}
               aria-label={t('common.actions.delete')}
             >
@@ -110,8 +111,8 @@ function AuthorCard({
 
       <CardContent className="flex flex-1 flex-col gap-3">
         {(author.birth_year || author.death_year) && (
-          <div className="flex items-center gap-sm">
-            <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
             <Badge variant="outline" className="text-xs font-normal">
               {author.birth_year && (
                 <>
@@ -139,13 +140,13 @@ function AuthorCard({
         {author.biography && (
           <div>
             <p
-              className={`text-sm leading-relaxed text-muted-foreground ${!bioExpanded ? 'line-clamp-3' : ''}`}
+              className={`text-muted-foreground text-sm leading-relaxed ${!bioExpanded ? 'line-clamp-3' : ''}`}
             >
               {author.biography}
             </p>
             {hasBioOverflow && (
               <button
-                className="mt-xs flex items-center gap-xs text-xs text-primary hover:underline"
+                className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
                 onClick={() => setBioExpanded((v) => !v)}
               >
                 {bioExpanded ? (
@@ -162,8 +163,8 @@ function AuthorCard({
           </div>
         )}
 
-        <div className="mt-auto flex items-center justify-between pt-sm">
-          <Badge variant="secondary" className="flex items-center gap-sm text-xs">
+        <div className="pt-sm mt-auto flex items-center justify-between">
+          <Badge variant="secondary" className="gap-sm flex items-center text-xs">
             <BookOpen className="h-3 w-3" />
             {t('pages.authors.booksCount', { count: author.books_count })}
           </Badge>
@@ -174,8 +175,6 @@ function AuthorCard({
 }
 
 export default function Authors() {
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
@@ -184,27 +183,23 @@ export default function Authors() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadAuthors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadAuthors = async () => {
-    try {
-      setLoading(true);
-      const data = await authorsService.getAll();
-      setAuthors(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: authors = [], isLoading: loading } = useQuery({
+    queryKey: ['authors'],
+    queryFn: async () => {
+      try {
+        return await authorsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return [] as Author[];
+      }
+    },
+  });
 
   const handleCreate = () => {
     setSelectedAuthor(undefined);
@@ -235,7 +230,7 @@ export default function Authors() {
         title: t('pages.authors.deleted'),
         description: t('pages.authors.deletedDesc'),
       });
-      void loadAuthors();
+      void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -266,7 +261,7 @@ export default function Authors() {
         await authorsService.uploadPhoto(author.id, pendingPhotoFile);
       }
       setIsDialogOpen(false);
-      void loadAuthors();
+      void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -308,13 +303,13 @@ export default function Authors() {
 
       {filteredAuthors.length === 0 ? (
         <EmptyState
-          icon={<User className="h-12 w-12 text-muted-foreground" />}
+          icon={<User className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm ? t('pages.authors.emptySearch') : t('pages.authors.emptyState')
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {filteredAuthors.map((author) => (
             <AuthorCard
               key={author.id}

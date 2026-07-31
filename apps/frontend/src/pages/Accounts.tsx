@@ -58,7 +58,7 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
+      className={`px-sm inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
     >
       {labels[status] ?? status}
     </span>
@@ -309,16 +309,16 @@ export default function Accounts() {
         />
       </FilterBar>
 
-      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
         <Card
           className={`overflow-hidden border-t-2 ${totalBalance >= 0 ? 'border-t-success/60' : 'border-t-destructive/60'}`}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.accounts.stats.totalBalance')}
             </p>
             <div
-              className={`rounded-lg p-sm ring-1 ${totalBalance >= 0 ? 'bg-success/10 ring-success/20' : 'bg-destructive/10 ring-destructive/20'}`}
+              className={`p-sm rounded-lg ring-1 ${totalBalance >= 0 ? 'bg-success/10 ring-success/20' : 'bg-destructive/10 ring-destructive/20'}`}
             >
               <Banknote
                 className={`h-4 w-4 ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
@@ -331,7 +331,7 @@ export default function Accounts() {
             >
               {formatCurrency(totalBalance)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.accounts.stats.accountsCount', { count: accounts.length })}
             </p>
           </CardContent>
@@ -340,12 +340,12 @@ export default function Accounts() {
         <Card
           className={`overflow-hidden border-t-2 ${totalAvailable >= 0 ? 'border-t-info/60' : 'border-t-destructive/60'}`}
         >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.accounts.stats.availableBalance')}
             </p>
             <div
-              className={`rounded-lg p-sm ring-1 ${totalAvailable >= 0 ? 'bg-info/10 ring-info/20' : 'bg-destructive/10 ring-destructive/20'}`}
+              className={`p-sm rounded-lg ring-1 ${totalAvailable >= 0 ? 'bg-info/10 ring-info/20' : 'bg-destructive/10 ring-destructive/20'}`}
             >
               <ShieldCheck
                 className={`h-4 w-4 ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
@@ -358,22 +358,22 @@ export default function Accounts() {
             >
               {formatCurrency(totalAvailable)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.accounts.stats.overdraftIncluded')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-primary/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-primary/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.accounts.stats.count')}</p>
-            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
-              <Building2 className="h-4 w-4 text-primary" />
+            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
+              <Building2 className="text-primary h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{accounts.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-primary text-2xl font-bold">{accounts.length}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.accounts.stats.institutionsSubtitle')}
             </p>
           </CardContent>
@@ -381,11 +381,11 @@ export default function Accounts() {
       </div>
 
       {balanceDistribution.positiveAccounts.length > 1 && (
-        <div className="rounded-lg border bg-card p-md">
-          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="bg-card p-md rounded-lg border">
+          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
             {t('pages.accounts.balanceDistribution')}
           </p>
-          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
             {balanceDistribution.positiveAccounts.map((acc, i) => (
               <div
                 key={acc.id}
@@ -397,13 +397,13 @@ export default function Accounts() {
               />
             ))}
           </div>
-          <div className="mt-sm flex flex-wrap gap-md">
+          <div className="mt-sm gap-md flex flex-wrap">
             {balanceDistribution.positiveAccounts.map((acc, i) => (
-              <div key={acc.id} className="flex items-center gap-xs">
+              <div key={acc.id} className="gap-xs flex items-center">
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
                 />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {acc.account_name} · {formatCurrency(acc.balance)}
                 </span>
               </div>
@@ -413,18 +413,18 @@ export default function Accounts() {
       )}
 
       {isLoading ? (
-        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-52 animate-pulse rounded-lg border bg-muted/30" />
+            <div key={i} className="bg-muted/30 h-52 animate-pulse rounded-lg border" />
           ))}
         </div>
       ) : filteredAccounts.length === 0 ? (
         <EmptyState
-          icon={<Wallet className="h-12 w-12 text-muted-foreground" />}
+          icon={<Wallet className="text-muted-foreground h-12 w-12" />}
           message={t('pages.accounts.emptyState')}
         />
       ) : (
-        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredAccounts.map((account) => {
             const balance = parseFloat(account.balance);
             const overdraft = parseFloat(account.overdraft_limit ?? '0');
@@ -442,18 +442,18 @@ export default function Accounts() {
                 className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
               >
                 <CardHeader className="pb-sm">
-                  <div className="flex items-start justify-between gap-sm">
-                    <div className="flex items-center gap-sm">
+                  <div className="gap-sm flex items-start justify-between">
+                    <div className="gap-sm flex items-center">
                       <div
                         className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
                       >
                         {initials}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold leading-tight">
+                        <p className="truncate leading-tight font-semibold">
                           {account.account_name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {translate('institutions', account.institution)}
                         </p>
                       </div>
@@ -465,12 +465,12 @@ export default function Accounts() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {account.account_number_masked && (
-                    <p className="font-mono text-xs text-muted-foreground">
+                    <p className="text-muted-foreground font-mono text-xs">
                       {account.account_number_masked}
                     </p>
                   )}
-                  <div className="rounded-lg bg-muted/30 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.accounts.columns.balance')}
                     </p>
                     <p
@@ -488,11 +488,11 @@ export default function Accounts() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center justify-between border-t pt-sm">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="pt-sm flex items-center justify-between border-t">
+                    <span className="text-muted-foreground text-xs">
                       {formatDate(account.created_at)}
                     </span>
-                    <div className="flex gap-xs">
+                    <div className="gap-xs flex">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -522,7 +522,7 @@ export default function Accounts() {
                         aria-label={t('common.actions.delete')}
                       >
                         <Trash2
-                          className="h-4 w-4 text-destructive"
+                          className="text-destructive h-4 w-4"
                           aria-hidden="true"
                         />
                       </Button>
@@ -562,7 +562,7 @@ export default function Accounts() {
       <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
+            <DialogTitle className="gap-sm flex items-center">
               <ArrowLeftRight className="h-5 w-5" />
               {t('pages.accounts.bankReconciliationTitle', {
                 account: reconciliationAccount?.account_name,
@@ -581,19 +581,19 @@ export default function Accounts() {
           </div>
 
           {importsLoading ? (
-            <div className="flex items-center justify-center py-xl">
-              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="py-xl flex items-center justify-center">
+              <RefreshCw className="text-muted-foreground h-6 w-6 animate-spin" />
             </div>
           ) : imports.length === 0 ? (
             <EmptyState
-              icon={<ArrowLeftRight className="h-12 w-12 text-muted-foreground" />}
+              icon={<ArrowLeftRight className="text-muted-foreground h-12 w-12" />}
               title={t('pages.accounts.noImports')}
               message={t('pages.accounts.noImportsDesc')}
             />
           ) : (
             <div className="rounded-md border">
               <table className="w-full text-sm">
-                <thead className="border-b bg-muted/50">
+                <thead className="bg-muted/50 border-b">
                   <tr>
                     <th className="p-3 text-left font-medium">
                       {t('pages.accounts.imports.file')}
@@ -627,10 +627,10 @@ export default function Accounts() {
                         <ImportStatusBadge status={imp.status} />
                       </td>
                       <td className="p-3 text-right">{imp.total_entries}</td>
-                      <td className="p-3 text-right font-medium text-success">
+                      <td className="text-success p-3 text-right font-medium">
                         {imp.matched_count}
                       </td>
-                      <td className="p-3 text-muted-foreground">
+                      <td className="text-muted-foreground p-3">
                         {formatDate(imp.created_at)}
                       </td>
                       <td className="p-3">
@@ -667,11 +667,11 @@ export default function Accounts() {
                 id="upload-file"
                 type="file"
                 accept=".ofx,.csv"
-                className="block w-full text-sm text-muted-foreground file:mr-md file:rounded-md file:border-0 file:bg-primary/10 file:px-md file:py-sm file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                className="text-muted-foreground file:mr-md file:bg-primary/10 file:px-md file:py-sm file:text-primary hover:file:bg-primary/20 block w-full text-sm file:rounded-md file:border-0 file:text-sm file:font-semibold"
                 onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
               />
               {uploadFile && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {uploadFile.name} — formato:{' '}
                   <strong>
                     {detectFormat(uploadFile.name).toUpperCase() || 'desconhecido'}

@@ -19,18 +19,18 @@ export default function FinanceAgendaPage() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="calendar" className="flex-1 gap-xs">
+          <TabsTrigger value="calendar" className="gap-xs flex-1">
             <CalendarDays className="h-4 w-4" />
             {t('nav.items.financialCalendar')}
           </TabsTrigger>
-          <TabsTrigger value="planner" className="flex-1 gap-xs">
+          <TabsTrigger value="planner" className="gap-xs flex-1">
             <CalendarCheck className="h-4 w-4" />
             {t('nav.items.monthlyPlanner')}
           </TabsTrigger>

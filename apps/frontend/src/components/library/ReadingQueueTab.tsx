@@ -13,8 +13,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookOpen, GripVertical, Clock } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -58,36 +59,36 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-md rounded-lg border bg-card p-md shadow-sm"
+      className="gap-md bg-card p-md flex items-center rounded-lg border shadow-sm"
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="text-muted-foreground hover:text-foreground cursor-grab touch-none active:cursor-grabbing"
         aria-label="Arrastar para reordenar"
       >
         <GripVertical className="h-5 w-5" />
       </button>
 
-      <span className="w-6 text-center text-sm font-semibold text-muted-foreground">
+      <span className="text-muted-foreground w-6 text-center text-sm font-semibold">
         {rank}
       </span>
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{book.title}</p>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="text-muted-foreground truncate text-sm">
           {book.authors_names.join(', ')}
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-sm">
+      <div className="gap-sm flex shrink-0 items-center">
         <Badge variant="outline" className="hidden text-xs sm:inline-flex">
           {book.genre_display}
         </Badge>
         {book.estimated_days_to_finish != null && (
           <Badge
             variant="outline"
-            className="hidden items-center gap-xs text-xs lg:inline-flex"
+            className="gap-xs hidden items-center text-xs lg:inline-flex"
           >
             <Clock className="h-3 w-3" />~{book.estimated_days_to_finish}d
           </Badge>
@@ -100,37 +101,34 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
   );
 }
 
+const EMPTY_QUEUE: Book[] = [];
+const QUERY_KEY = ['reading-queue'];
+
 export function ReadingQueueTab() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  useEffect(() => {
-    void loadQueue();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadQueue = async () => {
-    try {
-      setIsLoading(true);
-      const data = await booksService.getReadingQueue();
-      setBooks(data);
-    } catch (err) {
-      toast({
-        title: t('pages.readingQueue.errorLoad'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: books = EMPTY_QUEUE, isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: async () => {
+      try {
+        return await booksService.getReadingQueue();
+      } catch (err) {
+        toast({
+          title: t('pages.readingQueue.errorLoad'),
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        });
+        return EMPTY_QUEUE;
+      }
+    },
+  });
 
   const persistOrder = useCallback(
     (ordered: Book[]) => {
@@ -156,7 +154,7 @@ export function ReadingQueueTab() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setBooks((prev) => {
+    queryClient.setQueryData<Book[]>(QUERY_KEY, (prev = EMPTY_QUEUE) => {
       const oldIndex = prev.findIndex((b) => b.id === active.id);
       const newIndex = prev.findIndex((b) => b.id === over.id);
       const reordered = arrayMove(prev, oldIndex, newIndex);
@@ -170,7 +168,7 @@ export function ReadingQueueTab() {
   if (books.length === 0) {
     return (
       <EmptyState
-        icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
+        icon={<BookOpen className="text-muted-foreground h-12 w-12" />}
         title={t('pages.readingQueue.emptyTitle')}
         message={t('pages.readingQueue.emptyDesc')}
       />
@@ -187,7 +185,7 @@ export function ReadingQueueTab() {
         items={books.map((b) => b.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-sm">
+        <div className="gap-sm flex flex-col">
           {books.map((book, index) => (
             <SortableBookItem key={book.id} book={book} rank={index + 1} />
           ))}

@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   CalendarDays,
@@ -16,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -93,8 +94,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
-  const [eligiblePayables, setEligiblePayables] = useState<Payable[]>([]);
   const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
     []
   );
@@ -109,7 +108,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     register,
     handleSubmit,
     setValue,
-    watch,
+    getValues,
+    control,
     formState: { errors },
   } = useForm<ExpenseFormData>({
     resolver: zodResolver(expenseSchema) as Resolver<ExpenseFormData>,
@@ -127,6 +127,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       related_payable: null,
       fixed_expense_template: null,
     },
+  });
+
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedPayed = useWatch({ control, name: 'payed' });
+  const watchedAccount = useWatch({ control, name: 'account' });
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedMerchant = useWatch({ control, name: 'merchant' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedRelatedLoan = useWatch({ control, name: 'related_loan' });
+  const watchedRelatedPayable = useWatch({ control, name: 'related_payable' });
+  const watchedFixedExpenseTemplate = useWatch({
+    control,
+    name: 'fixed_expense_template',
   });
 
   useEffect(() => {
@@ -154,25 +168,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     void loadRules();
   }, [expense, setValue]);
 
-  useEffect(() => {
-    if (loans && currentUserMember) {
-      const filtered = loans.filter(
-        (loan) =>
-          loan.benefited === currentUserMember.id &&
-          loan.status !== 'paid' &&
-          loan.status !== 'cancelled'
-      );
-      setEligibleLoans(filtered);
-    }
+  const eligibleLoans = useMemo(() => {
+    if (!loans || !currentUserMember) return [];
+    return loans.filter(
+      (loan) =>
+        loan.benefited === currentUserMember.id &&
+        loan.status !== 'paid' &&
+        loan.status !== 'cancelled'
+    );
   }, [loans, currentUserMember]);
 
-  useEffect(() => {
-    if (payables) {
-      const filtered = payables.filter(
-        (p) => p.status === 'active' || p.status === 'overdue'
-      );
-      setEligiblePayables(filtered);
-    }
+  const eligiblePayables = useMemo(() => {
+    if (!payables) return [];
+    return payables.filter((p) => p.status === 'active' || p.status === 'overdue');
   }, [payables]);
 
   useEffect(() => {
@@ -195,7 +203,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   }, [expense, accounts, setValue]);
 
   const fetchAiSuggestion = async (merchant: string) => {
-    const description = watch('description');
+    const description = getValues('description');
     if (!merchant.trim() && !description?.trim()) return;
 
     if (aiSuggestionAbortRef.current) aiSuggestionAbortRef.current.abort();
@@ -213,7 +221,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           setTimeout(() => reject(new Error('timeout')), 10000)
         ),
       ]);
-      const currentCat = watch('category');
+      const currentCat = getValues('category');
       const categoryIsEmpty =
         !currentCat || currentCat === 'others' || currentCat === '';
       if (result.method === 'rule' && categoryIsEmpty) {
@@ -247,7 +255,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             rule.merchant_contains.toLowerCase().includes(lower)
         );
         if (matched) {
-          const currentCategory = watch('category');
+          const currentCategory = getValues('category');
           if (
             !currentCategory ||
             currentCategory === 'others' ||
@@ -273,28 +281,24 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   }, [expense, prefillData, setValue]);
 
-  const watchedPayed = watch('payed');
-  const watchedAccount = watch('account');
-  const watchedValue = watch('value');
-  const watchedDate = watch('date');
   const today = formatLocalDate(new Date());
   const isFutureDate = watchedDate > today;
 
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
-
-  useEffect(() => {
-    if (!watchedAccount || !watchedDate || !(watchedValue > 0) || !isFutureDate) {
-      setProjectedBalance(null);
-      return;
-    }
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(watchedAccount, watchedDate)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [watchedAccount, watchedDate, watchedValue, isFutureDate]);
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', watchedAccount, watchedDate],
+    queryFn: async () => {
+      try {
+        const data = await accountsService.getProjectedBalance(
+          watchedAccount,
+          watchedDate
+        );
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!watchedAccount && !!watchedDate && watchedValue > 0 && isFutureDate,
+  });
 
   const balanceInfo = useMemo(() => {
     if (isFutureDate) return null;
@@ -361,10 +365,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       )}
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="description" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -374,26 +378,26 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-destructive text-sm">{errors.description.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="merchant" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="merchant" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.merchantLabel')}
-              <span className="ml-1 text-xs text-muted-foreground/70">
+              <span className="text-muted-foreground/70 ml-1 text-xs">
                 ({t('common.actions.none').toLowerCase()})
               </span>
             </Label>
             <Input
               id="merchant"
-              value={watch('merchant') ?? ''}
+              value={watchedMerchant ?? ''}
               onChange={(e) => handleMerchantChange(e.target.value)}
               placeholder={t('pages.expenses.form.merchantPlaceholder')}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.expenses.form.merchantHint')}
             </p>
           </div>
@@ -402,10 +406,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Seção: Valores & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="value" className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="value" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.valueLabel')}
             </Label>
             <CurrencyInput
@@ -416,13 +420,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.value && (
-              <p className="text-sm text-destructive">{errors.value.message}</p>
+              <p className="text-destructive text-sm">{errors.value.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.paymentStatusLabel')}
             </Label>
             <StatusToggle
@@ -445,33 +449,33 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="date" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.dateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('common.fields.selectDate')}
               disabled={isLoading}
             />
             {errors.date && (
-              <p className="text-sm text-destructive">{errors.date.message}</p>
+              <p className="text-destructive text-sm">{errors.date.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="horary" className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="horary" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.horaryLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
             {errors.horary && (
-              <p className="text-sm text-destructive">{errors.horary.message}</p>
+              <p className="text-destructive text-sm">{errors.horary.message}</p>
             )}
           </div>
         </div>
@@ -479,15 +483,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Seção: Classificação */}
       <FormSection title={t('common.form.sections.classification')} icon={Tag}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.categoryLabel')}
             </Label>
             <div className="relative">
               <Select
-                value={watch('category') || ''}
+                value={watchedCategory || ''}
                 onValueChange={(v) => {
                   setValue('category', v);
                   setAiSuggestion(null);
@@ -503,7 +507,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       <SelectItem key={key} value={key}>
                         <span className="flex items-center gap-2">
                           {Icon && (
-                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                           )}
                           {translate('expenseCategories', key)}
                         </span>
@@ -514,19 +518,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </Select>
             </div>
             {isLoadingAiSuggestion && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1 text-xs">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 <span>{t('pages.expenses.form.aiSuggesting')}</span>
               </div>
             )}
             {aiSuggestion && !isLoadingAiSuggestion && (
-              <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs">
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <div className="border-primary/20 bg-primary/5 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs">
+                <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
                 <span className="text-muted-foreground">
                   {t('pages.expenses.form.aiSuggested')}:{' '}
                   <button
                     type="button"
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="text-primary font-medium underline-offset-2 hover:underline"
                     onClick={() => {
                       setValue('category', aiSuggestion.category);
                       setAiSuggestion(null);
@@ -538,7 +542,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <button
                   type="button"
                   aria-label={t('common.actions.close')}
-                  className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground ml-auto transition-colors"
                   onClick={() => setAiSuggestion(null)}
                 >
                   <X className="h-3 w-3" />
@@ -546,17 +550,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </div>
             )}
             {errors.category && (
-              <p className="text-sm text-destructive">{errors.category.message}</p>
+              <p className="text-destructive text-sm">{errors.category.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.accountLabel')}
             </Label>
             <Select
-              value={watch('account')?.toString() || ''}
+              value={watchedAccount?.toString() || ''}
               onValueChange={(v) => setValue('account', parseInt(v))}
             >
               <SelectTrigger>
@@ -566,7 +570,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 {accounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground ml-2 text-xs">
                       {parseFloat(a.balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
@@ -577,7 +581,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </SelectContent>
             </Select>
             {selectedAccount && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.expenses.form.balanceInfo', {
                   value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
@@ -586,7 +590,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </p>
             )}
             {errors.account && (
-              <p className="text-sm text-destructive">{errors.account.message}</p>
+              <p className="text-destructive text-sm">{errors.account.message}</p>
             )}
           </div>
         </div>
@@ -598,30 +602,30 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
-            className="flex w-full items-center gap-xs text-left"
+            className="gap-xs flex w-full items-center text-left"
           >
-            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('common.form.sections.links')}
             </span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="bg-border/50 h-px flex-1" />
             {linksOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
           </button>
 
           {linksOpen && (
-            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               {eligibleLoans.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedLoanLabel')}
                   </Label>
                   <Select
-                    value={watch('related_loan')?.toString() || 'none'}
+                    value={watchedRelatedLoan?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue('related_loan', v === 'none' ? null : parseInt(v))
                     }
@@ -639,7 +643,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedLoanHint')}
                   </p>
                 </div>
@@ -647,12 +651,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
               {eligiblePayables.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedPayableLabel')}
                   </Label>
                   <Select
-                    value={watch('related_payable')?.toString() || 'none'}
+                    value={watchedRelatedPayable?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue('related_payable', v === 'none' ? null : parseInt(v))
                     }
@@ -670,7 +674,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedPayableHint')}
                   </p>
                 </div>
@@ -678,12 +682,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
               {eligibleFixedExpenses.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedFixedExpenseLabel')}
                   </Label>
                   <Select
-                    value={watch('fixed_expense_template')?.toString() || 'none'}
+                    value={watchedFixedExpenseTemplate?.toString() || 'none'}
                     onValueChange={(v) =>
                       setValue(
                         'fixed_expense_template',
@@ -707,7 +711,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedFixedExpenseHint')}
                   </p>
                 </div>
@@ -720,7 +724,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {/* Alertas de saldo */}
       {isFutureDate && watchedAccount && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             futureBalanceInfo && !futureBalanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : futureBalanceInfo?.isUsingOverdraft
@@ -753,7 +757,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       )}
       {balanceInfo && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             !balanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : 'border-warning/30 bg-warning/10 text-warning'
@@ -776,13 +780,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Toggle: Dividir despesa — only for new expenses */}
       {!expense && (
-        <div className="flex items-center gap-sm rounded-md border border-dashed border-border px-md py-sm">
-          <GitFork className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="gap-sm border-border px-md py-sm flex items-center rounded-md border border-dashed">
+          <GitFork className="text-muted-foreground h-4 w-4 shrink-0" />
           <div className="flex flex-1 flex-col gap-0.5">
             <span className="text-sm font-medium">
               {t('pages.expenses.form.splitToggle')}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('pages.expenses.form.splitToggleHint')}
             </span>
           </div>
@@ -791,7 +795,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             role="switch"
             aria-checked={splitOnCreate}
             onClick={() => setSplitOnCreate((v) => !v)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`focus-visible:ring-ring relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
               splitOnCreate ? 'bg-primary' : 'bg-input'
             }`}
           >
@@ -804,7 +808,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -200,7 +200,7 @@ export const EnhancedLineChart = ({
             formatter={(value) => {
               const lineConfig = lineConfigs.find((l) => l.dataKey === value);
               return (
-                <span className="text-sm text-foreground/80">
+                <span className="text-foreground/80 text-sm">
                   {lineConfig?.name || value}
                 </span>
               );

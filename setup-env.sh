@@ -117,6 +117,24 @@ esc() {
     printf '%s' "$1" | sed 's/\$/\$\$/g'
 }
 
+# Detecta o endereço IPv4 do host, para permitir acesso via IP na rede local
+get_host_ipv4() {
+    local ip
+    ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [ -z "$ip" ]; then
+        # Fallback: extrai o IP de saída da rota padrão (funciona sem 'hostname -I', ex.: macOS)
+        ip=$(ip route get 1.1.1.1 2>/dev/null | awk '{for (i=1;i<=NF;i++) if ($i=="src") print $(i+1)}')
+    fi
+    printf '%s' "$ip"
+}
+
+HOST_IPV4="$(get_host_ipv4)"
+if [ -n "$HOST_IPV4" ]; then
+    print_info "IP local detectado: $HOST_IPV4"
+else
+    print_warning "Não foi possível detectar o IP local automaticamente"
+fi
+
 # Função para gerar SECRET_KEY do Django
 generate_secret_key() {
     python3 -c "import secrets; print(''.join(secrets.choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))"
@@ -157,8 +175,13 @@ if [ "$MODE" == "auto" ]; then
     ENCRYPTION_KEY="$(generate_encryption_key)"
 
     DEBUG="True"
-    ALLOWED_HOSTS="localhost,127.0.0.1"
-    CORS_ALLOWED_ORIGINS="http://localhost:39101,http://127.0.0.1:39101"
+    if [ -n "$HOST_IPV4" ]; then
+        ALLOWED_HOSTS="localhost,127.0.0.1,axiom.localhost,$HOST_IPV4"
+        CORS_ALLOWED_ORIGINS="http://localhost:39101,http://127.0.0.1:39101,http://axiom.localhost:39101,http://$HOST_IPV4:39101"
+    else
+        ALLOWED_HOSTS="localhost,127.0.0.1,axiom.localhost"
+        CORS_ALLOWED_ORIGINS="http://localhost:39101,http://127.0.0.1:39101,http://axiom.localhost:39101"
+    fi
 
     LOG_FORMAT="json"
     LOG_LEVEL="INFO"
@@ -252,11 +275,19 @@ else
     read -p "Modo debug [True]: " DEBUG
     DEBUG=${DEBUG:-True}
 
-    read -p "Hosts permitidos [localhost,127.0.0.1]: " ALLOWED_HOSTS
-    ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    if [ -n "$HOST_IPV4" ]; then
+        DEFAULT_ALLOWED_HOSTS="localhost,127.0.0.1,axiom.localhost,$HOST_IPV4"
+        DEFAULT_CORS_ALLOWED_ORIGINS="http://localhost:39101,http://127.0.0.1:39101,http://axiom.localhost:39101,http://$HOST_IPV4:39101"
+    else
+        DEFAULT_ALLOWED_HOSTS="localhost,127.0.0.1,axiom.localhost"
+        DEFAULT_CORS_ALLOWED_ORIGINS="http://localhost:39101,http://127.0.0.1:39101,http://axiom.localhost:39101"
+    fi
 
-    read -p "Origens CORS [http://localhost:39101,http://127.0.0.1:39101]: " CORS_ALLOWED_ORIGINS
-    CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:39101,http://127.0.0.1:39101}
+    read -p "Hosts permitidos [$DEFAULT_ALLOWED_HOSTS]: " ALLOWED_HOSTS
+    ALLOWED_HOSTS=${ALLOWED_HOSTS:-$DEFAULT_ALLOWED_HOSTS}
+
+    read -p "Origens CORS [$DEFAULT_CORS_ALLOWED_ORIGINS]: " CORS_ALLOWED_ORIGINS
+    CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-$DEFAULT_CORS_ALLOWED_ORIGINS}
 
     read -p "Porta da API [39100]: " API_PORT
     API_PORT=${API_PORT:-39100}

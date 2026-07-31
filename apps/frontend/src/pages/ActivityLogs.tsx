@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
@@ -18,7 +19,7 @@ import {
   Share2,
   Activity,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { ElementType } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -123,33 +124,26 @@ const ACTION_CONFIG: Record<string, ActionConfig> = {
 };
 
 export default function ActivityLogs() {
-  const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await activityLogsService.getAll();
-      setLogs(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ['activity-logs'],
+    queryFn: async () => {
+      try {
+        return await activityLogsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return [] as ActivityLog[];
+      }
+    },
+  });
 
   const groupedLogs = useMemo(() => {
     const map = new Map<string, ActivityLog[]>();
@@ -211,27 +205,27 @@ export default function ActivityLogs() {
 
       {logs.length === 0 ? (
         <EmptyState
-          icon={<ScrollText className="h-12 w-12 text-muted-foreground" />}
+          icon={<ScrollText className="text-muted-foreground h-12 w-12" />}
           message={t('pages.activityLogs.emptyState')}
         />
       ) : (
         <div className="space-y-lg">
           {groupedLogs.map(({ dateKey, dateLabel, items }) => (
             <div key={dateKey} className="space-y-xs">
-              <div className="mb-sm flex items-center gap-sm px-xs">
-                <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm font-medium capitalize text-muted-foreground">
+              <div className="mb-sm gap-sm px-xs flex items-center">
+                <Calendar className="text-muted-foreground h-4 w-4 shrink-0" />
+                <span className="text-muted-foreground text-sm font-medium capitalize">
                   {dateLabel}
                 </span>
-                <div className="flex-1 border-t border-border/50" />
+                <div className="border-border/50 flex-1 border-t" />
               </div>
 
-              <div className="divide-y divide-border/40 rounded-lg border bg-card">
+              <div className="divide-border/40 bg-card divide-y rounded-lg border">
                 {items.map((log) => {
                   const config = ACTION_CONFIG[log.action] ?? ACTION_CONFIG.other;
                   const Icon = config.Icon;
                   return (
-                    <div key={log.id} className="flex items-start gap-3 px-md py-3">
+                    <div key={log.id} className="px-md flex items-start gap-3 py-3">
                       <div
                         className={cn(
                           'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
@@ -240,14 +234,14 @@ export default function ActivityLogs() {
                       >
                         <Icon className={cn('h-3.5 w-3.5', config.iconColor)} />
                       </div>
-                      <div className="min-w-0 flex-1 space-y-xs">
-                        <div className="flex flex-wrap items-center gap-sm">
+                      <div className="space-y-xs min-w-0 flex-1">
+                        <div className="gap-sm flex flex-wrap items-center">
                           <Badge variant="outline" className={config.badge}>
                             {t(`pages.adminLogs.actions.${log.action}`, {
                               defaultValue: log.action_display,
                             })}
                           </Badge>
-                          <span className="text-sm text-foreground">
+                          <span className="text-foreground text-sm">
                             {log.description_key
                               ? t(`activityDescriptions.${log.description_key}`, {
                                   ...(log.description_params ?? {}),
@@ -256,7 +250,7 @@ export default function ActivityLogs() {
                               : log.description}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
                           <span>
                             {format(new Date(log.created_at), 'HH:mm:ss', {
                               locale: dateFnsLocale,

@@ -21,7 +21,7 @@ import {
   Brain,
   CheckCircle,
 } from 'lucide-react';
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -160,7 +160,7 @@ function BookCoverPlaceholder({ title, genre }: { title: string; genre: string }
     <div
       className={`flex h-full w-full items-center justify-center rounded-md bg-gradient-to-br ${gradient}`}
     >
-      <span className="select-none text-4xl font-bold text-white/90">{initial}</span>
+      <span className="text-4xl font-bold text-white/90 select-none">{initial}</span>
     </div>
   );
 }
@@ -189,14 +189,14 @@ function BookGridCard({
     <div
       role="button"
       tabIndex={0}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-md"
       onClick={() => onOpenDetail(book)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onOpenDetail(book);
       }}
     >
       {/* Cover */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
+      <div className="bg-muted relative aspect-[2/3] w-full overflow-hidden">
         {book.cover ? (
           <img
             src={book.cover}
@@ -208,7 +208,7 @@ function BookGridCard({
         ) : (
           <BookCoverPlaceholder title={book.title} genre={book.genre} />
         )}
-        <div className="absolute right-2 top-2">
+        <div className="absolute top-2 right-2">
           <Badge variant={statusVariant(book.read_status)} className="text-xs shadow">
             {t('pages.books.readStatuses.' + book.read_status, {
               defaultValue: book.read_status_display,
@@ -216,7 +216,7 @@ function BookGridCard({
           </Badge>
         </div>
         {pb && (
-          <div className="absolute left-2 top-2">
+          <div className="absolute top-2 left-2">
             <Badge variant={pb.variant} className="text-xs shadow">
               {pb.label}
             </Badge>
@@ -225,9 +225,9 @@ function BookGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col gap-xs p-3">
-        <p className="line-clamp-2 text-sm font-semibold leading-tight">{book.title}</p>
-        <p className="line-clamp-1 text-xs text-muted-foreground">
+      <div className="gap-xs flex flex-1 flex-col p-3">
+        <p className="line-clamp-2 text-sm leading-tight font-semibold">{book.title}</p>
+        <p className="text-muted-foreground line-clamp-1 text-xs">
           {book.authors_names.join(', ')}
         </p>
         <Badge variant="secondary" className="mt-xs w-fit text-xs">
@@ -235,9 +235,9 @@ function BookGridCard({
         </Badge>
 
         {book.reading_progress > 0 && (
-          <div className="mt-auto flex items-center gap-sm pt-sm">
+          <div className="gap-sm pt-sm mt-auto flex items-center">
             <Progress value={book.reading_progress} className="h-1.5 flex-1" />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {book.reading_progress}%
             </span>
           </div>
@@ -253,7 +253,7 @@ function BookGridCard({
       {/* Actions */}
       <div
         role="presentation"
-        className="flex items-center justify-end gap-xs border-t px-sm py-xs"
+        className="gap-xs px-sm py-xs flex items-center justify-end border-t"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -308,7 +308,7 @@ function BookGridCard({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive h-7 w-7"
           onClick={() => void onDelete(book.id)}
           title={t('common.actions.delete')}
         >
@@ -320,10 +320,6 @@ function BookGridCard({
 }
 
 export default function Books() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
@@ -364,6 +360,34 @@ export default function Books() {
   });
   const ownerId = member?.id ?? 0;
 
+  const { data: booksData, isLoading } = useQuery({
+    queryKey: ['books'],
+    queryFn: async () => {
+      try {
+        const [booksData, authorsData, publishersData] = await Promise.all([
+          booksService.getAll(),
+          authorsService.getAll(),
+          publishersService.getAll(),
+        ]);
+        return { books: booksData, authors: authorsData, publishers: publishersData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          books: [] as Book[],
+          authors: [] as Author[],
+          publishers: [] as Publisher[],
+        };
+      }
+    },
+  });
+  const books = booksData?.books ?? [];
+  const authors = booksData?.authors ?? [];
+  const publishers = booksData?.publishers ?? [];
+
   const quickCaptureMutation = useMutation({
     mutationFn: (data: { book: number; pages_read: number }) =>
       readingsService.create({
@@ -379,7 +403,6 @@ export default function Books() {
       setQuickCaptureBookId('');
       setQuickCapturePages('');
       void queryClient.invalidateQueries({ queryKey: ['books'] });
-      void loadData();
     },
     onError: (error: unknown) => {
       toast({
@@ -395,33 +418,6 @@ export default function Books() {
     const pages = Number(quickCapturePages);
     if (!bookId || !pages || pages <= 0) return;
     quickCaptureMutation.mutate({ book: bookId, pages_read: pages });
-  };
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [booksData, authorsData, publishersData] = await Promise.all([
-        booksService.getAll(),
-        authorsService.getAll(),
-        publishersService.getAll(),
-      ]);
-      setBooks(booksData);
-      setAuthors(authorsData);
-      setPublishers(publishersData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const openDetail = (book: Book, tab: DetailTab = 'info') => {
@@ -464,7 +460,7 @@ export default function Books() {
         title: t('pages.books.deleted'),
         description: t('pages.books.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -514,7 +510,7 @@ export default function Books() {
         });
       }
       setIsFormOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -591,7 +587,7 @@ export default function Books() {
     <PageContainer>
       <PageHeader title={t('pages.books.title')} icon={<Library />}>
         {activeTab === 'books' && (
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <div className="flex items-center rounded-md border">
               <Button
                 variant={viewMode === 'table' ? 'secondary' : 'ghost'}
@@ -635,15 +631,15 @@ export default function Books() {
         }
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="books" className="flex-1 gap-xs">
+          <TabsTrigger value="books" className="gap-xs flex-1">
             <Library className="h-4 w-4" />
             {t('nav.items.books')}
           </TabsTrigger>
-          <TabsTrigger value="reading-queue" className="flex-1 gap-xs">
+          <TabsTrigger value="reading-queue" className="gap-xs flex-1">
             <BookMarked className="h-4 w-4" />
             {t('nav.items.readingQueue')}
           </TabsTrigger>
-          <TabsTrigger value="highlights" className="flex-1 gap-xs">
+          <TabsTrigger value="highlights" className="gap-xs flex-1">
             <Highlighter className="h-4 w-4" />
             {t('nav.items.highlights')}
           </TabsTrigger>
@@ -720,7 +716,7 @@ export default function Books() {
 
               {filteredBooks.length === 0 ? (
                 <EmptyState
-                  icon={<Library className="h-12 w-12 text-muted-foreground" />}
+                  icon={<Library className="text-muted-foreground h-12 w-12" />}
                   message={
                     searchTerm
                       ? t('pages.books.emptySearch')
@@ -728,7 +724,7 @@ export default function Books() {
                   }
                 />
               ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 gap-md sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className="gap-md grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {pagedBooks.map((book) => (
                     <BookGridCard
                       key={book.id}
@@ -779,7 +775,7 @@ export default function Books() {
                         return (
                           <TableRow
                             key={book.id}
-                            className="cursor-pointer hover:bg-muted/50"
+                            className="hover:bg-muted/50 cursor-pointer"
                             onClick={() => openDetail(book, 'info')}
                           >
                             {/* Cover — compact in table view */}
@@ -806,7 +802,7 @@ export default function Books() {
 
                             {/* Title + priority */}
                             <TableCell>
-                              <p className="font-semibold leading-tight">
+                              <p className="leading-tight font-semibold">
                                 {book.title}
                               </p>
                               {pb && (
@@ -817,12 +813,12 @@ export default function Books() {
                             </TableCell>
 
                             {/* Authors */}
-                            <TableCell className="hidden max-w-[160px] truncate text-sm text-muted-foreground md:table-cell">
+                            <TableCell className="text-muted-foreground hidden max-w-[160px] truncate text-sm md:table-cell">
                               {book.authors_names.join(', ')}
                             </TableCell>
 
                             {/* Publisher */}
-                            <TableCell className="hidden max-w-[120px] truncate text-sm text-muted-foreground lg:table-cell">
+                            <TableCell className="text-muted-foreground hidden max-w-[120px] truncate text-sm lg:table-cell">
                               {book.publisher_name}
                             </TableCell>
 
@@ -848,7 +844,7 @@ export default function Books() {
                             </TableCell>
 
                             {/* Pages */}
-                            <TableCell className="hidden text-right text-sm text-muted-foreground lg:table-cell">
+                            <TableCell className="text-muted-foreground hidden text-right text-sm lg:table-cell">
                               {book.pages}p
                             </TableCell>
 
@@ -860,12 +856,12 @@ export default function Books() {
                             {/* Progress */}
                             <TableCell className="hidden sm:table-cell">
                               {book.reading_progress > 0 ? (
-                                <div className="flex items-center gap-sm">
+                                <div className="gap-sm flex items-center">
                                   <Progress
                                     value={book.reading_progress}
                                     className="h-2 w-28"
                                   />
-                                  <span className="text-xs text-muted-foreground">
+                                  <span className="text-muted-foreground text-xs">
                                     {book.reading_progress}%
                                   </span>
                                 </div>
@@ -877,7 +873,7 @@ export default function Books() {
                               onClick={(e) => e.stopPropagation()}
                               className="py-sm"
                             >
-                              <div className="flex gap-xs">
+                              <div className="gap-xs flex">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -969,7 +965,7 @@ export default function Books() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center justify-between text-sm">
                   <span>
                     {t('pages.books.paginationInfo', {
                       count: filteredBooks.length,
@@ -978,7 +974,7 @@ export default function Books() {
                       totalPages,
                     })}
                   </span>
-                  <div className="flex items-center gap-xs">
+                  <div className="gap-xs flex items-center">
                     <Button
                       variant="outline"
                       size="icon"
@@ -1064,7 +1060,7 @@ export default function Books() {
       {activeTab === 'books' && (
         <button
           onClick={() => setIsQuickCaptureOpen(true)}
-          className="fixed bottom-6 right-24 z-40 flex items-center gap-sm rounded-full bg-primary px-md py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"
+          className="gap-sm bg-primary px-md text-primary-foreground fixed right-24 bottom-6 z-40 flex items-center rounded-full py-3 text-sm font-semibold shadow-lg transition-shadow hover:shadow-xl"
           aria-label={t('pages.books.quickCapture.title')}
         >
           <CheckCircle className="h-4 w-4" />
@@ -1076,14 +1072,14 @@ export default function Books() {
       <Dialog open={isQuickCaptureOpen} onOpenChange={setIsQuickCaptureOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
-              <BookOpen className="h-4 w-4 text-primary" />
+            <DialogTitle className="gap-sm flex items-center">
+              <BookOpen className="text-primary h-4 w-4" />
               {t('pages.books.quickCapture.title')}
             </DialogTitle>
             <DialogDescription>{t('pages.books.quickCapture.desc')}</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-md py-sm">
-            <div className="flex flex-col gap-xs">
+          <div className="gap-md py-sm flex flex-col">
+            <div className="gap-xs flex flex-col">
               <Label htmlFor="qc-book">
                 {t('pages.books.quickCapture.selectBook')}
               </Label>
@@ -1109,7 +1105,7 @@ export default function Books() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-xs">
+            <div className="gap-xs flex flex-col">
               <Label htmlFor="qc-pages">
                 {t('pages.books.quickCapture.pagesRead')}
               </Label>
@@ -1150,8 +1146,8 @@ export default function Books() {
         <div className="fixed inset-0 z-50">
           <Suspense
             fallback={
-              <div className="flex h-full items-center justify-center bg-background">
-                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+              <div className="bg-background flex h-full items-center justify-center">
+                <Loader2 className="text-muted-foreground h-10 w-10 animate-spin" />
               </div>
             }
           >

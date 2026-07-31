@@ -84,10 +84,10 @@ export function DailyReflectionForm({
         title={t('pages.dailyReflections.form.sectionReflection')}
         icon={MessageSquare}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.dailyReflections.form.date')}
             </Label>
             <DatePicker
@@ -97,13 +97,13 @@ export function DailyReflectionForm({
               disabled={isLoading}
             />
             {errors.date && (
-              <p className="text-sm text-destructive">{errors.date.message}</p>
+              <p className="text-destructive text-sm">{errors.date.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Smile className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Smile className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.dailyReflections.form.mood')}
             </Label>
             <Select
@@ -134,13 +134,13 @@ export function DailyReflectionForm({
               </SelectContent>
             </Select>
             {errors.mood && (
-              <p className="text-sm text-destructive">{errors.mood.message}</p>
+              <p className="text-destructive text-sm">{errors.mood.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <MessageSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.dailyReflections.form.reflection')}
             </Label>
             <Textarea
@@ -151,13 +151,13 @@ export function DailyReflectionForm({
               disabled={isLoading}
             />
             {errors.reflection && (
-              <p className="text-sm text-destructive">{errors.reflection.message}</p>
+              <p className="text-destructive text-sm">{errors.reflection.message}</p>
             )}
           </div>
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('pages.dailyReflections.form.cancel')}
         </Button>

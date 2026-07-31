@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -12,7 +13,7 @@ import {
   Wallet,
   CalendarDays,
 } from 'lucide-react';
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -80,12 +81,20 @@ function getDefaultMonth(): string {
   return `${y}-${m}`;
 }
 
+const EMPTY_REVENUES: FixedRevenue[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function FixedRevenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [fixedRevenues, setFixedRevenues] = useState<FixedRevenue[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [stats, setStats] = useState<FixedRevenueStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedRevenue, setSelectedRevenue] = useState<FixedRevenue | undefined>();
@@ -105,35 +114,42 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     notes: '',
   });
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['fixed-revenues'],
+    queryFn: async () => {
+      try {
+        const [revenuesData, accountsData, statsData] = await Promise.all([
+          fixedRevenuesService.getAll(),
+          accountsService.getAll(),
+          fixedRevenuesService.getStats(),
+        ]);
+        const revenues: FixedRevenue[] = Array.isArray(revenuesData)
+          ? (revenuesData as FixedRevenue[])
+          : (revenuesData.results ?? []);
+        return {
+          fixedRevenues: revenues,
+          accounts: accountsData,
+          stats: statsData as FixedRevenueStats,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          fixedRevenues: EMPTY_REVENUES,
+          accounts: EMPTY_ACCOUNTS,
+          stats: null as FixedRevenueStats | null,
+        };
+      }
+    },
+  });
+  const fixedRevenues = pageData?.fixedRevenues ?? EMPTY_REVENUES;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+  const stats = pageData?.stats ?? null;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [revenuesData, accountsData, statsData] = await Promise.all([
-        fixedRevenuesService.getAll(),
-        accountsService.getAll(),
-        fixedRevenuesService.getStats(),
-      ]);
-      const revenues = Array.isArray(revenuesData)
-        ? revenuesData
-        : ((revenuesData as { results: FixedRevenue[] }).results ?? []);
-      setFixedRevenues(revenues);
-      setAccounts(accountsData);
-      setStats(statsData as FixedRevenueStats);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
 
   const openCreate = () => {
     setSelectedRevenue(undefined);
@@ -185,7 +201,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -212,7 +228,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         title: t('pages.fixedRevenues.deleted'),
         description: t('pages.fixedRevenues.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -228,12 +244,12 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       label: t('pages.fixedRevenues.columns.description'),
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-success/10 text-sm font-bold text-success">
+          <div className="bg-success/10 text-success flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
             {item.due_day}
           </div>
           <div>
             <div className="font-medium">{item.description}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {t('pages.fixedRevenues.dueDayDesc', { day: item.due_day })}
             </div>
           </div>
@@ -245,7 +261,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       label: t('pages.fixedRevenues.columns.defaultAmount'),
       align: 'right',
       render: (item) => (
-        <span className="font-semibold text-success">
+        <span className="text-success font-semibold">
           {formatCurrency(item.default_value)}
         </span>
       ),
@@ -299,14 +315,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     0
   );
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader
         title={t('pages.fixedRevenues.title')}
         icon={<Calendar className="h-6 w-6" />}
@@ -319,7 +329,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
 
       {/* 4 stat cards: modelos ativos | total mês | recebidas/pendentes | vs mês anterior */}
       {stats && (
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title={t('pages.fixedRevenues.stats.activeModels')}
             value={stats.active_templates}
@@ -364,23 +374,23 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
       <div
         className={cn(
-          'grid gap-md',
+          'gap-md grid',
           activeRevenues.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
         )}
       >
         {/* Card 1: Lançamento */}
-        <div className="flex flex-col justify-between rounded-lg border bg-card p-md">
+        <div className="bg-card p-md flex flex-col justify-between rounded-lg border">
           <div>
             <h3 className="text-base font-semibold">
               {t('pages.fixedRevenues.launchSection')}
             </h3>
-            <p className="mt-xs text-sm text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-sm">
               {t('pages.fixedRevenues.launchDesc')}
             </p>
           </div>
           <Button
             onClick={() => setIsLaunchDialogOpen(true)}
-            className="mt-md w-full bg-success hover:bg-success/90"
+            className="mt-md bg-success hover:bg-success/90 w-full"
           >
             <TrendingUp className="mr-sm h-4 w-4" />
             {t('pages.fixedRevenues.launchBtn')}
@@ -390,24 +400,24 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         {activeRevenues.length > 0 && (
           <>
             {/* Card 2: Comprometimento */}
-            <div className="rounded-lg border bg-card p-md">
+            <div className="bg-card p-md rounded-lg border">
               <p className="text-sm font-medium">
                 {t('pages.fixedRevenues.stats.monthlyDesc')}
               </p>
-              <p className="mt-xs text-2xl font-bold text-success">
+              <p className="mt-xs text-success text-2xl font-bold">
                 {formatCurrency(totalMonthlyFixed)}
               </p>
-              <p className="mt-sm text-xs text-muted-foreground">
+              <p className="mt-sm text-muted-foreground text-xs">
                 {activeRevenues.length} {t('pages.fixedRevenues.stats.activeCount')}
               </p>
             </div>
 
             {/* Card 3: Calendário */}
-            <div className="rounded-lg border bg-card p-md">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="bg-card p-md rounded-lg border">
+              <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
                 {t('pages.fixedRevenues.stats.scheduleTitle')}
               </p>
-              <div className="flex flex-wrap gap-sm">
+              <div className="gap-sm flex flex-wrap">
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                   const revsOnDay = activeRevenues.filter((r) => r.due_day === day);
                   const hasRevenue = revsOnDay.length > 0;
@@ -422,7 +432,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                       className={cn(
                         'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
                         hasRevenue
-                          ? 'bg-success/15 text-success ring-1 ring-success/30'
+                          ? 'bg-success/15 text-success ring-success/30 ring-1'
                           : 'text-muted-foreground'
                       )}
                     >
@@ -443,7 +453,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
         emptyState={{
-          icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
+          icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
           message: t('pages.fixedRevenues.emptyState'),
         }}
         rowClassName={(item) =>
@@ -452,7 +462,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             : 'border-l-4 border-l-muted opacity-60'
         }
         actions={(item) => (
-          <div className="flex items-center justify-end gap-sm">
+          <div className="gap-sm flex items-center justify-end">
             <Button
               variant="ghost"
               size="icon"
@@ -469,7 +479,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -494,8 +504,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             {/* Seção: Informações Básicas */}
             <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
               <div className="space-y-sm">
-                <Label htmlFor="description" className="flex items-center gap-xs">
-                  <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="description" className="gap-xs flex items-center">
+                  <Store className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedRevenues.form.descriptionLabel')}
                 </Label>
                 <Input
@@ -509,8 +519,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                 />
               </div>
               <div className="space-y-sm">
-                <Label className="flex items-center gap-xs">
-                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="gap-xs flex items-center">
+                  <Tag className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedRevenues.form.categoryLabel')}
                 </Label>
                 <Select
@@ -525,9 +535,9 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                       const Icon = REVENUE_CATEGORY_ICONS[key];
                       return (
                         <SelectItem key={key} value={key}>
-                          <span className="flex items-center gap-sm">
+                          <span className="gap-sm flex items-center">
                             {Icon && (
-                              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                             )}
                             {translate('revenueCategories', key)}
                           </span>
@@ -541,10 +551,10 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
 
             {/* Seção: Valores & Vencimento */}
             <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-              <div className="grid grid-cols-2 gap-md">
+              <div className="gap-md grid grid-cols-2">
                 <div className="space-y-sm">
-                  <Label htmlFor="default_value" className="flex items-center gap-xs">
-                    <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="default_value" className="gap-xs flex items-center">
+                    <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.defaultAmountLabel')}
                   </Label>
                   <CurrencyInput
@@ -560,8 +570,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                   />
                 </div>
                 <div className="space-y-sm">
-                  <Label htmlFor="due_day" className="flex items-center gap-xs">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="due_day" className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.dueDayLabel')}
                   </Label>
                   <Input
@@ -585,8 +595,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             {/* Seção: Conta */}
             <FormSection title={t('common.form.sections.paymentType')} icon={Wallet}>
               <div className="space-y-sm">
-                <Label className="flex items-center gap-xs">
-                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="gap-xs flex items-center">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.fixedRevenues.form.accountLabel')}
                 </Label>
                 <Select
@@ -615,8 +625,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
               <div className="space-y-md">
                 <div className="space-y-sm">
-                  <Label htmlFor="notes" className="flex items-center gap-xs">
-                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="notes" className="gap-xs flex items-center">
+                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.notesLabel')}
                   </Label>
                   <Textarea
@@ -629,7 +639,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                     rows={3}
                   />
                 </div>
-                <div className="flex items-center gap-sm">
+                <div className="gap-sm flex items-center">
                   <Checkbox
                     id="is_active"
                     checked={formData.is_active}
@@ -641,7 +651,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                     {t('pages.fixedRevenues.form.isActiveLabel')}
                   </Label>
                 </div>
-                <div className="flex items-center gap-sm">
+                <div className="gap-sm flex items-center">
                   <Checkbox
                     id="allow_value_edit"
                     checked={formData.allow_value_edit}
@@ -681,7 +691,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         isOpen={isLaunchDialogOpen}
         onClose={() => setIsLaunchDialogOpen(false)}
         fixedRevenues={activeRevenues}
-        onSuccess={loadData}
+        onSuccess={refresh}
       />
     </Wrapper>
   );
@@ -711,7 +721,11 @@ function LaunchRevenuesDialog({
   const years = Array.from({ length: 3 }, (_, i) => currentYear + i);
   const [monthPart, yearPart] = selectedMonth.split('-');
 
-  useEffect(() => {
+  // Reinicia os valores/seleção sempre que o dialog abre (derivado durante o
+  // render — sem efeito — comparando com a última transição de `isOpen`).
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  if (isOpen !== lastIsOpen) {
+    setLastIsOpen(isOpen);
     if (isOpen) {
       const defaults: Record<number, number> = {};
       const ids = new Set<number>();
@@ -722,7 +736,7 @@ function LaunchRevenuesDialog({
       setRevenueValues(defaults);
       setSelectedIds(ids);
     }
-  }, [isOpen, fixedRevenues]);
+  }
 
   const handleSubmit = async () => {
     if (!selectedMonth || selectedIds.size === 0) return;
@@ -758,7 +772,7 @@ function LaunchRevenuesDialog({
         </DialogHeader>
 
         <div className="flex gap-3">
-          <div className="flex-1 space-y-xs">
+          <div className="space-y-xs flex-1">
             <Label>{t('pages.fixedRevenues.form.monthLabel')}</Label>
             <Select
               value={monthPart}
@@ -776,7 +790,7 @@ function LaunchRevenuesDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="w-28 space-y-xs">
+          <div className="space-y-xs w-28">
             <Label>{t('pages.fixedRevenues.form.yearLabel')}</Label>
             <Select
               value={yearPart}
@@ -813,7 +827,7 @@ function LaunchRevenuesDialog({
               />
               <Label htmlFor={`rev-${r.id}`} className="flex-1 cursor-pointer text-sm">
                 {r.description}
-                <span className="ml-xs text-xs text-muted-foreground">
+                <span className="ml-xs text-muted-foreground text-xs">
                   (Dia {r.due_day})
                 </span>
               </Label>
@@ -832,7 +846,7 @@ function LaunchRevenuesDialog({
                   disabled={!selectedIds.has(r.id)}
                 />
               ) : (
-                <span className="w-28 text-right text-sm font-medium text-success">
+                <span className="text-success w-28 text-right text-sm font-medium">
                   {formatCurrency(parseFloat(r.default_value))}
                 </span>
               )}

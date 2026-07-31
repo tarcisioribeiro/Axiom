@@ -187,12 +187,12 @@ function ModuleItem({
   const completedCount = lessons.filter((l) => l.is_completed).length;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-md">
-      <div className="flex items-start justify-between gap-sm">
-        <div className="flex min-w-0 flex-1 items-center gap-sm">
-          <Layers className="mt-0.5 h-4 w-4 shrink-0 text-category-intellect" />
+    <div className="border-border bg-card p-md rounded-lg border">
+      <div className="gap-sm flex items-start justify-between">
+        <div className="gap-sm flex min-w-0 flex-1 items-center">
+          <Layers className="text-category-intellect mt-0.5 h-4 w-4 shrink-0" />
           {isEditing ? (
-            <div className="flex flex-1 gap-sm">
+            <div className="gap-sm flex flex-1">
               <Input
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
@@ -201,7 +201,7 @@ function ModuleItem({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 px-sm"
+                className="px-sm h-7"
                 onClick={() => updateMod.mutate({ title: editingTitle })}
                 disabled={updateMod.isPending}
               >
@@ -212,8 +212,8 @@ function ModuleItem({
             <span className="truncate text-sm font-medium">{mod.title}</span>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-xs">
-          <span className="text-xs text-muted-foreground">
+        <div className="gap-xs flex shrink-0 items-center">
+          <span className="text-muted-foreground text-xs">
             {completedCount}/{lessons.length}
           </span>
           <Button
@@ -230,7 +230,7 @@ function ModuleItem({
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive h-6 w-6"
             onClick={() => {
               void showConfirm({
                 title: t('common.messages.confirmDeleteTitle'),
@@ -254,28 +254,28 @@ function ModuleItem({
 
       {/* Bulk action bar */}
       {lessons.length > 0 && (
-        <div className="mt-sm flex items-center justify-between gap-sm">
+        <div className="mt-sm gap-sm flex items-center justify-between">
           <button
             type="button"
-            className="flex items-center gap-xs text-xs text-muted-foreground hover:text-foreground"
+            className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs"
             onClick={toggleSelectAll}
           >
             {allSelected ? (
-              <CheckSquare className="h-3.5 w-3.5 text-category-intellect" />
+              <CheckSquare className="text-category-intellect h-3.5 w-3.5" />
             ) : (
               <Square className="h-3.5 w-3.5" />
             )}
             {t('pages.courses.lessons.selectAll')}
           </button>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-xs">
-              <span className="text-xs text-muted-foreground">
+            <div className="gap-xs flex items-center">
+              <span className="text-muted-foreground text-xs">
                 {selectedIds.size} {t('pages.courses.lessons.selected')}
               </span>
               <Button
                 size="sm"
                 variant="outline"
-                className="h-6 gap-xs px-sm text-xs text-success"
+                className="gap-xs px-sm text-success h-6 text-xs"
                 disabled={bulkComplete.isPending}
                 onClick={() =>
                   bulkComplete.mutate({ ids: [...selectedIds], done: true })
@@ -287,7 +287,7 @@ function ModuleItem({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-6 gap-xs px-sm text-xs"
+                className="gap-xs px-sm h-6 text-xs"
                 disabled={bulkComplete.isPending}
                 onClick={() =>
                   bulkComplete.mutate({ ids: [...selectedIds], done: false })
@@ -305,7 +305,7 @@ function ModuleItem({
         {lessons.map((lesson) => (
           <div
             key={lesson.id}
-            className="flex items-center justify-between gap-sm rounded px-sm py-xs transition-colors hover:bg-muted/40"
+            className="gap-sm px-sm py-xs hover:bg-muted/40 flex items-center justify-between rounded transition-colors"
           >
             <button
               type="button"
@@ -313,20 +313,20 @@ function ModuleItem({
               onClick={() => toggleSelect(lesson.id)}
             >
               {selectedIds.has(lesson.id) ? (
-                <CheckSquare className="h-4 w-4 text-category-intellect" />
+                <CheckSquare className="text-category-intellect h-4 w-4" />
               ) : (
-                <Square className="h-4 w-4 text-muted-foreground/40 hover:text-muted-foreground" />
+                <Square className="text-muted-foreground/40 hover:text-muted-foreground h-4 w-4" />
               )}
             </button>
             <button
               type="button"
-              className="flex min-w-0 flex-1 items-center gap-sm"
+              className="gap-sm flex min-w-0 flex-1 items-center"
               onClick={() => toggleLesson.mutate(lesson.id)}
             >
               {lesson.is_completed ? (
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-category-intellect" />
+                <CheckCircle2 className="text-category-intellect h-4 w-4 shrink-0" />
               ) : (
-                <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+                <Circle className="text-muted-foreground/50 h-4 w-4 shrink-0" />
               )}
               <span
                 className={`truncate text-sm ${
@@ -341,7 +341,7 @@ function ModuleItem({
             <Button
               size="icon"
               variant="ghost"
-              className="h-5 w-5 shrink-0 text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive h-5 w-5 shrink-0"
               onClick={() => {
                 void showConfirm({
                   title: t('common.messages.confirmDeleteTitle'),
@@ -357,7 +357,7 @@ function ModuleItem({
         ))}
 
         {showAddLesson ? (
-          <div className="flex gap-sm pt-xs">
+          <div className="gap-sm pt-xs flex">
             <Input
               value={newLessonTitle}
               onChange={(e) => setNewLessonTitle(e.target.value)}
@@ -378,7 +378,7 @@ function ModuleItem({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 px-sm"
+              className="px-sm h-7"
               onClick={() => {
                 if (newLessonTitle.trim()) {
                   addLesson.mutate({
@@ -401,7 +401,7 @@ function ModuleItem({
         ) : (
           <button
             type="button"
-            className="flex w-full items-center gap-xs rounded px-sm py-xs text-xs text-muted-foreground transition-colors hover:bg-category-intellect/5 hover:text-category-intellect"
+            className="gap-xs px-sm py-xs text-muted-foreground hover:bg-category-intellect/5 hover:text-category-intellect flex w-full items-center rounded text-xs transition-colors"
             onClick={() => setShowAddLesson(true)}
           >
             <Plus className="h-3 w-3" />
@@ -434,26 +434,26 @@ function SessionItem({
   });
 
   return (
-    <div className="flex items-center justify-between gap-sm rounded-lg border border-border bg-card p-sm">
-      <div className="flex min-w-0 flex-1 items-center gap-sm">
-        <Timer className="h-4 w-4 shrink-0 text-category-intellect" />
+    <div className="gap-sm border-border bg-card p-sm flex items-center justify-between rounded-lg border">
+      <div className="gap-sm flex min-w-0 flex-1 items-center">
+        <Timer className="text-category-intellect h-4 w-4 shrink-0" />
         <div className="min-w-0">
           <div className="text-sm font-medium">{formatDate(session.session_date)}</div>
           {session.notes && (
-            <div className="truncate text-xs text-muted-foreground">
+            <div className="text-muted-foreground truncate text-xs">
               {session.notes}
             </div>
           )}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-sm">
-        <span className="rounded bg-category-intellect/10 px-sm py-xs text-xs font-semibold text-category-intellect">
+      <div className="gap-sm flex shrink-0 items-center">
+        <span className="bg-category-intellect/10 px-sm py-xs text-category-intellect rounded text-xs font-semibold">
           {session.duration_hours}h
         </span>
         <Button
           size="icon"
           variant="ghost"
-          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+          className="text-muted-foreground hover:text-destructive h-6 w-6"
           onClick={() => {
             void showConfirm({
               title: t('common.messages.confirmDeleteTitle'),
@@ -521,9 +521,9 @@ function AddSessionForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-md rounded-lg border border-category-intellect/20 bg-category-intellect/5 p-md"
+      className="space-y-md border-category-intellect/20 bg-category-intellect/5 p-md rounded-lg border"
     >
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.courses.sessions.dateLabel')}</Label>
           <DatePicker
@@ -560,7 +560,7 @@ function AddSessionForm({
           {...register('notes')}
         />
       </div>
-      <div className="flex justify-end gap-sm">
+      <div className="gap-sm flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -568,7 +568,7 @@ function AddSessionForm({
           type="submit"
           size="sm"
           disabled={create.isPending}
-          className="bg-category-intellect text-white hover:bg-category-intellect/90"
+          className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {create.isPending ? (
             <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
@@ -709,16 +709,16 @@ export function CourseDetailModal({
         {/* Colored header */}
         <div className="bg-category-intellect/10 px-xl pb-md pt-xl">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-md">
-              <div className="flex min-w-0 flex-1 items-center gap-md">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-intellect/20">
-                  <GraduationCap className="h-5 w-5 text-category-intellect" />
+            <div className="gap-md flex items-start justify-between">
+              <div className="gap-md flex min-w-0 flex-1 items-center">
+                <div className="bg-category-intellect/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                  <GraduationCap className="text-category-intellect h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <DialogTitle className="truncate text-lg font-bold">
                     {displayCourse.title}
                   </DialogTitle>
-                  <DialogDescription className="mt-xs flex items-center gap-sm">
+                  <DialogDescription className="mt-xs gap-sm flex items-center">
                     <span>{displayCourse.platform_display}</span>
                     <span className="text-muted-foreground/50">·</span>
                     <span>{displayCourse.category_display}</span>
@@ -732,54 +732,54 @@ export function CourseDetailModal({
 
             {/* Progress bar */}
             <div className="mt-md">
-              <div className="mb-xs flex items-center justify-between text-xs text-muted-foreground">
+              <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
                 <span>{t('pages.courses.stats.progress')}</span>
-                <span className="font-semibold text-category-intellect">
+                <span className="text-category-intellect font-semibold">
                   {displayCourse.progress_percentage}%
                 </span>
               </div>
               <Progress
                 value={displayCourse.progress_percentage}
-                className="h-2 bg-category-intellect/20"
+                className="bg-category-intellect/20 h-2"
               />
             </div>
 
             {/* Stats row */}
-            <div className="mt-md grid grid-cols-3 gap-sm">
-              <div className="rounded-lg bg-background/60 p-sm text-center">
-                <div className="text-lg font-bold text-category-intellect">
+            <div className="mt-md gap-sm grid grid-cols-3">
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
                   {displayCourse.completed_lessons}/{displayCourse.total_lessons}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   {t('pages.courses.stats.lessons')}
                 </div>
               </div>
-              <div className="rounded-lg bg-background/60 p-sm text-center">
-                <div className="text-lg font-bold text-category-intellect">
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
                   {displayCourse.invested_hours.toFixed(1)}h
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   {t('pages.courses.stats.investedHours')}
                 </div>
               </div>
-              <div className="rounded-lg bg-background/60 p-sm text-center">
-                <div className="text-lg font-bold text-category-intellect">
+              <div className="bg-background/60 p-sm rounded-lg text-center">
+                <div className="text-category-intellect text-lg font-bold">
                   {displayCourse.estimated_hours
                     ? `${displayCourse.estimated_hours}h`
                     : '—'}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   {t('pages.courses.stats.estimatedHours')}
                 </div>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="mt-md flex gap-sm">
+          <div className="mt-md gap-sm flex">
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-xs"
+              className="gap-xs h-8"
               onClick={() => onEdit(displayCourse)}
             >
               <Edit className="h-3.5 w-3.5" />
@@ -788,7 +788,7 @@ export function CourseDetailModal({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 gap-xs text-destructive hover:text-destructive"
+              className="gap-xs text-destructive hover:text-destructive h-8"
               onClick={() => onDelete(displayCourse)}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -820,7 +820,7 @@ export function CourseDetailModal({
 
           <TabsContent value="overview" className="mt-md space-y-md">
             {displayCourse.description && (
-              <div className="rounded-lg bg-muted/30 p-md text-sm leading-relaxed text-muted-foreground">
+              <div className="bg-muted/30 p-md text-muted-foreground rounded-lg text-sm leading-relaxed">
                 {displayCourse.description}
               </div>
             )}
@@ -829,21 +829,21 @@ export function CourseDetailModal({
                 href={displayCourse.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-sm text-sm text-category-intellect hover:underline"
+                className="gap-sm text-category-intellect flex items-center text-sm hover:underline"
               >
                 <GraduationCap className="h-4 w-4" />
                 {displayCourse.url}
               </a>
             )}
-            <div className="grid grid-cols-2 gap-sm text-sm">
+            <div className="gap-sm grid grid-cols-2 text-sm">
               {displayCourse.start_date && (
-                <div className="flex items-center gap-xs text-muted-foreground">
+                <div className="gap-xs text-muted-foreground flex items-center">
                   <Calendar className="h-3.5 w-3.5" />
                   {formatDate(displayCourse.start_date)}
                 </div>
               )}
               {displayCourse.end_date && (
-                <div className="flex items-center gap-xs text-muted-foreground">
+                <div className="gap-xs text-muted-foreground flex items-center">
                   <Calendar className="h-3.5 w-3.5" />
                   {formatDate(displayCourse.end_date)}
                 </div>
@@ -853,12 +853,12 @@ export function CourseDetailModal({
 
           <TabsContent value="modules" className="mt-md space-y-sm">
             {modules.length === 0 && !showAddModule && (
-              <div className="rounded-lg border border-dashed border-category-intellect/30 bg-category-intellect/5 p-lg text-center">
-                <Layers className="mx-auto mb-sm h-8 w-8 text-category-intellect/40" />
-                <p className="text-sm font-medium text-foreground">
+              <div className="border-category-intellect/30 bg-category-intellect/5 p-lg rounded-lg border border-dashed text-center">
+                <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
+                <p className="text-foreground text-sm font-medium">
                   {t('pages.courses.modules.emptyTitle')}
                 </p>
-                <p className="mt-xs text-xs text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-xs">
                   {t('pages.courses.modules.emptyHint')}
                 </p>
               </div>
@@ -875,7 +875,7 @@ export function CourseDetailModal({
             ))}
 
             {showAddModule ? (
-              <div className="flex gap-sm">
+              <div className="gap-sm flex">
                 <Input
                   value={newModuleTitle}
                   onChange={(e) => setNewModuleTitle(e.target.value)}
@@ -917,7 +917,7 @@ export function CourseDetailModal({
             ) : (
               <Button
                 variant="outline"
-                className="w-full gap-sm border-dashed text-muted-foreground hover:border-category-intellect/50 hover:text-category-intellect"
+                className="gap-sm text-muted-foreground hover:border-category-intellect/50 hover:text-category-intellect w-full border-dashed"
                 onClick={() => setShowAddModule(true)}
               >
                 <Plus className="h-4 w-4" />
@@ -928,8 +928,8 @@ export function CourseDetailModal({
 
           <TabsContent value="sessions" className="mt-md space-y-sm">
             {weeklyHoursData.length > 1 && (
-              <div className="rounded-lg border border-border p-sm">
-                <p className="mb-sm text-xs font-medium text-muted-foreground">
+              <div className="border-border p-sm rounded-lg border">
+                <p className="mb-sm text-muted-foreground text-xs font-medium">
                   {t('pages.courses.studyHours.title')}
                 </p>
                 <ResponsiveContainer width="100%" height={100}>
@@ -945,8 +945,8 @@ export function CourseDetailModal({
                     />
                     <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
                     <Tooltip
-                      formatter={(v: number) => [
-                        `${v}h`,
+                      formatter={(v) => [
+                        `${Number(v)}h`,
                         t('pages.courses.studyHours.hours'),
                       ]}
                       labelStyle={{ fontSize: 11 }}
@@ -962,14 +962,14 @@ export function CourseDetailModal({
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {t('pages.courses.sessions.totalHours', {
                   hours: totalSessionHours.toFixed(1),
                 })}
               </span>
               <Button
                 size="sm"
-                className="gap-xs bg-category-intellect text-white hover:bg-category-intellect/90"
+                className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
                 onClick={() => setShowAddSession(true)}
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -990,7 +990,7 @@ export function CourseDetailModal({
             )}
 
             {sessions.length === 0 && !showAddSession ? (
-              <p className="py-md text-center text-sm text-muted-foreground">
+              <p className="py-md text-muted-foreground text-center text-sm">
                 {t('pages.courses.sessions.emptyState')}
               </p>
             ) : (
@@ -1003,22 +1003,22 @@ export function CourseDetailModal({
           <TabsContent value="certificate" className="mt-md space-y-md">
             {displayCourse.completion_certificate ? (
               <div className="space-y-md">
-                <div className="flex items-center gap-md rounded-lg border border-category-intellect/20 bg-category-intellect/5 p-md">
-                  <Award className="h-8 w-8 shrink-0 text-category-intellect" />
+                <div className="gap-md border-category-intellect/20 bg-category-intellect/5 p-md flex items-center rounded-lg border">
+                  <Award className="text-category-intellect h-8 w-8 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       {t('pages.courses.certificate.fileLabel')}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p className="text-muted-foreground truncate text-xs">
                       {displayCourse.completion_certificate.split('/').pop()}
                     </p>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <a
                       href={displayCourse.completion_certificate}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                      className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>
@@ -1026,7 +1026,7 @@ export function CourseDetailModal({
                       type="button"
                       disabled={uploadingCert}
                       onClick={() => void handleCertificateRemove()}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-destructive transition-colors hover:bg-destructive/10"
+                      className="border-border text-destructive hover:bg-destructive/10 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors"
                     >
                       {uploadingCert ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1036,9 +1036,9 @@ export function CourseDetailModal({
                     </button>
                   </div>
                 </div>
-                <label className="flex cursor-pointer flex-col items-center gap-sm rounded-lg border border-dashed border-border p-md text-center transition-colors hover:bg-muted/30">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
+                <label className="gap-sm border-border p-md hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                  <Upload className="text-muted-foreground h-5 w-5" />
+                  <span className="text-muted-foreground text-xs">
                     {t('pages.courses.certificate.replace')}
                   </span>
                   <input
@@ -1053,17 +1053,17 @@ export function CourseDetailModal({
                 </label>
               </div>
             ) : (
-              <label className="flex cursor-pointer flex-col items-center gap-md rounded-lg border border-dashed border-category-intellect/30 bg-category-intellect/5 p-xl text-center transition-colors hover:bg-category-intellect/10">
+              <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
                 {uploadingCert ? (
-                  <Loader2 className="h-10 w-10 animate-spin text-category-intellect/50" />
+                  <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
                 ) : (
-                  <Award className="h-10 w-10 text-category-intellect/40" />
+                  <Award className="text-category-intellect/40 h-10 w-10" />
                 )}
                 <div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-foreground text-sm font-medium">
                     {t('pages.courses.certificate.emptyTitle')}
                   </p>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.courses.certificate.emptyHint')}
                   </p>
                 </div>

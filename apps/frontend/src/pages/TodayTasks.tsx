@@ -112,21 +112,21 @@ function PomodoroTimer() {
         : 'hsl(var(--warning))';
 
   return (
-    <div className="flex items-center gap-md rounded-lg border bg-card px-lg py-md">
-      <div className="flex items-center gap-sm">
-        <Timer className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">
+    <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
+      <div className="gap-sm flex items-center">
+        <Timer className="text-muted-foreground h-4 w-4" />
+        <span className="text-muted-foreground text-sm font-medium">
           {t('pages.todayTasks.pomodoroTitle')}
         </span>
       </div>
-      <div className="flex items-center gap-xs rounded-md border p-0.5">
+      <div className="gap-xs flex items-center rounded-md border p-0.5">
         {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => switchMode(m)}
             className={cn(
-              'rounded px-sm py-xs text-xs transition-colors',
+              'px-sm py-xs rounded text-xs transition-colors',
               mode === m
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -139,7 +139,7 @@ function PomodoroTimer() {
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
         <span className="text-xs font-bold tabular-nums">{timeString}</span>
       </CircularProgress>
-      <div className="flex items-center gap-xs">
+      <div className="gap-xs flex items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -164,7 +164,7 @@ function PomodoroTimer() {
         </Button>
       </div>
       {cycles > 0 && (
-        <span className="ml-auto text-xs text-muted-foreground">
+        <span className="text-muted-foreground ml-auto text-xs">
           {t('pages.todayTasks.pomodoroCycles', { count: cycles })}
         </span>
       )}
@@ -270,7 +270,7 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
           onClick={() => changeViewMode(mode)}
           title={t(`pages.todayTasks.${mode}Mode`)}
           className={cn(
-            'rounded px-sm py-xs transition-colors',
+            'px-sm py-xs rounded transition-colors',
             viewMode === mode
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground'
@@ -327,7 +327,7 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
 
       <PomodoroTimer />
 
-      <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
+      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
         <CircularProgress
           value={dayRate}
           size={72}
@@ -337,20 +337,20 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
           <span className="text-sm font-bold">{doneCount}</span>
         </CircularProgress>
         <div className="flex-1">
-          <div className="flex items-center gap-sm">
-            <GreetIcon className="h-5 w-5 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <GreetIcon className="text-muted-foreground h-5 w-5" />
             <span className="text-lg font-semibold">{greeting.label}</span>
           </div>
-          <p className="mt-0.5 capitalize text-muted-foreground">{dateLabel}</p>
+          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold">
             {doneCount}
-            <span className="text-base font-normal text-muted-foreground">
+            <span className="text-muted-foreground text-base font-normal">
               /{todayTasksCount}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.todayTasks.tasksLabel')}
           </p>
         </div>

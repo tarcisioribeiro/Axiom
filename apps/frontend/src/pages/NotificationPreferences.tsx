@@ -1,5 +1,6 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Mail, BellOff, BellRing, Loader2, Save, Zap } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -76,34 +77,32 @@ function ChannelBadge({ channel }: { channel: NotificationChannel }) {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
+const EMPTY_PREFERENCES: NotificationPreference[] = [];
+
 export default function NotificationPreferences() {
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [pendingChanges, setPendingChanges] = useState<
     Record<NotificationType, NotificationChannel>
   >({} as Record<NotificationType, NotificationChannel>);
 
-  const load = useCallback(async () => {
-    try {
-      const data = await notificationPreferencesService.getAll();
-      setPreferences(data);
-    } catch (err) {
-      toast({
-        title: t('pages.notificationPreferences.loadError'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast, t]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { data: preferences = EMPTY_PREFERENCES, isLoading } = useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: async () => {
+      try {
+        return await notificationPreferencesService.getAll();
+      } catch (err) {
+        toast({
+          title: t('pages.notificationPreferences.loadError'),
+          description: getErrorMessage(err),
+          variant: 'destructive',
+        });
+        return EMPTY_PREFERENCES;
+      }
+    },
+  });
 
   function getChannel(notificationType: NotificationType): NotificationChannel {
     if (notificationType in pendingChanges) return pendingChanges[notificationType];
@@ -138,15 +137,20 @@ export default function NotificationPreferences() {
           const updated = await notificationPreferencesService.update(existing.id, {
             channel,
           });
-          setPreferences((prev) =>
-            prev.map((p) => (p.id === existing.id ? updated : p))
+          queryClient.setQueryData<NotificationPreference[]>(
+            ['notification-preferences'],
+            (prev = EMPTY_PREFERENCES) =>
+              prev.map((p) => (p.id === existing.id ? updated : p))
           );
         } else {
           const created = await notificationPreferencesService.create({
             notification_type: notificationType as NotificationType,
             channel,
           });
-          setPreferences((prev) => [...prev, created]);
+          queryClient.setQueryData<NotificationPreference[]>(
+            ['notification-preferences'],
+            (prev = EMPTY_PREFERENCES) => [...prev, created]
+          );
         }
       }
       setPendingChanges({} as Record<NotificationType, NotificationChannel>);
@@ -186,7 +190,7 @@ export default function NotificationPreferences() {
         {t('pages.notificationPreferences.subtitle')}
       </p>
 
-      <div className="grid gap-md sm:grid-cols-2">
+      <div className="gap-md grid sm:grid-cols-2">
         {NOTIFICATION_TYPE_KEYS.map((key) => {
           const currentChannel = getChannel(key);
           const label = t(`pages.notificationPreferences.types.${key}_label`);
@@ -196,10 +200,10 @@ export default function NotificationPreferences() {
           return (
             <Card
               key={key}
-              className={`flex flex-col ${isPending ? 'ring-1 ring-primary/40' : ''}`}
+              className={`flex flex-col ${isPending ? 'ring-primary/40 ring-1' : ''}`}
             >
               <CardHeader className="pb-sm">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="gap-sm flex items-start justify-between">
                   <div className="space-y-0.5">
                     <CardTitle className="text-sm font-semibold">{label}</CardTitle>
                     <CardDescription className="text-xs">{description}</CardDescription>
@@ -221,7 +225,7 @@ export default function NotificationPreferences() {
                   <SelectContent>
                     {CHANNEL_OPTION_KEYS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex items-center gap-sm">
+                        <span className="gap-sm flex items-center">
                           {opt.icon}
                           {t(
                             `pages.notificationPreferences.${CHANNEL_KEY_MAP[opt.value]}`
@@ -237,14 +241,14 @@ export default function NotificationPreferences() {
         })}
       </div>
 
-      <div className="mt-lg rounded-lg border border-dashed p-md text-sm text-muted-foreground">
-        <p className="flex items-center gap-sm">
+      <div className="mt-lg p-md text-muted-foreground rounded-lg border border-dashed text-sm">
+        <p className="gap-sm flex items-center">
           <BellOff className="h-4 w-4 shrink-0" />
           <span>{t('pages.notificationPreferences.emailNote')}</span>
         </p>
       </div>
 
-      <div className="mt-lg flex flex-wrap items-center gap-sm">
+      <div className="mt-lg gap-sm flex flex-wrap items-center">
         <Button onClick={() => void handleSave()} disabled={isSaving}>
           {isSaving ? (
             <Loader2 className="mr-xs h-4 w-4 animate-spin" />

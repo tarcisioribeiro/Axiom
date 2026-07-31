@@ -114,7 +114,7 @@ function InsightCard({ insight }: { insight: HabitInsight }) {
 
   return (
     <div
-      className={cn('flex items-center gap-sm rounded-lg border p-md', variantClass)}
+      className={cn('gap-sm p-md flex items-center rounded-lg border', variantClass)}
     >
       {item.icon}
       <p className="text-sm font-medium">{item.label}</p>
@@ -182,13 +182,13 @@ function HeatmapCalendar({ data, year }: HeatmapCalendarProps) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex gap-xs">
+      <div className="gap-xs flex">
         {/* Weekday labels column */}
-        <div className="flex flex-col gap-px pt-lg">
+        <div className="pt-lg flex flex-col gap-px">
           {weekdayLabels.map((label, i) => (
             <div
               key={i}
-              className="flex h-3 w-3 items-center justify-center text-[9px] text-muted-foreground"
+              className="text-muted-foreground flex h-3 w-3 items-center justify-center text-[9px]"
             >
               {i % 2 === 0 ? label : ''}
             </div>
@@ -205,7 +205,7 @@ function HeatmapCalendar({ data, year }: HeatmapCalendarProps) {
                   : '';
               return (
                 <div key={wIdx} className="flex flex-col gap-px">
-                  <div className="h-4 text-[9px] text-muted-foreground">
+                  <div className="text-muted-foreground h-4 text-[9px]">
                     {monthLabel}
                   </div>
                   {week.map((cell) => {
@@ -234,7 +234,7 @@ function HeatmapCalendar({ data, year }: HeatmapCalendarProps) {
         </div>
       </div>
       {/* Legend */}
-      <div className="mt-sm flex items-center gap-sm text-xs text-muted-foreground">
+      <div className="mt-sm gap-sm text-muted-foreground flex items-center text-xs">
         <span>{t('pages.personalAnalytics.less')}</span>
         {['bg-muted', 'bg-success/30', 'bg-success/60', 'bg-success'].map((cls) => (
           <div key={cls} className={cn('h-3 w-3 rounded-sm', cls)} />
@@ -269,8 +269,8 @@ function WeekdayBarChart({ data }: { data: WeekdayAnalytics[] }) {
         <XAxis dataKey="name" tick={{ fontSize: 11 }} />
         <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
         <Tooltip
-          formatter={(value: number) => [
-            `${value}%`,
+          formatter={(value) => [
+            `${Number(value)}%`,
             t('pages.personalAnalytics.completionRate'),
           ]}
           contentStyle={{ fontSize: 12 }}
@@ -331,11 +331,11 @@ export default function PersonalAnalytics() {
         <PageHeader
           title={t('pages.personalAnalytics.title')}
           description={t('pages.personalAnalytics.description')}
-          icon={<BarChart3 className="h-6 w-6 text-primary" />}
+          icon={<BarChart3 className="text-primary h-6 w-6" />}
         />
 
         {/* Summary stats */}
-        <div className="mb-lg grid grid-cols-2 gap-md sm:grid-cols-4">
+        <div className="mb-lg gap-md grid grid-cols-2 sm:grid-cols-4">
           <StatCard
             title={t('pages.personalAnalytics.rate7d')}
             value={`${stats?.completion_rate_7d ?? 0}%`}
@@ -372,11 +372,11 @@ export default function PersonalAnalytics() {
           />
         </div>
 
-        <div className="grid gap-lg lg:grid-cols-3">
+        <div className="gap-lg grid lg:grid-cols-3">
           {/* Left: weekday bar chart + insights */}
           <div className="space-y-lg lg:col-span-2">
             {/* Weekday completion chart */}
-            <div className="rounded-lg border bg-card p-md">
+            <div className="bg-card p-md rounded-lg border">
               <div className="mb-md flex items-center justify-between">
                 <h3 className="font-semibold">
                   {t('pages.personalAnalytics.weekdayChart')}
@@ -390,21 +390,21 @@ export default function PersonalAnalytics() {
               {analytics?.completion_by_weekday.some((d) => d.total > 0) ? (
                 <WeekdayBarChart data={analytics.completion_by_weekday} />
               ) : (
-                <p className="py-lg text-center text-sm text-muted-foreground">
+                <p className="py-lg text-muted-foreground text-center text-sm">
                   {t('pages.personalAnalytics.noData')}
                 </p>
               )}
             </div>
 
             {/* Heatmap */}
-            <div className="rounded-lg border bg-card p-md">
+            <div className="bg-card p-md rounded-lg border">
               <h3 className="mb-md font-semibold">
                 {t('pages.personalAnalytics.heatmap')} {currentYear}
               </h3>
               {heatmap ? (
                 <HeatmapCalendar data={heatmap.data} year={currentYear} />
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('pages.personalAnalytics.noData')}
                 </p>
               )}
@@ -413,7 +413,7 @@ export default function PersonalAnalytics() {
 
           {/* Right: insights */}
           <div className="space-y-md">
-            <div className="rounded-lg border bg-card p-md">
+            <div className="bg-card p-md rounded-lg border">
               <h3 className="mb-md font-semibold">
                 {t('pages.personalAnalytics.insightsTitle')}
               </h3>
@@ -424,7 +424,7 @@ export default function PersonalAnalytics() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('pages.personalAnalytics.noInsights')}
                 </p>
               )}
@@ -432,7 +432,7 @@ export default function PersonalAnalytics() {
 
             {/* Category distribution */}
             {stats && stats.tasks_by_category.length > 0 && (
-              <div className="rounded-lg border bg-card p-md">
+              <div className="bg-card p-md rounded-lg border">
                 <h3 className="mb-md font-semibold">
                   {t('pages.personalAnalytics.byCategory')}
                 </h3>
@@ -448,9 +448,9 @@ export default function PersonalAnalytics() {
                           <span className="font-medium">{cat.category_display}</span>
                           <span className="text-muted-foreground">{cat.count}</span>
                         </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full bg-primary transition-all"
+                            className="bg-primary h-full rounded-full transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

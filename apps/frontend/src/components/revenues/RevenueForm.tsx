@@ -159,10 +159,10 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={TrendingUp}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.descriptionLabel')}
             </Label>
             <Input
@@ -173,10 +173,10 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <TrendingUp className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.sourceLabel')}
-              <span className="ml-1 text-xs text-muted-foreground/70">
+              <span className="text-muted-foreground/70 ml-1 text-xs">
                 ({t('common.actions.none').toLowerCase()})
               </span>
             </Label>
@@ -191,10 +191,10 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
 
       {/* Seção: Valores & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.valueLabel')}
             </Label>
             <CurrencyInput
@@ -206,8 +206,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.receivedLabel')}
             </Label>
             <StatusToggle
@@ -230,8 +230,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.dateLabel')}
             </Label>
             <DatePicker
@@ -243,8 +243,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.horaryLabel')}
             </Label>
             <TimePicker
@@ -258,10 +258,10 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
 
       {/* Seção: Classificação */}
       <FormSection title={t('common.form.sections.classification')} icon={Tag}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.categoryLabel')}
             </Label>
             <Select
@@ -278,7 +278,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                     <SelectItem key={key} value={key}>
                       <span className="flex items-center gap-2">
                         {Icon && (
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                         )}
                         {translate('revenueCategories', key)}
                       </span>
@@ -290,8 +290,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.revenues.form.accountLabel')}
             </Label>
             <Select
@@ -305,7 +305,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 {accounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground ml-2 text-xs">
                       {parseFloat(a.balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
@@ -316,7 +316,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               </SelectContent>
             </Select>
             {selectedAccount && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('common.fields.balance_info', {
                   value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
@@ -334,24 +334,24 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
-            className="flex w-full items-center gap-xs text-left"
+            className="gap-xs flex w-full items-center text-left"
           >
-            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('common.form.sections.links')}
             </span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="bg-border/50 h-px flex-1" />
             {linksOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
           </button>
 
           {linksOpen && (
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.revenues.form.relatedLoanLabel')}
               </Label>
               <Select
@@ -373,14 +373,14 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.revenues.form.relatedLoanHint')}
               </p>
 
               {eligibleFixedRevenues.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.revenues.form.relatedFixedRevenueLabel')}
                   </Label>
                   <Select
@@ -408,7 +408,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.revenues.form.relatedFixedRevenueHint')}
                   </p>
                 </div>
@@ -418,7 +418,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

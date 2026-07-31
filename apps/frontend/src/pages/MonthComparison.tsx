@@ -56,7 +56,7 @@ function VariationBadge({ pct, inverse = false }: VariationBadgeProps) {
   const { t } = useTranslation();
   if (Math.abs(pct) < 0.1)
     return (
-      <span className="inline-flex items-center gap-xs text-xs text-muted-foreground">
+      <span className="gap-xs text-muted-foreground inline-flex items-center text-xs">
         <Minus className="h-3 w-3" /> {t('monthComparison.noChange')}
       </span>
     );
@@ -65,7 +65,7 @@ function VariationBadge({ pct, inverse = false }: VariationBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-xs text-xs font-medium',
+        'gap-xs inline-flex items-center text-xs font-medium',
         isGood ? 'text-success' : 'text-destructive'
       )}
     >
@@ -95,23 +95,23 @@ function SummaryCard({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className="rounded-lg bg-muted p-sm">{icon}</div>
+        <div className="bg-muted p-sm rounded-lg">{icon}</div>
       </CardHeader>
       <CardContent className="space-y-sm">
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div>
-            <p className="text-xs font-semibold text-warning">A</p>
-            <p className="text-lg font-bold text-warning">{formatCurrency(valueA)}</p>
+            <p className="text-warning text-xs font-semibold">A</p>
+            <p className="text-warning text-lg font-bold">{formatCurrency(valueA)}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold text-info">B</p>
-            <p className="text-lg font-bold text-info">{formatCurrency(valueB)}</p>
+            <p className="text-info text-xs font-semibold">B</p>
+            <p className="text-info text-lg font-bold">{formatCurrency(valueB)}</p>
           </div>
         </div>
-        <div className="flex items-center justify-between border-t pt-sm">
-          <span className="text-xs text-muted-foreground">
+        <div className="pt-sm flex items-center justify-between border-t">
+          <span className="text-muted-foreground text-xs">
             {diff >= 0 ? '+' : ''}
             {formatCurrency(diff)}
           </span>
@@ -138,8 +138,8 @@ function MonthSelector({
   placeholder,
 }: MonthSelectorProps) {
   return (
-    <div className="flex flex-col gap-xs">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    <div className="gap-xs flex flex-col">
+      <span className="text-muted-foreground text-xs font-medium">{label}</span>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder={placeholder} />
@@ -222,7 +222,7 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
         subtitle={t('monthComparison.subtitle')}
       />
 
-      <div className="flex flex-wrap items-end gap-md rounded-lg border bg-muted/40 p-md">
+      <div className="gap-md bg-muted/40 p-md flex flex-wrap items-end rounded-lg border">
         <MonthSelector
           label={t('monthComparison.monthA')}
           value={monthA}
@@ -243,33 +243,33 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
 
       {!isLoading && dataA && dataB && (
         <>
-          <div className="flex flex-wrap items-center gap-sm">
-            <span className="inline-flex items-center gap-xs rounded-full bg-warning/10 px-sm py-xs text-xs font-semibold text-warning">
-              <span className="h-1.5 w-1.5 rounded-full bg-warning" />A — {labelA}
+          <div className="gap-sm flex flex-wrap items-center">
+            <span className="gap-xs bg-warning/10 px-sm py-xs text-warning inline-flex items-center rounded-full text-xs font-semibold">
+              <span className="bg-warning h-1.5 w-1.5 rounded-full" />A — {labelA}
             </span>
-            <span className="text-xs text-muted-foreground">vs</span>
-            <span className="inline-flex items-center gap-xs rounded-full bg-info/10 px-sm py-xs text-xs font-semibold text-info">
-              <span className="h-1.5 w-1.5 rounded-full bg-info" />B — {labelB}
+            <span className="text-muted-foreground text-xs">vs</span>
+            <span className="gap-xs bg-info/10 px-sm py-xs text-info inline-flex items-center rounded-full text-xs font-semibold">
+              <span className="bg-info h-1.5 w-1.5 rounded-full" />B — {labelB}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+          <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
             <SummaryCard
               title={t('monthComparison.revenues')}
-              icon={<TrendingUp className="h-4 w-4 text-success" />}
+              icon={<TrendingUp className="text-success h-4 w-4" />}
               valueA={parseFloat(dataA.total_revenues)}
               valueB={parseFloat(dataB.total_revenues)}
             />
             <SummaryCard
               title={t('monthComparison.expenses')}
-              icon={<TrendingDown className="h-4 w-4 text-destructive" />}
+              icon={<TrendingDown className="text-destructive h-4 w-4" />}
               valueA={parseFloat(dataA.total_expenses)}
               valueB={parseFloat(dataB.total_expenses)}
               inverse
             />
             <SummaryCard
               title={t('monthComparison.balance')}
-              icon={<Wallet className="h-4 w-4 text-primary" />}
+              icon={<Wallet className="text-primary h-4 w-4" />}
               valueA={parseFloat(dataA.balance)}
               valueB={parseFloat(dataB.balance)}
             />
@@ -284,10 +284,10 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
               </CardHeader>
               <CardContent>
                 <div className="space-y-sm">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-sm text-xs font-medium text-muted-foreground">
+                  <div className="gap-sm text-muted-foreground grid grid-cols-[1fr_auto_auto_auto] text-xs font-medium">
                     <span>{t('common.fields.category')}</span>
-                    <span className="text-right font-semibold text-warning">A</span>
-                    <span className="text-right font-semibold text-info">B</span>
+                    <span className="text-warning text-right font-semibold">A</span>
+                    <span className="text-info text-right font-semibold">B</span>
                     <span className="text-right">{t('monthComparison.variation')}</span>
                   </div>
                   {expenseCategoryMap.map(({ cat, totalA, totalB, diff: _diff }) => {
@@ -296,15 +296,15 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
                     return (
                       <div
                         key={cat}
-                        className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-sm border-t pt-sm text-sm"
+                        className="gap-sm pt-sm grid grid-cols-[1fr_auto_auto_auto] items-center border-t text-sm"
                       >
                         <span className="truncate font-medium">
                           {translate('expenseCategories', cat)}
                         </span>
-                        <span className="text-right tabular-nums text-warning">
+                        <span className="text-warning text-right tabular-nums">
                           {formatCurrency(totalA)}
                         </span>
-                        <span className="text-right tabular-nums text-info">
+                        <span className="text-info text-right tabular-nums">
                           {formatCurrency(totalB)}
                         </span>
                         <div className="text-right">

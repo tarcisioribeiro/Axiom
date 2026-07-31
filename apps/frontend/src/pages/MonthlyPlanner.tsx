@@ -227,13 +227,13 @@ function CardSubSection({
   }[variant];
 
   return (
-    <div className={cn('space-y-sm border-l-2 pl-sm', accent)}>
-      <div className="flex items-center gap-xs">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
+      <div className="gap-xs flex items-center">
+        <Icon className="text-muted-foreground h-3.5 w-3.5" />
+        <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {title}
         </span>
-        <div className="h-px flex-1 bg-border/50" />
+        <div className="bg-border/50 h-px flex-1" />
         <span className="text-sm font-semibold">{formatCurrency(total)}</span>
       </div>
       <div className="space-y-xs">{children}</div>
@@ -273,7 +273,7 @@ function EditableFixedItem({
   return (
     <div
       className={cn(
-        'flex items-center gap-sm rounded-lg bg-muted/40 px-sm py-xs text-sm transition-opacity',
+        'gap-sm bg-muted/40 px-sm py-xs flex items-center rounded-lg text-sm transition-opacity',
         !enabled && 'opacity-40'
       )}
     >
@@ -285,12 +285,12 @@ function EditableFixedItem({
       />
       <div className="min-w-0 flex-1">
         <span className="font-medium">{label}</span>
-        {sub && <span className="ml-xs text-xs text-muted-foreground">{sub}</span>}
+        {sub && <span className="ml-xs text-muted-foreground text-xs">{sub}</span>}
       </div>
       {alreadyPosted && (
         <Badge
           variant="outline"
-          className="shrink-0 border-success text-xs text-success"
+          className="border-success text-success shrink-0 text-xs"
         >
           {t('monthlyPlanner.alreadyPosted')}
         </Badge>
@@ -324,7 +324,7 @@ function BillItem({
   return (
     <div
       className={cn(
-        'flex items-center gap-sm rounded-lg bg-muted/40 px-sm py-xs text-sm transition-opacity',
+        'gap-sm bg-muted/40 px-sm py-xs flex items-center rounded-lg text-sm transition-opacity',
         !enabled && 'opacity-40'
       )}
     >
@@ -336,7 +336,7 @@ function BillItem({
       <div className="min-w-0 flex-1">
         <span className="font-medium">{bill.credit_card_name}</span>
         {bill.due_date && (
-          <span className="ml-xs text-xs text-muted-foreground">
+          <span className="ml-xs text-muted-foreground text-xs">
             {formatDueDate(bill.due_date)}
           </span>
         )}
@@ -344,7 +344,7 @@ function BillItem({
       {isPaid && (
         <Badge
           variant="outline"
-          className="shrink-0 border-success text-xs text-success"
+          className="border-success text-success shrink-0 text-xs"
         >
           Pago
         </Badge>
@@ -352,13 +352,13 @@ function BillItem({
       {isInsufficient && enabled && !isPaid && (
         <Badge
           variant="outline"
-          className="shrink-0 border-destructive text-xs text-destructive"
+          className="border-destructive text-destructive shrink-0 text-xs"
         >
           <AlertTriangle className="mr-xs h-3 w-3" />
           Saldo insuficiente
         </Badge>
       )}
-      <span className="shrink-0 text-muted-foreground">
+      <span className="text-muted-foreground shrink-0">
         {formatCurrency(bill.total_amount)}
       </span>
     </div>
@@ -386,7 +386,7 @@ function ExtraItemRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-xs transition-opacity',
+        'gap-xs flex items-center transition-opacity',
         !enabled && 'opacity-40'
       )}
     >
@@ -416,7 +416,7 @@ function ExtraItemRow({
         variant="ghost"
         size="sm"
         onClick={() => onRemove(index)}
-        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+        className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
         aria-label={removeLabel}
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -448,29 +448,29 @@ function ActualItemsSection({
     variant === 'revenue' ? 'border-l-success/60' : 'border-l-destructive/60';
 
   return (
-    <div className={cn('space-y-sm border-l-2 pl-sm', accent)}>
+    <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
       <button
-        className="flex w-full items-center gap-xs"
+        className="gap-xs flex w-full items-center"
         onClick={() => setExpanded((v) => !v)}
       >
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <Icon className="text-muted-foreground h-3.5 w-3.5" />
+        <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {title}
         </span>
         <Badge variant="secondary" className="text-xs">
           {items.length}
         </Badge>
-        <div className="h-px flex-1 bg-border/50" />
+        <div className="bg-border/50 h-px flex-1" />
         {expanded ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="text-muted-foreground h-4 w-4" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="text-muted-foreground h-4 w-4" />
         )}
       </button>
       {expanded && (
         <div className="space-y-xs">
           {items.length === 0 ? (
-            <p className="py-sm text-center text-xs text-muted-foreground">
+            <p className="py-sm text-muted-foreground text-center text-xs">
               {emptyText}
             </p>
           ) : (
@@ -864,7 +864,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
       {/* Month navigation */}
       <div className="mb-lg flex items-center justify-between">
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <Button variant="outline" size="sm" onClick={() => navigateMonth(-1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -892,12 +892,12 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       </div>
 
       {/* Summary stats */}
-      <div className="mb-lg grid grid-cols-2 gap-md lg:grid-cols-4">
+      <div className="mb-lg gap-md grid grid-cols-2 lg:grid-cols-4">
         <Card className="border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="pt-md">
-            <div className="flex items-center gap-sm">
+            <div className="gap-sm flex items-center">
               <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.totalRevenues')}
               </span>
             </div>
@@ -905,7 +905,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               {formatCurrency(totalRevenues)}
             </p>
             {hasActualData && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualRevenues)}
               </p>
             )}
@@ -914,22 +914,22 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
         <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="pt-md">
-            <div className="flex items-center gap-sm">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-              <span className="text-xs text-muted-foreground">
+            <div className="gap-sm flex items-center">
+              <TrendingDown className="text-destructive h-4 w-4" />
+              <span className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.totalExpenses')}
               </span>
             </div>
-            <p className="mt-xs text-lg font-bold text-destructive">
+            <p className="mt-xs text-destructive text-lg font-bold">
               {formatCurrency(totalExpenses)}
             </p>
             {totalBudgets > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.budgets')}: {formatCurrency(totalBudgets)}
               </p>
             )}
             {hasActualData && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualExpenses)}
               </p>
             )}
@@ -944,9 +944,9 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           )}
         >
           <CardContent className="pt-md">
-            <div className="flex items-center gap-sm">
-              <Wallet className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">
+            <div className="gap-sm flex items-center">
+              <Wallet className="text-primary h-4 w-4" />
+              <span className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.projectedBalance')}
               </span>
             </div>
@@ -959,12 +959,12 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
               {formatCurrency(projectedBalance)}
             </p>
             {hasActualData && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualBalance)}
               </p>
             )}
             {totalOverdraft > 0 && (
-              <div className="mt-xs flex items-center gap-xs rounded-md border border-yellow-500/30 bg-yellow-500/10 px-xs py-xs">
+              <div className="mt-xs gap-xs px-xs py-xs flex items-center rounded-md border border-yellow-500/30 bg-yellow-500/10">
                 <AlertTriangle className="h-3 w-3 shrink-0 text-yellow-500" />
                 <span className="text-xs text-yellow-600 dark:text-yellow-400">
                   {t('monthlyPlanner.withOverdraft')}:{' '}
@@ -977,21 +977,21 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="pt-md">
-            <div className="flex items-center gap-sm">
-              <Landmark className="h-4 w-4 text-primary" />
-              <span className="text-xs text-muted-foreground">
+            <div className="gap-sm flex items-center">
+              <Landmark className="text-primary h-4 w-4" />
+              <span className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.accountBalance')}
               </span>
             </div>
-            <p className="mt-xs text-lg font-bold text-primary">
+            <p className="mt-xs text-primary text-lg font-bold">
               {formatCurrency(totalAccountBalance)}
             </p>
             {totalOverdraft > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.overdraftLimit')}: {formatCurrency(totalOverdraft)}
               </p>
             )}
-            <p className="text-xs font-medium text-primary">
+            <p className="text-primary text-xs font-medium">
               {t('monthlyPlanner.totalAvailable')}: {formatCurrency(totalAvailable)}
             </p>
           </CardContent>
@@ -999,19 +999,19 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       </div>
 
       {/* Revenues + Expenses */}
-      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+      <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
         {/* Left: Revenues + Budgets */}
         <div className="space-y-sm">
-          <Card className="border-l-4 border-l-success">
+          <Card className="border-l-success border-l-4">
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-sm">
-                  <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+                <div className="gap-sm flex items-center">
+                  <CircleDollarSign className="text-muted-foreground h-4 w-4" />
                   <CardTitle className="text-sm font-semibold">
                     {t('monthlyPlanner.totalRevenues')}
                   </CardTitle>
                 </div>
-                <span className="text-sm font-semibold text-success">
+                <span className="text-success text-sm font-semibold">
                   {formatCurrency(totalRevenues)}
                 </span>
               </div>
@@ -1024,7 +1024,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="revenue"
               >
                 {(data?.fixed_revenues.length ?? 0) === 0 && (
-                  <p className="py-sm text-center text-xs text-muted-foreground">
+                  <p className="py-sm text-muted-foreground text-center text-xs">
                     {t('monthlyPlanner.noFixedRevenues')}
                   </p>
                 )}
@@ -1066,7 +1066,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   variant="outline"
                   size="sm"
                   onClick={addExtraRevenue}
-                  className="w-full gap-xs text-xs"
+                  className="gap-xs w-full text-xs"
                 >
                   <Plus className="h-3 w-3" />
                   {t('monthlyPlanner.addItem')}
@@ -1084,18 +1084,18 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   return (
                     <div
                       key={idx}
-                      className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                      className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
                     >
                       <div className="min-w-0 flex-1">
                         <span className="block truncate font-medium">
                           {r.description}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {translateCategory(r.category, 'revenue')} ·{' '}
                           {formatDate(r.date)}
                         </span>
                       </div>
-                      <span className="ml-sm shrink-0 font-semibold text-success">
+                      <span className="ml-sm text-success shrink-0 font-semibold">
                         {formatCurrency(r.value)}
                       </span>
                     </div>
@@ -1106,11 +1106,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </Card>
 
           {/* Budget by category */}
-          <Card className="border-l-4 border-l-primary">
+          <Card className="border-l-primary border-l-4">
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-sm">
-                  <Target className="h-4 w-4 text-muted-foreground" />
+                <div className="gap-sm flex items-center">
+                  <Target className="text-muted-foreground h-4 w-4" />
                   <CardTitle className="text-sm font-semibold">
                     {t('monthlyPlanner.budgetByCategory')}
                   </CardTitle>
@@ -1122,11 +1122,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             </CardHeader>
             <CardContent>
               {allCategories.length === 0 && (
-                <p className="py-sm text-center text-xs text-muted-foreground">
+                <p className="py-sm text-muted-foreground text-center text-xs">
                   {t('monthlyPlanner.noBudgetSuggestions')}
                 </p>
               )}
-              <div className="grid grid-cols-1 gap-sm sm:grid-cols-2">
+              <div className="gap-sm grid grid-cols-1 sm:grid-cols-2">
                 {allCategories.map((cat) => {
                   const suggested = budgetSuggestionMap[cat];
                   const existing = existingBudgetMap[cat];
@@ -1145,12 +1145,12 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     <div
                       key={cat}
                       className={cn(
-                        'space-y-xs rounded-lg border bg-muted/20 p-sm transition-opacity',
+                        'space-y-xs bg-muted/20 p-sm rounded-lg border transition-opacity',
                         isDisabled && 'opacity-40'
                       )}
                     >
-                      <div className="flex items-center justify-between gap-xs">
-                        <div className="flex min-w-0 items-center gap-xs">
+                      <div className="gap-xs flex items-center justify-between">
+                        <div className="gap-xs flex min-w-0 items-center">
                           <Checkbox
                             checked={!isDisabled}
                             onCheckedChange={(checked) =>
@@ -1163,7 +1163,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                           </span>
                         </div>
                         {suggested !== undefined && (
-                          <span className="shrink-0 text-xs text-muted-foreground">
+                          <span className="text-muted-foreground shrink-0 text-xs">
                             {t('monthlyPlanner.overrideHint', {
                               value: formatCurrency(suggested),
                             })}
@@ -1182,12 +1182,12 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                       />
                       {executionPct !== null && !isDisabled && (
                         <div>
-                          <p className="mb-xs text-xs text-muted-foreground">
+                          <p className="mb-xs text-muted-foreground text-xs">
                             {t('monthlyPlanner.executionPercent', {
                               percent: executionPct,
                             })}
                           </p>
-                          <div className="h-1.5 w-full rounded-full bg-muted">
+                          <div className="bg-muted h-1.5 w-full rounded-full">
                             <div
                               className={cn(
                                 'h-1.5 rounded-full transition-all',
@@ -1212,16 +1212,16 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
         {/* Right: Expenses */}
         <div className="space-y-sm">
-          <Card className="border-l-4 border-l-destructive">
+          <Card className="border-l-destructive border-l-4">
             <CardHeader className="pb-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-sm">
-                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                <div className="gap-sm flex items-center">
+                  <TrendingDown className="text-muted-foreground h-4 w-4" />
                   <CardTitle className="text-sm font-semibold">
                     {t('monthlyPlanner.totalExpenses')}
                   </CardTitle>
                 </div>
-                <span className="text-sm font-semibold text-destructive">
+                <span className="text-destructive text-sm font-semibold">
                   {formatCurrency(totalExpenses)}
                 </span>
               </div>
@@ -1234,7 +1234,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="expense"
               >
                 {(data?.fixed_expenses.length ?? 0) === 0 && (
-                  <p className="py-sm text-center text-xs text-muted-foreground">
+                  <p className="py-sm text-muted-foreground text-center text-xs">
                     {t('monthlyPlanner.noFixedExpenses')}
                   </p>
                 )}
@@ -1261,7 +1261,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="bill"
               >
                 {(data?.credit_card_bills.length ?? 0) === 0 && (
-                  <p className="py-sm text-center text-xs text-muted-foreground">
+                  <p className="py-sm text-muted-foreground text-center text-xs">
                     {t('monthlyPlanner.noBills')}
                   </p>
                 )}
@@ -1297,7 +1297,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   variant="outline"
                   size="sm"
                   onClick={addExtraExpense}
-                  className="w-full gap-xs text-xs"
+                  className="gap-xs w-full text-xs"
                 >
                   <Plus className="h-3 w-3" />
                   {t('monthlyPlanner.addItem')}
@@ -1315,28 +1315,28 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                   return (
                     <div
                       key={idx}
-                      className="flex items-center justify-between rounded-lg bg-muted/30 px-sm py-xs text-sm"
+                      className="bg-muted/30 px-sm py-xs flex items-center justify-between rounded-lg text-sm"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-xs">
+                        <div className="gap-xs flex items-center">
                           <span className="block truncate font-medium">
                             {e.description}
                           </span>
                           {!e.payed && (
                             <Badge
                               variant="outline"
-                              className="shrink-0 text-xs text-warning"
+                              className="text-warning shrink-0 text-xs"
                             >
                               {t('monthlyPlanner.pending')}
                             </Badge>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {translateCategory(e.category, 'expense')} ·{' '}
                           {formatDate(e.date)}
                         </span>
                       </div>
-                      <span className="ml-sm shrink-0 font-semibold text-destructive">
+                      <span className="ml-sm text-destructive shrink-0 font-semibold">
                         {formatCurrency(e.value)}
                       </span>
                     </div>

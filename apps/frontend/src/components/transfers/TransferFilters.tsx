@@ -127,8 +127,8 @@ export function TransferFilters({
           ))}
         </SelectContent>
       </Select>
-      <div className="flex items-center gap-xs">
-        <span className="whitespace-nowrap text-xs text-muted-foreground">
+      <div className="gap-xs flex items-center">
+        <span className="text-muted-foreground text-xs whitespace-nowrap">
           {t('pages.transfers.dateFrom')}
         </span>
         <DatePicker
@@ -137,7 +137,7 @@ export function TransferFilters({
           placeholder={t('pages.transfers.dateFrom')}
           clearable
         />
-        <span className="whitespace-nowrap text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs whitespace-nowrap">
           {t('pages.transfers.dateTo')}
         </span>
         <DatePicker

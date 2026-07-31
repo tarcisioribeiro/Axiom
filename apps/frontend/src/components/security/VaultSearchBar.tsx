@@ -83,16 +83,17 @@ export function VaultSearchBar() {
   const allItems: ResultItem[] = [
     ...(data?.passwords ?? []).map((d): ResultItem => ({ type: 'password', data: d })),
     ...(data?.stored_cards ?? []).map((d): ResultItem => ({ type: 'card', data: d })),
-    ...(data?.stored_accounts ?? []).map(
-      (d): ResultItem => ({ type: 'account', data: d })
-    ),
+    ...(data?.stored_accounts ?? []).map((d): ResultItem => ({
+      type: 'account',
+      data: d,
+    })),
     ...(data?.archives ?? []).map((d): ResultItem => ({ type: 'archive', data: d })),
   ];
 
   return (
     <div className="relative w-full max-w-sm">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           type="text"
           placeholder="Buscar no cofre..."
@@ -104,13 +105,13 @@ export function VaultSearchBar() {
           onBlur={() => {
             setTimeout(() => setIsOpen(false), 150);
           }}
-          className="pl-9 pr-9"
+          className="pr-9 pl-9"
         />
         {query && (
           <button
             type="button"
             onClick={clear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
           >
             {isFetching ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -122,21 +123,21 @@ export function VaultSearchBar() {
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[340px] rounded-lg border bg-popover shadow-xl">
+        <div className="bg-popover absolute top-full left-0 z-50 mt-1 w-full min-w-[340px] rounded-lg border shadow-xl">
           {allItems.length === 0 && !isFetching ? (
-            <div className="flex items-center justify-center gap-sm p-lg text-sm text-muted-foreground">
+            <div className="gap-sm p-lg text-muted-foreground flex items-center justify-center text-sm">
               <Search className="h-4 w-4 opacity-50" />
               Nenhum resultado para "{debouncedQuery}"
             </div>
           ) : (
-            <ul className="max-h-80 overflow-y-auto py-xs">
+            <ul className="py-xs max-h-80 overflow-y-auto">
               {allItems.map((item, idx) => (
                 <ResultRow key={idx} item={item} onSelect={handleSelect} />
               ))}
             </ul>
           )}
           {data && data.total > allItems.length && (
-            <div className="border-t px-md py-sm text-xs text-muted-foreground">
+            <div className="px-md py-sm text-muted-foreground border-t text-xs">
               Mostrando {allItems.length} de {data.total} resultados
             </div>
           )}
@@ -158,16 +159,16 @@ function ResultRow({
     <li>
       <button
         type="button"
-        className="flex w-full items-center gap-sm px-md py-sm text-left hover:bg-accent/50"
+        className="gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left"
         onMouseDown={() => onSelect(item)}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <span className="bg-muted text-muted-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-md">
           {icon}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{title}</p>
           {subtitle && (
-            <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
           )}
         </div>
         <Badge variant="outline" className="shrink-0 text-xs">
@@ -188,7 +189,7 @@ function getResultMeta(item: ResultItem): {
     case 'password':
       return {
         icon: item.data.totp_enabled ? (
-          <Shield className="h-4 w-4 text-success" />
+          <Shield className="text-success h-4 w-4" />
         ) : (
           <Key className="h-4 w-4" />
         ),

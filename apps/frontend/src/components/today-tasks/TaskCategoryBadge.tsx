@@ -13,7 +13,7 @@ export function TaskCategoryBadge({
   const Icon = getIconByName(icon);
   return (
     <div
-      className={`flex shrink-0 items-center gap-sm rounded-md border px-sm py-xs text-xs font-semibold ${getCategoryColor(category)}`}
+      className={`gap-sm px-sm py-xs flex shrink-0 items-center rounded-md border text-xs font-semibold ${getCategoryColor(category)}`}
     >
       {/* eslint-disable-next-line react-hooks/static-components -- Icon is a stable Lucide reference, not a dynamic component */}
       {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}

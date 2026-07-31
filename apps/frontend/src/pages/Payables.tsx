@@ -56,6 +56,14 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -118,14 +126,8 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
 
   if (isLoading) return <LoadingState />;
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
@@ -142,64 +144,64 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         />
       </FilterBar>
 
-      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.payables.stats.total')}</p>
-            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-              <Banknote className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+              <Banknote className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">
+            <div className="text-destructive text-2xl font-bold">
               {formatCurrency(totalValue)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.payables.stats.totalSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-warning/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-warning/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.payables.stats.active')}</p>
-            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-              <Clock className="h-4 w-4 text-warning" />
+            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+              <Clock className="text-warning h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{activeCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-warning text-2xl font-bold">{activeCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.payables.stats.activeSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.payables.stats.overdue')}</p>
-            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+              <AlertTriangle className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{overdueCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-destructive text-2xl font-bold">{overdueCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.payables.stats.overdueSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.payables.stats.paid')}</p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <CheckCircle2 className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <CheckCircle2 className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{paidCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-success text-2xl font-bold">{paidCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.payables.stats.paidSubtitle')}
             </p>
           </CardContent>
@@ -208,7 +210,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
 
       {filteredPayables.length === 0 ? (
         <EmptyState
-          icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
+          icon={<Receipt className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.payables.emptySearch')
@@ -216,7 +218,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {filteredPayables.map((payable) => {
             const getDueBadge = () => {
               if (payable.status === 'overdue') {
@@ -259,18 +261,18 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
               <div
                 key={payable.id}
                 className={cn(
-                  'space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md',
+                  'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
                   urgencyClass
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       <h3 className="font-semibold">{payable.description}</h3>
                       {dueBadge && (
                         <span
                           className={cn(
-                            'rounded-full px-xs py-0.5 text-xs font-medium',
+                            'px-xs rounded-full py-0.5 text-xs font-medium',
                             dueBadge.cls
                           )}
                         >
@@ -278,7 +280,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {translate('expenseCategories', payable.category)}
                     </p>
                   </div>
@@ -299,13 +301,13 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                         : 'bg-destructive';
                   return (
                     <div className="space-y-xs">
-                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="bg-muted h-2 overflow-hidden rounded-full">
                         <div
                           className={cn('h-full rounded-full transition-all', barColor)}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex justify-between text-xs">
                         <span>
                           {t('pages.payables.paidAmount', {
                             value: formatCurrency(paid),
@@ -328,7 +330,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                     <span className="text-muted-foreground">
                       {t('pages.payables.remainingBalance')}
                     </span>
-                    <span className="font-medium text-destructive">
+                    <span className="text-destructive font-medium">
                       {formatCurrency(
                         parseFloat(payable.value) - parseFloat(payable.paid_value)
                       )}
@@ -337,7 +339,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                   {payable.due_date && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {t('pages.loans.dueDate')}
+                        {t('pages.payables.dueDate')}
                       </span>
                       <span className="font-medium">
                         {formatDate(payable.due_date, 'dd/MM/yyyy')}
@@ -354,7 +356,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
+                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
                   <Button
                     variant="outline"
                     size="sm"
@@ -399,7 +401,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                     title={t('common.actions.delete')}
                     aria-label={t('common.actions.delete')}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                    <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>

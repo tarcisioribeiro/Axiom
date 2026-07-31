@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Edit,
@@ -10,7 +11,7 @@ import {
   BarChart2,
   CalendarRange,
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -65,19 +66,19 @@ function BookProgressBar({ book, readings }: BookProgressProps) {
 
   return (
     <div className="space-y-xs">
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex justify-between text-xs">
         <span className="truncate font-medium">{book.title}</span>
         <span className="ml-sm shrink-0">
           {totalRead}/{book.pages} ({pct.toFixed(0)}%)
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+      <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-primary transition-all"
+          className="bg-primary h-full rounded-full transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-muted-foreground text-[10px]">
         {t('pages.readings.sessionsCount', { count: bookReadings.length })}
       </p>
     </div>
@@ -100,7 +101,11 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog abre/fecha (derivado durante o
+  // render — sem efeito — comparando com a última transição de `isOpen`).
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
+  if (isOpen !== lastIsOpen) {
+    setLastIsOpen(isOpen);
     if (!isOpen) {
       setSelectedBook(0);
       setStartDate('');
@@ -108,7 +113,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
     } else if (books.length === 1) {
       setSelectedBook(books[0].id);
     }
-  }, [isOpen, books]);
+  }
 
   const handleSubmit = async () => {
     if (!selectedBook || !startDate || !endDate) {
@@ -192,7 +197,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             <div className="space-y-sm">
               <Label>{t('pages.readings.markAsRead.startDateLabel')}</Label>
               <DatePicker
@@ -211,7 +216,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button variant="outline" onClick={onClose}>
               {t('pages.readings.markAsRead.cancelBtn')}
             </Button>
@@ -229,10 +234,10 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+const EMPTY_READINGS: Reading[] = [];
+const EMPTY_BOOKS: Book[] = [];
+
 export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
-  const [readings, setReadings] = useState<Reading[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchDebounce, setSearchDebounce] = useState('');
   const [selectedReading, setSelectedReading] = useState<Reading | undefined>();
@@ -243,6 +248,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   // Debounce search
   useEffect(() => {
@@ -250,33 +256,31 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
     return () => clearTimeout(id);
   }, [searchTerm]);
 
-  const loadData = useCallback(
-    async (search?: string) => {
+  const { data: pageData, isLoading: loading } = useQuery({
+    queryKey: ['readings-tab', searchDebounce],
+    queryFn: async () => {
       try {
-        setLoading(true);
-        const params = search ? { search } : undefined;
+        const params = searchDebounce ? { search: searchDebounce } : undefined;
         const [readingsData, booksData] = await Promise.all([
           readingsService.getAllPages(params),
           booksService.getAllPages(),
         ]);
-        setReadings(readingsData);
-        setBooks(booksData);
+        return { readings: readingsData, books: booksData };
       } catch (error: unknown) {
         toast({
           title: t('common.messages.loadError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
-      } finally {
-        setLoading(false);
+        return { readings: EMPTY_READINGS, books: EMPTY_BOOKS };
       }
     },
-    [toast, t]
-  );
+  });
+  const readings = pageData?.readings ?? EMPTY_READINGS;
+  const books = pageData?.books ?? EMPTY_BOOKS;
 
-  useEffect(() => {
-    void loadData(searchDebounce || undefined);
-  }, [searchDebounce, loadData]);
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['readings-tab', searchDebounce] });
 
   const handleCreateOpen = () => {
     if (books.length === 0) {
@@ -291,10 +295,13 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
     setSelectedReading(undefined);
   };
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog de criação abre (derivado durante
+  // o render — sem efeito — comparando com a última transição de `isCreateOpen`).
+  const [lastIsCreateOpen, setLastIsCreateOpen] = useState(isCreateOpen);
+  if (isCreateOpen !== lastIsCreateOpen) {
+    setLastIsCreateOpen(isCreateOpen);
     if (isCreateOpen) handleCreateOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreateOpen]);
+  }
 
   const handleEdit = (reading: Reading) => {
     setSelectedReading(reading);
@@ -317,7 +324,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         title: t('pages.readings.deleted'),
         description: t('pages.readings.deletedDesc'),
       });
-      void loadData(searchDebounce || undefined);
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -345,7 +352,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
       }
       onCreateClose();
       setIsEditOpen(false);
-      void loadData(searchDebounce || undefined);
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -397,11 +404,11 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
       {showProgress ? (
         booksWithReadings.length === 0 ? (
           <EmptyState
-            icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+            icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
             message={t('pages.readings.noReadingsProgress')}
           />
         ) : (
-          <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+          <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
             {booksWithReadings.map((book) => (
               <Card key={book.id}>
                 <CardContent className="pt-md">
@@ -413,7 +420,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         )
       ) : readings.length === 0 ? (
         <EmptyState
-          icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+          icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.readings.emptySearch')
@@ -421,20 +428,20 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {readings.map((reading) => (
             <Card key={reading.id}>
               <CardHeader className="pb-sm">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-xs flex items-center gap-sm">
+                    <div className="mb-xs gap-sm flex items-center">
                       <BookOpen className="h-4 w-4 flex-shrink-0" />
                       <CardTitle className="truncate text-base">
                         {reading.book_title}
                       </CardTitle>
                     </div>
-                    <div className="flex flex-wrap items-center gap-sm text-xs">
-                      <div className="flex items-center gap-xs">
+                    <div className="gap-sm flex flex-wrap items-center text-xs">
+                      <div className="gap-xs flex items-center">
                         <Calendar className="h-3 w-3" />
                         {formatDate(reading.reading_date, 'dd/MM/yyyy')}
                       </div>
@@ -442,7 +449,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                         {t('pages.readings.pagesRead', { count: reading.pages_read })}
                       </Badge>
                       {reading.reading_time > 0 && (
-                        <div className="flex items-center gap-xs text-muted-foreground">
+                        <div className="gap-xs text-muted-foreground flex items-center">
                           <Clock className="h-3 w-3" />
                           {reading.reading_time}min
                         </div>
@@ -459,7 +466,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-shrink-0 gap-xs">
+                  <div className="gap-xs flex flex-shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -534,7 +541,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
         isOpen={isMarkAsReadOpen}
         onClose={() => {
           setIsMarkAsReadOpen(false);
-          void loadData(searchDebounce || undefined);
+          void refresh();
         }}
         books={books}
       />

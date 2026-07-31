@@ -138,22 +138,22 @@ function VaultSearch() {
     {
       type: 'password',
       label: t('pages.securityDashboard.vaultSearch.groupPasswords'),
-      icon: <Key className="h-4 w-4 text-info" />,
+      icon: <Key className="text-info h-4 w-4" />,
     },
     {
       type: 'card',
       label: t('pages.securityDashboard.vaultSearch.groupCards'),
-      icon: <CreditCard className="h-4 w-4 text-warning" />,
+      icon: <CreditCard className="text-warning h-4 w-4" />,
     },
     {
       type: 'account',
       label: t('pages.securityDashboard.vaultSearch.groupAccounts'),
-      icon: <Wallet className="h-4 w-4 text-success" />,
+      icon: <Wallet className="text-success h-4 w-4" />,
     },
     {
       type: 'archive',
       label: t('pages.securityDashboard.vaultSearch.groupArchives'),
-      icon: <Archive className="h-4 w-4 text-accent" />,
+      icon: <Archive className="text-accent h-4 w-4" />,
     },
   ];
 
@@ -181,7 +181,7 @@ function VaultSearch() {
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
         <Input
           value={query}
           onChange={(e) => {
@@ -190,13 +190,13 @@ function VaultSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={t('pages.securityDashboard.vaultSearch.placeholder')}
-          className="pl-10 pr-10"
+          className="pr-10 pl-10"
         />
         {query && (
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+            className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0"
             onClick={() => {
               setQuery('');
               setIsOpen(false);
@@ -209,19 +209,19 @@ function VaultSearch() {
       </div>
 
       {isOpen && enabled && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-xs max-h-96 overflow-y-auto rounded-lg border bg-popover shadow-lg">
+        <div className="mt-xs bg-popover absolute top-full right-0 left-0 z-50 max-h-96 overflow-y-auto rounded-lg border shadow-lg">
           {isFetching ? (
-            <div className="flex items-center justify-center gap-sm py-lg">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Buscando...</span>
+            <div className="gap-sm py-lg flex items-center justify-center">
+              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+              <span className="text-muted-foreground text-sm">Buscando...</span>
             </div>
           ) : !hasResults ? (
-            <div className="flex flex-col items-center justify-center gap-sm py-lg text-center">
-              <Search className="h-8 w-8 text-muted-foreground/40" />
+            <div className="gap-sm py-lg flex flex-col items-center justify-center text-center">
+              <Search className="text-muted-foreground/40 h-8 w-8" />
               <p className="text-sm font-medium">
                 {t('pages.securityDashboard.vaultSearch.noResults')}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.securityDashboard.vaultSearch.noResultsDesc')}
               </p>
             </div>
@@ -232,22 +232,22 @@ function VaultSearch() {
                 if (items.length === 0) return null;
                 return (
                   <div key={type}>
-                    <div className="flex items-center gap-xs px-md py-xs">
+                    <div className="gap-xs px-md py-xs flex items-center">
                       {icon}
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                         {label}
                       </span>
                     </div>
                     {items.map((item) => (
                       <button
                         key={`${item.type}-${item.id}`}
-                        className="flex w-full items-center gap-sm px-md py-sm text-left transition-colors hover:bg-accent/50"
+                        className="gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors"
                         onClick={() => handleSelect(item)}
                         type="button"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">{item.label}</p>
-                          <p className="truncate text-xs text-muted-foreground">
+                          <p className="text-muted-foreground truncate text-xs">
                             {item.sublabel}
                           </p>
                         </div>
@@ -301,8 +301,8 @@ function VaultAlertConfigPanel() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-lg">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <CardContent className="py-lg flex items-center justify-center">
+          <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -355,17 +355,17 @@ function VaultAlertConfigPanel() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-sm text-base">
+        <CardTitle className="gap-sm flex items-center text-base">
           <Bell className="h-4 w-4" />
           {t('pages.securityDashboard.alertConfig')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-sm">
         {rows.map(({ field, label, desc, value }) => (
-          <div key={field} className="flex items-start justify-between gap-md">
+          <div key={field} className="gap-md flex items-start justify-between">
             <div className="min-w-0">
               <p className="text-sm font-medium">{label}</p>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+              <p className="text-muted-foreground text-xs">{desc}</p>
             </div>
             <button
               type="button"
@@ -373,7 +373,7 @@ function VaultAlertConfigPanel() {
               aria-checked={value}
               disabled={mutation.isPending}
               onClick={() => toggle(field, !value)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${
+              className={`focus-visible:ring-ring relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50 ${
                 value ? 'bg-primary' : 'bg-muted-foreground/30'
               }`}
             >
@@ -401,13 +401,15 @@ export default function SecurityDashboard() {
   const { isCompleted } = useVaultOnboarding();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    // Show onboarding wizard on first visit
+  // Mostra o assistente de onboarding na primeira visita (checagem única,
+  // derivada durante o render — sem efeito).
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false);
+  if (!hasCheckedOnboarding) {
+    setHasCheckedOnboarding(true);
     if (!isCompleted()) {
       setShowOnboarding(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['securityDashboard'],
@@ -469,7 +471,7 @@ export default function SecurityDashboard() {
         <VaultSearch />
 
         {/* Métricas + Saúde do Cofre */}
-        <div className="grid grid-cols-1 gap-md lg:grid-cols-3">
+        <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
           {/* Card único com as 4 métricas */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-sm">
@@ -478,59 +480,59 @@ export default function SecurityDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-sm">
+              <div className="gap-sm flex flex-col">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-xs">
-                    <div className="rounded-lg bg-info/10 p-sm ring-1 ring-info/20">
-                      <Key className="h-4 w-4 text-info" />
+                  <div className="gap-xs flex items-center">
+                    <div className="bg-info/10 p-sm ring-info/20 rounded-lg ring-1">
+                      <Key className="text-info h-4 w-4" />
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {t('pages.securityDashboard.passwords')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-info">
+                  <span className="text-info text-2xl font-bold">
                     {stats?.total_passwords || 0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-xs">
-                    <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-                      <CreditCard className="h-4 w-4 text-warning" />
+                  <div className="gap-xs flex items-center">
+                    <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+                      <CreditCard className="text-warning h-4 w-4" />
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {t('pages.securityDashboard.storedCards')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-warning">
+                  <span className="text-warning text-2xl font-bold">
                     {stats?.total_stored_cards || 0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-xs">
-                    <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-                      <Wallet className="h-4 w-4 text-success" />
+                  <div className="gap-xs flex items-center">
+                    <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+                      <Wallet className="text-success h-4 w-4" />
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {t('pages.securityDashboard.storedAccounts')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-success">
+                  <span className="text-success text-2xl font-bold">
                     {stats?.total_stored_accounts || 0}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-xs">
-                    <div className="rounded-lg bg-accent/10 p-sm ring-1 ring-accent/20">
-                      <Archive className="h-4 w-4 text-accent" />
+                  <div className="gap-xs flex items-center">
+                    <div className="bg-accent/10 p-sm ring-accent/20 rounded-lg ring-1">
+                      <Archive className="text-accent h-4 w-4" />
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {t('pages.securityDashboard.archives')}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold text-accent">
+                  <span className="text-accent text-2xl font-bold">
                     {stats?.total_archives || 0}
                   </span>
                 </div>
@@ -543,30 +545,30 @@ export default function SecurityDashboard() {
         </div>
 
         {/* Atividade Recente + Ações Rápidas */}
-        <div className="grid grid-cols-1 gap-lg lg:grid-cols-3">
+        <div className="gap-lg grid grid-cols-1 lg:grid-cols-3">
           {/* Feed de Atividade Recente */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="gap-sm flex items-center">
+                <Clock className="text-muted-foreground h-4 w-4" />
                 {t('pages.securityDashboard.vaultHub.recentActivity')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {!stats?.recent_activity?.length ? (
-                <p className="py-md text-center text-sm text-muted-foreground">
+                <p className="py-md text-muted-foreground text-center text-sm">
                   {t('pages.securityDashboard.noRecentActivity')}
                 </p>
               ) : (
                 <div className="flex flex-col divide-y">
                   {stats.recent_activity.slice(0, 8).map((entry, i) => (
-                    <div key={i} className="flex items-start gap-sm py-sm">
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div key={i} className="gap-sm py-sm flex items-start">
+                      <div className="bg-muted mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
+                        <Shield className="text-muted-foreground h-3.5 w-3.5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm">{entry.description}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {new Date(entry.created_at).toLocaleString(i18n.language, {
                             day: '2-digit',
                             month: '2-digit',
@@ -575,7 +577,7 @@ export default function SecurityDashboard() {
                           })}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-md bg-muted/60 px-xs py-0.5 text-xs text-muted-foreground">
+                      <span className="bg-muted/60 px-xs text-muted-foreground shrink-0 rounded-md py-0.5 text-xs">
                         {entry.action_display}
                       </span>
                     </div>
@@ -588,13 +590,13 @@ export default function SecurityDashboard() {
           {/* Ações Rápidas */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="gap-sm flex items-center">
+                <ArrowRight className="text-muted-foreground h-4 w-4" />
                 {t('pages.securityDashboard.vaultHub.quickActions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-sm">
+              <div className="gap-sm flex flex-col">
                 {(
                   [
                     {
@@ -631,12 +633,12 @@ export default function SecurityDashboard() {
                     key={route}
                     type="button"
                     onClick={() => void navigate(route)}
-                    className="flex items-center gap-sm rounded-lg border bg-card p-sm text-left transition-colors hover:bg-accent/10"
+                    className="gap-sm bg-card p-sm hover:bg-accent/10 flex items-center rounded-lg border text-left transition-colors"
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${colorClass}`} />
                     <span className="flex-1 text-sm">{label}</span>
                     <span className={`text-sm font-bold ${colorClass}`}>{count}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
                   </button>
                 ))}
               </div>

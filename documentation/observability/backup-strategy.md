@@ -1,16 +1,23 @@
 # Estratégia de Backup
 
-Backup diário do PostgreSQL (dump `pg_dump --format=custom`), criptografado
-com AES-256-CBC e enviado para o MinIO (bucket separado, `axiom-backups`).
-Roda como container `db-backup` no Docker Compose (dev/self-hosted) e como
-`CronJob` no Kubernetes (staging/produção).
+Backup diário do PostgreSQL (dump SQL simples, `pg_dump --format=plain`),
+compactado com `gzip` e criptografado com AES-256-CBC (senha via
+`BACKUP_ENCRYPTION_KEY`), gerando um único artefato `.sql.gz.enc` enviado
+para o MinIO (bucket separado, `axiom-backups`). Roda como container
+`db-backup` no Docker Compose (dev/self-hosted) e como `CronJob` no
+Kubernetes (staging/produção).
+
+**Artefato gerado por execução**: `db_backup_<timestamp>_kv<versão>.sql.gz.enc`
+— um dump `.sql` simples, sem formato proprietário do `pg_restore` e sem
+`.manifest` (removidos em 2026-07 a pedido do time; restore agora é só
+`openssl` → `gunzip` → `psql -f`, sem depender de `pg_restore`).
 
 ## RPO / RTO
 
 - **RPO**: 24 horas — backup roda uma vez por dia, às 02:00 BRT (`BACKUP_CRON`).
-- **RTO**: ≤ 4 horas — download do MinIO (~5min) + decrypt (~5min) +
-  provisionamento de infra (~30min) + `pg_restore` (30–120min, depende do
-  tamanho do banco) + smoke tests (~15min).
+- **RTO**: ≤ 4 horas — download do MinIO (~5min) + decrypt/gunzip (~5min) +
+  provisionamento de infra (~30min) + restore via `psql -f` (30–120min,
+  depende do tamanho do banco) + smoke tests (~15min).
 
 O procedimento de restore completo está documentado no cabeçalho de
 `apps/api/scripts/backup.sh`.
@@ -53,6 +60,23 @@ revisão a cópia do Kubernetes estava dessincronizada** — não tinha suporte 
 Ambos os checks acima rodam **dentro do container/pod da API**, então ele
 precisa ter acesso de leitura ao mesmo diretório `BACKUP_DIR` usado pelo
 `db-backup`/CronJob — ver problema #2 abaixo.
+
+## Cobertura de arquivos de mídia (foto de perfil, capas, documentos de livros, certificados)
+
+`backup.sh` só arquiva `/app/media` — e apenas quando o diretório está montado
+e não-vazio. Como `MINIO_ENDPOINT` está configurado, o Django usa
+`S3Boto3Storage` para todo upload de mídia (`apps/api/app/settings.py`,
+bucket `axiom` por padrão via `MINIO_BUCKET_NAME`), então os arquivos reais
+(foto de perfil, capas de livro, documentos, certificados) nunca chegam a
+`/app/media` — ficam direto no bucket `axiom` do MinIO. Na prática, o passo
+de "media backup" do `backup.sh` está sempre pulando ("No media files found")
+e **esses arquivos não são cobertos pelo backup diário automatizado**.
+
+O único mecanismo que hoje copia o conteúdo real do bucket `axiom` é o
+`infra/scripts/k8s-backup.sh`, manual e não agendado (`mc mirror` do bucket
+inteiro para um `.tar.gz` local). Se for necessário RPO diário também para
+mídia, o `backup.sh` precisaria de um passo adicional de `mc mirror` do
+bucket `axiom` (não apenas `/app/media`) para o bucket `axiom-backups`.
 
 ## Revisão de 2026-07 — problemas encontrados e corrigidos
 

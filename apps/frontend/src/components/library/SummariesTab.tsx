@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Edit,
   Trash2,
@@ -8,7 +9,7 @@ import {
   XCircle,
   Highlighter,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -50,11 +51,11 @@ interface SummariesTabProps {
 
 const EMPTY_FORM: SummaryFormData = { title: '', book: 0, text: '', owner: 0 };
 
+const EMPTY_SUMMARIES: Summary[] = [];
+const EMPTY_BOOKS: Book[] = [];
+const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
+
 export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps) {
-  const [summaries, setSummaries] = useState<Summary[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState<Summary | null>(null);
@@ -62,29 +63,37 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading: loading } = useQuery({
+    queryKey: ['summaries-tab'],
+    queryFn: async () => {
+      try {
+        const [summariesData, booksData, highlightsData] = await Promise.all([
+          summariesService.getAll(),
+          booksService.getAll(),
+          bookHighlightsService.getAll(),
+        ]);
+        return {
+          summaries: summariesData,
+          books: booksData,
+          highlights: highlightsData,
+        };
+      } catch {
+        toast({ title: t('common.messages.loadError'), variant: 'destructive' });
+        return {
+          summaries: EMPTY_SUMMARIES,
+          books: EMPTY_BOOKS,
+          highlights: EMPTY_HIGHLIGHTS,
+        };
+      }
+    },
+  });
+  const summaries = pageData?.summaries ?? EMPTY_SUMMARIES;
+  const books = pageData?.books ?? EMPTY_BOOKS;
+  const highlights = pageData?.highlights ?? EMPTY_HIGHLIGHTS;
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [summariesData, booksData, highlightsData] = await Promise.all([
-        summariesService.getAll(),
-        booksService.getAll(),
-        bookHighlightsService.getAll(),
-      ]);
-      setSummaries(summariesData);
-      setBooks(booksData);
-      setHighlights(highlightsData);
-    } catch {
-      toast({ title: t('common.messages.loadError'), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['summaries-tab'] });
 
   const handleCreateOpen = () => {
     if (books.length === 0) {
@@ -99,10 +108,13 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
     }
   };
 
-  useEffect(() => {
+  // Reinicia o formulário quando o dialog de criação abre (derivado durante
+  // o render — sem efeito — comparando com a última transição de `isCreateOpen`).
+  const [lastIsCreateOpen, setLastIsCreateOpen] = useState(isCreateOpen);
+  if (isCreateOpen !== lastIsCreateOpen) {
+    setLastIsCreateOpen(isCreateOpen);
     if (isCreateOpen) handleCreateOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreateOpen]);
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +126,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
       });
       onCreateClose();
       setFormData(EMPTY_FORM);
-      void loadData();
+      void refresh();
     } catch {
       toast({ title: t('common.messages.createError'), variant: 'destructive' });
     }
@@ -132,7 +144,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
       setIsEditOpen(false);
       setSelectedSummary(null);
       setFormData(EMPTY_FORM);
-      void loadData();
+      void refresh();
     } catch {
       toast({ title: t('common.messages.updateError'), variant: 'destructive' });
     }
@@ -164,7 +176,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
         title: t('pages.summaries.deleted'),
         description: t('pages.summaries.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch {
       toast({ title: t('common.messages.deleteError'), variant: 'destructive' });
     }
@@ -191,7 +203,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
 
       {filteredSummaries.length === 0 ? (
         <EmptyState
-          icon={<FileText className="h-12 w-12 text-muted-foreground" />}
+          icon={<FileText className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.summaries.emptySearch')
@@ -199,17 +211,17 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
           }
         />
       ) : (
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           {filteredSummaries.map((summary) => (
             <Card key={summary.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="mb-sm flex items-center gap-sm">
+                    <div className="mb-sm gap-sm flex items-center">
                       <BookOpen className="h-5 w-5" />
                       <CardTitle className="text-xl">{summary.book_title}</CardTitle>
                     </div>
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       {summary.is_vectorized ? (
                         <Badge variant="default" className="gap-xs">
                           <CheckCircle2 className="h-3 w-3" />
@@ -232,7 +244,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-sm">
+                  <div className="gap-sm flex">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -253,7 +265,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="line-clamp-6 whitespace-pre-wrap text-sm">
+                <p className="line-clamp-6 text-sm whitespace-pre-wrap">
                   {summary.text}
                 </p>
                 {(() => {
@@ -263,7 +275,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   if (bookHighlights.length === 0) return null;
                   return (
                     <div className="border-t pt-3">
-                      <p className="mb-sm flex items-center gap-sm text-xs font-medium text-muted-foreground">
+                      <p className="mb-sm gap-sm text-muted-foreground flex items-center text-xs font-medium">
                         <Highlighter className="h-3.5 w-3.5" />
                         {bookHighlights.length} destaque
                         {bookHighlights.length !== 1 ? 's' : ''} relacionado
@@ -273,13 +285,13 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                         {bookHighlights.slice(0, 3).map((h) => (
                           <p
                             key={h.id}
-                            className="line-clamp-2 border-l-2 border-primary/40 pl-sm text-xs text-muted-foreground"
+                            className="border-primary/40 pl-sm text-muted-foreground line-clamp-2 border-l-2 text-xs"
                           >
                             {h.text}
                           </p>
                         ))}
                         {bookHighlights.length > 3 && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             +{bookHighlights.length - 3} mais
                           </p>
                         )}
@@ -306,7 +318,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-md py-md">
+            <div className="gap-md py-md grid">
               <div className="space-y-sm">
                 <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
                 <Input
@@ -360,7 +372,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.editTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.editDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-md py-md">
+            <div className="gap-md py-md grid">
               <div className="space-y-sm">
                 <Label htmlFor="edit-title">{t('pages.summaries.titleField')}</Label>
                 <Input

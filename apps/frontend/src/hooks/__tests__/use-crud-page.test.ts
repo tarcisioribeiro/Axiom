@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor, act } from '@testing-library/react';
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { useCrudPage } from '@/hooks/use-crud-page';
@@ -41,9 +43,17 @@ function createMockService(): CrudService<TestItem, TestCreate> {
 
 describe('useCrudPage', () => {
   let service: CrudService<TestItem, TestCreate>;
+  let queryClient: QueryClient;
+
+  function wrapper({ children }: { children: React.ReactNode }) {
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+  }
 
   beforeEach(() => {
     service = createMockService();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
     mockToast.mockClear();
     mockToast.mockReturnValue({ id: '1', dismiss: vi.fn(), update: vi.fn() });
   });
@@ -53,7 +63,10 @@ describe('useCrudPage', () => {
   });
 
   it('starts with isLoading=true and loads items on mount', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     expect(result.current.isLoading).toBe(true);
 
@@ -64,7 +77,10 @@ describe('useCrudPage', () => {
   });
 
   it('starts with dialog closed and no selected item', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -73,7 +89,10 @@ describe('useCrudPage', () => {
   });
 
   it('handleCreate opens dialog with no selectedItem', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -86,7 +105,10 @@ describe('useCrudPage', () => {
   });
 
   it('handleEdit opens dialog with the selected item', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -100,7 +122,10 @@ describe('useCrudPage', () => {
   });
 
   it('closeDialog resets dialog state', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -118,7 +143,10 @@ describe('useCrudPage', () => {
   });
 
   it('handleSubmit calls service.create when no selectedItem', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -136,7 +164,10 @@ describe('useCrudPage', () => {
   });
 
   it('handleSubmit calls service.update when selectedItem is set', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -154,7 +185,10 @@ describe('useCrudPage', () => {
   });
 
   it('handleSubmit (update) applies change optimistically and closes dialog before API call', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -190,7 +224,10 @@ describe('useCrudPage', () => {
   it('handleSubmit (update) reverts item when API call fails', async () => {
     vi.mocked(service.update).mockRejectedValue(new Error('Server error'));
 
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -210,15 +247,19 @@ describe('useCrudPage', () => {
   });
 
   it('handleDelete removes item immediately (optimistic) without calling service.delete', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.items).toHaveLength(2);
 
     // Switch to fake timers AFTER data is loaded so waitFor above doesn't hang
     vi.useFakeTimers();
 
-    act(() => {
-      void result.current.handleDelete(1);
+    await act(async () => {
+      result.current.handleDelete(1);
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     // Item removed immediately
@@ -229,13 +270,17 @@ describe('useCrudPage', () => {
   });
 
   it('handleDelete calls service.delete after the 5-second undo window expires', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.useFakeTimers();
 
-    act(() => {
-      void result.current.handleDelete(1);
+    await act(async () => {
+      result.current.handleDelete(1);
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     expect(service.delete).not.toHaveBeenCalled();
@@ -248,13 +293,17 @@ describe('useCrudPage', () => {
   });
 
   it('handleDelete shows a toast with an undo action', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.useFakeTimers();
 
-    act(() => {
-      void result.current.handleDelete(1);
+    await act(async () => {
+      result.current.handleDelete(1);
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     expect(mockToast).toHaveBeenCalledWith(
@@ -263,13 +312,17 @@ describe('useCrudPage', () => {
   });
 
   it('handleDelete restores item when undo is clicked before timer fires', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.useFakeTimers();
 
-    act(() => {
-      void result.current.handleDelete(1);
+    await act(async () => {
+      result.current.handleDelete(1);
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     expect(result.current.items).toHaveLength(1);
@@ -280,8 +333,9 @@ describe('useCrudPage', () => {
     };
     const undoClick = toastArg.action.props.onClick;
 
-    act(() => {
+    await act(async () => {
       undoClick();
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     // Item should be restored
@@ -299,13 +353,17 @@ describe('useCrudPage', () => {
   it('handleDelete restores item when API delete fails after undo window', async () => {
     vi.mocked(service.delete).mockRejectedValue(new Error('Network error'));
 
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     vi.useFakeTimers();
 
-    act(() => {
-      void result.current.handleDelete(1);
+    await act(async () => {
+      result.current.handleDelete(1);
+      await vi.advanceTimersByTimeAsync(0);
     });
 
     expect(result.current.items).toHaveLength(1);
@@ -324,7 +382,10 @@ describe('useCrudPage', () => {
   it('shows a destructive toast when loadData fails', async () => {
     vi.mocked(service.getAll).mockRejectedValue(new Error('Network error'));
 
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -335,8 +396,9 @@ describe('useCrudPage', () => {
   });
 
   it('shows a success toast after creating an item', async () => {
-    const { result } = renderHook(() =>
-      useCrudPage(service, { resourceName: 'conta' })
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'conta' }),
+      { wrapper }
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -357,8 +419,10 @@ describe('useCrudPage', () => {
   it('uses custom resourceNamePlural in error messages', async () => {
     vi.mocked(service.getAll).mockRejectedValue(new Error('Fail'));
 
-    const { result } = renderHook(() =>
-      useCrudPage(service, { resourceName: 'conta', resourceNamePlural: 'contas' })
+    const { result } = renderHook(
+      () =>
+        useCrudPage(service, { resourceName: 'conta', resourceNamePlural: 'contas' }),
+      { wrapper }
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -370,8 +434,9 @@ describe('useCrudPage', () => {
 
   it('calls onSuccess callback after a successful create', async () => {
     const onSuccess = vi.fn();
-    const { result } = renderHook(() =>
-      useCrudPage(service, { resourceName: 'item', onSuccess })
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item', onSuccess }),
+      { wrapper }
     );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -393,7 +458,10 @@ describe('useCrudPage', () => {
   it('handleSubmit (create) shows error toast when API call fails', async () => {
     vi.mocked(service.create).mockRejectedValueOnce(new Error('Create error'));
 
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
@@ -410,7 +478,10 @@ describe('useCrudPage', () => {
   });
 
   it('refresh reloads items from service', async () => {
-    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    const { result } = renderHook(
+      () => useCrudPage(service, { resourceName: 'item' }),
+      { wrapper }
+    );
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(service.getAll).toHaveBeenCalledOnce();

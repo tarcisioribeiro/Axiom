@@ -45,7 +45,7 @@ export const WithChildren: Story = {
   },
   render: (args) => (
     <PageHeader {...args}>
-      <div className="flex gap-sm">
+      <div className="gap-sm flex">
         <Button variant="outline" size="sm">
           <Filter className="mr-sm h-4 w-4" />
           Filtros

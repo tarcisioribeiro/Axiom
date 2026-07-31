@@ -78,17 +78,17 @@ export function WorkoutPlanForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
-          <Dumbbell className="h-5 w-5 text-category-exercise" />
+      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Dumbbell className="text-category-exercise h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-exercise">
+          <p className="text-category-exercise text-sm font-semibold">
             {plan
               ? t('pages.workoutPlans.editPlanTitle')
               : t('pages.workoutPlans.newPlanTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.workoutPlans.newPlanDesc')}
           </p>
         </div>
@@ -103,7 +103,7 @@ export function WorkoutPlanForm({
             className={cn(errors.name && 'border-destructive')}
           />
           {errors.name && (
-            <p className="text-xs text-destructive">{t('common.required')}</p>
+            <p className="text-destructive text-xs">{t('common.required')}</p>
           )}
         </div>
       </FormSection>
@@ -120,15 +120,15 @@ export function WorkoutPlanForm({
 
       {/* Status */}
       <div className="space-y-sm">
-        <Label className="flex items-center gap-xs text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <Label className="gap-xs text-muted-foreground flex items-center text-xs font-semibold tracking-wider uppercase">
           {t('pages.workoutPlans.planActive')}
         </Label>
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <button
             type="button"
             onClick={() => setValue('is_active', true)}
             className={cn(
-              'flex items-center justify-center gap-sm rounded-lg border-2 px-md py-sm text-sm font-medium transition-all',
+              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition-all',
               isActive
                 ? 'border-success bg-success/10 text-success'
                 : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
@@ -141,7 +141,7 @@ export function WorkoutPlanForm({
             type="button"
             onClick={() => setValue('is_active', false)}
             className={cn(
-              'flex items-center justify-center gap-sm rounded-lg border-2 px-md py-sm text-sm font-medium transition-all',
+              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition-all',
               !isActive
                 ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
                 : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30'
@@ -152,7 +152,7 @@ export function WorkoutPlanForm({
           </button>
         </div>
         {isActive && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t(
               'pages.workoutPlans.activeWarning',
               'Planos ativos aparecem em destaque na tela de treinos.'
@@ -161,7 +161,7 @@ export function WorkoutPlanForm({
         )}
       </div>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

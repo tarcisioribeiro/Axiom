@@ -321,7 +321,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       label: t('pages.revenues.columns.amount'),
       align: 'right',
       render: (revenue) => (
-        <span className="font-semibold text-success">
+        <span className="text-success font-semibold">
           {formatCurrency(revenue.value)}
         </span>
       ),

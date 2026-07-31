@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -54,14 +55,14 @@ function PublisherInitials({ name }: { name: string }) {
     <div
       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${colors[colorIndex]}`}
     >
-      <span className="select-none text-sm font-bold text-white">{initials}</span>
+      <span className="text-sm font-bold text-white select-none">{initials}</span>
     </div>
   );
 }
 
+const EMPTY_PUBLISHERS: Publisher[] = [];
+
 export default function Publishers() {
-  const [publishers, setPublishers] = useState<Publisher[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPublisher, setSelectedPublisher] = useState<Publisher | undefined>();
@@ -69,27 +70,25 @@ export default function Publishers() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadPublishers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: publishers = EMPTY_PUBLISHERS, isLoading: loading } = useQuery({
+    queryKey: ['publishers'],
+    queryFn: async () => {
+      try {
+        return await publishersService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_PUBLISHERS;
+      }
+    },
+  });
 
-  const loadPublishers = async () => {
-    try {
-      setLoading(true);
-      const data = await publishersService.getAll();
-      setPublishers(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['publishers'] });
 
   const handleCreate = () => {
     setSelectedPublisher(undefined);
@@ -118,7 +117,7 @@ export default function Publishers() {
         title: t('pages.publishers.deleted'),
         description: t('pages.publishers.deletedDesc'),
       });
-      void loadPublishers();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -145,7 +144,7 @@ export default function Publishers() {
         });
       }
       setIsDialogOpen(false);
-      void loadPublishers();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -187,7 +186,7 @@ export default function Publishers() {
 
       {filteredPublishers.length === 0 ? (
         <EmptyState
-          icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
+          icon={<Building2 className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.publishers.emptySearch')
@@ -195,11 +194,11 @@ export default function Publishers() {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {filteredPublishers.map((publisher) => (
             <Card key={publisher.id} className="flex flex-col">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="gap-sm flex items-start justify-between">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <PublisherInitials name={publisher.name} />
                     <div className="min-w-0">
@@ -215,7 +214,7 @@ export default function Publishers() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -229,7 +228,7 @@ export default function Publishers() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-8 w-8"
                       onClick={() => void handleDelete(publisher.id)}
                       aria-label={t('common.actions.delete')}
                       title={t('common.actions.delete')}
@@ -242,8 +241,8 @@ export default function Publishers() {
 
               <CardContent className="flex flex-1 flex-col gap-3">
                 {publisher.founded_year && (
-                  <div className="flex items-center gap-sm">
-                    <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div className="gap-sm flex items-center">
+                    <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                     <Badge variant="outline" className="text-xs font-normal">
                       {t('pages.publishers.foundedYear', {
                         year: publisher.founded_year,
@@ -252,23 +251,23 @@ export default function Publishers() {
                   </div>
                 )}
                 {publisher.website && (
-                  <div className="flex items-center gap-sm">
-                    <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div className="gap-sm flex items-center">
+                    <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                     <a
                       href={publisher.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="truncate text-sm text-primary hover:underline"
+                      className="text-primary truncate text-sm hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {publisher.website.replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                 )}
-                <div className="mt-auto pt-sm">
+                <div className="pt-sm mt-auto">
                   <Badge
                     variant="secondary"
-                    className="flex w-fit items-center gap-sm text-xs"
+                    className="gap-sm flex w-fit items-center text-xs"
                   >
                     <BookOpen className="h-3 w-3" />
                     {t('pages.publishers.booksCount', { count: publisher.books_count })}

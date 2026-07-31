@@ -166,21 +166,21 @@ function PomodoroBar() {
         : 'hsl(var(--warning))';
 
   return (
-    <div className="flex items-center gap-md rounded-lg border bg-card px-lg py-md">
-      <div className="flex items-center gap-sm">
-        <Timer className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">
+    <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
+      <div className="gap-sm flex items-center">
+        <Timer className="text-muted-foreground h-4 w-4" />
+        <span className="text-muted-foreground text-sm font-medium">
           {t('pages.todayTasks.pomodoroTitle')}
         </span>
       </div>
-      <div className="flex items-center gap-xs rounded-md border p-0.5">
+      <div className="gap-xs flex items-center rounded-md border p-0.5">
         {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => switchMode(m)}
             className={cn(
-              'rounded px-sm py-xs text-xs transition-colors',
+              'px-sm py-xs rounded text-xs transition-colors',
               mode === m
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -193,7 +193,7 @@ function PomodoroBar() {
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
         <span className="text-xs font-bold tabular-nums">{timeString}</span>
       </CircularProgress>
-      <div className="flex items-center gap-xs">
+      <div className="gap-xs flex items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -221,7 +221,7 @@ function PomodoroBar() {
         </Button>
       </div>
       {cycles > 0 && (
-        <span className="ml-auto text-xs text-muted-foreground">
+        <span className="text-muted-foreground ml-auto text-xs">
           {t('pages.todayTasks.pomodoroCycles', { count: cycles })}
         </span>
       )}
@@ -360,36 +360,51 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  useEffect(() => {
-    const initializeDate = async () => {
+  // Disparo inicial (uma vez por montagem) via useQuery — evita setState direto
+  // dentro de um useEffect puro, mantendo a lógica de carregamento inalterada.
+  useQuery({
+    queryKey: ['daily-checklist', 'init'],
+    queryFn: async () => {
+      await loadCurrentUserMember();
       try {
         const serverDate = await appService.getCurrentDate();
         setSelectedDate(serverDate);
       } catch {
         setSelectedDate(formatLocalDate(new Date()));
       }
-    };
-    void loadCurrentUserMember();
-    void initializeDate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      return true;
+    },
+  });
 
-  useEffect(() => {
-    if (ownerId > 0 && selectedDate) {
-      void loadData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, ownerId]);
+  useQuery({
+    queryKey: ['daily-checklist', 'data', selectedDate, ownerId],
+    queryFn: async () => {
+      await loadData();
+      return true;
+    },
+    enabled: ownerId > 0 && !!selectedDate,
+  });
 
-  useEffect(() => {
+  // Deriva os cards a partir de `instances` durante o render (sem efeito),
+  // permitindo que `setCards` continue editável localmente (drag-and-drop).
+  const [lastInstances, setLastInstances] = useState(instances);
+  if (instances !== lastInstances) {
+    setLastInstances(instances);
     setCards(instances.length > 0 ? convertInstancesToCards(instances) : []);
-  }, [instances]);
+  }
 
   useEffect(() => {
     if (cards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
       const timer = setTimeout(() => {
         setShowCelebration(true);
-        toast({ title: t('pages.todayTasks.allDoneTitle') });
+        toast({
+          title: (
+            <span className="gap-xs flex items-center">
+              <CheckCircle2 className="text-success h-4 w-4 shrink-0" />
+              {t('pages.todayTasks.allDoneTitle')}
+            </span>
+          ),
+        });
       }, 0);
       prevDayRateRef.current = dayRate;
       return () => clearTimeout(timer);
@@ -629,7 +644,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
           onClick={() => changeViewMode(mode)}
           title={t(`pages.todayTasks.${mode}Mode`)}
           className={cn(
-            'rounded px-sm py-xs transition-colors',
+            'px-sm py-xs rounded transition-colors',
             viewMode === mode
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground'
@@ -694,7 +709,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       <PomodoroBar />
 
       {/* Saudação + progresso do dia */}
-      <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
+      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
         <CircularProgress
           value={dayRate}
           size={64}
@@ -704,57 +719,57 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
           <span className="text-sm font-bold">{completedTasks}</span>
         </CircularProgress>
         <div className="flex-1">
-          <div className="flex items-center gap-sm">
-            <GreetIcon className="h-5 w-5 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <GreetIcon className="text-muted-foreground h-5 w-5" />
             <span className="text-lg font-semibold">{greeting.label}</span>
           </div>
-          <p className="mt-0.5 capitalize text-muted-foreground">{dateLabel}</p>
+          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold">
             {completedTasks}
-            <span className="text-base font-normal text-muted-foreground">
+            <span className="text-muted-foreground text-base font-normal">
               /{cards.length}
             </span>
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.todayTasks.tasksLabel')}
           </p>
         </div>
       </div>
 
       {gamification && (
-        <div className="flex items-center gap-md rounded-lg border bg-muted/30 px-md py-sm">
-          <div className="flex items-center gap-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+        <div className="gap-md bg-muted/30 px-md py-sm flex items-center rounded-lg border">
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
               {gamification.current_level}
             </div>
             <div className="hidden sm:block">
               <p className="text-xs font-medium">
                 {t('pages.dailyChecklist.level', { level: gamification.current_level })}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {gamification.total_xp} XP
               </p>
             </div>
           </div>
           <div className="flex flex-1 flex-col gap-0.5">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span className="flex items-center gap-xs">
-                <Zap className="h-3 w-3 text-warning" />
+            <div className="text-muted-foreground flex justify-between text-xs">
+              <span className="gap-xs flex items-center">
+                <Zap className="text-warning h-3 w-3" />
                 {gamification.xp_in_level}/{gamification.xp_needed_for_next_level} XP
               </span>
               <span>{gamification.level_progress_pct}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full bg-primary transition-all"
+                className="bg-primary h-full rounded-full transition-all"
                 style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
               />
             </div>
           </div>
           {gamification.current_streak > 0 && (
-            <div className="flex items-center gap-xs rounded-full bg-orange-500/10 px-sm py-xs">
+            <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
               <Flame className="h-3.5 w-3.5 text-orange-500" />
               <span className="text-sm font-bold text-orange-500">
                 {gamification.current_streak}
@@ -765,7 +780,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       )}
 
       {overdueTaskNotifications.length > 0 && (
-        <div className="flex items-center gap-sm rounded-lg border border-destructive/30 bg-destructive/10 px-md py-sm text-sm text-destructive">
+        <div className="gap-sm border-destructive/30 bg-destructive/10 px-md py-sm text-destructive flex items-center rounded-lg border text-sm">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>
             {t('pages.dailyChecklist.overdueBanner', {
@@ -776,9 +791,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-md">
+      <div className="gap-md flex flex-wrap items-center">
         {embedded && viewToggle}
-        <div className="flex items-end gap-sm">
+        <div className="gap-sm flex items-end">
           <div>
             <Label htmlFor="date">{t('common.fields.date')}</Label>
             <DatePicker
@@ -810,7 +825,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               >
                 <StickyNote className="h-4 w-4" aria-hidden="true" />
                 {(reflection.trim() || mood) && (
-                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <span className="bg-primary absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full" />
                 )}
               </Button>
             </DialogTrigger>
@@ -851,22 +866,22 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                     rows={6}
                   />
                   {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-xs text-sm text-destructive">
+                    <p className="mt-xs text-destructive text-sm">
                       {t('pages.dailyChecklist.reflectionMinLength')}
                     </p>
                   )}
                 </div>
               </div>
-              <DialogFooter className="flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
+              <DialogFooter className="gap-sm flex-col sm:flex-row sm:items-center sm:justify-between">
                 <Link
                   to="/planning/reflections"
-                  className="flex items-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+                  className="gap-xs text-muted-foreground hover:text-primary flex items-center text-xs transition-colors"
                   onClick={() => setIsReflectionOpen(false)}
                 >
                   <ExternalLink className="h-3 w-3" />
                   {t('pages.dailyChecklist.viewAllReflections')}
                 </Link>
-                <div className="flex gap-sm">
+                <div className="gap-sm flex">
                   <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
                     {t('common.actions.close')}
                   </Button>
@@ -913,7 +928,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         <>
           {looseInstances.length === 0 ? (
             <EmptyState
-              icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+              icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
               title={t('pages.dailyChecklist.noTasks')}
               message={t('pages.dailyChecklist.noTasksDesc')}
             />
@@ -926,7 +941,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                   <div
                     key={task.id}
                     className={cn(
-                      'flex items-center gap-md rounded-lg border p-md transition-opacity',
+                      'gap-md p-md flex items-center rounded-lg border transition-opacity',
                       isCompleted && 'opacity-60'
                     )}
                   >
@@ -934,7 +949,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                       type="button"
                       disabled={isUpdating}
                       onClick={() => void handleToggleTaskComplete(task)}
-                      className="shrink-0 text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
+                      className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
                       title={
                         isCompleted
                           ? t('pages.todayTasks.markPending')
@@ -942,7 +957,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                       }
                     >
                       {isCompleted ? (
-                        <CheckCircle2 className="h-6 w-6 text-success" />
+                        <CheckCircle2 className="text-success h-6 w-6" />
                       ) : (
                         <Circle className="h-6 w-6" />
                       )}
@@ -954,7 +969,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                         {task.task_name}
                       </h3>
                       {task.time_display && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {t('pages.todayTasks.timeLabel', { time: task.time_display })}
                         </p>
                       )}
@@ -979,7 +994,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         <>
           {instances.length === 0 ? (
             <EmptyState
-              icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+              icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
               title={t('pages.dailyChecklist.noTasks')}
               message={t('pages.dailyChecklist.noTasksDesc')}
             />
@@ -992,7 +1007,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="grid grid-cols-1 gap-md md:grid-cols-3 md:gap-lg">
+              <div className="gap-md md:gap-lg grid grid-cols-1 md:grid-cols-3">
                 <KanbanColumn
                   status="todo"
                   title={t('pages.dailyChecklist.todo')}
@@ -1020,13 +1035,10 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
             cardsByStatus.doing.length === 0 &&
             cardsByStatus.done.length === cards.length &&
             !reflection.trim() && (
-              <div className="flex items-center gap-md rounded-lg border border-success/30 bg-success/5 px-md py-md">
-                <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
+              <div className="gap-md border-success/30 bg-success/5 px-md py-md flex items-center rounded-lg border">
+                <CheckCircle2 className="text-success h-6 w-6 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">
-                    {t('pages.dailyChecklist.allDone')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-foreground text-sm font-medium">
                     {t('pages.dailyChecklist.reflectionPrompt')}
                   </p>
                 </div>

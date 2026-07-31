@@ -102,14 +102,14 @@ export function FormField({
       case 'validating':
         return (
           <Loader2
-            className="h-4 w-4 animate-spin text-muted-foreground"
+            className="text-muted-foreground h-4 w-4 animate-spin"
             aria-hidden="true"
           />
         );
       case 'valid':
-        return <Check className="h-4 w-4 text-success" aria-hidden="true" />;
+        return <Check className="text-success h-4 w-4" aria-hidden="true" />;
       case 'invalid':
-        return <X className="h-4 w-4 text-destructive" aria-hidden="true" />;
+        return <X className="text-destructive h-4 w-4" aria-hidden="true" />;
       default:
         return null;
     }
@@ -132,7 +132,7 @@ export function FormField({
       {enhancedChild}
 
       {description && !error && (
-        <p id={descriptionId} className="text-sm text-muted-foreground">
+        <p id={descriptionId} className="text-muted-foreground text-sm">
           {description}
         </p>
       )}
@@ -140,7 +140,7 @@ export function FormField({
       {error && (
         <p
           id={errorId}
-          className="animate-in slide-in-from-top-1 text-sm text-destructive duration-200"
+          className="animate-in slide-in-from-top-1 text-destructive text-sm duration-200"
           role="alert"
           aria-live="polite"
         >

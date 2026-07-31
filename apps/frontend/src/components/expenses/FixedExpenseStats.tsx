@@ -1,40 +1,33 @@
+import { useQuery } from '@tanstack/react-query';
 import { TrendingDown, TrendingUp, Calendar, DollarSign } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StatCard } from '@/components/common/StatCard';
 import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
-import type { FixedExpenseStats as StatsType } from '@/types';
 
 export const FixedExpenseStats = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<StatsType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    void loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      setIsLoading(true);
-      const data = await fixedExpensesService.getStats();
-      setStats(data);
-    } catch (error) {
-      logger.error('Erro ao carregar estatísticas:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: stats = null, isLoading } = useQuery({
+    queryKey: ['fixed-expense-stats'],
+    queryFn: async () => {
+      try {
+        return await fixedExpensesService.getStats();
+      } catch (error) {
+        logger.error('Erro ao carregar estatísticas:', error);
+        return null;
+      }
+    },
+  });
 
   if (isLoading || !stats) {
     return <div>{t('pages.fixedExpenses.stats.loading')}</div>;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+    <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title={t('pages.fixedExpenses.stats.activeTemplates')}
         value={stats.active_templates}

@@ -147,7 +147,7 @@ export function ReceiptButton({
   return (
     <>
       {/* Hidden receipt template for direct export */}
-      <div className="pointer-events-none fixed -left-[9999px] top-0">
+      <div className="pointer-events-none fixed top-0 -left-[9999px]">
         <ReceiptTemplate ref={receiptRef} data={receiptData} forExport />
       </div>
 
@@ -174,16 +174,16 @@ export function ReceiptButton({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-sm" align="end">
+        <PopoverContent className="p-sm w-48" align="end">
           {isLoadingItems ? (
-            <div className="flex items-center justify-center py-md">
+            <div className="py-md flex items-center justify-center">
               <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {t('receipt.button.loading')}
               </span>
             </div>
           ) : (
-            <div className="flex flex-col gap-xs">
+            <div className="gap-xs flex flex-col">
               <Button
                 variant="ghost"
                 size="sm"

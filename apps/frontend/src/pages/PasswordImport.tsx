@@ -228,7 +228,7 @@ export default function PasswordImport() {
         {step === 'upload' && (
           <Card className="mx-auto max-w-xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
+              <CardTitle className="gap-sm flex items-center">
                 <Upload className="h-5 w-5" />
                 {t('pages.passwordImport.title')}
               </CardTitle>
@@ -268,7 +268,7 @@ export default function PasswordImport() {
                 <div
                   role="button"
                   tabIndex={0}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-xl transition-colors ${
+                  className={`p-xl flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors ${
                     isDragging
                       ? 'border-primary bg-primary/5'
                       : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/20'
@@ -285,16 +285,16 @@ export default function PasswordImport() {
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                 >
-                  <FileUp className="mb-sm h-8 w-8 text-muted-foreground" />
+                  <FileUp className="mb-sm text-muted-foreground h-8 w-8" />
                   {file ? (
                     <p className="text-sm font-medium">{file.name}</p>
                   ) : (
                     <>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {t('pages.passwordImport.uploadHint')}
                       </p>
                       {format && (
-                        <p className="mt-xs text-xs text-muted-foreground">
+                        <p className="mt-xs text-muted-foreground text-xs">
                           {t('pages.passwordImport.uploadHintFormat', {
                             format: format === 'bitwarden_json' ? '.json' : '.csv',
                           })}
@@ -314,7 +314,7 @@ export default function PasswordImport() {
               </div>
 
               {/* Security note */}
-              <div className="flex items-start gap-sm rounded-md bg-muted/40 p-3 text-sm text-muted-foreground">
+              <div className="gap-sm bg-muted/40 text-muted-foreground flex items-start rounded-md p-3 text-sm">
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{t('pages.passwordImport.description')}</span>
               </div>
@@ -349,7 +349,7 @@ export default function PasswordImport() {
                       {t('pages.passwordImport.previewDesc')}
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-sm">
+                  <div className="gap-sm flex items-center">
                     <Button variant="outline" size="sm" onClick={selectAll}>
                       <CheckSquare className="mr-xs h-4 w-4" />
                       {t('pages.passwordImport.selectAll')}
@@ -363,7 +363,7 @@ export default function PasswordImport() {
               </CardHeader>
               <CardContent>
                 {preview.entries.length === 0 ? (
-                  <p className="py-xl text-center text-muted-foreground">
+                  <p className="py-xl text-muted-foreground text-center">
                     {t('pages.passwordImport.emptyFile')}
                   </p>
                 ) : (
@@ -402,7 +402,7 @@ export default function PasswordImport() {
                             <TableCell className="text-muted-foreground">
                               {entry.username || '—'}
                             </TableCell>
-                            <TableCell className="max-w-[180px] truncate text-sm text-muted-foreground">
+                            <TableCell className="text-muted-foreground max-w-[180px] truncate text-sm">
                               {entry.site || '—'}
                             </TableCell>
                             <TableCell>
@@ -430,7 +430,7 @@ export default function PasswordImport() {
                 {t('common.cancel')}
               </Button>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {t('pages.passwordImport.selectedCount', { count: selected.size })}
                 </span>
                 <Button
@@ -449,27 +449,27 @@ export default function PasswordImport() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.passwordImport.categoryMappingStep')}</CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {t('pages.passwordImport.categoryMappingDesc')}
               </p>
             </CardHeader>
             <CardContent>
-              <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
+              <div className="space-y-sm pr-xs max-h-96 overflow-y-auto">
                 {preview.entries
                   .filter((e) => selected.has(e.index))
                   .map((e) => (
                     <div
                       key={e.index}
-                      className="flex items-center justify-between gap-sm rounded-md border border-border p-sm"
+                      className="gap-sm border-border p-sm flex items-center justify-between rounded-md border"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{e.title}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {e.site || e.username}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-sm">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="gap-sm flex shrink-0 items-center">
+                        <span className="text-muted-foreground text-xs">
                           {t('pages.passwordImport.suggestedCategory')}:{' '}
                           <strong>{e.suggested_category || e.category}</strong>
                         </span>
@@ -505,7 +505,7 @@ export default function PasswordImport() {
                 <Button variant="outline" onClick={() => setStep('preview')}>
                   {t('common.actions.back')}
                 </Button>
-                <div className="flex gap-sm">
+                <div className="gap-sm flex">
                   <Button
                     variant="ghost"
                     onClick={() =>
@@ -539,41 +539,41 @@ export default function PasswordImport() {
         {step === 'summary' && summary && (
           <Card className="mx-auto max-w-md">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm">
+              <CardTitle className="gap-sm flex items-center">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                 {t('pages.passwordImport.summaryTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-md">
-              <div className="grid grid-cols-3 gap-md text-center">
-                <div className="space-y-xs rounded-lg bg-green-50 p-md dark:bg-green-950/20">
+              <div className="gap-md grid grid-cols-3 text-center">
+                <div className="space-y-xs p-md rounded-lg bg-green-50 dark:bg-green-950/20">
                   <p className="text-2xl font-bold text-green-700 dark:text-green-400">
                     {summary.imported}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.passwordImport.summaryImported')}
                   </p>
                 </div>
-                <div className="space-y-xs rounded-lg bg-yellow-50 p-md dark:bg-yellow-950/20">
+                <div className="space-y-xs p-md rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
                   <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
                     {summary.duplicates_skipped}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.passwordImport.summaryDuplicates')}
                   </p>
                 </div>
-                <div className="space-y-xs rounded-lg bg-red-50 p-md dark:bg-red-950/20">
+                <div className="space-y-xs p-md rounded-lg bg-red-50 dark:bg-red-950/20">
                   <p className="text-2xl font-bold text-red-700 dark:text-red-400">
                     {summary.errors}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.passwordImport.summaryErrors')}
                   </p>
                 </div>
               </div>
 
               {summary.errors > 0 && (
-                <div className="flex items-start gap-sm rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/20 dark:text-red-400">
+                <div className="gap-sm flex items-start rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/20 dark:text-red-400">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>
                     {summary.errors}{' '}

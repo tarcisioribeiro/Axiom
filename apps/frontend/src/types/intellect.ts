@@ -1,26 +1,10 @@
 export type CourseStatus = 'not_started' | 'in_progress' | 'completed' | 'paused';
 export type CoursePlatform =
-  | 'udemy'
-  | 'coursera'
-  | 'youtube'
-  | 'linkedin'
-  | 'alura'
-  | 'pluralsight'
-  | 'other';
+  'udemy' | 'coursera' | 'youtube' | 'linkedin' | 'alura' | 'pluralsight' | 'other';
 export type IntellectCategory =
-  | 'technology'
-  | 'languages'
-  | 'design'
-  | 'business'
-  | 'science'
-  | 'arts'
-  | 'other';
+  'technology' | 'languages' | 'design' | 'business' | 'science' | 'arts' | 'other';
 export type SkillProficiency =
-  | 'beginner'
-  | 'basic'
-  | 'intermediate'
-  | 'advanced'
-  | 'expert';
+  'beginner' | 'basic' | 'intermediate' | 'advanced' | 'expert';
 export type SkillStatus = 'learning' | 'evolving' | 'mastered';
 
 export interface Course {
@@ -176,20 +160,10 @@ export interface SkillFormData {
 // ============================================================================
 
 export type KnowledgeNodeType =
-  | 'book'
-  | 'course'
-  | 'skill'
-  | 'highlight'
-  | 'summary'
-  | 'author';
+  'book' | 'course' | 'skill' | 'highlight' | 'summary' | 'author';
 
 export type KnowledgeLinkRelation =
-  | 'relates'
-  | 'supports'
-  | 'contradicts'
-  | 'deepens'
-  | 'derived_from'
-  | 'applies';
+  'relates' | 'supports' | 'contradicts' | 'deepens' | 'derived_from' | 'applies';
 
 export interface KnowledgeLink {
   id: number;

@@ -64,22 +64,10 @@ export interface CategorizationRuleFormData {
 }
 
 export type AutomationConditionField =
-  | 'merchant'
-  | 'description'
-  | 'category'
-  | 'value'
-  | 'account'
-  | 'payment_method';
+  'merchant' | 'description' | 'category' | 'value' | 'account' | 'payment_method';
 
 export type AutomationOperator =
-  | 'contains'
-  | 'not_contains'
-  | 'eq'
-  | 'neq'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte';
+  'contains' | 'not_contains' | 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte';
 
 export type AutomationActionType = 'set_category' | 'add_tag' | 'create_alert';
 

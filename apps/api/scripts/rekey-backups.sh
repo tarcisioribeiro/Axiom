@@ -143,7 +143,7 @@ export _REKEY_NEW_KEY="$BACKUP_ENCRYPTION_KEY"
 # ── Find files to rekey ───────────────────────────────────────────────────────
 mapfile -d '' FILES < <(
     find "$BACKUP_DIR" -maxdepth 1 \
-        -name "db_backup_*_kv${FROM_VERSION}.dump.enc" \
+        -name "db_backup_*_kv${FROM_VERSION}.sql.gz.enc" \
         -print0 | sort -z
 )
 
@@ -169,9 +169,9 @@ FAILED=0
 for OLD_ENC in "${FILES[@]}"; do
     OLD_BASE=$(basename "$OLD_ENC")
     # Replace _kv<FROM> with _kv<TO> in the filename
-    NEW_BASE="${OLD_BASE/_kv${FROM_VERSION}.dump.enc/_kv${TO_VERSION}.dump.enc}"
+    NEW_BASE="${OLD_BASE/_kv${FROM_VERSION}.sql.gz.enc/_kv${TO_VERSION}.sql.gz.enc}"
     NEW_ENC="${BACKUP_DIR}/${NEW_BASE}"
-    TEMP_DUMP=$(mktemp "${BACKUP_DIR}/.rekey_XXXXXX.dump")
+    TEMP_DUMP=$(mktemp "${BACKUP_DIR}/.rekey_XXXXXX.sql.gz")
 
     log "Processing: ${OLD_BASE}"
 
@@ -214,14 +214,6 @@ for OLD_ENC in "${FILES[@]}"; do
     rm -f "$TEMP_DUMP"
     log "  Re-encrypted → ${NEW_BASE}"
 
-    # Re-key manifest if it exists
-    OLD_MANIFEST="${OLD_ENC%.dump.enc}.manifest"
-    if [ -f "$OLD_MANIFEST" ]; then
-        NEW_MANIFEST="${NEW_ENC%.dump.enc}.manifest"
-        cp "$OLD_MANIFEST" "$NEW_MANIFEST"
-        log "  Manifest copied → $(basename "$NEW_MANIFEST")"
-    fi
-
     # Upload new file
     if $OPT_UPLOAD; then
         if "$MC_BIN" cp "$NEW_ENC" "axiom-storage/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
@@ -242,7 +234,7 @@ for OLD_ENC in "${FILES[@]}"; do
 
     # Delete old local file
     if $OPT_DELETE_OLD; then
-        rm -f "$OLD_ENC" "$OLD_MANIFEST"
+        rm -f "$OLD_ENC"
         log "  Deleted local: ${OLD_BASE}"
     fi
 

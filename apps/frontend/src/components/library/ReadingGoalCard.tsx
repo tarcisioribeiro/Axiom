@@ -1,7 +1,8 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -85,7 +86,7 @@ function CelebrationBurst() {
         return (
           <motion.div
             key={i}
-            className={`absolute left-1/2 top-1/2 h-2 w-2 rounded-full ${colors[i % colors.length]}`}
+            className={`absolute top-1/2 left-1/2 h-2 w-2 rounded-full ${colors[i % colors.length]}`}
             initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
             animate={{ x, y, opacity: 0, scale: 0 }}
             transition={{ duration: 0.8, delay: i * 0.05, ease: 'easeOut' }}
@@ -115,7 +116,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
       {showCelebration && <CelebrationBurst />}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-muted-foreground text-xs font-medium">
           {goal.name
             ? goal.name
             : t('pages.libraryDashboard.readingGoals.goalFallbackName', {
@@ -135,7 +136,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive h-6 w-6"
             onClick={onDelete}
             title={t('pages.libraryDashboard.readingGoals.deleteTitle')}
           >
@@ -144,7 +145,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
         </div>
       </div>
 
-      <div className="flex items-center gap-md">
+      <div className="gap-md flex items-center">
         <div className="relative flex items-center justify-center">
           <CircularProgress
             percentage={goal.progress_percentage}
@@ -162,19 +163,19 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
                 <Trophy className="h-5 w-5 text-yellow-500" />
               </motion.div>
             ) : (
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <BookOpen className="text-muted-foreground h-4 w-4" />
             )}
-            <span className="text-base font-bold leading-tight">
+            <span className="text-base leading-tight font-bold">
               {goal.progress_percentage.toFixed(0)}%
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-muted-foreground text-[10px]">
               {goal.books_read_this_year}/{goal.books_goal}
             </span>
           </div>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-sm">
-          <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="space-y-sm min-w-0 flex-1">
+          <div className="text-muted-foreground flex justify-between text-xs">
             <span>
               {t('pages.libraryDashboard.readingGoals.booksRead', {
                 count: goal.books_read_this_year,
@@ -189,7 +190,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
 
           {goal.pages_goal > 0 && (
             <div className="space-y-0.5">
-              <div className="flex justify-between text-[10px] text-muted-foreground">
+              <div className="text-muted-foreground flex justify-between text-[10px]">
                 <span>{t('pages.libraryDashboard.readingGoals.pages')}</span>
                 <span>
                   {goal.pages_read_this_year.toLocaleString(i18n.language)} /{' '}
@@ -197,9 +198,9 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
                   {goal.pages_progress_percentage.toFixed(0)}%)
                 </span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <div
-                  className="h-full rounded-full bg-primary transition-all"
+                  className="bg-primary h-full rounded-full transition-all"
                   style={{ width: `${Math.min(goal.pages_progress_percentage, 100)}%` }}
                 />
               </div>
@@ -207,18 +208,18 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           )}
 
           {ltgs.length > 0 && (
-            <div className="space-y-xs border-t pt-xs">
+            <div className="space-y-xs pt-xs border-t">
               {ltgs.map((ltg) => (
                 <div key={ltg.id} className="space-y-0.5">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <div className="text-muted-foreground flex justify-between text-[10px]">
                     <span>{t('pages.books.literaryTypes.' + ltg.literary_type)}</span>
                     <span>
                       {ltg.books_read_this_year}/{ltg.goal_count}
                     </span>
                   </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
                     <div
-                      className="h-full rounded-full bg-primary/70 transition-all"
+                      className="bg-primary/70 h-full rounded-full transition-all"
                       style={{ width: `${Math.min(ltg.progress_percentage, 100)}%` }}
                     />
                   </div>
@@ -248,42 +249,42 @@ interface ReadingGoalCardProps {
   onGoalChange?: () => void;
 }
 
+const EMPTY_GOALS: ReadingGoal[] = [];
+
 export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   const { t } = useTranslation();
-  const [goals, setGoals] = useState<ReadingGoal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<ReadingGoal | undefined>();
   const [celebrationId, setCelebrationId] = useState<number | null>(null);
   const { toast } = useToast();
   const { showDelete } = useAlertDialog();
+  const queryClient = useQueryClient();
 
   const currentYear = new Date().getFullYear();
 
-  useEffect(() => {
-    void loadGoals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: goals = EMPTY_GOALS, isLoading } = useQuery({
+    queryKey: ['reading-goals', currentYear],
+    queryFn: async () => {
+      try {
+        const data = await readingGoalsService.getAll({ year: currentYear });
+        const yearGoals = data.filter((g) => g.year === currentYear);
 
-  const loadGoals = async () => {
-    try {
-      setIsLoading(true);
-      const data = await readingGoalsService.getAll({ year: currentYear });
-      const yearGoals = data.filter((g) => g.year === currentYear);
-      setGoals(yearGoals);
-
-      const completed = yearGoals.find((g) => g.progress_percentage >= 100);
-      if (completed) {
-        setCelebrationId(completed.id);
-        setTimeout(() => setCelebrationId(null), 1200);
+        const completed = yearGoals.find((g) => g.progress_percentage >= 100);
+        if (completed) {
+          setCelebrationId(completed.id);
+          setTimeout(() => setCelebrationId(null), 1200);
+        }
+        return yearGoals;
+      } catch {
+        // silently fail — goals are optional
+        return EMPTY_GOALS;
       }
-    } catch {
-      // silently fail — goals are optional
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['reading-goals', currentYear] });
 
   const openNewGoal = () => {
     setEditingGoal(undefined);
@@ -309,7 +310,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
     try {
       await readingGoalsService.delete(goal.id);
       toast({ title: t('pages.libraryDashboard.readingGoals.deleted') });
-      await loadGoals();
+      await refresh();
       onGoalChange?.();
     } catch (error) {
       toast({
@@ -357,7 +358,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
         ),
       ]);
 
-      await loadGoals();
+      await refresh();
 
       toast({
         title: editingGoal
@@ -381,11 +382,11 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   return (
     <>
       <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-sm font-medium">
             {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
           </CardTitle>
-          <div className="flex items-center gap-xs">
+          <div className="gap-xs flex items-center">
             <Button
               variant="ghost"
               size="icon"
@@ -395,14 +396,14 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <Target className="text-muted-foreground h-4 w-4" />
           </div>
         </CardHeader>
 
         <CardContent>
           {isLoading ? (
             <div className="flex h-[140px] items-center justify-center">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
             </div>
           ) : goals.length > 0 ? (
             <div className="divide-y">
@@ -418,9 +419,9 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-3 py-md">
-              <Target className="h-10 w-10 text-muted-foreground/40" />
-              <p className="text-center text-sm text-muted-foreground">
+            <div className="py-md flex flex-col items-center gap-3">
+              <Target className="text-muted-foreground/40 h-10 w-10" />
+              <p className="text-muted-foreground text-center text-sm">
                 {t('pages.libraryDashboard.readingGoals.setGoalFor', {
                   year: currentYear,
                 })}

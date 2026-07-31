@@ -216,28 +216,28 @@ export default function Webhooks() {
           }
         />
       ) : (
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           {webhooks.map((w) => (
             <div
               key={w.id}
-              className="flex items-start justify-between gap-md rounded-lg border bg-card p-md"
+              className="gap-md bg-card p-md flex items-start justify-between rounded-lg border"
             >
-              <div className="flex min-w-0 items-start gap-sm">
-                <div className="mt-xs rounded-md bg-primary/10 p-sm">
-                  <Globe className="h-md w-md text-primary" />
+              <div className="gap-sm flex min-w-0 items-start">
+                <div className="mt-xs bg-primary/10 p-sm rounded-md">
+                  <Globe className="h-md text-primary w-md" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-sm">
+                  <div className="gap-sm flex flex-wrap items-center">
                     <span className="font-medium">{w.name}</span>
                     {!w.is_active && (
                       <Badge variant="secondary">{t('webhooks.inactive')}</Badge>
                     )}
                     {statusBadge(w.last_delivery_status, t)}
                   </div>
-                  <p className="max-w-xs truncate text-sm text-muted-foreground">
+                  <p className="text-muted-foreground max-w-xs truncate text-sm">
                     {w.url}
                   </p>
-                  <div className="mt-xs flex flex-wrap gap-xs">
+                  <div className="mt-xs gap-xs flex flex-wrap">
                     {w.events.slice(0, 4).map((ev) => (
                       <Badge key={ev} variant="outline" className="text-xs">
                         {ev}
@@ -249,13 +249,13 @@ export default function Webhooks() {
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('webhooks.deliveries', { count: w.delivery_count })}
                   </p>
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-xs">
+              <div className="gap-xs flex shrink-0 items-center">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -291,28 +291,28 @@ export default function Webhooks() {
           ))}
 
           {deliveriesWebhookId && (
-            <div className="rounded-lg border bg-card p-md">
+            <div className="bg-card p-md rounded-lg border">
               <h3 className="mb-sm font-medium">{t('webhooks.deliveryHistory')}</h3>
               {loadingDeliveries ? (
-                <div className="flex justify-center py-md">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <div className="py-md flex justify-center">
+                  <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
                 </div>
               ) : !deliveries?.length ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('webhooks.noDeliveries')}
                 </p>
               ) : (
                 <div className="space-y-sm">
                   {deliveries.map((d) => (
-                    <div key={d.id} className="flex items-center gap-sm text-sm">
+                    <div key={d.id} className="gap-sm flex items-center text-sm">
                       {d.status === 'success' ? (
                         <CheckCircle2 className="h-md w-md shrink-0 text-green-500" />
                       ) : d.status === 'failed' ? (
-                        <XCircle className="h-md w-md shrink-0 text-destructive" />
+                        <XCircle className="h-md text-destructive w-md shrink-0" />
                       ) : (
-                        <Clock className="h-md w-md shrink-0 text-muted-foreground" />
+                        <Clock className="h-md text-muted-foreground w-md shrink-0" />
                       )}
-                      <span className="rounded bg-muted px-xs font-mono text-xs">
+                      <span className="bg-muted px-xs rounded font-mono text-xs">
                         {d.event}
                       </span>
                       {d.response_status_code && (
@@ -323,12 +323,12 @@ export default function Webhooks() {
                       {d.duration_ms && (
                         <span className="text-muted-foreground">{d.duration_ms}ms</span>
                       )}
-                      <span className="ml-auto text-muted-foreground">
+                      <span className="text-muted-foreground ml-auto">
                         {new Date(d.created_at).toLocaleString('pt-BR')}
                       </span>
                       {d.error_message && (
                         <span
-                          className="max-w-xs truncate text-xs text-destructive"
+                          className="text-destructive max-w-xs truncate text-xs"
                           title={d.error_message}
                         >
                           {d.error_message}
@@ -385,7 +385,7 @@ export default function Webhooks() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-sm">
+            <div className="gap-sm grid grid-cols-2">
               <div className="space-y-xs">
                 <Label>{t('webhooks.form.timeoutLabel')}</Label>
                 <Input
@@ -412,7 +412,7 @@ export default function Webhooks() {
               </div>
             </div>
 
-            <div className="flex items-center gap-sm">
+            <div className="gap-sm flex items-center">
               <Checkbox
                 id="is_active"
                 checked={form.is_active}
@@ -423,9 +423,9 @@ export default function Webhooks() {
 
             <div className="space-y-sm">
               <Label>{t('webhooks.form.eventsLabel')}</Label>
-              <div className="grid max-h-48 grid-cols-1 gap-xs overflow-y-auto rounded-md border p-sm">
+              <div className="gap-xs p-sm grid max-h-48 grid-cols-1 overflow-y-auto rounded-md border">
                 {(events ?? []).map((ev) => (
-                  <div key={ev.value} className="flex items-center gap-sm">
+                  <div key={ev.value} className="gap-sm flex items-center">
                     <Checkbox
                       id={`ev-${ev.value}`}
                       checked={form.events.includes(ev.value)}
@@ -435,7 +435,7 @@ export default function Webhooks() {
                       htmlFor={`ev-${ev.value}`}
                       className="cursor-pointer text-sm font-normal"
                     >
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="text-muted-foreground font-mono text-xs">
                         {ev.value}
                       </span>
                       {' — '}

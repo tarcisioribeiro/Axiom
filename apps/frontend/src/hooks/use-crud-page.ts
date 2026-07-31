@@ -1,71 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useCallback, useMemo } from 'react';
 
 import { ToastAction, type ToastActionElement } from '@/components/ui/toast';
+import type {
+  CrudService,
+  UseCrudPageOptions,
+  UseCrudPageReturn,
+} from '@/hooks/use-crud-page-types';
 import { useSoundFeedback } from '@/hooks/use-sound-feedback';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/utils';
 
-/**
- * Interface para servicos CRUD.
- * O servico deve implementar esses metodos.
- */
-export interface CrudService<T, CreateData, UpdateData = CreateData> {
-  getAll: () => Promise<T[]>;
-  create: (data: CreateData) => Promise<T>;
-  update: (id: string | number, data: UpdateData) => Promise<T>;
-  delete: (id: string | number) => Promise<void>;
-}
-
-/**
- * Opcoes de configuracao do hook.
- */
-export interface UseCrudPageOptions<T> {
-  /** Nome do recurso em singular (ex: "conta", "despesa") */
-  resourceName: string;
-  /** Nome do recurso em plural (ex: "contas", "despesas") */
-  resourceNamePlural?: string;
-  /** Mensagens customizadas */
-  messages?: {
-    loadError?: string;
-    createSuccess?: string;
-    updateSuccess?: string;
-    deleteSuccess?: string;
-    deleteError?: string;
-    saveError?: string;
-  };
-  /** Callback apos criar/atualizar/deletar com sucesso */
-  onSuccess?: (action: 'create' | 'update' | 'delete', item?: T) => void;
-}
-
-/**
- * Retorno do hook useCrudPage.
- */
-export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
-  /** Lista de itens */
-  items: T[];
-  /** Estado de loading inicial */
-  isLoading: boolean;
-  /** Estado de loading do submit */
-  isSubmitting: boolean;
-  /** Dialog de formulario aberto */
-  isDialogOpen: boolean;
-  /** Item selecionado para edicao (undefined = criar novo) */
-  selectedItem: T | undefined;
-  /** Abre dialog para criar novo item */
-  handleCreate: () => void;
-  /** Abre dialog para editar item existente */
-  handleEdit: (item: T) => void;
-  /** Deleta item com confirmacao */
-  handleDelete: (id: string | number) => void;
-  /** Submete formulario (cria ou atualiza) */
-  handleSubmit: (data: CreateData | UpdateData) => Promise<void>;
-  /** Fecha dialog */
-  closeDialog: () => void;
-  /** Recarrega dados */
-  refresh: () => Promise<void>;
-  /** Define estado do dialog */
-  setIsDialogOpen: (open: boolean) => void;
-}
+export type { CrudService, UseCrudPageOptions, UseCrudPageReturn };
 
 /**
  * Hook generico para paginas CRUD.
@@ -109,14 +55,13 @@ export function useCrudPage<
     onSuccess,
   } = options;
 
-  const [items, setItems] = useState<T[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<T | undefined>();
 
   const { toast } = useToast();
   const { playSuccess, playDelete, playError } = useSoundFeedback();
+  const queryClient = useQueryClient();
 
   // Mensagens padrao — memoizadas para evitar re-criação a cada render
   const defaultMessages = useMemo(
@@ -136,27 +81,28 @@ export function useCrudPage<
     [resourceName, resourceNamePlural]
   );
 
-  // Carrega dados
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await service.getAll();
-      setItems(data);
-    } catch (error: unknown) {
-      toast({
-        title: defaultMessages.loadError,
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [service, toast, defaultMessages.loadError]);
+  const queryKey = useMemo(() => ['crud-page', resourceName], [resourceName]);
 
-  // Carrega dados ao montar
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+  // Carrega dados via TanStack Query (sem efeito de montagem manual)
+  const { data: items = [], isLoading } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      try {
+        return await service.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: defaultMessages.loadError,
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return [] as T[];
+      }
+    },
+  });
+
+  const refresh = useCallback(async () => {
+    await queryClient.refetchQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
   // Abre dialog para criar
   const handleCreate = useCallback(() => {
@@ -184,7 +130,9 @@ export function useCrudPage<
       if (!deletedItem) return;
 
       // Optimistic remove
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      queryClient.setQueryData<T[]>(queryKey, (prev = []) =>
+        prev.filter((item) => item.id !== id)
+      );
 
       let undone = false;
       // Ref-like object so the closure captures the container (const) rather than the value (let)
@@ -193,7 +141,7 @@ export function useCrudPage<
       const handleUndo = () => {
         undone = true;
         clearTimeout(timer.handle);
-        setItems((prev) => {
+        queryClient.setQueryData<T[]>(queryKey, (prev = []) => {
           const restored = [...prev];
           restored.splice(Math.min(itemIndex, restored.length), 0, deletedItem);
           return restored;
@@ -218,7 +166,7 @@ export function useCrudPage<
             onSuccess?.('delete');
           })
           .catch((error: unknown) => {
-            setItems((prev) => {
+            queryClient.setQueryData<T[]>(queryKey, (prev = []) => {
               const restored = [...prev];
               restored.splice(Math.min(itemIndex, restored.length), 0, deletedItem);
               return restored;
@@ -232,7 +180,17 @@ export function useCrudPage<
           });
       }, 5000);
     },
-    [items, service, toast, onSuccess, defaultMessages, playDelete, playError]
+    [
+      items,
+      service,
+      toast,
+      onSuccess,
+      defaultMessages,
+      playDelete,
+      playError,
+      queryClient,
+      queryKey,
+    ]
   );
 
   // Submete formulario
@@ -242,7 +200,7 @@ export function useCrudPage<
         // OPTIMISTIC UPDATE: aplica mudanca imediatamente, reverte em erro
         const originalItem = selectedItem;
         const optimisticItem = { ...selectedItem, ...(data as object) };
-        setItems((prev) =>
+        queryClient.setQueryData<T[]>(queryKey, (prev = []) =>
           prev.map((item) => (item.id === selectedItem.id ? optimisticItem : item))
         );
         closeDialog();
@@ -250,7 +208,7 @@ export function useCrudPage<
         try {
           setIsSubmitting(true);
           const result = await service.update(selectedItem.id, data as UpdateData);
-          setItems((prev) =>
+          queryClient.setQueryData<T[]>(queryKey, (prev = []) =>
             prev.map((item) => (item.id === selectedItem.id ? result : item))
           );
           playSuccess();
@@ -258,7 +216,7 @@ export function useCrudPage<
           onSuccess?.('update', result);
         } catch (error: unknown) {
           // Reverte para estado original
-          setItems((prev) =>
+          queryClient.setQueryData<T[]>(queryKey, (prev = []) =>
             prev.map((item) => (item.id === selectedItem.id ? originalItem : item))
           );
           playError();
@@ -279,7 +237,7 @@ export function useCrudPage<
           toast({ title: defaultMessages.createSuccess });
           onSuccess?.('create', result);
           closeDialog();
-          await loadData();
+          await refresh();
         } catch (error: unknown) {
           playError();
           toast({
@@ -297,11 +255,13 @@ export function useCrudPage<
       service,
       toast,
       closeDialog,
-      loadData,
+      refresh,
       onSuccess,
       defaultMessages,
       playSuccess,
       playError,
+      queryClient,
+      queryKey,
     ]
   );
 
@@ -316,7 +276,7 @@ export function useCrudPage<
     handleDelete,
     handleSubmit,
     closeDialog,
-    refresh: loadData,
+    refresh,
     setIsDialogOpen,
   };
 }

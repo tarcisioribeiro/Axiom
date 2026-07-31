@@ -21,7 +21,7 @@ export function Section({
     <Card>
       <CardHeader className="pb-md">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="bg-primary/10 text-primary flex h-9 w-9 items-center justify-center rounded-lg">
             {icon}
           </div>
           <div>
@@ -30,7 +30,7 @@ export function Section({
           </div>
         </div>
       </CardHeader>
-      <div className="mb-md h-px bg-border" />
+      <div className="mb-md bg-border h-px" />
       <CardContent className="space-y-md">{children}</CardContent>
     </Card>
   );

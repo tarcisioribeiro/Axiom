@@ -30,12 +30,22 @@ WORKDIR /app
 # Stage 2: Dependencies builder (cached when requirements unchanged)
 FROM base AS deps
 
+# Cache-buster for the pip install layer below. requirements.txt only pins
+# direct dependencies — transitive versions are resolved from PyPI at build
+# time. --cache-from reuses this layer indefinitely while requirements.txt is
+# unchanged, so a transitive package that gets a security fix upstream (e.g.
+# msgpack, setuptools) never actually re-resolves and the fix never lands in
+# the image. CI passes a value that changes weekly to force a periodic
+# re-resolution while keeping the layer cached for same-week rebuilds.
+ARG PIP_CACHE_BUST=1
+
 # Copy requirements first (for layer caching)
 COPY requirements.txt .
 
 # Install Python dependencies with BuildKit cache mount
 # Cache persists between builds, dramatically speeding up rebuilds
 RUN --mount=type=cache,target=/root/.cache/pip \
+    echo "cache-bust: ${PIP_CACHE_BUST}" && \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
@@ -64,6 +74,17 @@ WORKDIR /app
 # Copy installed packages from deps stage
 COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
+
+# pip is a build-time tool only — the app never imports it at runtime. Strip it
+# (and its bundled/vendored copies of msgpack, setuptools, etc., pinned to
+# whatever versions ship with this pip release) from the production image so
+# vulnerability scanners don't flag CVEs in code that's never executed here.
+# See GHSA-6v7p-g79w-8964 (msgpack) / CVE-2025-47273 (setuptools), both only
+# reachable through pip's internal vendor bundle, not the app's own pinned
+# msgpack==1.2.1 / setuptools==83.0.0 from requirements.txt.
+RUN find /usr/local/lib/python3.12/site-packages -maxdepth 1 -iname 'pip-*.dist-info' -exec rm -rf {} + && \
+    rm -rf /usr/local/lib/python3.12/site-packages/pip && \
+    rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.12
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser

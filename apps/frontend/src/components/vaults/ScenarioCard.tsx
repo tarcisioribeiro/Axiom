@@ -35,9 +35,9 @@ export function ScenarioCard({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-sm">
-        <CardTitle className="flex items-center gap-sm text-base">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+      <CardHeader className="pb-sm flex flex-row items-center justify-between">
+        <CardTitle className="gap-sm flex items-center text-base">
+          <div className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
             {index + 1}
           </div>
           <Badge variant="secondary">
@@ -55,13 +55,13 @@ export function ScenarioCard({
             variant="ghost"
             size="icon"
             onClick={() => onRemove(scenario.id)}
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-7 w-7"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </CardHeader>
-      <CardContent className="grid gap-md sm:grid-cols-2">
+      <CardContent className="gap-md grid sm:grid-cols-2">
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
           <Input

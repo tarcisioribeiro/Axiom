@@ -440,6 +440,7 @@ build:api:
           docker build --network=host \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
             --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
+            --build-arg PIP_CACHE_BUST="$(date +%Y%U)" \
             --cache-from "$API_IMAGE:main" \
             -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/api
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
@@ -451,6 +452,7 @@ build:api:
         docker build --network=host \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
+          --build-arg PIP_CACHE_BUST="$(date +%Y%U)" \
           --cache-from "$API_IMAGE:develop" \
           -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
@@ -1093,26 +1095,27 @@ rollback:staging:
 # Fluxo em dois passos:
 #
 #   Passo 1 — verify-backup.sh
-#     • Configura o cliente mc (MinIO) e baixa o artefato .dump.enc mais recente
-#       do bucket de staging (axiom-backups/db/).
+#     • Configura o cliente mc (MinIO) e baixa o artefato .sql.gz.enc mais
+#       recente do bucket de staging (axiom-backups/db/).
 #     • Decripta com OpenSSL AES-256-CBC + PBKDF2 (600 000 iterações) usando
 #       BACKUP_ENCRYPTION_KEY (ou a chave versionada _kv<N> quando presente no
-#       nome do arquivo — suporte a rotação de chave).
-#     • Restaura em um banco temporário via pg_restore e executa verificações de
-#       schema (contagem mínima de tabelas definida em MIN_TABLE_COUNT).
+#       nome do arquivo — suporte a rotação de chave), descompacta com gunzip
+#       e restaura o dump SQL simples em um banco temporário via `psql -f`,
+#       executando verificações de schema (contagem mínima de tabelas
+#       definida em MIN_TABLE_COUNT).
 #     • Um trap EXIT garante que o banco temporário é sempre descartado, mesmo
 #       em caso de falha.
 #
 #   Passo 2 — manage.py check
-#     • Repete a decriptação e restaura o dump em um segundo banco
-#       (axiom_managecheck_<CI_JOB_ID>).
+#     • Repete a decriptação/descompactação e restaura o dump em um segundo
+#       banco (axiom_managecheck_<CI_JOB_ID>).
 #     • Roda `python manage.py check --database default` apontado para esse
 #       banco — valida que o ORM do Django não detecta inconsistências de
 #       modelo contra dados reais.
 #     • Descarta o banco ao final.
 #
 # Serviço PostgreSQL: pgvector/pgvector:pg16 em container auxiliar (alias
-# "postgres").  Todos os comandos psql/pg_restore usam PGPASSWORD=trust.
+# "postgres").  Todos os comandos psql usam PGPASSWORD=trust.
 #
 # Variáveis necessárias:
 #   BACKUP_ENCRYPTION_KEY            — passphrase AES-256-CBC (masked)
@@ -1170,7 +1173,7 @@ test:backup-restore:
         "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY"
     - |
       LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/" --json \
-        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
+        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".sql.gz.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
       mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/${LATEST_FILE}" \
         "${BACKUP_DIR}/${LATEST_FILE}"
       echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
@@ -1186,22 +1189,24 @@ test:backup-restore:
       apps/api/scripts/verify-backup.sh "$ENC_FILE"
     - |
       RESTORE_DB="axiom_managecheck_${CI_JOB_ID}"
-      TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
+      TEMP_GZ=$(mktemp /tmp/managecheck_XXXXXX.sql.gz)
+      TEMP_SQL="${TEMP_GZ%.gz}"
       ENC_BASENAME=$(basename "$ENC_FILE")
       DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
-      if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+      if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.sql\.gz\.enc$ ]]; then
         KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
         [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
       fi
       DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
         openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
           -pass "env:DECRYPT_KEY_FOR_VERIFY" \
-          -in  "$ENC_FILE" -out "$TEMP_DUMP"
+          -in  "$ENC_FILE" -out "$TEMP_GZ"
+      gunzip "$TEMP_GZ"
       createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
-      pg_restore --host=postgres --port=5432 --username=postgres \
-        --dbname="$RESTORE_DB" --no-owner --no-privileges \
-        "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
-      rm -f "$TEMP_DUMP"
+      psql --host=postgres --port=5432 --username=postgres \
+        --dbname="$RESTORE_DB" --set ON_ERROR_STOP=0 \
+        --file="$TEMP_SQL" > /dev/null
+      rm -f "$TEMP_SQL"
       cd apps/api
       DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
         DB_USER=postgres DB_PASSWORD="" \

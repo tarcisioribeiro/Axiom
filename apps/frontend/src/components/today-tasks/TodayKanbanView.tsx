@@ -141,8 +141,8 @@ export function TodayKanbanView({
 
   return (
     <>
-      <div className="flex items-center gap-md">
-        <div className="flex items-end gap-sm">
+      <div className="gap-md flex items-center">
+        <div className="gap-sm flex items-end">
           <div>
             <Label htmlFor="date">{t('common.fields.date')}</Label>
             <DatePicker
@@ -176,7 +176,7 @@ export function TodayKanbanView({
               >
                 <StickyNote className="h-4 w-4" aria-hidden="true" />
                 {(reflection.trim() || mood) && (
-                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <span className="bg-primary absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full" />
                 )}
               </Button>
             </DialogTrigger>
@@ -217,7 +217,7 @@ export function TodayKanbanView({
                     rows={6}
                   />
                   {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-xs text-sm text-destructive">
+                    <p className="mt-xs text-destructive text-sm">
                       {t('pages.dailyChecklist.reflectionMinLength')}
                     </p>
                   )}
@@ -245,7 +245,7 @@ export function TodayKanbanView({
 
       {cards.length === 0 ? (
         <EmptyState
-          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+          icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
           title={t('pages.dailyChecklist.noTasks')}
           message={t('pages.dailyChecklist.noTasksDesc')}
         />
@@ -258,7 +258,7 @@ export function TodayKanbanView({
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-3 gap-lg">
+          <div className="gap-lg grid grid-cols-3">
             <KanbanColumn
               status="todo"
               title={t('pages.dailyChecklist.todo')}

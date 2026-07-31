@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -59,13 +60,21 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const EMPTY_BILLS: CreditCardBill[] = [];
+const EMPTY_CARDS: CreditCard[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
+function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? (
+    <div className="space-y-lg">{children}</div>
+  ) : (
+    <PageContainer>{children}</PageContainer>
+  );
+}
+
 export default function CreditCardBills({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
-  const [bills, setBills] = useState<CreditCardBill[]>([]);
-  const [filteredBills, setFilteredBills] = useState<CreditCardBill[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isRenegotiateDialogOpen, setIsRenegotiateDialogOpen] = useState(false);
@@ -81,6 +90,34 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const { user } = useAuthStore();
   const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
 
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['credit-card-bills'],
+    queryFn: async () => {
+      try {
+        const [billsData, cardsData, accountsData] = await Promise.all([
+          creditCardBillsService.getAll(),
+          creditCardsService.getAll(),
+          accountsService.getAll(),
+        ]);
+        return { bills: billsData, creditCards: cardsData, accounts: accountsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return {
+          bills: EMPTY_BILLS,
+          creditCards: EMPTY_CARDS,
+          accounts: EMPTY_ACCOUNTS,
+        };
+      }
+    },
+  });
+  const bills = pageData?.bills ?? EMPTY_BILLS;
+  const creditCards = pageData?.creditCards ?? EMPTY_CARDS;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+
   useEffect(() => {
     if (cardFilter === 'all') {
       setExtraSubLabel(null);
@@ -91,39 +128,6 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     return () => setExtraSubLabel(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, creditCards]);
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    filterBills();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardFilter, statusFilter, yearFilter, bills]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [billsData, cardsData, accountsData] = await Promise.all([
-        creditCardBillsService.getAll(),
-        creditCardsService.getAll(),
-        accountsService.getAll(),
-      ]);
-      setBills(billsData);
-      setFilteredBills(billsData);
-      setCreditCards(cardsData);
-      setAccounts(accountsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Mapeamento de abreviações de mês para número
   const MONTH_TO_NUMBER: Record<string, number> = {
@@ -141,7 +145,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     Dec: 12,
   };
 
-  const filterBills = () => {
+  const filteredBills = useMemo(() => {
     let filtered = [...bills];
     if (cardFilter !== 'all') {
       filtered = filtered.filter((b) => b.credit_card.toString() === cardFilter);
@@ -188,8 +192,9 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       return aDate.getTime() - bDate.getTime();
     });
 
-    setFilteredBills(filtered);
-  };
+    return filtered;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bills, cardFilter, statusFilter, yearFilter]);
 
   const handleSubmit = async (data: CreditCardBillFormData) => {
     try {
@@ -208,7 +213,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -248,7 +253,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         title: t('pages.creditCardBills.deleted'),
         description: t('pages.creditCardBills.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -283,7 +288,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         }),
       });
       setIsPaymentDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.payError'),
@@ -316,7 +321,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         }),
       });
       setIsRenegotiateDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.renegotiateError'),
@@ -344,7 +349,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         title: t('pages.creditCardBills.reopened'),
         description: t('pages.creditCardBills.reopenedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.reopenError'),
@@ -389,7 +394,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       key: 'credit_card',
       label: t('pages.creditCardBills.columns.card'),
       render: (bill) => (
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <CreditCardIcon className="h-4 w-4" />
           <span className="font-medium">{getCardName(bill)}</span>
         </div>
@@ -404,7 +409,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
             {translate('months', bill.month)}/{bill.year}
           </span>
           {bill.due_date && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('pages.creditCardBills.columns.duePrefix')}:{' '}
               {formatDate(bill.due_date)}
             </span>
@@ -425,7 +430,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       label: t('pages.creditCardBills.columns.minPayment'),
       align: 'right',
       render: (bill) => (
-        <span className="text-sm font-medium text-warning">
+        <span className="text-warning text-sm font-medium">
           {formatCurrency(bill.minimum_payment)}
         </span>
       ),
@@ -435,7 +440,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       label: t('pages.creditCardBills.columns.paid'),
       align: 'right',
       render: (bill) => (
-        <span className="font-semibold text-success">
+        <span className="text-success font-semibold">
           {formatCurrency(bill.paid_amount)}
         </span>
       ),
@@ -470,16 +475,10 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     },
   ];
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
-
   return (
-    <Wrapper>
+    <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
-        <div className="flex flex-wrap items-center gap-sm">
+        <div className="gap-sm flex flex-wrap items-center">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger className="w-52">
               <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
@@ -557,21 +556,21 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
             0
           );
           return (
-            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-              <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+              <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
                   <p className="text-sm font-medium">
                     {t('pages.creditCardBills.stats.open')}
                   </p>
-                  <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+                    <AlertTriangle className="text-destructive h-4 w-4" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-destructive">
+                  <div className="text-destructive text-2xl font-bold">
                     {formatCurrency(totalOpen)}
                   </div>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.creditCardBills.stats.openCount', {
                       count: openBills.length,
                     })}
@@ -579,20 +578,20 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-t-2 border-t-success/60">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <Card className="border-t-success/60 overflow-hidden border-t-2">
+                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
                   <p className="text-sm font-medium">
                     {t('pages.creditCardBills.stats.paid')}
                   </p>
-                  <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
+                  <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+                    <CheckCircle2 className="text-success h-4 w-4" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-success">
+                  <div className="text-success text-2xl font-bold">
                     {formatCurrency(totalPaid)}
                   </div>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.creditCardBills.stats.paidCount', {
                       count: filteredBills.filter((b) => b.status === 'paid').length,
                     })}
@@ -600,20 +599,20 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-t-2 border-t-warning/60">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <Card className="border-t-warning/60 overflow-hidden border-t-2">
+                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
                   <p className="text-sm font-medium">
                     {t('pages.creditCardBills.stats.minPending')}
                   </p>
-                  <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-                    <Wallet className="h-4 w-4 text-warning" />
+                  <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+                    <Wallet className="text-warning h-4 w-4" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-warning">
+                  <div className="text-warning text-2xl font-bold">
                     {formatCurrency(totalMinimum)}
                   </div>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.creditCardBills.stats.minPaymentNote')}
                   </p>
                 </CardContent>
@@ -628,7 +627,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         keyExtractor={(bill) => bill.id}
         isLoading={isLoading}
         emptyState={{
-          icon: <Receipt className="h-12 w-12 text-muted-foreground" />,
+          icon: <Receipt className="text-muted-foreground h-12 w-12" />,
           message: t('pages.creditCardBills.emptyState'),
         }}
         rowClassName={(bill) => {
@@ -639,7 +638,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
           return '';
         }}
         actions={(bill) => (
-          <div className="flex items-center justify-end gap-sm">
+          <div className="gap-sm flex items-center justify-end">
             {bill.status === 'paid' && (
               <ReceiptButton
                 source={{ type: 'credit_card_bill', data: bill }}
@@ -654,7 +653,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                 aria-label={t('pages.creditCardBills.payBillLabel')}
                 title={t('pages.creditCardBills.payBillLabel')}
               >
-                <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
+                <Wallet className="text-primary h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             {bill.status !== 'paid' &&
@@ -667,7 +666,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                   aria-label={t('pages.creditCardBills.renegotiateBillLabel')}
                   title={t('pages.creditCardBills.renegotiateBillLabel')}
                 >
-                  <RefreshCw className="h-4 w-4 text-warning" aria-hidden="true" />
+                  <RefreshCw className="text-warning h-4 w-4" aria-hidden="true" />
                 </Button>
               )}
             {(bill.closed || bill.status === 'paid' || bill.status === 'closed') && (
@@ -678,7 +677,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
                 aria-label={t('pages.creditCardBills.reopenBillLabel')}
                 title={t('pages.creditCardBills.reopenBillLabel')}
               >
-                <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
+                <RotateCcw className="text-warning h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             <Button
@@ -697,7 +696,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}

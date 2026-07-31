@@ -25,7 +25,7 @@ export function FileInput({ id, accept, onChange, className }: FileInputProps) {
   };
 
   return (
-    <div className={`flex items-center gap-sm ${className ?? ''}`}>
+    <div className={`gap-sm flex items-center ${className ?? ''}`}>
       <input
         ref={inputRef}
         id={id}
@@ -38,7 +38,7 @@ export function FileInput({ id, accept, onChange, className }: FileInputProps) {
         <Paperclip className="mr-xs h-4 w-4" />
         {t('common.fileInput.selectFile')}
       </Button>
-      <span className="truncate text-sm text-muted-foreground">
+      <span className="text-muted-foreground truncate text-sm">
         {fileName ?? t('common.fileInput.noFileSelected')}
       </span>
     </div>

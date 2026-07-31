@@ -79,6 +79,21 @@ if [ "$#" -gt 0 ]; then
   echo "🚀 Iniciando: $*"
   exec "$@"
 else
+  # Garante que os agentes de IA (Financeiro, Pessoal, Biblioteca...) tenham
+  # embeddings RAG disponíveis assim que a API sobe — sem isso, buscas
+  # semânticas ficam vazias até alguém rodar os comandos manualmente.
+  # Só roda aqui (branch do gunicorn/API), não no worker/queue, que não
+  # consomem embeddings. Os comandos pulam registros já vetorizados por
+  # padrão (só --force reprocessa), então repetir isso a cada subida do
+  # container é barato — só embeda o que for novo. Nunca bloqueia o boot:
+  # timeout + "|| echo" garantem que uma falha (ex: Ollama ainda subindo)
+  # apenas adia a indexação para a próxima subida, sem derrubar a API.
+  echo "🧠 Gerando embeddings pendentes para os agentes de IA (RAG)..."
+  timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py vectorize_existing --domain all || \
+    echo "⚠️  vectorize_existing falhou ou expirou — agentes seguem funcionando sem RAG até a próxima subida do container."
+  timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py index_library || \
+    echo "⚠️  index_library falhou ou expirou — RAG da biblioteca fica pendente até a próxima subida do container."
+
   echo "🚀 Iniciando servidor com Gunicorn..."
   # Com múltiplos workers, cada processo Gunicorn mantém seu próprio registro
   # Prometheus em memória — sem o modo multiprocess, cada scrape em /metrics

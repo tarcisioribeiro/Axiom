@@ -91,11 +91,11 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-md w-full max-w-lg rounded-2xl border border-border bg-card p-xl shadow-2xl"
+        className="mx-md border-border bg-card p-xl relative w-full max-w-lg rounded-2xl border shadow-2xl"
       >
         <button
           onClick={handleSkip}
-          className="absolute right-md top-md text-muted-foreground hover:text-foreground"
+          className="right-md top-md text-muted-foreground hover:text-foreground absolute"
           aria-label={t('common.actions.close')}
         >
           <X className="h-4 w-4" />
@@ -104,13 +104,13 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         {/* Step 0: Welcome */}
         {step === 0 && (
           <div className="text-center">
-            <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <div className="mb-md bg-primary/10 text-primary mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
               <Sparkles className="h-8 w-8" />
             </div>
             <h2 className="heading-2 text-foreground">
               {t('pages.planningOnboarding.step0.title')}
             </h2>
-            <p className="mt-sm text-sm text-muted-foreground">
+            <p className="mt-sm text-muted-foreground text-sm">
               {t('pages.planningOnboarding.step0.desc')}
             </p>
           </div>
@@ -120,7 +120,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         {step === 1 && (
           <div>
             <div className="mb-md text-center">
-              <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-2xl bg-info/10 text-info">
+              <div className="mb-md bg-info/10 text-info mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                 <Target className="h-8 w-8" />
               </div>
               <h2 className="heading-2 text-foreground">
@@ -128,7 +128,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   defaultValue: 'Escolha uma rotina inicial',
                 })}
               </h2>
-              <p className="mt-sm text-sm text-muted-foreground">
+              <p className="mt-sm text-muted-foreground text-sm">
                 {t('pages.planningOnboarding.step1.desc', {
                   defaultValue:
                     'Selecione um template para começar. Você pode personalizar depois.',
@@ -136,8 +136,8 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
               </p>
             </div>
             {isLoadingTemplates ? (
-              <div className="flex items-center justify-center py-lg">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="py-lg flex items-center justify-center">
+                <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
               </div>
             ) : (
               <div className="space-y-sm">
@@ -150,13 +150,13 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                       onClick={() =>
                         setSelectedTemplateId(isSelected ? null : template.id)
                       }
-                      className={`w-full rounded-xl border-2 p-md text-left transition-colors ${
+                      className={`p-md w-full rounded-xl border-2 text-left transition-colors ${
                         isSelected
                           ? 'border-primary bg-primary/5'
                           : 'border-border bg-card hover:border-primary/50'
                       }`}
                     >
-                      <div className="flex items-start gap-sm">
+                      <div className="gap-sm flex items-start">
                         <div
                           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
                             isSelected
@@ -168,10 +168,10 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold">{template.name}</p>
-                          <p className="mt-xs line-clamp-2 text-xs text-muted-foreground">
+                          <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
                             {template.description}
                           </p>
-                          <p className="mt-xs text-xs text-primary">
+                          <p className="mt-xs text-primary text-xs">
                             {t('pages.routineTemplates.taskCount', {
                               count: template.task_count,
                               defaultValue: `${template.task_count} tarefas`,
@@ -179,7 +179,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                           </p>
                         </div>
                         {isSelected && (
-                          <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
+                          <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
                         )}
                       </div>
                     </button>
@@ -187,7 +187,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                 })}
                 <button
                   onClick={() => setSelectedTemplateId(null)}
-                  className={`w-full rounded-xl border-2 p-md text-left text-sm text-muted-foreground transition-colors ${
+                  className={`p-md text-muted-foreground w-full rounded-xl border-2 text-left text-sm transition-colors ${
                     selectedTemplateId === null
                       ? 'border-muted-foreground bg-muted/30'
                       : 'border-border hover:border-muted-foreground/50'
@@ -213,7 +213,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   animate={{ scale: 1, opacity: 1 }}
                   className="py-md"
                 >
-                  <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10 text-success">
+                  <div className="mb-md bg-success/10 text-success mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <h2 className="heading-2 text-foreground">
@@ -221,7 +221,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                       defaultValue: 'Rotina criada com sucesso!',
                     })}
                   </h2>
-                  <p className="mt-sm text-sm text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-sm">
                     {t('pages.planningOnboarding.step2.successDesc', {
                       defaultValue: 'Suas tarefas estão prontas. Bom planejamento!',
                     })}
@@ -233,7 +233,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 1 }}
                 >
-                  <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10 text-success">
+                  <div className="mb-md bg-success/10 text-success mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
                     <CheckCircle2 className="h-8 w-8" />
                   </div>
                   <h2 className="heading-2 text-foreground">
@@ -241,7 +241,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                       defaultValue: 'Tudo pronto!',
                     })}
                   </h2>
-                  <p className="mt-sm text-sm text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-sm">
                     {selectedTemplateId
                       ? t('pages.planningOnboarding.step2.descWithTemplate', {
                           defaultValue:
@@ -253,7 +253,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                         })}
                   </p>
                   {importError && (
-                    <p className="mt-sm text-sm text-destructive">{importError}</p>
+                    <p className="mt-sm text-destructive text-sm">{importError}</p>
                   )}
                 </motion.div>
               )}
@@ -262,33 +262,33 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         )}
 
         {/* Step dots */}
-        <div className="my-lg flex justify-center gap-xs">
+        <div className="my-lg gap-xs flex justify-center">
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span
               key={i}
               className={`h-1.5 rounded-full transition-all ${
-                i === step ? 'w-6 bg-primary' : 'w-1.5 bg-muted'
+                i === step ? 'bg-primary w-6' : 'bg-muted w-1.5'
               }`}
             />
           ))}
         </div>
 
         {/* Actions */}
-        <div className="flex gap-sm">
+        <div className="gap-sm flex">
           {step < TOTAL_STEPS - 1 && (
             <Button variant="ghost" size="sm" onClick={handleSkip} className="flex-1">
               {t('pages.planningOnboarding.skip')}
             </Button>
           )}
           {step < TOTAL_STEPS - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} className="flex-1 gap-sm">
+            <Button onClick={() => setStep((s) => s + 1)} className="gap-sm flex-1">
               {t('pages.planningOnboarding.next')}
               <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
               onClick={() => void handleImportAndFinish()}
-              className="flex-1 gap-sm"
+              className="gap-sm flex-1"
               disabled={isImporting || importSuccess}
             >
               {isImporting ? (

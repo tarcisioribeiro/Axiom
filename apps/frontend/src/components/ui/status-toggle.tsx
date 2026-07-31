@@ -21,7 +21,7 @@ export function StatusToggle({
 }: StatusToggleProps) {
   const [optionA, optionB] = options;
   return (
-    <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+    <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
       {[optionA, optionB].map((opt) => {
         const isActive = value === opt.value;
         return (

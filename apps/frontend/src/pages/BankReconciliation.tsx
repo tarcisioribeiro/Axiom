@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   FileUp,
@@ -7,7 +8,7 @@ import {
   Search,
   CheckCircle2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -51,7 +52,7 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
+      className={`px-sm inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
     >
       {t(`pages.bankReconciliation.statuses.${status}`, { defaultValue: status })}
     </span>
@@ -145,7 +146,7 @@ function UploadDialog({
               role="button"
               tabIndex={0}
               className={cn(
-                'flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-xl transition-colors',
+                'p-xl flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors',
                 file
                   ? 'border-success/50 bg-success/5'
                   : 'border-muted-foreground/30 bg-muted/30 hover:border-primary/50 hover:bg-muted/50'
@@ -159,11 +160,11 @@ function UploadDialog({
             >
               {file ? (
                 <>
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
-                    <FileUp className="h-6 w-6 text-success" />
+                  <div className="bg-success/10 mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                    <FileUp className="text-success h-6 w-6" />
                   </div>
                   <p className="font-medium">{file.name}</p>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
                     <strong>
                       {detectFormat(file.name).toUpperCase() ||
@@ -173,15 +174,15 @@ function UploadDialog({
                 </>
               ) : (
                 <>
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                    <FileUp className="h-6 w-6 text-muted-foreground" />
+                  <div className="bg-muted mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                    <FileUp className="text-muted-foreground h-6 w-6" />
                   </div>
                   <p className="font-medium">
                     {t('pages.bankReconciliation.upload.dropzone', {
                       defaultValue: 'Arraste ou clique para selecionar',
                     })}
                   </p>
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     {t('pages.bankReconciliation.upload.supportedFormats', {
                       defaultValue: 'Suporte: OFX, CSV',
                     })}
@@ -243,34 +244,31 @@ export default function BankReconciliation() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [imports, setImports] = useState<BankStatementImport[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function loadData() {
-    setLoading(true);
-    try {
-      const [importsData, accountsData] = await Promise.all([
-        bankReconciliationService.getAll(),
-        accountsService.getAll(),
-      ]);
-      setImports(importsData);
-      setAccounts(accountsData);
-    } catch (err) {
-      toast({ title: getErrorMessage(err), variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['bank-reconciliation'],
+    queryFn: async () => {
+      try {
+        const [importsData, accountsData] = await Promise.all([
+          bankReconciliationService.getAll(),
+          accountsService.getAll(),
+        ]);
+        return { imports: importsData, accounts: accountsData };
+      } catch (err) {
+        toast({ title: getErrorMessage(err), variant: 'destructive' });
+        return { imports: [] as BankStatementImport[], accounts: [] as Account[] };
+      }
+    },
+  });
+  const imports = data?.imports ?? [];
+  const accounts = data?.accounts ?? [];
 
   function handleImportSuccess(imp: BankStatementImport) {
-    setImports((prev) => [imp, ...prev]);
+    queryClient.setQueryData<typeof data>(['bank-reconciliation'], (prev) =>
+      prev ? { ...prev, imports: [imp, ...prev.imports] } : prev
+    );
     void navigate(`/bank-reconciliation/${imp.id}`);
   }
 
@@ -294,41 +292,41 @@ export default function BankReconciliation() {
       />
 
       {/* Flow orientation banner */}
-      <div className="mt-md rounded-lg border bg-muted/40 p-md">
-        <p className="mb-md text-sm font-medium text-muted-foreground">
+      <div className="mt-md bg-muted/40 p-md rounded-lg border">
+        <p className="mb-md text-muted-foreground text-sm font-medium">
           {t('pages.bankReconciliation.flowTitle')}
         </p>
-        <div className="flex flex-col gap-md sm:flex-row sm:items-center">
-          <div className="flex items-center gap-sm">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+        <div className="gap-md flex flex-col sm:flex-row sm:items-center">
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold">
               1
             </div>
-            <div className="flex items-center gap-xs">
-              <Upload className="h-4 w-4 text-primary" />
+            <div className="gap-xs flex items-center">
+              <Upload className="text-primary h-4 w-4" />
               <span className="text-sm font-medium">
                 {t('pages.bankReconciliation.flowStep1')}
               </span>
             </div>
           </div>
-          <div className="hidden h-px flex-1 bg-border sm:block" />
-          <div className="flex items-center gap-sm">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          <div className="bg-border hidden h-px flex-1 sm:block" />
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold">
               2
             </div>
-            <div className="flex items-center gap-xs">
-              <Search className="h-4 w-4 text-primary" />
+            <div className="gap-xs flex items-center">
+              <Search className="text-primary h-4 w-4" />
               <span className="text-sm font-medium">
                 {t('pages.bankReconciliation.flowStep2')}
               </span>
             </div>
           </div>
-          <div className="hidden h-px flex-1 bg-border sm:block" />
-          <div className="flex items-center gap-sm">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          <div className="bg-border hidden h-px flex-1 sm:block" />
+          <div className="gap-sm flex items-center">
+            <div className="bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold">
               3
             </div>
-            <div className="flex items-center gap-xs">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
+            <div className="gap-xs flex items-center">
+              <CheckCircle2 className="text-primary h-4 w-4" />
               <span className="text-sm font-medium">
                 {t('pages.bankReconciliation.flowStep3')}
               </span>
@@ -337,30 +335,30 @@ export default function BankReconciliation() {
         </div>
       </div>
 
-      <div className="mb-lg mt-lg grid grid-cols-1 gap-md sm:grid-cols-2">
+      <div className="mb-lg mt-lg gap-md grid grid-cols-1 sm:grid-cols-2">
         <StatCard
           title={t('pages.bankReconciliation.totalImports')}
           value={imports.length}
-          icon={<ArrowLeftRight className="h-4 w-4 text-muted-foreground" />}
+          icon={<ArrowLeftRight className="text-muted-foreground h-4 w-4" />}
         />
         <StatCard
           title={t('pages.bankReconciliation.lastImport')}
           value={lastImportDate}
-          icon={<RefreshCw className="h-4 w-4 text-muted-foreground" />}
+          icon={<RefreshCw className="text-muted-foreground h-4 w-4" />}
         />
       </div>
 
       {/* Stat summary below cards */}
       {imports.length > 0 && (
-        <div className="mb-lg flex gap-md text-sm text-muted-foreground">
-          <span className="font-medium text-success">
+        <div className="mb-lg gap-md text-muted-foreground flex text-sm">
+          <span className="text-success font-medium">
             {completedCount}{' '}
             {t('pages.bankReconciliation.completedLabel', {
               defaultValue: 'concluídos',
             })}
           </span>
           {pendingCount > 0 && (
-            <span className="font-medium text-warning">
+            <span className="text-warning font-medium">
               {pendingCount}{' '}
               {t('pages.bankReconciliation.pendingLabel', {
                 defaultValue: 'pendentes',
@@ -388,15 +386,15 @@ export default function BankReconciliation() {
                 ? Math.round((imp.matched_count / imp.total_entries) * 100)
                 : 0;
             return (
-              <div key={imp.id} className="rounded-lg border bg-card p-md">
-                <div className="flex items-start justify-between gap-md">
+              <div key={imp.id} className="bg-card p-md rounded-lg border">
+                <div className="gap-md flex items-start justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-xs flex items-center gap-sm">
+                    <div className="mb-xs gap-sm flex items-center">
                       <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
                       <ImportStatusBadge status={imp.status} />
                     </div>
                     <p className="truncate font-medium">{imp.original_filename}</p>
-                    <p className="mt-xs text-xs text-muted-foreground">
+                    <p className="mt-xs text-muted-foreground text-xs">
                       {imp.total_entries}{' '}
                       {t('pages.bankReconciliation.transactionsLabel', {
                         defaultValue: 'transações',
@@ -409,7 +407,7 @@ export default function BankReconciliation() {
                     </p>
 
                     {/* Barra de progresso de conciliação */}
-                    <div className="mt-3 space-y-xs">
+                    <div className="space-y-xs mt-3">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">
                           {t('pages.bankReconciliation.reconciliationLabel', {
@@ -419,14 +417,14 @@ export default function BankReconciliation() {
                         <span
                           className={
                             matchPct === 100
-                              ? 'font-semibold text-success'
+                              ? 'text-success font-semibold'
                               : 'text-muted-foreground'
                           }
                         >
                           {matchPct}%
                         </span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="bg-muted h-2 overflow-hidden rounded-full">
                         <div
                           className={cn(
                             'h-full rounded-full transition-all',
@@ -439,7 +437,7 @@ export default function BankReconciliation() {
                           style={{ width: `${matchPct}%` }}
                         />
                       </div>
-                      <div className="flex gap-3 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex gap-3 text-xs">
                         <span className="text-success">
                           {imp.matched_count}{' '}
                           {t('pages.bankReconciliation.matchedLabel', {

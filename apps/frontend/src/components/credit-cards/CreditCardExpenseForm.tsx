@@ -11,7 +11,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +64,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } =
+  const { register, handleSubmit, setValue, control } =
     useForm<CreditCardExpenseFormData>({
       defaultValues: {
         description: '',
@@ -80,10 +80,13 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
       },
     });
 
-  const watchedValue = watch('value');
-  const watchedTotalInstallments = watch('total_installments');
-  const watchedCard = watch('card');
-  const watchedCategory = watch('category');
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedTotalInstallments = useWatch({ control, name: 'total_installments' });
+  const watchedCard = useWatch({ control, name: 'card' });
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedBill = useWatch({ control, name: 'bill' });
 
   const installmentValue =
     watchedTotalInstallments > 0
@@ -189,10 +192,10 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Seção: Identificação */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Receipt}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="description" className="flex items-center gap-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -204,8 +207,8 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.categoryLabel')}
             </Label>
             <Select
@@ -218,7 +221,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                     {(() => {
                       const TrigIcon = EXPENSE_CATEGORY_ICONS[watchedCategory];
                       return TrigIcon ? (
-                        <TrigIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <TrigIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                       ) : null;
                     })()}
                     <span>{translate('expenseCategories', watchedCategory)}</span>
@@ -248,10 +251,10 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 
       {/* Seção: Valores e Parcelas */}
       <FormSection title={t('common.form.sections.values')} icon={CreditCard}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="value" className="flex items-center gap-xs">
-              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="value" className="gap-xs flex items-center">
+              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.totalValueLabel')}
             </Label>
             <CurrencyInput
@@ -262,7 +265,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               disabled={isLoading || !!expense}
             />
             {expense && (
-              <p className="text-xs text-warning">
+              <p className="text-warning text-xs">
                 {t('pages.creditCardExpenses.form.totalValueWarning')}
               </p>
             )}
@@ -270,17 +273,17 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 
           {/* Widget de parcelas */}
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Layers className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.installmentsLabel')}
             </Label>
             {expense ? (
-              <p className="text-sm text-warning">
+              <p className="text-warning text-sm">
                 {t('pages.creditCardExpenses.form.installmentsWarning')}
               </p>
             ) : (
               <>
-                <div className="flex items-center gap-sm">
+                <div className="gap-sm flex items-center">
                   <button
                     type="button"
                     disabled={isLoading || watchedTotalInstallments <= 1}
@@ -290,7 +293,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                         Math.max(1, watchedTotalInstallments - 1)
                       )
                     }
-                    className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-muted/30 transition-colors hover:bg-muted disabled:opacity-40"
+                    className="border-border bg-muted/30 hover:bg-muted flex h-9 w-9 items-center justify-center rounded-md border transition-colors disabled:opacity-40"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
@@ -298,7 +301,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                     <span className="text-2xl font-bold">
                       {watchedTotalInstallments}
                     </span>
-                    <span className="ml-xs text-sm text-muted-foreground">
+                    <span className="ml-xs text-muted-foreground text-sm">
                       {watchedTotalInstallments === 1 ? 'vez' : 'vezes'}
                     </span>
                   </div>
@@ -308,12 +311,12 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                     onClick={() =>
                       setValue('total_installments', watchedTotalInstallments + 1)
                     }
-                    className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-muted/30 transition-colors hover:bg-muted disabled:opacity-40"
+                    className="border-border bg-muted/30 hover:bg-muted flex h-9 w-9 items-center justify-center rounded-md border transition-colors disabled:opacity-40"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="rounded-md bg-muted/40 px-sm py-xs text-center text-sm">
+                <div className="bg-muted/40 px-sm py-xs rounded-md text-center text-sm">
                   {watchedTotalInstallments > 1
                     ? t('pages.creditCardExpenses.form.installmentsSummary', {
                         total: watchedValue.toLocaleString('pt-BR', {
@@ -336,14 +339,14 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 
       {/* Seção: Data e Cartão */}
       <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="date" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.purchaseDateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('pages.creditCardExpenses.form.purchaseDatePlaceholder')}
               disabled={isLoading}
@@ -351,24 +354,24 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="horary" className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="horary" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.cardLabel')}
             </Label>
             <Select
-              value={watch('card')?.toString() || ''}
+              value={watchedCard?.toString() || ''}
               onValueChange={(v) => setValue('card', parseInt(v))}
               disabled={isLoading || !!expense}
             >
@@ -381,7 +384,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                     getCardDisplayInfo(c);
                   return (
                     <SelectItem key={c.id} value={c.id.toString()}>
-                      <div className="flex items-center gap-sm">
+                      <div className="gap-sm flex items-center">
                         <span className="font-medium">{c.name}</span>
                         <span className="text-sm">
                           {hasNumber
@@ -401,19 +404,19 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               </SelectContent>
             </Select>
             {expense && (
-              <p className="text-xs text-warning">
+              <p className="text-warning text-xs">
                 {t('pages.creditCardExpenses.form.cardWarning')}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Receipt className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Receipt className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.billAssociatedLabel')}
             </Label>
             <Select
-              value={watch('bill')?.toString() || 'none'}
+              value={watchedBill?.toString() || 'none'}
               onValueChange={(v) => setValue('bill', v === 'none' ? null : parseInt(v))}
               disabled={filteredBills.length === 0 || isLoading}
             >
@@ -435,12 +438,12 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                     {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
                     {b.year}
                     {b.status === 'open' && (
-                      <span className="ml-sm text-xs text-success">
+                      <span className="ml-sm text-success text-xs">
                         ({t('pages.creditCardExpenses.status.open')})
                       </span>
                     )}
                     {b.status === 'closed' && (
-                      <span className="ml-sm text-xs text-muted-foreground">
+                      <span className="ml-sm text-muted-foreground text-xs">
                         ({t('pages.creditCardExpenses.status.closed')})
                       </span>
                     )}
@@ -449,15 +452,15 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               </SelectContent>
             </Select>
             {filteredBills.length === 0 && watchedCard > 0 && (
-              <p className="text-xs text-warning">
+              <p className="text-warning text-xs">
                 {t('pages.creditCardExpenses.noBills')}
               </p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="notes" className="flex items-center gap-xs">
-              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="notes" className="gap-xs flex items-center">
+              <FileText className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.creditCardExpenses.form.notesLabel')}
             </Label>
             <Textarea
@@ -471,7 +474,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

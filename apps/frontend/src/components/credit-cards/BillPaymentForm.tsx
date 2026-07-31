@@ -145,39 +145,39 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Bill Summary */}
-      <div className="space-y-3 rounded-lg bg-muted/50 p-md">
-        <h4 className="text-sm font-semibold text-muted-foreground">
+      <div className="bg-muted/50 p-md space-y-3 rounded-lg">
+        <h4 className="text-muted-foreground text-sm font-semibold">
           {t('pages.creditCardBills.payForm.billSummary')}
         </h4>
 
-        <div className="grid grid-cols-2 gap-md">
-          <div className="flex items-center gap-sm">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+        <div className="gap-md grid grid-cols-2">
+          <div className="gap-sm flex items-center">
+            <CreditCard className="text-muted-foreground h-4 w-4" />
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.cardLabel')}
               </p>
               <p className="text-sm font-medium">
                 {cardholderName} {cardNumber}
               </p>
-              <p className="text-xs text-muted-foreground">{flag}</p>
+              <p className="text-muted-foreground text-xs">{flag}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-sm">
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <Building2 className="text-muted-foreground h-4 w-4" />
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.debitAccountLabel')}
               </p>
               <p className="text-sm font-medium">{accountName}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <Calendar className="text-muted-foreground h-4 w-4" />
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.periodLabel')}
               </p>
               <p className="text-sm font-medium">
@@ -186,10 +186,10 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <Calendar className="text-muted-foreground h-4 w-4" />
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.dueDateLabel')}
               </p>
               <p className="text-sm font-medium">
@@ -200,26 +200,26 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
 
         <div className="mt-3 border-t pt-3">
-          <div className="grid grid-cols-3 gap-md text-center">
+          <div className="gap-md grid grid-cols-3 text-center">
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.totalAmountLabel')}
               </p>
               <p className="text-lg font-bold">{formatCurrency(bill.total_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.alreadyPaidLabel')}
               </p>
-              <p className="text-lg font-bold text-success">
+              <p className="text-success text-lg font-bold">
                 {formatCurrency(bill.paid_amount)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.payForm.remainingLabel')}
               </p>
-              <p className="text-lg font-bold text-primary">
+              <p className="text-primary text-lg font-bold">
                 {formatCurrency(remaining.toString())}
               </p>
             </div>
@@ -229,9 +229,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {/* Warning if bill is already paid */}
       {remaining <= 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-md">
-          <AlertCircle className="h-5 w-5 text-warning" />
-          <p className="text-sm text-warning">
+        <div className="border-warning/30 bg-warning/10 p-md flex items-center gap-3 rounded-lg border">
+          <AlertCircle className="text-warning h-5 w-5" />
+          <p className="text-warning text-sm">
             {t('pages.creditCardBills.payForm.alreadyPaidWarning')}
           </p>
         </div>
@@ -243,7 +243,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <button
             type="button"
             onClick={() => handleScheduledToggle(false)}
-            className={`flex flex-1 items-center justify-center gap-xs py-sm text-sm transition-colors ${
+            className={`gap-xs py-sm flex flex-1 items-center justify-center text-sm transition-colors ${
               !scheduled
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-background text-muted-foreground hover:bg-muted'
@@ -255,7 +255,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <button
             type="button"
             onClick={() => handleScheduledToggle(true)}
-            className={`flex flex-1 items-center justify-center gap-xs border-l py-sm text-sm transition-colors ${
+            className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
               scheduled
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-background text-muted-foreground hover:bg-muted'
@@ -275,7 +275,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               {t('pages.creditCardBills.payForm.paymentAmountLabel')}
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                 R$
               </span>
               <Input
@@ -300,9 +300,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               />
             </div>
             {errors.amount && (
-              <p className="text-xs text-destructive">{errors.amount.message}</p>
+              <p className="text-destructive text-xs">{errors.amount.message}</p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.creditCardBills.payForm.maxHint', {
                 value: formatCurrency(remaining.toString()),
               })}
@@ -343,7 +343,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {/* Saldo futuro / agendamento */}
       {(isFutureDate || scheduled) && associatedAccount && watchedAmount > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             futureBalanceInfo && !futureBalanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : futureBalanceInfo?.isUsingOverdraft
@@ -377,7 +377,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {balanceInfo && watchedAmount > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             !balanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : 'border-warning/30 bg-warning/10 text-warning'
@@ -398,7 +398,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

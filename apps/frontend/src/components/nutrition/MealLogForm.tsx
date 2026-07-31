@@ -115,17 +115,17 @@ export function MealLogForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
-          <CheckCircle2 className="h-5 w-5 text-category-nutrition" />
+      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <CheckCircle2 className="text-category-nutrition h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-nutrition">
+          <p className="text-category-nutrition text-sm font-semibold">
             {log
               ? t('pages.nutritionLog.editLogTitle')
               : t('pages.nutritionLog.newLogTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {selectedMealType?.name ?? t('pages.nutritionLog.newLogDesc')}
           </p>
         </div>
@@ -133,9 +133,9 @@ export function MealLogForm({
 
       {/* Data e hora */}
       <FormSection title="Data & Hora" icon={CalendarDays}>
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div className="space-y-xs">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-muted-foreground text-xs">
               {t('pages.nutritionLog.logDate')}
             </Label>
             <DatePicker
@@ -145,7 +145,7 @@ export function MealLogForm({
             />
           </div>
           <div className="space-y-xs">
-            <Label className="text-xs text-muted-foreground">
+            <Label className="text-muted-foreground text-xs">
               {t('pages.nutritionLog.logTime')}
             </Label>
             <TimePicker
@@ -172,11 +172,11 @@ export function MealLogForm({
           <SelectContent>
             {mealTypes.map((mt) => (
               <SelectItem key={mt.id} value={String(mt.id)}>
-                <span className="flex items-center gap-sm">
+                <span className="gap-sm flex items-center">
                   {getPeriodIcon(mt.suggested_time)}
                   {mt.name}
                   {mt.suggested_time && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {mt.suggested_time.slice(0, 5)}
                     </span>
                   )}
@@ -190,7 +190,7 @@ export function MealLogForm({
       {/* Refeição livre */}
       <div
         className={cn(
-          'flex items-start gap-sm rounded-lg border-2 p-sm transition-all',
+          'gap-sm p-sm flex items-start rounded-lg border-2 transition-all',
           isFreeMeal ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
         )}
       >
@@ -204,11 +204,11 @@ export function MealLogForm({
           className="mt-0.5"
         />
         <div>
-          <Label htmlFor="free-meal" className="flex items-center gap-xs font-medium">
-            <Zap className="h-3.5 w-3.5 text-primary" />
+          <Label htmlFor="free-meal" className="gap-xs flex items-center font-medium">
+            <Zap className="text-primary h-3.5 w-3.5" />
             {t('pages.nutritionLog.isFreeMeal')}
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.nutritionLog.isFreeMealDesc')}
           </p>
         </div>
@@ -217,7 +217,7 @@ export function MealLogForm({
       {/* Opções de cardápio */}
       {selectedMealType && !isFreeMeal && selectedMealType.options.length > 0 && (
         <FormSection title={t('pages.nutritionLog.menuOption')} icon={CheckCircle2}>
-          <div className="grid gap-sm">
+          <div className="gap-sm grid">
             {selectedMealType.options.map((opt) => {
               const isSelected = selectedMenuOption === opt.id;
               return (
@@ -228,13 +228,13 @@ export function MealLogForm({
                     setValue('menu_option', isSelected ? undefined : opt.id)
                   }
                   className={cn(
-                    'rounded-lg border-2 p-sm text-left transition-all',
+                    'p-sm rounded-lg border-2 text-left transition-all',
                     isSelected
-                      ? 'bg-category-nutrition/8 border-category-nutrition/50 ring-1 ring-category-nutrition/20'
+                      ? 'bg-category-nutrition/8 border-category-nutrition/50 ring-category-nutrition/20 ring-1'
                       : 'border-border bg-card hover:border-category-nutrition/30 hover:bg-category-nutrition/5'
                   )}
                 >
-                  <div className="mb-xs flex items-center gap-xs">
+                  <div className="mb-xs gap-xs flex items-center">
                     <div
                       className={cn(
                         'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all',
@@ -268,9 +268,9 @@ export function MealLogForm({
                       {opt.ingredients.map((ing) => (
                         <li
                           key={ing.id}
-                          className="flex items-center gap-xs text-xs text-muted-foreground"
+                          className="gap-xs text-muted-foreground flex items-center text-xs"
                         >
-                          <span className="h-1 w-1 rounded-full bg-category-nutrition/40" />
+                          <span className="bg-category-nutrition/40 h-1 w-1 rounded-full" />
                           {ing.is_optional && (
                             <span className="italic opacity-60">[opt.]</span>
                           )}
@@ -302,7 +302,7 @@ export function MealLogForm({
         />
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -94,30 +94,31 @@ data:
     #       • Download encrypted backup from MinIO          ~  5 min
     #       • Decrypt with openssl                          ~  5 min
     #       • Provision / restart infrastructure            ~ 30 min
-    #       • pg_restore (depends on DB size; typically)   ~ 30–120 min
+    #       • psql restore (depends on DB size; typically)  ~ 30–120 min
     #       • Smoke-tests and service cutover               ~ 15 min
     #
     # ─────────────────────────────────────────────────────────────────────────────
     # Restore Procedure
     # ─────────────────────────────────────────────────────────────────────────────
     #
-    #   1. Download the encrypted dump from MinIO:
-    #        mc cp axiom-storage/axiom-backups/db/db_backup_<TS>_kv<VER>.dump.enc .
+    #   1. Download the encrypted archive from MinIO:
+    #        mc cp axiom-storage/axiom-backups/db/db_backup_<TS>_kv<VER>.sql.gz.enc .
     #
     #   2. Decrypt (use the key that matches the _kv<VER> suffix in the filename;
     #      store historical keys as BACKUP_ENCRYPTION_KEY_v1, _v2, etc.):
     #        export BACKUP_ENCRYPTION_KEY="<key-for-that-version>"
     #        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
     #          -pass env:BACKUP_ENCRYPTION_KEY \
-    #          -in  db_backup_<TS>_kv<VER>.dump.enc \
-    #          -out db_backup_<TS>_kv<VER>.dump
+    #          -in  db_backup_<TS>_kv<VER>.sql.gz.enc \
+    #          -out db_backup_<TS>_kv<VER>.sql.gz
     #
-    #   3. Restore:
-    #        pg_restore \
+    #   3. Decompress:
+    #        gunzip db_backup_<TS>_kv<VER>.sql.gz
+    #
+    #   4. Restore (plain SQL — no pg_restore needed):
+    #        psql \
     #          -h <PGHOST> -p <PGPORT> -U <DB_USER> -d <DB_NAME> \
-    #          --clean --if-exists --no-owner --no-privileges \
-    #          --verbose \
-    #          db_backup_<TS>.dump
+    #          -f db_backup_<TS>_kv<VER>.sql
     #
     # ─────────────────────────────────────────────────────────────────────────────
     # Required Environment Variables
@@ -219,9 +220,9 @@ data:
     # ── File paths ─────────────────────────────────────────────────────────────────
     mkdir -p "$BACKUP_DIR"
 
-    DB_DUMP="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.dump"
-    DB_ENC="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.dump.enc"
-    DB_MANIFEST="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.manifest"
+    DB_SQL="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.sql"
+    DB_GZ="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.sql.gz"
+    DB_ENC="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.sql.gz.enc"
     SENTINEL_FILE="$BACKUP_DIR/.last_successful_backup"
     STATUS_FILE="$BACKUP_DIR/.last_backup_status"
 
@@ -236,81 +237,85 @@ data:
     echo "in_progress:${DATE}" > "$STATUS_FILE"
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # Step 1: Database dump — PostgreSQL custom format (-Fc)
+    # Step 1: Database dump — plain SQL
     #
-    # Custom format advantages over plain SQL:
-    #   • Built-in compression (level 9 used here)
-    #   • Selective table/schema restore
-    #   • Parallel restore with --jobs
-    #   • Readable by pg_restore --list for integrity checks
+    # --no-owner/--no-acl keep the dump portable across environments where the
+    # restoring role differs from the one that created the objects (matches the
+    # convention already used by infra/scripts/k8s-backup.sh).
     # ─────────────────────────────────────────────────────────────────────────────
-    log "Step 1/5 — Creating database dump (custom format, compression=9)..."
+    log "Step 1/6 — Creating database dump (plain SQL)..."
 
     pg_dump \
         --host="$PGHOST" \
         --port="$PGPORT" \
         --username="$DB_USER" \
         --dbname="$DB_NAME" \
-        --format=custom \
-        --compress=9 \
+        --format=plain \
+        --no-owner \
+        --no-acl \
         --no-password \
-        --file="$DB_DUMP"
+        --file="$DB_SQL"
 
-    DUMP_SIZE=$(du -h "$DB_DUMP" | cut -f1)
-    log "Dump created: $(basename "$DB_DUMP") (${DUMP_SIZE})"
+    DUMP_SIZE=$(du -h "$DB_SQL" | cut -f1)
+    log "Dump created: $(basename "$DB_SQL") (${DUMP_SIZE})"
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # Step 2: Integrity verification — pg_restore --list
+    # Step 2: Integrity verification
     #
-    # Reads the dump's table-of-contents without performing any restore.
-    # A non-zero exit code or empty manifest signals a corrupt archive.
-    # The manifest is uploaded alongside the encrypted dump for auditing.
+    # Plain-format dumps have no table-of-contents to inspect (that's a
+    # pg_restore/custom-format-only feature), so integrity is checked instead via
+    # the "-- PostgreSQL database dump complete" trailer pg_dump appends once it
+    # finishes writing without error; its absence signals a truncated file (e.g.
+    # the process was killed mid-dump).
     # ─────────────────────────────────────────────────────────────────────────────
-    log "Step 2/5 — Verifying backup integrity (pg_restore --list)..."
+    log "Step 2/6 — Verifying backup integrity..."
 
-    if pg_restore --list "$DB_DUMP" > "$DB_MANIFEST" 2>&1; then
-        OBJECT_COUNT=$(grep -c '^[0-9]' "$DB_MANIFEST" || echo "0")
-        log "Integrity check passed — ${OBJECT_COUNT} objects catalogued"
-    else
-        error "pg_restore --list failed — archive may be corrupt"
-        error "Manifest output:"
-        cat "$DB_MANIFEST" >&2
-        rm -f "$DB_DUMP" "$DB_MANIFEST"
+    if [ ! -s "$DB_SQL" ] || ! tail -n 5 "$DB_SQL" | grep -q "PostgreSQL database dump complete"; then
+        error "Dump file is empty or missing its completion trailer — dump may be truncated"
+        rm -f "$DB_SQL"
         echo "failed:integrity_check:${DATE}" > "$STATUS_FILE"
         exit 1
     fi
+    log "Integrity check passed — completion trailer found"
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # Step 3: AES-256-CBC encryption
+    # Step 3: Compression — gzip
+    # ─────────────────────────────────────────────────────────────────────────────
+    log "Step 3/6 — Compressing dump (gzip -9)..."
+
+    gzip -9 "$DB_SQL"
+
+    GZ_SIZE=$(du -h "$DB_GZ" | cut -f1)
+    log "Compressed: $(basename "$DB_GZ") (${GZ_SIZE})"
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Step 4: AES-256-CBC encryption — this is what password-protects the .gz
     #
     # • PBKDF2 key derivation with 600 000 iterations (NIST SP 800-132 guidance)
     # • Random salt prepended to ciphertext (required for decryption)
     # • Key read via -pass env:VAR — not visible in /proc/<pid>/cmdline or ps
     # ─────────────────────────────────────────────────────────────────────────────
-    log "Step 3/5 — Encrypting backup (AES-256-CBC, PBKDF2, 600k iterations, key version: ${BACKUP_KEY_VERSION})..."
+    log "Step 4/6 — Encrypting backup (AES-256-CBC, PBKDF2, 600k iterations, key version: ${BACKUP_KEY_VERSION})..."
 
     openssl enc -aes-256-cbc \
         -pbkdf2 \
         -iter 600000 \
         -salt \
         -pass "env:BACKUP_ENCRYPTION_KEY" \
-        -in  "$DB_DUMP" \
+        -in  "$DB_GZ" \
         -out "$DB_ENC"
 
     ENC_SIZE=$(du -h "$DB_ENC" | cut -f1)
     log "Encrypted: $(basename "$DB_ENC") (${ENC_SIZE})"
 
-    # Remove the unencrypted dump immediately after encryption
-    rm -f "$DB_DUMP"
-    log "Unencrypted dump removed"
+    # Remove the unencrypted .gz immediately after encryption
+    rm -f "$DB_GZ"
+    log "Unencrypted archive removed"
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # Step 4: Upload to MinIO — mandatory
-    #
-    # Both the encrypted dump and the plaintext manifest are uploaded.
-    # Failure to upload the dump is fatal; manifest upload failure is a warning.
+    # Step 5: Upload to MinIO — mandatory
     # ─────────────────────────────────────────────────────────────────────────────
-    log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
+    log "Step 5/6 — Uploading to MinIO (${MINIO_ENDPOINT})..."
 
     # Configure mc alias (stdout/stderr captured, not shown, to avoid leaking
     # credentials — but checked, so a bad endpoint/credential fails fast here
@@ -329,20 +334,13 @@ data:
     # Ensure bucket exists (idempotent)
     "$MC_BIN" mb --ignore-existing "axiom-storage/${MINIO_BUCKET}" > /dev/null 2>&1 || true
 
-    # Upload encrypted dump — failure is fatal
+    # Upload encrypted archive — failure is fatal
     if ! "$MC_BIN" cp "$DB_ENC" "axiom-storage/${MINIO_BUCKET}/db/"; then
-        error "Failed to upload encrypted dump to MinIO — backup not stored off-site"
+        error "Failed to upload encrypted archive to MinIO — backup not stored off-site"
         echo "failed:minio_upload:${DATE}" > "$STATUS_FILE"
         exit 1
     fi
-    log "Encrypted dump uploaded"
-
-    # Upload manifest — failure is non-fatal (aids auditing without decryption)
-    if "$MC_BIN" cp "$DB_MANIFEST" "axiom-storage/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
-        log "Manifest uploaded"
-    else
-        warning "Manifest upload failed (non-critical)"
-    fi
+    log "Encrypted archive uploaded"
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Optional: Media files backup
@@ -369,9 +367,9 @@ data:
     fi
 
     # ─────────────────────────────────────────────────────────────────────────────
-    # Step 5: Local retention — GFS (Grandfather-Father-Son) policy
+    # Step 6: Local retention — GFS (Grandfather-Father-Son) policy
     #
-    # Files are named db_backup_YYYYMMDD_HHMMSS.dump.enc; the date is parsed
+    # Files are named db_backup_YYYYMMDD_HHMMSS.sql.gz.enc; the date is parsed
     # directly from the filename (more reliable than mtime under copy/move).
     #
     # Keep:
@@ -380,21 +378,20 @@ data:
     #   • One backup per calendar month for the last ${KEEP_MONTHLY} months
     #
     # A file can satisfy multiple criteria; it is kept if it satisfies any one.
-    # Matching manifest files are deleted alongside their dump.
     # ─────────────────────────────────────────────────────────────────────────────
-    log "Step 5/5 — Applying GFS retention (${KEEP_DAILY}d / ${KEEP_WEEKLY}w / ${KEEP_MONTHLY}m)..."
+    log "Step 6/6 — Applying GFS retention (${KEEP_DAILY}d / ${KEEP_WEEKLY}w / ${KEEP_MONTHLY}m)..."
 
     prune_local_backups() {
-        # Collect all encrypted dumps, sorted newest-first by filename timestamp.
+        # Collect all encrypted archives, sorted newest-first by filename timestamp.
         local -a all_files=()
         while IFS= read -r -d '' f; do
             all_files+=("$f")
-        done < <(find "$BACKUP_DIR" -maxdepth 1 -name 'db_backup_*.dump.enc' -print0 \
+        done < <(find "$BACKUP_DIR" -maxdepth 1 -name 'db_backup_*.sql.gz.enc' -print0 \
                  | sort -rz)
 
         local total=${#all_files[@]}
         if (( total == 0 )); then
-            log "No local encrypted dumps found — nothing to prune"
+            log "No local encrypted archives found — nothing to prune"
             return
         fi
 
@@ -408,8 +405,8 @@ data:
             local base date_str year month day week ym keep_this
             base=$(basename "$f")
 
-            # Parse YYYYMMDD from: db_backup_YYYYMMDD_HHMMSS.dump.enc
-            date_str="${base#db_backup_}"   # YYYYMMDD_HHMMSS.dump.enc
+            # Parse YYYYMMDD from: db_backup_YYYYMMDD_HHMMSS.sql.gz.enc
+            date_str="${base#db_backup_}"   # YYYYMMDD_HHMMSS.sql.gz.enc
             date_str="${date_str%%_*}"      # YYYYMMDD (stop at first underscore after date)
             # Handle edge case: if stripping only produced length-8 string
             if [[ ${#date_str} -ne 8 ]] || ! [[ $date_str =~ ^[0-9]{8}$ ]]; then
@@ -447,7 +444,7 @@ data:
             fi
         done
 
-        # Delete files not in the keep list (with matching manifest).
+        # Delete files not in the keep list.
         local deleted=0
         for f in "${all_files[@]}"; do
             local in_keep=false
@@ -457,7 +454,6 @@ data:
             done
             if ! $in_keep; then
                 rm -f "$f"
-                rm -f "${f%.dump.enc}.manifest"
                 (( deleted++ )) || true
                 log "Pruned: $(basename "$f")"
             fi
@@ -489,12 +485,11 @@ data:
     TOTAL_LOCAL=$(du -sh "$BACKUP_DIR" 2>/dev/null | cut -f1 || echo "N/A")
     log "════════════════════════════════════════════════════════════"
     log "Backup completed successfully at $(date '+%Y-%m-%d %H:%M:%S %Z')"
-    log "  Encrypted dump : $(basename "$DB_ENC")"
-    log "  Manifest       : $(basename "$DB_MANIFEST")"
-    log "  Remote path    : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
-    log "  Local dir size : ${TOTAL_LOCAL}"
-    log "  Timestamp      : ${DATE}"
-    log "  Key version    : ${BACKUP_KEY_VERSION}"
+    log "  Encrypted archive : $(basename "$DB_ENC")"
+    log "  Remote path       : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
+    log "  Local dir size    : ${TOTAL_LOCAL}"
+    log "  Timestamp         : ${DATE}"
+    log "  Key version       : ${BACKUP_KEY_VERSION}"
     log "════════════════════════════════════════════════════════════"
 ---
 # ── 3. CronJob — daily at 02:00 BRT ───────────────────────────────────────────

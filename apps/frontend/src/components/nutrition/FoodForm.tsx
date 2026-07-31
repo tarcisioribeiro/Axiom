@@ -90,21 +90,21 @@ export function FoodForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual com avatar */}
-      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/25">
+      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-nutrition/25 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
           {nameValue ? (
-            <span className="text-xl font-bold text-category-nutrition">{initial}</span>
+            <span className="text-category-nutrition text-xl font-bold">{initial}</span>
           ) : (
-            <Salad className="h-6 w-6 text-category-nutrition" />
+            <Salad className="text-category-nutrition h-6 w-6" />
           )}
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-nutrition">
+          <p className="text-category-nutrition text-sm font-semibold">
             {food
               ? t('pages.nutritionFoods.editFoodTitle')
               : t('pages.nutritionFoods.newFoodTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {nameValue || t('pages.nutritionFoods.newFoodDesc')}
           </p>
         </div>
@@ -118,7 +118,7 @@ export function FoodForm({
           className={cn(errors.name && 'border-destructive')}
         />
         {errors.name && (
-          <p className="mt-xs text-xs text-destructive">{t('common.required')}</p>
+          <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
         )}
       </FormSection>
 
@@ -138,15 +138,15 @@ export function FoodForm({
         icon={Flame}
       >
         <div className="space-y-sm">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t(
               'pages.nutritionFoods.caloriesHelp',
               t('pages.nutritionFoods.caloriesHelp')
             )}
           </p>
-          <div className="grid grid-cols-2 gap-sm">
+          <div className="gap-sm grid grid-cols-2">
             <div className="space-y-xs">
-              <label className="text-xs font-medium text-foreground">
+              <label className="text-foreground text-xs font-medium">
                 {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
               </label>
               <Input
@@ -158,12 +158,12 @@ export function FoodForm({
               />
             </div>
             <div className="space-y-xs">
-              <label className="text-xs font-medium text-foreground">
+              <label className="text-foreground text-xs font-medium">
                 {t('pages.nutritionFoods.servingUnit', 'Unidade')}
               </label>
               <select
                 {...register('serving_unit')}
-                className="w-full rounded-md border border-input bg-background px-sm py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-input bg-background px-sm focus:ring-ring w-full rounded-md border py-2 text-sm focus:ring-2 focus:outline-none"
               >
                 {SERVING_UNIT_VALUES.map((val) => (
                   <option key={val} value={val}>
@@ -174,7 +174,7 @@ export function FoodForm({
             </div>
           </div>
           <div className="space-y-xs">
-            <label className="text-xs font-medium text-foreground">
+            <label className="text-foreground text-xs font-medium">
               {t(
                 'pages.nutritionFoods.caloriesPerServing',
                 'Calorias (kcal) por Porção'
@@ -191,7 +191,7 @@ export function FoodForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

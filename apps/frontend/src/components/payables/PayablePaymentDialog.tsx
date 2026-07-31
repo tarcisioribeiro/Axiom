@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, CalendarClock, CreditCard } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
@@ -46,6 +48,7 @@ export function PayablePaymentDialog({
 }: PayablePaymentDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const now = useNow();
   const today = new Date().toISOString().split('T')[0];
   const [form, setForm] = useState({
     value: '',
@@ -54,8 +57,6 @@ export function PayablePaymentDialog({
     notes: '',
   });
   const [scheduled, setScheduled] = useState(false);
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const remaining = payable
@@ -63,6 +64,21 @@ export function PayablePaymentDialog({
     : 0;
 
   const isFutureDate = form.date > today;
+
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', form.account, form.date],
+    queryFn: async () => {
+      const accountId = parseInt(form.account);
+      try {
+        const data = await accountsService.getProjectedBalance(accountId, form.date);
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled:
+      !!form.account && !!form.date && !!form.value && (isFutureDate || scheduled),
+  });
 
   const balanceInfo = useMemo(() => {
     if (scheduled || isFutureDate) return null;
@@ -92,24 +108,6 @@ export function PayablePaymentDialog({
   }, [form.account, form.value, projectedBalance, accounts, isFutureDate, scheduled]);
 
   const isValueExceedsRemaining = parseFloat(form.value) > remaining;
-
-  useEffect(() => {
-    if (!form.account || !form.date || !form.value) {
-      setProjectedBalance(null);
-      return;
-    }
-    if (!isFutureDate && !scheduled) {
-      setProjectedBalance(null);
-      return;
-    }
-    const accountId = parseInt(form.account);
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(accountId, form.date)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [form.account, form.date, form.value, isFutureDate, scheduled]);
 
   const handleSubmit = async () => {
     if (!payable) return;
@@ -184,7 +182,6 @@ export function PayablePaymentDialog({
   const handleClose = (open: boolean) => {
     if (!open) {
       setScheduled(false);
-      setProjectedBalance(null);
       onClose();
     }
   };
@@ -208,7 +205,7 @@ export function PayablePaymentDialog({
                 setScheduled(false);
                 setForm((f) => ({ ...f, date: today }));
               }}
-              className={`flex flex-1 items-center justify-center gap-xs py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center text-sm transition-colors ${
                 !scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -220,7 +217,7 @@ export function PayablePaymentDialog({
             <button
               type="button"
               onClick={() => setScheduled(true)}
-              className={`flex flex-1 items-center justify-center gap-xs border-l py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
                 scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -268,7 +265,7 @@ export function PayablePaymentDialog({
             </Label>
             <DatePicker
               value={form.date}
-              minDate={scheduled ? new Date(Date.now() + 86400000) : undefined}
+              minDate={scheduled ? new Date(now + 86400000) : undefined}
               onChange={(date) =>
                 setForm((f) => ({ ...f, date: date ? formatLocalDate(date) : '' }))
               }
@@ -285,7 +282,7 @@ export function PayablePaymentDialog({
 
           {/* Valor excede restante */}
           {isValueExceedsRemaining && parseFloat(form.value) > 0 && (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-sm text-sm text-destructive">
+            <div className="border-destructive/30 bg-destructive/10 p-sm text-destructive flex items-start gap-2 rounded-md border text-sm">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
                 {t('pages.payables.payment.exceedsRemaining', {
@@ -298,7 +295,7 @@ export function PayablePaymentDialog({
           {/* Saldo projetado ou alerta para data futura / agendamento */}
           {(isFutureDate || scheduled) && form.account && form.value && (
             <div
-              className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
                 futureBalanceInfo && !futureBalanceInfo.canPay
                   ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : futureBalanceInfo?.isUsingOverdraft
@@ -337,7 +334,7 @@ export function PayablePaymentDialog({
           {/* Alerta de saldo insuficiente (pagamento imediato) */}
           {balanceInfo && parseFloat(form.value) > 0 && (
             <div
-              className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+              className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
                 !balanceInfo.canPay
                   ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : 'border-warning/30 bg-warning/10 text-warning'

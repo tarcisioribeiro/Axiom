@@ -70,12 +70,7 @@ export type EmotionalState =
   | 'other';
 
 export type ImpulseType =
-  | 'pornography'
-  | 'alcohol'
-  | 'social_media'
-  | 'shopping'
-  | 'procrastination'
-  | 'other';
+  'pornography' | 'alcohol' | 'social_media' | 'shopping' | 'procrastination' | 'other';
 
 export interface CrisisActionPlan {
   '5min': string[];
@@ -113,11 +108,7 @@ export interface CrisisImpulseLogCreate {
 }
 
 export type InterventionCategory =
-  | 'self_esteem'
-  | 'loneliness'
-  | 'neediness'
-  | 'anxiety'
-  | 'emotional_dependency';
+  'self_esteem' | 'loneliness' | 'neediness' | 'anxiety' | 'emotional_dependency';
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 

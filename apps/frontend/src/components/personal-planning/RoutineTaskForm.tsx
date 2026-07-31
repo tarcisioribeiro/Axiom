@@ -253,10 +253,10 @@ export function RoutineTaskForm({
         title={t('pages.routineTasks.form.sectionIdentification')}
         icon={CheckSquare}
       >
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <CheckSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.nameLabel')}
             </Label>
             <Input
@@ -266,13 +266,13 @@ export function RoutineTaskForm({
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="description" className="flex items-center gap-xs">
-              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <CheckSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.descriptionLabel')}
             </Label>
             <Textarea
@@ -283,15 +283,15 @@ export function RoutineTaskForm({
               disabled={isLoading}
             />
             {errors.description && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.description.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.categoryLabel')}
             </Label>
             <Select
@@ -317,15 +317,15 @@ export function RoutineTaskForm({
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.category.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="icon" className="flex items-center gap-xs">
-              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="icon" className="gap-xs flex items-center">
+              <CheckSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.iconLabel')}
             </Label>
             <IconPicker
@@ -333,7 +333,7 @@ export function RoutineTaskForm({
               onChange={(value) => setValue('icon', value)}
             />
             {errors.icon && (
-              <p className="mt-xs text-sm text-destructive">{errors.icon.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.icon.message}</p>
             )}
           </div>
         </div>
@@ -346,17 +346,17 @@ export function RoutineTaskForm({
         <div className="space-y-md">
           {/* Toggle visual de periodicidade */}
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Repeat className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.periodicityLabel')}
               <Tooltip
                 content={t('pages.routineTasks.form.periodicityTooltip')}
                 side="right"
               >
-                <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
               </Tooltip>
             </Label>
-            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {PERIODICITY_CHOICES.map((period) => (
                 <button
                   key={period.value}
@@ -380,10 +380,10 @@ export function RoutineTaskForm({
               ))}
             </div>
             {frequencyPreview() && (
-              <p className="text-xs font-medium text-primary">{frequencyPreview()}</p>
+              <p className="text-primary text-xs font-medium">{frequencyPreview()}</p>
             )}
             {errors.periodicity && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.periodicity.message}
               </p>
             )}
@@ -391,11 +391,11 @@ export function RoutineTaskForm({
 
           {periodicity === 'weekly' && (
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.weekdayLabel')}
               </Label>
-              <div className="flex gap-xs">
+              <div className="gap-xs flex">
                 {WEEKDAY_CHOICES.map((day) => {
                   const isSelected = watch('weekday') === day.value;
                   return (
@@ -419,7 +419,7 @@ export function RoutineTaskForm({
                 })}
               </div>
               {errors.weekday && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.weekday.message}
                 </p>
               )}
@@ -428,8 +428,8 @@ export function RoutineTaskForm({
 
           {periodicity === 'monthly' && (
             <div className="space-y-sm">
-              <Label htmlFor="day_of_month" className="flex items-center gap-xs">
-                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="day_of_month" className="gap-xs flex items-center">
+                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.dayOfMonthLabel')}
               </Label>
               <Input
@@ -445,7 +445,7 @@ export function RoutineTaskForm({
                 disabled={isLoading}
               />
               {errors.day_of_month && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.day_of_month.message}
                 </p>
               )}
@@ -453,15 +453,15 @@ export function RoutineTaskForm({
           )}
 
           {periodicity === 'weekdays' && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('pages.routineTasks.form.weekdaysNote')}
             </p>
           )}
 
           {periodicity === 'custom' && (
-            <div className="space-y-md rounded-lg border bg-muted/50 p-md">
-              <h4 className="flex items-center gap-xs text-sm font-medium">
-                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="space-y-md bg-muted/50 p-md rounded-lg border">
+              <h4 className="gap-xs flex items-center text-sm font-medium">
+                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.customSection')}
               </h4>
 
@@ -469,9 +469,9 @@ export function RoutineTaskForm({
                 <Label className="text-sm">
                   {t('pages.routineTasks.form.customWeekdaysLabel')}
                 </Label>
-                <div className="mt-sm grid grid-cols-7 gap-sm">
+                <div className="mt-sm gap-sm grid grid-cols-7">
                   {WEEKDAY_CHOICES.map((day) => (
-                    <div key={day.value} className="flex flex-col items-center gap-xs">
+                    <div key={day.value} className="gap-xs flex flex-col items-center">
                       <Checkbox
                         id={`custom-weekday-${day.value}`}
                         checked={watch('custom_weekdays')?.includes(day.value) || false}
@@ -519,7 +519,7 @@ export function RoutineTaskForm({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-md">
+              <div className="gap-md grid grid-cols-2">
                 <div>
                   <Label htmlFor="times_per_week" className="text-sm">
                     {t('pages.routineTasks.form.timesPerWeekLabel')}
@@ -556,7 +556,7 @@ export function RoutineTaskForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-md">
+              <div className="gap-md grid grid-cols-2">
                 <div>
                   <Label htmlFor="interval_days" className="text-sm">
                     {t('pages.routineTasks.form.intervalDaysLabel')}
@@ -594,7 +594,7 @@ export function RoutineTaskForm({
               </div>
 
               {errors.interval_start_date && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {errors.interval_start_date.message}
                 </p>
               )}
@@ -604,16 +604,16 @@ export function RoutineTaskForm({
       </FormSection>
 
       <FormSection title={t('pages.routineTasks.form.sectionGoalUnit')} icon={Target}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="target_quantity" className="flex items-center gap-xs">
-              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="target_quantity" className="gap-xs flex items-center">
+              <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.targetQuantityLabel')}
               <Tooltip
                 content={t('pages.routineTasks.form.targetQuantityTooltip')}
                 side="right"
               >
-                <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
               </Tooltip>
             </Label>
             <Input
@@ -626,15 +626,15 @@ export function RoutineTaskForm({
               disabled={isLoading}
             />
             {errors.target_quantity && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.target_quantity.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.unitLabel')}
             </Label>
             <Select
@@ -656,7 +656,7 @@ export function RoutineTaskForm({
               </SelectContent>
             </Select>
             {errors.unit && (
-              <p className="mt-xs text-sm text-destructive">{errors.unit.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.unit.message}</p>
             )}
           </div>
         </div>
@@ -664,14 +664,14 @@ export function RoutineTaskForm({
 
       <FormSection title={t('pages.routineTasks.form.scheduleSection')} icon={Clock}>
         <div className="space-y-md">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.routineTasks.form.scheduleSectionNote')}
           </p>
 
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
-              <Label htmlFor="default_time" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="default_time" className="gap-xs flex items-center">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.defaultTimeLabel')}
               </Label>
               <TimePicker
@@ -679,19 +679,19 @@ export function RoutineTaskForm({
                 onChange={(t) => setValue('default_time', t ?? null)}
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.routineTasks.form.defaultTimeHint')}
               </p>
               {errors.default_time && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.default_time.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.priorityLabel')}
               </Label>
               <Select
@@ -719,15 +719,15 @@ export function RoutineTaskForm({
                 </SelectContent>
               </Select>
               {errors.priority && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.priority.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-sm md:col-span-2">
-              <Label className="flex items-center gap-xs">
-                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.isActiveLabel')}
               </Label>
               <StatusToggle
@@ -754,31 +754,31 @@ export function RoutineTaskForm({
           <button
             type="button"
             onClick={() => setAdvancedOpen((o) => !o)}
-            className="flex w-full items-center gap-xs text-left"
+            className="gap-xs flex w-full items-center text-left"
           >
-            <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.routineTasks.form.advancedSettings')}
             </span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="bg-border/50 h-px flex-1" />
             {advancedOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
           </button>
 
           {advancedOpen && (
-            <div className="grid grid-cols-1 gap-md rounded-lg border bg-muted/20 p-md md:grid-cols-2">
+            <div className="gap-md bg-muted/20 p-md grid grid-cols-1 rounded-lg border md:grid-cols-2">
               <div className="space-y-sm">
-                <Label htmlFor="daily_occurrences" className="flex items-center gap-xs">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="daily_occurrences" className="gap-xs flex items-center">
+                  <Clock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.routineTasks.form.dailyOccurrencesLabel')}
                   <Tooltip
                     content={t('pages.routineTasks.form.dailyOccurrencesHint')}
                     side="right"
                   >
-                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
                 <Input
@@ -794,14 +794,14 @@ export function RoutineTaskForm({
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="interval_hours" className="flex items-center gap-xs">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="interval_hours" className="gap-xs flex items-center">
+                  <Clock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.routineTasks.form.intervalHoursLabel')}
                   <Tooltip
                     content={t('pages.routineTasks.form.intervalHoursHint')}
                     side="right"
                   >
-                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
                 <Input
@@ -820,7 +820,7 @@ export function RoutineTaskForm({
                   disabled={isLoading}
                 />
                 {errors.interval_hours && (
-                  <p className="mt-xs text-sm text-destructive">
+                  <p className="mt-xs text-destructive text-sm">
                     {errors.interval_hours.message}
                   </p>
                 )}
@@ -828,14 +828,14 @@ export function RoutineTaskForm({
 
               {(dailyOccurrences ?? 1) === 1 && (
                 <div className="space-y-sm">
-                  <Label htmlFor="closing_time" className="flex items-center gap-xs">
-                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="closing_time" className="gap-xs flex items-center">
+                    <Clock className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.routineTasks.form.closingTimeLabel')}
                     <Tooltip
                       content={t('pages.routineTasks.form.closingTimeHint')}
                       side="right"
                     >
-                      <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                      <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                     </Tooltip>
                   </Label>
                   <TimePicker
@@ -844,7 +844,7 @@ export function RoutineTaskForm({
                     disabled={isLoading}
                   />
                   {errors.closing_time && (
-                    <p className="mt-xs text-sm text-destructive">
+                    <p className="mt-xs text-destructive text-sm">
                       {errors.closing_time.message}
                     </p>
                   )}
@@ -854,15 +854,15 @@ export function RoutineTaskForm({
               <div className="space-y-sm">
                 <Label
                   htmlFor="allowed_skips_per_month"
-                  className="flex items-center gap-xs"
+                  className="gap-xs flex items-center"
                 >
-                  <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.routineTasks.form.allowedSkipsLabel')}
                   <Tooltip
                     content={t('pages.routineTasks.form.allowedSkipsHint')}
                     side="right"
                   >
-                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
                 <Input
@@ -876,21 +876,21 @@ export function RoutineTaskForm({
                   disabled={isLoading}
                 />
                 {errors.allowed_skips_per_month && (
-                  <p className="mt-xs text-sm text-destructive">
+                  <p className="mt-xs text-destructive text-sm">
                     {errors.allowed_skips_per_month.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-sm md:col-span-2">
-                <Label htmlFor="scheduled_times" className="flex items-center gap-xs">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="scheduled_times" className="gap-xs flex items-center">
+                  <Clock className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.routineTasks.form.scheduledTimesLabel')}
                   <Tooltip
                     content={t('pages.routineTasks.form.scheduledTimesHint')}
                     side="right"
                   >
-                    <HelpCircle className="h-3 w-3 cursor-help text-muted-foreground/60" />
+                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
                 <Input
@@ -908,7 +908,7 @@ export function RoutineTaskForm({
                   disabled={isLoading}
                 />
                 {errors.scheduled_times && (
-                  <p className="mt-xs text-sm text-destructive">
+                  <p className="mt-xs text-destructive text-sm">
                     {errors.scheduled_times.message}
                   </p>
                 )}
@@ -923,26 +923,26 @@ export function RoutineTaskForm({
           <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
-            className="flex w-full items-center gap-xs text-left"
+            className="gap-xs flex w-full items-center text-left"
           >
-            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('common.form.sections.links')}
             </span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="bg-border/50 h-px flex-1" />
             {linksOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
           </button>
 
           {linksOpen && (
-            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               {financialGoals.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
                   </Label>
                   <Select
@@ -973,7 +973,7 @@ export function RoutineTaskForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.routineTasks.form.linkedFinancialGoalHint')}
                   </p>
                 </div>
@@ -981,8 +981,8 @@ export function RoutineTaskForm({
 
               {readingBooksList.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.routineTasks.form.linkedBookLabel')}
                   </Label>
                   <Select
@@ -1011,7 +1011,7 @@ export function RoutineTaskForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.routineTasks.form.linkedBookHint')}
                   </p>
                 </div>
@@ -1021,7 +1021,7 @@ export function RoutineTaskForm({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

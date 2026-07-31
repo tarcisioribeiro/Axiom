@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -14,7 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
@@ -99,9 +100,9 @@ function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
   });
 
   return (
-    <div className="mb-lg flex items-end gap-sm">
+    <div className="mb-lg gap-sm flex items-end">
       {days.map(({ date, key, mood }) => (
-        <div key={key} className="flex flex-col items-center gap-xs">
+        <div key={key} className="gap-xs flex flex-col items-center">
           <div
             title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
             className={cn(
@@ -110,7 +111,7 @@ function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
             )}
           />
           {date.getDay() === 0 && (
-            <span className="text-[9px] text-muted-foreground">
+            <span className="text-muted-foreground text-[9px]">
               {format(date, 'dd/MM')}
             </span>
           )}
@@ -142,23 +143,23 @@ function ReflectionCard({
   return (
     <Card className="group">
       <CardContent className="p-5">
-        <div className="flex items-start gap-md">
+        <div className="gap-md flex items-start">
           {/* Data estilo calendário */}
-          <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border bg-muted/40 py-sm text-center">
-            <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+          <div className="bg-muted/40 py-sm flex w-14 shrink-0 flex-col items-center rounded-lg border text-center">
+            <span className="text-muted-foreground text-[10px] font-semibold uppercase">
               {format(date, 'MMM', { locale: ptBR })}
             </span>
-            <span className="text-2xl font-bold leading-tight">
+            <span className="text-2xl leading-tight font-bold">
               {format(date, 'dd')}
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-muted-foreground text-[10px]">
               {format(date, 'yyyy')}
             </span>
           </div>
 
           {/* Conteúdo */}
           <div className="min-w-0 flex-1">
-            <div className="mb-sm flex items-center gap-sm">
+            <div className="mb-sm gap-sm flex items-center">
               {reflection.mood && (
                 <Badge
                   variant={MOOD_VARIANT[reflection.mood] ?? 'secondary'}
@@ -168,16 +169,16 @@ function ReflectionCard({
                   {reflection.mood_display ?? reflection.mood}
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {format(date, 'EEEE', { locale: ptBR })}
               </span>
             </div>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed">{text}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
             {isLong && (
               <button
                 type="button"
                 onClick={() => setExpanded(!expanded)}
-                className="mt-xs flex items-center gap-xs text-xs text-primary hover:underline"
+                className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
               >
                 {expanded ? (
                   <>
@@ -193,7 +194,7 @@ function ReflectionCard({
           </div>
 
           {/* Ações */}
-          <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
             <Button
               variant="ghost"
               size="icon"
@@ -208,7 +209,7 @@ function ReflectionCard({
               onClick={() => onDelete(reflection.id)}
               aria-label={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" />
+              <Trash2 className="text-destructive h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -217,11 +218,11 @@ function ReflectionCard({
   );
 }
 
+const EMPTY_REFLECTIONS: DailyReflection[] = [];
+
 export default function DailyReflections() {
   const { t } = useTranslation();
-  const [reflections, setReflections] = useState<DailyReflection[]>([]);
-  const [filtered, setFiltered] = useState<DailyReflection[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selected, setSelected] = useState<DailyReflection | undefined>();
@@ -238,39 +239,32 @@ export default function DailyReflections() {
     setEndDate(undefined);
   };
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: reflections = EMPTY_REFLECTIONS, isLoading } = useQuery({
+    queryKey: ['daily-reflections'],
+    queryFn: async () => {
+      try {
+        return await dailyReflectionsService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.dailyReflections.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_REFLECTIONS;
+      }
+    },
+  });
 
-  useEffect(() => {
-    applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reflections, moodFilter, startDate, endDate]);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await dailyReflectionsService.getAll();
-      setReflections(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dailyReflections.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
+  const filtered = useMemo(() => {
     let result = [...reflections];
     if (moodFilter !== 'all') result = result.filter((r) => r.mood === moodFilter);
     if (startDate) result = result.filter((r) => new Date(r.date) >= startDate);
     if (endDate) result = result.filter((r) => new Date(r.date) <= endDate);
-    setFiltered(result);
-  };
+    return result;
+  }, [reflections, moodFilter, startDate, endDate]);
+
+  const refresh = () =>
+    queryClient.invalidateQueries({ queryKey: ['daily-reflections'] });
 
   const handleCreate = () => {
     setSelected(undefined);
@@ -297,7 +291,7 @@ export default function DailyReflections() {
         title: t('pages.dailyReflections.deleted'),
         description: t('pages.dailyReflections.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyReflections.deleteError'),
@@ -324,7 +318,7 @@ export default function DailyReflections() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyReflections.saveError'),
@@ -352,20 +346,20 @@ export default function DailyReflections() {
 
       {/* Timeline de humores dos últimos 21 dias */}
       {reflections.length > 0 && (
-        <div className="rounded-lg border bg-card px-5 py-md">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="bg-card py-md rounded-lg border px-5">
+          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
             {t('pages.dailyReflections.moodTimeline')}
           </p>
           <MoodTimeline reflections={reflections} />
-          <div className="flex items-center gap-md text-xs text-muted-foreground">
+          <div className="gap-md text-muted-foreground flex items-center text-xs">
             {MOOD_CHOICES.map((c) => (
-              <span key={c.value} className="flex items-center gap-xs">
+              <span key={c.value} className="gap-xs flex items-center">
                 <span className={cn('h-2.5 w-2.5 rounded-full', MOOD_DOT[c.value])} />
                 {c.label}
               </span>
             ))}
-            <span className="flex items-center gap-xs">
-              <span className="h-2.5 w-2.5 rounded-full bg-muted" />
+            <span className="gap-xs flex items-center">
+              <span className="bg-muted h-2.5 w-2.5 rounded-full" />
               {t('pages.dailyReflections.noMood')}
             </span>
           </div>
@@ -396,8 +390,8 @@ export default function DailyReflections() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-xs">
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
+        <div className="gap-xs flex items-center">
+          <span className="text-muted-foreground text-xs whitespace-nowrap">
             {t('pages.dailyReflections.filters.startDate')}
           </span>
           <DatePicker
@@ -406,7 +400,7 @@ export default function DailyReflections() {
             placeholder={t('pages.dailyReflections.filters.startDate')}
             clearable
           />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs whitespace-nowrap">
             {t('pages.dailyReflections.filters.endDate')}
           </span>
           <DatePicker

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -49,7 +49,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } =
+  const { register, handleSubmit, setValue, control } =
     useForm<CreditCardPurchaseFormData>({
       defaultValues: {
         description: '',
@@ -66,9 +66,12 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
     });
 
   // Watch valores para cálculo de parcela
-  const watchedTotalValue = watch('total_value');
-  const watchedTotalInstallments = watch('total_installments');
-  const watchedCard = watch('card');
+  const watchedTotalValue = useWatch({ control, name: 'total_value' });
+  const watchedTotalInstallments = useWatch({ control, name: 'total_installments' });
+  const watchedCard = useWatch({ control, name: 'card' });
+  const watchedCategory = useWatch({ control, name: 'category' });
+  const watchedPurchaseDate = useWatch({ control, name: 'purchase_date' });
+  const watchedPurchaseTime = useWatch({ control, name: 'purchase_time' });
 
   // Calcular valor por parcela
   const installmentValue = useMemo(() => {
@@ -194,7 +197,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md" noValidate>
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+      <div className="gap-md grid grid-cols-1 md:grid-cols-2">
         <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">
             {t('pages.creditCardExpenses.form.descriptionLabel')}
@@ -220,7 +223,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             disabled={isLoading || isEditMode}
           />
           {isEditMode && (
-            <p className="text-xs text-warning">
+            <p className="text-warning text-xs">
               {t('pages.creditCardExpenses.form.totalValueLocked')}
             </p>
           )}
@@ -229,19 +232,19 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.categoryLabel')}</Label>
           <Select
-            value={watch('category') || ''}
+            value={watchedCategory || ''}
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              {watch('category') ? (
+              {watchedCategory ? (
                 <span className="flex items-center gap-2">
                   {(() => {
-                    const TrigIcon = EXPENSE_CATEGORY_ICONS[watch('category')];
+                    const TrigIcon = EXPENSE_CATEGORY_ICONS[watchedCategory];
                     return TrigIcon ? (
-                      <TrigIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <TrigIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                     ) : null;
                   })()}
-                  <span>{translate('expenseCategories', watch('category'))}</span>
+                  <span>{translate('expenseCategories', watchedCategory)}</span>
                 </span>
               ) : (
                 <SelectValue placeholder={t('common.fields.selectCategory')} />
@@ -269,7 +272,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             {t('pages.creditCardExpenses.form.purchaseDateLabel')}
           </Label>
           <DatePicker
-            value={watch('purchase_date')}
+            value={watchedPurchaseDate}
             onChange={(date) =>
               setValue('purchase_date', date ? formatLocalDate(date) : '')
             }
@@ -283,7 +286,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
           </Label>
           <TimePicker
-            value={watch('purchase_time')}
+            value={watchedPurchaseTime}
             onChange={(t) => setValue('purchase_time', t ?? '')}
             disabled={isLoading}
           />
@@ -292,7 +295,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.cardLabel')}</Label>
           <Select
-            value={watch('card')?.toString() || ''}
+            value={watchedCard?.toString() || ''}
             onValueChange={(v) => setValue('card', parseInt(v))}
             disabled={isEditMode}
           >
@@ -305,7 +308,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                   getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-sm">
                         {hasNumber
@@ -323,14 +326,14 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             </SelectContent>
           </Select>
           {isEditMode && (
-            <p className="text-xs text-warning">
+            <p className="text-warning text-xs">
               {t('pages.creditCardExpenses.form.cardLocked')}
             </p>
           )}
           {/* Exibir limite disponível do cartão selecionado */}
           {selectedCardInfo && !isEditMode && (
             <div
-              className={`rounded-md p-sm text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
+              className={`p-sm rounded-md text-sm ${exceedsLimit ? 'border-destructive/30 bg-destructive/10 border' : 'bg-muted'}`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
@@ -343,7 +346,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                 </span>
               </div>
               {exceedsLimit && watchedTotalValue > 0 && (
-                <p className="mt-xs text-xs text-destructive">
+                <p className="mt-xs text-destructive text-xs">
                   {t('pages.creditCardExpenses.form.exceedsLimitBy', {
                     amount: formatCurrency(
                       watchedTotalValue - selectedCardInfo.availableCredit
@@ -372,9 +375,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             })}
             disabled={isLoading || isEditMode}
           />
-          <div className="rounded-md bg-muted p-sm">
+          <div className="bg-muted p-sm rounded-md">
             {watchedTotalInstallments > 1 ? (
-              <p className="text-sm font-medium text-primary">
+              <p className="text-primary text-sm font-medium">
                 {t('pages.creditCardExpenses.form.installmentsSummary', {
                   total: formatCurrency(watchedTotalValue),
                   count: watchedTotalInstallments,
@@ -388,7 +391,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             )}
           </div>
           {isEditMode && (
-            <p className="text-xs text-warning">
+            <p className="text-warning text-xs">
               {t('pages.creditCardExpenses.form.installmentsLocked')}
             </p>
           )}
@@ -417,7 +420,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

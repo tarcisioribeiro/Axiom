@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -120,7 +121,7 @@ function HighlightForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
           <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
@@ -170,7 +171,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
           <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
@@ -193,7 +194,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -210,11 +211,10 @@ interface HighlightsTabProps {
   onCreateClose: () => void;
 }
 
+const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
+const EMPTY_BOOKS: Book[] = [];
+
 export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProps) {
-  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [ownerId, setOwnerId] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -224,33 +224,33 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['highlights-tab'],
+    queryFn: async () => {
+      try {
+        const [highlightsData, booksData, member] = await Promise.all([
+          bookHighlightsService.getAll(),
+          booksService.getAll(),
+          membersService.getCurrentUserMember(),
+        ]);
+        return { highlights: highlightsData, books: booksData, ownerId: member.id };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { highlights: EMPTY_HIGHLIGHTS, books: EMPTY_BOOKS, ownerId: 0 };
+      }
+    },
+  });
+  const highlights = pageData?.highlights ?? EMPTY_HIGHLIGHTS;
+  const books = pageData?.books ?? EMPTY_BOOKS;
+  const ownerId = pageData?.ownerId ?? 0;
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [highlightsData, booksData, member] = await Promise.all([
-        bookHighlightsService.getAll(),
-        booksService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setHighlights(highlightsData);
-      setBooks(booksData);
-      setOwnerId(member.id);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['highlights-tab'] });
 
   const handleEdit = (highlight: BookHighlight) => {
     setEditingHighlight(highlight);
@@ -269,7 +269,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
     try {
       await bookHighlightsService.delete(id);
       toast({ title: t('pages.highlights.deleted') });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -291,7 +291,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       }
       onCreateClose();
       setIsEditOpen(false);
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -337,7 +337,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
   return (
     <div className="space-y-md">
-      <div className="flex items-center gap-sm">
+      <div className="gap-sm flex items-center">
         <SearchInput
           placeholder={t('pages.highlights.searchPlaceholder')}
           value={searchTerm}
@@ -361,7 +361,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+          icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.highlights.emptySearch')
@@ -373,25 +373,25 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           {filtered.map((h) => {
             const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
             return (
-              <div key={h.id} className={`rounded-lg border-l-4 p-md ${colorClass}`}>
-                <div className="mb-sm flex items-start justify-between gap-sm">
-                  <div className="flex flex-wrap items-center gap-sm">
+              <div key={h.id} className={`p-md rounded-lg border-l-4 ${colorClass}`}>
+                <div className="mb-sm gap-sm flex items-start justify-between">
+                  <div className="gap-sm flex flex-wrap items-center">
                     <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>
                       {h.highlight_type_display}
                     </Badge>
                     {h.page_number && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         p. {h.page_number}
                       </span>
                     )}
                     {h.chapter && (
-                      <span className="text-xs text-muted-foreground">{h.chapter}</span>
+                      <span className="text-muted-foreground text-xs">{h.chapter}</span>
                     )}
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-muted-foreground text-xs font-medium">
                       {h.book_title}
                     </span>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -403,7 +403,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-7 w-7 p-0"
                       onClick={() => void handleDelete(h.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

@@ -90,11 +90,11 @@ export function PomodoroTimer({
       // right-24 (not right-6) — clears the global StudyTimer trigger, which
       // anchors at bottom-6 right-6 and would otherwise sit hidden directly
       // underneath this panel.
-      className="fixed bottom-6 right-24 z-50 w-64 rounded-2xl border bg-card shadow-2xl"
+      className="bg-card fixed right-24 bottom-6 z-50 w-64 rounded-2xl border shadow-2xl"
     >
       <div
         className={cn(
-          'rounded-t-2xl px-md py-sm text-center text-xs font-semibold uppercase tracking-wider transition-colors',
+          'px-md py-sm rounded-t-2xl text-center text-xs font-semibold tracking-wider uppercase transition-colors',
           phase === 'work' ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'
         )}
       >
@@ -104,12 +104,12 @@ export function PomodoroTimer({
 
       <div className="p-md">
         {taskName && (
-          <p className="mb-sm truncate text-center text-xs text-muted-foreground">
+          <p className="mb-sm text-muted-foreground truncate text-center text-xs">
             {taskName}
           </p>
         )}
 
-        <div className="relative mx-auto mb-md flex h-28 w-28 items-center justify-center">
+        <div className="mb-md relative mx-auto flex h-28 w-28 items-center justify-center">
           <svg className="absolute inset-0 -rotate-90" viewBox="0 0 112 112">
             <circle
               cx="56"
@@ -139,7 +139,7 @@ export function PomodoroTimer({
           </span>
         </div>
 
-        <div className="flex items-center justify-center gap-sm">
+        <div className="gap-sm flex items-center justify-center">
           <Button size="sm" variant="outline" onClick={reset} aria-label="Reiniciar">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>

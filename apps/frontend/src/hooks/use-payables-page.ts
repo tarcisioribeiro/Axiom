@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -28,42 +29,38 @@ export interface UsePayablesPageReturn {
 
 export function usePayablesPage(): UsePayablesPageReturn {
   const { t } = useTranslation();
-  const [payables, setPayables] = useState<Payable[]>([]);
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPayable, setSelectedPayable] = useState<Payable | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [payablesData, memberData] = await Promise.all([
-        payablesService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setPayables(Array.isArray(payablesData) ? payablesData : []);
-      setCurrentUserMember(memberData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-      setPayables([]);
-      setCurrentUserMember(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data, isLoading } = useQuery({
+    queryKey: ['payables'],
+    queryFn: async () => {
+      try {
+        const [payablesData, memberData] = await Promise.all([
+          payablesService.getAll(),
+          membersService.getCurrentUserMember(),
+        ]);
+        return {
+          payables: Array.isArray(payablesData) ? payablesData : [],
+          currentUserMember: memberData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { payables: [] as Payable[], currentUserMember: null };
+      }
+    },
+  });
+  const payables = data?.payables ?? [];
+  const currentUserMember = data?.currentUserMember ?? null;
 
   const handleCreate = () => {
     setSelectedPayable(undefined);
@@ -87,7 +84,7 @@ export function usePayablesPage(): UsePayablesPageReturn {
         title: t('pages.payables.deleted'),
         description: t('pages.payables.deletedDesc'),
       });
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['payables'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -115,7 +112,7 @@ export function usePayablesPage(): UsePayablesPageReturn {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void queryClient.invalidateQueries({ queryKey: ['payables'] });
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),

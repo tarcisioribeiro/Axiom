@@ -201,17 +201,17 @@ export default function OnboardingWizard() {
 
   return (
     <AnimatedPage>
-      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-lg">
+      <div className="bg-background p-lg flex min-h-screen flex-col items-center justify-center">
         <div className="w-full max-w-2xl">
           {/* Progress header */}
           <div className="mb-xl">
             <div className="mb-md flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Etapa {step + 1} de {STEPS.length}
               </p>
               <p className="text-sm font-medium">{STEPS[step]}</p>
             </div>
-            <div className="flex gap-xs">
+            <div className="gap-xs flex">
               {STEPS.map((_, i) => (
                 <div
                   key={i}
@@ -312,7 +312,7 @@ function StepGoals({
           rotina.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-md sm:grid-cols-3">
+      <div className="gap-md grid grid-cols-2 sm:grid-cols-3">
         {FOCUS_AREAS.map((area) => {
           const Icon = area.icon;
           const isSelected = focusAreas.includes(area.id);
@@ -322,9 +322,9 @@ function StepGoals({
               type="button"
               onClick={() => onToggle(area.id)}
               className={cn(
-                'flex flex-col items-center gap-sm rounded-lg border p-md transition-all',
+                'gap-sm p-md flex flex-col items-center rounded-lg border transition-all',
                 isSelected
-                  ? area.bg + ' ring-2 ring-primary/30'
+                  ? area.bg + ' ring-primary/30 ring-2'
                   : 'border-border bg-card hover:border-primary/30'
               )}
             >
@@ -342,7 +342,7 @@ function StepGoals({
               >
                 {area.label}
               </span>
-              {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
+              {isSelected && <CheckCircle2 className="text-primary h-4 w-4" />}
             </button>
           );
         })}
@@ -366,16 +366,16 @@ function StepTime({
           Isso vai determinar quantas tarefas sugerimos na sua rotina diária.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         {DAILY_TIME_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'flex flex-col items-start gap-xs rounded-lg border p-md text-left transition-all',
+              'gap-xs p-md flex flex-col items-start rounded-lg border text-left transition-all',
               dailyMinutes === opt.value
-                ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                ? 'border-primary bg-primary/5 ring-primary/20 ring-2'
                 : 'border-border bg-card hover:border-primary/30'
             )}
           >
@@ -387,7 +387,7 @@ function StepTime({
                 )}
               />
               {dailyMinutes === opt.value && (
-                <CheckCircle2 className="h-4 w-4 text-primary" />
+                <CheckCircle2 className="text-primary h-4 w-4" />
               )}
             </div>
             <p
@@ -398,7 +398,7 @@ function StepTime({
             >
               {opt.label}
             </p>
-            <p className="text-sm text-muted-foreground">{opt.description}</p>
+            <p className="text-muted-foreground text-sm">{opt.description}</p>
           </button>
         ))}
       </div>
@@ -421,7 +421,7 @@ function StepDays({
           Sua rotina será gerada apenas para os dias selecionados.
         </p>
       </div>
-      <div className="flex gap-sm">
+      <div className="gap-sm flex">
         {WEEKDAY_LABELS.map((label, idx) => {
           const isActive = activeDays.includes(idx);
           return (
@@ -430,7 +430,7 @@ function StepDays({
               type="button"
               onClick={() => onToggle(idx)}
               className={cn(
-                'flex flex-1 flex-col items-center gap-xs rounded-lg border py-md transition-all',
+                'gap-xs py-md flex flex-1 flex-col items-center rounded-lg border transition-all',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-card text-muted-foreground hover:border-primary/30'
@@ -442,7 +442,7 @@ function StepDays({
           );
         })}
       </div>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-sm">
         {activeDays.length} dia{activeDays.length !== 1 ? 's' : ''} selecionado
         {activeDays.length !== 1 ? 's' : ''}
       </p>
@@ -482,22 +482,22 @@ function StepRoutine({
 
       {/* Summary card */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="flex flex-wrap gap-md p-md">
-          <div className="flex items-center gap-xs">
-            <Activity className="h-4 w-4 text-primary" />
+        <CardContent className="gap-md p-md flex flex-wrap">
+          <div className="gap-xs flex items-center">
+            <Activity className="text-primary h-4 w-4" />
             <span className="text-sm">
               <strong>{focusAreas.length}</strong> área
               {focusAreas.length !== 1 ? 's' : ''} de foco
             </span>
           </div>
-          <div className="flex items-center gap-xs">
-            <Clock className="h-4 w-4 text-primary" />
+          <div className="gap-xs flex items-center">
+            <Clock className="text-primary h-4 w-4" />
             <span className="text-sm">
               <strong>{timeLabel}</strong>/dia
             </span>
           </div>
-          <div className="flex items-center gap-xs">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
+          <div className="gap-xs flex items-center">
+            <CheckCircle2 className="text-primary h-4 w-4" />
             <span className="text-sm">
               <strong>{activeDays.length}</strong> dias: {activeDayNames}
             </span>
@@ -506,7 +506,7 @@ function StepRoutine({
       </Card>
 
       {suggestedTemplates.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-center text-sm">
           Nenhum template encontrado para as áreas selecionadas.
         </p>
       ) : (
@@ -519,22 +519,22 @@ function StepRoutine({
                 type="button"
                 onClick={() => onToggle(template.id)}
                 className={cn(
-                  'flex w-full items-center gap-md rounded-lg border p-md text-left transition-all',
+                  'gap-md p-md flex w-full items-center rounded-lg border text-left transition-all',
                   isSelected
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                    ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
                     : 'border-border bg-card hover:border-primary/30'
                 )}
               >
                 <span className="shrink-0 text-2xl">{template.icon}</span>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{template.name}</p>
-                  <p className="truncate text-sm text-muted-foreground">
+                  <p className="text-muted-foreground truncate text-sm">
                     {template.description}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-sm">
+                <div className="gap-sm flex shrink-0 items-center">
                   <Badge variant="secondary">{template.task_count} tarefas</Badge>
-                  {isSelected && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  {isSelected && <CheckCircle2 className="text-primary h-5 w-5" />}
                 </div>
               </button>
             );

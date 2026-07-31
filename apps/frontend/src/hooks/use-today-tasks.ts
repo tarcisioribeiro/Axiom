@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useToast } from '@/hooks/use-toast';
@@ -148,29 +149,40 @@ export function useTodayTasks(viewMode: ViewMode) {
     [selectedDate, toast, t]
   );
 
-  useEffect(() => {
-    const init = async () => {
+  // Disparo inicial (uma vez por montagem) via useQuery — evita setState direto
+  // dentro de um useEffect puro, mantendo a lógica de carregamento inalterada.
+  useQuery({
+    queryKey: ['today-tasks', 'init'],
+    queryFn: async () => {
+      await loadCurrentUserMember();
       try {
         const serverDate = await appService.getCurrentDate();
         setSelectedDate(serverDate);
       } catch {
         setSelectedDate(formatLocalDate(new Date()));
       }
-    };
-    void loadCurrentUserMember();
-    void init();
-  }, [loadCurrentUserMember]);
+      return true;
+    },
+  });
 
-  useEffect(() => {
-    if (ownerId > 0 && selectedDate) {
-      if (viewMode === 'list') void loadListData();
-      else void loadKanbanData();
-    }
-  }, [selectedDate, ownerId, viewMode, loadListData, loadKanbanData]);
+  useQuery({
+    queryKey: ['today-tasks', 'data', selectedDate, ownerId, viewMode],
+    queryFn: async () => {
+      if (viewMode === 'list') await loadListData();
+      else await loadKanbanData();
+      return true;
+    },
+    enabled: ownerId > 0 && !!selectedDate,
+  });
 
-  useEffect(() => {
+  // Deriva os cards do kanban a partir de `instances` durante o render
+  // (sem efeito), permitindo que `setCards` continua editável localmente
+  // (drag-and-drop) apos a sincronizacao inicial.
+  const [lastInstances, setLastInstances] = useState(instances);
+  if (instances !== lastInstances) {
+    setLastInstances(instances);
     setCards(instances.length > 0 ? convertInstancesToCards(instances) : []);
-  }, [instances, convertInstancesToCards]);
+  }
 
   const handleToggleTaskComplete = async (task: TaskInstance) => {
     const newStatus: InstanceStatus =

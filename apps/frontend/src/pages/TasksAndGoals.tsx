@@ -20,22 +20,22 @@ export default function TasksAndGoals() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="daily" className="flex-1 gap-xs">
+          <TabsTrigger value="daily" className="gap-xs flex-1">
             <CheckCircle2 className="h-4 w-4" />
             {t('pages.dailyChecklist.title')}
           </TabsTrigger>
-          <TabsTrigger value="routine" className="flex-1 gap-xs">
+          <TabsTrigger value="routine" className="gap-xs flex-1">
             <Calendar className="h-4 w-4" />
             {t('pages.routineTasks.title')}
           </TabsTrigger>
-          <TabsTrigger value="goals" className="flex-1 gap-xs">
+          <TabsTrigger value="goals" className="gap-xs flex-1">
             <Trophy className="h-4 w-4" />
             {t('pages.goals.title')}
           </TabsTrigger>

@@ -102,13 +102,13 @@ export const ChartContainer = ({
   if (!data || data.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-sm text-muted-foreground"
+        className="gap-sm text-muted-foreground flex flex-col items-center justify-center"
         style={{ height }}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50">
+        <div className="bg-muted/50 flex h-12 w-12 items-center justify-center rounded-lg">
           <BarChart2 className="h-6 w-6 opacity-40" />
         </div>
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-center text-sm">
           {resolvedEmptyMessage}
         </p>
       </div>
@@ -119,11 +119,11 @@ export const ChartContainer = ({
     <div className="relative">
       {/* Botão de alternância - Oculto quando lockChartType está definido */}
       {!lockChartType && enabledTypes.length > 1 && (
-        <div className="group absolute right-0 top-0 z-10">
+        <div className="group absolute top-0 right-0 z-10">
           <motion.button
             onClick={handleToggle}
             disabled={isAnimating}
-            className="rounded-lg border border-border bg-background/80 p-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
+            className="border-border bg-background/80 p-sm hover:bg-accent/10 rounded-lg border shadow-sm backdrop-blur-sm transition-colors disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label={t('common.charts.toggleType')}
@@ -137,7 +137,7 @@ export const ChartContainer = ({
           </motion.button>
 
           {/* Tooltip no hover */}
-          <div className="pointer-events-none absolute right-0 top-full z-20 mt-xs whitespace-nowrap rounded-md border border-border bg-popover/95 px-sm py-xs text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <div className="mt-xs border-border bg-popover/95 px-sm py-xs pointer-events-none absolute top-full right-0 z-20 rounded-md border text-xs whitespace-nowrap opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
             {t('common.charts.toggleView')}
           </div>
         </div>

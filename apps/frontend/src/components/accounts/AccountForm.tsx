@@ -104,19 +104,19 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Mini preview da conta */}
-      <div className="relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-md">
-        <div className="flex items-center gap-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+      <div className="border-border/60 from-muted/40 to-muted/10 p-md relative overflow-hidden rounded-lg border bg-gradient-to-br">
+        <div className="gap-sm flex items-center">
+          <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
             {(() => {
               const InstIcon = INSTITUTION_ICONS_CONFIG[institution] ?? Building2;
-              return <InstIcon className="h-5 w-5 text-primary" />;
+              return <InstIcon className="text-primary h-5 w-5" />;
             })()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold leading-tight">
+            <p className="truncate leading-tight font-semibold">
               {watch('account_name') || t('pages.accounts.form.namePlaceholder')}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {TRANSLATIONS.institutions[
                 institution as keyof typeof TRANSLATIONS.institutions
               ] ?? institution}
@@ -126,7 +126,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           <div
             className={`text-right ${balanceVal >= 0 ? 'text-success' : 'text-destructive'}`}
           >
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('common.fields.balance')}
             </p>
             <p className="font-semibold">
@@ -137,18 +137,18 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             </p>
           </div>
         </div>
-        <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-primary/5" />
+        <div className="bg-primary/5 absolute -top-4 -right-4 h-16 w-16 rounded-full" />
       </div>
 
       {/* Seção: Identificação */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Landmark}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.typeLabel')}
             </Label>
-            <div className="grid grid-cols-3 gap-xs">
+            <div className="gap-xs grid grid-cols-3">
               {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
                 <button
                   key={key}
@@ -157,7 +157,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     setValue('account_type', key as AccountFormData['account_type'])
                   }
                   disabled={isLoading}
-                  className={`flex items-center gap-xs rounded border px-sm py-xs text-xs font-medium transition-all ${
+                  className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition-all ${
                     accountType === key
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
@@ -172,13 +172,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               ))}
             </div>
             {errors.account_type && (
-              <p className="text-sm text-destructive">{errors.account_type.message}</p>
+              <p className="text-destructive text-sm">{errors.account_type.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="institution" className="flex items-center gap-xs">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="institution" className="gap-xs flex items-center">
+              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.institutionLabel')}
             </Label>
             <Select
@@ -207,13 +207,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               </SelectContent>
             </Select>
             {errors.institution && (
-              <p className="text-sm text-destructive">{errors.institution.message}</p>
+              <p className="text-destructive text-sm">{errors.institution.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="account_name" className="flex items-center gap-xs">
-              <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="account_name" className="gap-xs flex items-center">
+              <Landmark className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.nameLabel')}
             </Label>
             <Input
@@ -223,13 +223,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               disabled={isLoading}
             />
             {errors.account_name && (
-              <p className="text-sm text-destructive">{errors.account_name.message}</p>
+              <p className="text-destructive text-sm">{errors.account_name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="account_number" className="flex items-center gap-xs">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="account_number" className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.numberLabel')}
             </Label>
             <Input
@@ -243,12 +243,12 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               disabled={isLoading}
             />
             {account && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.accounts.form.numberHiddenPlaceholder')}
               </p>
             )}
             {errors.account_number && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 {errors.account_number.message}
               </p>
             )}
@@ -258,10 +258,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({
 
       {/* Seção: Valores */}
       <FormSection title={t('common.form.sections.values')} icon={BadgeDollarSign}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="balance" className="flex items-center gap-xs">
-              <BadgeDollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="balance" className="gap-xs flex items-center">
+              <BadgeDollarSign className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.balanceLabel')}
             </Label>
             <CurrencyInput
@@ -272,7 +272,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               disabled={isLoading}
             />
             {overdraftVal > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.accounts.form.balanceMinHint')}{' '}
                 {(-overdraftVal).toLocaleString('pt-BR', {
                   style: 'currency',
@@ -281,15 +281,15 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               </p>
             )}
             {errors.balance && (
-              <p className="text-sm text-destructive">{errors.balance.message}</p>
+              <p className="text-destructive text-sm">{errors.balance.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="overdraft_limit" className="flex items-center gap-xs">
-              <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="overdraft_limit" className="gap-xs flex items-center">
+              <ShieldAlert className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.accounts.form.overdraftLabel')}
-              <span className="ml-1 text-xs text-muted-foreground/70">
+              <span className="text-muted-foreground/70 ml-1 text-xs">
                 ({t('common.actions.none').toLowerCase()})
               </span>
             </Label>
@@ -302,7 +302,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               disabled={isLoading}
             />
             {errors.overdraft_limit && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 {errors.overdraft_limit.message}
               </p>
             )}
@@ -310,7 +310,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

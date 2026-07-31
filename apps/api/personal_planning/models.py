@@ -2069,12 +2069,131 @@ class BodyMetric(BaseModel):
         blank=True,
         verbose_name="Quadril (cm)",
     )
+    shoulders_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Ombros (cm)",
+    )
+    chest_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Tórax (cm)",
+    )
+    abdomen_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Abdômen (cm)",
+    )
+    arm_left_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Braço Esquerdo (cm)",
+    )
+    arm_right_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Braço Direito (cm)",
+    )
+    thigh_left_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Coxa Esquerda (cm)",
+    )
+    thigh_right_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Coxa Direita (cm)",
+    )
+    calf_left_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Perna Esquerda (cm)",
+    )
+    calf_right_cm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Perna Direita (cm)",
+    )
+    skinfold_triceps_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Tricipital (mm)",
+    )
+    skinfold_subscapular_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Subescapular (mm)",
+    )
+    skinfold_suprailiac_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Supra-Ilíaca (mm)",
+    )
+    skinfold_chest_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Peitoral (mm)",
+    )
+    skinfold_midaxillary_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Axilar Média (mm)",
+    )
+    skinfold_abdominal_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Abdominal (mm)",
+    )
+    skinfold_thigh_mm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Dobra Coxa (mm)",
+    )
+    body_fat_method = models.CharField(
+        max_length=10,
+        choices=(("navy", "Marinha"), ("pollock", "Pollock 7 Dobras")),
+        null=True,
+        blank=True,
+        verbose_name="Método de Cálculo da Gordura Corporal",
+    )
     body_fat_pct = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Gordura Corporal (%) — calculado pelo método da Marinha",
+        verbose_name="Gordura Corporal (%)",
     )
     notes = models.TextField(blank=True, verbose_name="Observações")
 

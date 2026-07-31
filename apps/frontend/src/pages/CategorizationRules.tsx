@@ -91,15 +91,15 @@ function RuleForm({
     <form onSubmit={handleSubmit} className="space-y-lg">
       {/* Preview ao vivo */}
       {merchantContains && category && (
-        <div className="flex items-center gap-xs overflow-hidden rounded-lg border border-border/60 bg-muted/30 px-sm py-sm text-sm">
-          <div className="rounded-md bg-background px-sm py-xs font-mono text-xs font-semibold shadow-sm">
+        <div className="gap-xs border-border/60 bg-muted/30 px-sm py-sm flex items-center overflow-hidden rounded-lg border text-sm">
+          <div className="bg-background px-sm py-xs rounded-md font-mono text-xs font-semibold shadow-sm">
             &ldquo;{merchantContains}&rdquo;
           </div>
-          <div className="flex items-center gap-xs text-muted-foreground">
-            <div className="h-px w-4 bg-border" />
-            <Zap className="h-3 w-3 text-primary" />
+          <div className="gap-xs text-muted-foreground flex items-center">
+            <div className="bg-border h-px w-4" />
+            <Zap className="text-primary h-3 w-3" />
           </div>
-          <div className="flex items-center gap-xs rounded-md bg-primary/10 px-sm py-xs text-xs font-semibold text-primary">
+          <div className="gap-xs bg-primary/10 px-sm py-xs text-primary flex items-center rounded-md text-xs font-semibold">
             {(() => {
               const CatIcon =
                 EXPENSE_CATEGORY_ICONS[category] ?? EXPENSE_CATEGORY_ICONS['others'];
@@ -114,8 +114,8 @@ function RuleForm({
       <FormSection title={t('common.form.sections.basicInfo')} icon={Filter}>
         <div className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="merchant_contains" className="flex items-center gap-xs">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="merchant_contains" className="gap-xs flex items-center">
+              <Filter className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.categorizationRules.form.merchantContains')} *
             </Label>
             <Input
@@ -127,14 +127,14 @@ function RuleForm({
               onChange={(e) => setMerchantContains(e.target.value)}
               required
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.categorizationRules.form.merchantContainsHint')}
             </p>
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="category" className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="category" className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.categorizationRules.form.category')} *
             </Label>
             <Select value={category} onValueChange={setCategory} required>
@@ -148,7 +148,7 @@ function RuleForm({
                   const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
                   return (
                     <SelectItem key={cat.key} value={cat.key}>
-                      <span className="flex items-center gap-sm">
+                      <span className="gap-sm flex items-center">
                         {CatIcon && <CatIcon className="h-4 w-4" />}
                         {translate('expenseCategories', cat.key)}
                       </span>
@@ -165,8 +165,8 @@ function RuleForm({
       <FormSection title={t('common.form.sections.configuration')} icon={Hash}>
         <div className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="priority" className="flex items-center gap-xs">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="priority" className="gap-xs flex items-center">
+              <Hash className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.categorizationRules.form.priority')}
             </Label>
             <Input
@@ -177,7 +177,7 @@ function RuleForm({
               value={priority}
               onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.categorizationRules.form.priorityHint')}
             </p>
           </div>
@@ -185,9 +185,9 @@ function RuleForm({
           <button
             type="button"
             onClick={() => setIsActive(!isActive)}
-            className={`flex w-full items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+            className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
               isActive
-                ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'
             }`}
           >
@@ -204,7 +204,7 @@ function RuleForm({
               <p className="text-sm font-medium">
                 {t('pages.categorizationRules.form.isActive')}
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {isActive
                   ? t('pages.categorizationRules.form.statusActive')
                   : t('pages.categorizationRules.form.statusInactive')}
@@ -372,17 +372,17 @@ export default function CategorizationRules({
             <div
               key={rule.id}
               className={cn(
-                'flex items-center gap-3 rounded-lg border bg-card p-md',
+                'bg-card p-md flex items-center gap-3 rounded-lg border',
                 !rule.is_active && 'opacity-50'
               )}
             >
               {/* Left: merchant pattern → category flow */}
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
                 {/* Merchant pattern chip */}
-                <div className="flex flex-shrink-0 items-center gap-sm rounded-md bg-muted px-3 py-sm">
-                  <Tag className="h-4 w-4 text-muted-foreground" />
+                <div className="gap-sm bg-muted py-sm flex flex-shrink-0 items-center rounded-md px-3">
+                  <Tag className="text-muted-foreground h-4 w-4" />
                   <div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.categorizationRules.contains')}
                     </p>
                     <p className="font-mono text-sm font-semibold">
@@ -392,8 +392,8 @@ export default function CategorizationRules({
                 </div>
 
                 {/* Arrow */}
-                <div className="flex flex-shrink-0 items-center gap-xs text-muted-foreground">
-                  <div className="h-px w-6 bg-border" />
+                <div className="gap-xs text-muted-foreground flex flex-shrink-0 items-center">
+                  <div className="bg-border h-px w-6" />
                   <svg
                     width="8"
                     height="12"
@@ -413,7 +413,7 @@ export default function CategorizationRules({
                 {/* Target category chip */}
                 <div
                   className={cn(
-                    'flex flex-shrink-0 items-center gap-sm rounded-md px-3 py-sm',
+                    'gap-sm py-sm flex flex-shrink-0 items-center rounded-md px-3',
                     getCategoryBg(rule.category)
                   )}
                 >
@@ -426,7 +426,7 @@ export default function CategorizationRules({
                     ) : null;
                   })()}
                   <div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.categorizationRules.categorizeAs')}
                     </p>
                     <p className="text-sm font-semibold">
@@ -437,7 +437,7 @@ export default function CategorizationRules({
               </div>
 
               {/* Right: priority + status badges + actions */}
-              <div className="flex flex-shrink-0 items-center gap-sm">
+              <div className="gap-sm flex flex-shrink-0 items-center">
                 <Badge variant="outline" className="text-xs">
                   #{rule.priority}
                 </Badge>

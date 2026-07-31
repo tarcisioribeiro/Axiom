@@ -63,7 +63,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       {/* Informações da parcela (somente leitura) */}
-      <div className="space-y-sm rounded-lg bg-muted/50 p-md">
+      <div className="space-y-sm bg-muted/50 p-md rounded-lg">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">
             {t('pages.creditCardExpenses.installmentForm.purchaseLabel')}
@@ -126,7 +126,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
             placeholder="0.00"
             disabled={isLoading}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.creditCardExpenses.installmentForm.originalValueHint', {
               value: formatCurrency(installment.value),
             })}
@@ -143,11 +143,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue
-                placeholder={t(
-                  'pages.creditCardExpenses.installmentForm.billPlaceholder'
-                )}
-              />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="false">{t('common.status.pending')}</SelectItem>
@@ -185,7 +181,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
       </div>
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

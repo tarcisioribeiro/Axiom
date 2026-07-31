@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -89,20 +90,27 @@ export function StudyTimer() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateRef = useRef(state);
-  stateRef.current = state;
-
-  // Recover elapsed time from startedAt when phase is 'running' (page reload)
   useEffect(() => {
-    if (state.phase === 'running' && state.startedAt) {
-      const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
-      setState((s) => ({
-        ...s,
-        elapsed: s.elapsed + recovered,
-        startedAt: Date.now(),
-      }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    stateRef.current = state;
+  }, [state]);
+
+  // Recover elapsed time from startedAt when phase is 'running' (page reload).
+  // Runs once via useQuery — avoids calling setState directly inside a plain
+  // useEffect body.
+  useQuery({
+    queryKey: ['study-timer-recover'],
+    queryFn: () => {
+      if (state.phase === 'running' && state.startedAt) {
+        const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
+        setState((s) => ({
+          ...s,
+          elapsed: s.elapsed + recovered,
+          startedAt: Date.now(),
+        }));
+      }
+      return true;
+    },
+  });
 
   // Tick
   useEffect(() => {
@@ -219,20 +227,20 @@ export function StudyTimer() {
   return (
     <>
       {/* Floating trigger */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-sm">
+      <div className="gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end">
         {isOpen && (
-          <div className="mb-sm w-72 rounded-lg border bg-card shadow-lg">
+          <div className="mb-sm bg-card w-72 rounded-lg border shadow-lg">
             {/* Header */}
-            <div className="flex items-center justify-between border-b px-md py-sm">
-              <div className="flex items-center gap-sm">
-                <Timer className="h-4 w-4 text-primary" />
+            <div className="px-md py-sm flex items-center justify-between border-b">
+              <div className="gap-sm flex items-center">
+                <Timer className="text-primary h-4 w-4" />
                 <span className="text-sm font-semibold">
                   {t('pages.libraryDashboard.studyTimerTitle')}
                 </span>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded p-xs text-muted-foreground hover:text-foreground"
+                className="p-xs text-muted-foreground hover:text-foreground rounded"
                 aria-label={t('common.close')}
               >
                 <X className="h-4 w-4" />
@@ -241,7 +249,7 @@ export function StudyTimer() {
 
             <div className="space-y-sm p-md">
               {/* Mode selector */}
-              <div className="flex gap-xs rounded-md border p-0.5">
+              <div className="gap-xs flex rounded-md border p-0.5">
                 {(['reading', 'course'] as TimerMode[]).map((m) => (
                   <button
                     key={m}
@@ -250,7 +258,7 @@ export function StudyTimer() {
                     onClick={() =>
                       updateState({ mode: m, bookId: null, courseId: null })
                     }
-                    className={`flex-1 rounded px-sm py-xs text-xs transition-colors ${
+                    className={`px-sm py-xs flex-1 rounded text-xs transition-colors ${
                       state.mode === m
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:text-foreground disabled:cursor-not-allowed'
@@ -307,12 +315,12 @@ export function StudyTimer() {
               )}
 
               {/* Timer display */}
-              <div className="text-center text-3xl font-bold tabular-nums tracking-tight">
+              <div className="text-center text-3xl font-bold tracking-tight tabular-nums">
                 {formatElapsed(state.elapsed)}
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-center gap-sm">
+              <div className="gap-sm flex items-center justify-center">
                 {state.phase === 'idle' && (
                   <Button size="sm" disabled={!canStart} onClick={handleStart}>
                     <Play className="mr-xs h-3.5 w-3.5" />
@@ -351,7 +359,7 @@ export function StudyTimer() {
         {/* FAB button */}
         <button
           onClick={() => setIsOpen((o) => !o)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+          className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
           aria-label={t('pages.libraryDashboard.studyTimerTitle')}
         >
           {state.phase === 'running' ? (
@@ -383,8 +391,8 @@ export function StudyTimer() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-md py-sm">
-            <div className="flex items-center justify-between rounded-lg bg-muted px-md py-sm">
-              <span className="text-sm text-muted-foreground">
+            <div className="bg-muted px-md py-sm flex items-center justify-between rounded-lg">
+              <span className="text-muted-foreground text-sm">
                 {t('pages.libraryDashboard.studyTimerDuration')}
               </span>
               <span className="text-sm font-bold">{formatElapsed(state.elapsed)}</span>
@@ -406,7 +414,7 @@ export function StudyTimer() {
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-sm">
+          <div className="gap-sm flex justify-end">
             <Button
               variant="outline"
               size="sm"

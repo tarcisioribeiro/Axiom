@@ -248,17 +248,17 @@ export function MenuOptionForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
-          <ListChecks className="h-5 w-5 text-category-nutrition" />
+      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <ListChecks className="text-category-nutrition h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-nutrition">
+          <p className="text-category-nutrition text-sm font-semibold">
             {option
               ? t('pages.nutritionMealTypes.editOptionTitle')
               : t('pages.nutritionMealTypes.newOptionTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {nameValue || t('pages.nutritionMealTypes.newOptionDesc')}
           </p>
         </div>
@@ -266,7 +266,7 @@ export function MenuOptionForm({
 
       {/* Nome e ordem */}
       <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
-        <div className="grid grid-cols-[1fr_80px] gap-sm">
+        <div className="gap-sm grid grid-cols-[1fr_80px]">
           <div>
             <Input
               placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
@@ -274,7 +274,7 @@ export function MenuOptionForm({
               className={cn(errors.name && 'border-destructive')}
             />
             {errors.name && (
-              <p className="mt-xs text-xs text-destructive">{t('common.required')}</p>
+              <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
             )}
           </div>
           <Input
@@ -294,14 +294,14 @@ export function MenuOptionForm({
       >
         <div className="space-y-sm">
           {fields.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed border-category-nutrition/20 py-md text-center">
-              <Salad className="mx-auto mb-xs h-8 w-8 text-category-nutrition/30" />
-              <p className="text-sm text-muted-foreground">
+            <div className="border-category-nutrition/20 py-md rounded-lg border-2 border-dashed text-center">
+              <Salad className="mb-xs text-category-nutrition/30 mx-auto h-8 w-8" />
+              <p className="text-muted-foreground text-sm">
                 {t('pages.nutritionMealTypes.noIngredients')}
               </p>
             </div>
           ) : (
-            <div className="max-h-96 space-y-sm overflow-y-auto pr-1">
+            <div className="space-y-sm max-h-96 overflow-y-auto pr-1">
               {visualGroups.map((group) =>
                 group.groupId === null ? (
                   // ── Ingrediente simples ──────────────────────────────────────
@@ -322,10 +322,10 @@ export function MenuOptionForm({
                   // ── Grupo de alternativas ────────────────────────────────────
                   <div
                     key={`group-${group.groupId}`}
-                    className="rounded-lg border border-category-nutrition/30 bg-category-nutrition/5"
+                    className="border-category-nutrition/30 bg-category-nutrition/5 rounded-lg border"
                   >
-                    <div className="flex items-center justify-between border-b border-category-nutrition/20 px-sm py-xs">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-category-nutrition">
+                    <div className="border-category-nutrition/20 px-sm py-xs flex items-center justify-between border-b">
+                      <span className="text-category-nutrition text-xs font-semibold tracking-wider uppercase">
                         {t(
                           'pages.nutritionMealTypes.altGroupLabel',
                           'Grupo de alternativas'
@@ -334,13 +334,13 @@ export function MenuOptionForm({
                       <button
                         type="button"
                         onClick={() => addVariantToGroup(group.groupId!)}
-                        className="flex items-center gap-xs rounded px-xs py-0.5 text-xs font-medium text-category-nutrition hover:bg-category-nutrition/10"
+                        className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
                       </button>
                     </div>
-                    <div className="space-y-0 p-sm">
+                    <div className="p-sm space-y-0">
                       {group.indices.map((idx, position) => (
                         <div key={fields[idx]?.id}>
                           <IngredientRow
@@ -354,7 +354,7 @@ export function MenuOptionForm({
                             t={t}
                           />
                           {position < group.indices.length - 1 && (
-                            <p className="my-xs text-center text-[10px] font-bold uppercase tracking-widest text-category-nutrition/60">
+                            <p className="my-xs text-category-nutrition/60 text-center text-[10px] font-bold tracking-widest uppercase">
                               {t('pages.nutritionMealTypes.ingredientOr')}
                             </p>
                           )}
@@ -368,11 +368,11 @@ export function MenuOptionForm({
           )}
 
           {/* Botões de adição */}
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             <button
               type="button"
               onClick={addStandalone}
-              className="flex flex-1 items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/30 py-sm text-sm font-medium text-category-nutrition transition-all hover:border-category-nutrition/60 hover:bg-category-nutrition/5"
+              className="gap-sm border-category-nutrition/30 py-sm text-category-nutrition hover:border-category-nutrition/60 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-all"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addIngredient')}
@@ -380,7 +380,7 @@ export function MenuOptionForm({
             <button
               type="button"
               onClick={addNewGroup}
-              className="flex flex-1 items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/20 py-sm text-sm font-medium text-category-nutrition/70 transition-all hover:border-category-nutrition/40 hover:bg-category-nutrition/5"
+              className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-all"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
@@ -389,7 +389,7 @@ export function MenuOptionForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -430,26 +430,26 @@ function IngredientRow({
   t,
 }: IngredientRowProps) {
   return (
-    <div className="group relative rounded-lg border border-border bg-card p-sm transition-all hover:border-category-nutrition/30">
+    <div className="group border-border bg-card p-sm hover:border-category-nutrition/30 relative rounded-lg border transition-all">
       {/* Row header */}
-      <div className="mb-sm flex items-center gap-xs">
-        <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
-        <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="mb-sm gap-xs flex items-center">
+        <GripVertical className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
+        <span className="text-muted-foreground flex-1 text-xs font-semibold tracking-wider uppercase">
           {label}
         </span>
         <button
           type="button"
           onClick={onRemove}
-          className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+          className="text-muted-foreground hover:text-destructive rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
 
       {/* Food + Quantity + Unit */}
-      <div className="grid grid-cols-[1fr_80px_100px] gap-xs">
+      <div className="gap-xs grid grid-cols-[1fr_80px_100px]">
         <div className="space-y-xs">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.food')}
           </Label>
           <Select
@@ -471,7 +471,7 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
           <Input
@@ -484,7 +484,7 @@ function IngredientRow({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.unit')}
           </Label>
           <Select
@@ -506,20 +506,20 @@ function IngredientRow({
       </div>
 
       {/* Optional + Notes */}
-      <div className="mt-xs flex items-center gap-sm">
-        <label className="flex cursor-pointer items-center gap-xs">
+      <div className="mt-xs gap-sm flex items-center">
+        <label className="gap-xs flex cursor-pointer items-center">
           <Checkbox
             checked={watch(`ingredients.${idx}.is_optional`)}
             onCheckedChange={(v) =>
               setValue(`ingredients.${idx}.is_optional`, Boolean(v))
             }
           />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {t('pages.nutritionMealTypes.optional')}
           </span>
         </label>
         <div className="relative flex-1">
-          <StickyNote className="absolute left-xs top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
+          <StickyNote className="left-xs text-muted-foreground/50 absolute top-1/2 h-3 w-3 -translate-y-1/2" />
           <Input
             placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
             {...register(`ingredients.${idx}.notes`)}

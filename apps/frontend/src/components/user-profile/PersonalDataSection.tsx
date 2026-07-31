@@ -57,7 +57,7 @@ function PersonalDataForm({
       title={t('userProfile.personalData.title')}
       description={t('userProfile.personalData.description')}
     >
-      <div className="grid gap-md sm:grid-cols-2">
+      <div className="gap-md grid sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Label htmlFor="name">{t('userProfile.personalData.name')}</Label>
           <Input
@@ -69,8 +69,8 @@ function PersonalDataForm({
         </div>
         <div>
           <Label htmlFor="email">{t('userProfile.personalData.email')}</Label>
-          <div className="relative mt-xs">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="mt-xs relative">
+            <Mail className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               id="email"
               type="email"
@@ -82,8 +82,8 @@ function PersonalDataForm({
         </div>
         <div>
           <Label htmlFor="phone">{t('userProfile.personalData.phone')}</Label>
-          <div className="relative mt-xs">
-            <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="mt-xs relative">
+            <Phone className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               id="phone"
               value={phone}
@@ -93,7 +93,7 @@ function PersonalDataForm({
           </div>
         </div>
       </div>
-      <div className="flex justify-end pt-sm">
+      <div className="pt-sm flex justify-end">
         <Button
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}

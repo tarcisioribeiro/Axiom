@@ -179,7 +179,7 @@ export function VaultContributionsDialog({
             </div>
           )}
           {isFormOpen && (
-            <div className="space-y-3 rounded-md border p-md">
+            <div className="p-md space-y-3 rounded-md border">
               <h4 className="text-sm font-medium">
                 {editing
                   ? t('common.actions.edit')
@@ -267,7 +267,7 @@ export function VaultContributionsDialog({
                     clearable
                   />
                 </div>
-                <div className="col-span-2 flex items-center gap-sm">
+                <div className="gap-sm col-span-2 flex items-center">
                   <Checkbox
                     id="contrib_active"
                     checked={formData.is_active}
@@ -280,7 +280,7 @@ export function VaultContributionsDialog({
                   </Label>
                 </div>
               </div>
-              <div className="flex justify-end gap-sm">
+              <div className="gap-sm flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
@@ -304,11 +304,11 @@ export function VaultContributionsDialog({
             </div>
           )}
           {isLoading ? (
-            <div className="py-xl text-center text-sm text-muted-foreground">
+            <div className="py-xl text-muted-foreground text-center text-sm">
               {t('common.messages.loading')}
             </div>
           ) : contributions.length === 0 ? (
-            <div className="py-xl text-center text-sm text-muted-foreground">
+            <div className="py-xl text-muted-foreground text-center text-sm">
               {t('pages.vaults.recurringContributions.emptyState')}
             </div>
           ) : (
@@ -319,7 +319,7 @@ export function VaultContributionsDialog({
                   className="flex items-start justify-between gap-3 rounded-md border p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       <span className="truncate text-sm font-medium">
                         {c.description}
                       </span>
@@ -332,10 +332,10 @@ export function VaultContributionsDialog({
                           : t('pages.vaults.recurringContributions.inactive')}
                       </Badge>
                     </div>
-                    <div className="mt-0.5 text-sm font-semibold text-success">
+                    <div className="text-success mt-0.5 text-sm font-semibold">
                       {formatCurrency(parseFloat(c.amount))}
                     </div>
-                    <div className="mt-xs space-y-0.5 text-xs text-muted-foreground">
+                    <div className="mt-xs text-muted-foreground space-y-0.5 text-xs">
                       <div>
                         {t('pages.vaults.columns.date')}: {c.day_of_month} &bull;{' '}
                         {c.start_date}
@@ -357,7 +357,7 @@ export function VaultContributionsDialog({
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -374,7 +374,7 @@ export function VaultContributionsDialog({
                       aria-label={t('common.actions.delete')}
                       title={t('common.actions.delete')}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                      <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

@@ -12,11 +12,11 @@ export const Layout = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="bg-background flex min-h-screen">
       {/* Skip link para acessibilidade - permite pular navegacao */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-md focus:top-md focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-md focus:py-sm focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="focus:left-md focus:top-md focus:bg-primary focus:px-md focus:py-sm focus:text-primary-foreground focus:ring-ring sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:ring-2 focus:outline-none"
       >
         {t('layout.skipToContent')}
       </a>

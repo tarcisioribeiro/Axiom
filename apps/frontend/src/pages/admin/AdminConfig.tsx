@@ -41,7 +41,7 @@ export default function AdminConfig() {
     return (
       <div className="space-y-md">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-32 animate-pulse rounded-lg bg-card" />
+          <div key={i} className="bg-card h-32 animate-pulse rounded-lg" />
         ))}
       </div>
     );
@@ -49,26 +49,26 @@ export default function AdminConfig() {
 
   return (
     <div>
-      <div className="mb-lg flex items-start justify-between gap-md">
+      <div className="mb-lg gap-md flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-foreground text-2xl font-bold">
             {t('pages.adminConfig.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('pages.adminConfig.subtitle')}
           </p>
         </div>
         <Button
           variant="outline"
           onClick={() => setRestartOpen(true)}
-          className="flex-shrink-0 gap-sm"
+          className="gap-sm flex-shrink-0"
         >
           <RotateCcw className="h-4 w-4" />
           {t('pages.adminConfig.restartBtn')}
         </Button>
       </div>
 
-      <div className="mb-md flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-md py-3">
+      <div className="mb-md px-md flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 py-3">
         <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500" />
         <p className="text-sm text-amber-700 dark:text-amber-400">
           {t('pages.adminConfig.restartWarning')}

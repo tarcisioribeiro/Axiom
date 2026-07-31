@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
+import type { CreditCardBill } from '@/types';
 
 type Strategy = 'snowball' | 'avalanche';
 
@@ -189,7 +190,7 @@ export default function DebtPayoffPlanner({
       });
     }
 
-    const billsByCard = new Map<number, typeof billsQuery.data>();
+    const billsByCard = new Map<number, CreditCardBill[]>();
     for (const bill of billsQuery.data ?? []) {
       const balance =
         parseFloat(bill.total_amount) - parseFloat(bill.paid_amount ?? '0');
@@ -289,21 +290,21 @@ export default function DebtPayoffPlanner({
       <PageHeader
         title={t('pages.debtPayoff.title')}
         description={t('pages.debtPayoff.description')}
-        icon={<TrendingDown className="h-6 w-6 text-destructive" />}
+        icon={<TrendingDown className="text-destructive h-6 w-6" />}
       />
 
       {isLoading ? (
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
+        <div className="text-muted-foreground flex h-64 items-center justify-center">
           {t('common.loading')}
         </div>
       ) : debts.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-md text-center">
-          <Trophy className="h-16 w-16 text-success opacity-60" />
+        <div className="gap-md flex h-64 flex-col items-center justify-center text-center">
+          <Trophy className="text-success h-16 w-16 opacity-60" />
           <div>
-            <p className="text-lg font-semibold text-success">
+            <p className="text-success text-lg font-semibold">
               {t('pages.debtPayoff.noDebts')}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('pages.debtPayoff.noDebtsDesc')}
             </p>
           </div>
@@ -311,7 +312,7 @@ export default function DebtPayoffPlanner({
       ) : (
         <div className="space-y-lg">
           {/* Summary stats */}
-          <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
+          <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title={t('pages.debtPayoff.totalDebt')}
               value={formatCurrency(totalDebt)}
@@ -346,17 +347,17 @@ export default function DebtPayoffPlanner({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-lg">
-              <div className="grid gap-lg sm:grid-cols-2">
+              <div className="gap-lg grid sm:grid-cols-2">
                 {/* Strategy selector */}
                 <div className="space-y-sm">
                   <p className="text-sm font-medium">
                     {t('pages.debtPayoff.strategy')}
                   </p>
-                  <div className="grid grid-cols-2 gap-sm">
+                  <div className="gap-sm grid grid-cols-2">
                     <button
                       onClick={() => setStrategy('snowball')}
                       className={cn(
-                        'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                        'gap-xs p-md flex flex-col items-center rounded-lg border transition-colors',
                         strategy === 'snowball'
                           ? 'border-info bg-info/5 text-info'
                           : 'border-border hover:border-info/30'
@@ -373,14 +374,14 @@ export default function DebtPayoffPlanner({
                       <p className="text-sm font-medium">
                         {t('pages.debtPayoff.snowball')}
                       </p>
-                      <p className="text-center text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-center text-xs">
                         {t('pages.debtPayoff.snowballDesc')}
                       </p>
                     </button>
                     <button
                       onClick={() => setStrategy('avalanche')}
                       className={cn(
-                        'flex flex-col items-center gap-xs rounded-lg border p-md transition-colors',
+                        'gap-xs p-md flex flex-col items-center rounded-lg border transition-colors',
                         strategy === 'avalanche'
                           ? 'border-warning bg-warning/5 text-warning'
                           : 'border-border hover:border-warning/30'
@@ -397,7 +398,7 @@ export default function DebtPayoffPlanner({
                       <p className="text-sm font-medium">
                         {t('pages.debtPayoff.avalanche')}
                       </p>
-                      <p className="text-center text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-center text-xs">
                         {t('pages.debtPayoff.avalancheDesc')}
                       </p>
                     </button>
@@ -414,7 +415,7 @@ export default function DebtPayoffPlanner({
                     onChange={(e) => setMonthlyExtra(parseFloat(e.target.value) || 0)}
                     placeholder="0,00"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.debtPayoff.extraMonthlyHint')}
                   </p>
                 </div>
@@ -422,9 +423,9 @@ export default function DebtPayoffPlanner({
 
               {/* Strategy comparison */}
               {interestSaved > 0 && (
-                <div className="flex items-start gap-sm rounded-lg border border-success/30 bg-success/5 p-md">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                  <p className="text-sm text-success">
+                <div className="gap-sm border-success/30 bg-success/5 p-md flex items-start rounded-lg border">
+                  <Info className="text-success mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="text-success text-sm">
                     {t('pages.debtPayoff.interestSavedWithAvalanche', {
                       amount: formatCurrency(interestSaved),
                     })}
@@ -437,11 +438,11 @@ export default function DebtPayoffPlanner({
           {/* Payoff plan */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-base">
+              <CardTitle className="gap-sm flex items-center text-base">
                 {strategy === 'snowball' ? (
-                  <Snowflake className="h-4 w-4 text-primary" />
+                  <Snowflake className="text-primary h-4 w-4" />
                 ) : (
-                  <Flame className="h-4 w-4 text-primary" />
+                  <Flame className="text-primary h-4 w-4" />
                 )}
                 {t('pages.debtPayoff.plan', {
                   strategy:
@@ -466,12 +467,12 @@ export default function DebtPayoffPlanner({
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.05 }}
                         className={cn(
-                          'rounded-lg border border-l-4 bg-card p-md',
+                          'bg-card p-md rounded-lg border border-l-4',
                           getPriorityBorderColor(plan.priority)
                         )}
                       >
-                        <div className="flex items-start justify-between gap-sm">
-                          <div className="flex items-start gap-sm">
+                        <div className="gap-sm flex items-start justify-between">
+                          <div className="gap-sm flex items-start">
                             <div
                               className={cn(
                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-2 ring-offset-1',
@@ -487,25 +488,25 @@ export default function DebtPayoffPlanner({
                               {plan.priority}
                             </div>
                             <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-xs">
+                              <div className="gap-xs flex flex-wrap items-center">
                                 <p className="truncate text-sm font-semibold">
                                   {plan.debt.name}
                                 </p>
                                 <span
                                   className={cn(
-                                    'rounded-full px-xs py-0.5 text-xs font-medium',
+                                    'px-xs rounded-full py-0.5 text-xs font-medium',
                                     typeColors[plan.debt.type]
                                   )}
                                 >
                                   {typeLabels[plan.debt.type]}
                                 </span>
                               </div>
-                              <div className="mt-xs flex flex-wrap gap-sm text-xs text-muted-foreground">
+                              <div className="mt-xs gap-sm text-muted-foreground flex flex-wrap text-xs">
                                 {plan.debt.interestRate > 0 && (
                                   <span>{plan.debt.interestRate}% a.a.</span>
                                 )}
                                 {plan.debt.dueDate && (
-                                  <span className="flex items-center gap-xs">
+                                  <span className="gap-xs flex items-center">
                                     <CalendarDays className="h-3 w-3" />
                                     {formatDate(plan.debt.dueDate)}
                                   </span>
@@ -514,25 +515,25 @@ export default function DebtPayoffPlanner({
                             </div>
                           </div>
                           <div className="shrink-0 text-right">
-                            <p className="text-sm font-bold text-destructive">
+                            <p className="text-destructive text-sm font-bold">
                               {formatCurrency(plan.debt.balance)}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               {formatCurrency(plan.monthlyPayment)}/
                               {t('pages.debtPayoff.month')}
                             </p>
                           </div>
                         </div>
 
-                        <div className="mt-sm h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="mt-sm bg-muted h-1.5 w-full overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full bg-destructive/60 transition-all"
+                            className="bg-destructive/60 h-full rounded-full transition-all"
                             style={{ width: `${debtBalancePct}%` }}
                           />
                         </div>
 
-                        <div className="mt-sm flex items-center justify-between text-xs text-muted-foreground">
-                          <span className="flex items-center gap-xs">
+                        <div className="mt-sm text-muted-foreground flex items-center justify-between text-xs">
+                          <span className="gap-xs flex items-center">
                             <ArrowRight className="h-3 w-3" />
                             {t('pages.debtPayoff.payoffBy')}{' '}
                             <strong className="text-foreground">
@@ -565,10 +566,10 @@ export default function DebtPayoffPlanner({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-md sm:grid-cols-2">
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-md">
-                  <div className="mb-sm flex items-center gap-sm">
-                    <Snowflake className="h-4 w-4 text-primary" />
+              <div className="gap-md grid sm:grid-cols-2">
+                <div className="border-primary/20 bg-primary/5 p-md rounded-lg border">
+                  <div className="mb-sm gap-sm flex items-center">
+                    <Snowflake className="text-primary h-4 w-4" />
                     <p className="font-medium">{t('pages.debtPayoff.snowball')}</p>
                   </div>
                   <div className="space-y-xs text-sm">
@@ -601,9 +602,9 @@ export default function DebtPayoffPlanner({
                     {t('pages.debtPayoff.snowballBenefit')}
                   </Badge>
                 </div>
-                <div className="rounded-lg border border-warning/20 bg-warning/5 p-md">
-                  <div className="mb-sm flex items-center gap-sm">
-                    <Flame className="h-4 w-4 text-warning" />
+                <div className="border-warning/20 bg-warning/5 p-md rounded-lg border">
+                  <div className="mb-sm gap-sm flex items-center">
+                    <Flame className="text-warning h-4 w-4" />
                     <p className="font-medium">{t('pages.debtPayoff.avalanche')}</p>
                   </div>
                   <div className="space-y-xs text-sm">

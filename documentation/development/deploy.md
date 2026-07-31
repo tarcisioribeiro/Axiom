@@ -748,7 +748,7 @@ Push para develop
   → deploy:staging                 ← kubectl apply + set image → k3s reinicia os pods
   → smoke:staging                  ← curl /health/, /ready/ + login cookie + /api/v1/me/
   → backup:staging                 ← cria job K8s a partir do CronJob; aguarda conclusão
-  → test:backup-restore            ← baixa dump do MinIO, pg_restore, manage.py check
+  → test:backup-restore            ← baixa dump do MinIO, restaura via psql, manage.py check
 
 Push para main (+ aprovação manual)
   → (mesmos estágios acima até scan)

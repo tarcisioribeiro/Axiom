@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -26,14 +27,15 @@ import { vaultsService } from '@/services/vaults-service';
 import type { Account, Vault as VaultType } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const EMPTY_VAULTS: VaultType[] = [];
+const EMPTY_ACCOUNTS: Account[] = [];
+
 export default function Vaults() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
 
-  const [vaults, setVaults] = useState<VaultType[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedVault, setSelectedVault] = useState<VaultType | undefined>();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,29 +46,29 @@ export default function Vaults() {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
-  const loadData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [vaultsData, accountsData] = await Promise.all([
-        vaultsService.getAll(),
-        accountsService.getAll(),
-      ]);
-      setVaults(vaultsData);
-      setAccounts(accountsData);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast, t]);
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['vaults'],
+    queryFn: async () => {
+      try {
+        const [vaultsData, accountsData] = await Promise.all([
+          vaultsService.getAll(),
+          accountsService.getAll(),
+        ]);
+        return { vaults: vaultsData, accounts: accountsData };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return { vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
+      }
+    },
+  });
+  const vaults = pageData?.vaults ?? EMPTY_VAULTS;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
 
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['vaults'] });
 
   const handleCreate = () => {
     if (accounts.length === 0) {
@@ -107,7 +109,7 @@ export default function Vaults() {
         title: t('pages.vaults.deleted'),
         description: t('pages.vaults.deletedDesc'),
       });
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -133,7 +135,7 @@ export default function Vaults() {
               description: t('pages.vaults.noYieldDesc'),
             }
       );
-      void loadData();
+      void refresh();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -156,7 +158,7 @@ export default function Vaults() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
             <Zap className="mr-sm h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
@@ -168,23 +170,23 @@ export default function Vaults() {
         </div>
       </PageHeader>
 
-      <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-3">
-        <Card className="border-t-2 border-t-success">
+      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-3">
+        <Card className="border-t-success border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <PiggyBank className="h-4 w-4 text-success" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <PiggyBank className="text-success h-4 w-4" />
               {t('pages.vaults.totalBalance')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalBalance)}
             </div>
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-amber-500">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
               <Sparkles className="h-4 w-4 text-amber-500" />
               {t('pages.vaults.totalYield')}
             </CardTitle>
@@ -195,15 +197,15 @@ export default function Vaults() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-t-2 border-t-info">
+        <Card className="border-t-info border-t-2">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <TrendingUp className="h-4 w-4 text-info" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <TrendingUp className="text-info h-4 w-4" />
               {t('pages.vaults.pendingYield')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-info">
+            <div className="text-info text-2xl font-bold">
               {formatCurrency(totalPendingYield)}
             </div>
           </CardContent>
@@ -213,12 +215,12 @@ export default function Vaults() {
       {isLoading ? (
         <LoadingState />
       ) : vaults.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
           <Vault className="mb-md h-12 w-12" />
           <p>{t('pages.vaults.emptyState')}</p>
         </div>
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {vaults.map((vault, index) => (
             <VaultCard
               key={vault.id}
@@ -258,25 +260,25 @@ export default function Vaults() {
         onOpenChange={setIsFormOpen}
         selectedVault={selectedVault}
         accounts={accounts}
-        onSuccess={() => void loadData()}
+        onSuccess={() => void refresh()}
       />
       <VaultDepositDialog
         open={isDepositOpen}
         onOpenChange={setIsDepositOpen}
         vault={selectedVault}
-        onSuccess={() => void loadData()}
+        onSuccess={() => void refresh()}
       />
       <VaultWithdrawDialog
         open={isWithdrawOpen}
         onOpenChange={setIsWithdrawOpen}
         vault={selectedVault}
-        onSuccess={() => void loadData()}
+        onSuccess={() => void refresh()}
       />
       <VaultTransactionsDialog
         open={isTransactionsOpen}
         onOpenChange={setIsTransactionsOpen}
         vault={selectedVault}
-        onSuccess={() => void loadData()}
+        onSuccess={() => void refresh()}
       />
       <VaultContributionsDialog
         open={isContributionsOpen}
@@ -286,7 +288,7 @@ export default function Vaults() {
       <VaultGenerateDialog
         open={isGenerateOpen}
         onOpenChange={setIsGenerateOpen}
-        onSuccess={() => void loadData()}
+        onSuccess={() => void refresh()}
       />
       <VaultSimulatorDialog
         open={isSimulatorOpen}

@@ -85,10 +85,10 @@ export function PublisherForm({
         title={t('pages.publishers.form.sectionIdentification')}
         icon={Building2}
       >
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           <div className="space-y-sm">
-            <Label htmlFor="name" className="flex items-center gap-xs">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="name" className="gap-xs flex items-center">
+              <Building2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.nameLabel')}
             </Label>
             <Input
@@ -98,13 +98,13 @@ export function PublisherForm({
               disabled={isLoading}
             />
             {errors.name && (
-              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Globe className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.countryLabel')}
             </Label>
             <Select
@@ -127,17 +127,17 @@ export function PublisherForm({
               </SelectContent>
             </Select>
             {errors.country && (
-              <p className="mt-xs text-sm text-destructive">{errors.country.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.country.message}</p>
             )}
           </div>
         </div>
       </FormSection>
 
       <FormSection title={t('pages.publishers.form.sectionInfo')} icon={Globe}>
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           <div className="space-y-sm">
-            <Label htmlFor="website" className="flex items-center gap-xs">
-              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="website" className="gap-xs flex items-center">
+              <Globe className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.websiteLabel')}
             </Label>
             <Input
@@ -148,13 +148,13 @@ export function PublisherForm({
               disabled={isLoading}
             />
             {errors.website && (
-              <p className="mt-xs text-sm text-destructive">{errors.website.message}</p>
+              <p className="mt-xs text-destructive text-sm">{errors.website.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="founded_year" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="founded_year" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.foundedYearLabel')}
             </Label>
             <Input
@@ -169,7 +169,7 @@ export function PublisherForm({
               disabled={isLoading}
             />
             {errors.founded_year && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.founded_year.message}
               </p>
             )}
@@ -177,7 +177,7 @@ export function PublisherForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

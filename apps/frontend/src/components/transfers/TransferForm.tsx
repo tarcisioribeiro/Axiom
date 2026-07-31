@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
@@ -12,8 +13,8 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const { register, handleSubmit, setValue, watch } = useForm<TransferFormData>({
+  const { register, handleSubmit, setValue, control } = useForm<TransferFormData>({
     defaultValues: transfer
       ? {
           description: transfer.description,
@@ -83,17 +84,32 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         },
   });
 
-  const watchedOriginAccount = watch('origin_account');
-  const watchedDestinyAccount = watch('destiny_account');
-  const watchedTransfered = watch('transfered');
-  const watchedValue = watch('value');
-  const watchedDate = watch('date');
-  const watchedCategory = watch('category') || 'pix';
+  const watchedOriginAccount = useWatch({ control, name: 'origin_account' });
+  const watchedDestinyAccount = useWatch({ control, name: 'destiny_account' });
+  const watchedTransfered = useWatch({ control, name: 'transfered' });
+  const watchedValue = useWatch({ control, name: 'value' });
+  const watchedDate = useWatch({ control, name: 'date' });
+  const watchedHorary = useWatch({ control, name: 'horary' });
+  const watchedCategoryRaw = useWatch({ control, name: 'category' });
+  const watchedCategory = watchedCategoryRaw || 'pix';
   const today = formatLocalDate(new Date());
   const isFutureDate = watchedDate > today;
 
-  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
-  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
+  const { data: projectedBalance = null, isLoading: isLoadingProjected } = useQuery({
+    queryKey: ['projected-balance', watchedOriginAccount, watchedDate],
+    queryFn: async () => {
+      try {
+        const data = await accountsService.getProjectedBalance(
+          watchedOriginAccount,
+          watchedDate
+        );
+        return data.projected_balance;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!watchedOriginAccount && !!watchedDate && !!watchedValue && isFutureDate,
+  });
 
   const balanceInfo = useMemo(() => {
     if (isFutureDate) return null;
@@ -130,22 +146,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   ]);
 
   useEffect(() => {
-    if (!watchedOriginAccount || !watchedDate || !watchedValue || !isFutureDate) {
-      setProjectedBalance(null);
-      return;
-    }
-    setIsLoadingProjected(true);
-    accountsService
-      .getProjectedBalance(watchedOriginAccount, watchedDate)
-      .then((data) => setProjectedBalance(data.projected_balance))
-      .catch(() => setProjectedBalance(null))
-      .finally(() => setIsLoadingProjected(false));
-  }, [watchedOriginAccount, watchedDate, watchedValue, isFutureDate]);
-
-  useEffect(() => {
     if (!transfer && accounts.length > 0) {
-      const currentOrigin = watch('origin_account');
-      const currentDestiny = watch('destiny_account');
+      const currentOrigin = watchedOriginAccount;
+      const currentDestiny = watchedDestinyAccount;
       if (!currentOrigin && accounts.length > 0)
         setValue('origin_account', accounts[0].id);
       if (!currentDestiny && accounts.length > 1) {
@@ -159,8 +162,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
 
   useEffect(() => {
     if (!transfer && watchedOriginAccount && accounts.length > 1) {
-      const currentDestiny = watch('destiny_account');
-      if (currentDestiny === watchedOriginAccount) {
+      if (watchedDestinyAccount === watchedOriginAccount) {
         const newDestiny = accounts.find((a) => a.id !== watchedOriginAccount);
         if (newDestiny) setValue('destiny_account', newDestiny.id);
       }
@@ -169,8 +171,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   }, [watchedOriginAccount]);
 
   const handleSwapAccounts = () => {
-    const origin = watch('origin_account');
-    const destiny = watch('destiny_account');
+    const origin = watchedOriginAccount;
+    const destiny = watchedDestinyAccount;
     setValue('origin_account', destiny);
     setValue('destiny_account', origin);
   };
@@ -190,8 +192,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       {/* Seção: Informações */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
         <div className="space-y-sm">
-          <Label className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.transfers.form.descriptionLabel')}
           </Label>
           <Input
@@ -204,7 +206,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
 
       {/* Seção: Tipo de Transferência */}
       <FormSection title={t('pages.transfers.form.typeLabel')} icon={ArrowRight}>
-        <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
+        <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
           {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
             const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
             return (
@@ -212,7 +214,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 key={k}
                 type="button"
                 onClick={() => setValue('category', k)}
-                className={`flex flex-col items-center gap-1 rounded-lg border p-sm text-sm font-medium transition-all ${
+                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition-all ${
                   watchedCategory === k
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -227,20 +229,20 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       </FormSection>
 
       {/* Widget de Fluxo */}
-      <div className="rounded-lg border border-border/50 bg-muted/20 p-md">
-        <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="border-border/50 bg-muted/20 p-md rounded-lg border">
+        <p className="mb-sm text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {t('pages.transfers.form.flowLabel')}
         </p>
-        <div className="flex items-center gap-sm">
-          <div className="flex-1 space-y-xs">
-            <p className="text-xs text-muted-foreground">
+        <div className="gap-sm flex items-center">
+          <div className="space-y-xs flex-1">
+            <p className="text-muted-foreground text-xs">
               {t('pages.transfers.form.flowFrom')}
             </p>
             <Select
               value={watchedOriginAccount?.toString() || ''}
               onValueChange={(v) => setValue('origin_account', parseInt(v))}
             >
-              <SelectTrigger className="h-auto py-sm">
+              <SelectTrigger className="py-sm h-auto">
                 <SelectValue
                   placeholder={t('pages.transfers.form.originAccountPlaceholder')}
                 />
@@ -249,7 +251,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 {accounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground ml-2 text-xs">
                       {parseFloat(a.balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
@@ -271,31 +273,31 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-xs">
+          <div className="gap-xs flex flex-col items-center">
             <button
               type="button"
               title={t('pages.transfers.form.swapAccounts')}
               onClick={handleSwapAccounts}
-              className="rounded-full border border-border/70 bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+              className="border-border/70 bg-background text-muted-foreground hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors"
             >
               <ArrowLeftRight className="h-4 w-4" />
             </button>
             {formattedValue && (
-              <span className="text-xs font-semibold text-primary">
+              <span className="text-primary text-xs font-semibold">
                 {formattedValue}
               </span>
             )}
           </div>
 
-          <div className="flex-1 space-y-xs">
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-xs flex-1">
+            <p className="text-muted-foreground text-xs">
               {t('pages.transfers.form.flowTo')}
             </p>
             <Select
               value={watchedDestinyAccount?.toString() || ''}
               onValueChange={(v) => setValue('destiny_account', parseInt(v))}
             >
-              <SelectTrigger className="h-auto py-sm">
+              <SelectTrigger className="py-sm h-auto">
                 <SelectValue
                   placeholder={t('pages.transfers.form.destinyAccountPlaceholder')}
                 />
@@ -311,7 +313,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               </SelectContent>
             </Select>
             {destinyAccount && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {parseFloat(destinyAccount.balance).toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
@@ -324,10 +326,10 @@ export const TransferForm: React.FC<TransferFormProps> = ({
 
       {/* Seção: Valor & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.transfers.form.valueLabel')}
             </Label>
             <CurrencyInput
@@ -338,8 +340,8 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.transfers.form.transferedLabel')}
             </Label>
             <StatusToggle
@@ -362,12 +364,12 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.transfers.form.dateLabel')}
             </Label>
             <DatePicker
-              value={watch('date')}
+              value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('pages.transfers.form.datePlaceholder')}
               disabled={isLoading}
@@ -375,12 +377,12 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.transfers.form.timeLabel')}
             </Label>
             <TimePicker
-              value={watch('horary')}
+              value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
@@ -391,7 +393,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       {/* Alertas de saldo */}
       {isFutureDate && watchedOriginAccount && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             futureBalanceInfo && !futureBalanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : futureBalanceInfo?.isUsingOverdraft
@@ -424,7 +426,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       )}
       {balanceInfo && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             !balanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : 'border-warning/30 bg-warning/10 text-warning'
@@ -445,7 +447,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

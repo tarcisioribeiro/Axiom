@@ -80,7 +80,7 @@ export function ProfileAvatar({ name, photoUrl }: ProfileAvatarProps) {
         role="button"
         tabIndex={0}
         aria-label={t('userProfile.avatar.change')}
-        className="relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-primary to-primary/60 text-2xl font-bold text-primary-foreground shadow-lg ring-4 ring-background transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="from-primary to-primary/60 text-primary-foreground ring-background focus-visible:ring-primary relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-br text-2xl font-bold shadow-lg ring-4 transition-opacity focus-visible:ring-2 focus-visible:outline-none"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={handleClick}
@@ -108,7 +108,7 @@ export function ProfileAvatar({ name, photoUrl }: ProfileAvatarProps) {
       {photoUrl && !isLoading && (
         <button
           type="button"
-          className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-md transition-opacity hover:opacity-90"
+          className="bg-destructive text-destructive-foreground absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full shadow-md transition-opacity hover:opacity-90"
           onClick={(e) => {
             e.stopPropagation();
             deleteMutation.mutate();

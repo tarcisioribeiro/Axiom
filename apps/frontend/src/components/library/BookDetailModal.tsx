@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BookMarked,
   BookOpen,
@@ -86,6 +87,10 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   idea: 'outline',
 };
 
+const EMPTY_HIGHLIGHTS: BookHighlight[] = [];
+const EMPTY_READINGS: Reading[] = [];
+const EMPTY_SUMMARIES: Summary[] = [];
+
 interface HighlightInlineFormProps {
   bookId: number;
   ownerId: number;
@@ -157,7 +162,7 @@ function HighlightInlineForm({
         rows={3}
         required
       />
-      <div className="grid grid-cols-2 gap-sm">
+      <div className="gap-sm grid grid-cols-2">
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.books.detail.hlTypeLbl')}</Label>
           <Select
@@ -206,7 +211,7 @@ function HighlightInlineForm({
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-sm">
+      <div className="gap-sm grid grid-cols-2">
         <Input
           type="number"
           min={1}
@@ -222,7 +227,7 @@ function HighlightInlineForm({
           className="h-8 text-xs"
         />
       </div>
-      <div className="flex justify-end gap-sm">
+      <div className="gap-sm flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -296,13 +301,13 @@ function BookChat({ book }: { book: Book }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="max-h-64 min-h-32 space-y-3 overflow-y-auto pr-xs">
+      <div className="pr-xs max-h-64 min-h-32 space-y-3 overflow-y-auto">
         {isLoadingHistory ? (
-          <p className="py-md text-center text-xs text-muted-foreground">
+          <p className="py-md text-muted-foreground text-center text-xs">
             {t('common.actions.loading')}
           </p>
         ) : chatMessages.length === 0 && !showStreamBubble ? (
-          <p className="py-lg text-center text-sm text-muted-foreground">
+          <p className="py-lg text-muted-foreground text-center text-sm">
             {t('pages.books.detail.chat.empty')}
           </p>
         ) : (
@@ -315,8 +320,8 @@ function BookChat({ book }: { book: Book }) {
                 <div
                   className={`max-w-[82%] rounded-lg px-3 py-2 text-sm ${
                     msg.role === 'user'
-                      ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                      : 'rounded-tl-sm bg-muted text-foreground'
+                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                      : 'bg-muted text-foreground rounded-tl-sm'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -333,9 +338,9 @@ function BookChat({ book }: { book: Book }) {
             ))}
             {showStreamBubble && (
               <div className="flex gap-2">
-                <div className="max-w-[82%] rounded-lg rounded-tl-sm bg-muted px-3 py-2 text-sm">
+                <div className="bg-muted max-w-[82%] rounded-lg rounded-tl-sm px-3 py-2 text-sm">
                   {!accumulatedText && isStreaming ? (
-                    <span className="flex items-center gap-2 text-muted-foreground">
+                    <span className="text-muted-foreground flex items-center gap-2">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       {t('pages.books.detail.chat.thinking')}
                     </span>
@@ -365,7 +370,7 @@ function BookChat({ book }: { book: Book }) {
           }}
           placeholder={t('pages.books.detail.chat.placeholder')}
           disabled={isStreaming}
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+          className="border-border bg-background placeholder:text-muted-foreground focus:ring-primary/40 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
         />
         <Button
           size="sm"
@@ -429,9 +434,9 @@ function MetaRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-sm text-sm">
-      <span className="mt-0.5 text-muted-foreground">{icon}</span>
-      <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
+    <div className="gap-sm flex items-start text-sm">
+      <span className="text-muted-foreground mt-0.5">{icon}</span>
+      <span className="text-muted-foreground w-28 shrink-0">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );
@@ -449,22 +454,16 @@ export function BookDetailModal({
   const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
 
   // Highlights state
-  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
-  const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isExporting, setIsExporting] = useState(false);
 
   // Readings state
-  const [readings, setReadings] = useState<Reading[]>([]);
-  const [isLoadingReadings, setIsLoadingReadings] = useState(false);
   const [isReadingFormOpen, setIsReadingFormOpen] = useState(false);
   const [editingReading, setEditingReading] = useState<Reading | undefined>();
   const [isReadingSubmitting, setIsReadingSubmitting] = useState(false);
 
   // Summaries state
-  const [summaries, setSummaries] = useState<Summary[]>([]);
-  const [isLoadingSummaries, setIsLoadingSummaries] = useState(false);
   const [isSummaryFormOpen, setIsSummaryFormOpen] = useState(false);
   const [editingSummary, setEditingSummary] = useState<Summary | null>(null);
   const [summaryFormData, setSummaryFormData] = useState<SummaryFormData>({
@@ -479,19 +478,63 @@ export function BookDetailModal({
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  // Load data when tab changes
-  useEffect(() => {
-    if (book && open) {
-      if (activeTab === 'highlights') void loadHighlights();
-      if (activeTab === 'readings') void loadReadings();
-      if (activeTab === 'summaries') void loadSummaries();
+  const { data: highlights = EMPTY_HIGHLIGHTS, isLoading: isLoadingHighlights } =
+    useQuery({
+      queryKey: ['book-highlights', book?.id],
+      queryFn: async () => {
+        if (!book) return EMPTY_HIGHLIGHTS;
+        try {
+          return await bookHighlightsService.getByBook(book.id);
+        } catch {
+          return EMPTY_HIGHLIGHTS;
+        }
+      },
+      enabled: !!book && open && activeTab === 'highlights',
+    });
+  const refreshHighlights = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-highlights', book?.id] });
+
+  const { data: readings = EMPTY_READINGS, isLoading: isLoadingReadings } = useQuery({
+    queryKey: ['book-readings', book?.id],
+    queryFn: async () => {
+      if (!book) return EMPTY_READINGS;
+      try {
+        const data = await readingsService.getAll();
+        return data.filter((r) => r.book === book.id);
+      } catch {
+        return EMPTY_READINGS;
+      }
+    },
+    enabled: !!book && open && activeTab === 'readings',
+  });
+  const refreshReadings = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-readings', book?.id] });
+
+  const { data: summaries = EMPTY_SUMMARIES, isLoading: isLoadingSummaries } = useQuery(
+    {
+      queryKey: ['book-summaries', book?.id],
+      queryFn: async () => {
+        if (!book) return EMPTY_SUMMARIES;
+        try {
+          const data = await summariesService.getAll();
+          return data.filter((s) => s.book === book.id);
+        } catch {
+          return EMPTY_SUMMARIES;
+        }
+      },
+      enabled: !!book && open && activeTab === 'summaries',
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book, open, activeTab]);
+  );
+  const refreshSummaries = () =>
+    queryClient.invalidateQueries({ queryKey: ['book-summaries', book?.id] });
 
   // Reset state when modal opens with a new book or initialTab changes
-  useEffect(() => {
+  // (derivado durante o render — sem efeito).
+  const [lastResetKey, setLastResetKey] = useState({ open, initialTab });
+  if (lastResetKey.open !== open || lastResetKey.initialTab !== initialTab) {
+    setLastResetKey({ open, initialTab });
     if (open) {
       setActiveTab(initialTab);
     } else {
@@ -502,33 +545,7 @@ export function BookDetailModal({
       setIsSummaryFormOpen(false);
       setEditingSummary(null);
     }
-  }, [open, initialTab]);
-
-  const loadHighlights = async () => {
-    if (!book) return;
-    setIsLoadingHighlights(true);
-    try {
-      const data = await bookHighlightsService.getByBook(book.id);
-      setHighlights(data);
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingHighlights(false);
-    }
-  };
-
-  const loadReadings = async () => {
-    if (!book) return;
-    setIsLoadingReadings(true);
-    try {
-      const data = await readingsService.getAll();
-      setReadings(data.filter((r) => r.book === book.id));
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingReadings(false);
-    }
-  };
+  }
 
   const handleReadingSubmit = async (data: ReadingFormData) => {
     if (!book) return;
@@ -549,7 +566,7 @@ export function BookDetailModal({
       }
       setIsReadingFormOpen(false);
       setEditingReading(undefined);
-      void loadReadings();
+      void refreshReadings();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -576,26 +593,13 @@ export function BookDetailModal({
         title: t('pages.readings.deleted'),
         description: t('pages.readings.deletedDesc'),
       });
-      void loadReadings();
+      void refreshReadings();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-    }
-  };
-
-  const loadSummaries = async () => {
-    if (!book) return;
-    setIsLoadingSummaries(true);
-    try {
-      const data = await summariesService.getAll();
-      setSummaries(data.filter((s) => s.book === book.id));
-    } catch {
-      // silently ignore
-    } finally {
-      setIsLoadingSummaries(false);
     }
   };
 
@@ -661,7 +665,7 @@ export function BookDetailModal({
       }
       setIsSummaryFormOpen(false);
       setEditingSummary(null);
-      void loadSummaries();
+      void refreshSummaries();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -688,7 +692,7 @@ export function BookDetailModal({
         title: t('pages.summaries.deleted'),
         description: t('pages.summaries.deletedDesc'),
       });
-      void loadSummaries();
+      void refreshSummaries();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -709,7 +713,7 @@ export function BookDetailModal({
     if (!confirmed) return;
     try {
       await bookHighlightsService.delete(id);
-      void loadHighlights();
+      void refreshHighlights();
     } catch (error: unknown) {
       toast({
         title: t('pages.books.detail.highlightDeleteError'),
@@ -754,7 +758,7 @@ export function BookDetailModal({
         </DialogHeader>
 
         {/* Tab navigation */}
-        <div className="flex shrink-0 gap-xs rounded-md border p-xs">
+        <div className="gap-xs p-xs flex shrink-0 rounded-md border">
           {(
             [
               { id: 'info', label: t('pages.books.detail.tabInfo'), icon: null },
@@ -784,7 +788,7 @@ export function BookDetailModal({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-1 items-center justify-center gap-sm rounded px-sm py-sm text-xs font-medium transition-colors ${
+              className={`gap-sm px-sm py-sm flex flex-1 items-center justify-center rounded text-xs font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -801,7 +805,7 @@ export function BookDetailModal({
           {activeTab === 'info' && (
             <>
               {/* Top section: cover + main info */}
-              <div className="flex gap-lg">
+              <div className="gap-lg flex">
                 {/* Cover */}
                 <div className="shrink-0">
                   {book.cover ? (
@@ -811,8 +815,8 @@ export function BookDetailModal({
                       className="h-64 w-44 rounded-md object-cover shadow-md"
                     />
                   ) : (
-                    <div className="flex h-64 w-44 items-center justify-center rounded-md border bg-muted shadow-sm">
-                      <BookOpen className="h-10 w-10 text-muted-foreground" />
+                    <div className="bg-muted flex h-64 w-44 items-center justify-center rounded-md border shadow-sm">
+                      <BookOpen className="text-muted-foreground h-10 w-10" />
                     </div>
                   )}
                 </div>
@@ -820,15 +824,15 @@ export function BookDetailModal({
                 {/* Main info */}
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
-                    <h2 className="text-xl font-semibold leading-tight">
+                    <h2 className="text-xl leading-tight font-semibold">
                       {book.title}
                     </h2>
-                    <p className="mt-xs text-sm text-muted-foreground">
+                    <p className="mt-xs text-muted-foreground text-sm">
                       {book.authors_names.join(', ')}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-sm">
+                  <div className="gap-sm flex flex-wrap">
                     <Badge variant={statusVariant(book.read_status)}>
                       {book.read_status_display}
                     </Badge>
@@ -897,14 +901,14 @@ export function BookDetailModal({
                   <div className="border-t" />
                   <div className="space-y-sm">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-xs font-medium">
+                      <span className="gap-xs flex items-center font-medium">
                         <TrendingUp className="h-4 w-4" />
                         {t('pages.books.detail.readingProgress')}
                       </span>
                       <span className="font-semibold">{book.reading_progress}%</span>
                     </div>
                     <Progress value={book.reading_progress} className="h-2" />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.books.detail.pagesRead', {
                         read: book.total_pages_read,
                         total: book.pages,
@@ -921,13 +925,13 @@ export function BookDetailModal({
                   <>
                     <div className="border-t" />
                     <div className="space-y-sm">
-                      <span className="flex items-center gap-xs text-sm font-medium">
+                      <span className="gap-xs flex items-center text-sm font-medium">
                         <Calendar className="h-4 w-4" />
                         {t('pages.books.detail.completionForecast')}
                       </span>
-                      <div className="grid grid-cols-1 gap-sm text-xs">
+                      <div className="gap-sm grid grid-cols-1 text-xs">
                         {book.estimated_completion_book && (
-                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-sm">
+                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
                             <span className="text-muted-foreground">
                               {t('pages.books.detail.bookAvg')}
                               {book.book_avg_pages_per_day > 0 && (
@@ -946,7 +950,7 @@ export function BookDetailModal({
                           </div>
                         )}
                         {book.estimated_completion_general && (
-                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-sm">
+                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
                             <span className="text-muted-foreground">
                               {t('pages.books.detail.generalAvg')}
                               {book.general_avg_pages_per_day > 0 && (
@@ -977,7 +981,7 @@ export function BookDetailModal({
                     <p className="text-sm font-medium">
                       {t('pages.books.detail.synopsis')}
                     </p>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
+                    <p className="text-muted-foreground text-sm leading-relaxed">
                       {book.synopsis}
                     </p>
                   </div>
@@ -986,7 +990,7 @@ export function BookDetailModal({
 
               {/* Actions */}
               <div className="border-t" />
-              <div className="flex justify-between gap-sm">
+              <div className="gap-sm flex justify-between">
                 <div>
                   {onAskIntellect && (
                     <Button
@@ -997,12 +1001,12 @@ export function BookDetailModal({
                         onAskIntellect(book);
                       }}
                     >
-                      <Brain className="mr-sm h-4 w-4 text-primary" />
+                      <Brain className="mr-sm text-primary h-4 w-4" />
                       {t('pages.books.chatTabDesc')}
                     </Button>
                   )}
                 </div>
-                <div className="flex gap-sm">
+                <div className="gap-sm flex">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1034,12 +1038,12 @@ export function BookDetailModal({
           {activeTab === 'highlights' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
+                <span className="text-muted-foreground text-sm font-medium">
                   {t('pages.books.detail.highlightsCount', {
                     count: highlights.length,
                   })}
                 </span>
-                <div className="flex gap-sm">
+                <div className="gap-sm flex">
                   {highlights.length > 0 && (
                     <Button
                       variant="outline"
@@ -1072,18 +1076,18 @@ export function BookDetailModal({
                   ownerId={book.owner}
                   onSaved={() => {
                     setShowAddForm(false);
-                    void loadHighlights();
+                    void refreshHighlights();
                   }}
                   onCancel={() => setShowAddForm(false)}
                 />
               )}
 
               {isLoadingHighlights ? (
-                <p className="py-md text-center text-sm text-muted-foreground">
+                <p className="py-md text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.loadingHighlights')}
                 </p>
               ) : highlights.length === 0 && !showAddForm ? (
-                <p className="py-lg text-center text-sm text-muted-foreground">
+                <p className="py-lg text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.noHighlights')}
                 </p>
               ) : (
@@ -1097,7 +1101,7 @@ export function BookDetailModal({
                         highlight={h}
                         onSaved={() => {
                           setEditingHighlight(undefined);
-                          void loadHighlights();
+                          void refreshHighlights();
                         }}
                         onCancel={() => setEditingHighlight(undefined)}
                       />
@@ -1106,8 +1110,8 @@ export function BookDetailModal({
                         key={h.id}
                         className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
                       >
-                        <div className="mb-sm flex items-start justify-between gap-sm">
-                          <div className="flex flex-wrap items-center gap-sm">
+                        <div className="mb-sm gap-sm flex items-start justify-between">
+                          <div className="gap-sm flex flex-wrap items-center">
                             <Badge
                               variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
                               className="text-xs"
@@ -1115,12 +1119,12 @@ export function BookDetailModal({
                               {h.highlight_type_display}
                             </Badge>
                             {h.page_number && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 p. {h.page_number}
                               </span>
                             )}
                             {h.chapter && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 {h.chapter}
                               </span>
                             )}
@@ -1137,7 +1141,7 @@ export function BookDetailModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
                               onClick={() => void handleDeleteHighlight(h.id)}
                             >
                               <Trash2 className="h-3 w-3" />
@@ -1157,7 +1161,7 @@ export function BookDetailModal({
           {activeTab === 'readings' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
+                <span className="text-muted-foreground text-sm font-medium">
                   {t('pages.books.detail.readingsCount', { count: readings.length })}
                 </span>
                 <Button
@@ -1173,11 +1177,11 @@ export function BookDetailModal({
               </div>
 
               {isLoadingReadings ? (
-                <p className="py-md text-center text-sm text-muted-foreground">
+                <p className="py-md text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.loadingReadings')}
                 </p>
               ) : readings.length === 0 ? (
-                <p className="py-lg text-center text-sm text-muted-foreground">
+                <p className="py-lg text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.noReadings')}
                 </p>
               ) : (
@@ -1185,15 +1189,15 @@ export function BookDetailModal({
                   {readings.map((r) => (
                     <Card key={r.id}>
                       <CardHeader className="pb-sm pt-3">
-                        <div className="flex items-start justify-between gap-sm">
+                        <div className="gap-sm flex items-start justify-between">
                           <div className="space-y-xs">
-                            <div className="flex items-center gap-sm text-sm">
-                              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                            <div className="gap-sm flex items-center text-sm">
+                              <Calendar className="text-muted-foreground h-3.5 w-3.5" />
                               <span className="font-medium">
                                 {formatDate(r.reading_date, 'dd/MM/yyyy')}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="text-muted-foreground flex items-center gap-3 text-xs">
                               <span>
                                 {t('pages.books.detail.readingPagesRead', {
                                   count: r.pages_read,
@@ -1224,7 +1228,7 @@ export function BookDetailModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
                               title={t('common.actions.delete')}
                               onClick={() => void handleDeleteReading(r.id)}
                             >
@@ -1234,8 +1238,8 @@ export function BookDetailModal({
                         </div>
                       </CardHeader>
                       {r.notes && (
-                        <CardContent className="pb-3 pt-0">
-                          <p className="line-clamp-2 text-xs text-muted-foreground">
+                        <CardContent className="pt-0 pb-3">
+                          <p className="text-muted-foreground line-clamp-2 text-xs">
                             {r.notes}
                           </p>
                         </CardContent>
@@ -1250,11 +1254,11 @@ export function BookDetailModal({
           {/* Summaries tab */}
           {activeTab === 'summaries' && (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-sm">
-                <span className="text-sm font-medium text-muted-foreground">
+              <div className="gap-sm flex flex-wrap items-center justify-between">
+                <span className="text-muted-foreground text-sm font-medium">
                   {t('pages.books.detail.summariesCount', { count: summaries.length })}
                 </span>
-                <div className="flex shrink-0 items-center gap-xs">
+                <div className="gap-xs flex shrink-0 items-center">
                   {book.read_status === 'read' && (
                     <Button
                       size="sm"
@@ -1288,7 +1292,7 @@ export function BookDetailModal({
               </div>
               {book.read_status !== 'read' && (
                 <p
-                  className="rounded-md bg-muted px-3 py-sm text-xs text-muted-foreground"
+                  className="bg-muted py-sm text-muted-foreground rounded-md px-3 text-xs"
                   dangerouslySetInnerHTML={{
                     __html: t('pages.books.detail.summariesReadOnlyNote'),
                   }}
@@ -1296,11 +1300,11 @@ export function BookDetailModal({
               )}
 
               {isLoadingSummaries ? (
-                <p className="py-md text-center text-sm text-muted-foreground">
+                <p className="py-md text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.loadingSummaries')}
                 </p>
               ) : summaries.length === 0 ? (
-                <p className="py-lg text-center text-sm text-muted-foreground">
+                <p className="py-lg text-muted-foreground text-center text-sm">
                   {t('pages.books.detail.noSummaries')}
                 </p>
               ) : (
@@ -1308,10 +1312,10 @@ export function BookDetailModal({
                   {summaries.map((s) => (
                     <Card key={s.id}>
                       <CardHeader className="pb-sm pt-3">
-                        <div className="flex items-start justify-between gap-sm">
+                        <div className="gap-sm flex items-start justify-between">
                           <div className="space-y-xs">
                             <CardTitle className="text-sm">{s.title}</CardTitle>
-                            <div className="flex items-center gap-sm">
+                            <div className="gap-sm flex items-center">
                               {s.is_vectorized ? (
                                 <Badge variant="default" className="gap-xs text-xs">
                                   <CheckCircle2 className="h-3 w-3" />
@@ -1338,7 +1342,7 @@ export function BookDetailModal({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
                               title={t('common.actions.delete')}
                               onClick={() => void handleDeleteSummary(s.id)}
                             >
@@ -1347,8 +1351,8 @@ export function BookDetailModal({
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="pb-3 pt-0">
-                        <p className="line-clamp-4 whitespace-pre-wrap text-xs text-muted-foreground">
+                      <CardContent className="pt-0 pb-3">
+                        <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
                           {s.text}
                         </p>
                       </CardContent>
@@ -1363,11 +1367,11 @@ export function BookDetailModal({
           {activeTab === 'chat' && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-primary" />
+                <Brain className="text-primary h-4 w-4" />
                 <span className="text-sm font-medium">
                   {t('pages.books.detail.chat.title')}
                 </span>
-                <span className="ml-auto text-xs text-muted-foreground">
+                <span className="text-muted-foreground ml-auto text-xs">
                   {book.title}
                 </span>
               </div>
@@ -1416,7 +1420,7 @@ export function BookDetailModal({
                       : t('pages.summaries.createDesc')}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-md py-md">
+                <div className="gap-md py-md grid">
                   <div className="space-y-sm">
                     <Label htmlFor="summary-title">
                       {t('pages.summaries.titleField')}

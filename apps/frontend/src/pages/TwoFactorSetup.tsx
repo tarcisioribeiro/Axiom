@@ -30,7 +30,7 @@ export default function TwoFactorSetup() {
       {isLoading ? (
         <Card>
           <CardContent className="flex h-32 items-center justify-center">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {t('pages.twoFactor.loading')}
             </span>
           </CardContent>
@@ -38,8 +38,8 @@ export default function TwoFactorSetup() {
       ) : is2FAActive ? (
         <div className="space-y-md">
           <Card className="border-success/30 bg-success/5">
-            <CardContent className="flex items-center gap-3 py-md">
-              <Shield className="h-5 w-5 text-success" />
+            <CardContent className="py-md flex items-center gap-3">
+              <Shield className="text-success h-5 w-5" />
               <span className="text-sm font-medium">
                 {t('pages.twoFactor.status')}: {t('pages.twoFactor.active')}
               </span>

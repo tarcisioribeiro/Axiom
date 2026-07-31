@@ -34,7 +34,7 @@ export function XPFloating({ onMount }: XPFloatingProps) {
         {particles.map((p) => (
           <motion.div
             key={p.id}
-            className="absolute select-none font-bold text-warning"
+            className="text-warning absolute font-bold select-none"
             style={{ left: p.x, top: p.y, fontSize: '1.1rem' }}
             initial={{ opacity: 1, y: 0, scale: 1 }}
             animate={{ opacity: 0, y: -52, scale: 1.3 }}

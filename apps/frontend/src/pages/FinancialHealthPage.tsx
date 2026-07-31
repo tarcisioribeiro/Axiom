@@ -19,18 +19,18 @@ export default function FinancialHealthPage() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="net-worth" className="flex-1 gap-xs">
+          <TabsTrigger value="net-worth" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
             {t('nav.items.netWorth')}
           </TabsTrigger>
-          <TabsTrigger value="debt-payoff" className="flex-1 gap-xs">
+          <TabsTrigger value="debt-payoff" className="gap-xs flex-1">
             <Landmark className="h-4 w-4" />
             {t('nav.items.debtPayoff')}
           </TabsTrigger>

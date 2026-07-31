@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
+import { KcalBar } from './KcalBar';
+
 interface MealEntry {
   meal_type: string;
   is_free_meal: boolean;
@@ -50,18 +52,6 @@ interface Props {
   isLoading: boolean;
 }
 
-function KcalBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-      <div
-        className={cn('h-full rounded-full transition-all duration-500', color)}
-        style={{ width: `${pct}%` }}
-      />
-    </div>
-  );
-}
-
 export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
   const { t } = useTranslation();
 
@@ -69,7 +59,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
     return (
       <Card>
         <CardHeader className="pb-sm">
-          <CardTitle className="flex items-center gap-sm text-sm">
+          <CardTitle className="gap-sm flex items-center text-sm">
             <Flame className="h-4 w-4 text-orange-500" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
@@ -77,7 +67,7 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-4 animate-pulse rounded bg-muted" />
+              <div key={i} className="bg-muted h-4 animate-pulse rounded" />
             ))}
           </div>
         </CardContent>
@@ -89,13 +79,13 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
     return (
       <Card>
         <CardHeader className="pb-sm">
-          <CardTitle className="flex items-center gap-sm text-sm">
+          <CardTitle className="gap-sm flex items-center text-sm">
             <Flame className="h-4 w-4 text-orange-500" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('pages.planningDashboard.caloricSummary.noMetrics')}{' '}
             <Link
               to="/planning/workout"
@@ -120,37 +110,37 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
     <Card>
       <CardHeader className="pb-sm">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-sm text-sm">
+          <CardTitle className="gap-sm flex items-center text-sm">
             <Flame className="h-4 w-4 text-orange-500" />
             {t('pages.planningDashboard.caloricSummary.title')}
           </CardTitle>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {format(new Date(data.date + 'T00:00:00'), 'dd/MM')}
           </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-md">
         {/* Linha principal: consumido / TDEE */}
-        <div className="flex items-end justify-between gap-sm">
+        <div className="gap-sm flex items-end justify-between">
           <div>
-            <p className="text-3xl font-bold leading-none">
+            <p className="text-3xl leading-none font-bold">
               {consumed.toLocaleString('pt-BR')}
-              <span className="ml-1 text-base font-normal text-muted-foreground">
+              <span className="text-muted-foreground ml-1 text-base font-normal">
                 kcal
               </span>
             </p>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.planningDashboard.caloricSummary.consumed')}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold leading-none">
+            <p className="text-lg leading-none font-semibold">
               {tdee.toLocaleString('pt-BR')}
-              <span className="ml-1 text-xs font-normal text-muted-foreground">
+              <span className="text-muted-foreground ml-1 text-xs font-normal">
                 kcal
               </span>
             </p>
-            <p className="mt-xs flex items-center justify-end gap-xs text-xs text-muted-foreground">
+            <p className="mt-xs gap-xs text-muted-foreground flex items-center justify-end text-xs">
               {t('pages.planningDashboard.caloricSummary.tdee')}
               <Tooltip
                 content={t('pages.planningDashboard.caloricSummary.tdeeTooltip', {
@@ -167,30 +157,30 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
         <KcalBar value={consumed} max={tdee} color="bg-orange-500" />
 
         {/* Linha: gasto treino + saldo */}
-        <div className="grid grid-cols-2 gap-md border-t pt-md">
-          <div className="flex flex-col gap-xs">
-            <div className="flex items-center gap-sm text-muted-foreground">
+        <div className="gap-md pt-md grid grid-cols-2 border-t">
+          <div className="gap-xs flex flex-col">
+            <div className="gap-sm text-muted-foreground flex items-center">
               <Dumbbell className="h-3.5 w-3.5" />
               <span className="text-xs">
                 {t('pages.planningDashboard.caloricSummary.exerciseBurned')}
               </span>
             </div>
-            <span className="text-xl font-bold text-info">
+            <span className="text-info text-xl font-bold">
               {exerciseBurned > 0 ? `-${exerciseBurned.toLocaleString('pt-BR')}` : '—'}
               {exerciseBurned > 0 && (
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                <span className="text-muted-foreground ml-1 text-xs font-normal">
                   kcal
                 </span>
               )}
             </span>
           </div>
 
-          <div className="flex flex-col gap-xs">
-            <div className="flex items-center gap-sm text-muted-foreground">
+          <div className="gap-xs flex flex-col">
+            <div className="gap-sm text-muted-foreground flex items-center">
               {isDeficit ? (
-                <TrendingDown className="h-3.5 w-3.5 text-success" />
+                <TrendingDown className="text-success h-3.5 w-3.5" />
               ) : (
-                <TrendingUp className="h-3.5 w-3.5 text-destructive" />
+                <TrendingUp className="text-destructive h-3.5 w-3.5" />
               )}
               <span className="text-xs">
                 {t('pages.planningDashboard.caloricSummary.balance')}
@@ -209,26 +199,26 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
               >
                 {net > 0 ? '+' : ''}
                 {net.toLocaleString('pt-BR')}
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                <span className="text-muted-foreground ml-1 text-xs font-normal">
                   kcal
                 </span>
               </span>
             ) : (
-              <span className="text-xl font-bold text-muted-foreground">—</span>
+              <span className="text-muted-foreground text-xl font-bold">—</span>
             )}
           </div>
         </div>
 
         {/* Lista de refeições */}
         {data.meals.length > 0 && (
-          <div className="space-y-xs border-t pt-sm">
-            <p className="flex items-center gap-xs text-xs font-medium text-muted-foreground">
+          <div className="space-y-xs pt-sm border-t">
+            <p className="gap-xs text-muted-foreground flex items-center text-xs font-medium">
               <Utensils className="h-3 w-3" />
               {t('pages.planningDashboard.caloricSummary.mealsLabel')}
             </p>
             {data.meals.map((meal, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
-                <span className="truncate text-muted-foreground">{meal.meal_type}</span>
+                <span className="text-muted-foreground truncate">{meal.meal_type}</span>
                 <span className="font-medium">
                   {meal.calories > 0
                     ? `${meal.calories.toLocaleString('pt-BR')} kcal`
@@ -241,20 +231,20 @@ export function DailyCaloricSummaryCard({ data, isLoading }: Props) {
 
         {/* Lista de treinos */}
         {data.workout_sessions.length > 0 && (
-          <div className="space-y-xs border-t pt-sm">
-            <p className="flex items-center gap-xs text-xs font-medium text-muted-foreground">
+          <div className="space-y-xs pt-sm border-t">
+            <p className="gap-xs text-muted-foreground flex items-center text-xs font-medium">
               <Dumbbell className="h-3 w-3" />
               {t('pages.planningDashboard.caloricSummary.sessionsLabel')}
             </p>
             {data.workout_sessions.map((s, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
-                <span className="truncate text-muted-foreground">{s.name}</span>
+                <span className="text-muted-foreground truncate">{s.name}</span>
                 <span className="font-medium">
                   {s.calories_burned != null
                     ? `${s.calories_burned.toLocaleString('pt-BR')} kcal`
                     : t('pages.planningDashboard.caloricSummary.noDuration')}
                   {s.duration_minutes != null && (
-                    <span className="ml-1 text-muted-foreground">
+                    <span className="text-muted-foreground ml-1">
                       ({s.duration_minutes}min)
                     </span>
                   )}

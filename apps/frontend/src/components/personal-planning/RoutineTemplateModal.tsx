@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
+import { membersService } from '@/services/members-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import { userRoutineTemplatesService } from '@/services/user-routine-templates-service';
@@ -65,33 +68,33 @@ function SystemTemplateList({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="gap-md flex flex-col">
       {templates.map((template) => {
         const TemplateIcon = getIconByName(template.icon);
         const isExpanded = expandedId === template.id;
         const isImporting = importingId === template.id;
 
         return (
-          <div key={template.id} className="rounded-lg border bg-card p-md">
-            <div className="flex items-start justify-between gap-sm">
-              <div className="flex items-center gap-sm">
+          <div key={template.id} className="bg-card p-md rounded-lg border">
+            <div className="gap-sm flex items-start justify-between">
+              <div className="gap-sm flex items-center">
                 {TemplateIcon && (
-                  <TemplateIcon className="h-5 w-5 shrink-0 text-primary" />
+                  <TemplateIcon className="text-primary h-5 w-5 shrink-0" />
                 )}
                 <div>
                   <p className="font-semibold">{template.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {template.description}
                   </p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-sm">
+              <div className="gap-sm flex shrink-0 items-center">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -120,16 +123,16 @@ function SystemTemplateList({
             </div>
 
             {isExpanded && (
-              <div className="mt-md flex flex-col gap-sm border-t pt-md">
+              <div className="mt-md gap-sm pt-md flex flex-col border-t">
                 {template.tasks.map((task, index) => {
                   const TaskIcon = getIconByName(task.icon ?? '');
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-sm rounded-md bg-muted/40 px-sm py-xs"
+                      className="gap-sm bg-muted/40 px-sm py-xs flex items-center rounded-md"
                     >
                       {TaskIcon ? (
-                        <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <TaskIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                       ) : (
                         <span className="h-4 w-4 shrink-0" />
                       )}
@@ -142,7 +145,7 @@ function SystemTemplateList({
                           { defaultValue: task.periodicity }
                         )}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {task.target_quantity} {task.unit}
                       </span>
                     </div>
@@ -176,19 +179,19 @@ function UserTemplateList({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   if (templates.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-sm py-12 text-center">
-        <User className="h-10 w-10 text-muted-foreground opacity-40" />
-        <p className="text-sm text-muted-foreground">
+      <div className="gap-sm flex flex-col items-center justify-center py-12 text-center">
+        <User className="text-muted-foreground h-10 w-10 opacity-40" />
+        <p className="text-muted-foreground text-sm">
           {t('pages.routineTasks.templates.noUserTemplates')}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {t('pages.routineTasks.templates.noUserTemplatesHint')}
         </p>
       </div>
@@ -196,32 +199,32 @@ function UserTemplateList({
   }
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="gap-md flex flex-col">
       {templates.map((template) => {
         const TemplateIcon = getIconByName(template.icon);
         const isExpanded = expandedId === template.id;
         const isImporting = importingId === template.id;
 
         return (
-          <div key={template.id} className="rounded-lg border bg-card p-md">
-            <div className="flex items-start justify-between gap-sm">
-              <div className="flex items-center gap-sm">
+          <div key={template.id} className="bg-card p-md rounded-lg border">
+            <div className="gap-sm flex items-start justify-between">
+              <div className="gap-sm flex items-center">
                 {TemplateIcon && (
-                  <TemplateIcon className="h-5 w-5 shrink-0 text-primary" />
+                  <TemplateIcon className="text-primary h-5 w-5 shrink-0" />
                 )}
                 <div>
                   <p className="font-semibold">{template.name}</p>
                   {template.description && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {template.description}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {template.task_count} {t('pages.routineTasks.templates.taskCount')}
                   </p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-sm">
+              <div className="gap-sm flex shrink-0 items-center">
                 {template.tasks.length > 0 && (
                   <Button
                     variant="ghost"
@@ -255,22 +258,22 @@ function UserTemplateList({
                   onClick={() => onDelete(template.id)}
                   title={t('common.actions.delete')}
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Trash2 className="text-destructive h-4 w-4" />
                 </Button>
               </div>
             </div>
 
             {isExpanded && template.tasks.length > 0 && (
-              <div className="mt-md flex flex-col gap-sm border-t pt-md">
+              <div className="mt-md gap-sm pt-md flex flex-col border-t">
                 {template.tasks.map((task, index) => {
                   const TaskIcon = getIconByName(task.icon ?? '');
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-sm rounded-md bg-muted/40 px-sm py-xs"
+                      className="gap-sm bg-muted/40 px-sm py-xs flex items-center rounded-md"
                     >
                       {TaskIcon ? (
-                        <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <TaskIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                       ) : (
                         <span className="h-4 w-4 shrink-0" />
                       )}
@@ -283,7 +286,7 @@ function UserTemplateList({
                           { defaultValue: task.periodicity }
                         )}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {task.target_quantity} {task.unit}
                       </span>
                     </div>
@@ -298,6 +301,9 @@ function UserTemplateList({
   );
 }
 
+const EMPTY_TEMPLATES: RoutineTemplate[] = [];
+const EMPTY_USER_TEMPLATES: UserRoutineTemplate[] = [];
+
 export function RoutineTemplateModal({
   open,
   onOpenChange,
@@ -306,14 +312,52 @@ export function RoutineTemplateModal({
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
+
+  const { data: member } = useQuery({
+    queryKey: ['current-member'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const ownerId = member?.id ?? 0;
+
   const [activeTab, setActiveTab] = useState('system');
 
-  const [templates, setTemplates] = useState<RoutineTemplate[]>([]);
-  const [isLoadingSystem, setIsLoadingSystem] = useState(false);
+  const { data: templates = EMPTY_TEMPLATES, isLoading: isLoadingSystem } = useQuery({
+    queryKey: ['routine-templates', 'system'],
+    queryFn: async () => {
+      try {
+        return await routineTemplatesService.getAll();
+      } catch (error: unknown) {
+        toast({
+          title: t('pages.routineTasks.templates.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+        return EMPTY_TEMPLATES;
+      }
+    },
+    enabled: open,
+  });
   const [importingSystemId, setImportingSystemId] = useState<string | null>(null);
 
-  const [userTemplates, setUserTemplates] = useState<UserRoutineTemplate[]>([]);
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const { data: userTemplates = EMPTY_USER_TEMPLATES, isLoading: isLoadingUser } =
+    useQuery({
+      queryKey: ['routine-templates', 'user'],
+      queryFn: async () => {
+        try {
+          return await userRoutineTemplatesService.getAll();
+        } catch (error: unknown) {
+          toast({
+            title: t('pages.routineTasks.templates.loadError'),
+            description: getErrorMessage(error),
+            variant: 'destructive',
+          });
+          return EMPTY_USER_TEMPLATES;
+        }
+      },
+      enabled: open,
+    });
   const [importingUserId, setImportingUserId] = useState<number | null>(null);
 
   // Create template state
@@ -325,46 +369,6 @@ export function RoutineTemplateModal({
   const [isLoadingAllTasks, setIsLoadingAllTasks] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [taskSearch, setTaskSearch] = useState('');
-
-  useEffect(() => {
-    if (open) {
-      void loadSystemTemplates();
-      void loadUserTemplates();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  const loadSystemTemplates = async () => {
-    try {
-      setIsLoadingSystem(true);
-      const data = await routineTemplatesService.getAll();
-      setTemplates(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.templates.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingSystem(false);
-    }
-  };
-
-  const loadUserTemplates = async () => {
-    try {
-      setIsLoadingUser(true);
-      const data = await userRoutineTemplatesService.getAll();
-      setUserTemplates(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.routineTasks.templates.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingUser(false);
-    }
-  };
 
   const handleImportSystem = async (template: RoutineTemplate) => {
     setImportingSystemId(template.id);
@@ -491,8 +495,12 @@ export function RoutineTemplateModal({
         name: newName.trim(),
         description: newDesc.trim() || undefined,
         tasks,
+        owner: ownerId,
       });
-      setUserTemplates((prev) => [created, ...prev]);
+      queryClient.setQueryData<UserRoutineTemplate[]>(
+        ['routine-templates', 'user'],
+        (prev = EMPTY_USER_TEMPLATES) => [created, ...prev]
+      );
       setShowCreateDialog(false);
       toast({
         title: t('pages.routineTasks.templates.createSuccess'),
@@ -523,7 +531,10 @@ export function RoutineTemplateModal({
     if (!confirmed) return;
     try {
       await userRoutineTemplatesService.delete(id);
-      setUserTemplates((prev) => prev.filter((t) => t.id !== id));
+      queryClient.setQueryData<UserRoutineTemplate[]>(
+        ['routine-templates', 'user'],
+        (prev = EMPTY_USER_TEMPLATES) => prev.filter((t) => t.id !== id)
+      );
       toast({ title: t('pages.routineTasks.templates.deleted') });
     } catch (error: unknown) {
       toast({
@@ -575,7 +586,7 @@ export function RoutineTemplateModal({
               <TabsTrigger value="user" className="flex-1">
                 {t('pages.routineTasks.templates.myTab')}
                 {userTemplates.length > 0 && (
-                  <span className="ml-xs rounded-full bg-primary/15 px-xs text-xs text-primary">
+                  <span className="ml-xs bg-primary/15 px-xs text-primary rounded-full text-xs">
                     {userTemplates.length}
                   </span>
                 )}
@@ -618,9 +629,9 @@ export function RoutineTemplateModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex flex-col gap-md">
+          <div className="gap-md flex flex-col">
             {/* Name */}
-            <div className="flex flex-col gap-xs">
+            <div className="gap-xs flex flex-col">
               <label className="text-sm font-medium">
                 {t('pages.routineTasks.templates.templateNameLabel')}
               </label>
@@ -633,7 +644,7 @@ export function RoutineTemplateModal({
             </div>
 
             {/* Description */}
-            <div className="flex flex-col gap-xs">
+            <div className="gap-xs flex flex-col">
               <label className="text-sm font-medium">
                 {t('pages.routineTasks.templates.templateDescLabel')}
               </label>
@@ -646,11 +657,11 @@ export function RoutineTemplateModal({
             </div>
 
             {/* Task selection */}
-            <div className="flex flex-col gap-xs">
+            <div className="gap-xs flex flex-col">
               <label className="text-sm font-medium">
                 {t('pages.routineTasks.templates.selectTasksLabel')}
                 {selectedTaskIds.size > 0 && (
-                  <span className="ml-sm text-xs font-normal text-muted-foreground">
+                  <span className="ml-sm text-muted-foreground text-xs font-normal">
                     ({selectedTaskIds.size}{' '}
                     {t('pages.routineTasks.templates.taskCount')})
                   </span>
@@ -661,32 +672,32 @@ export function RoutineTemplateModal({
                 onChange={(e) => setTaskSearch(e.target.value)}
                 placeholder={t('pages.routineTasks.templates.searchTasksPlaceholder')}
               />
-              <div className="custom-scrollbar max-h-52 overflow-y-auto rounded-lg border bg-muted/20 p-sm">
+              <div className="custom-scrollbar bg-muted/20 p-sm max-h-52 overflow-y-auto rounded-lg border">
                 {isLoadingAllTasks ? (
-                  <div className="flex items-center justify-center py-md">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <div className="py-md flex items-center justify-center">
+                    <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
                   </div>
                 ) : filteredTasks.length === 0 ? (
-                  <p className="py-md text-center text-sm text-muted-foreground">
+                  <p className="py-md text-muted-foreground text-center text-sm">
                     {t('pages.routineTasks.templates.noTasksAvailable')}
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-xs">
+                  <div className="gap-xs flex flex-col">
                     {filteredTasks.map((task) => {
                       const TaskIcon = getIconByName(task.icon ?? '');
                       return (
                         <label
                           key={task.id}
-                          className="flex cursor-pointer items-center gap-sm rounded-md px-sm py-xs transition-colors hover:bg-accent/20"
+                          className="gap-sm px-sm py-xs hover:bg-accent/20 flex cursor-pointer items-center rounded-md transition-colors"
                         >
                           <input
                             type="checkbox"
                             checked={selectedTaskIds.has(task.id)}
                             onChange={() => toggleTaskSelection(task.id)}
-                            className="h-4 w-4 rounded border-input accent-primary"
+                            className="border-input accent-primary h-4 w-4 rounded"
                           />
                           {TaskIcon ? (
-                            <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <TaskIcon className="text-muted-foreground h-4 w-4 shrink-0" />
                           ) : (
                             <span className="h-4 w-4 shrink-0" />
                           )}
@@ -705,7 +716,7 @@ export function RoutineTemplateModal({
             </div>
           </div>
 
-          <div className="flex justify-end gap-sm pt-sm">
+          <div className="gap-sm pt-sm flex justify-end">
             <Button
               variant="outline"
               onClick={() => setShowCreateDialog(false)}

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -20,11 +20,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate } from '@/lib/utils';
-import type { WorkoutDay } from '@/types/workout';
+import type { WorkoutDay, WorkoutSession } from '@/types/workout';
 
 const LOAD_UNITS = ['kg', 'lb'] as const;
 
 interface SessionSetValues {
+  id?: number;
   set_number: number;
   load: string;
   load_unit: string;
@@ -34,6 +35,7 @@ interface SessionSetValues {
 }
 
 interface SessionExerciseValues {
+  id?: number;
   exercise_name: string;
   sets_target: number;
   reps_target_min: number;
@@ -54,6 +56,7 @@ interface WorkoutSessionFormValues {
 interface WorkoutSessionFormProps {
   workoutDays: WorkoutDay[];
   ownerId: number;
+  session?: WorkoutSession;
   onSubmit: (data: WorkoutSessionFormValues) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -73,6 +76,7 @@ function newSet(setNumber: number): SessionSetValues {
 export function WorkoutSessionForm({
   workoutDays,
   ownerId: _ownerId,
+  session,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -84,25 +88,62 @@ export function WorkoutSessionForm({
 
   const { register, handleSubmit, control, watch, setValue } =
     useForm<WorkoutSessionFormValues>({
-      defaultValues: {
-        workout_day: '',
-        date: today,
-        started_at: '',
-        finished_at: '',
-        notes: '',
-        exercises: [],
-      },
+      defaultValues: session
+        ? {
+            workout_day: session.workout_day ? String(session.workout_day) : '',
+            date: session.date,
+            started_at: session.started_at ?? '',
+            finished_at: session.finished_at ?? '',
+            notes: session.notes ?? '',
+            exercises: [...session.session_exercises]
+              .sort((a, b) => a.order - b.order)
+              .map((ex) => ({
+                id: ex.id,
+                exercise_name: ex.exercise_name,
+                sets_target: ex.sets_target,
+                reps_target_min: ex.reps_target_min,
+                reps_target_max: ex.reps_target_max,
+                order: ex.order,
+                sets: [...ex.sets]
+                  .sort((a, b) => a.set_number - b.set_number)
+                  .map((s) => ({
+                    id: s.id,
+                    set_number: s.set_number,
+                    load: s.load ?? '',
+                    load_unit: s.load_unit,
+                    reps_done: s.reps_done != null ? String(s.reps_done) : '',
+                    completed: s.completed,
+                    notes: s.notes ?? '',
+                  })),
+              })),
+          }
+        : {
+            workout_day: '',
+            date: today,
+            started_at: '',
+            finished_at: '',
+            notes: '',
+            exercises: [],
+          },
     });
 
   const {
     fields: exerciseFields,
     append: appendExercise,
     remove: removeExercise,
-  } = useFieldArray({ control, name: 'exercises' });
+  } = useFieldArray({ control, name: 'exercises', keyName: 'fieldKey' });
 
   const selectedDayId = watch('workout_day');
 
+  // Skip on initial mount so editing a session doesn't get its loaded
+  // sets/reps clobbered by the workout day's template — this effect should
+  // only react to the user explicitly changing the day dropdown afterwards.
+  const didMountRef = useRef(false);
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     if (selectedDayId) {
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
@@ -132,7 +173,7 @@ export function WorkoutSessionForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.workoutSessions.sectionSession')}>
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
             <DatePicker
@@ -167,7 +208,7 @@ export function WorkoutSessionForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div className="space-y-sm">
             <Label>{t('pages.workoutSessions.startTime')}</Label>
             <TimePicker
@@ -208,10 +249,10 @@ export function WorkoutSessionForm({
           </Button>
         </div>
 
-        <div className="max-h-80 space-y-sm overflow-y-auto pr-1">
+        <div className="space-y-sm max-h-80 overflow-y-auto pr-1">
           {exerciseFields.map((exField, exIdx) => (
             <ExerciseBlock
-              key={exField.id}
+              key={exField.fieldKey}
               exIdx={exIdx}
               control={control}
               register={register}
@@ -234,7 +275,7 @@ export function WorkoutSessionForm({
         />
       </div>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -273,11 +314,12 @@ function ExerciseBlock({
   } = useFieldArray({
     control,
     name: `exercises.${exIdx}.sets`,
+    keyName: 'fieldKey',
   });
 
   return (
-    <div className="space-y-sm rounded-md border-l-2 border-category-exercise bg-card p-sm">
-      <div className="flex items-center gap-sm">
+    <div className="space-y-sm border-category-exercise bg-card p-sm rounded-md border-l-2">
+      <div className="gap-sm flex items-center">
         <Input
           className="flex-1"
           placeholder={t('pages.workoutSessions.exerciseNamePlaceholder')}
@@ -287,7 +329,7 @@ function ExerciseBlock({
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 text-destructive"
+          className="text-destructive shrink-0"
           onClick={onRemove}
         >
           <Trash2 className="h-4 w-4" />
@@ -295,7 +337,7 @@ function ExerciseBlock({
       </div>
 
       <div className="space-y-xs">
-        <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] gap-xs px-xs text-xs font-medium text-muted-foreground">
+        <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[2rem_1fr_1fr_1fr_2rem] text-xs font-medium">
           <span>{t('pages.workoutSessions.setNumber')}</span>
           <span>{t('pages.workoutSessions.load')}</span>
           <span>{t('pages.workoutSessions.loadUnit')}</span>
@@ -304,10 +346,10 @@ function ExerciseBlock({
         </div>
         {setFields.map((setField, sIdx) => (
           <div
-            key={setField.id}
-            className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center gap-xs"
+            key={setField.fieldKey}
+            className="gap-xs grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center"
           >
-            <span className="text-center text-xs font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-center text-xs font-medium">
               {sIdx + 1}
             </span>
             <Input
@@ -343,7 +385,7 @@ function ExerciseBlock({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive h-7 w-7"
               onClick={() => removeSet(sIdx)}
             >
               <Trash2 className="h-3 w-3" />
@@ -354,7 +396,7 @@ function ExerciseBlock({
           type="button"
           variant="ghost"
           size="sm"
-          className="w-full text-xs text-muted-foreground"
+          className="text-muted-foreground w-full text-xs"
           onClick={() => appendSet(newSet(setFields.length + 1))}
         >
           <Plus className="mr-1 h-3 w-3" />

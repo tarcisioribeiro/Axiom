@@ -22,6 +22,7 @@ from rest_framework.views import APIView
 
 from admin_panel.models import SystemConfig
 from admin_panel.serializers import SystemConfigSerializer
+from app.request_utils import request_data
 from security.models import ActivityLog
 from security.serializers import ActivityLogSerializer
 from storage.health import check_storage
@@ -132,7 +133,7 @@ class SystemConfigDetailView(AdminBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        value = request.data.get("value")
+        value = request_data(request).get("value")
         if value is None:
             return Response(
                 {"error": "Campo 'value' é obrigatório."},
@@ -195,14 +196,27 @@ def _check_ollama() -> dict[str, Any]:
         or getattr(settings, "OLLAMA_BASE_URL", "")
         or os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
     )
+
+    try:
+        from agents.core.circuit_breaker import ollama_circuit
+
+        if ollama_circuit.is_open:
+            return {
+                "status": "unhealthy",
+                "message": "Circuito aberto após falhas consecutivas",
+                "message_key": "circuit_breaker_open",
+            }
+    except Exception:
+        # Best-effort: a falha ao importar o breaker nunca deve impedir o
+        # health check de rodar.
+        pass
+
     try:
         req = urllib.request.Request(
             f"{base_url}/api/tags",
             headers={"Accept": "application/json"},
         )
         with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310
-            import json
-
             data = json.loads(resp.read())
             models = [m["name"] for m in data.get("models", [])]
             return {
@@ -212,10 +226,55 @@ def _check_ollama() -> dict[str, Any]:
                 "model_count": len(models),
                 "models": models,
             }
+    except _sock.timeout:
+        return {
+            "status": "unhealthy",
+            "message": "Tempo limite excedido ao conectar ao Ollama",
+            "message_key": "ollama_timeout",
+        }
+    except urllib.error.HTTPError as e:
+        return {
+            "status": "unhealthy",
+            "message": f"Erro HTTP {e.code}",
+            "message_key": "ollama_http_error",
+        }
     except urllib.error.URLError as e:
-        return {"status": "unhealthy", "message": f"Inacessível: {e.reason}"}
+        reason = e.reason
+        if isinstance(reason, _sock.gaierror):
+            return {
+                "status": "unhealthy",
+                "message": "Falha ao resolver o host do Ollama (DNS)",
+                "message_key": "ollama_dns_failure",
+            }
+        if isinstance(reason, ConnectionRefusedError):
+            return {
+                "status": "unhealthy",
+                "message": "Conexão recusada pelo host do Ollama",
+                "message_key": "ollama_connection_refused",
+            }
+        if isinstance(reason, (_sock.timeout, TimeoutError)):
+            return {
+                "status": "unhealthy",
+                "message": "Tempo limite excedido ao conectar ao Ollama",
+                "message_key": "ollama_timeout",
+            }
+        return {
+            "status": "unhealthy",
+            "message": f"Inacessível: {reason}",
+            "message_key": "ollama_unreachable",
+        }
+    except (ValueError, KeyError):
+        return {
+            "status": "unhealthy",
+            "message": "Resposta inválida do Ollama",
+            "message_key": "ollama_invalid_response",
+        }
     except Exception as e:
-        return {"status": "unhealthy", "message": str(e)}
+        return {
+            "status": "unhealthy",
+            "message": str(e),
+            "message_key": "ollama_unknown_error",
+        }
 
 
 def _check_disk() -> dict[str, Any]:
@@ -454,7 +513,7 @@ class AdminEmailTestView(AdminBaseView):
     """POST /api/v1/admin/email/test/ — envia email de teste."""
 
     def post(self, request: Request) -> Response:
-        to_email = request.data.get("to_email")
+        to_email = request_data(request).get("to_email")
         if not to_email:
             return Response(
                 {"error": "Campo 'to_email' é obrigatório."},
@@ -637,7 +696,7 @@ class AdminRestartAllView(AdminBaseView):
     """
 
     def post(self, request: Request) -> Response:
-        mode = (request.data.get("mode") or "auto").lower()
+        mode = (request_data(request).get("mode") or "auto").lower()
 
         if mode == "docker":
             result = _restart_via_docker_socket()
