@@ -114,14 +114,14 @@ export default function Home() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-sm">
+          <CardTitle className="gap-sm flex items-center">
             <LayoutDashboard className="h-5 w-5" />
             {t('pages.home.quickActionsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
-            className="grid grid-cols-2 gap-md md:grid-cols-3 lg:grid-cols-6"
+            className="gap-md grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -130,9 +130,9 @@ export default function Home() {
               <motion.div key={action.href} variants={itemVariants}>
                 <Link
                   to={action.href}
-                  className="flex flex-col items-center justify-center gap-sm rounded-lg border border-border p-md transition-all hover:scale-105 hover:border-primary hover:bg-accent"
+                  className="gap-sm border-border p-md hover:border-primary hover:bg-accent flex flex-col items-center justify-center rounded-lg border transition-all hover:scale-105"
                 >
-                  <div className="rounded-full bg-primary/10 p-3 text-primary">
+                  <div className="bg-primary/10 text-primary rounded-full p-3">
                     {action.icon}
                   </div>
                   <span className="text-center text-sm font-medium">
@@ -149,7 +149,7 @@ export default function Home() {
       <div className="space-y-lg">
         <PageHeader title={t('pages.home.modulesTitle')} />
         <motion.div
-          className="grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-4"
+          className="gap-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -163,7 +163,7 @@ export default function Home() {
                   module: module.title,
                 })}
               >
-                <Card className="h-full border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl">
+                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-xl">
                   <CardHeader>
                     <motion.div
                       className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-md flex items-center justify-center text-white`}
@@ -177,8 +177,8 @@ export default function Home() {
                   <CardContent>
                     <ul className="space-y-sm">
                       {module.features.map((feature) => (
-                        <li key={feature} className="flex items-center gap-sm text-sm">
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <li key={feature} className="gap-sm flex items-center text-sm">
+                          <div className="bg-primary h-1.5 w-1.5 rounded-full" />
                           {feature}
                         </li>
                       ))}
@@ -193,34 +193,34 @@ export default function Home() {
 
       {/* Knowledge Graph Widget */}
       <Link to="/library/knowledge-graph" className="block">
-        <Card className="border-primary/20 transition-all hover:border-primary hover:shadow-md">
+        <Card className="border-primary/20 hover:border-primary transition-all hover:shadow-md">
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm font-medium">
-              <GitFork className="h-4 w-4 text-primary" />
+            <CardTitle className="gap-sm flex items-center text-sm font-medium">
+              <GitFork className="text-primary h-4 w-4" />
               {t('pages.home.knowledgeGraph.title')}
-              <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+              <ExternalLink className="text-muted-foreground ml-auto h-3.5 w-3.5" />
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-lg">
-              <div className="flex flex-col gap-xs">
+            <div className="gap-lg flex items-center">
+              <div className="gap-xs flex flex-col">
                 <span className="text-2xl font-bold">
                   {graphData?.nodes?.length ?? '—'}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.home.knowledgeGraph.nodes')}
                 </span>
               </div>
-              <div className="h-8 w-px bg-border" />
-              <div className="flex flex-col gap-xs">
+              <div className="bg-border h-8 w-px" />
+              <div className="gap-xs flex flex-col">
                 <span className="text-2xl font-bold">
                   {graphData?.links?.length ?? '—'}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {t('pages.home.knowledgeGraph.links')}
                 </span>
               </div>
-              <p className="ml-auto text-xs text-muted-foreground">
+              <p className="text-muted-foreground ml-auto text-xs">
                 {t('pages.home.knowledgeGraph.desc')}
               </p>
             </div>
@@ -230,16 +230,16 @@ export default function Home() {
 
       {/* Info Cards */}
       <motion.div
-        className="grid grid-cols-1 gap-md md:grid-cols-3"
+        className="gap-md grid grid-cols-1 md:grid-cols-3"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
         <motion.div variants={itemVariants}>
-          <Card className="border-success/20 bg-gradient-to-br from-success/10 to-success/20">
+          <Card className="border-success/20 from-success/10 to-success/20 bg-gradient-to-br">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-success">
+              <CardTitle className="gap-sm text-success flex items-center">
                 <Wallet className="h-5 w-5" />
                 {t('pages.home.infoCards.financeTitle')}
               </CardTitle>
@@ -251,9 +251,9 @@ export default function Home() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="border-info/20 bg-gradient-to-br from-info/10 to-primary/20">
+          <Card className="border-info/20 from-info/10 to-primary/20 bg-gradient-to-br">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-info">
+              <CardTitle className="gap-sm text-info flex items-center">
                 <Lock className="h-5 w-5" />
                 {t('pages.home.infoCards.securityTitle')}
               </CardTitle>
@@ -265,9 +265,9 @@ export default function Home() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-accent/20">
+          <Card className="border-primary/20 from-primary/10 to-accent/20 bg-gradient-to-br">
             <CardHeader>
-              <CardTitle className="flex items-center gap-sm text-primary">
+              <CardTitle className="gap-sm text-primary flex items-center">
                 <BookMarked className="h-5 w-5" />
                 {t('pages.home.infoCards.knowledgeTitle')}
               </CardTitle>

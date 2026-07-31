@@ -111,7 +111,7 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
 
   return (
     <div className="space-y-xs">
-      <div className="flex gap-xs">
+      <div className="gap-xs flex">
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
@@ -226,7 +226,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
     <>
       <div
         className={cn(
-          'flex items-center gap-sm rounded-md px-sm py-xs text-xs',
+          'gap-sm px-sm py-xs flex items-center rounded-md text-xs',
           isWarning
             ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
             : 'bg-muted text-muted-foreground'
@@ -276,7 +276,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -287,7 +287,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                 </button>
               </div>
             </div>
-            <div className="flex justify-end gap-sm">
+            <div className="gap-sm flex justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -366,8 +366,8 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
     <div className="flex min-h-[60vh] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Shield className="h-8 w-8 text-primary" />
+          <div className="mb-md bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+            <Shield className="text-primary h-8 w-8" />
           </div>
           <CardTitle className="text-2xl">
             {t('pages.vaultGuard.setup.title')}
@@ -376,17 +376,17 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
-            <div className="rounded-lg bg-warning/10 p-sm text-xs text-warning">
-              <div className="flex items-start gap-sm">
+            <div className="bg-warning/10 p-sm text-warning rounded-lg text-xs">
+              <div className="gap-sm flex items-start">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
               </div>
-              <label className="mt-sm flex cursor-pointer items-start gap-sm">
+              <label className="mt-sm gap-sm flex cursor-pointer items-start">
                 <input
                   type="checkbox"
                   checked={acknowledged}
                   onChange={(e) => setAcknowledged(e.target.checked)}
-                  className="mt-0.5 h-3.5 w-3.5 accent-warning"
+                  className="accent-warning mt-0.5 h-3.5 w-3.5"
                 />
                 <span className="select-none">
                   {t('pages.vaultGuard.setup.irreversibleAck')}
@@ -411,7 +411,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -425,7 +425,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                 <PasswordStrengthIndicator password={masterPassword} />
               )}
               {isWeakPassword && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.vaultGuard.setup.passwordHint')}
                 </p>
               )}
@@ -445,7 +445,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                 minLength={8}
               />
               {confirmPassword && masterPassword !== confirmPassword && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {t('pages.vaultGuard.setup.passwordsMismatchShort')}
                 </p>
               )}
@@ -519,8 +519,8 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
     <div className="flex min-h-[60vh] items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <Lock className="h-8 w-8 text-muted-foreground" />
+          <div className="mb-md bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+            <Lock className="text-muted-foreground h-8 w-8" />
           </div>
           <CardTitle className="text-2xl">
             {t('pages.vaultGuard.locked.title')}
@@ -545,7 +545,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -558,13 +558,13 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
             </div>
 
             {failedAttempts > 0 && !isLocked && (
-              <div className="flex items-center gap-sm rounded-lg bg-warning/10 px-sm py-xs text-xs text-warning">
+              <div className="gap-sm bg-warning/10 px-sm py-xs text-warning flex items-center rounded-lg text-xs">
                 <AlertTriangle className="h-3 w-3 shrink-0" />
                 {t('pages.vaultGuard.locked.attemptsRemaining', { count: remaining })}
               </div>
             )}
             {isLocked && (
-              <div className="flex items-center gap-sm rounded-lg bg-destructive/10 px-sm py-xs text-xs text-destructive">
+              <div className="gap-sm bg-destructive/10 px-sm py-xs text-destructive flex items-center rounded-lg text-xs">
                 <AlertTriangle className="h-3 w-3 shrink-0" />
                 {t('pages.vaultGuard.locked.tooManyAttempts')}
               </div>
@@ -583,7 +583,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
             <button
               type="button"
               onClick={() => setShowRecovery(true)}
-              className="flex w-full items-center justify-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+              className="gap-xs text-muted-foreground hover:text-primary flex w-full items-center justify-center text-xs transition-colors"
             >
               <Key className="h-3 w-3" />
               {t('pages.vaultGuard.locked.useRecoveryKey')}
@@ -639,7 +639,7 @@ function VaultRecoveryKeyModalInline({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <Card className="mx-md w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-sm text-base">
+          <CardTitle className="gap-sm flex items-center text-base">
             <Key className="h-4 w-4" />
             {t('pages.security.recoveryKey.useTitle')}
           </CardTitle>
@@ -655,7 +655,7 @@ function VaultRecoveryKeyModalInline({
               if (e.key === 'Enter') void handleUnlock();
             }}
           />
-          <div className="flex gap-sm">
+          <div className="gap-sm flex">
             <Button variant="outline" className="flex-1" onClick={onClose}>
               {t('common.actions.cancel')}
             </Button>
@@ -701,7 +701,7 @@ function VaultKeyboardShortcutsPanel({
     >
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
+          <DialogTitle className="gap-sm flex items-center">
             <Keyboard className="h-4 w-4" />
             {t('pages.vaultGuard.shortcuts.title')}
           </DialogTitle>
@@ -710,19 +710,19 @@ function VaultKeyboardShortcutsPanel({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-sm">
-          <div className="flex items-center justify-between rounded-md border px-sm py-xs">
-            <span className="text-sm text-muted-foreground">
+          <div className="px-sm py-xs flex items-center justify-between rounded-md border">
+            <span className="text-muted-foreground text-sm">
               {t('pages.vaultGuard.shortcuts.lockVault')}
             </span>
-            <kbd className="rounded bg-muted px-xs py-0.5 font-mono text-xs">
+            <kbd className="bg-muted px-xs rounded py-0.5 font-mono text-xs">
               Ctrl+L
             </kbd>
           </div>
-          <div className="flex items-center justify-between rounded-md border px-sm py-xs">
-            <span className="text-sm text-muted-foreground">
+          <div className="px-sm py-xs flex items-center justify-between rounded-md border">
+            <span className="text-muted-foreground text-sm">
               {t('pages.vaultGuard.shortcuts.showShortcuts')}
             </span>
-            <kbd className="rounded bg-muted px-xs py-0.5 font-mono text-xs">?</kbd>
+            <kbd className="bg-muted px-xs rounded py-0.5 font-mono text-xs">?</kbd>
           </div>
         </div>
       </DialogContent>
@@ -764,12 +764,12 @@ export function VaultGuard({ children }: VaultGuardProps) {
 
   return (
     <>
-      <div className="mb-sm flex items-center justify-end gap-sm">
+      <div className="mb-sm gap-sm flex items-center justify-end">
         {status.expires_at && <VaultExpiryBadge expiresAt={status.expires_at} />}
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-xs px-sm text-xs text-muted-foreground"
+          className="gap-xs px-sm text-muted-foreground h-7 text-xs"
           onClick={() => setShowShortcuts(true)}
           title={t('pages.vaultGuard.shortcuts.button')}
         >

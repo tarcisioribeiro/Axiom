@@ -300,8 +300,8 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     const barColor =
       rate >= 80 ? 'bg-success' : rate >= 50 ? 'bg-warning' : 'bg-destructive';
     return (
-      <div className="flex w-28 items-center gap-sm">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+      <div className="gap-sm flex w-28 items-center">
+        <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
           <div
             className={cn('h-full rounded-full transition-all', barColor)}
             style={{ width: `${Math.min(rate, 100)}%` }}
@@ -339,9 +339,9 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       render: (task) => {
         const TaskIcon = getIconByName(task.icon);
         return (
-          <div className="flex items-center gap-sm font-medium">
+          <div className="gap-sm flex items-center font-medium">
             {TaskIcon && (
-              <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <TaskIcon className="text-muted-foreground h-4 w-4 shrink-0" />
             )}
             <span>{task.name}</span>
           </div>
@@ -424,7 +424,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       label: t('common.table.actions'),
       align: 'center',
       render: (task) => (
-        <div className="flex justify-center gap-sm">
+        <div className="gap-sm flex justify-center">
           <Button
             variant="ghost"
             size="icon"
@@ -444,7 +444,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
             aria-label={t('pages.routineTasks.templates.saveAsTemplate')}
             title={t('pages.routineTasks.templates.saveAsTemplate')}
           >
-            <Save className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <Save className="text-muted-foreground h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -462,7 +462,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
             aria-label={t('common.actions.delete')}
             title={t('common.actions.delete')}
           >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       ),
@@ -476,7 +476,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   return (
     <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -638,7 +638,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       >
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
+            <DialogTitle className="gap-sm flex items-center">
               <BarChart2 className="h-5 w-5" />
               {t('pages.routineTasks.heatmapConsistency')} — {heatmapTask?.name}
             </DialogTitle>

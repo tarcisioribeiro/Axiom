@@ -62,20 +62,16 @@ export default function Journey() {
   const completedGoals = (goals ?? []).filter((g) => g.status === 'completed');
 
   const events: TimelineEvent[] = [
-    ...(badges ?? []).map(
-      (b): TimelineEvent => ({
-        kind: 'badge',
-        date: b.awarded_at,
-        badge: b,
-      })
-    ),
-    ...completedGoals.map(
-      (g): TimelineEvent => ({
-        kind: 'goal',
-        date: g.updated_at,
-        goal: g,
-      })
-    ),
+    ...(badges ?? []).map((b): TimelineEvent => ({
+      kind: 'badge',
+      date: b.awarded_at,
+      badge: b,
+    })),
+    ...completedGoals.map((g): TimelineEvent => ({
+      kind: 'goal',
+      date: g.updated_at,
+      goal: g,
+    })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   if (isLoading) {
@@ -94,7 +90,7 @@ export default function Journey() {
         <PageHeader title={t('pages.journey.title')} icon={<Trophy />} />
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+        <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
           <StatCard
             title={t('pages.journey.badgesEarned')}
             value={badges?.length ?? 0}
@@ -117,11 +113,11 @@ export default function Journey() {
           />
         </div>
 
-        <div className="grid gap-lg lg:grid-cols-3">
+        <div className="gap-lg grid lg:grid-cols-3">
           {/* Badge gallery */}
           <Card>
             <CardHeader className="pb-sm">
-              <CardTitle className="flex items-center gap-sm text-base">
+              <CardTitle className="gap-sm flex items-center text-base">
                 <Star className="h-4 w-4 text-yellow-500" />
                 {t('pages.journey.badgesTitle')}
               </CardTitle>
@@ -133,11 +129,11 @@ export default function Journey() {
                   description={t('pages.journey.noBadgesDesc')}
                 />
               ) : (
-                <div className="grid grid-cols-2 gap-sm">
+                <div className="gap-sm grid grid-cols-2">
                   {(badges ?? []).map((b) => (
                     <div
                       key={b.id}
-                      className={`flex flex-col items-center rounded-lg border p-sm text-center ${BADGE_LEVEL_COLORS[b.level] ?? ''}`}
+                      className={`p-sm flex flex-col items-center rounded-lg border text-center ${BADGE_LEVEL_COLORS[b.level] ?? ''}`}
                     >
                       <span className="text-2xl">
                         {BADGE_LEVEL_ICONS[b.level] ?? '🏅'}
@@ -156,8 +152,8 @@ export default function Journey() {
           {/* Timeline */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-sm">
-              <CardTitle className="flex items-center gap-sm text-base">
-                <Trophy className="h-4 w-4 text-primary" />
+              <CardTitle className="gap-sm flex items-center text-base">
+                <Trophy className="text-primary h-4 w-4" />
                 {t('pages.journey.timelineTitle')}
               </CardTitle>
             </CardHeader>
@@ -168,21 +164,21 @@ export default function Journey() {
                   description={t('pages.journey.noEventsDesc')}
                 />
               ) : (
-                <ol className="relative border-l border-border/50 pl-lg">
+                <ol className="border-border/50 pl-lg relative border-l">
                   {events.map((ev, idx) => (
                     <li key={idx} className="mb-md ml-sm last:mb-0">
-                      <div className="absolute -left-1.5 mt-xs h-3 w-3 rounded-full border bg-background">
+                      <div className="mt-xs bg-background absolute -left-1.5 h-3 w-3 rounded-full border">
                         {ev.kind === 'badge' ? (
-                          <span className="absolute -left-0.5 -top-0.5 text-[10px]">
+                          <span className="absolute -top-0.5 -left-0.5 text-[10px]">
                             🏅
                           </span>
                         ) : (
-                          <span className="absolute -left-0.5 -top-0.5 text-[10px]">
+                          <span className="absolute -top-0.5 -left-0.5 text-[10px]">
                             ✅
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {formatDate(ev.date)}
                       </p>
                       {ev.kind === 'badge' ? (

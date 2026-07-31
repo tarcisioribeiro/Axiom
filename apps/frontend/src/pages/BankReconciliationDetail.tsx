@@ -103,7 +103,7 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status]}`}
+      className={`px-sm inline-flex items-center rounded-full border py-0.5 text-xs font-medium ${variants[status]}`}
     >
       {labels[status] ?? status}
     </span>
@@ -289,7 +289,7 @@ export default function BankReconciliationDetail() {
       render: (entry) => {
         const isDebit = entry.transaction_type === 'debit';
         return (
-          <div className="flex items-center gap-xs">
+          <div className="gap-xs flex items-center">
             <span
               className={cn('text-xs', isDebit ? 'text-destructive' : 'text-success')}
             >
@@ -350,7 +350,7 @@ export default function BankReconciliationDetail() {
         const isDebit = entry.transaction_type === 'debit';
 
         return (
-          <div className="flex flex-wrap gap-xs">
+          <div className="gap-xs flex flex-wrap">
             {/* Matched entries: show unmatch button */}
             {entry.status === 'matched' && (
               <Button
@@ -466,7 +466,7 @@ export default function BankReconciliationDetail() {
 
   return (
     <PageContainer>
-      <div className="mb-lg flex items-center gap-md">
+      <div className="mb-lg gap-md flex items-center">
         <Button
           variant="ghost"
           size="sm"
@@ -494,7 +494,7 @@ export default function BankReconciliationDetail() {
       />
 
       {/* Progress bar */}
-      <div className="mb-md rounded-lg border bg-card p-md">
+      <div className="mb-md bg-card p-md rounded-lg border">
         <div className="mb-sm flex items-center justify-between">
           <span className="text-sm font-medium">
             {t('pages.bankReconciliation.detail.progress')}
@@ -506,13 +506,13 @@ export default function BankReconciliationDetail() {
             })}
           </span>
         </div>
-        <div className="h-3 overflow-hidden rounded-full bg-muted">
+        <div className="bg-muted h-3 overflow-hidden rounded-full">
           <div
-            className="h-full rounded-full bg-success transition-all"
+            className="bg-success h-full rounded-full transition-all"
             style={{ width: `${reconciliationPct}%` }}
           />
         </div>
-        <div className="mt-sm flex gap-md text-xs text-muted-foreground">
+        <div className="mt-sm gap-md text-muted-foreground flex text-xs">
           <span className="text-success">
             {t('pages.bankReconciliation.detail.matchedCount', {
               count: importData.matched_count,
@@ -534,7 +534,7 @@ export default function BankReconciliationDetail() {
         </div>
       </div>
 
-      <div className="mb-lg mt-lg grid grid-cols-2 gap-md sm:grid-cols-4">
+      <div className="mb-lg mt-lg gap-md grid grid-cols-2 sm:grid-cols-4">
         <StatCard
           title={t('pages.bankReconciliation.detail.matched')}
           value={importData.matched_count}
@@ -556,9 +556,9 @@ export default function BankReconciliationDetail() {
         />
       </div>
 
-      <div className="mb-md flex items-center gap-md">
+      <div className="mb-md gap-md flex items-center">
         <Badge variant="outline">{importData.file_format.toUpperCase()}</Badge>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           {t('pages.bankReconciliation.detail.entryInfo', {
             total: importData.total_entries,
             date: formatDate(importData.created_at),
@@ -594,7 +594,7 @@ export default function BankReconciliationDetail() {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
+            <DialogTitle className="gap-sm flex items-center">
               <Link2 className="h-4 w-4" />
               {t('pages.bankReconciliation.detail.dialogTitle')}
             </DialogTitle>
@@ -606,7 +606,7 @@ export default function BankReconciliationDetail() {
           </DialogHeader>
 
           {matchingEntry && (
-            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+            <div className="bg-muted/30 rounded-md border p-3 text-sm">
               <p className="font-medium">{matchingEntry.description}</p>
               <p className="mt-xs text-muted-foreground">
                 {formatDate(matchingEntry.date)} ·{' '}
@@ -625,7 +625,7 @@ export default function BankReconciliationDetail() {
           )}
 
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               className="pl-xl"
               placeholder={
@@ -638,13 +638,13 @@ export default function BankReconciliationDetail() {
             />
           </div>
 
-          <div className="max-h-72 space-y-sm overflow-y-auto">
+          <div className="space-y-sm max-h-72 overflow-y-auto">
             {candidateLoading ? (
-              <p className="py-md text-center text-sm text-muted-foreground">
+              <p className="py-md text-muted-foreground text-center text-sm">
                 {t('common.actions.loading')}
               </p>
             ) : candidates.length === 0 ? (
-              <p className="py-md text-center text-sm text-muted-foreground">
+              <p className="py-md text-muted-foreground text-center text-sm">
                 {candidateLabel === 'despesas'
                   ? t('pages.bankReconciliation.detail.noExpensesFound')
                   : t('pages.bankReconciliation.detail.noRevenuesFound')}
@@ -653,7 +653,7 @@ export default function BankReconciliationDetail() {
               candidates.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between gap-sm rounded-md border p-sm text-sm"
+                  className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{c.description}</p>

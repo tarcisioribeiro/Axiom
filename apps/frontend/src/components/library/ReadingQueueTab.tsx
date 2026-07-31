@@ -59,36 +59,36 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-md rounded-lg border bg-card p-md shadow-sm"
+      className="gap-md bg-card p-md flex items-center rounded-lg border shadow-sm"
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="text-muted-foreground hover:text-foreground cursor-grab touch-none active:cursor-grabbing"
         aria-label="Arrastar para reordenar"
       >
         <GripVertical className="h-5 w-5" />
       </button>
 
-      <span className="w-6 text-center text-sm font-semibold text-muted-foreground">
+      <span className="text-muted-foreground w-6 text-center text-sm font-semibold">
         {rank}
       </span>
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{book.title}</p>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="text-muted-foreground truncate text-sm">
           {book.authors_names.join(', ')}
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-sm">
+      <div className="gap-sm flex shrink-0 items-center">
         <Badge variant="outline" className="hidden text-xs sm:inline-flex">
           {book.genre_display}
         </Badge>
         {book.estimated_days_to_finish != null && (
           <Badge
             variant="outline"
-            className="hidden items-center gap-xs text-xs lg:inline-flex"
+            className="gap-xs hidden items-center text-xs lg:inline-flex"
           >
             <Clock className="h-3 w-3" />~{book.estimated_days_to_finish}d
           </Badge>
@@ -168,7 +168,7 @@ export function ReadingQueueTab() {
   if (books.length === 0) {
     return (
       <EmptyState
-        icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
+        icon={<BookOpen className="text-muted-foreground h-12 w-12" />}
         title={t('pages.readingQueue.emptyTitle')}
         message={t('pages.readingQueue.emptyDesc')}
       />
@@ -185,7 +185,7 @@ export function ReadingQueueTab() {
         items={books.map((b) => b.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-sm">
+        <div className="gap-sm flex flex-col">
           {books.map((book, index) => (
             <SortableBookItem key={book.id} book={book} rank={index + 1} />
           ))}

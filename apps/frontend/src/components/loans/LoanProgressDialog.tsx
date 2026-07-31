@@ -38,8 +38,8 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, accent = 'default' }: SummaryCardProps) {
   return (
-    <div className="rounded-lg border bg-card p-sm text-center">
-      <p className="mb-0.5 text-xs text-muted-foreground">{label}</p>
+    <div className="bg-card p-sm rounded-lg border text-center">
+      <p className="text-muted-foreground mb-0.5 text-xs">{label}</p>
       <p
         className={cn(
           'text-sm font-semibold',
@@ -129,20 +129,20 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
         </DialogHeader>
 
         {isLoading ? (
-          <div className="py-xl text-center text-sm text-muted-foreground">
+          <div className="py-xl text-muted-foreground text-center text-sm">
             {t('common.actions.loading')}
           </div>
         ) : !stats ? null : (
           <div className="space-y-md">
             {/* Progress bar */}
             <div className="space-y-xs">
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex justify-between text-xs">
                 <span>{t('pages.loans.payoff')}</span>
-                <span className="font-semibold text-foreground">
+                <span className="text-foreground font-semibold">
                   {Math.round(stats.pct)}%
                 </span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-3 overflow-hidden rounded-full">
                 <div
                   className={cn(
                     'h-full rounded-full transition-all',
@@ -164,7 +164,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             </div>
 
             {/* Summary cards */}
-            <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
+            <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
               <SummaryCard
                 label={t('pages.loans.progress.paidInstallments')}
                 value={`${stats.paidInstallments}/${loan?.installments ?? 0}`}
@@ -193,7 +193,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             {/* Balance chart */}
             {chartData.length > 1 && (
               <div className="space-y-xs">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                   {t('pages.loans.progress.balanceOverTime')}
                 </p>
                 <div className="h-48">
@@ -264,7 +264,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             )}
 
             {installments.length === 0 && (
-              <p className="py-sm text-center text-sm text-muted-foreground">
+              <p className="py-sm text-muted-foreground text-center text-sm">
                 {t('pages.loans.progress.noInstallments')}
               </p>
             )}

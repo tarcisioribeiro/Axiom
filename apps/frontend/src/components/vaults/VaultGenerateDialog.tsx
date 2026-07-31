@@ -99,7 +99,7 @@ export function VaultGenerateDialog({
         <div className="space-y-md">
           <div>
             <Label>{t('pages.vaults.recurringContributions.generateMonth')}</Label>
-            <div className="mt-xs flex gap-sm">
+            <div className="mt-xs gap-sm flex">
               <Select
                 value={String(selectedMonth)}
                 onValueChange={(v) => setSelectedMonth(Number(v))}

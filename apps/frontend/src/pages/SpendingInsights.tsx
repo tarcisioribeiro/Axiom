@@ -44,7 +44,7 @@ function TrendBadge({ direction, pct }: { direction: TrendDirection; pct: number
   const { t } = useTranslation();
   if (direction === 'stable' || Math.abs(pct) < 0.5) {
     return (
-      <span className="inline-flex items-center gap-xs text-xs text-muted-foreground">
+      <span className="gap-xs text-muted-foreground inline-flex items-center text-xs">
         <Minus className="h-3 w-3" />
         {t('spendingInsights.stable')}
       </span>
@@ -54,7 +54,7 @@ function TrendBadge({ direction, pct }: { direction: TrendDirection; pct: number
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-xs rounded-full px-sm py-xs text-xs font-semibold',
+        'gap-xs px-sm py-xs inline-flex items-center rounded-full text-xs font-semibold',
         isUp ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'
       )}
     >
@@ -81,8 +81,8 @@ function CurrencyTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border bg-popover px-md py-sm text-sm shadow-lg">
-      <p className="mb-xs font-medium text-foreground">{label}</p>
+    <div className="bg-popover px-md py-sm rounded-lg border text-sm shadow-lg">
+      <p className="mb-xs text-foreground font-medium">{label}</p>
       {payload.map((entry) => (
         <p key={entry.dataKey} style={{ color: entry.color }} className="text-xs">
           {formatCurrency(entry.value)}
@@ -155,16 +155,16 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
       />
 
       {/* Trend summary row */}
-      <div className="grid grid-cols-1 gap-lg sm:grid-cols-3">
+      <div className="gap-lg grid grid-cols-1 sm:grid-cols-3">
         {/* Current month total */}
         <Card className="sm:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-sm">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               {t('spendingInsights.totalMonth', { month: monthName })}
             </CardTitle>
             <div
               className={cn(
-                'rounded-lg p-sm',
+                'p-sm rounded-lg',
                 trendDirection === 'up'
                   ? 'bg-destructive/10'
                   : trendDirection === 'down'
@@ -188,9 +188,9 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
             <p className="text-3xl font-bold tracking-tight">
               {formatCurrency(current_month.total_expenses)}
             </p>
-            <div className="flex items-center gap-md">
+            <div className="gap-md flex items-center">
               <TrendBadge direction={trendDirection} pct={trend.pct_change} />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {t('spendingInsights.vsPriorAvg', {
                   value: formatCurrency(trend.prior_avg),
                 })}
@@ -201,19 +201,19 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
 
         {/* Growing categories count */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-sm">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               {t('spendingInsights.risingCategories')}
             </CardTitle>
-            <div className="rounded-lg bg-destructive/10 p-sm">
-              <Flame className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm rounded-lg">
+              <Flame className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold tracking-tight">
               {growing_categories.length}
             </p>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('spendingInsights.aboveAverage')}
             </p>
           </CardContent>
@@ -221,7 +221,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
         {/* Top categories bar chart */}
         <Card>
           <CardHeader className="pb-sm">
@@ -231,7 +231,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
           </CardHeader>
           <CardContent>
             {top_categories.length === 0 ? (
-              <p className="py-lg text-center text-sm text-muted-foreground">
+              <p className="py-lg text-muted-foreground text-center text-sm">
                 {t('spendingInsights.noCategories')}
               </p>
             ) : (
@@ -285,7 +285,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
           </CardHeader>
           <CardContent>
             {monthly_breakdown.length === 0 ? (
-              <p className="py-lg text-center text-sm text-muted-foreground">
+              <p className="py-lg text-muted-foreground text-center text-sm">
                 {t('spendingInsights.noHistoryData')}
               </p>
             ) : (
@@ -333,13 +333,13 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-border">
+            <div className="divide-border divide-y">
               {growing_categories.map((item, idx) => (
                 <div
                   key={item.category}
-                  className="flex items-center justify-between py-sm"
+                  className="py-sm flex items-center justify-between"
                 >
-                  <div className="flex items-center gap-sm">
+                  <div className="gap-sm flex items-center">
                     <span
                       className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
                       style={{
@@ -352,19 +352,19 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
                       {translateCategory(item.category, 'expense')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-md text-right">
+                  <div className="gap-md flex items-center text-right">
                     <div className="hidden sm:block">
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {t('spendingInsights.current')}: {formatCurrency(item.current)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {t('spendingInsights.average')}:{' '}
                         {formatCurrency(item.prior_avg)}
                       </p>
                     </div>
                     <Badge
                       variant="outline"
-                      className="border-destructive/50 text-xs font-semibold text-destructive"
+                      className="border-destructive/50 text-destructive text-xs font-semibold"
                     >
                       +{item.pct_change.toFixed(1)}%
                     </Badge>

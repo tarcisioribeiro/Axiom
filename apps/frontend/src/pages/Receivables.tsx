@@ -209,68 +209,68 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
         />
       </FilterBar>
 
-      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.receivables.stats.total')}</p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <Banknote className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <Banknote className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalValue)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.receivables.stats.totalSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-warning/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-warning/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.receivables.stats.active')}</p>
-            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-              <Clock className="h-4 w-4 text-warning" />
+            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+              <Clock className="text-warning h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{activeCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-warning text-2xl font-bold">{activeCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.receivables.stats.activeSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.receivables.stats.overdue')}
             </p>
-            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+              <AlertTriangle className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{overdueCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-destructive text-2xl font-bold">{overdueCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.receivables.stats.overdueSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.receivables.stats.received')}
             </p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <CheckCircle2 className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <CheckCircle2 className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{receivedCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-success text-2xl font-bold">{receivedCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.receivables.stats.receivedSubtitle')}
             </p>
           </CardContent>
@@ -279,7 +279,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
       {filteredReceivables.length === 0 ? (
         <EmptyState
-          icon={<TrendingUp className="h-12 w-12 text-muted-foreground" />}
+          icon={<TrendingUp className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.receivables.emptySearch')
@@ -287,7 +287,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {filteredReceivables.map((receivable) => {
             const getDueBadge = () => {
               if (receivable.status === 'overdue')
@@ -337,18 +337,18 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
               <div
                 key={receivable.id}
                 className={cn(
-                  'space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md',
+                  'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
                   urgencyClass
                 )}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       <h3 className="font-semibold">{receivable.description}</h3>
                       {dueBadge && (
                         <span
                           className={cn(
-                            'rounded-full px-xs py-0.5 text-xs font-medium',
+                            'px-xs rounded-full py-0.5 text-xs font-medium',
                             dueBadge.cls
                           )}
                         >
@@ -356,7 +356,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {TRANSLATIONS.revenueCategories[
                         receivable.category as keyof typeof TRANSLATIONS.revenueCategories
                       ] ?? receivable.category}
@@ -368,13 +368,13 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                 </div>
 
                 <div className="space-y-xs">
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={cn('h-full rounded-full transition-all', barColor)}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex justify-between text-xs">
                     <span>
                       {t('pages.receivables.receivedAmount', {
                         value: formatCurrency(received),
@@ -397,7 +397,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                     <span className="text-muted-foreground">
                       {t('pages.receivables.remainingBalance')}
                     </span>
-                    <span className="font-medium text-success">
+                    <span className="text-success font-medium">
                       {formatCurrency(total - received)}
                     </span>
                   </div>
@@ -421,7 +421,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
+                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
                   {receivable.status !== 'received' &&
                     receivable.status !== 'cancelled' && (
                       <Button
@@ -429,7 +429,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                         size="sm"
                         onClick={() => setReceiptReceivable(receivable)}
                         title={t('pages.receivables.receipt.title')}
-                        className="gap-xs text-xs text-success"
+                        className="gap-xs text-success text-xs"
                       >
                         <Wallet className="h-3 w-3" />
                         {t('pages.receivables.receiveBtn')}
@@ -449,7 +449,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                     onClick={() => void handleDelete(receivable)}
                     title={t('common.actions.delete')}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="text-destructive h-4 w-4" />
                   </Button>
                 </div>
               </div>

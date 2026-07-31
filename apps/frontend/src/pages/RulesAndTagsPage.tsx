@@ -20,22 +20,22 @@ export default function RulesAndTagsPage() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="categorization" className="flex-1 gap-xs">
+          <TabsTrigger value="categorization" className="gap-xs flex-1">
             <Filter className="h-4 w-4" />
             {t('nav.items.categorizationRules')}
           </TabsTrigger>
-          <TabsTrigger value="automation" className="flex-1 gap-xs">
+          <TabsTrigger value="automation" className="gap-xs flex-1">
             <Zap className="h-4 w-4" />
             {t('nav.items.automationRules')}
           </TabsTrigger>
-          <TabsTrigger value="tags" className="flex-1 gap-xs">
+          <TabsTrigger value="tags" className="gap-xs flex-1">
             <Tag className="h-4 w-4" />
             {t('nav.items.tags')}
           </TabsTrigger>

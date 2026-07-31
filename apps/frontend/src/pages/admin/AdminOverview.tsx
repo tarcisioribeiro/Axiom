@@ -64,16 +64,16 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
     : check?.message;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className="border-border bg-card rounded-lg border p-5">
       <div className="mb-md flex items-center justify-between">
-        <div className="flex items-center gap-sm">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-            <Icon className="h-4 w-4 text-primary" />
+        <div className="gap-sm flex items-center">
+          <div className="bg-primary/10 flex h-9 w-9 items-center justify-center rounded-lg">
+            <Icon className="text-primary h-4 w-4" />
           </div>
-          <span className="font-medium text-foreground">{name}</span>
+          <span className="text-foreground font-medium">{name}</span>
         </div>
         {loading ? (
-          <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+          <RefreshCw className="text-muted-foreground h-4 w-4 animate-spin" />
         ) : (
           <StatusIcon className={cn('h-5 w-5', cfg.color)} />
         )}
@@ -82,13 +82,13 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
         {t(`pages.adminOverview.status.${cfg.statusKey}`)}
       </p>
       {messageText && (
-        <p className="mt-xs line-clamp-2 text-xs text-muted-foreground">
+        <p className="mt-xs text-muted-foreground line-clamp-2 text-xs">
           {messageText}
         </p>
       )}
       {check?.free_percent !== undefined && (
         <div className="mt-sm">
-          <div className="h-1.5 w-full rounded-full bg-secondary">
+          <div className="bg-secondary h-1.5 w-full rounded-full">
             <div
               className={cn(
                 'h-1.5 rounded-full transition-all',
@@ -120,23 +120,23 @@ export default function AdminOverview() {
     <div>
       <div className="mb-lg flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-foreground text-2xl font-bold">
             {t('pages.adminOverview.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t('pages.adminOverview.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastUpdate && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
             </span>
           )}
           <button
             onClick={() => void refetch()}
             disabled={isLoading}
-            className="flex items-center gap-sm rounded-lg border border-border bg-card px-3 py-sm text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50"
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
             {t('pages.adminOverview.refresh')}
@@ -148,7 +148,7 @@ export default function AdminOverview() {
       {data && (
         <div
           className={cn(
-            'mb-lg flex items-center gap-3 rounded-lg border px-5 py-md',
+            'mb-lg py-md flex items-center gap-3 rounded-lg border px-5',
             data.status === 'healthy' && 'border-green-500/30 bg-green-500/10',
             data.status === 'warning' && 'border-yellow-500/30 bg-yellow-500/10',
             data.status === 'unhealthy' && 'border-destructive/30 bg-destructive/10'
@@ -161,15 +161,15 @@ export default function AdminOverview() {
             <AlertTriangle className="h-5 w-5 text-yellow-500" />
           )}
           {data.status === 'unhealthy' && (
-            <XCircle className="h-5 w-5 text-destructive" />
+            <XCircle className="text-destructive h-5 w-5" />
           )}
           <div>
-            <p className="font-semibold text-foreground">
+            <p className="text-foreground font-semibold">
               {data.status === 'healthy' && t('pages.adminOverview.statusHealthy')}
               {data.status === 'warning' && t('pages.adminOverview.statusWarning')}
               {data.status === 'unhealthy' && t('pages.adminOverview.statusUnhealthy')}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('pages.adminOverview.checkedAt', {
                 time: new Date(data.timestamp).toLocaleString(i18n.language),
               })}
@@ -179,7 +179,7 @@ export default function AdminOverview() {
       )}
 
       {/* Service cards grid */}
-      <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
+      <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
         <ServiceCard
           name={t('pages.adminOverview.services.database')}
           icon={Database}

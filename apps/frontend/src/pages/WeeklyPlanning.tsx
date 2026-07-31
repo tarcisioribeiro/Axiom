@@ -82,12 +82,12 @@ function InstanceIcon({ name, className }: { name: string; className?: string })
 
 function StatusIcon({ status }: { status: TaskInstance['status'] }) {
   if (status === 'completed')
-    return <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />;
+    return <CheckCircle2 className="text-success h-3 w-3 shrink-0" />;
   if (status === 'in_progress')
-    return <Clock className="h-3 w-3 shrink-0 text-warning" />;
+    return <Clock className="text-warning h-3 w-3 shrink-0" />;
   if (status === 'skipped')
-    return <AlertCircle className="h-3 w-3 shrink-0 text-muted-foreground" />;
-  return <Circle className="h-3 w-3 shrink-0 text-muted-foreground" />;
+    return <AlertCircle className="text-muted-foreground h-3 w-3 shrink-0" />;
+  return <Circle className="text-muted-foreground h-3 w-3 shrink-0" />;
 }
 
 function TaskPill({ instance }: { instance: TaskInstance }) {
@@ -98,7 +98,7 @@ function TaskPill({ instance }: { instance: TaskInstance }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-xs rounded border px-xs py-xs text-xs leading-tight transition-opacity',
+        'gap-xs px-xs py-xs flex items-start rounded border text-xs leading-tight transition-opacity',
         colorClass,
         isDone && 'opacity-50'
       )}
@@ -179,7 +179,7 @@ export default function WeeklyPlanning() {
           icon={<Calendar />}
           subtitle={weekLabel}
         >
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <Button
               variant="outline"
               size="sm"
@@ -206,10 +206,10 @@ export default function WeeklyPlanning() {
         </PageHeader>
 
         {Object.values(loadByDate).some((load) => load > OVERLOAD_MINUTES) && (
-          <div className="mb-md rounded-lg border border-warning/30 bg-warning/5 p-md">
-            <div className="flex items-center gap-sm">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
-              <p className="text-sm text-warning">
+          <div className="mb-md border-warning/30 bg-warning/5 p-md rounded-lg border">
+            <div className="gap-sm flex items-center">
+              <AlertTriangle className="text-warning h-4 w-4 shrink-0" />
+              <p className="text-warning text-sm">
                 <strong>{t('weeklyPlanning.overloadWarningTitle')}:</strong>{' '}
                 {t('weeklyPlanning.overloadWarning', {
                   time: formatMinutes(OVERLOAD_MINUTES),
@@ -220,58 +220,58 @@ export default function WeeklyPlanning() {
         )}
 
         {/* Legend */}
-        <div className="mb-md flex flex-wrap items-center gap-sm text-xs text-muted-foreground">
+        <div className="mb-md gap-sm text-muted-foreground flex flex-wrap items-center text-xs">
           <span>{t('weeklyPlanning.legend', 'Legenda')}:</span>
-          <span className="flex items-center gap-xs">
-            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+          <span className="gap-xs flex items-center">
+            <CheckCircle2 className="text-success h-3.5 w-3.5" />
             {t('weeklyPlanning.statusCompleted', 'Concluído')}
           </span>
-          <span className="flex items-center gap-xs">
-            <Clock className="h-3.5 w-3.5 text-warning" />
+          <span className="gap-xs flex items-center">
+            <Clock className="text-warning h-3.5 w-3.5" />
             {t('weeklyPlanning.statusInProgress', 'Em andamento')}
           </span>
-          <span className="flex items-center gap-xs">
+          <span className="gap-xs flex items-center">
             <Circle className="h-3.5 w-3.5" />
             {t('weeklyPlanning.statusPending', 'Pendente')}
           </span>
-          <span className="flex items-center gap-xs">
-            <Zap className="h-3.5 w-3.5 text-warning" />
+          <span className="gap-xs flex items-center">
+            <Zap className="text-warning h-3.5 w-3.5" />
             {t('weeklyPlanning.overloadedDay', 'Dia sobrecarregado')}
           </span>
         </div>
 
         {/* Week summary */}
-        <div className="mb-md grid grid-cols-3 gap-md">
+        <div className="mb-md gap-md grid grid-cols-3">
           <Card>
-            <CardContent className="flex items-center gap-sm p-md">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+            <CardContent className="gap-sm p-md flex items-center">
+              <Calendar className="text-muted-foreground h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">{totalTasks}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('weeklyPlanning.tasks')}
                 </p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="flex items-center gap-sm p-md">
-              <CheckCircle2 className="h-5 w-5 text-success" />
+            <CardContent className="gap-sm p-md flex items-center">
+              <CheckCircle2 className="text-success h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">{completedTasks}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('weeklyPlanning.completed')}
                 </p>
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="flex items-center gap-sm p-md">
-              <Clock className="h-5 w-5 text-muted-foreground" />
+            <CardContent className="gap-sm p-md flex items-center">
+              <Clock className="text-muted-foreground h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">
                   {formatMinutes(Object.values(loadByDate).reduce((s, v) => s + v, 0))}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('weeklyPlanning.estimatedLoad')}
                 </p>
               </div>
@@ -281,11 +281,11 @@ export default function WeeklyPlanning() {
 
         {/* Week progress bar */}
         {totalTasks > 0 && (
-          <div className="mb-md flex items-center gap-md">
+          <div className="mb-md gap-md flex items-center">
             <Badge variant="secondary">
               {completedTasks}/{totalTasks} {t('weeklyPlanning.completed')}
             </Badge>
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
@@ -299,7 +299,7 @@ export default function WeeklyPlanning() {
         )}
 
         {/* 7-day grid */}
-        <div className="grid grid-cols-1 gap-md sm:grid-cols-7">
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-7">
           {days.map((day) => {
             const key = formatLocalDate(day);
             const dayInsts = instancesByDate[key] ?? [];
@@ -318,7 +318,7 @@ export default function WeeklyPlanning() {
                 key={key}
                 className={cn(
                   'flex flex-col',
-                  isToday && 'ring-2 ring-primary/60',
+                  isToday && 'ring-primary/60 ring-2',
                   isOverloaded && 'border-warning/40'
                 )}
               >
@@ -327,7 +327,7 @@ export default function WeeklyPlanning() {
                     <div>
                       <p
                         className={cn(
-                          'text-xs font-semibold uppercase tracking-wide',
+                          'text-xs font-semibold tracking-wide uppercase',
                           isToday ? 'text-primary' : 'text-muted-foreground'
                         )}
                       >
@@ -342,12 +342,12 @@ export default function WeeklyPlanning() {
                     <div className="text-right">
                       {isOverloaded && (
                         <AlertTriangle
-                          className="mb-xs h-4 w-4 text-warning"
+                          className="mb-xs text-warning h-4 w-4"
                           aria-label={t('weeklyPlanning.overloadedDay')}
                         />
                       )}
                       {dayTotal > 0 && (
-                        <p className="text-xs font-medium text-muted-foreground">
+                        <p className="text-muted-foreground text-xs font-medium">
                           {dayCompleted}/{dayTotal}
                         </p>
                       )}
@@ -356,7 +356,7 @@ export default function WeeklyPlanning() {
 
                   {/* Per-day completion progress */}
                   {dayTotal > 0 && (
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
                       <div
                         className={cn(
                           'h-full rounded-full transition-all',
@@ -372,7 +372,7 @@ export default function WeeklyPlanning() {
                   )}
 
                   {/* Load bar */}
-                  <div className="flex items-center gap-xs">
+                  <div className="gap-xs flex items-center">
                     <div
                       className={cn(
                         'h-1 flex-1 rounded-full',
@@ -389,14 +389,14 @@ export default function WeeklyPlanning() {
                         }}
                       />
                     </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground shrink-0 text-xs">
                       {formatMinutes(load)}
                     </span>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-1 flex-col gap-xs p-sm pt-0">
+                <CardContent className="gap-xs p-sm flex flex-1 flex-col pt-0">
                   {dayInsts.length === 0 ? (
-                    <p className="text-center text-xs text-muted-foreground/50">
+                    <p className="text-muted-foreground/50 text-center text-xs">
                       {t('weeklyPlanning.noTasks')}
                     </p>
                   ) : (

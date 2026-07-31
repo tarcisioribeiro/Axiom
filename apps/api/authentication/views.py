@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.config import cfg
+from app.request_utils import request_data
 
 from .throttles import RegisterRateThrottle
 
@@ -229,15 +230,16 @@ def create_user_with_member(request: Request) -> Response:
 
     logger = logging.getLogger("expenselit.audit")
 
-    username = request.data.get("username", "").strip()
-    password = request.data.get("password", "")
-    name = request.data.get("name", "").strip()
-    document = request.data.get("document", "").strip()
-    phone = request.data.get("phone", "").strip()
-    email = request.data.get("email", "").strip()
+    data = request_data(request)
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+    name = data.get("name", "").strip()
+    document = data.get("document", "").strip()
+    phone = data.get("phone", "").strip()
+    email = data.get("email", "").strip()
 
     # Validacoes completas
-    is_valid, validation_errors = validate_registration_data(request.data)
+    is_valid, validation_errors = validate_registration_data(data)
     if not is_valid:
         return Response(
             {"error": "Dados invalidos", "details": validation_errors},
@@ -402,7 +404,7 @@ class PasswordResetRequestView(APIView):
 
         logger = logging.getLogger("expenselit.audit")
 
-        email = (request.data.get("email") or "").strip().lower()
+        email = (request_data(request).get("email") or "").strip().lower()
         if not email:
             return Response(
                 {
@@ -478,10 +480,11 @@ class PasswordResetConfirmView(APIView):
         from django.utils.encoding import force_str
         from django.utils.http import urlsafe_base64_decode
 
-        uid = (request.data.get("uid") or "").strip()
-        token = (request.data.get("token") or "").strip()
-        new_password = request.data.get("new_password", "")
-        confirm_password = request.data.get("confirm_password", "")
+        data = request_data(request)
+        uid = (data.get("uid") or "").strip()
+        token = (data.get("token") or "").strip()
+        new_password = data.get("new_password", "")
+        confirm_password = data.get("confirm_password", "")
 
         if not all([uid, token, new_password, confirm_password]):
             return Response(
@@ -710,9 +713,10 @@ class ChangePasswordView(APIView):
 
     def post(self, request: Request) -> Response:
         user = cast(User, request.user)
-        current_password = request.data.get("current_password", "")
-        new_password = request.data.get("new_password", "")
-        confirm_password = request.data.get("confirm_password", "")
+        data = request_data(request)
+        current_password = data.get("current_password", "")
+        new_password = data.get("new_password", "")
+        confirm_password = data.get("confirm_password", "")
 
         if not all([current_password, new_password, confirm_password]):
             return Response(
@@ -820,7 +824,7 @@ class TwoFactorActivateView(APIView):
         from .models import TOTPDevice
 
         user = cast(User, request.user)
-        code = (request.data.get("code") or "").strip()
+        code = (request_data(request).get("code") or "").strip()
 
         if not code:
             return Response(
@@ -891,8 +895,9 @@ class TwoFactorVerifyView(APIView):
 
         from .models import TOTPDevice
 
-        temp_token = (request.data.get("temp_token") or "").strip()
-        code = (request.data.get("code") or "").strip()
+        data = request_data(request)
+        temp_token = (data.get("temp_token") or "").strip()
+        code = (data.get("code") or "").strip()
 
         if not temp_token or not code:
             return Response(
@@ -972,7 +977,7 @@ class TwoFactorDisableView(APIView):
         from .models import TOTPDevice
 
         user = cast(User, request.user)
-        password = request.data.get("password", "")
+        password = request_data(request).get("password", "")
 
         if not user.check_password(password):
             return Response(

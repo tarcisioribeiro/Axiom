@@ -175,11 +175,11 @@ export function CourseForm({
             className={errors.title ? 'border-destructive' : ''}
           />
           {errors.title && (
-            <p className="text-xs text-destructive">{errors.title.message}</p>
+            <p className="text-destructive text-xs">{errors.title.message}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
             <Label>{t('pages.courses.form.platformLabel')}</Label>
             <Select
@@ -213,8 +213,8 @@ export function CourseForm({
                   const Icon = CATEGORY_ICONS[c];
                   return (
                     <SelectItem key={c} value={c}>
-                      <div className="flex items-center gap-xs">
-                        <Icon className="h-3.5 w-3.5 text-category-intellect" />
+                      <div className="gap-xs flex items-center">
+                        <Icon className="text-category-intellect h-3.5 w-3.5" />
                         {t(`pages.courses.category.${c}`)}
                       </div>
                     </SelectItem>
@@ -227,7 +227,7 @@ export function CourseForm({
 
         <div className="space-y-sm">
           <Label htmlFor="url">
-            <div className="flex items-center gap-xs">
+            <div className="gap-xs flex items-center">
               <ExternalLink className="h-3.5 w-3.5" />
               {t('pages.courses.form.urlLabel')}
             </div>
@@ -254,7 +254,7 @@ export function CourseForm({
       </FormSection>
 
       <FormSection title={t('pages.courses.form.sectionDetails')} icon={Layers}>
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
             <Label>{t('pages.courses.form.statusLabel')}</Label>
             <Select
@@ -276,7 +276,7 @@ export function CourseForm({
 
           <div className="space-y-sm">
             <Label htmlFor="estimated_hours">
-              <div className="flex items-center gap-xs">
+              <div className="gap-xs flex items-center">
                 <Clock className="h-3.5 w-3.5" />
                 {t('pages.courses.form.estimatedHoursLabel')}
               </div>
@@ -291,7 +291,7 @@ export function CourseForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
             <Label>{t('pages.courses.form.startDateLabel')}</Label>
             <DatePicker
@@ -309,14 +309,14 @@ export function CourseForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="bg-category-intellect text-white hover:bg-category-intellect/90"
+          className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {t('common.actions.save')}
         </Button>

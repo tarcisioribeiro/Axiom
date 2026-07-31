@@ -20,22 +20,22 @@ export default function Transactions() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="expenses" className="flex-1 gap-xs">
+          <TabsTrigger value="expenses" className="gap-xs flex-1">
             <TrendingDown className="h-4 w-4" />
             {t('pages.expenses.title')}
           </TabsTrigger>
-          <TabsTrigger value="revenues" className="flex-1 gap-xs">
+          <TabsTrigger value="revenues" className="gap-xs flex-1">
             <TrendingUp className="h-4 w-4" />
             {t('pages.revenues.title')}
           </TabsTrigger>
-          <TabsTrigger value="credit-card" className="flex-1 gap-xs">
+          <TabsTrigger value="credit-card" className="gap-xs flex-1">
             <CreditCard className="h-4 w-4" />
             {t('nav.items.creditCardExpenses')}
           </TabsTrigger>

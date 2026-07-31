@@ -55,7 +55,7 @@ function PublisherInitials({ name }: { name: string }) {
     <div
       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${colors[colorIndex]}`}
     >
-      <span className="select-none text-sm font-bold text-white">{initials}</span>
+      <span className="text-sm font-bold text-white select-none">{initials}</span>
     </div>
   );
 }
@@ -186,7 +186,7 @@ export default function Publishers() {
 
       {filteredPublishers.length === 0 ? (
         <EmptyState
-          icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
+          icon={<Building2 className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.publishers.emptySearch')
@@ -194,11 +194,11 @@ export default function Publishers() {
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {filteredPublishers.map((publisher) => (
             <Card key={publisher.id} className="flex flex-col">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="gap-sm flex items-start justify-between">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <PublisherInitials name={publisher.name} />
                     <div className="min-w-0">
@@ -214,7 +214,7 @@ export default function Publishers() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -228,7 +228,7 @@ export default function Publishers() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-8 w-8"
                       onClick={() => void handleDelete(publisher.id)}
                       aria-label={t('common.actions.delete')}
                       title={t('common.actions.delete')}
@@ -241,8 +241,8 @@ export default function Publishers() {
 
               <CardContent className="flex flex-1 flex-col gap-3">
                 {publisher.founded_year && (
-                  <div className="flex items-center gap-sm">
-                    <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div className="gap-sm flex items-center">
+                    <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                     <Badge variant="outline" className="text-xs font-normal">
                       {t('pages.publishers.foundedYear', {
                         year: publisher.founded_year,
@@ -251,23 +251,23 @@ export default function Publishers() {
                   </div>
                 )}
                 {publisher.website && (
-                  <div className="flex items-center gap-sm">
-                    <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div className="gap-sm flex items-center">
+                    <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
                     <a
                       href={publisher.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="truncate text-sm text-primary hover:underline"
+                      className="text-primary truncate text-sm hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {publisher.website.replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                 )}
-                <div className="mt-auto pt-sm">
+                <div className="pt-sm mt-auto">
                   <Badge
                     variant="secondary"
-                    className="flex w-fit items-center gap-sm text-xs"
+                    className="gap-sm flex w-fit items-center text-xs"
                   >
                     <BookOpen className="h-3 w-3" />
                     {t('pages.publishers.booksCount', { count: publisher.books_count })}

@@ -203,7 +203,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
 
       {filteredSummaries.length === 0 ? (
         <EmptyState
-          icon={<FileText className="h-12 w-12 text-muted-foreground" />}
+          icon={<FileText className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.summaries.emptySearch')
@@ -211,17 +211,17 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
           }
         />
       ) : (
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           {filteredSummaries.map((summary) => (
             <Card key={summary.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="mb-sm flex items-center gap-sm">
+                    <div className="mb-sm gap-sm flex items-center">
                       <BookOpen className="h-5 w-5" />
                       <CardTitle className="text-xl">{summary.book_title}</CardTitle>
                     </div>
-                    <div className="flex items-center gap-sm">
+                    <div className="gap-sm flex items-center">
                       {summary.is_vectorized ? (
                         <Badge variant="default" className="gap-xs">
                           <CheckCircle2 className="h-3 w-3" />
@@ -244,7 +244,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-sm">
+                  <div className="gap-sm flex">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -265,7 +265,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="line-clamp-6 whitespace-pre-wrap text-sm">
+                <p className="line-clamp-6 text-sm whitespace-pre-wrap">
                   {summary.text}
                 </p>
                 {(() => {
@@ -275,7 +275,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   if (bookHighlights.length === 0) return null;
                   return (
                     <div className="border-t pt-3">
-                      <p className="mb-sm flex items-center gap-sm text-xs font-medium text-muted-foreground">
+                      <p className="mb-sm gap-sm text-muted-foreground flex items-center text-xs font-medium">
                         <Highlighter className="h-3.5 w-3.5" />
                         {bookHighlights.length} destaque
                         {bookHighlights.length !== 1 ? 's' : ''} relacionado
@@ -285,13 +285,13 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                         {bookHighlights.slice(0, 3).map((h) => (
                           <p
                             key={h.id}
-                            className="line-clamp-2 border-l-2 border-primary/40 pl-sm text-xs text-muted-foreground"
+                            className="border-primary/40 pl-sm text-muted-foreground line-clamp-2 border-l-2 text-xs"
                           >
                             {h.text}
                           </p>
                         ))}
                         {bookHighlights.length > 3 && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             +{bookHighlights.length - 3} mais
                           </p>
                         )}
@@ -318,7 +318,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-md py-md">
+            <div className="gap-md py-md grid">
               <div className="space-y-sm">
                 <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
                 <Input
@@ -372,7 +372,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.editTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.editDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-md py-md">
+            <div className="gap-md py-md grid">
               <div className="space-y-sm">
                 <Label htmlFor="edit-title">{t('pages.summaries.titleField')}</Label>
                 <Input

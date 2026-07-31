@@ -165,8 +165,8 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   const heatmapContent = (
     <div className="space-y-3">
       {/* Header: year selector + filters + expand */}
-      <div className="flex flex-wrap items-center justify-between gap-sm">
-        <div className="flex items-center gap-xs">
+      <div className="gap-sm flex flex-wrap items-center justify-between">
+        <div className="gap-xs flex items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -214,10 +214,10 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
           </Select>
         )}
 
-        {taskName && <span className="text-xs text-muted-foreground">{taskName}</span>}
+        {taskName && <span className="text-muted-foreground text-xs">{taskName}</span>}
 
-        <div className="flex items-center gap-sm">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="gap-sm flex items-center">
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
             <span>
               {t('pages.planningDashboard.heatmapTotalCompletions', {
                 count: totalCompleted,
@@ -254,11 +254,11 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
 
       {/* Heatmap grid */}
       {isLoading ? (
-        <div className="h-[110px] animate-pulse rounded-md bg-muted" />
+        <div className="bg-muted h-[110px] animate-pulse rounded-md" />
       ) : (
-        <div className="relative overflow-x-auto pb-xs">
+        <div className="pb-xs relative overflow-x-auto">
           {/* Wrapper with left padding for weekday labels */}
-          <div className="flex gap-xs">
+          <div className="gap-xs flex">
             {/* Weekday labels */}
             <div
               className="flex shrink-0 flex-col"
@@ -267,7 +267,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
               {weekdayLabels.map((label, i) => (
                 <div
                   key={label}
-                  className="flex items-center justify-end text-xs text-muted-foreground"
+                  className="text-muted-foreground flex items-center justify-end text-xs"
                   style={{ height: CELL, fontSize: 9, lineHeight: `${CELL}px` }}
                 >
                   {/* Only render Mon, Wed, Fri, Sun to reduce clutter */}
@@ -289,7 +289,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
                     <div
                       key={col}
                       style={{ width: CELL, fontSize: 9, lineHeight: `${CELL}px` }}
-                      className="shrink-0 overflow-hidden text-xs text-muted-foreground"
+                      className="text-muted-foreground shrink-0 overflow-hidden text-xs"
                     >
                       {label?.month ?? ''}
                     </div>
@@ -347,7 +347,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
               pointerEvents: 'none',
               zIndex: 9999,
             }}
-            className="rounded-md border bg-popover px-sm py-xs text-xs text-popover-foreground shadow-md"
+            className="bg-popover px-sm py-xs text-popover-foreground rounded-md border text-xs shadow-md"
           >
             {tooltip.text}
           </div>,
@@ -355,7 +355,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
         )}
 
       {/* Legend */}
-      <div className="flex items-center gap-xs text-xs text-muted-foreground">
+      <div className="gap-xs text-muted-foreground flex items-center text-xs">
         <span>{t('pages.planningDashboard.heatmapLess')}</span>
         {[
           'var(--heatmap-empty)',
@@ -381,10 +381,10 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
 
   if (isExpanded) {
     return createPortal(
-      <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-background/95 p-lg backdrop-blur-sm">
-        <div className="w-full max-w-5xl rounded-lg border border-border bg-card p-lg shadow-2xl">
+      <div className="bg-background/95 p-lg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm">
+        <div className="border-border bg-card p-lg w-full max-w-5xl rounded-lg border shadow-2xl">
           <div className="mb-md flex items-center justify-between">
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-foreground text-sm font-semibold">
               {t('pages.planningDashboard.habitHeatmapTitle', {
                 defaultValue: 'Mapa de Hábitos',
               })}

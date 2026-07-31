@@ -72,36 +72,36 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
           {/* Resumo */}
-          <div className="space-y-3 rounded-lg bg-muted/50 p-md">
-            <h4 className="text-sm font-semibold text-muted-foreground">
+          <div className="bg-muted/50 p-md space-y-3 rounded-lg">
+            <h4 className="text-muted-foreground text-sm font-semibold">
               {t('pages.creditCardBills.payForm.billSummary')}
             </h4>
-            <div className="grid grid-cols-2 gap-md text-sm">
+            <div className="gap-md grid grid-cols-2 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.payForm.periodLabel')}
                 </p>
                 <p className="font-medium">{period}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.payForm.totalAmountLabel')}
                 </p>
                 <p className="font-medium">{formatCurrency(bill.total_amount)}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.payForm.alreadyPaidLabel')}
                 </p>
-                <p className="font-medium text-success">
+                <p className="text-success font-medium">
                   {formatCurrency(bill.paid_amount)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.renegotiateForm.remainingLabel')}
                 </p>
-                <p className="font-bold text-primary">
+                <p className="text-primary font-bold">
                   {formatCurrency(remaining.toFixed(2))}
                 </p>
               </div>
@@ -109,7 +109,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
           </div>
 
           {/* Aviso informativo */}
-          <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-sm text-sm text-warning">
+          <div className="border-warning/30 bg-warning/10 p-sm text-warning flex items-start gap-2 rounded-md border text-sm">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <p>{t('pages.creditCardBills.renegotiateForm.interestWarning')}</p>
           </div>
@@ -121,7 +121,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestLabel')}
               </Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
                   R$
                 </span>
                 <Input
@@ -142,11 +142,11 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                 />
               </div>
               {errors.total_with_interest && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {errors.total_with_interest.message}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestHint')}
               </p>
             </div>
@@ -174,7 +174,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                 disabled={isLoading}
               />
               {errors.installments && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {errors.installments.message}
                 </p>
               )}
@@ -183,16 +183,16 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
 
           {/* Preview do valor de cada parcela */}
           {installmentValue !== null && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-md">
+            <div className="border-primary/30 bg-primary/5 p-md rounded-lg border">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   {t('pages.creditCardBills.renegotiateForm.installmentValuePreview')}
                 </p>
-                <p className="text-xl font-bold text-primary">
+                <p className="text-primary text-xl font-bold">
                   {formatCurrency(installmentValue.toFixed(2))}
                 </p>
               </div>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {watchedInstallments}x {t('pages.creditCardBills.renegotiateForm.of')}{' '}
                 {formatCurrency(installmentValue.toFixed(2))}
               </p>
@@ -200,12 +200,12 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
           )}
 
           {/* Aviso de que a fatura será marcada como paga */}
-          <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-sm text-sm text-info">
+          <div className="border-info/30 bg-info/10 p-sm text-info flex items-start gap-2 rounded-md border text-sm">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <p>{t('pages.creditCardBills.renegotiateForm.billWillBePaid')}</p>
           </div>
 
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button
               type="button"
               variant="outline"

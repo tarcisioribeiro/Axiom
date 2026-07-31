@@ -9,7 +9,7 @@ export default function Unauthorized() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h1 className="mb-md text-6xl font-bold text-destructive">
+        <h1 className="mb-md text-destructive text-6xl font-bold">
           {t('pages.unauthorized.code')}
         </h1>
         <h2 className="mb-sm text-2xl font-semibold">

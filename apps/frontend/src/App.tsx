@@ -123,7 +123,7 @@ const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
 
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
-    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+    <Loader2 className="text-primary h-12 w-12 animate-spin" />
   </div>
 );
 

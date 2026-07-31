@@ -72,7 +72,7 @@ export function TagFormDialog({
           </div>
           <div className="space-y-sm">
             <Label>{t('pages.tags.color')}</Label>
-            <div className="flex flex-wrap gap-sm">
+            <div className="gap-sm flex flex-wrap">
               {DEFAULT_COLORS.map((c) => (
                 <button
                   key={c}
@@ -96,7 +96,7 @@ export function TagFormDialog({
             </div>
             {form.color && (
               <span
-                className="inline-block rounded-full px-sm py-0.5 text-xs font-medium"
+                className="px-sm inline-block rounded-full py-0.5 text-xs font-medium"
                 style={{ backgroundColor: `${form.color}22`, color: form.color }}
               >
                 {form.name || t('pages.tags.name')}

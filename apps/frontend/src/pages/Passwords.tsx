@@ -200,18 +200,18 @@ function TOTPBlock({ code, expiresAt }: TOTPRevealData) {
 
   if (isExpired) {
     return (
-      <p className="mt-xs text-xs text-warning">
+      <p className="mt-xs text-warning text-xs">
         Código expirado — revele novamente para atualizar.
       </p>
     );
   }
 
   return (
-    <div className="mt-sm flex items-center justify-between gap-sm">
+    <div className="mt-sm gap-sm flex items-center justify-between">
       <code className="font-mono text-xl font-bold tracking-[0.25em]">
         {code.slice(0, 3)} {code.slice(3)}
       </code>
-      <div className="flex items-center gap-xs">
+      <div className="gap-xs flex items-center">
         <span
           className={cn(
             'font-mono text-sm',
@@ -295,7 +295,7 @@ function DetailPanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-start justify-between gap-sm border-b p-lg">
+      <div className="gap-sm p-lg flex items-start justify-between border-b">
         <div className="flex min-w-0 items-center gap-3">
           <div
             className={cn(
@@ -307,14 +307,14 @@ function DetailPanel({
           </div>
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold">{password.title}</h2>
-            <p className="truncate text-sm text-muted-foreground">
+            <p className="text-muted-foreground truncate text-sm">
               {password.username}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-xs">
+        <div className="gap-xs flex items-center">
           {password.totp_enabled && (
-            <Shield className="h-4 w-4 text-success" aria-label="TOTP habilitado" />
+            <Shield className="text-success h-4 w-4" aria-label="TOTP habilitado" />
           )}
           <Button
             size="sm"
@@ -333,9 +333,9 @@ function DetailPanel({
         <button
           type="button"
           className={cn(
-            'flex flex-1 items-center justify-center gap-xs px-md py-sm text-sm font-medium transition-colors',
+            'gap-xs px-md py-sm flex flex-1 items-center justify-center text-sm font-medium transition-colors',
             activeTab === 'details'
-              ? 'border-b-2 border-primary text-primary'
+              ? 'border-primary text-primary border-b-2'
               : 'text-muted-foreground hover:text-foreground'
           )}
           onClick={() => setActiveTab('details')}
@@ -346,9 +346,9 @@ function DetailPanel({
         <button
           type="button"
           className={cn(
-            'flex flex-1 items-center justify-center gap-xs px-md py-sm text-sm font-medium transition-colors',
+            'gap-xs px-md py-sm flex flex-1 items-center justify-center text-sm font-medium transition-colors',
             activeTab === 'history'
-              ? 'border-b-2 border-primary text-primary'
+              ? 'border-primary text-primary border-b-2'
               : 'text-muted-foreground hover:text-foreground'
           )}
           onClick={() => setActiveTab('history')}
@@ -358,17 +358,17 @@ function DetailPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-lg">
+      <div className="p-lg flex-1 overflow-y-auto">
         {activeTab === 'history' ? (
           <div className="space-y-sm">
             {isHistoryLoading ? (
-              <div className="flex justify-center py-lg">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <div className="py-lg flex justify-center">
+                <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
               </div>
             ) : !historyEntries || historyEntries.length === 0 ? (
-              <div className="flex flex-col items-center gap-sm py-lg text-center">
-                <History className="h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">
+              <div className="gap-sm py-lg flex flex-col items-center text-center">
+                <History className="text-muted-foreground/40 h-10 w-10" />
+                <p className="text-muted-foreground text-sm">
                   {t('pages.passwords.noHistory', {
                     defaultValue: 'Nenhuma alteração de senha registrada.',
                   })}
@@ -378,15 +378,15 @@ function DetailPanel({
               historyEntries.map((entry, idx) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between rounded-lg border bg-muted/20 px-md py-sm"
+                  className="bg-muted/20 px-md py-sm flex items-center justify-between rounded-lg border"
                 >
-                  <div className="flex items-center gap-sm">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                  <div className="gap-sm flex items-center">
+                    <div className="bg-muted text-muted-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium">
                       {idx + 1}
                     </div>
                     <div>
                       <p className="text-sm font-medium">••••••••</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {formatDate(entry.created_at, 'dd/MM/yyyy HH:mm')}
                         {entry.changed_by_username
                           ? ` · ${entry.changed_by_username}`
@@ -400,9 +400,9 @@ function DetailPanel({
           </div>
         ) : (
           <div className="space-y-md">
-            <div className="flex items-center gap-sm">
-              <Tag className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+            <div className="gap-sm flex items-center">
+              <Tag className="text-muted-foreground h-4 w-4 shrink-0" />
+              <span className="text-muted-foreground text-sm">
                 {t('common.fields.category')}
               </span>
               <Badge
@@ -416,16 +416,16 @@ function DetailPanel({
             </div>
 
             {password.site && (
-              <div className="flex items-center gap-sm">
-                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
+              <div className="gap-sm flex items-center">
+                <Globe className="text-muted-foreground h-4 w-4 shrink-0" />
+                <span className="text-muted-foreground text-sm">
                   {t('common.fields.site')}
                 </span>
                 <a
                   href={password.site}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-auto flex min-w-0 items-center gap-xs truncate text-sm hover:underline"
+                  className="gap-xs ml-auto flex min-w-0 items-center truncate text-sm hover:underline"
                 >
                   <span className="truncate">{password.site}</span>
                   <ExternalLink className="h-3 w-3 shrink-0" />
@@ -433,20 +433,20 @@ function DetailPanel({
               </div>
             )}
 
-            <div className="flex items-center gap-sm">
-              <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+            <div className="gap-sm flex items-center">
+              <User className="text-muted-foreground h-4 w-4 shrink-0" />
+              <span className="text-muted-foreground text-sm">
                 {t('common.fields.username')}
               </span>
               <span className="ml-auto truncate text-sm">{password.username}</span>
             </div>
 
-            <div className="rounded-lg border bg-muted/30 p-md">
-              <p className="mb-sm text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="bg-muted/30 p-md rounded-lg border">
+              <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 {t('auth.login.password')}
               </p>
               {revealedPassword ? (
-                <div className="flex items-center gap-sm">
+                <div className="gap-sm flex items-center">
                   <code className="flex-1 font-mono text-sm">{revealedPassword}</code>
                   <Button
                     size="sm"
@@ -458,15 +458,15 @@ function DetailPanel({
                   </Button>
                 </div>
               ) : (
-                <p className="font-mono text-sm text-muted-foreground">••••••••</p>
+                <p className="text-muted-foreground font-mono text-sm">••••••••</p>
               )}
             </div>
 
             {password.totp_enabled && (
-              <div className="rounded-lg border border-success/30 bg-success/5 p-md">
-                <div className="flex items-center gap-sm">
-                  <Shield className="h-4 w-4 shrink-0 text-success" />
-                  <span className="text-sm font-medium text-success">TOTP (2FA)</span>
+              <div className="border-success/30 bg-success/5 p-md rounded-lg border">
+                <div className="gap-sm flex items-center">
+                  <Shield className="text-success h-4 w-4 shrink-0" />
+                  <span className="text-success text-sm font-medium">TOTP (2FA)</span>
                 </div>
                 {revealedTotpData ? (
                   <TOTPBlock
@@ -474,7 +474,7 @@ function DetailPanel({
                     expiresAt={revealedTotpData.expiresAt}
                   />
                 ) : (
-                  <p className="mt-xs text-xs text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-xs">
                     Revele a senha para ver o código TOTP atual.
                   </p>
                 )}
@@ -483,17 +483,17 @@ function DetailPanel({
 
             {password.notes && (
               <div className="space-y-xs">
-                <div className="flex items-center gap-sm">
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
+                <div className="gap-sm flex items-center">
+                  <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
+                  <span className="text-muted-foreground text-sm">
                     {t('common.fields.notes')}
                   </span>
                 </div>
-                <p className="rounded-lg bg-muted/30 p-sm text-sm">{password.notes}</p>
+                <p className="bg-muted/30 p-sm rounded-lg text-sm">{password.notes}</p>
               </div>
             )}
 
-            <div className="flex items-center gap-sm border-t pt-md text-xs text-muted-foreground">
+            <div className="gap-sm pt-md text-muted-foreground flex items-center border-t text-xs">
               <Calendar className="h-3.5 w-3.5 shrink-0" />
               <span>
                 {t('common.fields.createdAt')}{' '}
@@ -504,7 +504,7 @@ function DetailPanel({
         )}
       </div>
 
-      <div className="flex flex-wrap gap-sm border-t p-lg">
+      <div className="gap-sm p-lg flex flex-wrap border-t">
         <Button
           size="sm"
           variant="outline"
@@ -932,7 +932,7 @@ export default function Passwords() {
     <VaultGuard>
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <Button
               variant="outline"
               onClick={() => setIsImportOpen(true)}
@@ -973,9 +973,9 @@ export default function Passwords() {
           </Button>
         </FilterBar>
 
-        <div className={cn('flex gap-lg', detailPassword ? 'lg:flex-row' : 'flex-col')}>
+        <div className={cn('gap-lg flex', detailPassword ? 'lg:flex-row' : 'flex-col')}>
           <div className={cn('min-w-0', detailPassword ? 'lg:w-[40%]' : 'w-full')}>
-            <div className="grid gap-md md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="gap-md grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {filteredPasswords.map((password) => {
                 const catConfig =
                   CATEGORY_CONFIG[password.category] ?? CATEGORY_CONFIG.other;
@@ -986,7 +986,7 @@ export default function Passwords() {
                     className={cn(
                       'cursor-pointer overflow-hidden border-l-2 transition-shadow hover:shadow-lg',
                       catConfig.border,
-                      isSelected && 'ring-2 ring-primary/50'
+                      isSelected && 'ring-primary/50 ring-2'
                     )}
                     onClick={() => handleCardClick(password)}
                   >
@@ -1021,16 +1021,16 @@ export default function Passwords() {
                     <CardContent>
                       <div className="space-y-3">
                         {password.site && (
-                          <div className="flex items-center gap-sm text-sm">
+                          <div className="gap-sm flex items-center text-sm">
                             <ExternalLink className="h-3 w-3" />
-                            <span className="truncate text-muted-foreground">
+                            <span className="text-muted-foreground truncate">
                               {password.site}
                             </span>
                           </div>
                         )}
                         {password.strength_score !== undefined && (
-                          <div className="flex items-center gap-xs">
-                            <Shield className="h-3 w-3 text-muted-foreground" />
+                          <div className="gap-xs flex items-center">
+                            <Shield className="text-muted-foreground h-3 w-3" />
                             <span
                               className={cn(
                                 'text-xs font-medium',
@@ -1061,12 +1061,12 @@ export default function Passwords() {
                         )}
 
                         {!detailPassword && revealedPasswords.has(password.id) && (
-                          <div className="flex items-center gap-sm rounded bg-muted p-sm">
+                          <div className="gap-sm bg-muted p-sm flex items-center rounded">
                             <code className="flex-1 truncate text-sm">
                               {revealedPasswords.get(password.id)}
                             </code>
                             {countdown.get(password.id) !== undefined && (
-                              <span className="shrink-0 text-xs text-muted-foreground">
+                              <span className="text-muted-foreground shrink-0 text-xs">
                                 {t('pages.passwords.autoHideIn', {
                                   seconds: countdown.get(password.id),
                                 })}
@@ -1099,7 +1099,7 @@ export default function Passwords() {
                         )}
 
                         {!detailPassword && (
-                          <div className="flex gap-sm pt-sm">
+                          <div className="gap-sm pt-sm flex">
                             <Button
                               size="sm"
                               variant="outline"
@@ -1199,14 +1199,14 @@ export default function Passwords() {
                               aria-label={t('common.actions.delete')}
                             >
                               <Trash2
-                                className="h-3 w-3 text-destructive"
+                                className="text-destructive h-3 w-3"
                                 aria-hidden="true"
                               />
                             </Button>
                           </div>
                         )}
 
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-muted-foreground text-xs">
                           {t('common.fields.updatedAt')}{' '}
                           {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
                         </div>
@@ -1219,7 +1219,7 @@ export default function Passwords() {
 
             {filteredPasswords.length === 0 && (
               <EmptyState
-                icon={<Key className="h-12 w-12 text-muted-foreground" />}
+                icon={<Key className="text-muted-foreground h-12 w-12" />}
                 message={
                   searchTerm
                     ? t('pages.passwords.emptySearch')
@@ -1239,7 +1239,7 @@ export default function Passwords() {
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 className="hidden lg:block lg:w-[60%] lg:shrink-0"
               >
-                <div className="sticky top-4 rounded-lg border bg-card shadow-lg">
+                <div className="bg-card sticky top-4 rounded-lg border shadow-lg">
                   <DetailPanel
                     password={detailPassword}
                     revealedPassword={revealedPasswords.get(detailPassword.id)}
@@ -1338,7 +1338,7 @@ export default function Passwords() {
                   placeholder={t('pages.passwords.titlePlaceholder')}
                 />
                 {errors.title && (
-                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                  <p className="text-destructive text-sm">{errors.title.message}</p>
                 )}
               </div>
 
@@ -1351,7 +1351,7 @@ export default function Passwords() {
                   placeholder={t('pages.passwords.sitePlaceholder')}
                 />
                 {errors.site && (
-                  <p className="text-sm text-destructive">{errors.site.message}</p>
+                  <p className="text-destructive text-sm">{errors.site.message}</p>
                 )}
               </div>
 
@@ -1363,7 +1363,7 @@ export default function Passwords() {
                   placeholder={t('pages.passwords.usernamePlaceholder')}
                 />
                 {errors.username && (
-                  <p className="text-sm text-destructive">{errors.username.message}</p>
+                  <p className="text-destructive text-sm">{errors.username.message}</p>
                 )}
               </div>
 
@@ -1377,7 +1377,7 @@ export default function Passwords() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowGenerator(!showGenerator)}
-                    className="h-auto px-sm py-xs text-xs"
+                    className="px-sm py-xs h-auto text-xs"
                   >
                     <Wand2 className="mr-xs h-3 w-3" />
                     {showGenerator
@@ -1394,10 +1394,10 @@ export default function Passwords() {
                   }
                 />
                 {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-destructive text-sm">{errors.password.message}</p>
                 )}
                 {showGenerator && (
-                  <div className="rounded-lg border bg-muted/30 p-3">
+                  <div className="bg-muted/30 rounded-lg border p-3">
                     <PasswordGenerator
                       compact
                       onPasswordGenerated={(pwd) => setValue('password', pwd)}
@@ -1422,9 +1422,9 @@ export default function Passwords() {
                         PASSWORD_CATEGORY_ICONS['other'];
                       return (
                         <SelectItem key={cat.value} value={cat.value}>
-                          <span className="flex items-center gap-sm">
+                          <span className="gap-sm flex items-center">
                             {Icon && (
-                              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                             )}
                             {t(`pages.passwords.categories.${cat.value}`)}
                           </span>
@@ -1434,7 +1434,7 @@ export default function Passwords() {
                   </SelectContent>
                 </Select>
                 {errors.category && (
-                  <p className="text-sm text-destructive">{errors.category.message}</p>
+                  <p className="text-destructive text-sm">{errors.category.message}</p>
                 )}
               </div>
 
@@ -1447,15 +1447,15 @@ export default function Passwords() {
                   rows={3}
                 />
                 {errors.notes && (
-                  <p className="text-sm text-destructive">{errors.notes.message}</p>
+                  <p className="text-destructive text-sm">{errors.notes.message}</p>
                 )}
               </div>
 
               {/* TOTP (#195) */}
-              <div className="rounded-lg border bg-muted/20 p-md">
+              <div className="bg-muted/20 p-md rounded-lg border">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-sm">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
+                  <div className="gap-sm flex items-center">
+                    <Shield className="text-muted-foreground h-4 w-4" />
                     <Label className="cursor-pointer" htmlFor="totp_enabled">
                       {t('pages.passwords.totpEnable', {
                         defaultValue: 'Habilitar TOTP (2FA)',
@@ -1466,7 +1466,7 @@ export default function Passwords() {
                     id="totp_enabled"
                     type="checkbox"
                     {...register('totp_enabled')}
-                    className="h-4 w-4 rounded border accent-primary"
+                    className="accent-primary h-4 w-4 rounded border"
                   />
                 </div>
                 {watchedTotpEnabled && (
@@ -1482,7 +1482,7 @@ export default function Passwords() {
                       placeholder="JBSWY3DPEHPK3PXP"
                       className="font-mono"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.passwords.totpSecretHint', {
                         defaultValue:
                           'Cole o segredo base32 do serviço para gerar códigos TOTP.',
@@ -1492,7 +1492,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-sm">
+              <div className="gap-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"

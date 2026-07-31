@@ -12,7 +12,7 @@ export function ActionBadge({ action, display }: { action: string; display: stri
   return (
     <span
       className={cn(
-        'rounded-full px-sm py-0.5 text-xs font-medium',
+        'px-sm rounded-full py-0.5 text-xs font-medium',
         ACTION_COLORS[action] ?? 'bg-secondary text-muted-foreground'
       )}
     >
@@ -24,24 +24,24 @@ export function ActionBadge({ action, display }: { action: string; display: stri
 export function LogRow({ log }: { log: AdminLog }) {
   const date = new Date(log.created_at);
   return (
-    <tr className="border-b border-border transition-colors hover:bg-accent/30">
-      <td className="whitespace-nowrap px-md py-3 text-xs text-muted-foreground">
+    <tr className="border-border hover:bg-accent/30 border-b transition-colors">
+      <td className="px-md text-muted-foreground py-3 text-xs whitespace-nowrap">
         <div>{date.toLocaleDateString(i18n.language)}</div>
         <div className="font-mono">{date.toLocaleTimeString(i18n.language)}</div>
       </td>
       <td className="px-md py-3">
-        <span className="font-medium text-foreground">{log.username ?? '—'}</span>
+        <span className="text-foreground font-medium">{log.username ?? '—'}</span>
       </td>
       <td className="px-md py-3">
         <ActionBadge action={log.action} display={log.action_display} />
       </td>
-      <td className="px-md py-3 text-sm text-muted-foreground">
+      <td className="px-md text-muted-foreground py-3 text-sm">
         {log.model_name ?? '—'}
       </td>
-      <td className="max-w-xs px-md py-3 text-sm text-foreground">
+      <td className="px-md text-foreground max-w-xs py-3 text-sm">
         <span className="line-clamp-2">{log.description}</span>
       </td>
-      <td className="whitespace-nowrap px-md py-3 font-mono text-xs text-muted-foreground">
+      <td className="px-md text-muted-foreground py-3 font-mono text-xs whitespace-nowrap">
         {log.ip_address ?? '—'}
       </td>
     </tr>

@@ -103,7 +103,7 @@ export function GamificationPanel() {
         </CardHeader>
         <CardContent>
           <Progress value={data.level_progress_pct} className="h-3" />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-xs">
             {data.xp_in_level} / {data.xp_needed_for_next_level} XP (
             {data.level_progress_pct}%)
           </p>
@@ -124,7 +124,7 @@ export function GamificationPanel() {
                 <div
                   key={b.slug}
                   title={`${b.name}: ${b.description}\n${new Date(b.earned_at).toLocaleDateString('pt-BR')}`}
-                  className="flex cursor-default items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-sm"
+                  className="bg-muted/50 flex cursor-default items-center gap-1.5 rounded-full border px-3 py-1 text-sm"
                 >
                   {(() => {
                     const BadgeIcon = getIconByName(b.icon) ?? Medal;

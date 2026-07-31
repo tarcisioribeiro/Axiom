@@ -454,7 +454,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
-        <div className="border-b p-sm">
+        <div className="p-sm border-b">
           <Input
             placeholder={t('common.iconPicker.searchPlaceholder')}
             value={search}
@@ -468,7 +468,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="mb-sm w-full justify-start text-muted-foreground"
+              className="mb-sm text-muted-foreground w-full justify-start"
               onClick={() => {
                 onChange(null);
                 setOpen(false);
@@ -480,10 +480,10 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
 
             {Object.entries(filteredCategories).map(([category, icons]) => (
               <div key={category} className="mb-3">
-                <div className="mb-xs px-sm text-xs font-medium text-muted-foreground">
+                <div className="mb-xs px-sm text-muted-foreground text-xs font-medium">
                   {category}
                 </div>
-                <div className="grid grid-cols-4 gap-xs">
+                <div className="gap-xs grid grid-cols-4">
                   {icons.map((iconName) => {
                     const Icon = TASK_ICONS[iconName];
                     return (
@@ -507,7 +507,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             ))}
 
             {Object.keys(filteredCategories).length === 0 && (
-              <div className="py-md text-center text-sm text-muted-foreground">
+              <div className="py-md text-muted-foreground text-center text-sm">
                 Nenhum icone encontrado
               </div>
             )}

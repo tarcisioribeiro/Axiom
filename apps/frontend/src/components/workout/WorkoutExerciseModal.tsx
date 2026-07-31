@@ -71,25 +71,25 @@ function CounterInput({
   label: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-xs">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="gap-xs flex flex-col items-center">
+      <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
         {label}
       </span>
-      <div className="flex flex-col items-center rounded-lg border border-border bg-background shadow-sm">
+      <div className="border-border bg-background flex flex-col items-center rounded-lg border shadow-sm">
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="flex h-8 w-10 items-center justify-center rounded-t-lg border-b border-border text-muted-foreground transition-colors hover:bg-category-exercise/10 hover:text-category-exercise"
+          className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-t-lg border-b transition-colors"
         >
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
-        <span className="flex h-10 w-10 items-center justify-center text-lg font-bold tabular-nums text-foreground">
+        <span className="text-foreground flex h-10 w-10 items-center justify-center text-lg font-bold tabular-nums">
           {value}
         </span>
         <button
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="flex h-8 w-10 items-center justify-center rounded-b-lg border-t border-border text-muted-foreground transition-colors hover:bg-category-exercise/10 hover:text-category-exercise"
+          className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-b-lg border-t transition-colors"
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
@@ -161,18 +161,18 @@ export function WorkoutExerciseModal({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
-          <Dumbbell className="h-5 w-5 text-category-exercise" />
+      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Dumbbell className="text-category-exercise h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-category-exercise">
+          <p className="text-category-exercise text-sm font-semibold">
             {existing
               ? t('pages.workoutPlans.editExerciseTitle')
               : t('pages.workoutPlans.addExerciseTitle')}
           </p>
           {selectedExercise ? (
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="text-muted-foreground truncate text-xs">
               {selectedExercise.name}
               {selectedExercise.muscle_groups && (
                 <span className="ml-xs opacity-60">
@@ -181,7 +181,7 @@ export function WorkoutExerciseModal({
               )}
             </p>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.workoutPlans.selectExercise')}
             </p>
           )}
@@ -192,19 +192,19 @@ export function WorkoutExerciseModal({
       <FormSection title={t('pages.workoutPlans.selectExercise')} icon={Search}>
         <div className="space-y-xs">
           <div className="relative">
-            <Search className="absolute left-sm top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="left-sm text-muted-foreground absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
             <input
               type="text"
               placeholder={t('pages.workoutPlans.searchExercise')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-input bg-background py-2 pl-8 pr-sm text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="border-input bg-background pr-sm focus:ring-ring w-full rounded-lg border py-2 pl-8 text-sm outline-none focus:ring-2"
             />
           </div>
 
-          <div className="max-h-40 space-y-xs overflow-y-auto rounded-lg border border-border p-xs">
+          <div className="space-y-xs border-border p-xs max-h-40 overflow-y-auto rounded-lg border">
             {filtered.length === 0 ? (
-              <p className="py-sm text-center text-xs text-muted-foreground">
+              <p className="py-sm text-muted-foreground text-center text-xs">
                 {t('pages.exercises.empty')}
               </p>
             ) : (
@@ -216,9 +216,9 @@ export function WorkoutExerciseModal({
                     type="button"
                     onClick={() => setSelectedExercise(ex)}
                     className={cn(
-                      'flex w-full items-center gap-sm rounded-lg px-sm py-xs text-left transition-all',
+                      'gap-sm px-sm py-xs flex w-full items-center rounded-lg text-left transition-all',
                       isSelected
-                        ? 'bg-category-exercise/15 ring-1 ring-category-exercise/30'
+                        ? 'bg-category-exercise/15 ring-category-exercise/30 ring-1'
                         : 'hover:bg-accent'
                     )}
                   >
@@ -242,7 +242,7 @@ export function WorkoutExerciseModal({
                         {ex.name}
                       </span>
                       {ex.muscle_groups && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {ex.muscle_groups}
                         </span>
                       )}
@@ -260,21 +260,21 @@ export function WorkoutExerciseModal({
         title={t('pages.workoutPlans.sets') + ' & ' + t('pages.workoutPlans.repsMin')}
         icon={Dumbbell}
       >
-        <div className="flex items-start justify-center gap-lg py-xs">
+        <div className="gap-lg py-xs flex items-start justify-center">
           <CounterInput
             value={sets}
             onChange={(v) => setValue('sets', v)}
             min={0}
             label={t('pages.workoutPlans.sets')}
           />
-          <div className="flex items-center gap-md pt-8">
+          <div className="gap-md flex items-center pt-8">
             <CounterInput
               value={repsMin}
               onChange={(v) => setValue('reps_min', Math.min(v, repsMax))}
               min={0}
               label={t('pages.workoutPlans.repsMin')}
             />
-            <span className="pb-2 text-xs font-medium text-muted-foreground">–</span>
+            <span className="text-muted-foreground pb-2 text-xs font-medium">–</span>
             <CounterInput
               value={repsMax}
               onChange={(v) => setValue('reps_max', Math.max(v, repsMin))}
@@ -283,20 +283,20 @@ export function WorkoutExerciseModal({
             />
           </div>
         </div>
-        <div className="rounded-lg bg-muted/40 py-xs text-center text-xs text-muted-foreground">
+        <div className="bg-muted/40 py-xs text-muted-foreground rounded-lg text-center text-xs">
           {sets === 0 ? (
             <span>{t('pages.workoutPlans.noSetsLabel')}</span>
           ) : repsMin === 0 && repsMax === 0 ? (
             <>
-              <strong className="font-semibold text-foreground">{sets}</strong>{' '}
+              <strong className="text-foreground font-semibold">{sets}</strong>{' '}
               {t('pages.workoutPlans.setsOf')}{' '}
               <span>{t('pages.workoutPlans.noRepsLabel', 'sem repetições')}</span>
             </>
           ) : (
             <>
-              <strong className="font-semibold text-foreground">{sets}</strong>{' '}
+              <strong className="text-foreground font-semibold">{sets}</strong>{' '}
               {t('pages.workoutPlans.setsOf')}{' '}
-              <strong className="font-semibold text-foreground">
+              <strong className="text-foreground font-semibold">
                 {repsMin === repsMax ? repsMin : `${repsMin}–${repsMax}`}
               </strong>{' '}
               {t('pages.workoutPlans.repsPlural', 'repetições')}
@@ -311,14 +311,14 @@ export function WorkoutExerciseModal({
         icon={Timer}
       >
         <div className="space-y-sm">
-          <div className="flex flex-wrap gap-xs">
+          <div className="gap-xs flex flex-wrap">
             {REST_PRESETS.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => setValue('rest_seconds', preset)}
                 className={cn(
-                  'rounded-lg border px-sm py-xs text-xs font-semibold transition-all',
+                  'px-sm py-xs rounded-lg border text-xs font-semibold transition-all',
                   restSeconds === preset
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
@@ -328,15 +328,15 @@ export function WorkoutExerciseModal({
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <input
               type="number"
               min={0}
               step={5}
               {...register('rest_seconds', { valueAsNumber: true })}
-              className="w-24 rounded-lg border border-input bg-background px-sm py-2 text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+              className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
             />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {t('pages.workoutPlans.seconds')}
             </span>
           </div>
@@ -345,23 +345,23 @@ export function WorkoutExerciseModal({
 
       {/* Carga */}
       <FormSection title={t('pages.workoutPlans.load')} icon={Minus}>
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <input
             type="number"
             min={0}
             step="0.5"
             placeholder="0"
             {...register('load')}
-            className="w-24 rounded-lg border border-input bg-background px-sm py-2 text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+            className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
           />
-          <div className="flex gap-xs">
+          <div className="gap-xs flex">
             {LOAD_UNITS.map((unit) => (
               <button
                 key={unit.value}
                 type="button"
                 onClick={() => setValue('load_unit', unit.value)}
                 className={cn(
-                  'rounded-lg border px-sm py-xs text-xs font-semibold transition-all',
+                  'px-sm py-xs rounded-lg border text-xs font-semibold transition-all',
                   loadUnit === unit.value
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
@@ -379,7 +379,7 @@ export function WorkoutExerciseModal({
         <button
           type="button"
           onClick={() => setShowNotes((v) => !v)}
-          className="flex items-center gap-xs text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
         >
           <StickyNote className="h-3.5 w-3.5" />
           {showNotes
@@ -397,7 +397,7 @@ export function WorkoutExerciseModal({
         )}
       </div>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

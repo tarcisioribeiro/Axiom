@@ -325,7 +325,7 @@ export default function StoredCards() {
 
         {!isLoading && filteredCards.length === 0 ? (
           <EmptyState
-            icon={<CreditCardIcon className="h-12 w-12 text-muted-foreground" />}
+            icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
             message={
               searchTerm
                 ? t('pages.storedCards.emptySearch')
@@ -333,13 +333,13 @@ export default function StoredCards() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2 xl:grid-cols-3">
+          <div className="gap-lg grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
             {filteredCards.map((card) => {
               const flagCfg = FLAG_CONFIG[card.flag] ?? DEFAULT_FLAG;
               const revealed = revealedData.get(card.id);
 
               return (
-                <div key={card.id} className="flex flex-col gap-sm">
+                <div key={card.id} className="gap-sm flex flex-col">
                   {/* Card face */}
                   <div
                     className={cn(
@@ -348,19 +348,19 @@ export default function StoredCards() {
                     )}
                   >
                     {/* Decorative background circles */}
-                    <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-foreground/[0.04]" />
-                    <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-foreground/[0.03]" />
+                    <div className="bg-foreground/[0.04] absolute -top-8 -right-8 h-28 w-28 rounded-full" />
+                    <div className="bg-foreground/[0.03] absolute -right-10 -bottom-10 h-40 w-40 rounded-full" />
 
                     {/* Top row: chip + brand */}
                     <div className="relative flex items-start justify-between">
-                      <div className="h-8 w-10 rounded-md border border-warning/60 bg-gradient-to-br from-warning/40 to-warning/20" />
+                      <div className="border-warning/60 from-warning/40 to-warning/20 h-8 w-10 rounded-md border bg-gradient-to-br" />
                       <Badge variant="outline" className={flagCfg.badge}>
                         {card.flag_display}
                       </Badge>
                     </div>
 
                     {/* Card number */}
-                    <div className="relative mt-lg flex items-center gap-sm">
+                    <div className="mt-lg gap-sm relative flex items-center">
                       <span className="font-mono text-base tracking-widest">
                         {revealed
                           ? revealed.number
@@ -385,17 +385,17 @@ export default function StoredCards() {
                     </div>
 
                     {/* Bottom row: holder + expiry/cvv */}
-                    <div className="relative mt-md flex items-end justify-between gap-sm">
+                    <div className="mt-md gap-sm relative flex items-end justify-between">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                        <p className="text-[10px] font-medium tracking-widest uppercase opacity-50">
                           {t('pages.storedCards.columns.holder')}
                         </p>
-                        <p className="truncate text-sm font-semibold uppercase tracking-wide">
+                        <p className="truncate text-sm font-semibold tracking-wide uppercase">
                           {card.cardholder_name}
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                        <p className="text-[10px] font-medium tracking-widest uppercase opacity-50">
                           {t('pages.storedCards.columns.expiry')}
                         </p>
                         <p className="font-mono text-sm font-semibold">
@@ -403,7 +403,7 @@ export default function StoredCards() {
                           {card.expiration_year}
                         </p>
                         {revealed && (
-                          <div className="mt-0.5 flex items-center justify-end gap-xs">
+                          <div className="gap-xs mt-0.5 flex items-center justify-end">
                             <span className="font-mono text-xs opacity-70">
                               CVV: {revealed.cvv}
                             </span>
@@ -423,12 +423,12 @@ export default function StoredCards() {
                   </div>
 
                   {/* Action bar */}
-                  <div className="flex items-center justify-between gap-sm px-xs">
+                  <div className="gap-sm px-xs flex items-center justify-between">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{card.name}</p>
                       {card.finance_card_name && (
                         <button
-                          className="flex items-center gap-0.5 truncate text-xs text-primary hover:underline"
+                          className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             void navigate('/finance/credit-cards');
@@ -527,7 +527,7 @@ export default function StoredCards() {
                         aria-label={t('common.actions.delete')}
                       >
                         <Trash2
-                          className="h-3.5 w-3.5 text-destructive"
+                          className="text-destructive h-3.5 w-3.5"
                           aria-hidden="true"
                         />
                       </Button>

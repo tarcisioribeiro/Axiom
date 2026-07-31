@@ -190,7 +190,7 @@ export default function NotificationPreferences() {
         {t('pages.notificationPreferences.subtitle')}
       </p>
 
-      <div className="grid gap-md sm:grid-cols-2">
+      <div className="gap-md grid sm:grid-cols-2">
         {NOTIFICATION_TYPE_KEYS.map((key) => {
           const currentChannel = getChannel(key);
           const label = t(`pages.notificationPreferences.types.${key}_label`);
@@ -200,10 +200,10 @@ export default function NotificationPreferences() {
           return (
             <Card
               key={key}
-              className={`flex flex-col ${isPending ? 'ring-1 ring-primary/40' : ''}`}
+              className={`flex flex-col ${isPending ? 'ring-primary/40 ring-1' : ''}`}
             >
               <CardHeader className="pb-sm">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="gap-sm flex items-start justify-between">
                   <div className="space-y-0.5">
                     <CardTitle className="text-sm font-semibold">{label}</CardTitle>
                     <CardDescription className="text-xs">{description}</CardDescription>
@@ -225,7 +225,7 @@ export default function NotificationPreferences() {
                   <SelectContent>
                     {CHANNEL_OPTION_KEYS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex items-center gap-sm">
+                        <span className="gap-sm flex items-center">
                           {opt.icon}
                           {t(
                             `pages.notificationPreferences.${CHANNEL_KEY_MAP[opt.value]}`
@@ -241,14 +241,14 @@ export default function NotificationPreferences() {
         })}
       </div>
 
-      <div className="mt-lg rounded-lg border border-dashed p-md text-sm text-muted-foreground">
-        <p className="flex items-center gap-sm">
+      <div className="mt-lg p-md text-muted-foreground rounded-lg border border-dashed text-sm">
+        <p className="gap-sm flex items-center">
           <BellOff className="h-4 w-4 shrink-0" />
           <span>{t('pages.notificationPreferences.emailNote')}</span>
         </p>
       </div>
 
-      <div className="mt-lg flex flex-wrap items-center gap-sm">
+      <div className="mt-lg gap-sm flex flex-wrap items-center">
         <Button onClick={() => void handleSave()} disabled={isSaving}>
           {isSaving ? (
             <Loader2 className="mr-xs h-4 w-4 animate-spin" />

@@ -35,18 +35,18 @@ export default function CreditCardManagement() {
   };
 
   return (
-    <AnimatedPage className="flex flex-col px-sm py-md md:px-lg md:py-xl">
+    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
         <TabsList className="mb-lg w-full">
-          <TabsTrigger value="cards" className="flex-1 gap-xs">
+          <TabsTrigger value="cards" className="gap-xs flex-1">
             <CreditCard className="h-4 w-4" />
             {t('pages.creditCards.title')}
           </TabsTrigger>
-          <TabsTrigger value="bills" className="flex-1 gap-xs">
+          <TabsTrigger value="bills" className="gap-xs flex-1">
             <Receipt className="h-4 w-4" />
             {t('pages.creditCardBills.title')}
           </TabsTrigger>

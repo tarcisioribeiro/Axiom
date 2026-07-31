@@ -112,7 +112,7 @@ function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
       iconColor: 'text-muted-foreground',
       dotDone: 'border-success bg-success',
       dotLate: 'border-warning bg-warning/30',
-      icon: <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />,
+      icon: <UtensilsCrossed className="text-muted-foreground h-5 w-5" />,
       label: '',
     };
   const h = parseInt(time.slice(0, 2));
@@ -600,24 +600,24 @@ export default function NutritionPage() {
       <PageContainer>
         <PageHeader
           title={t('pages.nutritionFoods.title')}
-          icon={<UtensilsCrossed className="h-6 w-6 text-category-nutrition" />}
+          icon={<UtensilsCrossed className="text-category-nutrition h-6 w-6" />}
         />
 
         <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
-            <TabsTrigger value="today" className="flex-1 gap-xs">
+            <TabsTrigger value="today" className="gap-xs flex-1">
               <Sun className="h-4 w-4" />
               {t('pages.nutritionHub.todayMeals')}
             </TabsTrigger>
-            <TabsTrigger value="log" className="flex-1 gap-xs">
+            <TabsTrigger value="log" className="gap-xs flex-1">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
             </TabsTrigger>
-            <TabsTrigger value="meal-types" className="flex-1 gap-xs">
+            <TabsTrigger value="meal-types" className="gap-xs flex-1">
               <UtensilsCrossed className="h-4 w-4" />
               {t('pages.nutritionFoods.tabMealTypes')}
             </TabsTrigger>
-            <TabsTrigger value="foods" className="flex-1 gap-xs">
+            <TabsTrigger value="foods" className="gap-xs flex-1">
               <Salad className="h-4 w-4" />
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
@@ -627,7 +627,7 @@ export default function NutritionPage() {
           <TabsContent value="today" className="mt-0 flex-1">
             <div className="space-y-md">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">
+                <p className="text-muted-foreground text-sm font-medium">
                   {t('pages.nutritionHub.subtitle')}
                 </p>
                 <Button onClick={() => setDialog({ type: 'new-log' })}>
@@ -672,15 +672,15 @@ export default function NutritionPage() {
                       return (
                         <div
                           key={log.id}
-                          className="flex items-center justify-between rounded-md border border-border p-sm"
+                          className="border-border p-sm flex items-center justify-between rounded-md border"
                         >
                           <div>
                             <p className="text-sm font-medium">
                               {log.meal_type_name ?? log.meal_type}
                             </p>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                            <div className="gap-xs mt-0.5 flex flex-wrap items-center">
                               {log.menu_option_name && (
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-muted-foreground text-xs">
                                   {log.menu_option_name}
                                 </p>
                               )}
@@ -692,14 +692,14 @@ export default function NutritionPage() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-sm">
-                            <span className="text-xs text-muted-foreground">
+                          <div className="gap-sm flex items-center">
+                            <span className="text-muted-foreground text-xs">
                               {log.time ?? ''}
                             </span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 w-7 p-0 text-destructive"
+                              className="text-destructive h-7 w-7 p-0"
                               onClick={() => deleteLogMutation.mutate(log.id)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -717,7 +717,7 @@ export default function NutritionPage() {
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
             {/* Navegação de data */}
-            <div className="mb-md flex items-center gap-sm">
+            <div className="mb-md gap-sm flex items-center">
               <Button
                 variant="ghost"
                 size="icon"
@@ -752,21 +752,21 @@ export default function NutritionPage() {
             </div>
 
             {/* Header card com aderência */}
-            <div className="mb-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-              <div className="flex items-center justify-between gap-md px-lg py-md">
+            <div className="mb-lg border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+              <div className="gap-md px-lg py-md flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium capitalize text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium capitalize">
                     {selectedDateLabel}
                   </p>
-                  <div className="mt-xs flex items-baseline gap-xs">
-                    <span className="text-4xl font-bold tabular-nums text-category-nutrition">
+                  <div className="mt-xs gap-xs flex items-baseline">
+                    <span className="text-category-nutrition text-4xl font-bold tabular-nums">
                       {selectedLogs.length}
                     </span>
-                    <span className="text-xl text-muted-foreground">
+                    <span className="text-muted-foreground text-xl">
                       / {activeMealTypes.length}
                     </span>
                   </div>
-                  <p className="mt-xs text-sm text-muted-foreground">
+                  <p className="mt-xs text-muted-foreground text-sm">
                     {t('pages.nutritionLog.mealsLogged', {
                       logged: selectedLogs.length,
                       total: activeMealTypes.length,
@@ -804,7 +804,7 @@ export default function NutritionPage() {
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-sm font-bold text-category-nutrition">
+                      <span className="text-category-nutrition text-sm font-bold">
                         {adherencePct}%
                       </span>
                     </div>
@@ -812,7 +812,7 @@ export default function NutritionPage() {
                 )}
               </div>
 
-              <div className="border-t border-border px-lg py-sm">
+              <div className="border-border px-lg py-sm border-t">
                 <Button
                   size="sm"
                   onClick={() => setDialog({ type: 'new-log' })}
@@ -848,12 +848,12 @@ export default function NutritionPage() {
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end gap-sm">
+            <div className="mb-md gap-sm flex justify-end">
               <Button
                 variant="outline"
                 onClick={() => setDialog({ type: 'ai-generate-menu' })}
               >
-                <Sparkles className="mr-sm h-4 w-4 text-primary" />
+                <Sparkles className="mr-sm text-primary h-4 w-4" />
                 Gerar com IA
               </Button>
               <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
@@ -913,15 +913,15 @@ export default function NutritionPage() {
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods" className="mt-0 flex-1">
-            <div className="mb-md flex items-center gap-sm">
+            <div className="mb-md gap-sm flex items-center">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}
                   onChange={(e) => setFoodSearch(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background py-sm pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  className="border-input bg-background py-sm focus:ring-ring w-full rounded-lg border pr-3 pl-9 text-sm outline-none focus:ring-2"
                 />
               </div>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
@@ -944,7 +944,7 @@ export default function NutritionPage() {
                 }}
               />
             ) : (
-              <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
+              <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
                 {filteredFoods.map((food) => (
                   <FoodCard
                     key={food.id}
@@ -1104,7 +1104,7 @@ export default function NutritionPage() {
 
                 <div className="space-y-sm">
                   <Label>Refeições por dia: {aiMenuForm.meals_per_day}</Label>
-                  <div className="flex gap-xs">
+                  <div className="gap-xs flex">
                     {[2, 3, 4, 5, 6].map((n) => (
                       <button
                         key={n}
@@ -1125,7 +1125,7 @@ export default function NutritionPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-sm pt-sm">
+                <div className="gap-sm pt-sm flex">
                   <Button
                     variant="outline"
                     className="flex-1"
@@ -1198,13 +1198,13 @@ function MealTypeCard({
       {/* Card header */}
       <div
         className={cn(
-          'flex items-center gap-sm px-md py-sm',
+          'gap-sm px-md py-sm flex items-center',
           mealType.is_active ? theme.cardBg : 'bg-card'
         )}
       >
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-sm text-left"
+          className="gap-sm flex min-w-0 flex-1 items-center text-left"
           onClick={onToggle}
         >
           <div
@@ -1216,12 +1216,12 @@ function MealTypeCard({
             {theme.icon}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-semibold leading-snug">{mealType.name}</p>
-            <div className="mt-0.5 flex items-center gap-sm">
+            <p className="leading-snug font-semibold">{mealType.name}</p>
+            <div className="gap-sm mt-0.5 flex items-center">
               {mealType.suggested_time && (
                 <span
                   className={cn(
-                    'flex items-center gap-xs text-xs font-medium',
+                    'gap-xs flex items-center text-xs font-medium',
                     mealType.is_active ? theme.iconColor : 'text-muted-foreground'
                   )}
                 >
@@ -1229,7 +1229,7 @@ function MealTypeCard({
                   {mealType.suggested_time.slice(0, 5)}
                 </span>
               )}
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {mealType.options.length}{' '}
                 {mealType.options.length === 1
                   ? t('pages.nutritionMealTypes.optionSingular')
@@ -1238,12 +1238,12 @@ function MealTypeCard({
             </div>
           </div>
           {expanded ? (
-            <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            <ChevronDown className="text-muted-foreground ml-auto h-4 w-4 shrink-0" />
           ) : (
-            <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            <ChevronRight className="text-muted-foreground ml-auto h-4 w-4 shrink-0" />
           )}
         </button>
-        <div className="ml-sm flex shrink-0 items-center gap-xs">
+        <div className="ml-sm gap-xs flex shrink-0 items-center">
           <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
             {mealType.is_active
               ? t('pages.nutritionMealTypes.active')
@@ -1273,7 +1273,7 @@ function MealTypeCard({
             transition={{ duration: 0.22, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="border-t border-border bg-card p-md">
+            <div className="border-border bg-card p-md border-t">
               <div className="mb-sm flex justify-end">
                 <Button variant="outline" size="sm" onClick={onNewOption}>
                   <Plus className="mr-xs h-3 w-3" />
@@ -1281,7 +1281,7 @@ function MealTypeCard({
                 </Button>
               </div>
               {mealType.options.length === 0 ? (
-                <p className="py-sm text-center text-xs text-muted-foreground">
+                <p className="py-sm text-muted-foreground text-center text-xs">
                   {t('pages.nutritionMealTypes.noIngredients')}
                 </p>
               ) : (
@@ -1289,13 +1289,13 @@ function MealTypeCard({
                   {mealType.options.map((opt) => (
                     <div
                       key={opt.id}
-                      className="overflow-hidden rounded-lg border border-border bg-muted/20"
+                      className="border-border bg-muted/20 overflow-hidden rounded-lg border"
                     >
                       {/* Option header */}
-                      <div className="flex items-center justify-between border-b border-border/60 bg-card px-sm py-xs">
-                        <div className="flex items-center gap-xs">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-category-nutrition/10">
-                            <BookOpen className="h-3.5 w-3.5 text-category-nutrition" />
+                      <div className="border-border/60 bg-card px-sm py-xs flex items-center justify-between border-b">
+                        <div className="gap-xs flex items-center">
+                          <div className="bg-category-nutrition/10 flex h-6 w-6 items-center justify-center rounded-lg">
+                            <BookOpen className="text-category-nutrition h-3.5 w-3.5" />
                           </div>
                           <span className="text-sm font-semibold">{opt.name}</span>
                           {(() => {
@@ -1314,7 +1314,7 @@ function MealTypeCard({
                             ) : null;
                           })()}
                         </div>
-                        <div className="flex gap-xs">
+                        <div className="gap-xs flex">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1326,7 +1326,7 @@ function MealTypeCard({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            className="text-destructive hover:text-destructive h-7 w-7"
                             onClick={() => onDeleteOption(opt)}
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1337,7 +1337,7 @@ function MealTypeCard({
                       {opt.ingredients.length > 0 ? (
                         <IngredientList ingredients={opt.ingredients} />
                       ) : (
-                        <p className="px-sm py-xs text-xs text-muted-foreground">
+                        <p className="px-sm py-xs text-muted-foreground text-xs">
                           {t('pages.nutritionMealTypes.noIngredients')}
                         </p>
                       )}
@@ -1392,9 +1392,9 @@ function MealTimeline({
         const theme = getMealPeriodTheme(mt.suggested_time);
 
         return (
-          <div key={mt.id} className="flex gap-sm">
+          <div key={mt.id} className="gap-sm flex">
             {/* Timeline spine */}
-            <div className="flex shrink-0 flex-col items-center pt-md">
+            <div className="pt-md flex shrink-0 flex-col items-center">
               <div
                 className={cn(
                   'h-3 w-3 rounded-full border-2 transition-colors',
@@ -1408,7 +1408,7 @@ function MealTimeline({
                 )}
               />
               {idx < mealTypes.length - 1 && (
-                <div className="mt-xs w-0.5 flex-1 bg-border" />
+                <div className="mt-xs bg-border w-0.5 flex-1" />
               )}
             </div>
 
@@ -1427,7 +1427,7 @@ function MealTimeline({
               {theme.label && !log && !isLate && (
                 <div
                   className={cn(
-                    'border-b px-sm py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                    'px-sm border-b py-0.5 text-[10px] font-semibold tracking-wider uppercase',
                     theme.border,
                     theme.iconColor
                   )}
@@ -1436,8 +1436,8 @@ function MealTimeline({
                 </div>
               )}
 
-              <div className="flex items-start justify-between gap-sm p-sm">
-                <div className="flex min-w-0 items-start gap-sm">
+              <div className="gap-sm p-sm flex items-start justify-between">
+                <div className="gap-sm flex min-w-0 items-start">
                   <div
                     className={cn(
                       'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
@@ -1445,18 +1445,18 @@ function MealTimeline({
                     )}
                   >
                     {log ? (
-                      <CheckCircle2 className="h-5 w-5 text-success" />
+                      <CheckCircle2 className="text-success h-5 w-5" />
                     ) : isLate ? (
-                      <AlertCircle className="h-5 w-5 text-warning" />
+                      <AlertCircle className="text-warning h-5 w-5" />
                     ) : (
                       theme.icon
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold leading-snug">{mt.name}</p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                    <p className="leading-snug font-semibold">{mt.name}</p>
+                    <div className="gap-xs mt-0.5 flex flex-wrap items-center">
                       {mt.suggested_time && (
-                        <span className="flex items-center gap-xs text-xs text-muted-foreground">
+                        <span className="gap-xs text-muted-foreground flex items-center text-xs">
                           <Clock className="h-3 w-3" />
                           {t('pages.nutritionLog.suggestedTime', {
                             time: mt.suggested_time.slice(0, 5),
@@ -1464,7 +1464,7 @@ function MealTimeline({
                         </span>
                       )}
                       {log?.time && (
-                        <span className="text-xs font-medium text-success">
+                        <span className="text-success text-xs font-medium">
                           {t('pages.nutritionLog.actualTime', {
                             time: log.time.slice(0, 5),
                           })}
@@ -1472,7 +1472,7 @@ function MealTimeline({
                       )}
                     </div>
                     {log && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground mt-0.5 text-xs">
                         {log.is_free_meal
                           ? t('pages.nutritionLog.freeMeal')
                           : (log.menu_option_name ?? t('pages.nutritionLog.done'))}
@@ -1481,7 +1481,7 @@ function MealTimeline({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-xs">
+                <div className="gap-xs flex shrink-0 items-center">
                   {log ? (
                     <>
                       <Button
@@ -1495,7 +1495,7 @@ function MealTimeline({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-7 w-7"
                         onClick={() => onDelete(log)}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -1505,7 +1505,7 @@ function MealTimeline({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 border-warning/50 text-xs hover:bg-warning/10"
+                      className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
                       {t('pages.nutritionLog.registerMeal')}
@@ -1514,7 +1514,7 @@ function MealTimeline({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
                       {t('pages.nutritionLog.registerMeal')} →
@@ -1540,13 +1540,13 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
   const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
-    <div className="group flex items-center gap-sm rounded-lg border border-border bg-card p-md transition-all hover:border-category-nutrition/40 hover:shadow-sm">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/10">
-        <span className="text-base font-bold text-category-nutrition">{initial}</span>
+    <div className="group gap-sm border-border bg-card p-md hover:border-category-nutrition/40 flex items-center rounded-lg border transition-all hover:shadow-sm">
+      <div className="bg-category-nutrition/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+        <span className="text-category-nutrition text-base font-bold">{initial}</span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold leading-snug">{food.name}</p>
-        <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+        <p className="leading-snug font-semibold">{food.name}</p>
+        <div className="gap-xs mt-0.5 flex flex-wrap items-center">
           {food.calories_per_serving && (
             <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
               <Flame className="h-3 w-3" />
@@ -1554,25 +1554,25 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
             </span>
           )}
           {food.serving_size && food.serving_unit && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {food.serving_size} {t(`units.${food.serving_unit}`, food.serving_unit)}
             </span>
           )}
         </div>
         {food.description && (
-          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
             {food.description}
           </p>
         )}
       </div>
-      <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
           <Edit className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive h-7 w-7"
           onClick={onDelete}
         >
           <Trash2 className="h-3 w-3" />
@@ -1597,10 +1597,10 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
   const { t } = useTranslation();
   const cal = calcCalories(ing);
   return (
-    <div className="flex items-start gap-xs">
-      <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
-      <span className="text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{ing.food_name}</span>
+    <div className="gap-xs flex items-start">
+      <div className="mt-xs bg-category-nutrition/50 h-1.5 w-1.5 shrink-0 rounded-full" />
+      <span className="text-muted-foreground text-xs">
+        <span className="text-foreground font-medium">{ing.food_name}</span>
         {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
         {cal != null && (
           <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
@@ -1609,7 +1609,7 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
           </span>
         )}
         {ing.is_optional && (
-          <span className="ml-xs italic text-muted-foreground/60">(opt.)</span>
+          <span className="ml-xs text-muted-foreground/60 italic">(opt.)</span>
         )}
         {ing.notes ? ` · ${ing.notes}` : ''}
       </span>
@@ -1636,7 +1636,7 @@ function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }
   });
 
   return (
-    <div className="grid gap-xs p-sm sm:grid-cols-2">
+    <div className="gap-xs p-sm grid sm:grid-cols-2">
       {entries.map(([groupKey, items]) =>
         items.length === 1 ? (
           <IngredientItem key={items[0].id} ing={items[0]} />
@@ -1646,7 +1646,7 @@ function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }
               <div key={ing.id}>
                 <IngredientItem ing={ing} />
                 {idx < items.length - 1 && (
-                  <p className="ml-3 text-[10px] font-semibold uppercase tracking-wider text-category-nutrition/60">
+                  <p className="text-category-nutrition/60 ml-3 text-[10px] font-semibold tracking-wider uppercase">
                     {t('pages.nutritionMealTypes.ingredientOr')}
                   </p>
                 )}

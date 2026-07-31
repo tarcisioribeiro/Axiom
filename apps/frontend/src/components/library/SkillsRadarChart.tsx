@@ -76,9 +76,9 @@ function RadarTooltip({ active, payload, label }: TooltipProps) {
             ? 'advanced'
             : 'expert';
   return (
-    <div className="rounded-lg border border-border bg-popover px-md py-sm shadow-lg">
+    <div className="border-border bg-popover px-md py-sm rounded-lg border shadow-lg">
       <p className="text-sm font-semibold">{label}</p>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         {t(`pages.skills.proficiency.${proficiency}`)} ({level}/5)
       </p>
     </div>
@@ -99,7 +99,7 @@ export function SkillsRadarChart({ skills }: SkillsRadarChartProps) {
       <CardContent>
         {data.length === 0 ? (
           <div className="flex h-48 items-center justify-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('pages.skills.radarChart.emptyState')}
             </p>
           </div>

@@ -649,7 +649,7 @@ export default function BodyMetrics() {
           <>
             {/* ── Cards de resumo ── */}
             {latest && (
-              <div className="mb-lg grid grid-cols-2 gap-md sm:grid-cols-3 lg:grid-cols-6">
+              <div className="mb-lg gap-md grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
                 <StatCard
                   title={t('pages.bodyMetrics.weight')}
                   value={fmt(latest.weight_kg, 'kg')}
@@ -744,12 +744,12 @@ export default function BodyMetrics() {
               {/* ── Gráfico ── */}
               <TabsContent value="chart">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between gap-md pb-sm">
+                  <CardHeader className="gap-md pb-sm flex flex-row items-center justify-between">
                     <CardTitle className="text-base">
                       {t('pages.bodyMetrics.chartTitle')}
                     </CardTitle>
-                    <div className="flex items-center gap-sm">
-                      <span className="text-xs text-muted-foreground">
+                    <div className="gap-sm flex items-center">
+                      <span className="text-muted-foreground text-xs">
                         {t('pages.bodyMetrics.chartPeriod')}:
                       </span>
                       <Select
@@ -777,7 +777,7 @@ export default function BodyMetrics() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-md flex flex-wrap gap-xs">
+                    <div className="mb-md gap-xs flex flex-wrap">
                       {chartMetrics.map(({ key, labelKey, color, unit }) => {
                         const isActive = activeMetrics.has(key);
                         return (
@@ -785,7 +785,7 @@ export default function BodyMetrics() {
                             key={key}
                             onClick={() => toggleMetric(key)}
                             className={cn(
-                              'inline-flex items-center gap-xs rounded-full border px-sm py-xs text-xs font-medium transition-all duration-200',
+                              'gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium transition-all duration-200',
                               isActive ? 'shadow-sm' : 'hover:opacity-70'
                             )}
                             style={{
@@ -811,9 +811,9 @@ export default function BodyMetrics() {
                     </div>
 
                     {chartData.length < 2 ? (
-                      <div className="flex flex-col items-center justify-center py-xl text-center">
-                        <Activity className="mb-sm h-8 w-8 text-muted-foreground/40" />
-                        <p className="text-sm text-muted-foreground">
+                      <div className="py-xl flex flex-col items-center justify-center text-center">
+                        <Activity className="mb-sm text-muted-foreground/40 h-8 w-8" />
+                        <p className="text-muted-foreground text-sm">
                           {t('pages.bodyMetrics.noDataForChart')}
                         </p>
                       </div>
@@ -935,7 +935,7 @@ export default function BodyMetrics() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+                      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
                         <StatCard
                           title={t('pages.bodyMetrics.whr')}
                           value={latestWhr !== null ? latestWhr.toFixed(2) : '—'}
@@ -1005,18 +1005,18 @@ export default function BodyMetrics() {
                   const renderLegendRow = (
                     items: { label: string; value: string; color: string }[]
                   ) => (
-                    <div className="mb-md flex flex-wrap items-center justify-center gap-xl">
+                    <div className="mb-md gap-xl flex flex-wrap items-center justify-center">
                       {items.map((item) => (
-                        <div key={item.label} className="flex items-center gap-sm">
+                        <div key={item.label} className="gap-sm flex items-center">
                           <span
                             className="h-8 w-1 rounded-full"
                             style={{ backgroundColor: item.color }}
                           />
                           <div>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               {item.label}
                             </p>
-                            <p className="text-sm font-bold text-foreground">
+                            <p className="text-foreground text-sm font-bold">
                               {item.value}
                             </p>
                           </div>
@@ -1026,11 +1026,11 @@ export default function BodyMetrics() {
                   );
 
                   return (
-                    <div className="mt-md grid grid-cols-1 gap-md lg:grid-cols-2">
+                    <div className="mt-md gap-md grid grid-cols-1 lg:grid-cols-2">
                       <Card>
                         <CardHeader className="pb-sm">
-                          <CardTitle className="flex items-center gap-xs text-base">
-                            <PieChart className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="gap-xs flex items-center text-base">
+                            <PieChart className="text-muted-foreground h-4 w-4" />
                             {t('pages.bodyMetrics.fatPctChartTitle')}
                           </CardTitle>
                         </CardHeader>
@@ -1064,9 +1064,9 @@ export default function BodyMetrics() {
                               />
                             </>
                           ) : (
-                            <div className="flex flex-col items-center justify-center py-xl text-center">
-                              <PieChart className="mb-sm h-8 w-8 text-muted-foreground/40" />
-                              <p className="text-sm text-muted-foreground">
+                            <div className="py-xl flex flex-col items-center justify-center text-center">
+                              <PieChart className="mb-sm text-muted-foreground/40 h-8 w-8" />
+                              <p className="text-muted-foreground text-sm">
                                 {t('pages.bodyMetrics.noDataForComposition')}
                               </p>
                             </div>
@@ -1076,8 +1076,8 @@ export default function BodyMetrics() {
 
                       <Card>
                         <CardHeader className="pb-sm">
-                          <CardTitle className="flex items-center gap-xs text-base">
-                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                          <CardTitle className="gap-xs flex items-center text-base">
+                            <BarChart3 className="text-muted-foreground h-4 w-4" />
                             {t('pages.bodyMetrics.massChartTitle')}
                           </CardTitle>
                         </CardHeader>
@@ -1113,9 +1113,9 @@ export default function BodyMetrics() {
                               />
                             </>
                           ) : (
-                            <div className="flex flex-col items-center justify-center py-xl text-center">
-                              <BarChart3 className="mb-sm h-8 w-8 text-muted-foreground/40" />
-                              <p className="text-sm text-muted-foreground">
+                            <div className="py-xl flex flex-col items-center justify-center text-center">
+                              <BarChart3 className="mb-sm text-muted-foreground/40 h-8 w-8" />
+                              <p className="text-muted-foreground text-sm">
                                 {t('pages.bodyMetrics.noDataForComposition')}
                               </p>
                             </div>
@@ -1141,9 +1141,9 @@ export default function BodyMetrics() {
                         : null;
                     return (
                       <Card key={metric.id}>
-                        <CardContent className="flex items-start justify-between gap-md p-md">
+                        <CardContent className="gap-md p-md flex items-start justify-between">
                           <div className="min-w-0 flex-1">
-                            <div className="mb-sm flex flex-wrap items-center gap-sm">
+                            <div className="mb-sm gap-sm flex flex-wrap items-center">
                               <span className="font-medium">
                                 {format(date, "dd 'de' MMMM 'de' yyyy", { locale })}
                               </span>
@@ -1156,7 +1156,7 @@ export default function BodyMetrics() {
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex flex-wrap gap-x-md gap-y-xs text-sm text-muted-foreground">
+                            <div className="gap-x-md gap-y-xs text-muted-foreground flex flex-wrap text-sm">
                               {metric.weight_kg && (
                                 <span>
                                   {t('pages.bodyMetrics.weight')}:{' '}
@@ -1217,8 +1217,7 @@ export default function BodyMetrics() {
                                 ['calf_right_cm', 'calfRight'],
                               ].map(([field, labelKey]) => {
                                 const val = metric[field as keyof BodyMetric] as
-                                  | string
-                                  | null;
+                                  string | null;
                                 if (!val) return null;
                                 return (
                                   <span key={field}>
@@ -1246,12 +1245,12 @@ export default function BodyMetrics() {
                               )}
                             </div>
                             {metric.notes && (
-                              <p className="mt-xs text-xs text-muted-foreground">
+                              <p className="mt-xs text-muted-foreground text-xs">
                                 {metric.notes}
                               </p>
                             )}
                           </div>
-                          <div className="flex shrink-0 gap-xs">
+                          <div className="gap-xs flex shrink-0">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -1263,7 +1262,7 @@ export default function BodyMetrics() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive h-7 w-7"
                               onClick={() => void handleDelete(metric)}
                               disabled={deleteMutation.isPending}
                             >
@@ -1307,7 +1306,7 @@ export default function BodyMetrics() {
 
               {/* ── Peso e Altura → IMC ── */}
               <FormSection title={t('pages.bodyMetrics.sectionWeightHeight')}>
-                <div className="grid grid-cols-2 gap-md">
+                <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
                     <Label>{t('pages.bodyMetrics.weight')} (kg)</Label>
                     <Input
@@ -1332,7 +1331,7 @@ export default function BodyMetrics() {
                   </div>
                 </div>
                 {liveBmi !== null && (
-                  <div className="mt-sm flex items-center gap-sm rounded-md border bg-muted/40 px-md py-sm text-sm">
+                  <div className="mt-sm gap-sm bg-muted/40 px-md py-sm flex items-center rounded-md border text-sm">
                     <span className="text-muted-foreground">
                       {t('pages.bodyMetrics.bmiLabel')}:
                     </span>
@@ -1349,10 +1348,10 @@ export default function BodyMetrics() {
 
               {/* ── Perimetria (circunferências) ── */}
               <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
-                <p className="mb-sm text-xs text-muted-foreground">
+                <p className="mb-sm text-muted-foreground text-xs">
                   {t('pages.bodyMetrics.perimetryHint')}
                 </p>
-                <div className="grid grid-cols-2 gap-md">
+                <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
                     <Label>{t('pages.bodyMetrics.neck')} (cm)</Label>
                     <Input
@@ -1409,7 +1408,7 @@ export default function BodyMetrics() {
                     <Label>
                       {t('pages.bodyMetrics.hip')} (cm)
                       {sex === 'F' && (
-                        <span className="ml-xs text-xs text-muted-foreground">*</span>
+                        <span className="ml-xs text-muted-foreground text-xs">*</span>
                       )}
                     </Label>
                     <Input
@@ -1489,10 +1488,10 @@ export default function BodyMetrics() {
                 title={t('pages.bodyMetrics.sectionSkinfolds')}
                 icon={Layers}
               >
-                <p className="mb-sm text-xs text-muted-foreground">
+                <p className="mb-sm text-muted-foreground text-xs">
                   {t('pages.bodyMetrics.pollockMethodHint')}
                 </p>
-                <div className="grid grid-cols-2 gap-md">
+                <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
                     <Label>{t('pages.bodyMetrics.skinfoldTriceps')} (mm)</Label>
                     <Input
@@ -1566,12 +1565,12 @@ export default function BodyMetrics() {
                 </div>
 
                 {liveBodyFat !== null ? (
-                  <div className="mt-sm flex items-center gap-sm rounded-md border border-success/30 bg-success/10 px-md py-sm text-sm">
+                  <div className="mt-sm gap-sm border-success/30 bg-success/10 px-md py-sm flex items-center rounded-md border text-sm">
                     <span className="text-muted-foreground">
                       {t('pages.bodyMetrics.bodyFat')}:
                     </span>
                     <strong>{liveBodyFat.toFixed(1)}%</strong>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       (
                       {liveBodyFatMethod === 'pollock'
                         ? t('pages.bodyMetrics.pollockMethod')
@@ -1580,15 +1579,15 @@ export default function BodyMetrics() {
                     </span>
                   </div>
                 ) : hasAllSkinfolds && age === null ? (
-                  <p className="mt-sm text-xs text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.bodyMetrics.pollockMissingBirthDate')}
                   </p>
                 ) : skinfoldValues.some((v) => v > 0) && !hasAllSkinfolds ? (
-                  <p className="mt-sm text-xs text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.bodyMetrics.pollockMethodIncomplete')}
                   </p>
                 ) : liveWaist > 0 || liveNeck > 0 ? (
-                  <p className="mt-sm text-xs text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.bodyMetrics.navyMethodIncomplete')}
                   </p>
                 ) : null}
@@ -1604,7 +1603,7 @@ export default function BodyMetrics() {
                 />
               </div>
 
-              <div className="flex justify-end gap-sm pt-sm">
+              <div className="gap-sm pt-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"

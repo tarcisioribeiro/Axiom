@@ -184,7 +184,7 @@ export function VaultTransactionsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <Label>{t('pages.vaults.filterByType')}</Label>
             <Select value={filter} onValueChange={handleFilterChange}>
               <SelectTrigger className="w-48">
@@ -221,7 +221,7 @@ export function VaultTransactionsDialog({
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="py-xl text-center text-muted-foreground"
+                      className="py-xl text-muted-foreground text-center"
                     >
                       {t('pages.vaults.noTransactions')}
                     </TableCell>
@@ -286,7 +286,7 @@ export function VaultTransactionsDialog({
                         {formatCurrency(parseFloat(tx.balance_after))}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-xs">
+                        <div className="gap-xs flex items-center justify-end">
                           {(tx.transaction_type === 'deposit' ||
                             tx.transaction_type === 'withdrawal') &&
                             vault && (
@@ -335,7 +335,7 @@ export function VaultTransactionsDialog({
                                   title={t('common.actions.delete')}
                                 >
                                   <Trash2
-                                    className="h-4 w-4 text-destructive"
+                                    className="text-destructive h-4 w-4"
                                     aria-hidden="true"
                                   />
                                 </Button>

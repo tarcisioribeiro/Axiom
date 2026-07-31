@@ -365,10 +365,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       )}
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="description" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="description" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.descriptionLabel')}
             </Label>
             <Input
@@ -378,15 +378,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-destructive text-sm">{errors.description.message}</p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label htmlFor="merchant" className="flex items-center gap-xs">
-              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="merchant" className="gap-xs flex items-center">
+              <Store className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.merchantLabel')}
-              <span className="ml-1 text-xs text-muted-foreground/70">
+              <span className="text-muted-foreground/70 ml-1 text-xs">
                 ({t('common.actions.none').toLowerCase()})
               </span>
             </Label>
@@ -397,7 +397,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               placeholder={t('pages.expenses.form.merchantPlaceholder')}
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.expenses.form.merchantHint')}
             </p>
           </div>
@@ -406,10 +406,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Seção: Valores & Data */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="value" className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="value" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.valueLabel')}
             </Label>
             <CurrencyInput
@@ -420,13 +420,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.value && (
-              <p className="text-sm text-destructive">{errors.value.message}</p>
+              <p className="text-destructive text-sm">{errors.value.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.paymentStatusLabel')}
             </Label>
             <StatusToggle
@@ -449,8 +449,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="date" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.dateLabel')}
             </Label>
             <DatePicker
@@ -460,13 +460,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.date && (
-              <p className="text-sm text-destructive">{errors.date.message}</p>
+              <p className="text-destructive text-sm">{errors.date.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="horary" className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="horary" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.horaryLabel')}
             </Label>
             <TimePicker
@@ -475,7 +475,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               disabled={isLoading}
             />
             {errors.horary && (
-              <p className="text-sm text-destructive">{errors.horary.message}</p>
+              <p className="text-destructive text-sm">{errors.horary.message}</p>
             )}
           </div>
         </div>
@@ -483,10 +483,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Seção: Classificação */}
       <FormSection title={t('common.form.sections.classification')} icon={Tag}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.categoryLabel')}
             </Label>
             <div className="relative">
@@ -507,7 +507,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       <SelectItem key={key} value={key}>
                         <span className="flex items-center gap-2">
                           {Icon && (
-                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                           )}
                           {translate('expenseCategories', key)}
                         </span>
@@ -518,19 +518,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </Select>
             </div>
             {isLoadingAiSuggestion && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-1 text-xs">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 <span>{t('pages.expenses.form.aiSuggesting')}</span>
               </div>
             )}
             {aiSuggestion && !isLoadingAiSuggestion && (
-              <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs">
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <div className="border-primary/20 bg-primary/5 flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs">
+                <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
                 <span className="text-muted-foreground">
                   {t('pages.expenses.form.aiSuggested')}:{' '}
                   <button
                     type="button"
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="text-primary font-medium underline-offset-2 hover:underline"
                     onClick={() => {
                       setValue('category', aiSuggestion.category);
                       setAiSuggestion(null);
@@ -542,7 +542,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <button
                   type="button"
                   aria-label={t('common.actions.close')}
-                  className="ml-auto text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground ml-auto transition-colors"
                   onClick={() => setAiSuggestion(null)}
                 >
                   <X className="h-3 w-3" />
@@ -550,13 +550,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </div>
             )}
             {errors.category && (
-              <p className="text-sm text-destructive">{errors.category.message}</p>
+              <p className="text-destructive text-sm">{errors.category.message}</p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.expenses.form.accountLabel')}
             </Label>
             <Select
@@ -570,7 +570,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 {accounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground ml-2 text-xs">
                       {parseFloat(a.balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
@@ -581,7 +581,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </SelectContent>
             </Select>
             {selectedAccount && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.expenses.form.balanceInfo', {
                   value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
                     minimumFractionDigits: 2,
@@ -590,7 +590,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </p>
             )}
             {errors.account && (
-              <p className="text-sm text-destructive">{errors.account.message}</p>
+              <p className="text-destructive text-sm">{errors.account.message}</p>
             )}
           </div>
         </div>
@@ -602,26 +602,26 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
-            className="flex w-full items-center gap-xs text-left"
+            className="gap-xs flex w-full items-center text-left"
           >
-            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+            <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('common.form.sections.links')}
             </span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="bg-border/50 h-px flex-1" />
             {linksOpen ? (
-              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
             ) : (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
           </button>
 
           {linksOpen && (
-            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               {eligibleLoans.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedLoanLabel')}
                   </Label>
                   <Select
@@ -643,7 +643,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedLoanHint')}
                   </p>
                 </div>
@@ -651,8 +651,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
               {eligiblePayables.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedPayableLabel')}
                   </Label>
                   <Select
@@ -674,7 +674,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedPayableHint')}
                   </p>
                 </div>
@@ -682,8 +682,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
               {eligibleFixedExpenses.length > 0 && (
                 <div className="space-y-sm">
-                  <Label className="flex items-center gap-xs">
-                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.expenses.form.relatedFixedExpenseLabel')}
                   </Label>
                   <Select
@@ -711,7 +711,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.expenses.form.relatedFixedExpenseHint')}
                   </p>
                 </div>
@@ -724,7 +724,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {/* Alertas de saldo */}
       {isFutureDate && watchedAccount && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             futureBalanceInfo && !futureBalanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : futureBalanceInfo?.isUsingOverdraft
@@ -757,7 +757,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       )}
       {balanceInfo && watchedValue > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             !balanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : 'border-warning/30 bg-warning/10 text-warning'
@@ -780,13 +780,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* Toggle: Dividir despesa — only for new expenses */}
       {!expense && (
-        <div className="flex items-center gap-sm rounded-md border border-dashed border-border px-md py-sm">
-          <GitFork className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="gap-sm border-border px-md py-sm flex items-center rounded-md border border-dashed">
+          <GitFork className="text-muted-foreground h-4 w-4 shrink-0" />
           <div className="flex flex-1 flex-col gap-0.5">
             <span className="text-sm font-medium">
               {t('pages.expenses.form.splitToggle')}
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('pages.expenses.form.splitToggleHint')}
             </span>
           </div>
@@ -795,7 +795,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             role="switch"
             aria-checked={splitOnCreate}
             onClick={() => setSplitOnCreate((v) => !v)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`focus-visible:ring-ring relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none ${
               splitOnCreate ? 'bg-primary' : 'bg-input'
             }`}
           >
@@ -808,7 +808,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

@@ -1,10 +1,5 @@
 export type ConfigCategory =
-  | 'llm'
-  | 'email'
-  | 'backup'
-  | 'app'
-  | 'security'
-  | 'storage';
+  'llm' | 'email' | 'backup' | 'app' | 'security' | 'storage';
 
 export interface SystemConfig {
   key: string;
@@ -21,12 +16,7 @@ export interface SystemConfig {
 }
 
 export type ServiceStatus =
-  | 'healthy'
-  | 'unhealthy'
-  | 'warning'
-  | 'not_configured'
-  | 'unknown'
-  | 'not_active';
+  'healthy' | 'unhealthy' | 'warning' | 'not_configured' | 'unknown' | 'not_active';
 
 export interface ServiceCheck {
   status: ServiceStatus;

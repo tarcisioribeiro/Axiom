@@ -193,7 +193,7 @@ export function LoanForm({
               const isDone = stepNum < step;
               return (
                 <div key={stepNum} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center gap-xs">
+                  <div className="gap-xs flex flex-col items-center">
                     <div
                       className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
                         isDone
@@ -206,7 +206,7 @@ export function LoanForm({
                       {isDone ? <Check className="h-3.5 w-3.5" /> : stepNum}
                     </div>
                     <span
-                      className={`text-center text-xs ${isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
+                      className={`text-center text-xs ${isActive ? 'text-primary font-semibold' : 'text-muted-foreground'}`}
                     >
                       {label}
                     </span>
@@ -233,14 +233,14 @@ export function LoanForm({
           }
           icon={FileText}
         >
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             {!isEditing && (
               <div className="col-span-2">
-                <Label className="flex items-center gap-xs">
-                  <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label className="gap-xs flex items-center">
+                  <Shield className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.loans.form.loanTypeLabel')}
                 </Label>
-                <div className="mt-sm grid grid-cols-2 gap-sm">
+                <div className="mt-sm gap-sm grid grid-cols-2">
                   {(['borrowed', 'lent'] as const).map((type) => (
                     <button
                       key={type}
@@ -264,7 +264,7 @@ export function LoanForm({
                             : {}),
                         });
                       }}
-                      className={`flex flex-col items-center gap-sm rounded-lg border-2 p-md transition-all ${
+                      className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 transition-all ${
                         formData.loan_type === type
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border/50 bg-muted/10 text-muted-foreground hover:border-primary/40'
@@ -285,8 +285,8 @@ export function LoanForm({
             )}
 
             <div className="col-span-2">
-              <Label htmlFor="description" className="flex items-center gap-xs">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="description" className="gap-xs flex items-center">
+                <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.descriptionLabel')}
               </Label>
               <Input
@@ -298,8 +298,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="value" className="flex items-center gap-xs">
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="value" className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.totalValueLabel')}
               </Label>
               <CurrencyInput
@@ -310,8 +310,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="payed_value" className="flex items-center gap-xs">
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="payed_value" className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.paidValueLabel')}
                 {loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}
               </Label>
@@ -320,18 +320,18 @@ export function LoanForm({
                 value={formData.payed_value}
                 onChange={(e) => set({ payed_value: parseFloat(e.target.value) || 0 })}
                 disabled={!!loan}
-                className={loan ? 'cursor-not-allowed bg-muted' : ''}
+                className={loan ? 'bg-muted cursor-not-allowed' : ''}
               />
               {loan && (
-                <p className="mt-xs text-xs text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-xs">
                   {t('pages.loans.form.paidValueNote')}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="date" className="flex items-center gap-xs">
-                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="date" className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.dateLabel')}
               </Label>
               <DatePicker
@@ -342,8 +342,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="horary" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="horary" className="gap-xs flex items-center">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.timeLabel')}
               </Label>
               <TimePicker
@@ -365,10 +365,10 @@ export function LoanForm({
           }
           icon={Users}
         >
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             <div>
-              <Label htmlFor="category" className="flex items-center gap-xs">
-                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="category" className="gap-xs flex items-center">
+                <Tag className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.categoryLabel')}
               </Label>
               <Select
@@ -385,7 +385,7 @@ export function LoanForm({
                       <SelectItem key={key} value={key}>
                         <span className="flex items-center gap-2">
                           {Icon && (
-                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                           )}
                           {translate('expenseCategories', key)}
                         </span>
@@ -397,8 +397,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="account" className="flex items-center gap-xs">
-                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="account" className="gap-xs flex items-center">
+                <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.accountLabel')}
               </Label>
               <Select
@@ -412,7 +412,7 @@ export function LoanForm({
                   {accounts.map((acc) => (
                     <SelectItem key={acc.id} value={acc.id.toString()}>
                       {acc.account_name}
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground ml-2 text-xs">
                         {parseFloat(acc.balance).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -426,8 +426,8 @@ export function LoanForm({
 
             {((!isEditing && formData.loan_type === 'lent') || isEditing) && (
               <div>
-                <Label htmlFor="benefited" className="flex items-center gap-xs">
-                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="benefited" className="gap-xs flex items-center">
+                  <Users className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.loans.form.benefitedLabel')}
                 </Label>
                 <Select
@@ -455,8 +455,8 @@ export function LoanForm({
 
             {((!isEditing && formData.loan_type === 'borrowed') || isEditing) && (
               <div>
-                <Label htmlFor="creditor" className="flex items-center gap-xs">
-                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="creditor" className="gap-xs flex items-center">
+                  <Users className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.loans.form.creditorLabel')}
                 </Label>
                 <Select
@@ -483,8 +483,8 @@ export function LoanForm({
             )}
 
             <div>
-              <Label htmlFor="status" className="flex items-center gap-xs">
-                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="status" className="gap-xs flex items-center">
+                <Shield className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.statusLabel')}
               </Label>
               <Select
@@ -517,10 +517,10 @@ export function LoanForm({
           }
           icon={BadgePercent}
         >
-          <div className="grid grid-cols-2 gap-md">
+          <div className="gap-md grid grid-cols-2">
             <div>
-              <Label htmlFor="installments" className="flex items-center gap-xs">
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="installments" className="gap-xs flex items-center">
+                <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.installmentsLabel')}
               </Label>
               <Input
@@ -532,8 +532,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="interest_rate" className="flex items-center gap-xs">
-                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="interest_rate" className="gap-xs flex items-center">
+                <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.interestRateLabel')}
               </Label>
               <Input
@@ -546,8 +546,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="due_date" className="flex items-center gap-xs">
-                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="due_date" className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.dueDateLabel')}
               </Label>
               <DatePicker
@@ -560,8 +560,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="payment_frequency" className="flex items-center gap-xs">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="payment_frequency" className="gap-xs flex items-center">
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.paymentFrequencyLabel')}
               </Label>
               <Select
@@ -582,8 +582,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="late_fee" className="flex items-center gap-xs">
-                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="late_fee" className="gap-xs flex items-center">
+                <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.lateFeeLabel')}
               </Label>
               <CurrencyInput
@@ -594,8 +594,8 @@ export function LoanForm({
             </div>
 
             <div>
-              <Label htmlFor="guarantor" className="flex items-center gap-xs">
-                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="guarantor" className="gap-xs flex items-center">
+                <Shield className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.guarantorLabel')}
               </Label>
               <Select
@@ -621,8 +621,8 @@ export function LoanForm({
             </div>
 
             <div className="col-span-2">
-              <Label htmlFor="notes" className="flex items-center gap-xs">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="notes" className="gap-xs flex items-center">
+                <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.notesLabel')}
               </Label>
               <Textarea
@@ -634,8 +634,8 @@ export function LoanForm({
             </div>
 
             <div className="col-span-2">
-              <Label htmlFor="contract_document" className="flex items-center gap-xs">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="contract_document" className="gap-xs flex items-center">
+                <FileText className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.contractDocumentLabel')}
               </Label>
               <FileInput
@@ -644,7 +644,7 @@ export function LoanForm({
               />
             </div>
 
-            <div className="col-span-2 flex items-center gap-sm">
+            <div className="gap-sm col-span-2 flex items-center">
               <input
                 type="checkbox"
                 id="payed"
@@ -658,8 +658,8 @@ export function LoanForm({
             </div>
 
             {!isEditing && formData.loan_type === 'borrowed' && (
-              <div className="col-span-2 space-y-xs rounded-md border p-sm">
-                <div className="flex items-center gap-sm">
+              <div className="space-y-xs p-sm col-span-2 rounded-md border">
+                <div className="gap-sm flex items-center">
                   <input
                     type="checkbox"
                     id="generate_revenue"
@@ -672,7 +672,7 @@ export function LoanForm({
                   </Label>
                 </div>
                 {formData.generate_revenue && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.loans.form.generateRevenueHint')}
                   </p>
                 )}
@@ -680,8 +680,8 @@ export function LoanForm({
             )}
 
             {!isEditing && formData.loan_type === 'lent' && (
-              <div className="col-span-2 space-y-xs rounded-md border p-sm">
-                <div className="flex items-center gap-sm">
+              <div className="space-y-xs p-sm col-span-2 rounded-md border">
+                <div className="gap-sm flex items-center">
                   <input
                     type="checkbox"
                     id="generate_expense"
@@ -694,7 +694,7 @@ export function LoanForm({
                   </Label>
                 </div>
                 {formData.generate_expense && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('pages.loans.form.generateExpenseHint')}
                   </p>
                 )}
@@ -706,7 +706,7 @@ export function LoanForm({
 
       {balanceInfo && formData.value > 0 && (
         <div
-          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+          className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             !balanceInfo.canPay
               ? 'border-destructive/30 bg-destructive/10 text-destructive'
               : 'border-warning/30 bg-warning/10 text-warning'
@@ -727,7 +727,7 @@ export function LoanForm({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         {step > 1 && !isEditing && (
           <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
             {t('common.actions.back')}

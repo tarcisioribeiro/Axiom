@@ -184,6 +184,7 @@ class VectorizeExistingCommandTest(TestCase):
         with (
             patch("expenses.models.Expense.objects") as mock_exp,
             patch("revenues.models.Revenue.objects") as mock_rev,
+            patch("agents.models.AgentEmbedding.objects") as mock_emb,
         ):
 
             mock_exp_qs = mock_exp.filter.return_value.values.return_value
@@ -192,6 +193,12 @@ class VectorizeExistingCommandTest(TestCase):
             mock_rev_qs = mock_rev.filter.return_value.values.return_value
             mock_rev_qs.count.return_value = 0
             mock_rev_qs.iterator.return_value = iter([])
+            # _already_embedded() queries AgentEmbedding directly (not via
+            # the mocked Expense/Revenue managers above), which would
+            # otherwise hit the real "vectors"."agent_embeddings" table —
+            # a Postgres-only schema-qualified table unavailable under the
+            # SQLite test database.
+            mock_emb.filter.return_value.values_list.return_value = []
 
             out = StringIO()
             from django.core.management import call_command
@@ -319,7 +326,7 @@ class VectorizeExistingCommandTest(TestCase):
         ):
             mock_mgr.filter.return_value.delete.return_value = (5, {})
 
-            options = {"reset": True, "batch_size": 50}
+            options = {"reset": True, "batch_size": 50, "force": False}
             cmd._process_domain(self.user, "finance", options)
 
             mock_mgr.filter.assert_called_once_with(

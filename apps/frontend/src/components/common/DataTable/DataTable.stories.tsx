@@ -60,7 +60,7 @@ const columns: Column<SampleRow>[] = [
     label: 'Valor',
     align: 'right',
     render: (item) => (
-      <span className="font-medium text-destructive">{item.amount}</span>
+      <span className="text-destructive font-medium">{item.amount}</span>
     ),
   },
   { key: 'date', label: 'Data', align: 'center' },
@@ -109,7 +109,7 @@ export const WithActions: Story = {
       columns={columns}
       keyExtractor={(item) => item.id}
       actions={(item) => (
-        <div className="flex justify-end gap-sm">
+        <div className="gap-sm flex justify-end">
           <Button
             variant="ghost"
             size="icon"
@@ -124,7 +124,7 @@ export const WithActions: Story = {
             aria-label={`Excluir ${item.name}`}
             onClick={() => alert(`Excluir: ${item.name}`)}
           >
-            <Trash2 className="h-4 w-4 text-destructive" />
+            <Trash2 className="text-destructive h-4 w-4" />
           </Button>
         </div>
       )}

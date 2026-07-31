@@ -51,10 +51,10 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
   return (
     <div className="flex max-h-[calc(100vh-14rem)] flex-col">
       <div
-        className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-md py-3 text-white`}
+        className={`${getHeaderColor()} px-md flex-shrink-0 rounded-t-lg py-3 text-white`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <h3 className="text-lg font-semibold">{title}</h3>
             {isComplete && (
               <motion.div
@@ -83,8 +83,8 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
 
       <div
         ref={setNodeRef}
-        className={`flex-1 ${getColorClasses()} kanban-scrollbar min-h-[200px] overflow-y-auto rounded-b-lg border-2 p-md transition-colors ${
-          isOver ? 'border-4 border-dashed border-info bg-info/20' : ''
+        className={`flex-1 ${getColorClasses()} kanban-scrollbar p-md min-h-[200px] overflow-y-auto rounded-b-lg border-2 transition-colors ${
+          isOver ? 'border-info bg-info/20 border-4 border-dashed' : ''
         }`}
       >
         <SortableContext

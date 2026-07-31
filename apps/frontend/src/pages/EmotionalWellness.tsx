@@ -143,7 +143,7 @@ function ScaleInput({
   return (
     <div className="space-y-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-foreground text-sm font-medium">{label}</span>
         <span className={cn('text-lg font-bold tabular-nums', color)}>{value}</span>
       </div>
       <input
@@ -152,9 +152,9 @@ function ScaleInput({
         max={10}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+        className="bg-muted accent-primary h-2 w-full cursor-pointer appearance-none rounded-full"
       />
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex justify-between text-xs">
         <span>0</span>
         <span>10</span>
       </div>
@@ -187,19 +187,19 @@ function WellnessStatCard({
         : 'text-muted-foreground';
 
   return (
-    <Card className="relative overflow-hidden border-border/50">
+    <Card className="border-border/50 relative overflow-hidden">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-xs">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               {title}
             </p>
-            <p className="text-2xl font-bold text-foreground">{value ?? '—'}</p>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+            <p className="text-foreground text-2xl font-bold">{value ?? '—'}</p>
+            {subtitle && <p className="text-muted-foreground text-xs">{subtitle}</p>}
           </div>
-          <div className="flex flex-col items-end gap-sm">
-            <div className="rounded-lg bg-primary/10 p-sm">
-              <Icon className="h-4 w-4 text-primary" />
+          <div className="gap-sm flex flex-col items-end">
+            <div className="bg-primary/10 p-sm rounded-lg">
+              <Icon className="text-primary h-4 w-4" />
             </div>
             {trend && <TrendIcon className={cn('h-3.5 w-3.5', trendColor)} />}
           </div>
@@ -311,12 +311,12 @@ function DashboardTab() {
             <div className="space-y-sm">
               {history.slice(0, 5).map((a) => (
                 <div key={a.id} className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 text-xs text-muted-foreground">
+                  <span className="text-muted-foreground w-24 shrink-0 text-xs">
                     {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
                   </span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="bg-primary h-full rounded-full transition-all"
                       style={{ width: `${(a.score / 30) * 100}%` }}
                     />
                   </div>
@@ -420,8 +420,8 @@ function SelfEsteemTab() {
       {!showForm && (
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-foreground">Escala de Rosenberg</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-foreground font-semibold">Escala de Rosenberg</h2>
+            <p className="text-muted-foreground text-sm">
               10 perguntas sobre como você se vê
             </p>
           </div>
@@ -456,11 +456,11 @@ function SelfEsteemTab() {
 
             {ROSENBERG_QUESTIONS.map((q, i) => (
               <Card key={i} className="border-border/50">
-                <CardContent className="space-y-3 p-md">
-                  <p className="text-sm font-medium leading-relaxed">
+                <CardContent className="p-md space-y-3">
+                  <p className="text-sm leading-relaxed font-medium">
                     {i + 1}. {q}
                   </p>
-                  <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
+                  <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
                     {ROSENBERG_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
@@ -468,7 +468,7 @@ function SelfEsteemTab() {
                           setAnswers((prev) => ({ ...prev, [`q${i + 1}`]: opt.value }))
                         }
                         className={cn(
-                          'rounded-lg border px-3 py-sm text-center text-xs font-medium transition-all',
+                          'py-sm rounded-lg border px-3 text-center text-xs font-medium transition-all',
                           answers[`q${i + 1}`] === opt.value
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -504,16 +504,16 @@ function SelfEsteemTab() {
                 className={cn('text-5xl font-black', scoreLabel(submitted.score).color)}
               >
                 {submitted.score}
-                <span className="text-2xl font-light text-muted-foreground">/30</span>
+                <span className="text-muted-foreground text-2xl font-light">/30</span>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Autoestima {scoreLabel(submitted.score).label}
               </p>
             </div>
 
             <Card className="border-border/50">
-              <CardContent className="space-y-3 p-md">
-                <p className="text-sm leading-relaxed text-foreground">
+              <CardContent className="p-md space-y-3">
+                <p className="text-foreground text-sm leading-relaxed">
                   {aiParsed.analysis}
                 </p>
               </CardContent>
@@ -522,15 +522,15 @@ function SelfEsteemTab() {
             {aiParsed.strengths?.length > 0 && (
               <Card className="border-success/20">
                 <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-sm text-success">
+                  <CardTitle className="text-success text-sm">
                     Pontos fortes identificados
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
                   {aiParsed.strengths.map((s, i) => (
-                    <div key={i} className="flex items-start gap-sm">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                      <p className="text-sm text-foreground">{s}</p>
+                    <div key={i} className="gap-sm flex items-start">
+                      <CheckCircle2 className="text-success mt-0.5 h-4 w-4 shrink-0" />
+                      <p className="text-foreground text-sm">{s}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -540,15 +540,15 @@ function SelfEsteemTab() {
             {aiParsed.limiting_beliefs?.length > 0 && (
               <Card className="border-warning/20">
                 <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-sm text-warning">
+                  <CardTitle className="text-warning text-sm">
                     Crenças para trabalhar
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
                   {aiParsed.limiting_beliefs.map((b, i) => (
-                    <div key={i} className="flex items-start gap-sm">
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-                      <p className="text-sm text-foreground">{b}</p>
+                    <div key={i} className="gap-sm flex items-start">
+                      <AlertCircle className="text-warning mt-0.5 h-4 w-4 shrink-0" />
+                      <p className="text-foreground text-sm">{b}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -558,15 +558,15 @@ function SelfEsteemTab() {
             {aiParsed.weekly_suggestions?.length > 0 && (
               <Card className="border-primary/20">
                 <CardHeader className="px-md pb-sm pt-md">
-                  <CardTitle className="text-sm text-primary">
+                  <CardTitle className="text-primary text-sm">
                     Sugestões para esta semana
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-sm px-md pb-md">
                   {aiParsed.weekly_suggestions.map((s, i) => (
-                    <div key={i} className="flex items-start gap-sm">
-                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <p className="text-sm text-foreground">{s}</p>
+                    <div key={i} className="gap-sm flex items-start">
+                      <ChevronRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                      <p className="text-foreground text-sm">{s}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -600,14 +600,14 @@ function SelfEsteemTab() {
                   const sl = scoreLabel(a.score);
                   return (
                     <Card key={a.id} className="border-border/50">
-                      <CardContent className="flex items-center gap-md p-md">
+                      <CardContent className="gap-md p-md flex items-center">
                         <div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
                           </p>
                           <p className={cn('text-2xl font-bold', sl.color)}>
                             {a.score}
-                            <span className="text-sm font-normal text-muted-foreground">
+                            <span className="text-muted-foreground text-sm font-normal">
                               /30
                             </span>
                           </p>
@@ -615,9 +615,9 @@ function SelfEsteemTab() {
                             {sl.label}
                           </Badge>
                         </div>
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full bg-primary"
+                            className="bg-primary h-full rounded-full"
                             style={{ width: `${(a.score / 30) * 100}%` }}
                           />
                         </div>
@@ -678,13 +678,13 @@ function CheckinTab() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex flex-col items-center justify-center space-y-md py-12 text-center"
+        className="space-y-md flex flex-col items-center justify-center py-12 text-center"
       >
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-          <CheckCircle2 className="h-8 w-8 text-success" />
+        <div className="bg-success/10 flex h-16 w-16 items-center justify-center rounded-full">
+          <CheckCircle2 className="text-success h-8 w-8" />
         </div>
         <h2 className="text-lg font-semibold">Check-in registrado</h2>
-        <p className="max-w-xs text-sm text-muted-foreground">
+        <p className="text-muted-foreground max-w-xs text-sm">
           Ótimo trabalho em reservar um momento para se conectar com você mesmo.
         </p>
         <Button onClick={() => setSubmitted(false)}>Fazer outro check-in</Button>
@@ -696,7 +696,7 @@ function CheckinTab() {
     <div className="space-y-lg">
       <div>
         <h2 className="font-semibold">Como você está agora?</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Responda com honestidade — só você vai ver.
         </p>
       </div>
@@ -740,7 +740,7 @@ function CheckinTab() {
         <div>
           <label
             htmlFor="what-happened"
-            className="mb-xs.5 block text-sm font-medium text-foreground"
+            className="mb-xs.5 text-foreground block text-sm font-medium"
           >
             O que aconteceu hoje?
           </label>
@@ -748,17 +748,17 @@ function CheckinTab() {
             id="what-happened"
             value={form.what_happened}
             onChange={(e) => setForm((p) => ({ ...p, what_happened: e.target.value }))}
-            className="min-h-[80px] w-full resize-none rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary min-h-[80px] w-full resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
             placeholder="Pode ser algo simples ou complexo..."
           />
         </div>
         <div>
           <label
             htmlFor="occupying-thoughts"
-            className="mb-xs.5 block text-sm font-medium text-foreground"
+            className="mb-xs.5 text-foreground block text-sm font-medium"
           >
             Existe algo ocupando seus pensamentos?{' '}
-            <span className="font-normal text-muted-foreground">(opcional)</span>
+            <span className="text-muted-foreground font-normal">(opcional)</span>
           </label>
           <textarea
             id="occupying-thoughts"
@@ -766,7 +766,7 @@ function CheckinTab() {
             onChange={(e) =>
               setForm((p) => ({ ...p, occupying_thoughts: e.target.value }))
             }
-            className="min-h-[70px] w-full resize-none rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary min-h-[70px] w-full resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
             placeholder="Uma preocupação, uma pessoa, um pensamento recorrente..."
           />
         </div>
@@ -777,27 +777,27 @@ function CheckinTab() {
       </Button>
 
       {history && history.results.length > 0 && (
-        <div className="space-y-sm border-t border-border/50 pt-sm">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="space-y-sm border-border/50 pt-sm border-t">
+          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Últimos check-ins
           </p>
           {history.results.slice(0, 3).map((c) => (
             <Card key={c.id} className="border-border/50">
               <CardContent className="flex items-center justify-between p-3">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {format(new Date(c.checked_at), 'dd/MM')}
                 </p>
-                <div className="flex gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-xs">
-                    <Heart className="h-3 w-3 text-info" />
+                <div className="text-muted-foreground flex gap-3 text-xs">
+                  <span className="gap-xs flex items-center">
+                    <Heart className="text-info h-3 w-3" />
                     {c.loneliness}
                   </span>
-                  <span className="flex items-center gap-xs">
-                    <Brain className="h-3 w-3 text-warning" />
+                  <span className="gap-xs flex items-center">
+                    <Brain className="text-warning h-3 w-3" />
                     {c.anxiety}
                   </span>
-                  <span className="flex items-center gap-xs">
-                    <Zap className="h-3 w-3 text-success" />
+                  <span className="gap-xs flex items-center">
+                    <Zap className="text-success h-3 w-3" />
                     {c.motivation}
                   </span>
                 </div>
@@ -882,12 +882,12 @@ function CrisisTab() {
     return (
       <div className="space-y-lg">
         <div className="space-y-md py-lg text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/10">
-            <Shield className="h-10 w-10 text-destructive" />
+          <div className="border-destructive/20 bg-destructive/10 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border">
+            <Shield className="text-destructive h-10 w-10" />
           </div>
           <div>
             <h2 className="text-lg font-semibold">Modo Crise</h2>
-            <p className="mx-auto mt-xs max-w-xs text-sm text-muted-foreground">
+            <p className="mt-xs text-muted-foreground mx-auto max-w-xs text-sm">
               Quando um impulso aparecer, este espaço é para você. Sem julgamento.
             </p>
           </div>
@@ -902,8 +902,8 @@ function CrisisTab() {
         </div>
 
         {logs && logs.results.length > 0 && (
-          <div className="space-y-sm border-t border-border/50 pt-md">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="space-y-sm border-border/50 pt-md border-t">
+            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               Histórico
             </p>
             {logs.results.slice(0, 5).map((log) => (
@@ -911,13 +911,13 @@ function CrisisTab() {
                 <CardContent className="flex items-center justify-between p-3">
                   <div>
                     <p className="text-sm font-medium">{log.impulse_type_display}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {log.emotional_state_display} ·{' '}
                       {format(new Date(log.logged_at), 'dd/MM HH:mm')}
                     </p>
                   </div>
                   {log.resolved ? (
-                    <Badge className="border-success/20 bg-success/10 text-xs text-success">
+                    <Badge className="border-success/20 bg-success/10 text-success text-xs">
                       Superado
                     </Badge>
                   ) : (
@@ -945,10 +945,10 @@ function CrisisTab() {
         </div>
 
         <div>
-          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Estado emocional
           </p>
-          <div className="grid grid-cols-2 gap-sm sm:grid-cols-3">
+          <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
             {EMOTIONAL_STATES.map((e) => (
               <button
                 key={e.value}
@@ -966,7 +966,7 @@ function CrisisTab() {
           </div>
           {emotionalState === 'other' && (
             <input
-              className="mt-sm w-full rounded-lg border border-border bg-background px-3 py-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="mt-sm border-border bg-background py-sm focus:ring-primary w-full rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
               placeholder="Descreva o que está sentindo"
               value={otherEmotion}
               onChange={(e) => setOtherEmotion(e.target.value)}
@@ -975,10 +975,10 @@ function CrisisTab() {
         </div>
 
         <div>
-          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
             Qual impulso você está tentando evitar?
           </p>
-          <div className="grid grid-cols-2 gap-sm sm:grid-cols-3">
+          <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
             {IMPULSE_TYPES.map((t) => (
               <button
                 key={t.value}
@@ -996,7 +996,7 @@ function CrisisTab() {
           </div>
           {impulseType === 'other' && (
             <input
-              className="mt-sm w-full rounded-lg border border-border bg-background px-3 py-sm text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="mt-sm border-border bg-background py-sm focus:ring-primary w-full rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
               placeholder="Descreva o impulso"
               value={otherImpulse}
               onChange={(e) => setOtherImpulse(e.target.value)}
@@ -1026,7 +1026,7 @@ function CrisisTab() {
         <>
           <Card className="border-primary/20">
             <CardContent className="space-y-xs p-md">
-              <p className="text-xs font-medium uppercase tracking-wider text-primary">
+              <p className="text-primary text-xs font-medium tracking-wider uppercase">
                 Validação
               </p>
               <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
@@ -1035,7 +1035,7 @@ function CrisisTab() {
 
           <Card className="border-warning/20">
             <CardContent className="space-y-xs p-md">
-              <p className="text-xs font-medium uppercase tracking-wider text-warning">
+              <p className="text-warning text-xs font-medium tracking-wider uppercase">
                 Contexto
               </p>
               <p className="text-sm leading-relaxed">{aiParsed.explanation}</p>
@@ -1043,20 +1043,20 @@ function CrisisTab() {
           </Card>
 
           <div className="space-y-sm">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               Plano de ação imediato
             </p>
             {(['5min', '10min', '20min'] as const).map((duration) => (
               <Card key={duration} className="border-border/50">
                 <CardHeader className="px-md pb-sm pt-3">
-                  <CardTitle className="gap-xs.5 flex items-center text-xs text-muted-foreground">
+                  <CardTitle className="gap-xs.5 text-muted-foreground flex items-center text-xs">
                     <Clock className="h-3.5 w-3.5" /> {duration}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-xs.5 px-md pb-3">
                   {aiParsed.action_plan[duration]?.map((action, i) => (
-                    <div key={i} className="flex items-start gap-sm">
-                      <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                    <div key={i} className="gap-sm flex items-start">
+                      <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
                       <p className="text-sm">{action}</p>
                     </div>
                   ))}
@@ -1067,7 +1067,7 @@ function CrisisTab() {
 
           <Card className="border-success/20">
             <CardContent className="p-md">
-              <p className="text-center text-sm italic text-success">
+              <p className="text-success text-center text-sm italic">
                 "{aiParsed.affirmation}"
               </p>
             </CardContent>
@@ -1076,14 +1076,14 @@ function CrisisTab() {
       ) : (
         <Card className="border-border/50">
           <CardContent className="p-md">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Impulso registrado. A análise da IA estará disponível em breve.
             </p>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex">
         <Button
           className="flex-1"
           variant="outline"
@@ -1164,13 +1164,13 @@ function LibraryTab() {
 
   return (
     <div className="space-y-md">
-      <div className="-mx-xs flex gap-sm overflow-x-auto px-xs pb-xs">
+      <div className="-mx-xs gap-sm px-xs pb-xs flex overflow-x-auto">
         {categories.map((c) => (
           <button
             key={c.value}
             onClick={() => setSelectedCategory(c.value)}
             className={cn(
-              'py-xs.5 whitespace-nowrap rounded-full border px-3 text-xs font-medium transition-all',
+              'py-xs.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-all',
               selectedCategory === c.value
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border text-muted-foreground hover:border-primary/50'
@@ -1198,19 +1198,19 @@ function LibraryTab() {
                 key={item.id}
                 className={cn('border-border/50 transition-all', done && 'opacity-70')}
               >
-                <CardContent className="space-y-3 p-md">
+                <CardContent className="p-md space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 space-y-xs">
-                      <div className="flex flex-wrap items-center gap-sm">
+                    <div className="space-y-xs flex-1">
+                      <div className="gap-sm flex flex-wrap items-center">
                         <span
                           className={cn(
-                            'rounded-full border px-sm py-0.5 text-xs font-medium',
+                            'px-sm rounded-full border py-0.5 text-xs font-medium',
                             CATEGORY_COLORS[item.category]
                           )}
                         >
                           {CATEGORY_LABELS[item.category]}
                         </span>
-                        <span className="flex items-center gap-xs text-xs text-muted-foreground">
+                        <span className="gap-xs text-muted-foreground flex items-center text-xs">
                           <Clock className="h-3 w-3" /> {item.duration_minutes}min
                         </span>
                         <span
@@ -1222,14 +1222,14 @@ function LibraryTab() {
                           {item.difficulty_display}
                         </span>
                       </div>
-                      <h3 className="font-medium text-foreground">{item.title}</h3>
-                      <p className="text-xs leading-relaxed text-muted-foreground">
+                      <h3 className="text-foreground font-medium">{item.title}</h3>
+                      <p className="text-muted-foreground text-xs leading-relaxed">
                         {item.description}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-t border-border/50 pt-xs">
-                    <p className="flex items-center gap-xs text-xs text-muted-foreground">
+                  <div className="border-border/50 pt-xs flex items-center justify-between border-t">
+                    <p className="gap-xs text-muted-foreground flex items-center text-xs">
                       <TrendingUp className="h-3 w-3" /> {item.expected_benefit}
                     </p>
                     <Button
@@ -1245,7 +1245,7 @@ function LibraryTab() {
                     >
                       {done ? (
                         <>
-                          <CheckCircle2 className="mr-xs h-3 w-3 text-success" /> Feito
+                          <CheckCircle2 className="mr-xs text-success h-3 w-3" /> Feito
                         </>
                       ) : completeMutation.isPending && completingId === item.id ? (
                         'Salvando...'
@@ -1291,7 +1291,7 @@ function ReportTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-semibold">Relatório Semanal</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Análise dos seus padrões emocionais
           </p>
         </div>
@@ -1323,7 +1323,7 @@ function ReportTab() {
         <div className="space-y-md">
           <Card className="border-border/50">
             <CardHeader className="px-md pb-sm pt-md">
-              <CardTitle className="text-xs text-muted-foreground">
+              <CardTitle className="text-muted-foreground text-xs">
                 Semana {format(new Date(latest.week_start), 'dd/MM')} –{' '}
                 {format(new Date(latest.week_end), 'dd/MM/yyyy')}
               </CardTitle>
@@ -1336,14 +1336,14 @@ function ReportTab() {
           {latest.attention_points?.length > 0 && (
             <Card className="border-warning/20">
               <CardHeader className="px-md pb-sm pt-md">
-                <CardTitle className="text-sm text-warning">
+                <CardTitle className="text-warning text-sm">
                   Pontos de atenção
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-sm px-md pb-md">
                 {latest.attention_points.map((p, i) => (
-                  <div key={i} className="flex items-start gap-sm">
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                  <div key={i} className="gap-sm flex items-start">
+                    <AlertCircle className="text-warning mt-0.5 h-4 w-4 shrink-0" />
                     <p className="text-sm">{p}</p>
                   </div>
                 ))}
@@ -1354,14 +1354,14 @@ function ReportTab() {
           {latest.suggestions?.length > 0 && (
             <Card className="border-primary/20">
               <CardHeader className="px-md pb-sm pt-md">
-                <CardTitle className="text-sm text-primary">
+                <CardTitle className="text-primary text-sm">
                   Sugestões para a próxima semana
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-sm px-md pb-md">
                 {latest.suggestions.map((s, i) => (
-                  <div key={i} className="flex items-start gap-sm">
-                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div key={i} className="gap-sm flex items-start">
+                    <ChevronRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                     <p className="text-sm">{s}</p>
                   </div>
                 ))}
@@ -1369,7 +1369,7 @@ function ReportTab() {
             </Card>
           )}
 
-          <div className="grid grid-cols-3 gap-sm">
+          <div className="gap-sm grid grid-cols-3">
             {[
               { label: 'Solidão', value: latest.avg_loneliness },
               { label: 'Ansiedade', value: latest.avg_anxiety },
@@ -1377,8 +1377,8 @@ function ReportTab() {
             ].map(({ label, value }) => (
               <Card key={label} className="border-border/50">
                 <CardContent className="p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                  <p className="text-xl font-bold text-foreground">
+                  <p className="text-muted-foreground text-xs">{label}</p>
+                  <p className="text-foreground text-xl font-bold">
                     {value ? Number(value).toFixed(1) : '—'}
                   </p>
                 </CardContent>
@@ -1414,7 +1414,7 @@ export default function EmotionalWellness() {
         />
 
         {/* Tab navigation */}
-        <div className="-mx-xs mb-lg flex gap-xs overflow-x-auto border-b border-border/50 px-xs pb-xs">
+        <div className="-mx-xs mb-lg gap-xs border-border/50 px-xs pb-xs flex overflow-x-auto border-b">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -1422,10 +1422,10 @@ export default function EmotionalWellness() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'gap-xs.5 -mb-px flex items-center whitespace-nowrap rounded-t-lg border-b-2 px-3 py-sm text-sm font-medium transition-all',
+                  'gap-xs.5 py-sm -mb-px flex items-center rounded-t-lg border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-all',
                   activeTab === tab.id
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground border-transparent'
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />

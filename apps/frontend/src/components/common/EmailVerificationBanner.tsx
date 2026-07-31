@@ -65,9 +65,9 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 px-md py-3 text-sm">
-      <MailWarning className="h-4 w-4 shrink-0 text-warning" />
-      <span className="flex-1 text-foreground">
+    <div className="border-warning/40 bg-warning/10 px-md flex items-center gap-3 rounded-lg border py-3 text-sm">
+      <MailWarning className="text-warning h-4 w-4 shrink-0" />
+      <span className="text-foreground flex-1">
         {t('common.emailVerificationBanner.message')}
       </span>
       <Button
@@ -75,7 +75,7 @@ export function EmailVerificationBanner() {
         size="sm"
         onClick={handleResend}
         disabled={isSending}
-        className="shrink-0 border-warning/40 text-xs hover:bg-warning/10"
+        className="border-warning/40 hover:bg-warning/10 shrink-0 text-xs"
       >
         {isSending
           ? t('common.emailVerificationBanner.sending')
@@ -84,7 +84,7 @@ export function EmailVerificationBanner() {
       <button
         type="button"
         onClick={() => setDismissed(true)}
-        className="shrink-0 text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground shrink-0"
         aria-label={t('common.emailVerificationBanner.dismiss')}
       >
         <X className="h-4 w-4" />

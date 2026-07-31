@@ -783,24 +783,24 @@ export default function WorkoutPage() {
       <PageContainer>
         <PageHeader
           title={t('pages.workoutPlans.title')}
-          icon={<Dumbbell className="h-6 w-6 text-category-exercise" />}
+          icon={<Dumbbell className="text-category-exercise h-6 w-6" />}
         />
 
         <Tabs defaultValue="today" className="flex flex-1 flex-col">
           <TabsList className="mb-lg w-full">
-            <TabsTrigger value="today" className="flex-1 gap-xs">
+            <TabsTrigger value="today" className="gap-xs flex-1">
               <Flame className="h-4 w-4" />
               {t('pages.workoutHub.todayPlan')}
             </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex-1 gap-xs">
+            <TabsTrigger value="sessions" className="gap-xs flex-1">
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
             </TabsTrigger>
-            <TabsTrigger value="plans" className="flex-1 gap-xs">
+            <TabsTrigger value="plans" className="gap-xs flex-1">
               <ClipboardList className="h-4 w-4" />
               {t('pages.workoutPlans.tabPlans')}
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex-1 gap-xs">
+            <TabsTrigger value="exercises" className="gap-xs flex-1">
               <Dumbbell className="h-4 w-4" />
               {t('pages.workoutPlans.tabExercises')}
             </TabsTrigger>
@@ -822,7 +822,7 @@ export default function WorkoutPage() {
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end gap-sm">
+            <div className="mb-md gap-sm flex justify-end">
               <Button
                 variant="outline"
                 onClick={() => setDialog({ type: 'quick-log' })}
@@ -861,12 +861,12 @@ export default function WorkoutPage() {
 
           {/* ── Planos ──────────────────────────────────────────────────── */}
           <TabsContent value="plans" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end gap-sm">
+            <div className="mb-md gap-sm flex justify-end">
               <Button
                 variant="outline"
                 onClick={() => setDialog({ type: 'ai-generate-plan' })}
               >
-                <Sparkles className="mr-sm h-4 w-4 text-primary" />
+                <Sparkles className="mr-sm text-primary h-4 w-4" />
                 Gerar com IA
               </Button>
               <Button onClick={() => setDialog({ type: 'new-plan' })}>
@@ -901,13 +901,13 @@ export default function WorkoutPage() {
                     }));
                   return (
                     <div key={activePlan.id} className="space-y-sm">
-                      <div className="overflow-hidden rounded-2xl shadow-sm ring-1 ring-category-exercise/30">
+                      <div className="ring-category-exercise/30 overflow-hidden rounded-2xl shadow-sm ring-1">
                         {/* Gradient header */}
-                        <div className="relative overflow-hidden bg-gradient-to-br from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg">
-                          <Dumbbell className="absolute -right-6 -top-6 h-36 w-36 rotate-12 text-white/10" />
+                        <div className="from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg relative overflow-hidden bg-gradient-to-br">
+                          <Dumbbell className="absolute -top-6 -right-6 h-36 w-36 rotate-12 text-white/10" />
                           <div className="relative flex items-start justify-between">
                             <div className="min-w-0">
-                              <div className="mb-sm inline-flex items-center gap-xs rounded-full bg-white/20 px-sm py-xs text-xs font-bold uppercase tracking-widest text-white">
+                              <div className="mb-sm gap-xs px-sm py-xs inline-flex items-center rounded-full bg-white/20 text-xs font-bold tracking-widest text-white uppercase">
                                 <Zap className="h-3 w-3" />
                                 {t('pages.workoutPlans.activePlan')}
                               </div>
@@ -919,32 +919,32 @@ export default function WorkoutPage() {
                                   {activePlan.description}
                                 </p>
                               )}
-                              <div className="mt-sm flex flex-wrap gap-md text-sm text-white/80">
-                                <span className="flex items-center gap-xs">
+                              <div className="mt-sm gap-md flex flex-wrap text-sm text-white/80">
+                                <span className="gap-xs flex items-center">
                                   <ClipboardList className="h-3.5 w-3.5" />
                                   {activePlan.day_count} {t('pages.workoutPlans.days')}
                                 </span>
-                                <span className="flex items-center gap-xs">
+                                <span className="gap-xs flex items-center">
                                   <Dumbbell className="h-3.5 w-3.5" />
                                   {activePlan.exercise_count}{' '}
                                   {t('pages.workoutPlans.exercises')}
                                 </span>
                               </div>
                             </div>
-                            <div className="ml-md flex shrink-0 gap-xs">
+                            <div className="ml-md gap-xs flex shrink-0">
                               <button
                                 type="button"
                                 onClick={() =>
                                   setDialog({ type: 'edit-plan', plan: activePlan })
                                 }
-                                className="rounded-lg p-xs text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                                className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleDeletePlan(activePlan)}
-                                className="rounded-lg p-xs text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                                className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -954,10 +954,10 @@ export default function WorkoutPage() {
 
                         {/* Day cards */}
                         <div className="bg-card p-md">
-                          <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <p className="mb-sm text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             {t('pages.workoutPlans.days')}
                           </p>
-                          <div className="flex gap-sm overflow-x-auto pb-xs">
+                          <div className="gap-sm pb-xs flex overflow-x-auto">
                             {activePlan.days?.map((day) => (
                               <button
                                 key={day.id}
@@ -968,7 +968,7 @@ export default function WorkoutPage() {
                                   )
                                 }
                                 className={cn(
-                                  'flex min-w-[130px] flex-col items-start rounded-lg border-2 p-sm text-left transition-all',
+                                  'p-sm flex min-w-[130px] flex-col items-start rounded-lg border-2 text-left transition-all',
                                   activePlanSelectedDay === day.id
                                     ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
                                     : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
@@ -986,7 +986,7 @@ export default function WorkoutPage() {
                                 </div>
                                 <span
                                   className={cn(
-                                    'text-sm font-semibold leading-tight',
+                                    'text-sm leading-tight font-semibold',
                                     activePlanSelectedDay === day.id
                                       ? 'text-category-exercise'
                                       : 'text-foreground'
@@ -995,11 +995,11 @@ export default function WorkoutPage() {
                                   {day.name}
                                 </span>
                                 {day.muscle_groups && (
-                                  <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                  <span className="text-muted-foreground mt-0.5 line-clamp-1 text-xs">
                                     {day.muscle_groups}
                                   </span>
                                 )}
-                                <span className="mt-sm text-xs text-muted-foreground">
+                                <span className="mt-sm text-muted-foreground text-xs">
                                   {day.exercise_count}{' '}
                                   {t('pages.workoutPlans.exercises')}
                                 </span>
@@ -1010,12 +1010,12 @@ export default function WorkoutPage() {
                               onClick={() =>
                                 setDialog({ type: 'new-day', planId: activePlan.id })
                               }
-                              className="flex min-w-[100px] flex-col items-center justify-center gap-sm rounded-lg border-2 border-dashed border-border p-sm text-center transition-colors hover:border-category-exercise/40 hover:bg-category-exercise/5"
+                              className="gap-sm border-border p-sm hover:border-category-exercise/40 hover:bg-category-exercise/5 flex min-w-[100px] flex-col items-center justify-center rounded-lg border-2 border-dashed text-center transition-colors"
                             >
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                                <Plus className="h-4 w-4 text-muted-foreground" />
+                              <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-lg">
+                                <Plus className="text-muted-foreground h-4 w-4" />
                               </div>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 {t('pages.workoutPlans.newDayBtn')}
                               </span>
                             </button>
@@ -1029,19 +1029,19 @@ export default function WorkoutPage() {
                               );
                               if (!day) return null;
                               return (
-                                <div className="mt-md rounded-lg border border-category-exercise/25 bg-category-exercise/5 p-md">
+                                <div className="mt-md border-category-exercise/25 bg-category-exercise/5 p-md rounded-lg border">
                                   <div className="mb-sm flex items-center justify-between">
                                     <div>
-                                      <p className="font-semibold text-foreground">
+                                      <p className="text-foreground font-semibold">
                                         {day.name}
                                       </p>
                                       {day.muscle_groups && (
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-muted-foreground text-xs">
                                           {day.muscle_groups}
                                         </p>
                                       )}
                                     </div>
-                                    <div className="flex gap-xs">
+                                    <div className="gap-xs flex">
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1055,7 +1055,7 @@ export default function WorkoutPage() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-destructive hover:text-destructive"
+                                        className="text-destructive hover:text-destructive h-7 w-7"
                                         onClick={() => handleDeleteDay(day)}
                                       >
                                         <Trash2 className="h-3 w-3" />
@@ -1075,7 +1075,7 @@ export default function WorkoutPage() {
                                       onDelete={handleDeleteExercise}
                                     />
                                   ) : (
-                                    <p className="py-sm text-center text-xs text-muted-foreground">
+                                    <p className="py-sm text-muted-foreground text-center text-xs">
                                       {t('pages.workoutPlans.noExercises')}
                                     </p>
                                   )}
@@ -1084,7 +1084,7 @@ export default function WorkoutPage() {
                                     onClick={() =>
                                       setDialog({ type: 'add-exercise', day })
                                     }
-                                    className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-sm text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                                    className="mt-sm gap-sm border-category-exercise/30 py-sm text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
                                   >
                                     <Plus className="h-3.5 w-3.5" />
                                     {t('pages.workoutPlans.addExerciseBtn')}
@@ -1101,12 +1101,12 @@ export default function WorkoutPage() {
                 {/* Outros planos */}
                 {inactivePlans.length > 0 && (
                   <div className="space-y-sm">
-                    <div className="flex items-center gap-sm">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <div className="gap-sm flex items-center">
+                      <div className="bg-border h-px flex-1" />
+                      <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                         {t('pages.workoutPlans.otherPlans')}
                       </span>
-                      <div className="h-px flex-1 bg-border" />
+                      <div className="bg-border h-px flex-1" />
                     </div>
 
                     {inactivePlans.map((plan) => (
@@ -1159,7 +1159,7 @@ export default function WorkoutPage() {
                 }}
               />
             ) : (
-              <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {catalogExercises.map((exercise) => (
                   <ExerciseCatalogCard
                     key={exercise.id}
@@ -1325,7 +1325,7 @@ export default function WorkoutPage() {
 
                 <div className="space-y-sm">
                   <Label>Nível</Label>
-                  <div className="flex gap-sm">
+                  <div className="gap-sm flex">
                     {(['iniciante', 'intermediário', 'avançado'] as const).map(
                       (lvl) => (
                         <button
@@ -1361,7 +1361,7 @@ export default function WorkoutPage() {
 
                 <div className="space-y-sm">
                   <Label>Dias por semana: {aiForm.days_per_week}</Label>
-                  <div className="flex gap-xs">
+                  <div className="gap-xs flex">
                     {[2, 3, 4, 5, 6].map((d) => (
                       <button
                         key={d}
@@ -1380,7 +1380,7 @@ export default function WorkoutPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-sm pt-sm">
+                <div className="gap-sm pt-sm flex">
                   <Button
                     variant="outline"
                     className="flex-1"
@@ -1510,7 +1510,7 @@ function QuickLogForm({
               <select
                 value={selectedDayId}
                 onChange={(e) => setSelectedDayId(e.target.value)}
-                className="w-full rounded-md border border-border bg-background px-sm py-xs text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-border bg-background px-sm py-xs focus:ring-ring w-full rounded-md border text-sm focus:ring-2 focus:outline-none"
               >
                 <option value="none">
                   {t('pages.workoutSessions.quickLogNoPlan')}
@@ -1524,7 +1524,7 @@ function QuickLogForm({
               </select>
             </div>
           </FormSection>
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button type="button" variant="outline" onClick={onCancel}>
               {t('common.actions.cancel')}
             </Button>
@@ -1541,7 +1541,7 @@ function QuickLogForm({
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
                 <Label>{t('pages.workoutSessions.quickLogDuration')}</Label>
-                <span className="text-sm font-bold text-primary">
+                <span className="text-primary text-sm font-bold">
                   {duration} {t('pages.workoutSessions.quickLogMin')}
                 </span>
               </div>
@@ -1552,15 +1552,15 @@ function QuickLogForm({
                 step={5}
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full accent-primary"
+                className="accent-primary w-full"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex justify-between text-xs">
                 <span>15 min</span>
                 <span>180 min</span>
               </div>
             </div>
           </FormSection>
-          <div className="flex justify-end gap-sm border-t pt-md">
+          <div className="gap-sm pt-md flex justify-end border-t">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
               {t('common.actions.back')}
             </Button>
@@ -1591,31 +1591,31 @@ function ExerciseCatalogCard({
   onDelete: () => void;
 }) {
   return (
-    <div className="group relative flex flex-col rounded-lg border border-border bg-card p-md transition-shadow hover:shadow-md">
-      <div className="mb-sm flex items-start justify-between gap-sm">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/10">
-          <Dumbbell className="h-5 w-5 text-category-exercise" />
+    <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-shadow hover:shadow-md">
+      <div className="mb-sm gap-sm flex items-start justify-between">
+        <div className="bg-category-exercise/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Dumbbell className="text-category-exercise h-5 w-5" />
         </div>
-        <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
             <Edit className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive h-7 w-7"
             onClick={onDelete}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
-      <p className="font-semibold leading-tight text-foreground">{exercise.name}</p>
+      <p className="text-foreground leading-tight font-semibold">{exercise.name}</p>
       {exercise.muscle_groups && (
-        <p className="mt-xs text-xs text-muted-foreground">{exercise.muscle_groups}</p>
+        <p className="mt-xs text-muted-foreground text-xs">{exercise.muscle_groups}</p>
       )}
       {exercise.description && (
-        <p className="mt-sm line-clamp-2 text-xs text-muted-foreground/70">
+        <p className="mt-sm text-muted-foreground/70 line-clamp-2 text-xs">
           {exercise.description}
         </p>
       )}
@@ -1695,17 +1695,17 @@ function ExerciseCatalogForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
-          <Dumbbell className="h-5 w-5 text-category-exercise" />
+      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Dumbbell className="text-category-exercise h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-exercise">
+          <p className="text-category-exercise text-sm font-semibold">
             {exercise
               ? t('pages.exercises.editTitle', 'Editar Exercício')
               : t('pages.exercises.newTitle', 'Novo Exercício')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {values.name ||
               t('pages.exercises.newDesc', 'Cadastre um exercício no catálogo')}
           </p>
@@ -1725,7 +1725,7 @@ function ExerciseCatalogForm({
       {/* Grupos musculares */}
       <FormSection title={t('pages.exercises.fieldMuscles')} icon={Layers}>
         <div className="space-y-sm">
-          <div className="flex flex-wrap gap-xs">
+          <div className="gap-xs flex flex-wrap">
             {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
               const label = t(`pages.workoutPlans.muscleChips.${key}`);
               return (
@@ -1734,7 +1734,7 @@ function ExerciseCatalogForm({
                   type="button"
                   onClick={() => toggleChip(label)}
                   className={cn(
-                    'rounded-full border px-sm py-xs text-xs font-medium transition-all',
+                    'px-sm py-xs rounded-full border text-xs font-medium transition-all',
                     selectedChips.includes(label)
                       ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                       : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -1772,7 +1772,7 @@ function ExerciseCatalogForm({
         />
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -1816,54 +1816,54 @@ function SortableExerciseItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-sm rounded-lg bg-background px-sm py-xs"
+      className="group gap-sm bg-background px-sm py-xs flex items-center rounded-lg"
     >
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
+        className="text-muted-foreground/50 hover:text-muted-foreground cursor-grab touch-none active:cursor-grabbing"
         aria-label="Reordenar"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-category-exercise/20 text-xs font-bold text-category-exercise">
+      <span className="bg-category-exercise/20 text-category-exercise flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {idx + 1}
       </span>
       <span className="flex-1 text-sm font-medium">{ex.name}</span>
-      <div className="flex shrink-0 items-center gap-xs">
+      <div className="gap-xs flex shrink-0 items-center">
         {ex.load && (
-          <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
             {ex.load} {ex.load_unit}
           </span>
         )}
         {ex.sets > 0 ? (
           <>
-            <span className="rounded-full bg-category-exercise/15 px-xs py-px text-xs font-semibold text-category-exercise">
+            <span className="bg-category-exercise/15 px-xs text-category-exercise rounded-full py-px text-xs font-semibold">
               {ex.sets}×
             </span>
-            <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+            <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
               {ex.reps_min}–{ex.reps_max}
             </span>
           </>
         ) : (
-          <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+          <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
             {t('pages.workoutPlans.noSets')}
           </span>
         )}
         {ex.rest_seconds != null && ex.rest_seconds > 0 && (
-          <span className="flex items-center gap-0.5 rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+          <span className="bg-muted px-xs text-muted-foreground flex items-center gap-0.5 rounded-full py-px text-xs">
             <Clock className="h-2.5 w-2.5" />
             {ex.rest_seconds}s
           </span>
         )}
         {(onEdit || onDelete) && (
-          <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
             {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(ex)}
-                className="rounded p-xs text-muted-foreground hover:text-foreground"
+                className="p-xs text-muted-foreground hover:text-foreground rounded"
               >
                 <Edit className="h-3 w-3" />
               </button>
@@ -1872,7 +1872,7 @@ function SortableExerciseItem({
               <button
                 type="button"
                 onClick={() => onDelete(ex)}
-                className="rounded p-xs text-muted-foreground hover:text-destructive"
+                className="p-xs text-muted-foreground hover:text-destructive rounded"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -1994,19 +1994,19 @@ function InactivePlanRow({
   t,
 }: InactivePlanRowProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <div className="flex items-center gap-sm bg-card px-md py-sm">
+    <div className="border-border overflow-hidden rounded-lg border">
+      <div className="gap-sm bg-card px-md py-sm flex items-center">
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-sm text-left"
+          className="gap-sm flex min-w-0 flex-1 items-center text-left"
           onClick={onToggle}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+            <ClipboardList className="text-muted-foreground h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-foreground">{plan.name}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-foreground truncate font-semibold">{plan.name}</p>
+            <p className="text-muted-foreground text-xs">
               {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
               {t('pages.workoutPlans.exercises')}
             </p>
@@ -2033,7 +2033,7 @@ function InactivePlanRow({
             </svg>
           </div>
         </button>
-        <div className="ml-sm flex shrink-0 items-center gap-xs">
+        <div className="ml-sm gap-xs flex shrink-0 items-center">
           <Badge variant="secondary" className="text-xs">
             {t('pages.workoutPlans.inactive')}
           </Badge>
@@ -2061,7 +2061,7 @@ function InactivePlanRow({
             transition={{ duration: 0.22, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
-            <div className="space-y-sm border-t border-border bg-background p-md">
+            <div className="space-y-sm border-border bg-background p-md border-t">
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={onNewDay}>
                   <Plus className="mr-xs h-3 w-3" />
@@ -2071,26 +2071,26 @@ function InactivePlanRow({
               {plan.days?.map((day) => (
                 <div
                   key={day.id}
-                  className="overflow-hidden rounded-lg border border-border"
+                  className="border-border overflow-hidden rounded-lg border"
                 >
-                  <div className="flex items-center justify-between bg-muted/30 px-sm py-xs">
+                  <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
                     <button
                       type="button"
-                      className="flex min-w-0 flex-1 items-center gap-xs text-left"
+                      className="gap-xs flex min-w-0 flex-1 items-center text-left"
                       onClick={() => onToggleDay(day.id)}
                     >
-                      <div className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
+                      <div className="text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center">
                         {getMuscleIcon(day.muscle_groups)}
                       </div>
                       <span className="text-sm font-medium">{day.name}</span>
                       {day.muscle_groups && (
-                        <span className="truncate text-xs text-muted-foreground">
+                        <span className="text-muted-foreground truncate text-xs">
                           — {day.muscle_groups}
                         </span>
                       )}
                     </button>
-                    <div className="flex shrink-0 items-center gap-xs">
-                      <span className="text-xs text-muted-foreground">
+                    <div className="gap-xs flex shrink-0 items-center">
+                      <span className="text-muted-foreground text-xs">
                         {day.exercise_count} {t('pages.workoutPlans.exercises')}
                       </span>
                       <Button
@@ -2104,7 +2104,7 @@ function InactivePlanRow({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-7 w-7"
                         onClick={() => onDeleteDay(day)}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -2123,7 +2123,7 @@ function InactivePlanRow({
                       <button
                         type="button"
                         onClick={() => onAddExercise(day)}
-                        className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-xs text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                        className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.workoutPlans.addExerciseBtn')}
@@ -2160,14 +2160,14 @@ function SessionsGrouped({ sessions, onEdit, onDelete, t }: SessionsGroupedProps
     <div className="space-y-lg">
       {groups.map((group) => (
         <div key={group.key}>
-          <div className="mb-sm flex items-center gap-sm">
-            <div className="h-px flex-1 bg-border" />
-            <span className="flex items-center gap-xs rounded-full bg-muted px-sm py-0.5 text-xs font-semibold text-muted-foreground">
+          <div className="mb-sm gap-sm flex items-center">
+            <div className="bg-border h-px flex-1" />
+            <span className="gap-xs bg-muted px-sm text-muted-foreground flex items-center rounded-full py-0.5 text-xs font-semibold">
               <Calendar className="h-3 w-3" />
               {group.label}
               <span className="font-normal opacity-70">· {group.items.length}</span>
             </span>
-            <div className="h-px flex-1 bg-border" />
+            <div className="bg-border h-px flex-1" />
           </div>
           <div className="space-y-sm">
             {group.items.map((session) => (
@@ -2202,38 +2202,38 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
   ).toUpperCase();
 
   return (
-    <div className="group flex gap-md rounded-lg border border-border bg-card p-md transition-all hover:border-category-exercise/30 hover:shadow-sm">
+    <div className="group gap-md border-border bg-card p-md hover:border-category-exercise/30 flex rounded-lg border transition-all hover:shadow-sm">
       {/* Date block */}
-      <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-category-exercise/10 py-sm text-center">
-        <span className="text-2xl font-bold leading-none text-category-exercise">
+      <div className="bg-category-exercise/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
+        <span className="text-category-exercise text-2xl leading-none font-bold">
           {dayNum}
         </span>
-        <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-category-exercise/70">
+        <span className="text-category-exercise/70 mt-0.5 text-[10px] font-semibold tracking-wide uppercase">
           {monthLabel}
         </span>
       </div>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-sm">
+        <div className="gap-sm flex items-start justify-between">
           <div className="min-w-0">
-            <p className="font-semibold leading-snug">
+            <p className="leading-snug font-semibold">
               {session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')}
             </p>
             {session.workout_day_muscle_groups && (
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-0.5 truncate text-xs">
                 {session.workout_day_muscle_groups}
               </p>
             )}
           </div>
-          <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
               <Edit className="h-3 w-3" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive h-7 w-7"
               onClick={onDelete}
             >
               <Trash2 className="h-3 w-3" />
@@ -2241,21 +2241,21 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
           </div>
         </div>
 
-        <div className="mt-sm flex flex-wrap items-center gap-xs">
+        <div className="mt-sm gap-xs flex flex-wrap items-center">
           {session.duration_minutes != null && (
-            <span className="flex items-center gap-xs rounded-full border border-border bg-background px-sm py-0.5 text-xs text-muted-foreground">
+            <span className="gap-xs border-border bg-background px-sm text-muted-foreground flex items-center rounded-full border py-0.5 text-xs">
               <Clock className="h-3 w-3" />
               {formatDuration(session.duration_minutes)}
             </span>
           )}
           {exerciseCount > 0 && (
-            <span className="flex items-center gap-xs rounded-full border border-border bg-background px-sm py-0.5 text-xs text-muted-foreground">
+            <span className="gap-xs border-border bg-background px-sm text-muted-foreground flex items-center rounded-full border py-0.5 text-xs">
               <Dumbbell className="h-3 w-3" />
               {exerciseCount} {t('pages.workoutPlans.exercises')}
             </span>
           )}
           {session.notes && (
-            <span className="line-clamp-1 text-xs text-muted-foreground">
+            <span className="text-muted-foreground line-clamp-1 text-xs">
               {session.notes}
             </span>
           )}
@@ -2301,7 +2301,7 @@ function TodayPlanTab({
       {/* Sessões de hoje */}
       {todaySessions.length > 0 && (
         <div>
-          <p className="mb-sm text-sm font-semibold text-foreground">
+          <p className="mb-sm text-foreground text-sm font-semibold">
             {t('pages.workoutHub.todaySessions')}
           </p>
           <SessionsGrouped
@@ -2348,20 +2348,20 @@ function TodayPlanTab({
 
         return plansForToday.map((plan) => (
           <div key={plan.id} className="space-y-sm">
-            <div className="flex items-center gap-sm">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-category-exercise/10">
-                <ClipboardList className="h-4 w-4 text-category-exercise" />
+            <div className="gap-sm flex items-center">
+              <div className="bg-category-exercise/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                <ClipboardList className="text-category-exercise h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">{plan.name}</p>
+                <p className="text-foreground text-sm font-semibold">{plan.name}</p>
                 {plan.description && (
-                  <p className="text-xs text-muted-foreground">{plan.description}</p>
+                  <p className="text-muted-foreground text-xs">{plan.description}</p>
                 )}
               </div>
             </div>
 
             {plan.days.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {t('pages.workoutPlans.emptyDays')}
               </p>
             ) : (
@@ -2373,15 +2373,15 @@ function TodayPlanTab({
                   .map((day) => (
                     <div
                       key={day.id}
-                      className="overflow-hidden rounded-lg border border-border bg-card"
+                      className="border-border bg-card overflow-hidden rounded-lg border"
                     >
-                      <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-md py-sm">
-                        <div className="flex items-center gap-sm">
+                      <div className="border-border/60 bg-muted/30 px-md py-sm flex items-center justify-between border-b">
+                        <div className="gap-sm flex items-center">
                           {getMuscleIcon(day.muscle_groups)}
                           <div>
                             <p className="text-sm font-semibold">{day.name}</p>
                             {day.muscle_groups && (
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 {day.muscle_groups}
                               </p>
                             )}
@@ -2395,17 +2395,17 @@ function TodayPlanTab({
                         </Badge>
                       </div>
                       {day.exercises.length > 0 && (
-                        <div className="divide-y divide-border/40">
+                        <div className="divide-border/40 divide-y">
                           {day.exercises.map((ex) => (
                             <div
                               key={ex.id}
-                              className="flex items-center justify-between px-md py-xs"
+                              className="px-md py-xs flex items-center justify-between"
                             >
-                              <div className="flex items-center gap-sm">
-                                <Dumbbell className="h-3.5 w-3.5 shrink-0 text-category-exercise/60" />
+                              <div className="gap-sm flex items-center">
+                                <Dumbbell className="text-category-exercise/60 h-3.5 w-3.5 shrink-0" />
                                 <span className="text-sm">{ex.name}</span>
                               </div>
-                              <div className="flex items-center gap-sm text-xs text-muted-foreground">
+                              <div className="gap-sm text-muted-foreground flex items-center text-xs">
                                 {ex.sets > 0 ? (
                                   <span>
                                     {ex.sets}×
@@ -2417,7 +2417,7 @@ function TodayPlanTab({
                                   <span>{t('pages.workoutPlans.noSets')}</span>
                                 )}
                                 {ex.load && (
-                                  <span className="font-medium text-foreground">
+                                  <span className="text-foreground font-medium">
                                     {ex.load} {ex.load_unit}
                                   </span>
                                 )}

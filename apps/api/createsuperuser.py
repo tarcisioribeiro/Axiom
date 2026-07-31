@@ -13,7 +13,7 @@ django.setup()
 User = get_user_model()
 
 django_username = os.getenv("DJANGO_SUPERUSER_USERNAME")
-email = os.getenv("DJANGO_SUPERUSER_EMAIL")
+email = os.getenv("DJANGO_SUPERUSER_EMAIL") or ""
 password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
 
 if django_username:

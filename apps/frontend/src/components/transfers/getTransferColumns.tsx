@@ -34,12 +34,12 @@ export function getTransferColumns(t: TFunction): Column<Transfer>[] {
       key: 'accounts',
       label: t('pages.transfers.columns.route'),
       render: (transfer) => (
-        <div className="flex items-center gap-xs text-sm">
-          <span className="rounded bg-muted px-xs py-0.5 text-xs font-medium text-muted-foreground">
+        <div className="gap-xs flex items-center text-sm">
+          <span className="bg-muted px-xs text-muted-foreground rounded py-0.5 text-xs font-medium">
             {transfer.origin_account_name ?? '—'}
           </span>
-          <ArrowRight className="h-3 w-3 shrink-0 text-info" />
-          <span className="rounded bg-info/10 px-xs py-0.5 text-xs font-medium text-info">
+          <ArrowRight className="text-info h-3 w-3 shrink-0" />
+          <span className="bg-info/10 px-xs text-info rounded py-0.5 text-xs font-medium">
             {transfer.destiny_account_name ?? '—'}
           </span>
         </div>

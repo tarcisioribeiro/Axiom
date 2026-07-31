@@ -363,7 +363,7 @@ export default function Archives() {
 
         {filteredArchives.length === 0 ? (
           <EmptyState
-            icon={<ArchiveIcon className="h-12 w-12 text-muted-foreground" />}
+            icon={<ArchiveIcon className="text-muted-foreground h-12 w-12" />}
             message={
               searchTerm
                 ? t('pages.archives.emptySearch')
@@ -371,7 +371,7 @@ export default function Archives() {
             }
           />
         ) : (
-          <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+          <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
             {filteredArchives.map((arc) => {
               const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
                 icon: 'bg-muted text-muted-foreground',
@@ -385,7 +385,7 @@ export default function Archives() {
                   <CardHeader className="pb-sm">
                     <div className="flex items-start justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="mb-xs flex items-center gap-sm">
+                        <div className="mb-xs gap-sm flex items-center">
                           <div
                             className={cn(
                               'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
@@ -402,7 +402,7 @@ export default function Archives() {
                             {arc.title}
                           </CardTitle>
                         </div>
-                        <div className="flex flex-wrap items-center gap-sm">
+                        <div className="gap-sm flex flex-wrap items-center">
                           <Badge>
                             {t(`pages.archives.categories.${arc.category}`)}
                           </Badge>
@@ -411,7 +411,7 @@ export default function Archives() {
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex flex-shrink-0 gap-xs">
+                      <div className="gap-xs flex flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -489,7 +489,7 @@ export default function Archives() {
                           title={t('common.actions.delete')}
                         >
                           <Trash2
-                            className="h-4 w-4 text-destructive"
+                            className="text-destructive h-4 w-4"
                             aria-hidden="true"
                           />
                         </Button>
@@ -498,16 +498,16 @@ export default function Archives() {
                   </CardHeader>
                   <CardContent className="space-y-sm">
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-sm">
+                      <div className="gap-sm flex items-center">
                         <Calendar className="h-4 w-4" />
                         <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
                       </div>
                       <span>{formatFileSize(arc.file_size)}</span>
                     </div>
                     {arc.tags && arc.tags.length > 0 && (
-                      <div className="flex items-center gap-sm">
+                      <div className="gap-sm flex items-center">
                         <Tag className="h-4 w-4 flex-shrink-0" />
-                        <div className="flex flex-wrap gap-xs">
+                        <div className="gap-xs flex flex-wrap">
                           {arc.tags.slice(0, 3).map((tag, idx) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {tag}
@@ -572,7 +572,7 @@ export default function Archives() {
                 rows={20}
                 className="font-mono text-sm"
               />
-              <div className="flex justify-end gap-sm">
+              <div className="gap-sm flex justify-end">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -612,7 +612,7 @@ export default function Archives() {
             </DialogHeader>
             {isPreviewLoading ? (
               <div className="flex h-64 items-center justify-center">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {t('common.loading', { defaultValue: 'Carregando...' })}
                 </span>
               </div>

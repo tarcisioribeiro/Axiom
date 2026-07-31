@@ -46,24 +46,24 @@ export const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="bg-background flex h-screen">
       {/* Sidebar */}
-      <aside className="flex w-64 flex-shrink-0 flex-col border-r border-border bg-card">
+      <aside className="border-border bg-card flex w-64 flex-shrink-0 flex-col border-r">
         {/* Logo */}
-        <div className="flex items-center gap-3 border-b border-border px-lg py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+        <div className="border-border px-lg flex items-center gap-3 border-b py-5">
+          <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-lg">
+            <Shield className="text-primary-foreground h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold leading-none text-foreground">Axiom</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-foreground text-sm leading-none font-semibold">Axiom</p>
+            <p className="text-muted-foreground mt-0.5 text-xs">
               {t('layout.adminPanel')}
             </p>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-xs p-3">
+        <nav className="space-y-xs flex-1 p-3">
           {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
             const isActive = exact
               ? location.pathname === href
@@ -77,7 +77,7 @@ export const AdminLayout = () => {
                 to={href}
                 end={exact}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-sm text-sm font-medium transition-colors',
+                  'py-sm flex items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -91,21 +91,21 @@ export const AdminLayout = () => {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-border p-3">
-          <div className="mb-sm flex items-center gap-3 rounded-lg px-3 py-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+        <div className="border-border border-t p-3">
+          <div className="mb-sm py-sm flex items-center gap-3 rounded-lg px-3">
+            <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
               {user?.username?.charAt(0).toUpperCase() ?? 'A'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
+              <p className="text-foreground truncate text-sm font-medium">
                 {user?.username}
               </p>
-              <p className="text-xs text-muted-foreground">{t('layout.superuser')}</p>
+              <p className="text-muted-foreground text-xs">{t('layout.superuser')}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-sm text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            className="py-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
           >
             <LogOut className="h-4 w-4" />
             {t('layout.logout')}
@@ -116,9 +116,9 @@ export const AdminLayout = () => {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 items-center gap-sm border-b border-border bg-card px-lg">
-          <Activity className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">
+        <header className="gap-sm border-border bg-card px-lg flex h-14 items-center border-b">
+          <Activity className="text-primary h-4 w-4" />
+          <span className="text-foreground text-sm font-medium">
             {NAV_ITEMS.find((n) =>
               n.exact
                 ? location.pathname === n.href
@@ -127,7 +127,7 @@ export const AdminLayout = () => {
           </span>
         </header>
 
-        <main className="flex-1 overflow-auto p-lg">
+        <main className="p-lg flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

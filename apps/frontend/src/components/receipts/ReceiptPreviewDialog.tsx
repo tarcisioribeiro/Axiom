@@ -66,7 +66,7 @@ export function ReceiptPreviewDialog({
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-md">
+        <div className="custom-scrollbar bg-muted p-md flex justify-center overflow-auto rounded-lg">
           <div className="origin-top scale-[0.65] transform">
             <ReceiptTemplate data={data} />
           </div>
@@ -87,13 +87,13 @@ export function ReceiptPreviewDialog({
 
         {/* Error Message */}
         {error && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
             {error}
           </div>
         )}
 
         {/* Export Buttons */}
-        <DialogFooter className="flex-col gap-sm sm:flex-row">
+        <DialogFooter className="gap-sm flex-col sm:flex-row">
           <Button
             variant="outline"
             onClick={() => handleExport('png')}

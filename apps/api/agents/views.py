@@ -43,6 +43,7 @@ from agents.serializers import (
     AgentStatusSerializer,
     CategoryClassifySerializer,
 )
+from app.request_utils import request_data
 from app.throttles import AgentRateThrottle
 
 logger = logging.getLogger(__name__)
@@ -504,7 +505,8 @@ class SemanticSearchView(APIView):
     _DOMAINS = ("library", "planning", "finance", "security")
 
     def post(self, request: Request) -> Response:
-        query = (request.data.get("query") or "").strip()
+        data = request_data(request)
+        query = (data.get("query") or "").strip()
         if not query:
             return Response(
                 {"detail": "Informe um query para busca."},
@@ -516,7 +518,7 @@ class SemanticSearchView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        domain = request.data.get("domain") or None
+        domain = data.get("domain") or None
         if domain and domain not in self._DOMAINS:
             return Response(
                 {
@@ -527,7 +529,7 @@ class SemanticSearchView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        raw_top_k = request.data.get("top_k", 10)
+        raw_top_k = data.get("top_k", 10)
         try:
             top_k = max(1, min(20, int(raw_top_k)))
         except (TypeError, ValueError):
@@ -749,8 +751,9 @@ class SuggestContinuationView(APIView):
     )
 
     def post(self, request: Request) -> Response:
-        text = (request.data.get("text") or "").strip()
-        book_id = request.data.get("book_id")
+        data = request_data(request)
+        text = (data.get("text") or "").strip()
+        book_id = data.get("book_id")
 
         if len(text) < 10:
             return Response(

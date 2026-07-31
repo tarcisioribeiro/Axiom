@@ -32,7 +32,7 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
       <span
         role="tooltip"
         className={cn(
-          'pointer-events-none absolute z-50 whitespace-nowrap rounded-md border border-border/60 bg-popover px-sm py-xs text-xs font-medium text-popover-foreground shadow-md',
+          'border-border/60 bg-popover px-sm py-xs text-popover-foreground pointer-events-none absolute z-50 rounded-md border text-xs font-medium whitespace-nowrap shadow-md',
           'opacity-0 transition-opacity duration-150 group-hover:opacity-100',
           sideClasses[side],
           className

@@ -585,7 +585,7 @@ export default function CreditCardExpenses({
       label: t('pages.creditCardExpenses.columns.amount'),
       align: 'right',
       render: (installment) => (
-        <span className="font-semibold text-destructive">
+        <span className="text-destructive font-semibold">
           {formatCurrency(installment.value)}
         </span>
       ),
@@ -613,7 +613,7 @@ export default function CreditCardExpenses({
         const current = installment.installment_number;
         const total = installment.total_installments ?? 1;
         return (
-          <div className="flex flex-col items-center gap-xs">
+          <div className="gap-xs flex flex-col items-center">
             <div className="flex gap-0.5">
               {Array.from({ length: Math.min(total, 8) }, (_, i) => (
                 <div
@@ -625,10 +625,10 @@ export default function CreditCardExpenses({
                 />
               ))}
               {total > 8 && (
-                <span className="text-xs text-muted-foreground">+{total - 8}</span>
+                <span className="text-muted-foreground text-xs">+{total - 8}</span>
               )}
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {current}/{total}
             </span>
           </div>
@@ -679,32 +679,32 @@ export default function CreditCardExpenses({
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
           <CardContent className="p-md">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.creditCardExpenses.totalPaid')}
             </p>
-            <p className="text-xl font-bold text-success">
+            <p className="text-success text-xl font-bold">
               {formatCurrency(totalPaid)}
             </p>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+        <Card className="border-t-warning/60 overflow-hidden border-t-2">
           <CardContent className="p-md">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.creditCardExpenses.totalPending')}
             </p>
-            <p className="text-xl font-bold text-warning">
+            <p className="text-warning text-xl font-bold">
               {formatCurrency(totalPending)}
             </p>
           </CardContent>
         </Card>
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
           <CardContent className="p-md">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {t('pages.creditCardExpenses.totalAmount')}
             </p>
-            <p className="text-xl font-bold text-destructive">
+            <p className="text-destructive text-xl font-bold">
               {formatCurrency(totalInstallments)}
             </p>
           </CardContent>
@@ -712,11 +712,11 @@ export default function CreditCardExpenses({
       </div>
 
       {categoryBreakdown.length > 1 && (
-        <div className="rounded-lg border bg-card p-md">
-          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="bg-card p-md rounded-lg border">
+          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
             {t('pages.creditCardExpenses.byCategory')}
           </p>
-          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
             {categoryBreakdown.map(({ cat, pct }, i) => (
               <div
                 key={cat}
@@ -726,13 +726,13 @@ export default function CreditCardExpenses({
               />
             ))}
           </div>
-          <div className="mt-sm flex flex-wrap gap-md">
+          <div className="mt-sm gap-md flex flex-wrap">
             {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="flex items-center gap-xs">
+              <div key={cat} className="gap-xs flex items-center">
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
                 />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {translateCategory(cat, 'expense')} · {Math.round(pct)}%
                 </span>
               </div>
@@ -741,13 +741,13 @@ export default function CreditCardExpenses({
         </div>
       )}
 
-      <div className="space-y-md rounded-lg border bg-card p-md">
+      <div className="space-y-md bg-card p-md rounded-lg border">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <Filter className="h-4 w-4" />
             <span className="font-semibold">{t('common.actions.filter')}</span>
           </div>
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <span className="text-sm">{t('pages.creditCardExpenses.viewMode')}</span>
             <Select
               value={viewMode}
@@ -767,7 +767,7 @@ export default function CreditCardExpenses({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger>
               <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
@@ -843,18 +843,18 @@ export default function CreditCardExpenses({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-between border-t pt-sm">
+        <div className="pt-sm flex items-center justify-between border-t">
           <span className="text-sm">
             {t('pages.creditCardExpenses.foundInstallments', {
               count: filteredInstallments.length,
             })}
           </span>
-          <div className="flex items-center gap-md">
+          <div className="gap-md flex items-center">
             <span className="text-sm">
               <span className="text-muted-foreground">
                 {t('pages.creditCardExpenses.totalPaid')}
               </span>{' '}
-              <span className="font-semibold text-success">
+              <span className="text-success font-semibold">
                 {formatCurrency(totalPaid)}
               </span>
             </span>
@@ -862,11 +862,11 @@ export default function CreditCardExpenses({
               <span className="text-muted-foreground">
                 {t('pages.creditCardExpenses.totalPending')}
               </span>{' '}
-              <span className="font-semibold text-warning">
+              <span className="text-warning font-semibold">
                 {formatCurrency(totalPending)}
               </span>
             </span>
-            <span className="text-lg font-bold text-destructive">
+            <span className="text-destructive text-lg font-bold">
               {t('pages.creditCardExpenses.totalAmount')}{' '}
               {formatCurrency(totalInstallments)}
             </span>
@@ -899,8 +899,8 @@ export default function CreditCardExpenses({
                   <CardHeader className="pb-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <CardTitle className="flex items-center gap-sm text-lg">
-                          <Calendar className="h-5 w-5 text-primary" />
+                        <CardTitle className="gap-sm flex items-center text-lg">
+                          <Calendar className="text-primary h-5 w-5" />
                           {key === 'sem-fatura'
                             ? label
                             : t('pages.creditCardExpenses.billLabel', { label })}
@@ -938,7 +938,7 @@ export default function CreditCardExpenses({
                         )}
                         {bill && (
                           <div className="mt-sm space-y-xs">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="text-muted-foreground flex items-center justify-between text-xs">
                               <span>
                                 {t('pages.creditCardExpenses.billPaidProgress')}
                               </span>
@@ -946,9 +946,9 @@ export default function CreditCardExpenses({
                                 {total > 0 ? Math.round((paid / total) * 100) : 0}%
                               </span>
                             </div>
-                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                               <div
-                                className="h-full rounded-full bg-success"
+                                className="bg-success h-full rounded-full"
                                 style={{
                                   width: `${total > 0 ? (paid / total) * 100 : 0}%`,
                                 }}
@@ -957,12 +957,12 @@ export default function CreditCardExpenses({
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-md">
+                      <div className="gap-md flex items-center">
                         <span className="text-sm">
                           <span className="text-muted-foreground">
                             {t('pages.creditCardExpenses.totalPaid')}
                           </span>{' '}
-                          <span className="font-semibold text-success">
+                          <span className="text-success font-semibold">
                             {formatCurrency(paid)}
                           </span>
                         </span>
@@ -970,11 +970,11 @@ export default function CreditCardExpenses({
                           <span className="text-muted-foreground">
                             {t('pages.creditCardExpenses.totalPending')}
                           </span>{' '}
-                          <span className="font-semibold text-warning">
+                          <span className="text-warning font-semibold">
                             {formatCurrency(pending)}
                           </span>
                         </span>
-                        <span className="text-lg font-bold text-destructive">
+                        <span className="text-destructive text-lg font-bold">
                           {formatCurrency(total)}
                         </span>
                       </div>
@@ -988,7 +988,7 @@ export default function CreditCardExpenses({
                       isLoading={false}
                       emptyState={{
                         icon: (
-                          <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+                          <ShoppingCart className="text-muted-foreground h-12 w-12" />
                         ),
                         message: t('pages.creditCardExpenses.noInstallments'),
                       }}
@@ -998,7 +998,7 @@ export default function CreditCardExpenses({
                         );
                         const isOrphan = !installment.bill;
                         return (
-                          <div className="flex items-center justify-end gap-sm">
+                          <div className="gap-sm flex items-center justify-end">
                             {purchase && (
                               <ReceiptButton
                                 source={{
@@ -1020,7 +1020,7 @@ export default function CreditCardExpenses({
                                 title={t('pages.creditCardExpenses.assignBillBtn')}
                               >
                                 <Link2
-                                  className="h-4 w-4 text-primary"
+                                  className="text-primary h-4 w-4"
                                   aria-hidden="true"
                                 />
                               </Button>
@@ -1035,7 +1035,7 @@ export default function CreditCardExpenses({
                               title={t('pages.creditCardExpenses.editInstallmentLabel')}
                             >
                               <DollarSign
-                                className="h-4 w-4 text-primary"
+                                className="text-primary h-4 w-4"
                                 aria-hidden="true"
                               />
                             </Button>
@@ -1060,7 +1060,7 @@ export default function CreditCardExpenses({
                               title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                             >
                               <Trash2
-                                className="h-4 w-4 text-destructive"
+                                className="text-destructive h-4 w-4"
                                 aria-hidden="true"
                               />
                             </Button>
@@ -1081,13 +1081,13 @@ export default function CreditCardExpenses({
           keyExtractor={(installment) => installment.id}
           isLoading={isLoading}
           emptyState={{
-            icon: <ShoppingCart className="h-12 w-12 text-muted-foreground" />,
+            icon: <ShoppingCart className="text-muted-foreground h-12 w-12" />,
             message: t('pages.creditCardExpenses.emptyState'),
           }}
           actions={(installment) => {
             const purchase = purchases.find((p) => p.id === installment.purchase);
             return (
-              <div className="flex items-center justify-end gap-sm">
+              <div className="gap-sm flex items-center justify-end">
                 {purchase && (
                   <ReceiptButton
                     source={{ type: 'credit_card_purchase', data: purchase }}
@@ -1101,7 +1101,7 @@ export default function CreditCardExpenses({
                   aria-label={t('pages.creditCardExpenses.editInstallmentLabel')}
                   title={t('pages.creditCardExpenses.editInstallmentLabel')}
                 >
-                  <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <DollarSign className="text-primary h-4 w-4" aria-hidden="true" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -1119,7 +1119,7 @@ export default function CreditCardExpenses({
                   aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
                   title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             );
@@ -1194,7 +1194,7 @@ export default function CreditCardExpenses({
               return (
                 <div className="space-y-md">
                   {eligibleBills.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {t('pages.creditCardExpenses.noEligibleBills')}
                     </p>
                   ) : (
@@ -1219,7 +1219,7 @@ export default function CreditCardExpenses({
                       </SelectContent>
                     </Select>
                   )}
-                  <div className="flex justify-end gap-sm">
+                  <div className="gap-sm flex justify-end">
                     <Button
                       variant="outline"
                       onClick={() => setIsAssignBillDialogOpen(false)}

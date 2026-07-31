@@ -88,18 +88,18 @@ export function KanbanCard({ card }: KanbanCardProps) {
     if (priority === 'high')
       return (
         <Flame
-          className="h-3.5 w-3.5 shrink-0 text-destructive"
+          className="text-destructive h-3.5 w-3.5 shrink-0"
           aria-label={t('pages.routineTasks.priorityHigh', { defaultValue: 'Alta' })}
         />
       );
     if (priority === 'medium')
       return (
         <AlertTriangle
-          className="h-3.5 w-3.5 shrink-0 text-warning"
+          className="text-warning h-3.5 w-3.5 shrink-0"
           aria-label={t('pages.routineTasks.priorityMedium', { defaultValue: 'Média' })}
         />
       );
-    return <Minus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
+    return <Minus className="text-muted-foreground h-3.5 w-3.5 shrink-0" />;
   };
 
   const isDone = card.status === 'done';
@@ -119,7 +119,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
         boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
       }}
       className={cn(
-        'cursor-grab rounded-lg border border-l-4 border-border bg-card p-md shadow-sm active:cursor-grabbing',
+        'border-border bg-card p-md cursor-grab rounded-lg border border-l-4 shadow-sm active:cursor-grabbing',
         getCategoryBorderColor(card.category)
       )}
     >
@@ -135,7 +135,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 exit={{ scale: 0 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               >
-                <CheckCircle2 className="h-5 w-5 text-success" />
+                <CheckCircle2 className="text-success h-5 w-5" />
               </motion.div>
             ) : (
               <motion.div key="drag" initial={{ scale: 1 }} animate={{ scale: 1 }}>
@@ -146,13 +146,13 @@ export function KanbanCard({ card }: KanbanCardProps) {
         </div>
 
         {/* Card Content */}
-        <div className="flex-1 space-y-sm">
+        <div className="space-y-sm flex-1">
           {/* Title and Category */}
-          <div className="flex items-start justify-between gap-sm">
+          <div className="gap-sm flex items-start justify-between">
             <div className="flex-1">
               <h4
                 className={cn(
-                  'flex items-center gap-sm text-sm font-semibold leading-tight',
+                  'gap-sm flex items-center text-sm leading-tight font-semibold',
                   isDone && 'line-through opacity-60'
                 )}
               >
@@ -172,7 +172,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 </span>
               </h4>
               {(card.scheduled_time || card.closing_time) && (
-                <div className="mt-xs flex items-center gap-xs text-xs">
+                <div className="mt-xs gap-xs flex items-center text-xs">
                   <Clock className="h-3 w-3" />
                   <span>
                     {card.scheduled_time}
@@ -183,7 +183,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
               )}
             </div>
             <div
-              className="flex shrink-0 items-center gap-xs"
+              className="gap-xs flex shrink-0 items-center"
               onPointerDown={(e) => e.stopPropagation()}
             >
               {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
@@ -197,18 +197,18 @@ export function KanbanCard({ card }: KanbanCardProps) {
 
           {/* Task Description */}
           {card.description && (
-            <p className="whitespace-pre-wrap text-xs leading-relaxed">
+            <p className="text-xs leading-relaxed whitespace-pre-wrap">
               {card.description}
             </p>
           )}
 
           {/* Daily Notes */}
           {card.notes && (
-            <div className="rounded-md border border-warning bg-warning/20 p-sm">
+            <div className="border-warning bg-warning/20 p-sm rounded-md border">
               <p className="mb-xs text-xs font-medium">
                 {t('pages.todayTasks.notesLabel')}
               </p>
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
+              <p className="text-foreground text-xs leading-relaxed whitespace-pre-wrap">
                 {card.notes}
               </p>
             </div>

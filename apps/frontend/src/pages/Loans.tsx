@@ -169,71 +169,71 @@ export default function Loans() {
         />
       </FilterBar>
 
-      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
-        <Card className="overflow-hidden border-t-2 border-t-primary/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+        <Card className="border-t-primary/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.loans.stats.total')}</p>
-            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
-              <HandCoins className="h-4 w-4 text-primary" />
+            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
+              <HandCoins className="text-primary h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{loans.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-primary text-2xl font-bold">{loans.length}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.loans.stats.totalSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-warning/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-warning/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.loans.stats.active')}</p>
-            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-              <Clock className="h-4 w-4 text-warning" />
+            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+              <Clock className="text-warning h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{activeCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-warning text-2xl font-bold">{activeCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.loans.stats.activeSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.loans.stats.paid')}</p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <CheckCircle2 className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <CheckCircle2 className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{paidCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-success text-2xl font-bold">{paidCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.loans.stats.paidSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.loans.stats.totalDebt')}</p>
-            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-              <Banknote className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+              <Banknote className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">
+            <div className="text-destructive text-2xl font-bold">
               {formatCurrency(totalDebt)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.loans.stats.debtSubtitle')}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-center gap-md">
+      <div className="gap-md flex flex-wrap items-center">
         {currentUserMemberId !== null && (
           <div className="flex overflow-hidden rounded-lg border">
             {(
@@ -248,7 +248,7 @@ export default function Loans() {
                 type="button"
                 onClick={() => setRoleFilter(key)}
                 className={cn(
-                  'flex items-center gap-sm border-r px-3 py-sm text-sm transition-colors last:border-r-0',
+                  'gap-sm py-sm flex items-center border-r px-3 text-sm transition-colors last:border-r-0',
                   roleFilter === key
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background text-muted-foreground hover:bg-muted'
@@ -264,13 +264,13 @@ export default function Loans() {
 
       {roleFilteredLoans.length === 0 ? (
         <EmptyState
-          icon={<HandCoins className="h-12 w-12 text-muted-foreground" />}
+          icon={<HandCoins className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')
           }
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {roleFilteredLoans.map((loan) => {
             const total = parseFloat(loan.value);
             const paid = parseFloat(loan.payed_value);
@@ -279,12 +279,12 @@ export default function Loans() {
             return (
               <div
                 key={loan.id}
-                className="space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md"
+                className="bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold">{loan.description}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {translate('expenseCategories', loan.category)}
                     </p>
                   </div>
@@ -295,11 +295,11 @@ export default function Loans() {
 
                 {/* Amortization progress */}
                 <div className="space-y-xs">
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex justify-between text-xs">
                     <span>{t('pages.loans.payoff')}</span>
                     <span className="font-medium">{Math.round(pct)}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',
@@ -373,14 +373,14 @@ export default function Loans() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
+                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
                   {Number(loan.creditor) === currentUserMemberId ? (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setReceiptLoan(loan)}
                       title={t('pages.loans.receipt.title')}
-                      className="gap-xs text-xs text-success"
+                      className="gap-xs text-success text-xs"
                     >
                       <CreditCard className="h-3 w-3" />
                       {t('pages.loans.receiveBtn')}
@@ -452,7 +452,7 @@ export default function Loans() {
                     title={t('common.actions.delete')}
                     aria-label={t('common.actions.delete')}
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                    <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
                   </Button>
                   {loan.contract_document && (
                     <Button variant="ghost" size="icon" title="Download" asChild>

@@ -92,9 +92,9 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-md">
+    <div className="from-primary/10 via-background to-accent/10 p-md flex min-h-screen items-center justify-center bg-gradient-to-br">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border bg-card p-xl shadow-2xl">
+        <div className="bg-card p-xl rounded-2xl border shadow-2xl">
           <div className="mb-xl text-center">
             <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
               Axiom
@@ -269,7 +269,7 @@ export default function Register() {
 
           <div className="mt-lg text-center text-sm">
             <span>{t('auth.register.hasAccount')} </span>
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to="/login" className="text-primary font-medium hover:underline">
               {t('auth.register.login')}
             </Link>
           </div>

@@ -132,7 +132,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
   return (
     <Wrapper>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
-        <div className="flex items-center gap-sm">
+        <div className="gap-sm flex items-center">
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
@@ -239,51 +239,51 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         />
       </FilterBar>
 
-      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.revenues.stats.totalAmount')}
             </p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <TrendingUp className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <TrendingUp className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalRevenues)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.revenues.entriesCount', { count: revenues.length })}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-primary/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-primary/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.revenues.stats.received')}</p>
-            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
+            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
+              <CheckCircle2 className="text-primary h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{receivedCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-primary text-2xl font-bold">{receivedCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {formatCurrency(receivedAmount)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-warning/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-warning/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">{t('pages.revenues.stats.pending')}</p>
-            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-              <Clock className="h-4 w-4 text-warning" />
+            <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
+              <Clock className="text-warning h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-warning text-2xl font-bold">{pendingCount}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {formatCurrency(pendingAmount)}
             </p>
           </CardContent>
@@ -291,11 +291,11 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
       </div>
 
       {categoryBreakdown.length > 1 && (
-        <div className="rounded-lg border bg-card p-md">
-          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="bg-card p-md rounded-lg border">
+          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
             {t('pages.revenues.byCategory')}
           </p>
-          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
             {categoryBreakdown.map(({ cat, pct }, i) => (
               <div
                 key={cat}
@@ -305,13 +305,13 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
               />
             ))}
           </div>
-          <div className="mt-sm flex flex-wrap gap-md">
+          <div className="mt-sm gap-md flex flex-wrap">
             {categoryBreakdown.map(({ cat, pct }, i) => (
-              <div key={cat} className="flex items-center gap-xs">
+              <div key={cat} className="gap-xs flex items-center">
                 <span
                   className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
                 />
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {translateCategory(cat, 'revenue')} · {Math.round(pct)}%
                 </span>
               </div>
@@ -327,25 +327,25 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         isLoading={isLoading}
         rowClassName={(revenue) => (revenue.received ? 'opacity-60' : '')}
         emptyState={{
-          icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
+          icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
           message: t('pages.revenues.emptyState'),
         }}
         mobileCard={(revenue) => (
           <div className="px-md py-3">
-            <div className="flex items-start justify-between gap-sm">
+            <div className="gap-sm flex items-start justify-between">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{revenue.description}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   {formatDate(revenue.date)} ·{' '}
                   {translateCategory(revenue.category, 'revenue')}
                 </p>
               </div>
               <div className="text-right">
-                <p className="numeric text-sm font-semibold text-success">
+                <p className="numeric text-success text-sm font-semibold">
                   {formatCurrency(parseFloat(revenue.value))}
                 </p>
                 <span
-                  className={`mt-0.5 inline-block rounded px-xs py-0.5 text-[10px] font-medium ${
+                  className={`px-xs mt-0.5 inline-block rounded py-0.5 text-[10px] font-medium ${
                     revenue.received
                       ? 'bg-success/10 text-success'
                       : 'bg-warning/10 text-warning'
@@ -357,7 +357,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                 </span>
               </div>
             </div>
-            <div className="mt-sm flex items-center justify-end gap-xs">
+            <div className="mt-sm gap-xs flex items-center justify-end">
               {revenue.received && (
                 <ReceiptButton
                   source={{ type: 'revenue', data: revenue }}
@@ -378,13 +378,13 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                 onClick={() => handleDelete(revenue.id)}
                 aria-label={t('common.actions.delete')}
               >
-                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
         )}
         actions={(revenue) => (
-          <div className="flex items-center justify-end gap-sm">
+          <div className="gap-sm flex items-center justify-end">
             {revenue.received && (
               <ReceiptButton
                 source={{ type: 'revenue', data: revenue }}
@@ -407,7 +407,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}

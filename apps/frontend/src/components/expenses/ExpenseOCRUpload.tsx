@@ -115,7 +115,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
           <div
             role="button"
             tabIndex={0}
-            className="relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-sm rounded-lg border-2 border-dashed border-border bg-muted/30 p-lg transition-colors hover:bg-muted/50"
+            className="gap-sm border-border bg-muted/30 p-lg hover:bg-muted/50 relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => inputRef.current?.click()}
@@ -135,7 +135,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                 </Badge>
                 <button
                   type="button"
-                  className="absolute right-2 top-2 rounded-full bg-background p-0.5 shadow"
+                  className="bg-background absolute top-2 right-2 rounded-full p-0.5 shadow"
                   onClick={(e) => {
                     e.stopPropagation();
                     reset();
@@ -146,11 +146,11 @@ export function ExpenseOCRUpload({ onResult }: Props) {
               </>
             ) : (
               <>
-                <Upload className="h-8 w-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
+                <Upload className="text-muted-foreground h-8 w-8" />
+                <p className="text-muted-foreground text-sm">
                   {t('pages.expenseOCR.dragHint')}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.expenseOCR.accepts')}
                 </p>
               </>
@@ -165,7 +165,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
             onChange={handleInputChange}
           />
 
-          <div className="flex justify-end gap-sm">
+          <div className="gap-sm flex justify-end">
             <Button
               type="button"
               variant="outline"

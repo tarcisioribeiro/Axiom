@@ -191,12 +191,12 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       label: t('pages.fixedExpenses.columns.description'),
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
             {item.due_day}
           </div>
           <div>
             <div className="font-medium">{item.description}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {t('pages.fixedExpenses.dueDayDesc', { day: item.due_day })}
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       label: t('pages.fixedExpenses.columns.defaultAmount'),
       align: 'right',
       render: (item) => (
-        <span className="font-semibold text-destructive">
+        <span className="text-destructive font-semibold">
           {formatCurrency(item.default_value)}
         </span>
       ),
@@ -282,17 +282,17 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         return (
           <div
             className={cn(
-              'grid gap-md',
+              'gap-md grid',
               activeExpenses.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
             )}
           >
             {/* Card 1: Lançamento */}
-            <div className="flex flex-col justify-between rounded-lg border bg-card p-md">
+            <div className="bg-card p-md flex flex-col justify-between rounded-lg border">
               <div>
                 <h3 className="text-base font-semibold">
                   {t('pages.fixedExpenses.launchSection')}
                 </h3>
-                <p className="mt-xs text-sm text-muted-foreground">
+                <p className="mt-xs text-muted-foreground text-sm">
                   {t('pages.fixedExpenses.launchDesc')}
                 </p>
               </div>
@@ -308,14 +308,14 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
             {activeExpenses.length > 0 && (
               <>
                 {/* Card 2: Comprometimento */}
-                <div className="rounded-lg border bg-card p-md">
+                <div className="bg-card p-md rounded-lg border">
                   <p className="text-sm font-medium">
                     {t('pages.fixedExpenses.stats.monthlyCommitment')}
                   </p>
-                  <p className="mt-xs text-2xl font-bold text-destructive">
+                  <p className="mt-xs text-destructive text-2xl font-bold">
                     {formatCurrency(totalMonthlyFixed)}
                   </p>
-                  <p className="mt-sm text-xs text-muted-foreground">
+                  <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.fixedExpenses.stats.activeCountDesc', {
                       count: activeExpenses.length,
                     })}
@@ -323,11 +323,11 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                 </div>
 
                 {/* Card 3: Calendário */}
-                <div className="rounded-lg border bg-card p-md">
-                  <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <div className="bg-card p-md rounded-lg border">
+                  <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
                     {t('pages.fixedExpenses.scheduleTitle')}
                   </p>
-                  <div className="flex flex-wrap gap-sm">
+                  <div className="gap-sm flex flex-wrap">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                       const expensesOnDay = activeExpenses.filter(
                         (e) => e.due_day === day
@@ -344,7 +344,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                           className={cn(
                             'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
                             hasExpense
-                              ? 'bg-destructive/15 text-destructive ring-1 ring-destructive/30'
+                              ? 'bg-destructive/15 text-destructive ring-destructive/30 ring-1'
                               : 'text-muted-foreground'
                           )}
                         >
@@ -367,7 +367,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
         emptyState={{
-          icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
+          icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
           message: t('pages.fixedExpenses.emptyState'),
         }}
         rowClassName={(item) =>
@@ -376,7 +376,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
             : 'border-l-4 border-l-muted opacity-60'
         }
         actions={(item) => (
-          <div className="flex items-center justify-end gap-sm">
+          <div className="gap-sm flex items-center justify-end">
             {item.total_generated > 0 && (
               <Button
                 variant="ghost"
@@ -385,7 +385,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                 aria-label={t('pages.fixedExpenses.historyBtn')}
                 title={t('pages.fixedExpenses.historyBtn')}
               >
-                <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <History className="text-muted-foreground h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             <Button
@@ -407,45 +407,45 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}
       />
 
       {/* Generation Log */}
-      <div className="rounded-lg border bg-card">
+      <div className="bg-card rounded-lg border">
         <button
           type="button"
-          className="flex w-full items-center justify-between px-md py-sm text-left"
+          className="px-md py-sm flex w-full items-center justify-between text-left"
           onClick={() => setShowGenerationLog((v) => !v)}
         >
-          <div className="flex items-center gap-sm">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          <div className="gap-sm flex items-center">
+            <ClipboardList className="text-muted-foreground h-4 w-4" />
             <span className="text-sm font-medium">
               {t('pages.fixedExpenses.generationLog.viewLog')}
             </span>
           </div>
           {showGenerationLog ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            <ChevronUp className="text-muted-foreground h-4 w-4" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="text-muted-foreground h-4 w-4" />
           )}
         </button>
         {showGenerationLog && (
-          <div className="border-t px-md pb-md pt-sm">
+          <div className="px-md pb-md pt-sm border-t">
             {generationLogQuery.isLoading ? (
-              <p className="py-sm text-center text-sm text-muted-foreground">
+              <p className="py-sm text-muted-foreground text-center text-sm">
                 {t('common.actions.loading')}
               </p>
             ) : !generationLogQuery.data?.length ? (
-              <p className="py-sm text-center text-sm text-muted-foreground">
+              <p className="py-sm text-muted-foreground text-center text-sm">
                 {t('pages.fixedExpenses.generationLog.emptyState')}
               </p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
+                  <tr className="text-muted-foreground border-b text-left text-xs">
                     <th className="pb-xs pr-md">
                       {t('pages.fixedExpenses.generationLog.month')}
                     </th>
@@ -468,7 +468,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                       <td className="py-xs pr-md text-muted-foreground">
                         {log.generated_by_name ?? '—'}
                       </td>
-                      <td className="py-xs text-right text-muted-foreground">
+                      <td className="py-xs text-muted-foreground text-right">
                         {formatDate(log.created_at, 'dd/MM/yyyy HH:mm')}
                       </td>
                     </tr>
@@ -523,7 +523,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
+            <DialogTitle className="gap-sm flex items-center">
               <History className="h-4 w-4" />
               {t('pages.fixedExpenses.historyTitle')}: {historyItem?.description}
             </DialogTitle>
@@ -532,18 +532,18 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
             </DialogDescription>
           </DialogHeader>
           {historyLoading ? (
-            <p className="py-md text-center text-sm text-muted-foreground">
+            <p className="py-md text-muted-foreground text-center text-sm">
               {t('common.actions.loading')}
             </p>
           ) : historyExpenses.length === 0 ? (
-            <p className="py-md text-center text-sm text-muted-foreground">
+            <p className="py-md text-muted-foreground text-center text-sm">
               {t('pages.fixedExpenses.historyEmpty')}
             </p>
           ) : (
             <div className="max-h-96 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-xs text-muted-foreground">
+                  <tr className="text-muted-foreground border-b text-left text-xs">
                     <th className="pb-xs pr-md">{t('common.fields.date')}</th>
                     <th className="pb-xs pr-md">{t('common.fields.description')}</th>
                     <th className="pb-xs text-right">{t('common.fields.amount')}</th>

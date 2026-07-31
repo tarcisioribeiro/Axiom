@@ -66,8 +66,8 @@ export function RestartModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent size="sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
-            <RotateCcw className="h-5 w-5 text-primary" />
+          <DialogTitle className="gap-sm flex items-center">
+            <RotateCcw className="text-primary h-5 w-5" />
             {t('pages.adminConfig.restartModal.title')}
           </DialogTitle>
           <DialogDescription>
@@ -76,18 +76,18 @@ export function RestartModal({
         </DialogHeader>
 
         {countdown !== null ? (
-          <div className="flex flex-col items-center gap-3 py-lg">
-            <RefreshCw className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
+          <div className="py-lg flex flex-col items-center gap-3">
+            <RefreshCw className="text-primary h-10 w-10 animate-spin" />
+            <p className="text-muted-foreground text-sm">
               {t('pages.adminConfig.restartModal.countdown', { seconds: countdown })}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 py-sm">
+          <div className="py-sm grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setMode('docker')}
-              className={`flex flex-col items-center gap-sm rounded-lg border-2 p-md text-sm font-medium transition-colors ${
+              className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
                 mode === 'docker'
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -102,7 +102,7 @@ export function RestartModal({
             <button
               type="button"
               onClick={() => setMode('kubernetes')}
-              className={`flex flex-col items-center gap-sm rounded-lg border-2 p-md text-sm font-medium transition-colors ${
+              className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
                 mode === 'kubernetes'
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'

@@ -49,8 +49,8 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
-      <ThemeToggle className="absolute right-4 top-4" />
+    <div className="from-background to-secondary/30 p-md relative flex min-h-screen items-center justify-center bg-gradient-to-br">
+      <ThemeToggle className="absolute top-4 right-4" />
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
@@ -61,24 +61,24 @@ export default function ResetPassword() {
         <CardContent>
           {!isValidParams ? (
             <div className="space-y-md text-center">
-              <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-md">
-                <p className="font-medium text-destructive">
+              <div className="border-destructive bg-destructive/10 px-md py-md rounded-lg border">
+                <p className="text-destructive font-medium">
                   {t('auth.resetPassword.invalidLink')}
                 </p>
-                <p className="mt-xs text-sm text-destructive/80">
+                <p className="mt-xs text-destructive/80 text-sm">
                   {t('auth.resetPassword.invalidLinkDesc')}
                 </p>
               </div>
               <Link
                 to="/forgot-password"
-                className="block text-sm font-medium text-primary hover:underline"
+                className="text-primary block text-sm font-medium hover:underline"
               >
                 {t('auth.forgotPassword.title')}
               </Link>
             </div>
           ) : success ? (
             <div className="space-y-md text-center">
-              <div className="rounded-lg border border-green-200 bg-green-50 px-md py-md dark:border-green-800 dark:bg-green-950/30">
+              <div className="px-md py-md rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30">
                 <p className="font-medium text-green-800 dark:text-green-300">
                   {t('auth.resetPassword.successTitle')}
                 </p>
@@ -88,19 +88,19 @@ export default function ResetPassword() {
               </div>
               <Link
                 to="/login"
-                className="block text-sm font-medium text-primary hover:underline"
+                className="text-primary block text-sm font-medium hover:underline"
               >
                 {t('auth.resetPassword.goToLogin')}
               </Link>
             </div>
           ) : (
             <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-center text-sm">
                 {t('auth.resetPassword.description')}
               </p>
 
               {error && (
-                <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
+                <div className="border-destructive bg-destructive/10 px-md text-destructive rounded-lg border py-3 text-sm">
                   {error}
                 </div>
               )}

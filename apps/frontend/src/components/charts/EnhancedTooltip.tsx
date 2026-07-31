@@ -11,25 +11,25 @@ export const EnhancedTooltip = ({
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="animate-in fade-in-0 zoom-in-95 min-w-[160px] max-w-[300px] rounded-lg border border-border/60 bg-popover shadow-xl duration-150">
+    <div className="animate-in fade-in-0 zoom-in-95 border-border/60 bg-popover max-w-[300px] min-w-[160px] rounded-lg border shadow-xl duration-150">
       {/* Label/Título */}
       {label && (
-        <div className="border-b border-border/40 px-3 py-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <div className="border-border/40 py-sm border-b px-3">
+          <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             {labelFormatter ? labelFormatter(label) : label}
           </p>
         </div>
       )}
 
       {/* Lista de valores */}
-      <div className="space-y-xs px-3 py-sm">
+      <div className="space-y-xs py-sm px-3">
         {payload.map((entry, index) => (
           <div
             key={`tooltip-item-${index}`}
-            className="flex items-center justify-between gap-md"
+            className="gap-md flex items-center justify-between"
           >
             {/* Indicador de cor + Nome */}
-            <div className="flex min-w-0 items-center gap-sm">
+            <div className="gap-sm flex min-w-0 items-center">
               <span
                 className="h-2.5 w-2.5 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}
@@ -39,7 +39,7 @@ export const EnhancedTooltip = ({
                   ? nameFormatter(String(entry.name))
                   : String(entry.name);
                 return displayName ? (
-                  <span className="truncate text-xs text-foreground/75">
+                  <span className="text-foreground/75 truncate text-xs">
                     {displayName}
                   </span>
                 ) : null;
@@ -47,7 +47,7 @@ export const EnhancedTooltip = ({
             </div>
 
             {/* Valor */}
-            <span className="text-sm font-bold tabular-nums text-foreground">
+            <span className="text-foreground text-sm font-bold tabular-nums">
               {formatter ? formatter(entry.value) : entry.value}
             </span>
           </div>

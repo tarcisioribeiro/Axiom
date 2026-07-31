@@ -121,7 +121,7 @@ function HighlightForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
           <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
@@ -171,7 +171,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-md">
+      <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
           <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
@@ -194,7 +194,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -337,7 +337,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
   return (
     <div className="space-y-md">
-      <div className="flex items-center gap-sm">
+      <div className="gap-sm flex items-center">
         <SearchInput
           placeholder={t('pages.highlights.searchPlaceholder')}
           value={searchTerm}
@@ -361,7 +361,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+          icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm
               ? t('pages.highlights.emptySearch')
@@ -373,25 +373,25 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           {filtered.map((h) => {
             const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
             return (
-              <div key={h.id} className={`rounded-lg border-l-4 p-md ${colorClass}`}>
-                <div className="mb-sm flex items-start justify-between gap-sm">
-                  <div className="flex flex-wrap items-center gap-sm">
+              <div key={h.id} className={`p-md rounded-lg border-l-4 ${colorClass}`}>
+                <div className="mb-sm gap-sm flex items-start justify-between">
+                  <div className="gap-sm flex flex-wrap items-center">
                     <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>
                       {h.highlight_type_display}
                     </Badge>
                     {h.page_number && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         p. {h.page_number}
                       </span>
                     )}
                     {h.chapter && (
-                      <span className="text-xs text-muted-foreground">{h.chapter}</span>
+                      <span className="text-muted-foreground text-xs">{h.chapter}</span>
                     )}
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span className="text-muted-foreground text-xs font-medium">
                       {h.book_title}
                     </span>
                   </div>
-                  <div className="flex shrink-0 gap-xs">
+                  <div className="gap-xs flex shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -403,7 +403,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-7 w-7 p-0"
                       onClick={() => void handleDelete(h.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

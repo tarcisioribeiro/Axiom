@@ -142,7 +142,7 @@ export function ReceivableReceiptDialog({
                 setScheduled(false);
                 setForm((f) => ({ ...f, date: today }));
               }}
-              className={`flex flex-1 items-center justify-center gap-xs py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center text-sm transition-colors ${
                 !scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -154,7 +154,7 @@ export function ReceivableReceiptDialog({
             <button
               type="button"
               onClick={() => setScheduled(true)}
-              className={`flex flex-1 items-center justify-center gap-xs border-l py-sm text-sm transition-colors ${
+              className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
                 scheduled
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-background text-muted-foreground hover:bg-muted'
@@ -218,7 +218,7 @@ export function ReceivableReceiptDialog({
           </div>
 
           {(isFutureDate || scheduled) && form.account && form.value && (
-            <div className="flex items-start gap-2 rounded-md border border-success/30 bg-success/10 p-sm text-sm text-success">
+            <div className="border-success/30 bg-success/10 p-sm text-success flex items-start gap-2 rounded-md border text-sm">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
                 {isLoadingProjected

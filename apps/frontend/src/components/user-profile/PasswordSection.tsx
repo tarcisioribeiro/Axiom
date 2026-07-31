@@ -44,7 +44,7 @@ export function PasswordSection() {
           <Label htmlFor="current-pw">
             {t('userProfile.security.currentPassword')}
           </Label>
-          <div className="relative mt-xs">
+          <div className="mt-xs relative">
             <Input
               id="current-pw"
               type={showCurrent ? 'text' : 'password'}
@@ -55,7 +55,7 @@ export function PasswordSection() {
             <button
               type="button"
               onClick={() => setShowCurrent((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
             >
               {showCurrent ? (
                 <EyeOff className="h-4 w-4" />
@@ -67,7 +67,7 @@ export function PasswordSection() {
         </div>
         <div>
           <Label htmlFor="new-pw">{t('userProfile.security.newPassword')}</Label>
-          <div className="relative mt-xs">
+          <div className="mt-xs relative">
             <Input
               id="new-pw"
               type={showNext ? 'text' : 'password'}
@@ -78,7 +78,7 @@ export function PasswordSection() {
             <button
               type="button"
               onClick={() => setShowNext((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
             >
               {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

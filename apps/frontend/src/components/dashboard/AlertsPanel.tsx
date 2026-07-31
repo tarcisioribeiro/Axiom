@@ -135,10 +135,10 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-sm">
-          <AlertTriangle className="h-5 w-5 text-warning" />
+        <div className="gap-sm flex items-center">
+          <AlertTriangle className="text-warning h-5 w-5" />
           <CardTitle>{t('pages.dashboard.financialAlerts.title')}</CardTitle>
-          <span className="ml-auto rounded-full bg-destructive px-sm py-0.5 text-xs font-semibold text-destructive-foreground">
+          <span className="bg-destructive px-sm text-destructive-foreground ml-auto rounded-full py-0.5 text-xs font-semibold">
             {visibleAlerts.length}
           </span>
         </div>
@@ -165,10 +165,10 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                   <TypeIcon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-xs flex items-center gap-sm">
+                  <div className="mb-xs gap-sm flex items-center">
                     <span
                       className={cn(
-                        'rounded px-sm py-0.5 text-xs font-medium',
+                        'px-sm rounded py-0.5 text-xs font-medium',
                         config.badgeClass
                       )}
                     >
@@ -191,7 +191,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground h-6 w-6 shrink-0"
                   title={t('pages.dashboard.financialAlerts.dismiss')}
                   onClick={() => handleDismiss(key)}
                 >

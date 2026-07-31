@@ -34,12 +34,12 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="hover-lift relative transition-all hover:bg-secondary"
+          className="hover-lift hover:bg-secondary relative transition-all"
           aria-label={t('layout.notifications.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-xs text-[10px] font-bold text-primary-foreground">
+            <span className="bg-destructive px-xs text-primary-foreground absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full text-[10px] font-bold">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -62,15 +62,15 @@ export function NotificationBell() {
 
         <ScrollArea className="h-80 max-h-80">
           {isLoading ? (
-            <div className="p-md text-center text-sm text-muted-foreground">
+            <div className="p-md text-muted-foreground text-center text-sm">
               {t('common.actions.loading')}
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-md text-center text-sm text-muted-foreground">
+            <div className="p-md text-muted-foreground text-center text-sm">
               {t('layout.notifications.empty')}
             </div>
           ) : (
-            <div className="flex flex-col divide-y divide-border py-xs">
+            <div className="divide-border py-xs flex flex-col divide-y">
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}

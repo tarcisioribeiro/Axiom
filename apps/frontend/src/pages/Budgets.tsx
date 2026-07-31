@@ -299,8 +299,8 @@ export default function Budgets() {
       <Dialog open={isSuggestOpen} onOpenChange={setIsSuggestOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
-              <Sparkles className="h-4 w-4 text-primary" />
+            <DialogTitle className="gap-sm flex items-center">
+              <Sparkles className="text-primary h-4 w-4" />
               {t('pages.budgets.aiSuggestionsTitle')}
             </DialogTitle>
             <DialogDescription>
@@ -308,19 +308,19 @@ export default function Budgets() {
             </DialogDescription>
           </DialogHeader>
           {isSuggestLoading ? (
-            <div className="flex items-center justify-center gap-sm py-xl text-muted-foreground">
+            <div className="gap-sm py-xl text-muted-foreground flex items-center justify-center">
               <Loader2 className="h-4 w-4 animate-spin" />
               {t('pages.budgets.analyzing')}
             </div>
           ) : (
-            <div className="max-h-96 space-y-sm overflow-y-auto pr-xs">
+            <div className="space-y-sm pr-xs max-h-96 overflow-y-auto">
               {suggestions.map((s) => (
                 <div
                   key={s.category}
                   className="flex items-center justify-between gap-3 rounded-lg border p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-xs text-sm font-medium">
+                    <p className="gap-xs flex items-center text-sm font-medium">
                       {(() => {
                         const CatIcon =
                           EXPENSE_CATEGORY_ICONS[s.category] ??
@@ -331,14 +331,14 @@ export default function Budgets() {
                       })()}
                       {translate('expenseCategories', s.category)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.budgets.averageLabel')}:{' '}
                       {formatCurrency(s.avg_monthly_spent)} ·{' '}
                       {t('pages.budgets.suggestionLabel')}:{' '}
                       {formatCurrency(s.suggested_limit)}
                     </p>
                     {s.reasoning && (
-                      <p className="mt-0.5 text-xs italic text-muted-foreground">
+                      <p className="text-muted-foreground mt-0.5 text-xs italic">
                         {s.reasoning}
                       </p>
                     )}
@@ -399,7 +399,7 @@ export default function Budgets() {
 
       {filteredBudgets.length === 0 ? (
         <EmptyState
-          icon={<PiggyBank className="h-12 w-12 text-muted-foreground" />}
+          icon={<PiggyBank className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm ? t('pages.budgets.emptySearch') : t('pages.budgets.emptyState')
           }
@@ -425,11 +425,11 @@ export default function Budgets() {
             const okCount = filteredBudgets.length - exceededCount - warningCount;
             return (
               <>
-                <div className="rounded-lg border bg-card p-md">
+                <div className="bg-card p-md rounded-lg border">
                   <p className="mb-sm text-sm font-medium">
                     {t('pages.budgets.health.title')}
                   </p>
-                  <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted flex h-3 overflow-hidden rounded-full">
                     {exceededCount > 0 && (
                       <div
                         className="bg-destructive"
@@ -455,17 +455,17 @@ export default function Budgets() {
                       />
                     )}
                   </div>
-                  <div className="mt-sm flex gap-md text-xs text-muted-foreground">
+                  <div className="mt-sm gap-md text-muted-foreground flex text-xs">
                     <span>
-                      <span className="font-semibold text-success">{okCount}</span>{' '}
+                      <span className="text-success font-semibold">{okCount}</span>{' '}
                       {t('pages.budgets.health.withinLimit')}
                     </span>
                     <span>
-                      <span className="font-semibold text-warning">{warningCount}</span>{' '}
+                      <span className="text-warning font-semibold">{warningCount}</span>{' '}
                       {t('pages.budgets.health.warning')}
                     </span>
                     <span>
-                      <span className="font-semibold text-destructive">
+                      <span className="text-destructive font-semibold">
                         {exceededCount}
                       </span>{' '}
                       {t('pages.budgets.health.exceeded')}
@@ -473,7 +473,7 @@ export default function Budgets() {
                   </div>
                 </div>
 
-                <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+                <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
                   {enriched.map(({ budget, status }) => (
                     <BudgetCard
                       key={budget.id}
@@ -504,8 +504,8 @@ export default function Budgets() {
             {/* Seção: Classificação */}
             <FormSection title={t('common.form.sections.classification')} icon={Tag}>
               <div className="space-y-sm">
-                <Label htmlFor="category" className="flex items-center gap-xs">
-                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="category" className="gap-xs flex items-center">
+                  <Tag className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.category')}
                 </Label>
                 <Select
@@ -522,7 +522,7 @@ export default function Budgets() {
                       const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
                       return (
                         <SelectItem key={cat.key} value={cat.key}>
-                          <span className="flex items-center gap-sm">
+                          <span className="gap-sm flex items-center">
                             {CatIcon && <CatIcon className="h-4 w-4" />}
                             {translate('expenseCategories', cat.key)}
                           </span>
@@ -537,8 +537,8 @@ export default function Budgets() {
             {/* Seção: Valores */}
             <FormSection title={t('common.form.sections.values')} icon={Wallet}>
               <div className="space-y-sm">
-                <Label htmlFor="limit_amount" className="flex items-center gap-xs">
-                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="limit_amount" className="gap-xs flex items-center">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.budgets.columns.limitAmount')}
                 </Label>
                 <CurrencyInput
@@ -557,10 +557,10 @@ export default function Budgets() {
 
             {/* Seção: Período */}
             <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
-              <div className="grid grid-cols-2 gap-md">
+              <div className="gap-md grid grid-cols-2">
                 <div className="space-y-sm">
-                  <Label htmlFor="month" className="flex items-center gap-xs">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="month" className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.budgets.month')}
                   </Label>
                   <Select
@@ -583,8 +583,8 @@ export default function Budgets() {
                 </div>
 
                 <div className="space-y-sm">
-                  <Label htmlFor="year" className="flex items-center gap-xs">
-                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Label htmlFor="year" className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.budgets.year')}
                   </Label>
                   <Select
@@ -611,7 +611,7 @@ export default function Budgets() {
             {/* Seção: Rollover */}
             <FormSection title={t('pages.budgets.rollover.enabled')} icon={RotateCcw}>
               <div className="space-y-md">
-                <div className="flex items-start gap-sm rounded-lg border border-border/60 bg-muted/20 p-sm">
+                <div className="gap-sm border-border/60 bg-muted/20 p-sm flex items-start rounded-lg border">
                   <Checkbox
                     id="rollover_enabled"
                     checked={formData.rollover_enabled ?? false}
@@ -627,7 +627,7 @@ export default function Budgets() {
                     >
                       {t('pages.budgets.rollover.enabled')}
                     </Label>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {t('pages.budgets.rollover.description')}
                     </p>
                   </div>
@@ -637,9 +637,9 @@ export default function Budgets() {
                   <div className="space-y-sm">
                     <Label
                       htmlFor="rollover_amount"
-                      className="flex items-center gap-xs"
+                      className="gap-xs flex items-center"
                     >
-                      <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                      <RotateCcw className="text-muted-foreground h-3.5 w-3.5" />
                       {t('pages.budgets.rollover.amount')}
                     </Label>
                     <CurrencyInput
@@ -709,9 +709,9 @@ function BudgetCard({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-lg border-l-4 bg-card transition-shadow hover:shadow-md',
+        'bg-card overflow-hidden rounded-lg border-l-4 transition-shadow hover:shadow-md',
         pct > 100
-          ? 'border-l-destructive shadow-sm shadow-destructive/20'
+          ? 'border-l-destructive shadow-destructive/20 shadow-sm'
           : pct >= 70
             ? 'border-l-warning'
             : 'border-l-success'
@@ -719,24 +719,24 @@ function BudgetCard({
     >
       <div className="p-md">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50">
+          <div className="gap-sm flex items-center">
+            <div className="bg-muted/50 flex h-10 w-10 items-center justify-center rounded-full">
               {CategoryIcon && (
-                <CategoryIcon className="h-5 w-5 text-muted-foreground" />
+                <CategoryIcon className="text-muted-foreground h-5 w-5" />
               )}
             </div>
             <div>
-              <p className="font-semibold leading-tight">{categoryLabel}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="leading-tight font-semibold">{categoryLabel}</p>
+              <p className="text-muted-foreground text-xs">
                 {monthLabel}/{budget.year}
               </p>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-xs">
+          <div className="gap-xs flex flex-col items-end">
             {status && (
               <span
                 className={cn(
-                  'rounded px-sm py-0.5 text-xs font-bold',
+                  'px-sm rounded py-0.5 text-xs font-bold',
                   pct > 100
                     ? 'bg-destructive/10 text-destructive'
                     : pct >= 70
@@ -754,14 +754,14 @@ function BudgetCard({
         </div>
 
         {status && (
-          <div className="mt-3 space-y-xs">
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <div className="space-y-xs mt-3">
+            <div className="bg-muted h-2 overflow-hidden rounded-full">
               <div
                 className={cn('h-full rounded-full transition-all', barColor)}
                 style={{ width: `${Math.min(pct, 100)}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex justify-between text-xs">
               <span>{formatCurrency(actualSpent ?? 0)}</span>
               <span>
                 {t('pages.budgets.ofLimit', { value: formatCurrency(limitAmount) })}
@@ -771,7 +771,7 @@ function BudgetCard({
         )}
 
         {!status && (
-          <div className="mt-3 space-y-xs text-sm">
+          <div className="space-y-xs mt-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
               <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
@@ -780,19 +780,19 @@ function BudgetCard({
         )}
 
         {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
-          <div className="mt-sm flex items-center gap-xs text-xs text-info">
+          <div className="mt-sm gap-xs text-info flex items-center text-xs">
             <span>↩</span>
             <span>Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}</span>
           </div>
         )}
 
         {budget.member_name && (
-          <p className="mt-xs text-xs text-muted-foreground">
+          <p className="mt-xs text-muted-foreground text-xs">
             {t('pages.budgets.member')}: {budget.member_name}
           </p>
         )}
 
-        <div className="mt-3 flex gap-sm border-t pt-3">
+        <div className="gap-sm mt-3 flex border-t pt-3">
           <Button
             variant="outline"
             size="sm"
@@ -805,7 +805,7 @@ function BudgetCard({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            className="text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1"
             onClick={() => void onDelete(budget)}
           >
             <Trash2 className="mr-xs h-3 w-3" />

@@ -18,8 +18,8 @@ export const Header = () => {
   const { status: vaultStatus, refresh: refreshVaultStatus } = useVaultStatus();
 
   return (
-    <header className="sticky top-0 z-header border-b border-border/60 bg-card/80 px-md py-md backdrop-blur-md md:px-lg">
-      <div className="flex items-center justify-between gap-sm">
+    <header className="z-header border-border/60 bg-card/80 px-md py-md md:px-lg sticky top-0 border-b backdrop-blur-md">
+      <div className="gap-sm flex items-center justify-between">
         {/* Hamburger — mobile only */}
         <Button
           variant="ghost"
@@ -37,16 +37,16 @@ export const Header = () => {
         </div>
 
         {/* Right-side actions */}
-        <div className="flex shrink-0 items-center gap-xs">
+        <div className="gap-xs flex shrink-0 items-center">
           {/* Command palette trigger — styled as a search bar on desktop */}
           <button
             onClick={openCommandPalette}
-            className="hidden items-center gap-sm rounded-md border border-border/60 bg-background/60 px-3 py-sm text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex"
+            className="gap-sm border-border/60 bg-background/60 py-sm text-muted-foreground hover:border-border hover:text-foreground hidden items-center rounded-md border px-3 text-sm transition-colors md:flex"
             aria-label={t('layout.openCommandPalette')}
           >
             <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="hidden lg:inline">{t('layout.search')}</span>
-            <kbd className="ml-xs hidden items-center gap-0.5 rounded bg-muted px-sm py-0.5 font-mono text-xs text-muted-foreground lg:flex">
+            <kbd className="ml-xs bg-muted px-sm text-muted-foreground hidden items-center gap-0.5 rounded py-0.5 font-mono text-xs lg:flex">
               <span className="text-sm">⌘</span>K
             </kbd>
           </button>

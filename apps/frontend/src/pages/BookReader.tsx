@@ -250,7 +250,7 @@ function AnnotationForm({
   };
 
   return (
-    <div className="space-y-3 rounded-lg border bg-background p-3 shadow-sm">
+    <div className="bg-background space-y-3 rounded-lg border p-3 shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
           {t('pages.bookReader.newAnnotation')}
@@ -268,7 +268,7 @@ function AnnotationForm({
         rows={3}
         className="resize-none text-sm"
       />
-      <div className="flex gap-sm">
+      <div className="gap-sm flex">
         <div className="flex-1">
           <Label className="mb-xs block text-xs">
             {t('pages.bookReader.typeLabel')}
@@ -295,7 +295,7 @@ function AnnotationForm({
             <SelectContent>
               {HIGHLIGHT_COLOR_VALUES.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
-                  <span className="flex items-center gap-sm">
+                  <span className="gap-sm flex items-center">
                     <span className={`inline-block h-3 w-3 rounded-full ${c.dot}`} />
                     {t(`pages.bookReader.${c.key}`)}
                   </span>
@@ -305,7 +305,7 @@ function AnnotationForm({
           </Select>
         </div>
       </div>
-      <div className="flex justify-end gap-sm">
+      <div className="gap-sm flex justify-end">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -445,7 +445,7 @@ function EpubReader({
       />
       <button
         onClick={prev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border p-sm shadow backdrop-blur-sm"
+        className="p-sm absolute top-1/2 left-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
           backgroundColor: `${cfg.backgroundColor}cc`,
           borderColor: cfg.borderColor,
@@ -457,7 +457,7 @@ function EpubReader({
       </button>
       <button
         onClick={next}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border p-sm shadow backdrop-blur-sm"
+        className="p-sm absolute top-1/2 right-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
           backgroundColor: `${cfg.backgroundColor}cc`,
           borderColor: cfg.borderColor,
@@ -541,7 +541,7 @@ function PdfReader({
   return (
     <div className="flex h-full flex-col" style={themeStyle(cfg)}>
       <div
-        className="flex flex-1 items-start justify-center overflow-auto py-lg"
+        className="py-lg flex flex-1 items-start justify-center overflow-auto"
         style={themeStyle(cfg)}
       >
         <Document
@@ -553,7 +553,7 @@ function PdfReader({
             </div>
           }
           error={
-            <div className="flex h-64 flex-col items-center justify-center gap-sm opacity-60">
+            <div className="gap-sm flex h-64 flex-col items-center justify-center opacity-60">
               <BookOpen className="h-10 w-10" />
               <p className="text-sm">{t('pages.bookReader.pdfError')}</p>
             </div>
@@ -789,17 +789,17 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+      <div className="bg-background flex h-screen items-center justify-center">
+        <Loader2 className="text-muted-foreground h-10 w-10 animate-spin" />
       </div>
     );
   }
 
   if (!book || !fileUrl || !fileType) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-md bg-background">
-        <BookOpen className="h-16 w-16 text-muted-foreground" />
-        <p className="text-lg text-muted-foreground">
+      <div className="gap-md bg-background flex h-screen flex-col items-center justify-center">
+        <BookOpen className="text-muted-foreground h-16 w-16" />
+        <p className="text-muted-foreground text-lg">
           {t('pages.bookReader.fileNotFound')}
         </p>
         <Button variant="outline" onClick={handleClose}>
@@ -823,7 +823,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
       style={{ backgroundColor: cfg.backgroundColor, color: cfg.color }}
     >
       {/* ── Toolbar ── */}
-      <header className="flex shrink-0 items-center px-md py-sm" style={tbStyle}>
+      <header className="px-md py-sm flex shrink-0 items-center" style={tbStyle}>
         {/* Left: book title (+ page badge for EPUB) */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <BookOpen className="h-5 w-5 shrink-0 opacity-60" />
@@ -841,7 +841,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
 
         {/* Center: PDF page navigation */}
         {fileType === 'pdf' && (
-          <div className="flex shrink-0 items-center gap-xs">
+          <div className="gap-xs flex shrink-0 items-center">
             <Button
               variant="ghost"
               size="icon"
@@ -852,7 +852,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-sm text-sm">
+            <div className="gap-sm flex items-center text-sm">
               <Input
                 className="h-7 w-14 text-center text-sm"
                 value={pageInput}
@@ -885,7 +885,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
         )}
 
         {/* Right: controls */}
-        <div className="flex flex-1 shrink-0 items-center justify-end gap-xs">
+        <div className="gap-xs flex flex-1 shrink-0 items-center justify-end">
           {/* Width controls */}
           <Button
             variant="ghost"
@@ -1014,14 +1014,14 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           >
             {/* Sidebar header */}
             <div
-              className="flex items-center justify-between px-3 py-sm"
+              className="py-sm flex items-center justify-between px-3"
               style={{
                 borderBottomWidth: 1,
                 borderBottomStyle: 'solid',
                 borderBottomColor: cfg.borderColor,
               }}
             >
-              <div className="flex items-center gap-sm">
+              <div className="gap-sm flex items-center">
                 <Highlighter className="h-4 w-4" />
                 <span className="text-sm font-medium">
                   {t('pages.bookReader.annotations')} ({annotations.length})
@@ -1052,7 +1052,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               )}
 
               {annotations.length === 0 && !showAnnotationForm && (
-                <div className="flex flex-col items-center gap-sm py-xl text-center text-sm opacity-50">
+                <div className="gap-sm py-xl flex flex-col items-center text-center text-sm opacity-50">
                   <Highlighter className="h-8 w-8" />
                   <p>{t('pages.bookReader.noAnnotations')}</p>
                   <p className="text-xs">Clique em + para adicionar.</p>
@@ -1064,8 +1064,8 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                   key={a.id}
                   className={`rounded-lg border-l-4 p-3 text-sm ${COLOR_BG[a.color] ?? 'border-l-gray-300 bg-gray-50'}`}
                 >
-                  <div className="mb-xs flex items-start justify-between gap-xs">
-                    <div className="flex flex-wrap gap-xs">
+                  <div className="mb-xs gap-xs flex items-start justify-between">
+                    <div className="gap-xs flex flex-wrap">
                       <Badge variant="secondary" className="text-xs">
                         {a.highlight_type_display}
                       </Badge>
@@ -1077,7 +1077,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                     </div>
                     <button
                       onClick={() => void handleDeleteAnnotation(a.id)}
-                      className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5"
                       aria-label={t('pages.bookReader.removeAnnotation')}
                     >
                       <X className="h-3 w-3" />

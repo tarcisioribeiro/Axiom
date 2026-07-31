@@ -173,7 +173,7 @@ export function WorkoutSessionForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.workoutSessions.sectionSession')}>
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
             <DatePicker
@@ -208,7 +208,7 @@ export function WorkoutSessionForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-sm">
+        <div className="gap-sm grid grid-cols-2">
           <div className="space-y-sm">
             <Label>{t('pages.workoutSessions.startTime')}</Label>
             <TimePicker
@@ -249,7 +249,7 @@ export function WorkoutSessionForm({
           </Button>
         </div>
 
-        <div className="max-h-80 space-y-sm overflow-y-auto pr-1">
+        <div className="space-y-sm max-h-80 overflow-y-auto pr-1">
           {exerciseFields.map((exField, exIdx) => (
             <ExerciseBlock
               key={exField.fieldKey}
@@ -275,7 +275,7 @@ export function WorkoutSessionForm({
         />
       </div>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <div className="gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -318,8 +318,8 @@ function ExerciseBlock({
   });
 
   return (
-    <div className="space-y-sm rounded-md border-l-2 border-category-exercise bg-card p-sm">
-      <div className="flex items-center gap-sm">
+    <div className="space-y-sm border-category-exercise bg-card p-sm rounded-md border-l-2">
+      <div className="gap-sm flex items-center">
         <Input
           className="flex-1"
           placeholder={t('pages.workoutSessions.exerciseNamePlaceholder')}
@@ -329,7 +329,7 @@ function ExerciseBlock({
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 text-destructive"
+          className="text-destructive shrink-0"
           onClick={onRemove}
         >
           <Trash2 className="h-4 w-4" />
@@ -337,7 +337,7 @@ function ExerciseBlock({
       </div>
 
       <div className="space-y-xs">
-        <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] gap-xs px-xs text-xs font-medium text-muted-foreground">
+        <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[2rem_1fr_1fr_1fr_2rem] text-xs font-medium">
           <span>{t('pages.workoutSessions.setNumber')}</span>
           <span>{t('pages.workoutSessions.load')}</span>
           <span>{t('pages.workoutSessions.loadUnit')}</span>
@@ -347,9 +347,9 @@ function ExerciseBlock({
         {setFields.map((setField, sIdx) => (
           <div
             key={setField.fieldKey}
-            className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center gap-xs"
+            className="gap-xs grid grid-cols-[2rem_1fr_1fr_1fr_2rem] items-center"
           >
-            <span className="text-center text-xs font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-center text-xs font-medium">
               {sIdx + 1}
             </span>
             <Input
@@ -385,7 +385,7 @@ function ExerciseBlock({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive h-7 w-7"
               onClick={() => removeSet(sIdx)}
             >
               <Trash2 className="h-3 w-3" />
@@ -396,7 +396,7 @@ function ExerciseBlock({
           type="button"
           variant="ghost"
           size="sm"
-          className="w-full text-xs text-muted-foreground"
+          className="text-muted-foreground w-full text-xs"
           onClick={() => appendSet(newSet(setFields.length + 1))}
         >
           <Plus className="mr-1 h-3 w-3" />

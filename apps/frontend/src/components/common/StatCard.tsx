@@ -149,11 +149,11 @@ export const StatCard: React.FC<StatCardProps> = ({
       <Card
         className={cn(
           `transition-shadow ${cardClass}`,
-          onClick && 'cursor-pointer hover:ring-2 hover:ring-primary/30'
+          onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
         )}
         onClick={onClick}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
             <motion.div
@@ -180,7 +180,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           </div>
           {progressBar && (
             <div className="mt-sm">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <motion.div
                   className={cn(
                     'h-full rounded-full',
@@ -202,20 +202,20 @@ export const StatCard: React.FC<StatCardProps> = ({
             </div>
           )}
           {description && (
-            <p className="mt-xs text-xs text-muted-foreground">{description}</p>
+            <p className="mt-xs text-muted-foreground text-xs">{description}</p>
           )}
           {trend && (
-            <div className="mt-sm flex items-center gap-xs">
+            <div className="mt-sm gap-xs flex items-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.2 }}
               >
                 {trend.isPositive ? (
-                  <TrendingUp className="h-4 w-4 text-success" aria-hidden="true" />
+                  <TrendingUp className="text-success h-4 w-4" aria-hidden="true" />
                 ) : (
                   <TrendingDown
-                    className="h-4 w-4 text-destructive"
+                    className="text-destructive h-4 w-4"
                     aria-hidden="true"
                   />
                 )}
@@ -227,7 +227,7 @@ export const StatCard: React.FC<StatCardProps> = ({
                 {trend.value}%
               </span>
               {trend.period && (
-                <span className="text-xs text-muted-foreground">{trend.period}</span>
+                <span className="text-muted-foreground text-xs">{trend.period}</span>
               )}
             </div>
           )}

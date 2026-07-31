@@ -460,7 +460,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
       label: t('pages.creditCardBills.columns.paid'),
       align: 'right',
       render: (bill) => (
-        <span className="font-semibold text-success">
+        <span className="text-success font-semibold">
           {formatCurrency(bill.paid_amount)}
         </span>
       ),
@@ -538,38 +538,38 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
         }}
       />
 
-      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-        <Card className="overflow-hidden border-t-2 border-t-primary/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
+        <Card className="border-t-primary/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.creditCards.cardCount', { count: creditCards.length })}
             </p>
-            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
-              <CreditCardIcon className="h-4 w-4 text-primary" />
+            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
+              <CreditCardIcon className="text-primary h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{creditCards.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <div className="text-primary text-2xl font-bold">{creditCards.length}</div>
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.creditCards.stats.registeredSubtitle')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-success/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-success/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.creditCards.stats.availableCredit')}
             </p>
-            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-              <Wallet className="h-4 w-4 text-success" />
+            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+              <Wallet className="text-success h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-success text-2xl font-bold">
               {formatCurrency(totalAvailable)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.creditCards.stats.ofTotalLimit', {
                 value: formatCurrency(totalLimit),
               })}
@@ -577,20 +577,20 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
+          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
             <p className="text-sm font-medium">
               {t('pages.creditCards.stats.usedCredit')}
             </p>
-            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-              <TrendingDown className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
+              <TrendingDown className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">
+            <div className="text-destructive text-2xl font-bold">
               {formatCurrency(totalLimit - totalAvailable)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">
+            <p className="mt-xs text-muted-foreground text-xs">
               {t('pages.creditCards.usedPercent', {
                 percent:
                   totalLimit > 0
@@ -604,12 +604,12 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
       {creditCards.length === 0 ? (
         <EmptyState
-          icon={<CreditCardIcon className="h-12 w-12 text-muted-foreground" />}
+          icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
           title={t('pages.creditCards.emptyTitle')}
           message={t('pages.creditCards.emptyState')}
         />
       ) : (
-        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {creditCards.map((card) => {
             const cardNumber = getCardNumber(card);
             const limit = parseFloat(card.credit_limit);
@@ -658,23 +658,23 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                   {/* Card hero — gradient background simulating a bank card */}
                   <div
                     className={cn(
-                      'relative bg-gradient-to-br px-md pb-lg pt-md',
+                      'px-md pb-lg pt-md relative bg-gradient-to-br',
                       brandGradient
                     )}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {t('pages.creditCards.limit')}
                         </p>
                         <p className="text-xl font-bold">{formatCurrency(available)}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {t('pages.creditCards.ofLimit', {
                             value: formatCurrency(limit),
                           })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-xs">
+                      <div className="gap-xs flex items-center">
                         <UsageArc pct={usagePct} size={48} />
                         <div className="flex flex-col">
                           <Button
@@ -715,7 +715,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                             aria-label={t('common.actions.delete')}
                           >
                             <Trash2
-                              className="h-4 w-4 text-destructive"
+                              className="text-destructive h-4 w-4"
                               aria-hidden="true"
                             />
                           </Button>
@@ -723,9 +723,9 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                       </div>
                     </div>
                     {/* Card chip */}
-                    <div className="absolute bottom-3 left-md h-5 w-7 rounded bg-warning/40 ring-1 ring-warning/30" />
+                    <div className="left-md bg-warning/40 ring-warning/30 absolute bottom-3 h-5 w-7 rounded ring-1" />
                     {/* Bottom accent strip */}
-                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                    <div className="via-primary/40 absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-transparent to-transparent" />
                   </div>
 
                   <CardContent className="space-y-sm pt-md">
@@ -738,7 +738,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                           {card.name}
                         </button>
                         {cardNumber && (
-                          <p className="font-mono text-xs text-muted-foreground">
+                          <p className="text-muted-foreground font-mono text-xs">
                             {cardNumber}
                           </p>
                         )}
@@ -764,8 +764,8 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between border-t pt-sm text-sm">
-                      <div className="flex items-center gap-xs text-muted-foreground">
+                    <div className="pt-sm flex items-center justify-between border-t text-sm">
+                      <div className="gap-xs text-muted-foreground flex items-center">
                         <Calendar className="h-3.5 w-3.5" />
                         <span>{t('pages.creditCards.dueDay')}</span>
                       </div>
@@ -775,7 +775,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                     </div>
 
                     {card.associated_account_name && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {t('pages.creditCards.associatedAccount')}{' '}
                         {card.associated_account_name}
                       </p>
@@ -816,7 +816,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
       <Dialog open={isBillsOpen} onOpenChange={setIsBillsOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
+            <DialogTitle className="gap-sm flex items-center">
               <Receipt className="h-5 w-5" />
               {t('pages.creditCardBills.title')} — {billsCard?.name}
             </DialogTitle>
@@ -825,7 +825,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Filter className="text-muted-foreground h-4 w-4" />
             <Select value={billStatusFilter} onValueChange={setBillStatusFilter}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
@@ -875,11 +875,11 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
             keyExtractor={(b) => b.id}
             isLoading={billsLoading}
             emptyState={{
-              icon: <Receipt className="h-12 w-12 text-muted-foreground" />,
+              icon: <Receipt className="text-muted-foreground h-12 w-12" />,
               message: t('pages.creditCardBills.emptyState'),
             }}
             actions={(bill) => (
-              <div className="flex items-center justify-end gap-xs">
+              <div className="gap-xs flex items-center justify-end">
                 {bill.status === 'paid' && (
                   <ReceiptButton
                     source={{ type: 'credit_card_bill', data: bill }}
@@ -897,7 +897,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                     }}
                     aria-label={t('pages.creditCardBills.payBillLabel')}
                   >
-                    <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
+                    <Wallet className="text-primary h-4 w-4" aria-hidden="true" />
                   </Button>
                 )}
                 {(bill.closed ||
@@ -910,7 +910,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                     onClick={() => void handleReopenBill(bill)}
                     aria-label={t('pages.creditCardBills.reopenBillLabel')}
                   >
-                    <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
+                    <RotateCcw className="text-warning h-4 w-4" aria-hidden="true" />
                   </Button>
                 )}
                 <Button
@@ -932,7 +932,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                   onClick={() => void handleBillDelete(bill.id)}
                   aria-label={t('common.actions.delete')}
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             )}

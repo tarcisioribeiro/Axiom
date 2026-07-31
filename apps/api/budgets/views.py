@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
+from app.request_utils import request_data
 from budgets.models import Budget
 from budgets.serializers import (
     BudgetHistorySerializer,
@@ -273,7 +274,9 @@ class BudgetSuggestView(APIView):
 
     def post(self, request: Request) -> Response:
         user = cast(User, request.user)
-        include_reasoning = request.data.get("include_llm_reasoning", False)
+        include_reasoning = request_data(request).get(
+            "include_llm_reasoning", False
+        )
 
         today = timezone.now().date()
         three_months_ago = (today.replace(day=1) - timedelta(days=1)).replace(

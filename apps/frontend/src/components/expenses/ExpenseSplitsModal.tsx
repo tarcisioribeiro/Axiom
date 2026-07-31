@@ -117,11 +117,11 @@ export function ExpenseSplitsModal({
 
         <div className="space-y-sm">
           {isLoading ? (
-            <p className="py-md text-center text-sm text-muted-foreground">
+            <p className="py-md text-muted-foreground text-center text-sm">
               {t('common.messages.loading')}
             </p>
           ) : splits.length === 0 && !addingNew ? (
-            <p className="py-md text-center text-sm text-muted-foreground">
+            <p className="py-md text-muted-foreground text-center text-sm">
               {t('pages.expenses.splits.empty')}
             </p>
           ) : (
@@ -129,7 +129,7 @@ export function ExpenseSplitsModal({
               {splits.map((split) => (
                 <div
                   key={split.id}
-                  className="flex items-center gap-sm rounded-md border border-border px-sm py-xs"
+                  className="gap-sm border-border px-sm py-xs flex items-center rounded-md border"
                 >
                   <Checkbox
                     checked={split.payed}
@@ -141,21 +141,21 @@ export function ExpenseSplitsModal({
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{split.description}</p>
                     {split.member_name && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {split.member_name}
                       </p>
                     )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-sm">
+                  <div className="gap-sm flex shrink-0 items-center">
                     <span
                       className={`text-sm font-semibold ${split.payed ? 'text-success' : 'text-foreground'}`}
                     >
                       {formatCurrency(parseFloat(split.value))}
                     </span>
                     {split.payed ? (
-                      <CheckCircle2 className="h-4 w-4 text-success" />
+                      <CheckCircle2 className="text-success h-4 w-4" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-muted-foreground" />
+                      <XCircle className="text-muted-foreground h-4 w-4" />
                     )}
                     <button
                       onClick={() => void handleDelete(split.id)}
@@ -170,7 +170,7 @@ export function ExpenseSplitsModal({
           )}
 
           {splits.length > 0 && (
-            <div className="flex justify-between border-t pt-xs text-xs text-muted-foreground">
+            <div className="pt-xs text-muted-foreground flex justify-between border-t text-xs">
               <span>{t('pages.expenses.splits.total')}</span>
               <span
                 className={
@@ -185,7 +185,7 @@ export function ExpenseSplitsModal({
           )}
 
           {addingNew ? (
-            <div className="space-y-sm rounded-md border border-border p-sm">
+            <div className="space-y-sm border-border p-sm rounded-md border">
               <div className="space-y-xs">
                 <Label htmlFor="split-desc">
                   {t('pages.expenses.splits.description')}
@@ -212,7 +212,7 @@ export function ExpenseSplitsModal({
                   }
                 />
               </div>
-              <div className="flex items-center gap-sm">
+              <div className="gap-sm flex items-center">
                 <Checkbox
                   id="split-payed"
                   checked={form.payed}
@@ -222,7 +222,7 @@ export function ExpenseSplitsModal({
                   {t('pages.expenses.splits.markPaid')}
                 </Label>
               </div>
-              <div className="flex gap-sm">
+              <div className="gap-sm flex">
                 <Button
                   size="sm"
                   onClick={() => createMutation.mutate(form)}
@@ -248,7 +248,7 @@ export function ExpenseSplitsModal({
             <Button
               size="sm"
               variant="outline"
-              className="w-full gap-xs"
+              className="gap-xs w-full"
               onClick={() => setAddingNew(true)}
             >
               <Plus className="h-4 w-4" />

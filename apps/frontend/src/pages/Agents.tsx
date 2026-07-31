@@ -53,7 +53,7 @@ function CitationLink({
         href={href ?? '#'}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-xs rounded-full bg-primary/10 px-sm py-0.5 text-[11px] font-medium text-primary no-underline hover:bg-primary/20"
+        className="gap-xs bg-primary/10 px-sm text-primary hover:bg-primary/20 inline-flex items-center rounded-full py-0.5 text-[11px] font-medium no-underline"
       >
         <ExternalLink className="h-2.5 w-2.5" />
         {label}
@@ -68,7 +68,7 @@ function CitationLink({
       <span
         title={title}
         aria-label={`Fonte ${num}: ${title}`}
-        className="inline-flex cursor-help items-center rounded bg-primary/15 px-xs text-[10px] font-bold leading-5 text-primary"
+        className="bg-primary/15 px-xs text-primary inline-flex cursor-help items-center rounded text-[10px] leading-5 font-bold"
       >
         {num}
       </span>
@@ -130,7 +130,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-sm rounded-full px-sm py-xs text-xs font-medium',
+        'gap-sm px-sm py-xs inline-flex items-center rounded-full text-xs font-medium',
         available
           ? 'bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))]'
           : 'bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))]'
@@ -174,7 +174,7 @@ function AgentSelectorCard({
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(agentKey)}
       className={cn(
-        'flex w-full flex-col gap-3 rounded-lg border-2 bg-card p-md text-left transition-all duration-200',
+        'bg-card p-md flex w-full flex-col gap-3 rounded-lg border-2 text-left transition-all duration-200',
         selected
           ? cn('border-2', cardClass, 'shadow-medium')
           : 'border-border hover:border-muted-foreground/40'
@@ -190,18 +190,18 @@ function AgentSelectorCard({
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-foreground">{name}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+          <p className="text-foreground text-sm font-semibold">{name}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>
         </div>
         {selected && (
           <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-[hsl(var(--success))]" />
         )}
       </div>
-      <div className="flex flex-wrap gap-xs">
+      <div className="gap-xs flex flex-wrap">
         {examples.slice(0, 3).map((ex) => (
           <span
             key={ex}
-            className="rounded-full bg-muted px-sm py-0.5 text-[10px] text-muted-foreground"
+            className="bg-muted px-sm text-muted-foreground rounded-full py-0.5 text-[10px]"
           >
             {ex}
           </span>
@@ -245,20 +245,20 @@ function MessageBubble({
         )}
       </div>
 
-      <div className={cn('flex max-w-[75%] flex-col gap-xs', isUser && 'items-end')}>
+      <div className={cn('gap-xs flex max-w-[75%] flex-col', isUser && 'items-end')}>
         {!isUser && message.agent_name && (
           <span
-            className={cn('rounded-full px-sm py-0.5 text-xs font-medium', badgeClass)}
+            className={cn('px-sm rounded-full py-0.5 text-xs font-medium', badgeClass)}
           >
             {agentLabel}
           </span>
         )}
         <div
           className={cn(
-            'rounded-2xl px-md py-sm text-sm leading-relaxed',
+            'px-md py-sm rounded-2xl text-sm leading-relaxed',
             isUser
-              ? 'rounded-tr-sm bg-primary text-primary-foreground'
-              : 'rounded-tl-sm bg-muted text-foreground'
+              ? 'bg-primary text-primary-foreground rounded-tr-sm'
+              : 'bg-muted text-foreground rounded-tl-sm'
           )}
         >
           {isUser ? (
@@ -274,7 +274,7 @@ function MessageBubble({
             </div>
           )}
         </div>
-        <span className="text-[11px] text-muted-foreground/70">
+        <span className="text-muted-foreground/70 text-[11px]">
           {new Date(message.created_at).toLocaleTimeString('pt-BR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -312,7 +312,7 @@ function StreamingBubble({
       transition={{ duration: 0.18 }}
       className="flex gap-3"
     >
-      <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="bg-muted text-muted-foreground mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
         {isStreaming && !text ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
@@ -320,16 +320,16 @@ function StreamingBubble({
         )}
       </div>
 
-      <div className="flex max-w-[75%] flex-col gap-xs">
+      <div className="gap-xs flex max-w-[75%] flex-col">
         {agentName && (
           <span
-            className={cn('rounded-full px-sm py-0.5 text-xs font-medium', badgeClass)}
+            className={cn('px-sm rounded-full py-0.5 text-xs font-medium', badgeClass)}
           >
             {getAgentLabel(agentName)}
           </span>
         )}
 
-        <div className="rounded-2xl rounded-tl-sm bg-muted px-md py-sm text-sm leading-relaxed text-foreground">
+        <div className="bg-muted px-md py-sm text-foreground rounded-2xl rounded-tl-sm text-sm leading-relaxed">
           {!text && isStreaming ? (
             <span className="text-muted-foreground">
               {t('pages.agents.streaming.processing')}
@@ -353,14 +353,14 @@ function StreamingBubble({
         </div>
 
         {!isStreaming && sources.length > 0 && (
-          <div className="flex flex-wrap gap-xs pt-0.5">
-            <span className="text-[11px] text-muted-foreground/70">
+          <div className="gap-xs flex flex-wrap pt-0.5">
+            <span className="text-muted-foreground/70 text-[11px]">
               {t('pages.agents.streaming.sources')}:
             </span>
             {sources.map((src) => (
               <span
                 key={src}
-                className="rounded-full bg-muted px-sm py-0.5 text-[11px] text-muted-foreground"
+                className="bg-muted px-sm text-muted-foreground rounded-full py-0.5 text-[11px]"
               >
                 {src}
               </span>
@@ -384,10 +384,10 @@ function ThinkingBubble() {
       transition={{ duration: 0.18 }}
       className="flex gap-3"
     >
-      <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="bg-muted text-muted-foreground mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
         <BotMessageSquare className="h-4 w-4" />
       </div>
-      <div className="flex items-center gap-sm rounded-2xl rounded-tl-sm bg-muted px-md py-sm text-sm text-muted-foreground">
+      <div className="gap-sm bg-muted px-md py-sm text-muted-foreground flex items-center rounded-2xl rounded-tl-sm text-sm">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         {t('pages.agents.thinking')}
       </div>
@@ -412,14 +412,14 @@ function AgentSelector({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.25 }}
-      className="flex h-full flex-col items-center justify-center gap-lg px-md py-lg"
+      className="gap-lg px-md py-lg flex h-full flex-col items-center justify-center"
     >
       <div className="text-center">
-        <div className="mx-auto mb-md flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-          <BotMessageSquare className="h-7 w-7 text-primary" />
+        <div className="mb-md bg-primary/10 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl">
+          <BotMessageSquare className="text-primary h-7 w-7" />
         </div>
         <h2 className="heading-2 text-foreground">{t('pages.agents.selectAgent')}</h2>
-        <p className="mt-xs text-sm text-muted-foreground">
+        <p className="mt-xs text-muted-foreground text-sm">
           {t('pages.agents.selectAgentDesc')}
         </p>
       </div>
@@ -622,15 +622,15 @@ export default function Agents() {
 
   return (
     <PageContainer>
-      <div className="flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-lg border border-border bg-card">
+      <div className="border-border bg-card flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-lg border">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-md py-3">
+        <div className="border-border px-md flex flex-shrink-0 items-center justify-between gap-3 border-b py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <BotMessageSquare className="h-4 w-4 text-primary" />
+            <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+              <BotMessageSquare className="text-primary h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm font-semibold leading-tight text-foreground">
+              <h1 className="text-foreground text-sm leading-tight font-semibold">
                 {activeAgentName ?? t('pages.agents.title')}
               </h1>
               {status && (
@@ -644,12 +644,12 @@ export default function Agents() {
             </div>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-sm">
+          <div className="gap-sm flex flex-shrink-0 items-center">
             {conversationStarted && (
               <button
                 onClick={handleChangeAgent}
                 title={t('pages.agents.changeAgent')}
-                className="rounded-lg border border-border bg-background px-sm py-xs text-xs text-muted-foreground hover:bg-muted"
+                className="border-border bg-background px-sm py-xs text-muted-foreground hover:bg-muted rounded-lg border text-xs"
               >
                 {t('pages.agents.changeAgent')}
               </button>
@@ -658,7 +658,7 @@ export default function Agents() {
               onClick={() => setShowHistory((v) => !v)}
               title={t('pages.agents.sessions')}
               className={cn(
-                'rounded-lg border border-border bg-background p-sm text-muted-foreground hover:bg-muted',
+                'border-border bg-background p-sm text-muted-foreground hover:bg-muted rounded-lg border',
                 showHistory && 'bg-muted text-foreground'
               )}
             >
@@ -668,7 +668,7 @@ export default function Agents() {
               <button
                 onClick={() => void handleClearHistory()}
                 title={t('pages.agents.clearHistory')}
-                className="rounded-lg border border-border bg-background p-sm text-muted-foreground hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
+                className="border-border bg-background p-sm text-muted-foreground rounded-lg border hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -678,14 +678,14 @@ export default function Agents() {
 
         {/* LLM unavailable banner — usa --warning em vez de amber hardcoded */}
         {status && !status.available && (
-          <div className="flex items-center gap-sm border-b border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.1)] px-md py-sm text-xs text-[hsl(var(--warning))]">
+          <div className="gap-sm px-md py-sm flex items-center border-b border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.1)] text-xs text-[hsl(var(--warning))]">
             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
             {t('pages.agents.unavailable')}
           </div>
         )}
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto px-md py-md">
+        <div className="px-md py-md flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             {showSelector ? (
               <AgentSelector
@@ -695,7 +695,7 @@ export default function Agents() {
               />
             ) : historyLoading ? (
               <div key="loading" className="flex h-full items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
               </div>
             ) : (
               <div key="messages" className="space-y-md">
@@ -731,12 +731,12 @@ export default function Agents() {
           selectedAgent ||
           showStreamingBubble ||
           messages.length > 0) && (
-          <div className="flex-shrink-0 border-t border-border bg-card px-md py-3">
+          <div className="border-border bg-card px-md flex-shrink-0 border-t py-3">
             {selectedAgent &&
               messages.length === 0 &&
               !showStreamingBubble &&
               !query && (
-                <div className="mb-sm flex flex-wrap gap-xs">
+                <div className="mb-sm gap-xs flex flex-wrap">
                   {(
                     (t(`pages.agents.suggestedQuestions.${selectedAgent}`, {
                       returnObjects: true,
@@ -746,14 +746,14 @@ export default function Agents() {
                       key={q}
                       type="button"
                       onClick={() => setQuery(q)}
-                      className="rounded-full border border-border bg-muted px-sm py-xs text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                      className="border-border bg-muted px-sm py-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full border text-xs transition-colors"
                     >
                       {q}
                     </button>
                   ))}
                 </div>
               )}
-            <div className="flex items-end gap-sm rounded-lg border border-border bg-background px-3 py-sm focus-within:ring-2 focus-within:ring-primary/40">
+            <div className="gap-sm border-border bg-background py-sm focus-within:ring-primary/40 flex items-end rounded-lg border px-3 focus-within:ring-2">
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -763,12 +763,12 @@ export default function Agents() {
                 placeholder={inputPlaceholder}
                 disabled={inputDisabled}
                 aria-label={inputPlaceholder}
-                className="max-h-40 flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+                className="text-foreground placeholder:text-muted-foreground max-h-40 flex-1 resize-none bg-transparent text-sm focus:outline-none disabled:opacity-50"
               />
               {isStreaming ? (
                 <button
                   onClick={cancelStream}
-                  className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-opacity hover:bg-destructive/90"
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity"
                   aria-label={t('pages.agents.stop')}
                   title={t('pages.agents.stop')}
                 >
@@ -778,14 +778,14 @@ export default function Agents() {
                 <button
                   onClick={() => void handleSend()}
                   disabled={!query.trim() || inputDisabled}
-                  className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:bg-primary/90 disabled:opacity-40"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
                   aria-label={t('pages.agents.send')}
                 >
                   <Send className="h-4 w-4" />
                 </button>
               )}
             </div>
-            <p className="mt-sm text-center text-[11px] text-muted-foreground/60">
+            <p className="mt-sm text-muted-foreground/60 text-center text-[11px]">
               {t('pages.agents.keyboardHint')}
             </p>
           </div>

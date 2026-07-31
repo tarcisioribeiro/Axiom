@@ -102,7 +102,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   // Spinner mode (default)
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-md ${
+      className={`gap-md flex flex-col items-center justify-center ${
         fullScreen ? 'h-screen' : sizeClasses[size]
       }`}
       role="status"
@@ -110,7 +110,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       aria-busy="true"
     >
       <Loader2
-        className={`${iconSizes[size]} animate-spin text-primary`}
+        className={`${iconSizes[size]} text-primary animate-spin`}
         aria-hidden="true"
       />
       {message && <p className="text-sm">{message}</p>}

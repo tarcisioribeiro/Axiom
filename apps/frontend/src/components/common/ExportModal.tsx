@@ -126,12 +126,12 @@ export function ExportModal({
             </Select>
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('common.export.activeFiltersNote')}
           </p>
         </div>
 
-        <div className="flex justify-end gap-sm pt-sm">
+        <div className="gap-sm pt-sm flex justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

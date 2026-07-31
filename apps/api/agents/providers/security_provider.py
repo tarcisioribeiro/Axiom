@@ -7,7 +7,7 @@ funções. Ver documentation/architecture/agents-llm-boundary.md.
 """
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -71,11 +71,14 @@ def password_category_counts(user: User) -> list[dict[str, Any]]:
 
     from security.models import Password
 
-    return list(
-        Password.objects.filter(owner__user=user, is_deleted=False)
-        .values("category")
-        .annotate(count=Count("id"))
-        .order_by("-count")
+    return cast(
+        "list[dict[str, Any]]",
+        list(
+            Password.objects.filter(owner__user=user, is_deleted=False)
+            .values("category")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        ),
     )
 
 

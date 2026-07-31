@@ -133,7 +133,7 @@ export function SuccessAnimation({
           {/* Pulse ring effect */}
           {variant !== 'minimal' && (
             <motion.div
-              className="absolute inset-0 rounded-full bg-success/20"
+              className="bg-success/20 absolute inset-0 rounded-full"
               variants={pulseRingVariants}
               initial="initial"
               animate="animate"
@@ -144,7 +144,7 @@ export function SuccessAnimation({
           {variant !== 'minimal' && (
             <motion.div
               className={cn(
-                'absolute inset-0 rounded-full bg-success',
+                'bg-success absolute inset-0 rounded-full',
                 sizeClasses[size]
               )}
               variants={checkmarkCircleVariants}

@@ -31,8 +31,8 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
   const navigate = useNavigate();
 
   const STEPS = [
-    { id: 1, icon: <Lock className="h-10 w-10 text-primary" /> },
-    { id: 2, icon: <KeyRound className="h-10 w-10 text-primary" /> },
+    { id: 1, icon: <Lock className="text-primary h-10 w-10" /> },
+    { id: 2, icon: <KeyRound className="text-primary h-10 w-10" /> },
     { id: 3, icon: <CheckCircle2 className="text-chart-2 h-10 w-10" /> },
   ];
 
@@ -55,16 +55,16 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-sm">
-            <ShieldCheck className="h-5 w-5 text-primary" />
+          <DialogTitle className="gap-sm flex items-center">
+            <ShieldCheck className="text-primary h-5 w-5" />
             {t('vaultOnboarding.dialogTitle')}
           </DialogTitle>
         </DialogHeader>
 
         {/* Stepper indicator */}
-        <div className="flex items-center justify-center gap-sm py-sm">
+        <div className="gap-sm py-sm flex items-center justify-center">
           {STEPS.map((s) => (
-            <div key={s.id} className="flex items-center gap-sm">
+            <div key={s.id} className="gap-sm flex items-center">
               <div
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                   step === s.id
@@ -86,23 +86,23 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         </div>
 
         {/* Step content */}
-        <div className="flex flex-col items-center gap-md py-md text-center">
+        <div className="gap-md py-md flex flex-col items-center text-center">
           {step === 1 && (
             <>
-              <Lock className="h-16 w-16 text-primary" />
+              <Lock className="text-primary h-16 w-16" />
               <div className="space-y-xs">
                 <h3 className="text-lg font-semibold">
                   {t('vaultOnboarding.step1Title')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('vaultOnboarding.step1Desc')}
                 </p>
               </div>
-              <div className="w-full rounded-lg border border-warning/30 bg-warning/10 p-3 text-left">
-                <p className="text-xs font-medium text-warning">
+              <div className="border-warning/30 bg-warning/10 w-full rounded-lg border p-3 text-left">
+                <p className="text-warning text-xs font-medium">
                   {t('vaultOnboarding.step1Warning')}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {t('vaultOnboarding.step1WarningDesc')}
                 </p>
               </div>
@@ -111,16 +111,16 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
 
           {step === 2 && (
             <>
-              <KeyRound className="h-16 w-16 text-primary" />
+              <KeyRound className="text-primary h-16 w-16" />
               <div className="space-y-xs">
                 <h3 className="text-lg font-semibold">
                   {t('vaultOnboarding.step2Title')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('vaultOnboarding.step2Desc')}
                 </p>
               </div>
-              <div className="w-full space-y-xs text-left">
+              <div className="space-y-xs w-full text-left">
                 <p className="text-xs font-medium">
                   {t('vaultOnboarding.step2TipsTitle')}
                 </p>
@@ -132,7 +132,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 ].map((tip) => (
                   <div
                     key={tip}
-                    className="flex items-center gap-xs text-xs text-muted-foreground"
+                    className="gap-xs text-muted-foreground flex items-center text-xs"
                   >
                     <CheckCircle2 className="text-chart-2 h-3 w-3 flex-shrink-0" />
                     {tip}
@@ -152,14 +152,14 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 <h3 className="text-lg font-semibold">
                   {t('vaultOnboarding.step3Title')}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('vaultOnboarding.step3Desc')}
                 </p>
               </div>
-              <div className="grid w-full grid-cols-1 gap-sm">
+              <div className="gap-sm grid w-full grid-cols-1">
                 <Button
                   variant="outline"
-                  className="justify-start gap-sm"
+                  className="gap-sm justify-start"
                   onClick={() => handleAction('/security/passwords')}
                 >
                   <KeyRound className="h-4 w-4" />
@@ -167,7 +167,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start gap-sm"
+                  className="gap-sm justify-start"
                   onClick={() => handleAction('/security/password-import')}
                 >
                   <Import className="h-4 w-4" />
@@ -175,7 +175,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start gap-sm"
+                  className="gap-sm justify-start"
                   onClick={() => handleAction('/security/health')}
                 >
                   <ShieldCheck className="h-4 w-4" />
@@ -183,7 +183,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="justify-start gap-sm"
+                  className="gap-sm justify-start"
                   onClick={() => handleAction('/security/archives')}
                 >
                   <FileArchive className="h-4 w-4" />
@@ -195,7 +195,7 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between gap-sm">
+        <div className="gap-sm flex justify-between">
           {step > 1 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
               {t('vaultOnboarding.back')}

@@ -35,7 +35,7 @@ export function TodayListView({
 
   return (
     <>
-      <div className="flex items-end gap-sm">
+      <div className="gap-sm flex items-end">
         <div>
           <Label htmlFor="list-date">{t('common.fields.date')}</Label>
           <DatePicker
@@ -59,7 +59,7 @@ export function TodayListView({
 
       {tasks.length === 0 ? (
         <EmptyState
-          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+          icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
           message={t('pages.todayTasks.emptyState')}
         />
       ) : (
@@ -72,7 +72,7 @@ export function TodayListView({
               <div
                 key={task.id}
                 className={cn(
-                  'flex items-center gap-md rounded-lg border p-md transition-opacity',
+                  'gap-md p-md flex items-center rounded-lg border transition-opacity',
                   isCompleted && 'opacity-60'
                 )}
               >
@@ -85,23 +85,23 @@ export function TodayListView({
                       ? t('pages.todayTasks.markPending')
                       : t('pages.todayTasks.markCompleted')
                   }
-                  className="shrink-0 text-muted-foreground hover:text-primary disabled:opacity-50"
+                  className="text-muted-foreground hover:text-primary shrink-0 disabled:opacity-50"
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="h-6 w-6 text-success" />
+                    <CheckCircle2 className="text-success h-6 w-6" />
                   ) : (
                     <Circle className="h-6 w-6" />
                   )}
                 </button>
                 <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-sm">
+                  <div className="gap-sm flex flex-wrap items-center">
                     <h3 className={cn('font-semibold', isCompleted && 'line-through')}>
                       {task.task_name}
                     </h3>
                     <Badge variant={badge.variant}>{badge.label}</Badge>
                   </div>
                   {(task.time_display || task.closing_time) && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {task.time_display &&
                         t('pages.todayTasks.timeLabel', { time: task.time_display })}
                       {task.closing_time && (
@@ -115,7 +115,7 @@ export function TodayListView({
                     </p>
                   )}
                   {task.notes && (
-                    <p className="text-sm text-muted-foreground">{task.notes}</p>
+                    <p className="text-muted-foreground text-sm">{task.notes}</p>
                   )}
                 </div>
                 {task.category && (

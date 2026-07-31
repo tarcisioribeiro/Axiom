@@ -98,11 +98,11 @@ export function ReadingForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       <FormSection title={t('pages.readings.form.sectionProgress')} icon={BookOpen}>
-        <div className="grid gap-md">
+        <div className="gap-md grid">
           {books.length > 1 && (
             <div className="space-y-sm">
-              <Label className="flex items-center gap-xs">
-                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label className="gap-xs flex items-center">
+                <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.readings.form.bookLabel')}
               </Label>
               <Select
@@ -123,15 +123,15 @@ export function ReadingForm({
                 </SelectContent>
               </Select>
               {errors.book && (
-                <p className="mt-xs text-sm text-destructive">{errors.book.message}</p>
+                <p className="mt-xs text-destructive text-sm">{errors.book.message}</p>
               )}
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
-              <Label htmlFor="pages_read" className="flex items-center gap-xs">
-                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="pages_read" className="gap-xs flex items-center">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.readings.form.pagesReadLabel')}
               </Label>
               <Input
@@ -145,12 +145,12 @@ export function ReadingForm({
                 disabled={isLoading}
               />
               {errors.pages_read && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.pages_read.message}
                 </p>
               )}
               {selectedBook > 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.readings.form.pagesReadMax', {
                     count: getBookMaxPages(selectedBook),
                   })}
@@ -159,8 +159,8 @@ export function ReadingForm({
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="current_page" className="flex items-center gap-xs">
-                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+              <Label htmlFor="current_page" className="gap-xs flex items-center">
+                <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.readings.form.currentPageLabel')}
               </Label>
               <Input
@@ -174,7 +174,7 @@ export function ReadingForm({
                 disabled={isLoading}
               />
               {errors.current_page && (
-                <p className="mt-xs text-sm text-destructive">
+                <p className="mt-xs text-destructive text-sm">
                   {errors.current_page.message}
                 </p>
               )}
@@ -184,10 +184,10 @@ export function ReadingForm({
       </FormSection>
 
       <FormSection title={t('pages.readings.form.sectionRecord')} icon={CalendarDays}>
-        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.readings.form.readingDateLabel')}
             </Label>
             <DatePicker
@@ -199,15 +199,15 @@ export function ReadingForm({
               disabled={isLoading}
             />
             {errors.reading_date && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.reading_date.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="reading_time" className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="reading_time" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.readings.form.readingTimeLabel')}
             </Label>
             <Input
@@ -220,15 +220,15 @@ export function ReadingForm({
               disabled={isLoading}
             />
             {errors.reading_time && (
-              <p className="mt-xs text-sm text-destructive">
+              <p className="mt-xs text-destructive text-sm">
                 {errors.reading_time.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
-            <Label className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.readings.form.timeOfDayLabel')}
             </Label>
             <Select
@@ -265,8 +265,8 @@ export function ReadingForm({
 
       <FormSection title={t('pages.readings.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="notes" className="flex items-center gap-xs">
-            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="notes" className="gap-xs flex items-center">
+            <FileText className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.readings.form.notesLabel')}
           </Label>
           <Textarea
@@ -277,12 +277,12 @@ export function ReadingForm({
             disabled={isLoading}
           />
           {errors.notes && (
-            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
           )}
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

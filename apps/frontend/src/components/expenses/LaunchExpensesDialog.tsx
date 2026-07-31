@@ -193,7 +193,7 @@ export const LaunchExpensesDialog = ({
                   total: fixedExpenses.length,
                 })}
               </Label>
-              <div className="flex items-center gap-sm">
+              <div className="gap-sm flex items-center">
                 <Checkbox
                   id="select-all"
                   checked={selectedExpenseIds.size === fixedExpenses.length}
@@ -207,12 +207,12 @@ export const LaunchExpensesDialog = ({
                 </label>
               </div>
             </div>
-            <ScrollArea className="h-[400px] rounded-md border p-md">
+            <ScrollArea className="p-md h-[400px] rounded-md border">
               <div className="space-y-3">
                 {fixedExpenses.map((exp) => (
                   <div
                     key={exp.id}
-                    className={`flex items-center gap-md rounded-lg border p-3 transition-colors ${
+                    className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
                       selectedExpenseIds.has(exp.id)
                         ? 'bg-background'
                         : 'bg-muted/50 opacity-60'
@@ -254,17 +254,17 @@ export const LaunchExpensesDialog = ({
           </div>
 
           {/* Total */}
-          <div className="flex items-center justify-between rounded-lg bg-muted p-md">
+          <div className="bg-muted p-md flex items-center justify-between rounded-lg">
             <span className="font-semibold">
               {t('pages.fixedExpenses.launchDialog.total')}
             </span>
-            <span className="text-2xl font-bold text-destructive">
+            <span className="text-destructive text-2xl font-bold">
               {formatCurrency(totalValue)}
             </span>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-sm">
+          <div className="gap-sm flex justify-end">
             <Button
               type="button"
               variant="outline"

@@ -207,43 +207,43 @@ export default function Members() {
 
       {/* Stat cards */}
       {members.length > 0 && (
-        <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
-          <Card className="overflow-hidden border-t-2 border-t-primary/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+        <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+          <Card className="border-t-primary/60 overflow-hidden border-t-2">
+            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
               <p className="text-sm font-medium">{t('pages.members.title')}</p>
-              <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
-                <Users className="h-4 w-4 text-primary" />
+              <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
+                <Users className="text-primary h-4 w-4" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{members.length}</div>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <div className="text-primary text-2xl font-bold">{members.length}</div>
+              <p className="mt-xs text-muted-foreground text-xs">
                 {t('pages.members.stats.registeredSubtitle')}
               </p>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden border-t-2 border-t-success/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+          <Card className="border-t-success/60 overflow-hidden border-t-2">
+            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
               <p className="text-sm font-medium">{t('pages.members.stats.active')}</p>
-              <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-                <UserCheck className="h-4 w-4 text-success" />
+              <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
+                <UserCheck className="text-success h-4 w-4" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">{activeCount}</div>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <div className="text-success text-2xl font-bold">{activeCount}</div>
+              <p className="mt-xs text-muted-foreground text-xs">
                 {t('pages.members.stats.activeSubtitle')}
               </p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden border-t-2 border-t-blue-500/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
               <p className="text-sm font-medium">
                 {t('pages.members.stats.creditors')}
               </p>
-              <div className="rounded-lg bg-blue-500/10 p-sm ring-1 ring-blue-500/20">
+              <div className="p-sm rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
                 <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
             </CardHeader>
@@ -251,18 +251,18 @@ export default function Members() {
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {creditorCount}
               </div>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {t('pages.members.stats.creditorsSubtitle')}
               </p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden border-t-2 border-t-emerald-500/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
               <p className="text-sm font-medium">
                 {t('pages.members.stats.beneficiaries')}
               </p>
-              <div className="rounded-lg bg-emerald-500/10 p-sm ring-1 ring-emerald-500/20">
+              <div className="p-sm rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
                 <HandCoins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
             </CardHeader>
@@ -270,7 +270,7 @@ export default function Members() {
               <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {beneficiaryCount}
               </div>
-              <p className="mt-xs text-xs text-muted-foreground">
+              <p className="mt-xs text-muted-foreground text-xs">
                 {t('pages.members.stats.beneficiariesSubtitle')}
               </p>
             </CardContent>
@@ -280,13 +280,13 @@ export default function Members() {
 
       {filteredMembers.length === 0 ? (
         <EmptyState
-          icon={<Users className="h-12 w-12 text-muted-foreground" />}
+          icon={<Users className="text-muted-foreground h-12 w-12" />}
           message={
             searchTerm ? t('pages.members.emptySearch') : t('pages.members.emptyState')
           }
         />
       ) : (
-        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredMembers.map((member) => {
             const isCurrentUser = currentUserMemberId === member.id;
             return (
@@ -294,46 +294,46 @@ export default function Members() {
                 key={member.id}
                 className={cn(
                   'overflow-hidden transition-shadow hover:shadow-md',
-                  isCurrentUser && 'ring-2 ring-primary/40',
+                  isCurrentUser && 'ring-primary/40 ring-2',
                   !member.active && 'opacity-60'
                 )}
               >
                 {/* Header com avatar e nome */}
-                <div className="flex items-start gap-3 bg-gradient-to-r from-muted/50 to-transparent p-md">
+                <div className="from-muted/50 p-md flex items-start gap-3 bg-gradient-to-r to-transparent">
                   <MemberInitials name={member.name} sex={member.sex} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-sm">
-                      <p className="truncate font-semibold leading-tight">
+                    <div className="gap-sm flex items-center">
+                      <p className="truncate leading-tight font-semibold">
                         {member.name}
                       </p>
                       {isCurrentUser && (
                         <Badge
                           variant="secondary"
-                          className="shrink-0 px-sm py-0 text-[10px]"
+                          className="px-sm shrink-0 py-0 text-[10px]"
                         >
                           Você
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {format(new Date(member.created_at), 'dd/MM/yyyy')}
                     </p>
                     {/* Papéis */}
-                    <div className="mt-sm flex flex-wrap gap-xs">
+                    <div className="mt-sm gap-xs flex flex-wrap">
                       {member.is_creditor && (
-                        <span className="inline-flex items-center gap-xs rounded-full bg-blue-500/10 px-sm py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                        <span className="gap-xs px-sm inline-flex items-center rounded-full bg-blue-500/10 py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
                           <Banknote className="h-2.5 w-2.5" />
                           {t('pages.members.form.isCreditor')}
                         </span>
                       )}
                       {member.is_benefited && (
-                        <span className="inline-flex items-center gap-xs rounded-full bg-emerald-500/10 px-sm py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                        <span className="gap-xs px-sm inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
                           <HandCoins className="h-2.5 w-2.5" />
                           {t('pages.members.form.isBenefited')}
                         </span>
                       )}
                       {!member.is_creditor && !member.is_benefited && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-muted-foreground text-[10px]">
                           {t('pages.members.noRole')}
                         </span>
                       )}
@@ -344,24 +344,24 @@ export default function Members() {
                 {/* Dados de contato */}
                 <CardContent className="space-y-sm py-3">
                   {member.phone && (
-                    <div className="flex items-center gap-sm text-xs text-muted-foreground">
+                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
                       <Phone className="h-3 w-3 shrink-0" />
                       <span>{member.phone}</span>
                     </div>
                   )}
                   {member.email && (
-                    <div className="flex items-center gap-sm text-xs text-muted-foreground">
+                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
                       <Mail className="h-3 w-3 shrink-0" />
                       <span className="truncate">{member.email}</span>
                     </div>
                   )}
                   {member.document && (
-                    <p className="font-mono text-xs text-muted-foreground">
+                    <p className="text-muted-foreground font-mono text-xs">
                       {member.document}
                     </p>
                   )}
                   {member.monthly_income && (
-                    <div className="rounded bg-muted/50 px-sm py-xs text-xs">
+                    <div className="bg-muted/50 px-sm py-xs rounded text-xs">
                       <span className="text-muted-foreground">
                         {t('pages.members.stats.income')}{' '}
                       </span>
@@ -372,7 +372,7 @@ export default function Members() {
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between border-t pt-sm">
+                  <div className="pt-sm flex items-center justify-between border-t">
                     <Badge
                       variant={member.active ? 'success' : 'outline'}
                       className="text-xs"
@@ -381,7 +381,7 @@ export default function Members() {
                         ? t('common.status.active')
                         : t('common.status.inactive')}
                     </Badge>
-                    <div className="flex gap-xs">
+                    <div className="gap-xs flex">
                       {isCurrentUser && (
                         <Button
                           variant="ghost"
@@ -416,7 +416,7 @@ export default function Members() {
                         title={t('common.actions.delete')}
                       >
                         <Trash2
-                          className="h-4 w-4 text-destructive"
+                          className="text-destructive h-4 w-4"
                           aria-hidden="true"
                         />
                       </Button>

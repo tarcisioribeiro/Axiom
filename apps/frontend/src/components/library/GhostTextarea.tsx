@@ -108,40 +108,40 @@ export function GhostTextarea({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex w-full rounded-md border border-input bg-background px-3 py-2',
-            'text-sm ring-offset-background placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'border-input bg-background flex w-full rounded-md border px-3 py-2',
+            'ring-offset-background placeholder:text-muted-foreground text-sm',
+            'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
             'focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
             'resize-none',
             className
           )}
         />
         {isLoading && (
-          <div className="absolute bottom-2 right-2">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground/50" />
+          <div className="absolute right-2 bottom-2">
+            <Loader2 className="text-muted-foreground/50 h-3.5 w-3.5 animate-spin" />
           </div>
         )}
       </div>
 
       {suggestion && (
-        <div className="flex items-start gap-sm rounded-lg border border-primary/20 bg-primary/5 p-sm">
-          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60" />
+        <div className="gap-sm border-primary/20 bg-primary/5 p-sm flex items-start rounded-lg border">
+          <Sparkles className="text-primary/60 mt-0.5 h-3.5 w-3.5 shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs italic leading-relaxed text-muted-foreground">
+            <p className="text-muted-foreground text-xs leading-relaxed italic">
               {suggestion}
             </p>
-            <div className="mt-xs flex items-center gap-sm">
+            <div className="mt-xs gap-sm flex items-center">
               <button
                 type="button"
                 onClick={acceptSuggestion}
-                className="rounded border border-primary/30 bg-primary/10 px-xs py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                className="border-primary/30 bg-primary/10 px-xs text-primary hover:bg-primary/20 rounded border py-0.5 text-xs font-medium transition-colors"
               >
                 Tab — Aceitar
               </button>
               <button
                 type="button"
                 onClick={dismissSuggestion}
-                className="text-xs text-muted-foreground/60 hover:text-muted-foreground"
+                className="text-muted-foreground/60 hover:text-muted-foreground text-xs"
               >
                 Esc — Ignorar
               </button>
@@ -150,7 +150,7 @@ export function GhostTextarea({
           <button
             type="button"
             onClick={dismissSuggestion}
-            className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground"
+            className="text-muted-foreground/40 hover:text-muted-foreground shrink-0"
           >
             <X className="h-3 w-3" />
           </button>

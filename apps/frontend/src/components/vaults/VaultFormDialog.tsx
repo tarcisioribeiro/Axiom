@@ -131,8 +131,8 @@ export function VaultFormDialog({
           <FormSection title={t('common.form.sections.basicInfo')} icon={Landmark}>
             <div className="space-y-md">
               <div className="space-y-sm">
-                <Label htmlFor="description" className="flex items-center gap-xs">
-                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="description" className="gap-xs flex items-center">
+                  <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.description')} *
                 </Label>
                 <Input
@@ -146,8 +146,8 @@ export function VaultFormDialog({
               </div>
 
               <div className="space-y-sm">
-                <Label htmlFor="account" className="flex items-center gap-xs">
-                  <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="account" className="gap-xs flex items-center">
+                  <Landmark className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.account')} *
                 </Label>
                 <Select
@@ -176,8 +176,8 @@ export function VaultFormDialog({
           <FormSection title={t('common.form.sections.configuration')} icon={Percent}>
             <div className="space-y-md">
               <div className="space-y-sm">
-                <Label htmlFor="annual_yield_rate" className="flex items-center gap-xs">
-                  <Percent className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="annual_yield_rate" className="gap-xs flex items-center">
+                  <Percent className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.vaults.yieldRateLabel')}
                 </Label>
                 <div className="relative">
@@ -196,28 +196,28 @@ export function VaultFormDialog({
                     placeholder="Ex: 12.00"
                     className="pr-8"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
                     %
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {t('pages.vaults.yieldRateHint')}
                 </p>
               </div>
 
               {/* Calculadora de rendimento estimado */}
               {formData.annual_yield_rate > 0 && accountBalance > 0 && (
-                <div className="rounded-lg border border-success/30 bg-success/5 p-sm">
-                  <div className="mb-xs flex items-center gap-xs text-xs font-semibold text-success">
+                <div className="border-success/30 bg-success/5 p-sm rounded-lg border">
+                  <div className="mb-xs gap-xs text-success flex items-center text-xs font-semibold">
                     <TrendingUp className="h-3.5 w-3.5" />
                     {t('pages.vaults.estimatedYield')}
                   </div>
-                  <div className="grid grid-cols-2 gap-sm text-xs">
+                  <div className="gap-sm grid grid-cols-2 text-xs">
                     <div>
                       <p className="text-muted-foreground">
                         {t('pages.vaults.monthlyYield')}
                       </p>
-                      <p className="font-semibold text-success">
+                      <p className="text-success font-semibold">
                         {formatCurrency(estimatedMonthlyYield)}
                       </p>
                     </div>
@@ -225,7 +225,7 @@ export function VaultFormDialog({
                       <p className="text-muted-foreground">
                         {t('pages.vaults.annualYield')}
                       </p>
-                      <p className="font-semibold text-success">
+                      <p className="text-success font-semibold">
                         {formatCurrency(estimatedAnnualYield)}
                       </p>
                     </div>
@@ -239,9 +239,9 @@ export function VaultFormDialog({
                 onClick={() =>
                   setFormData({ ...formData, is_active: !formData.is_active })
                 }
-                className={`flex w-full items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+                className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
                   formData.is_active
-                    ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                    ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                     : 'border-border/60 bg-muted/20 opacity-70'
                 }`}
               >
@@ -256,7 +256,7 @@ export function VaultFormDialog({
                 </div>
                 <div>
                   <p className="text-sm font-medium">{t('pages.vaults.activeVault')}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     {formData.is_active
                       ? t('pages.vaults.activeVaultDesc')
                       : t('pages.vaults.inactiveVaultDesc')}
@@ -265,8 +265,8 @@ export function VaultFormDialog({
               </button>
 
               <div className="space-y-sm">
-                <Label htmlFor="notes" className="flex items-center gap-xs">
-                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <Label htmlFor="notes" className="gap-xs flex items-center">
+                  <FileText className="text-muted-foreground h-3.5 w-3.5" />
                   {t('common.fields.notes')}
                 </Label>
                 <Textarea

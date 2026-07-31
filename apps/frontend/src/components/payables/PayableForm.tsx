@@ -129,8 +129,8 @@ export function PayableForm({
       {/* Seção: Informações Básicas */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Wallet}>
         <div className="space-y-sm">
-          <Label htmlFor="description" className="flex items-center gap-xs">
-            <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label htmlFor="description" className="gap-xs flex items-center">
+            <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.payables.form.descriptionLabel')}
           </Label>
           <input
@@ -139,17 +139,17 @@ export function PayableForm({
             onChange={(e) => set({ description: e.target.value })}
             required
             placeholder={t('pages.payables.form.descriptionPlaceholder')}
-            className="flex h-9 w-full rounded-md border border-border/70 bg-background px-3 py-xs text-sm shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           />
         </div>
       </FormSection>
 
       {/* Seção: Valores */}
       <FormSection title={t('common.form.sections.values')} icon={Wallet}>
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="value" className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="value" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.valueTotalLabel')}
             </Label>
             <CurrencyInput
@@ -162,8 +162,8 @@ export function PayableForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="paid_value" className="flex items-center gap-xs">
-              <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="paid_value" className="gap-xs flex items-center">
+              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.paidValueLabel')}
             </Label>
             <CurrencyInput
@@ -176,17 +176,17 @@ export function PayableForm({
 
           {/* Barra de progresso do pagamento */}
           {formData.value > 0 && (
-            <div className="col-span-2 space-y-xs">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="space-y-xs col-span-2">
+              <div className="text-muted-foreground flex items-center justify-between text-xs">
                 <span>{t('pages.payables.form.paymentProgress')}</span>
                 <span
-                  className={paymentPercent >= 100 ? 'font-semibold text-success' : ''}
+                  className={paymentPercent >= 100 ? 'text-success font-semibold' : ''}
                 >
                   {paymentPercent.toFixed(0)}%
                 </span>
               </div>
               <Progress value={paymentPercent} className="h-1.5" />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {t('pages.payables.form.progressLabel', {
                   paid: (formData.paid_value ?? 0).toLocaleString('pt-BR', {
                     style: 'currency',
@@ -205,10 +205,10 @@ export function PayableForm({
 
       {/* Seção: Datas */}
       <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="date" className="flex items-center gap-xs">
-              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="date" className="gap-xs flex items-center">
+              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.dateLabel')}
             </Label>
             <DatePicker
@@ -219,8 +219,8 @@ export function PayableForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="due_date" className="flex items-center gap-xs">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="due_date" className="gap-xs flex items-center">
+              <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.dueDateLabel')}
             </Label>
             <DatePicker
@@ -233,7 +233,7 @@ export function PayableForm({
             {/* Badge de urgência */}
             {dueDateInfo && (
               <div
-                className={`flex items-center gap-xs rounded-md border px-sm py-xs text-xs ${dueDateInfo.bg}`}
+                className={`gap-xs px-sm py-xs flex items-center rounded-md border text-xs ${dueDateInfo.bg}`}
               >
                 <dueDateInfo.icon className={`h-3.5 w-3.5 ${dueDateInfo.color}`} />
                 <span className={dueDateInfo.color}>{dueDateInfo.label}</span>
@@ -245,10 +245,10 @@ export function PayableForm({
 
       {/* Seção: Classificação */}
       <FormSection title={t('common.form.sections.classification')} icon={Tag}>
-        <div className="grid grid-cols-2 gap-md">
+        <div className="gap-md grid grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="category" className="flex items-center gap-xs">
-              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="category" className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.categoryLabel')}
             </Label>
             <Select
@@ -265,7 +265,7 @@ export function PayableForm({
                     <SelectItem key={key} value={key}>
                       <span className="flex items-center gap-2">
                         {Icon && (
-                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
                         )}
                         {translate('expenseCategories', key)}
                       </span>
@@ -277,8 +277,8 @@ export function PayableForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="status" className="flex items-center gap-xs">
-              <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <Label htmlFor="status" className="gap-xs flex items-center">
+              <CheckCircle2 className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.statusLabel')}
             </Label>
             <Select
@@ -300,9 +300,9 @@ export function PayableForm({
             </Select>
           </div>
 
-          <div className="col-span-2 space-y-sm">
-            <Label htmlFor="notes" className="flex items-center gap-xs">
-              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+          <div className="space-y-sm col-span-2">
+            <Label htmlFor="notes" className="gap-xs flex items-center">
+              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.payables.form.notesLabel')}
             </Label>
             <Textarea
@@ -316,7 +316,7 @@ export function PayableForm({
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t pt-md">
+      <div className="gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>

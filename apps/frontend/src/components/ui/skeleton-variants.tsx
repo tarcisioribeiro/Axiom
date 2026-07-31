@@ -56,7 +56,7 @@ export function SkeletonTable({
     <div className={cn('w-full overflow-auto', className)}>
       <table className="w-full" role="presentation">
         <thead>
-          <tr className="border-b bg-muted/50">
+          <tr className="bg-muted/50 border-b">
             {Array.from({ length: columns }).map((_, i) => (
               <th key={i} className="p-md text-left" aria-hidden="true">
                 <Skeleton className="h-4 w-20" />
@@ -79,9 +79,9 @@ export function SkeletonTable({
  */
 export function SkeletonListItem({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-md border-b p-md', className)}>
+    <div className={cn('gap-md p-md flex items-center border-b', className)}>
       <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
-      <div className="flex-1 space-y-sm">
+      <div className="space-y-sm flex-1">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
@@ -140,7 +140,7 @@ export function SkeletonStatsGrid({
   className?: string;
 }) {
   return (
-    <div className={cn('grid gap-md md:grid-cols-2 lg:grid-cols-4', className)}>
+    <div className={cn('gap-md grid md:grid-cols-2 lg:grid-cols-4', className)}>
       {Array.from({ length: items }).map((_, i) => (
         <SkeletonStat key={i} />
       ))}
@@ -183,7 +183,7 @@ export function SkeletonDashboard() {
       aria-label="Carregando dashboard"
     >
       <SkeletonStatsGrid items={4} />
-      <div className="grid gap-lg md:grid-cols-2">
+      <div className="gap-lg grid md:grid-cols-2">
         <SkeletonChart height={300} />
         <SkeletonChart height={300} />
       </div>

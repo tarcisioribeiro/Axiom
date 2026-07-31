@@ -95,11 +95,11 @@ export function VaultCard({
     <Card className={`overflow-hidden border ${color.border}`}>
       <div className={`bg-gradient-to-br ${color.bg} px-md pb-md pt-md`}>
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-sm">
+          <div className="gap-sm flex items-center">
             <Vault className={`h-8 w-8 ${color.accent}`} />
             <div>
-              <p className="font-semibold leading-tight">{vault.description}</p>
-              <p className="text-xs text-muted-foreground">{vault.account_name}</p>
+              <p className="leading-tight font-semibold">{vault.description}</p>
+              <p className="text-muted-foreground text-xs">{vault.account_name}</p>
             </div>
           </div>
           <Badge variant={vault.is_active ? 'default' : 'secondary'}>
@@ -107,7 +107,7 @@ export function VaultCard({
           </Badge>
         </div>
         <div className="mt-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.vaults.columns.currentBalance')}
           </p>
           <p className={`text-2xl font-bold ${color.accent}`}>
@@ -117,7 +117,7 @@ export function VaultCard({
       </div>
       <CardContent className="space-y-3 pt-3">
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-xs text-amber-500">
+          <div className="gap-xs flex items-center text-amber-500">
             <Sparkles className="h-3.5 w-3.5" />
             <span>{t('pages.vaults.columns.yields')}</span>
           </div>
@@ -128,7 +128,7 @@ export function VaultCard({
         {vault.pending_yield > 0 && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('pages.vaults.pending')}</span>
-            <span className="font-medium text-info">
+            <span className="text-info font-medium">
               +{formatCurrency(vault.pending_yield)}
             </span>
           </div>
@@ -143,11 +143,11 @@ export function VaultCard({
         </div>
         {totalBalance > 0 && (
           <div className="space-y-xs">
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex justify-between text-xs">
               <span>{t('pages.vaults.proportionLabel')}</span>
               <span>{proportion.toFixed(1)}%</span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${proportion}%`, backgroundColor: color.barColor }}
@@ -155,7 +155,7 @@ export function VaultCard({
             </div>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-xs border-t pt-sm">
+        <div className="gap-xs pt-sm flex flex-wrap items-center border-t">
           <Button
             variant="ghost"
             size="icon"
@@ -164,7 +164,7 @@ export function VaultCard({
             title={t('pages.vaults.depositBtn')}
             disabled={!vault.is_active}
           >
-            <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
+            <ArrowDownToLine className="text-success h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -174,7 +174,7 @@ export function VaultCard({
             title={t('pages.vaults.withdrawBtn')}
             disabled={!vault.is_active || balance <= 0}
           >
-            <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
+            <ArrowUpFromLine className="text-destructive h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -184,7 +184,7 @@ export function VaultCard({
             title={t('pages.vaults.applyYieldBtn')}
             disabled={!vault.is_active || vault.pending_yield <= 0}
           >
-            <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
+            <RefreshCcw className="text-info h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -202,7 +202,7 @@ export function VaultCard({
             aria-label={t('pages.vaults.recurringContributions.btn')}
             title={t('pages.vaults.recurringContributions.btn')}
           >
-            <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
+            <CalendarClock className="text-info h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -211,7 +211,7 @@ export function VaultCard({
             title={t('pages.vaultSimulator.title')}
             aria-label={t('pages.vaultSimulator.title')}
           >
-            <TrendingUp className="h-4 w-4 text-info" aria-hidden="true" />
+            <TrendingUp className="text-info h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -229,7 +229,7 @@ export function VaultCard({
             title={t('common.actions.delete')}
             aria-label={t('common.actions.delete')}
           >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+            <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </CardContent>

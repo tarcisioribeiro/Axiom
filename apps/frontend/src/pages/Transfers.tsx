@@ -98,11 +98,11 @@ export default function Transfers() {
         keyExtractor={(transfer) => transfer.id}
         isLoading={isLoading}
         emptyState={{
-          icon: <ArrowLeftRight className="h-12 w-12 text-muted-foreground" />,
+          icon: <ArrowLeftRight className="text-muted-foreground h-12 w-12" />,
           message: emptyMessage,
         }}
         actions={(transfer) => (
-          <div className="flex items-center justify-end gap-sm">
+          <div className="gap-sm flex items-center justify-end">
             <ReceiptButton
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}
@@ -123,7 +123,7 @@ export default function Transfers() {
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}
             >
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}

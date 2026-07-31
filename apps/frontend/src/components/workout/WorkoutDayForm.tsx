@@ -154,17 +154,17 @@ export function WorkoutDayForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
-          <Layers className="h-5 w-5 text-category-exercise" />
+      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
+        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+          <Layers className="text-category-exercise h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-category-exercise">
+          <p className="text-category-exercise text-sm font-semibold">
             {day
               ? t('pages.workoutPlans.editDayTitle')
               : t('pages.workoutPlans.newDayTitle')}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.workoutPlans.newDayDesc')}
           </p>
         </div>
@@ -172,7 +172,7 @@ export function WorkoutDayForm({
 
       {/* Nome e ordem */}
       <FormSection title={t('pages.workoutPlans.dayName')} icon={Dumbbell}>
-        <div className="grid grid-cols-[1fr_100px] gap-sm">
+        <div className="gap-sm grid grid-cols-[1fr_100px]">
           <div>
             <Input
               placeholder={t('pages.workoutPlans.dayNamePlaceholder')}
@@ -180,7 +180,7 @@ export function WorkoutDayForm({
               className={cn(errors.name && 'border-destructive')}
             />
             {errors.name && (
-              <p className="mt-xs text-xs text-destructive">{t('common.required')}</p>
+              <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
             )}
           </div>
           <div>
@@ -198,7 +198,7 @@ export function WorkoutDayForm({
 
       {/* Dia da semana */}
       <FormSection title={t('pages.workoutPlans.dayOfWeek')} icon={Calendar}>
-        <div className="flex flex-wrap gap-xs">
+        <div className="gap-xs flex flex-wrap">
           {WEEKDAYS.map((wd, i) => {
             const selected = watch('day_of_week') === i;
             return (
@@ -207,7 +207,7 @@ export function WorkoutDayForm({
                 type="button"
                 onClick={() => setValue('day_of_week', selected ? '' : i)}
                 className={cn(
-                  'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                  'px-sm rounded-full border py-1 text-xs font-medium transition-all',
                   selected
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -218,7 +218,7 @@ export function WorkoutDayForm({
             );
           })}
         </div>
-        <p className="mt-xs text-xs text-muted-foreground">
+        <p className="mt-xs text-muted-foreground text-xs">
           {t('pages.workoutPlans.dayOfWeekHint')}
         </p>
       </FormSection>
@@ -226,7 +226,7 @@ export function WorkoutDayForm({
       {/* Grupos musculares */}
       <FormSection title={t('pages.workoutPlans.muscleGroups')} icon={Flame}>
         <div className="space-y-sm">
-          <div className="flex flex-wrap gap-xs">
+          <div className="gap-xs flex flex-wrap">
             {MUSCLE_CHIP_KEYS.map(({ key }) => {
               const label = t(`pages.workoutPlans.muscleChips.${key}`);
               return (
@@ -235,7 +235,7 @@ export function WorkoutDayForm({
                   type="button"
                   onClick={() => toggleChip(label)}
                   className={cn(
-                    'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                    'px-sm rounded-full border py-1 text-xs font-medium transition-all',
                     selectedChips.includes(label)
                       ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                       : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -260,13 +260,13 @@ export function WorkoutDayForm({
             }}
             className="text-sm"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {t('pages.workoutPlans.muscleGroupsHint')}
           </p>
         </div>
       </FormSection>
 
-      <div className="flex justify-end gap-sm border-t border-border pt-md">
+      <div className="gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
