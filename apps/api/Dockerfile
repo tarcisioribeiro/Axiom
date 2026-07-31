@@ -30,12 +30,22 @@ WORKDIR /app
 # Stage 2: Dependencies builder (cached when requirements unchanged)
 FROM base AS deps
 
+# Cache-buster for the pip install layer below. requirements.txt only pins
+# direct dependencies — transitive versions are resolved from PyPI at build
+# time. --cache-from reuses this layer indefinitely while requirements.txt is
+# unchanged, so a transitive package that gets a security fix upstream (e.g.
+# msgpack, setuptools) never actually re-resolves and the fix never lands in
+# the image. CI passes a value that changes weekly to force a periodic
+# re-resolution while keeping the layer cached for same-week rebuilds.
+ARG PIP_CACHE_BUST=1
+
 # Copy requirements first (for layer caching)
 COPY requirements.txt .
 
 # Install Python dependencies with BuildKit cache mount
 # Cache persists between builds, dramatically speeding up rebuilds
 RUN --mount=type=cache,target=/root/.cache/pip \
+    echo "cache-bust: ${PIP_CACHE_BUST}" && \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 

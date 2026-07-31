@@ -440,6 +440,7 @@ build:api:
           docker build --network=host \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
             --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
+            --build-arg PIP_CACHE_BUST="$(date +%Y%U)" \
             --cache-from "$API_IMAGE:main" \
             -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/api
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
@@ -451,6 +452,7 @@ build:api:
         docker build --network=host \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           --build-arg APT_CACHE_BUST="$(date +%Y%U)" \
+          --build-arg PIP_CACHE_BUST="$(date +%Y%U)" \
           --cache-from "$API_IMAGE:develop" \
           -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
