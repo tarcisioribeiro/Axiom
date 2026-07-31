@@ -35,10 +35,8 @@ class BaseBudgetEnforcementTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f"Bearer {
-                refresh.access_token}"
-        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {
+                refresh.access_token}")
         self.account = Account.objects.create(
             account_name="Test Account",
             institution_name="Bank",
