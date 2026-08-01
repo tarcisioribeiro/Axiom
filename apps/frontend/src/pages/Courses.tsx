@@ -27,6 +27,7 @@ import {
   Cell,
 } from 'recharts';
 
+import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -256,7 +257,6 @@ export default function Courses() {
   const COLORS = useChartColors();
 
   const weeklyHoursData = useMemo(() => {
-    const dayNames = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
     const totals: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     const sessions = Array.isArray(weekSessions) ? weekSessions : [];
     sessions.forEach((s) => {
@@ -264,11 +264,11 @@ export default function Courses() {
       const dow = (d.getDay() + 6) % 7;
       totals[dow] = (totals[dow] ?? 0) + (s.duration_hours ?? s.duration_minutes / 60);
     });
-    return dayNames.map((name, i) => ({
-      name,
+    return Array.from({ length: 7 }, (_, i) => ({
+      name: t(`pages.planningDashboard.weekdayShort.${i}`),
       hours: Number((totals[i] ?? 0).toFixed(1)),
     }));
-  }, [weekSessions]);
+  }, [weekSessions, t]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['courses'] });
 
@@ -334,7 +334,7 @@ export default function Courses() {
 
   const handleAskIntellect = (course: Course) => {
     const context = encodeURIComponent(`Curso: ${course.title}`);
-    void navigate(`/intellect/agents?context=${context}`);
+    void navigate(`/agents?context=${context}`);
   };
 
   const inProgressCount = courses.filter((c) => c.status === 'in_progress').length;
@@ -407,13 +407,25 @@ export default function Courses() {
                 data={weeklyHoursData}
                 margin={{ top: 4, right: 8, bottom: 0, left: -24 }}
               >
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={{ stroke: 'hsl(var(--border))' }}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
                 <Tooltip
-                  formatter={(value) => [
-                    `${Number(value)}h`,
-                    t('pages.courses.studyHours.hours'),
-                  ]}
+                  cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
+                  content={
+                    <EnhancedTooltip
+                      formatter={(value) => `${Number(value)}h`}
+                      nameFormatter={() => t('pages.courses.studyHours.hours')}
+                    />
+                  }
                 />
                 <Bar dataKey="hours" radius={[4, 4, 0, 0]} maxBarSize={40}>
                   {weeklyHoursData.map((_, index) => (
