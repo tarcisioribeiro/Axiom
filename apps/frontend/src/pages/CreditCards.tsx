@@ -47,7 +47,11 @@ import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { sumByProperty } from '@/lib/helpers';
+import {
+  getCurrentCreditCardBill,
+  sortCreditCardBills,
+  sumByProperty,
+} from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -106,50 +110,6 @@ function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
       />
     </svg>
   );
-}
-
-// Mapeamento de abreviações de mês para número
-const MONTH_TO_NUMBER: Record<string, number> = {
-  Jan: 1,
-  Feb: 2,
-  Mar: 3,
-  Apr: 4,
-  May: 5,
-  Jun: 6,
-  Jul: 7,
-  Aug: 8,
-  Sep: 9,
-  Oct: 10,
-  Nov: 11,
-  Dec: 12,
-};
-
-function sortBills(bills: CreditCardBill[]): CreditCardBill[] {
-  const today = new Date();
-  const currentMonth = today.getMonth() + 1;
-  const currentYear = today.getFullYear();
-  return [...bills].sort((a, b) => {
-    const aMonth = MONTH_TO_NUMBER[a.month] || 1;
-    const bMonth = MONTH_TO_NUMBER[b.month] || 1;
-    const aIsCurrent =
-      aMonth === currentMonth &&
-      parseInt(a.year) === currentYear &&
-      a.status !== 'paid';
-    const bIsCurrent =
-      bMonth === currentMonth &&
-      parseInt(b.year) === currentYear &&
-      b.status !== 'paid';
-    if (aIsCurrent && !bIsCurrent) return -1;
-    if (!aIsCurrent && bIsCurrent) return 1;
-    const aIsOpen = a.status === 'open' || a.status === 'overdue';
-    const bIsOpen = b.status === 'open' || b.status === 'overdue';
-    if (aIsOpen && !bIsOpen) return -1;
-    if (!aIsOpen && bIsOpen) return 1;
-    return (
-      new Date(parseInt(a.year), aMonth - 1).getTime() -
-      new Date(parseInt(b.year), bMonth - 1).getTime()
-    );
-  });
 }
 
 const EMPTY_CREDIT_CARDS: CreditCard[] = [];
@@ -433,7 +393,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
     (currentYear - 2 + i).toString()
   );
 
-  const filteredBills = sortBills(
+  const filteredBills = sortCreditCardBills(
     bills.filter((b) => {
       if (billStatusFilter !== 'all' && b.status !== billStatusFilter) return false;
       if (billYearFilter !== 'all' && b.year !== billYearFilter) return false;
@@ -620,10 +580,8 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
               CARD_BRAND_GRADIENTS[card.flag.toLowerCase()] ??
               'from-primary/20 via-primary/10 to-transparent';
 
-            const openBill = allBills.find(
-              (b) =>
-                b.credit_card === card.id &&
-                (b.status === 'open' || b.status === 'overdue')
+            const openBill = getCurrentCreditCardBill(
+              allBills.filter((b) => b.credit_card === card.id)
             );
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -814,7 +772,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
       {/* Bills dialog */}
       <Dialog open={isBillsOpen} onOpenChange={setIsBillsOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-h-[95vh] w-full max-w-6xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Receipt className="h-5 w-5" />

@@ -119,6 +119,8 @@ class CreditCardBillCreateListView(BaseListCreateView):
     queryset = CreditCardBill.objects.all()  # GlobalDefaultPermission
     serializer_class = CreditCardBillsSerializer
     ordering = ["-year", "-month", "-invoice_ending_date"]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["credit_card", "status", "year"]
 
     def get_queryset(self):
         return CreditCardBill.objects.filter(

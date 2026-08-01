@@ -175,7 +175,7 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
           className="gap-xs h-7 text-xs"
           onClick={() => onNavigate(pw.id)}
         >
-          {t('common.update', { defaultValue: 'Atualizar' })}
+          {t('common.actions.update')}
           <ArrowRight className="h-3 w-3" />
         </Button>
       </div>
@@ -344,9 +344,7 @@ export function VaultHealthSection() {
           <CardHeader className="pb-sm">
             <CardTitle className="gap-sm text-destructive flex items-center text-base">
               <ShieldAlert className="h-4 w-4" />
-              {t('pages.vaultHealth.criticalIssues', {
-                defaultValue: 'Senhas Críticas',
-              })}
+              {t('pages.vaultHealth.criticalPasswords')}
               <Badge variant="destructive" className="ml-auto">
                 {criticalPasswords.length}
               </Badge>
@@ -419,7 +417,7 @@ export function VaultHealthSection() {
                 onClick={() => navigate('/security/health')}
               >
                 <RefreshCw className="h-3 w-3" />
-                {t('common.refresh', { defaultValue: 'Atualizar' })}
+                {t('common.actions.refresh')}
               </Button>
             </div>
           </CardHeader>

@@ -5,7 +5,7 @@
  */
 
 import { translate } from '@/config/constants';
-import type { Account } from '@/types';
+import type { Account, CreditCardBill } from '@/types';
 
 export interface AccountBalanceInfo {
   balance: number;
@@ -327,4 +327,68 @@ export const getEntityLabel = (type: string): string => {
     dailyreflection: 'Reflexão Diária',
   };
   return labels[type] || type;
+};
+
+const BILL_MONTH_ORDER: Record<string, number> = {
+  Jan: 1,
+  Feb: 2,
+  Mar: 3,
+  Apr: 4,
+  May: 5,
+  Jun: 6,
+  Jul: 7,
+  Aug: 8,
+  Sep: 9,
+  Oct: 10,
+  Nov: 11,
+  Dec: 12,
+};
+
+export const getBillTimestamp = (
+  bill: Pick<CreditCardBill, 'year' | 'month'>
+): number =>
+  new Date(parseInt(bill.year), (BILL_MONTH_ORDER[bill.month] ?? 1) - 1).getTime();
+
+/**
+ * Ordena faturas de cartão de crédito: não pagas em ordem cronológica
+ * crescente (a fatura aberta do mês atual fica primeiro), com as faturas
+ * pagas agrupadas ao final da lista.
+ */
+export const sortCreditCardBills = <
+  T extends Pick<CreditCardBill, 'year' | 'month' | 'status'>,
+>(
+  bills: T[]
+): T[] => {
+  const notPaid = bills
+    .filter((b) => b.status !== 'paid')
+    .sort((a, b) => getBillTimestamp(a) - getBillTimestamp(b));
+  const paid = bills
+    .filter((b) => b.status === 'paid')
+    .sort((a, b) => getBillTimestamp(a) - getBillTimestamp(b));
+  return [...notPaid, ...paid];
+};
+
+/**
+ * Retorna a fatura atual (a fatura do mês corrente) dentre as faturas de
+ * um cartão. Prioriza a fatura cujo ano/mês corresponde ao mês corrente
+ * real — mesmo que uma fatura antiga tenha ficado presa em status "aberta"
+ * (ex.: fechamento automático que não rodou) — e só recorre à fatura não
+ * paga mais antiga como fallback quando a fatura do mês atual ainda não
+ * foi gerada.
+ */
+export const getCurrentCreditCardBill = <
+  T extends Pick<CreditCardBill, 'year' | 'month' | 'status'>,
+>(
+  bills: T[]
+): T | undefined => {
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+  const exactMatch = bills.find(
+    (b) =>
+      (BILL_MONTH_ORDER[b.month] ?? 1) === currentMonth &&
+      parseInt(b.year, 10) === currentYear
+  );
+  if (exactMatch) return exactMatch;
+  return sortCreditCardBills(bills).find((b) => b.status !== 'paid');
 };

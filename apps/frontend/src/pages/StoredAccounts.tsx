@@ -482,7 +482,7 @@ export default function StoredAccounts() {
                             className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              void navigate('/finance/accounts');
+                              void navigate('/accounts');
                             }}
                           >
                             <ExternalLink className="h-2.5 w-2.5 shrink-0" />
