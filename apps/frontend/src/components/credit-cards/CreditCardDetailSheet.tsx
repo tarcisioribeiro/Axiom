@@ -36,6 +36,11 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import {
+  getBillTimestamp,
+  getCurrentCreditCardBill,
+  sortCreditCardBills,
+} from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
@@ -341,50 +346,13 @@ export function CreditCardDetailSheet({
     CARD_BRAND_GRADIENTS[card.flag.toLowerCase()] ??
     'from-primary/20 via-primary/10 to-transparent';
 
-  const sortedBills = (recentBillsQuery.data ?? []).slice().sort((a, b) => {
-    const aDate = new Date(
-      parseInt(a.year),
-      [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ].indexOf(a.month)
-    );
-    const bDate = new Date(
-      parseInt(b.year),
-      [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ].indexOf(b.month)
-    );
-    return bDate.getTime() - aDate.getTime();
-  });
-
-  const openBill = sortedBills.find(
-    (b) => b.status === 'open' || b.status === 'overdue'
-  );
-  const recentBills = sortedBills.slice(0, 5);
+  const recentBillsData = recentBillsQuery.data ?? [];
+  const openBill = getCurrentCreditCardBill(recentBillsData);
+  const recentBills = [...recentBillsData]
+    .sort((a, b) => getBillTimestamp(b) - getBillTimestamp(a))
+    .slice(0, 5);
   const purchases = purchasesQuery.data ?? [];
-  const allBills = billsQuery.data ?? [];
+  const allBills = sortCreditCardBills(billsQuery.data ?? []);
 
   const handleDeleteCard = async () => {
     const confirmed = await showConfirm({

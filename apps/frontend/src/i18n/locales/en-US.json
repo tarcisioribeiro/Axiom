@@ -39,8 +39,11 @@
       "none": "None",
       "total": "Total",
       "test": "Test",
-      "exportCSV": "Export CSV"
+      "exportCSV": "Export CSV",
+      "details": "Details",
+      "refresh": "Refresh"
     },
+    "required": "Required field",
     "messages": {
       "loadError": "Error loading data",
       "saveError": "Error saving",
@@ -105,7 +108,10 @@
       "phone": "Phone",
       "email": "Email",
       "selectDate": "Select date",
-      "value": "Value"
+      "value": "Value",
+      "from": "From",
+      "to": "To",
+      "select": "Select"
     },
     "paymentMethods": {
       "pix": "PIX",
@@ -2099,6 +2105,10 @@
           "overdue_other": "· {{count}} overdue"
         }
       },
+      "selectForecastPeriod": "Select forecast period",
+      "selectEvolutionPeriod": "Select evolution period",
+      "selectCard": "Select card",
+      "selectBill": "Select bill",
       "weeklyInsight": {
         "title": "Weekly Insight",
         "openAssistant": "Ask the Assistant"
@@ -2344,7 +2354,16 @@
         "errorTitle": "Check failed",
         "errorDesc": "Could not check password. Please try again."
       },
+      "titlePlaceholder": "e.g. Gmail, Netflix, etc.",
+      "sitePlaceholder": "https://example.com",
+      "usernamePlaceholder": "user@email.com",
       "keepCurrentPassword": "Leave blank to keep current",
+      "notesSitePlaceholder": "Additional notes...",
+      "history": "History",
+      "noHistory": "No password changes recorded.",
+      "totpEnable": "Enable TOTP (2FA)",
+      "totpSecret": "TOTP Secret",
+      "totpSecretHint": "Paste the service's base32 secret to generate TOTP codes.",
       "copyWithoutReveal": "Copy without revealing",
       "copyError": "Error copying password",
       "copied": "Copied!",
@@ -2501,6 +2520,7 @@
       "revealedDesc": "The card data was decrypted successfully.",
       "emptySearch": "No stored cards found.",
       "searchPlaceholder": "Search cards...",
+      "cardNumberLabel": "Card number",
       "columns": {
         "name": "Name",
         "holder": "Holder",
@@ -3357,6 +3377,9 @@
         "sectionNotes": "Notes"
       }
     },
+    "readingsTab": {
+      "pageLabel": "p."
+    },
     "readingQueue": {
       "title": "Reading Queue",
       "description": "Drag and drop to reorder the books you plan to read.",
@@ -3622,21 +3645,22 @@
       "skip": "Skip",
       "next": "Next",
       "start": "Get started",
+      "skipTemplate": "Start without a template — create manually",
+      "importing": "Importing...",
       "step0": {
         "title": "Welcome to Personal Planning",
         "desc": "Organize your daily routine, health goals, and reflections all in one place."
       },
       "step1": {
-        "title": "Daily Checklist",
-        "desc": "Create routine tasks and track completion day by day with a visual kanban board."
+        "title": "Choose a starting routine",
+        "desc": "Select a template to get started. You can customize it later."
       },
       "step2": {
-        "title": "Goals & Objectives",
-        "desc": "Define measurable goals, track progress, and stay focused on what matters."
-      },
-      "step3": {
-        "title": "Workout & Nutrition",
-        "desc": "Log workout sessions and meals to have a complete view of your health."
+        "title": "All set!",
+        "success": "Routine created successfully!",
+        "successDesc": "Your tasks are ready. Happy planning!",
+        "descWithTemplate": "Click Start to import the template and begin your journey.",
+        "descWithout": "You can create your first tasks manually whenever you'd like."
       }
     },
     "planningDashboard": {
@@ -3711,6 +3735,10 @@
       "heatmapCompletedDays": "{{completed}}/{{scheduled}} full days",
       "heatmapLess": "Less",
       "heatmapMore": "More",
+      "allCategories": "All categories",
+      "expand": "Expand",
+      "habitHeatmapTitle": "Habit Map",
+      "reflectionCorrelationTitle": "Mood × Task Completion",
       "heatmapTooltipNotScheduled": "{{date}} — not scheduled",
       "heatmapTooltipScheduled": "{{date}} — {{completed}} of {{expected}} completed",
       "insightBestDay": "You are very consistent on {{weekday}} ({{rate}}% completion rate). Keep it up!",
@@ -3803,6 +3831,8 @@
       "statusActive": "Active",
       "statusInactive": "Inactive",
       "dayLabel": "Day {{day}}",
+      "priorityHigh": "High",
+      "priorityMedium": "Medium",
       "templates": {
         "title": "Import Routine Template",
         "description": "Choose a pre-configured template to get started quickly. You can edit the tasks after importing.",
@@ -3953,6 +3983,10 @@
           "custom": "Custom days"
         }
       }
+    },
+    "routineTemplates": {
+      "taskCount_one": "{{count}} task",
+      "taskCount_other": "{{count}} tasks"
     },
     "goals": {
       "title": "Goals",
@@ -4366,6 +4400,7 @@
       "flowStep2": "Review Transactions",
       "flowStep3": "Confirm Reconciliation",
       "emptyGuide": "Start by importing a bank statement in OFX or CSV format. Then review the identified transactions and confirm the reconciliation.",
+      "reconciliationLabel": "Reconciliation",
       "columns": {
         "file": "File",
         "format": "Format",
@@ -4384,6 +4419,8 @@
       "upload": {
         "title": "Import Bank Statement",
         "desc": "Select the bank statement file and the corresponding account.",
+        "dropzone": "Drag or click to select",
+        "supportedFormats": "Supported: OFX, CSV",
         "fileLabel": "File (.ofx or .csv)",
         "accountLabel": "Account",
         "accountPlaceholder": "Select an account",
@@ -4637,6 +4674,13 @@
         "useRecoveryKey": "Forgot password? Use recovery key",
         "attemptsRemaining": "{{count}} attempts remaining",
         "tooManyAttempts": "Too many attempts. Use the recovery key."
+      },
+      "recoveryKey": {
+        "useTitle": "Use recovery key",
+        "useDesc": "Enter your recovery key to unlock the vault.",
+        "unlockBtn": "Unlock",
+        "unlockSuccess": "Vault unlocked with recovery key.",
+        "unlockError": "Error unlocking with recovery key."
       },
       "setup": {
         "title": "Protect Your Vault",
@@ -5135,6 +5179,8 @@
       "remainingBalance": "Remaining Balance:",
       "registrationDate": "Registration Date:",
       "responsible": "Responsible:",
+      "dueDate": "Due date:",
+      "debtor": "Debtor:",
       "receiveBtn": "Receive",
       "stats": {
         "total": "Total Receivable",
@@ -5179,7 +5225,8 @@
         "notes": "Notes",
         "receivedValue": "Received Value"
       },
-      "paidAmount": "{{value}} received"
+      "paidAmount": "{{value}} received",
+      "receivedAmount": "{{value}} received"
     },
     "workoutPlans": {
       "title": "Workout",
@@ -5202,6 +5249,7 @@
       "emptyPlans": "No plans registered",
       "emptyPlansDesc": "Create your first workout plan to organize your splits and track your progress.",
       "emptyPlansAction": "Create workout plan",
+      "emptyDays": "No training days added yet.",
       "planName": "Plan Name",
       "planNamePlaceholder": "e.g. My ABC Plan",
       "planDescription": "Description",
@@ -6395,36 +6443,50 @@
     "recentXp": "Recent XP Gained"
   },
   "webhooks": {
+    "title": "Webhooks",
     "description": "Receive real-time notifications of Axiom events in external systems.",
-    "newButton": "New Webhook",
-    "createButton": "Create webhook",
-    "emptyTitle": "No webhooks configured",
-    "emptyDescription": "Connect Axiom to Zapier, n8n or any external system.",
-    "editDialogTitle": "Edit Webhook",
-    "dialogDescription": "Configure the URL and events that trigger this webhook.",
+    "newBtn": "New Webhook",
+    "createBtn": "Create webhook",
+    "empty": "No webhooks configured",
+    "emptyDesc": "Connect Axiom to Zapier, n8n or any external system.",
+    "inactive": "Inactive",
+    "deliveries_one": "{{count}} delivery",
+    "deliveries_other": "{{count}} deliveries",
     "deliveryHistory": "Delivery history",
     "noDeliveries": "No deliveries recorded.",
     "viewDeliveries": "View deliveries",
-    "deliveryCount_one": "{{count}} delivery",
-    "deliveryCount_other": "{{count}} deliveries",
-    "nameLabel": "Name *",
-    "namePlaceholder": "e.g. Notify n8n",
-    "urlLabel": "Destination URL *",
-    "secretLabel": "Secret *",
-    "newSecretHint": "New secret (leave blank to keep current)",
-    "secretPlaceholder": "Key to sign the payload (HMAC-SHA256)",
-    "timeoutLabel": "Timeout (s)",
-    "maxRetriesLabel": "Max retries",
-    "activeLabel": "Webhook active",
-    "eventsLabel": "Events *",
-    "createdSuccess": "Webhook created successfully.",
+    "testBtn": "Test",
+    "created": "Webhook created successfully.",
     "createError": "Error creating webhook.",
-    "updatedSuccess": "Webhook updated.",
+    "updated": "Webhook updated.",
     "updateError": "Error updating webhook.",
-    "removedSuccess": "Webhook removed.",
-    "removeError": "Error removing webhook.",
-    "testQueuedSuccess": "Test queued successfully.",
-    "testQueueError": "Error queuing test."
+    "deleted": "Webhook removed.",
+    "deleteError": "Error removing webhook.",
+    "testSuccess": "Test queued successfully.",
+    "testError": "Error queuing test.",
+    "status": {
+      "success": "Success",
+      "failed": "Failed",
+      "retrying": "Retrying",
+      "pending": "Pending"
+    },
+    "form": {
+      "editTitle": "Edit Webhook",
+      "newTitle": "New Webhook",
+      "dialogDesc": "Configure the URL and events that trigger this webhook.",
+      "nameLabel": "Name *",
+      "namePlaceholder": "e.g. Notify n8n",
+      "urlLabel": "Destination URL *",
+      "secretLabel": "Secret *",
+      "secretEditLabel": "New secret (leave blank to keep current)",
+      "secretPlaceholder": "Key to sign the payload (HMAC-SHA256)",
+      "timeoutLabel": "Timeout (s)",
+      "maxRetriesLabel": "Max retries",
+      "isActiveLabel": "Webhook active",
+      "eventsLabel": "Events *",
+      "saveBtn": "Save",
+      "createBtn": "Create"
+    }
   },
   "components": {
     "installmentSimulator": {
@@ -6617,6 +6679,13 @@
     "overloadedDay": "Overloaded day",
     "noTasks": "No tasks",
     "overloadWarningTitle": "Warning",
-    "overloadWarning": "One or more days this week have a load exceeding {{time}}. Consider redistributing tasks to balance your week."
+    "overloadWarning": "One or more days this week have a load exceeding {{time}}. Consider redistributing tasks to balance your week.",
+    "legend": "Legend",
+    "statusCompleted": "Completed",
+    "statusInProgress": "In progress",
+    "statusPending": "Pending"
+  },
+  "intellect": {
+    "streakDays": "days"
   }
 }

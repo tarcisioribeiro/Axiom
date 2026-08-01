@@ -39,8 +39,11 @@
       "none": "Nenhum",
       "total": "Total",
       "test": "Testar",
-      "exportCSV": "Exportar CSV"
+      "exportCSV": "Exportar CSV",
+      "details": "Detalhes",
+      "refresh": "Atualizar"
     },
+    "required": "Campo obrigatório",
     "messages": {
       "loadError": "Erro ao carregar dados",
       "saveError": "Erro ao salvar",
@@ -105,7 +108,10 @@
       "phone": "Telefone",
       "email": "Email",
       "selectDate": "Selecione a data",
-      "value": "Valor"
+      "value": "Valor",
+      "from": "De",
+      "to": "Até",
+      "select": "Selecione"
     },
     "paymentMethods": {
       "pix": "PIX",
@@ -2389,6 +2395,11 @@
       "usernamePlaceholder": "usuario@email.com",
       "keepCurrentPassword": "Deixe vazio para manter a atual",
       "notesSitePlaceholder": "Notas adicionais...",
+      "history": "Histórico",
+      "noHistory": "Nenhuma alteração de senha registrada.",
+      "totpEnable": "Habilitar TOTP (2FA)",
+      "totpSecret": "Segredo TOTP",
+      "totpSecretHint": "Cole o segredo base32 do serviço para gerar códigos TOTP.",
       "categories": {
         "social": "Redes Sociais",
         "email": "E-mail",
@@ -3700,21 +3711,22 @@
       "skip": "Pular",
       "next": "Próximo",
       "start": "Começar agora",
+      "skipTemplate": "Começar sem template — criar manualmente",
+      "importing": "Importando...",
       "step0": {
         "title": "Bem-vindo ao Planejamento Pessoal",
         "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
       },
       "step1": {
-        "title": "Checklist Diário",
-        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
+        "title": "Escolha uma rotina inicial",
+        "desc": "Selecione um template para começar. Você pode personalizar depois."
       },
       "step2": {
-        "title": "Objetivos e Metas",
-        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
-      },
-      "step3": {
-        "title": "Treino e Nutrição",
-        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
+        "title": "Tudo pronto!",
+        "success": "Rotina criada com sucesso!",
+        "successDesc": "Suas tarefas estão prontas. Bom planejamento!",
+        "descWithTemplate": "Clique em Começar para importar o template e iniciar sua jornada.",
+        "descWithout": "Você pode criar suas primeiras tarefas manualmente quando quiser."
       }
     },
     "planningDashboard": {
@@ -3789,6 +3801,10 @@
       "heatmapCompletedDays": "{{completed}}/{{scheduled}} dias completos",
       "heatmapLess": "Menos",
       "heatmapMore": "Mais",
+      "allCategories": "Todas as categorias",
+      "expand": "Expandir",
+      "habitHeatmapTitle": "Mapa de Hábitos",
+      "reflectionCorrelationTitle": "Humor × Conclusão de Tarefas",
       "heatmapTooltipNotScheduled": "{{date}} — não programado",
       "heatmapTooltipScheduled": "{{date}} — {{completed}} de {{expected}} concluídas",
       "insightBestDay": "Você é muito consistente às {{weekday}} ({{rate}}% de cumprimento). Continue assim!",
@@ -3881,6 +3897,8 @@
       "statusActive": "Ativa",
       "statusInactive": "Inativa",
       "dayLabel": "Dia {{day}}",
+      "priorityHigh": "Alta",
+      "priorityMedium": "Média",
       "templates": {
         "title": "Importar Template de Rotina",
         "description": "Escolha um template pré-configurado para começar rapidamente. Você pode editar as tarefas após importar.",
@@ -4031,6 +4049,10 @@
           "custom": "Dias personalizados"
         }
       }
+    },
+    "routineTemplates": {
+      "taskCount_one": "{{count}} tarefa",
+      "taskCount_other": "{{count}} tarefas"
     },
     "goals": {
       "title": "Objetivos",
@@ -4444,6 +4466,7 @@
       "flowStep2": "Revisar Transações",
       "flowStep3": "Confirmar Conciliação",
       "emptyGuide": "Comece importando o extrato bancário no formato OFX ou CSV. Em seguida, revise as transações identificadas e confirme a conciliação.",
+      "reconciliationLabel": "Conciliação",
       "columns": {
         "file": "Arquivo",
         "format": "Formato",
@@ -4462,6 +4485,8 @@
       "upload": {
         "title": "Importar Extrato Bancário",
         "desc": "Selecione o arquivo do extrato bancário e a conta correspondente.",
+        "dropzone": "Arraste ou clique para selecionar",
+        "supportedFormats": "Suporte: OFX, CSV",
         "fileLabel": "Arquivo (.ofx ou .csv)",
         "accountLabel": "Conta",
         "accountPlaceholder": "Selecione a conta",
@@ -4715,6 +4740,13 @@
         "useRecoveryKey": "Esqueceu a senha? Use a chave de recuperação",
         "attemptsRemaining": "{{count}} tentativas restantes",
         "tooManyAttempts": "Muitas tentativas. Use a chave de recuperação."
+      },
+      "recoveryKey": {
+        "useTitle": "Usar chave de recuperação",
+        "useDesc": "Digite sua chave de recuperação para desbloquear o cofre.",
+        "unlockBtn": "Desbloquear",
+        "unlockSuccess": "Cofre desbloqueado com a chave de recuperação.",
+        "unlockError": "Erro ao desbloquear com a chave de recuperação."
       },
       "setup": {
         "title": "Proteja seu Cofre",
@@ -5213,6 +5245,8 @@
       "remainingBalance": "Saldo Restante:",
       "registrationDate": "Data de Registro:",
       "responsible": "Responsável:",
+      "dueDate": "Vencimento:",
+      "debtor": "Devedor:",
       "receiveBtn": "Receber",
       "stats": {
         "total": "Total a Receber",
@@ -5257,7 +5291,8 @@
         "notes": "Observações",
         "receivedValue": "Valor Recebido"
       },
-      "paidAmount": "{{value}} recebido"
+      "paidAmount": "{{value}} recebido",
+      "receivedAmount": "{{value}} recebido"
     },
     "workoutPlans": {
       "title": "Treino",
@@ -5280,6 +5315,7 @@
       "emptyPlans": "Nenhum plano cadastrado",
       "emptyPlansDesc": "Crie seu primeiro plano de treino para organizar suas divisões e acompanhar sua evolução.",
       "emptyPlansAction": "Criar plano de treino",
+      "emptyDays": "Nenhum dia de treino cadastrado.",
       "planName": "Nome do Plano",
       "planNamePlaceholder": "Ex: Meu Plano ABC",
       "planDescription": "Descrição",
@@ -5894,38 +5930,6 @@
       "manageMeals": "Refeições",
       "noMealsToday": "Nenhuma refeição registrada hoje",
       "addMeal": "Adicionar Refeição"
-    },
-    "webhooks": {
-      "description": "Receba notificações em tempo real de eventos do Axiom em sistemas externos.",
-      "newButton": "Novo Webhook",
-      "createButton": "Criar webhook",
-      "emptyTitle": "Nenhum webhook configurado",
-      "emptyDescription": "Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo.",
-      "editDialogTitle": "Editar Webhook",
-      "dialogDescription": "Configure a URL e os eventos que disparam este webhook.",
-      "deliveryHistory": "Histórico de entregas",
-      "noDeliveries": "Nenhuma entrega registrada.",
-      "viewDeliveries": "Ver entregas",
-      "deliveryCount_one": "{{count}} entrega",
-      "deliveryCount_other": "{{count}} entregas",
-      "nameLabel": "Nome *",
-      "namePlaceholder": "Ex: Notificar n8n",
-      "urlLabel": "URL de destino *",
-      "secretLabel": "Secret *",
-      "newSecretHint": "Novo secret (deixe em branco para manter)",
-      "secretPlaceholder": "Chave para assinar o payload (HMAC-SHA256)",
-      "timeoutLabel": "Timeout (s)",
-      "maxRetriesLabel": "Máx. tentativas",
-      "activeLabel": "Webhook ativo",
-      "eventsLabel": "Eventos *",
-      "createdSuccess": "Webhook criado com sucesso.",
-      "createError": "Erro ao criar webhook.",
-      "updatedSuccess": "Webhook atualizado.",
-      "updateError": "Erro ao atualizar webhook.",
-      "removedSuccess": "Webhook removido.",
-      "removeError": "Erro ao remover webhook.",
-      "testQueuedSuccess": "Teste enfileirado com sucesso.",
-      "testQueueError": "Erro ao enfileirar teste."
     },
     "planningToday": {
       "title": "Hoje",
@@ -6706,6 +6710,13 @@
     "overloadedDay": "Dia sobrecarregado",
     "noTasks": "Sem tarefas",
     "overloadWarningTitle": "Atenção",
-    "overloadWarning": "Um ou mais dias desta semana têm carga superior a {{time}}. Considere redistribuir tarefas para equilibrar sua semana."
+    "overloadWarning": "Um ou mais dias desta semana têm carga superior a {{time}}. Considere redistribuir tarefas para equilibrar sua semana.",
+    "legend": "Legenda",
+    "statusCompleted": "Concluído",
+    "statusInProgress": "Em andamento",
+    "statusPending": "Pendente"
+  },
+  "intellect": {
+    "streakDays": "dias"
   }
 }

@@ -447,23 +447,38 @@ export default function Agents() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
+  // A context param (e.g. "Livro: <title>") means the user came from a page
+  // that wants to jump straight into a chat with the intellect agent.
+  const hasContextParam = !!searchParams.get('context');
+
   // One session id per agent — keeps each agent's conversation separate so
   // switching agents never mixes their histories under the same session.
   const [sessionsByAgent, setSessionsByAgent] = useState<
     Partial<Record<AgentName, string>>
   >(() => {
     const stored = localStorage.getItem('axiom-agent-sessions-by-agent');
-    if (!stored) return {};
-    try {
-      return JSON.parse(stored) as Partial<Record<AgentName, string>>;
-    } catch {
-      return {};
+    let parsed: Partial<Record<AgentName, string>> = {};
+    if (stored) {
+      try {
+        parsed = JSON.parse(stored) as Partial<Record<AgentName, string>>;
+      } catch {
+        parsed = {};
+      }
     }
+    if (hasContextParam && !parsed.intellect) {
+      parsed = { ...parsed, intellect: crypto.randomUUID() };
+      localStorage.setItem('axiom-agent-sessions-by-agent', JSON.stringify(parsed));
+    }
+    return parsed;
   });
   const [query, setQuery] = useState(() => searchParams.get('context') ?? '');
-  const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(null);
-  const [conversationStarted, setConversationStarted] = useState(false);
-  const [viewMode, setViewMode] = useState<'selector' | 'chat'>('selector');
+  const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(
+    hasContextParam ? 'intellect' : null
+  );
+  const [conversationStarted, setConversationStarted] = useState(hasContextParam);
+  const [viewMode, setViewMode] = useState<'selector' | 'chat'>(
+    hasContextParam ? 'chat' : 'selector'
+  );
 
   const sessionId = selectedAgent ? sessionsByAgent[selectedAgent] : undefined;
 

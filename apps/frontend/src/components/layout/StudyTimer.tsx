@@ -207,7 +207,7 @@ export function StudyTimer() {
       setIsOpen(false);
     } catch (err) {
       toast({
-        title: t('common.error'),
+        title: t('common.messages.saveError'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -241,7 +241,7 @@ export function StudyTimer() {
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-xs text-muted-foreground hover:text-foreground rounded"
-                aria-label={t('common.close')}
+                aria-label={t('common.actions.close')}
               >
                 <X className="h-4 w-4" />
               </button>

@@ -427,7 +427,7 @@ export default function PasswordImport() {
 
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={handleReset}>
-                {t('common.cancel')}
+                {t('common.actions.cancel')}
               </Button>
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground text-sm">

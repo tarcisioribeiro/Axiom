@@ -621,12 +621,12 @@ function VaultRecoveryKeyModalInline({
       await apiClient.post(API_CONFIG.ENDPOINTS.SECURITY_VAULT_RECOVERY_UNLOCK, {
         recovery_key: recoveryKey.trim(),
       });
-      toast({ title: t('pages.security.recoveryKey.unlockSuccess') });
+      toast({ title: t('pages.vaultGuard.recoveryKey.unlockSuccess') });
       await onSuccess();
       onClose();
     } catch (err) {
       toast({
-        title: t('pages.security.recoveryKey.unlockError'),
+        title: t('pages.vaultGuard.recoveryKey.unlockError'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -641,9 +641,9 @@ function VaultRecoveryKeyModalInline({
         <CardHeader>
           <CardTitle className="gap-sm flex items-center text-base">
             <Key className="h-4 w-4" />
-            {t('pages.security.recoveryKey.useTitle')}
+            {t('pages.vaultGuard.recoveryKey.useTitle')}
           </CardTitle>
-          <CardDescription>{t('pages.security.recoveryKey.useDesc')}</CardDescription>
+          <CardDescription>{t('pages.vaultGuard.recoveryKey.useDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-md">
           <Input
@@ -666,7 +666,7 @@ function VaultRecoveryKeyModalInline({
             >
               {loading
                 ? t('common.actions.loading')
-                : t('pages.security.recoveryKey.unlockBtn')}
+                : t('pages.vaultGuard.recoveryKey.unlockBtn')}
             </Button>
           </div>
         </CardContent>

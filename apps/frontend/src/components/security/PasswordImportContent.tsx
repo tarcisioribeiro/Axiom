@@ -392,7 +392,7 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={handleReset}>
-              {t('common.cancel')}
+              {t('common.actions.cancel')}
             </Button>
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground text-sm">
@@ -461,7 +461,7 @@ export function PasswordImportContent() {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setStep('preview')}>
-              {t('common.back')}
+              {t('common.actions.back')}
             </Button>
             <Button disabled={isLoading} onClick={() => void handleImport()}>
               {isLoading

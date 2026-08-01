@@ -613,7 +613,7 @@ export default function Archives() {
             {isPreviewLoading ? (
               <div className="flex h-64 items-center justify-center">
                 <span className="text-muted-foreground text-sm">
-                  {t('common.loading', { defaultValue: 'Carregando...' })}
+                  {t('common.actions.loading')}
                 </span>
               </div>
             ) : previewType === 'image' && previewUrl ? (

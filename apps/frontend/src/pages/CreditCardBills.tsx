@@ -44,6 +44,7 @@ import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { sortCreditCardBills } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
@@ -129,22 +130,6 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, creditCards]);
 
-  // Mapeamento de abreviações de mês para número
-  const MONTH_TO_NUMBER: Record<string, number> = {
-    Jan: 1,
-    Feb: 2,
-    Mar: 3,
-    Apr: 4,
-    May: 5,
-    Jun: 6,
-    Jul: 7,
-    Aug: 8,
-    Sep: 9,
-    Oct: 10,
-    Nov: 11,
-    Dec: 12,
-  };
-
   const filteredBills = useMemo(() => {
     let filtered = [...bills];
     if (cardFilter !== 'all') {
@@ -157,43 +142,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       filtered = filtered.filter((b) => b.year === yearFilter);
     }
 
-    // Sort bills: current open bill first, then by date (oldest to newest)
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
-
-    filtered.sort((a, b) => {
-      const aMonth = MONTH_TO_NUMBER[a.month] || 1;
-      const bMonth = MONTH_TO_NUMBER[b.month] || 1;
-
-      // Check if bill is current (current month and year, not paid)
-      const aIsCurrent =
-        aMonth === currentMonth &&
-        parseInt(a.year) === currentYear &&
-        a.status !== 'paid';
-      const bIsCurrent =
-        bMonth === currentMonth &&
-        parseInt(b.year) === currentYear &&
-        b.status !== 'paid';
-
-      // Current open bill always first
-      if (aIsCurrent && !bIsCurrent) return -1;
-      if (!aIsCurrent && bIsCurrent) return 1;
-
-      // Open/overdue bills before paid/closed ones
-      const aIsOpen = a.status === 'open' || a.status === 'overdue';
-      const bIsOpen = b.status === 'open' || b.status === 'overdue';
-      if (aIsOpen && !bIsOpen) return -1;
-      if (!aIsOpen && bIsOpen) return 1;
-
-      // Then sort by date (oldest to newest)
-      const aDate = new Date(parseInt(a.year), aMonth - 1);
-      const bDate = new Date(parseInt(b.year), bMonth - 1);
-      return aDate.getTime() - bDate.getTime();
-    });
-
-    return filtered;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return sortCreditCardBills(filtered);
   }, [bills, cardFilter, statusFilter, yearFilter]);
 
   const handleSubmit = async (data: CreditCardBillFormData) => {

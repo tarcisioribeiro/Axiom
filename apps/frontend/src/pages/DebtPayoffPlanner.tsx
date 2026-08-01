@@ -295,7 +295,7 @@ export default function DebtPayoffPlanner({
 
       {isLoading ? (
         <div className="text-muted-foreground flex h-64 items-center justify-center">
-          {t('common.loading')}
+          {t('common.actions.loading')}
         </div>
       ) : debts.length === 0 ? (
         <div className="gap-md flex h-64 flex-col items-center justify-center text-center">
