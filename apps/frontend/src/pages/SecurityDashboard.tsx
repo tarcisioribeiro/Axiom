@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
 import {
@@ -470,79 +471,40 @@ export default function SecurityDashboard() {
 
         <VaultSearch />
 
-        {/* Métricas + Saúde do Cofre */}
-        <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
-          {/* Card único com as 4 métricas */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('pages.securityDashboard.vaultItems')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="gap-sm flex flex-col">
-                <div className="flex items-center justify-between">
-                  <div className="gap-xs flex items-center">
-                    <div className="bg-info/10 p-sm ring-info/20 rounded-lg ring-1">
-                      <Key className="text-info h-4 w-4" />
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {t('pages.securityDashboard.passwords')}
-                    </span>
-                  </div>
-                  <span className="text-info text-2xl font-bold">
-                    {stats?.total_passwords || 0}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="gap-xs flex items-center">
-                    <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-                      <CreditCard className="text-warning h-4 w-4" />
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {t('pages.securityDashboard.storedCards')}
-                    </span>
-                  </div>
-                  <span className="text-warning text-2xl font-bold">
-                    {stats?.total_stored_cards || 0}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="gap-xs flex items-center">
-                    <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-                      <Wallet className="text-success h-4 w-4" />
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {t('pages.securityDashboard.storedAccounts')}
-                    </span>
-                  </div>
-                  <span className="text-success text-2xl font-bold">
-                    {stats?.total_stored_accounts || 0}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="gap-xs flex items-center">
-                    <div className="bg-accent/10 p-sm ring-accent/20 rounded-lg ring-1">
-                      <Archive className="text-accent h-4 w-4" />
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {t('pages.securityDashboard.archives')}
-                    </span>
-                  </div>
-                  <span className="text-accent text-2xl font-bold">
-                    {stats?.total_archives || 0}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Saúde do Cofre */}
-          <VaultHealthSection />
+        {/* Itens do Cofre */}
+        <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title={t('pages.securityDashboard.passwords')}
+            value={stats?.total_passwords || 0}
+            icon={<Key className="h-4 w-4" />}
+            accentColor="blue"
+            onClick={() => void navigate('/security/passwords')}
+          />
+          <StatCard
+            title={t('pages.securityDashboard.storedCards')}
+            value={stats?.total_stored_cards || 0}
+            icon={<CreditCard className="h-4 w-4" />}
+            accentColor="orange"
+            onClick={() => void navigate('/security/stored-cards')}
+          />
+          <StatCard
+            title={t('pages.securityDashboard.storedAccounts')}
+            value={stats?.total_stored_accounts || 0}
+            icon={<Wallet className="h-4 w-4" />}
+            accentColor="green"
+            onClick={() => void navigate('/security/stored-accounts')}
+          />
+          <StatCard
+            title={t('pages.securityDashboard.archives')}
+            value={stats?.total_archives || 0}
+            icon={<Archive className="h-4 w-4" />}
+            accentColor="purple"
+            onClick={() => void navigate('/security/archives')}
+          />
         </div>
+
+        {/* Saúde do Cofre + Senhas que precisam de atenção + Evolução do Score */}
+        <VaultHealthSection />
 
         {/* Atividade Recente + Ações Rápidas */}
         <div className="gap-lg grid grid-cols-1 lg:grid-cols-3">

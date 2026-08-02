@@ -1,6 +1,5 @@
 from datetime import date, timedelta
 
-from django.db.models import Count, Sum
 from rest_framework import serializers
 
 from library.models import (
@@ -274,14 +273,26 @@ class BookSerializer(serializers.ModelSerializer):
     def get_authors_names(self, obj):
         return [author.name for author in obj.authors.all()]
 
+    def _active_readings(self, obj):
+        """Usa o prefetch (`to_attr="active_readings"`) quando disponível
+        para evitar uma query extra por linha; cai para uma query direta
+        quando o serializer é usado fora da listagem (ex.: retrieve)."""
+        cached = getattr(obj, "active_readings", None)
+        if cached is not None:
+            return cached
+        return list(obj.readings.filter(deleted_at__isnull=True))
+
+    def _active_summaries(self, obj):
+        cached = getattr(obj, "active_summaries", None)
+        if cached is not None:
+            return cached
+        return list(obj.summaries.filter(deleted_at__isnull=True))
+
     def get_has_summary(self, obj):
-        return obj.summaries.filter(deleted_at__isnull=True).exists()
+        return len(self._active_summaries(obj)) > 0
 
     def get_total_pages_read(self, obj):
-        total = sum(
-            r.pages_read for r in obj.readings.filter(deleted_at__isnull=True)
-        )
-        return total
+        return sum(r.pages_read for r in self._active_readings(obj))
 
     def get_reading_progress(self, obj):
         if obj.pages > 0:
@@ -289,33 +300,43 @@ class BookSerializer(serializers.ModelSerializer):
             return round((total_read / obj.pages) * 100, 1)
         return 0.0
 
-    def _calc_avg_pages_per_day(self, readings_qs):
-        """Calcula média de páginas por dia baseado em dias distintos
-        de leitura."""
-        agg = readings_qs.aggregate(
-            total_pages=Sum("pages_read"),
-            distinct_days=Count("reading_date", distinct=True),
-        )
-        distinct_days = agg["distinct_days"] or 0
-        total_pages = agg["total_pages"] or 0
-        if distinct_days == 0:
+    @staticmethod
+    def _calc_avg_pages_per_day(readings):
+        """Calcula média de páginas por dia a partir de uma lista de
+        leituras já carregada em memória (sem nova query)."""
+        distinct_days = {r.reading_date for r in readings}
+        total_pages = sum(r.pages_read for r in readings)
+        if not distinct_days:
             return 0.0
-        return round(total_pages / distinct_days, 2)
+        return round(total_pages / len(distinct_days), 2)
 
     def get_general_avg_pages_per_day(self, obj):
-        """Média geral do membro: todas as leituras de todos os livros."""
+        """Média geral do membro: todas as leituras de todos os livros.
+
+        É a mesma consulta para todo livro do mesmo dono, então o resultado
+        é cacheado por owner_id no contexto do serializer (1 query por
+        dono, não 1 por livro)."""
         if not obj.owner_id:
             return 0.0
-        readings_qs = Reading.objects.filter(
-            owner=obj.owner,
-            deleted_at__isnull=True,
-        )
-        return self._calc_avg_pages_per_day(readings_qs)
+        cache_key = "_general_avg_cache"
+        owner_cache = self.context.setdefault(cache_key, {})
+        if obj.owner_id not in owner_cache:
+            readings = Reading.objects.filter(
+                owner_id=obj.owner_id,
+                deleted_at__isnull=True,
+            ).values_list("reading_date", "pages_read")
+            distinct_days = {r[0] for r in readings}
+            total_pages = sum(r[1] for r in readings)
+            owner_cache[obj.owner_id] = (
+                round(total_pages / len(distinct_days), 2)
+                if distinct_days
+                else 0.0
+            )
+        return owner_cache[obj.owner_id]
 
     def get_book_avg_pages_per_day(self, obj):
         """Média específica deste livro: apenas leituras deste livro."""
-        readings_qs = obj.readings.filter(deleted_at__isnull=True)
-        return self._calc_avg_pages_per_day(readings_qs)
+        return self._calc_avg_pages_per_day(self._active_readings(obj))
 
     def _estimated_completion(self, obj, avg_pages_per_day):
         """Retorna a data estimada de conclusão ou None."""

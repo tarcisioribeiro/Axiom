@@ -736,6 +736,8 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
     mutationFn: () => automationRulesService.applyRules(),
     onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: ['automation-rules'] });
+      void queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      void queryClient.invalidateQueries({ queryKey: ['tags'] });
       toast({
         title: t('pages.automationRules.applySuccess'),
         description: t('pages.automationRules.applySuccessDesc', {

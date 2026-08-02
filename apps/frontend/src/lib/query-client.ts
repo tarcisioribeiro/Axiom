@@ -72,15 +72,16 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    // After any successful mutation (create/update/delete), invalidate all
-    // active queries so every view that reads from the database is refreshed.
+    // Cache freshening after a mutation is each page's own responsibility
+    // (scoped `invalidateQueries`/`setQueryData` in its `onSuccess`) — this
+    // handler only centralizes the sound feedback so it isn't wired into
+    // every individual page.
     onSuccess: (data) => {
       if (data === undefined || data === null) {
         playDeleteSound();
       } else {
         playSuccessSound();
       }
-      void queryClient.invalidateQueries();
     },
     onError: () => {
       playErrorSound();
