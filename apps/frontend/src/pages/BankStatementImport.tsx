@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftRight,
   CheckCircle2,
@@ -101,6 +102,7 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -130,6 +132,7 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
       const imported = await bankReconciliationService.importFile(formData);
       // Buscar detalhes com entries
       const detail = await bankReconciliationService.getImport(imported.id);
+      void queryClient.invalidateQueries({ queryKey: ['bank-reconciliation'] });
       onImported(detail);
     } catch (error: unknown) {
       toast({ title: getErrorMessage(error), variant: 'destructive' });
@@ -242,6 +245,7 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const entries = importData.entries ?? [];
   const ignored = entries.filter((e) => e.status === 'ignored');
   const pending = entries.filter((e) => e.status !== 'ignored');
@@ -250,6 +254,7 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
     setIsLoading(true);
     try {
       const matched = await bankReconciliationService.runMatch(importData.id);
+      void queryClient.invalidateQueries({ queryKey: ['bank-reconciliation'] });
       onConfirm({
         total: entries.length,
         imported: pending.length,

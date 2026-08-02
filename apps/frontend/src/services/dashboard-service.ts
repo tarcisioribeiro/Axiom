@@ -6,6 +6,7 @@ import type {
   CreditCardExpensesByCategory,
   BalanceForecast,
   CashFlowForecast,
+  DebtPayoffPlan,
   FinancialAlert,
   AnomalyAlert,
   SpendingInsights,
@@ -76,6 +77,12 @@ class DashboardService {
   async getCashFlowForecast(days: 30 | 60 | 90 = 30): Promise<CashFlowForecast> {
     return apiClient.get<CashFlowForecast>('/api/v1/dashboard/cash-flow-forecast/', {
       days,
+    });
+  }
+
+  async getDebtPayoffPlan(extraMonthly = 0): Promise<DebtPayoffPlan> {
+    return apiClient.get<DebtPayoffPlan>('/api/v1/dashboard/debt-payoff-plan/', {
+      extra_monthly: extraMonthly,
     });
   }
 

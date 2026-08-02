@@ -226,13 +226,22 @@ export default function Dashboard() {
     staleTime: STALE_TIMES.BALANCE_FORECAST,
   });
 
-  // Lazy-load refs: anomalias e projeção de fluxo só disparam quando visíveis
-  const anomaliesSectionRef = useRef<HTMLDivElement>(null);
-  const cashFlowSectionRef = useRef<HTMLDivElement>(null);
+  // Lazy-load refs: anomalias e projeção de fluxo só disparam quando visíveis.
+  // Usamos callback refs (em vez de useRef) porque a página renderiza um
+  // fullscreen loading state até summaryQuery resolver — se o observer fosse
+  // montado num useEffect([]) tradicional, ele rodaria contra current === null
+  // (o card ainda não existe no DOM) e nunca mais seria reexecutado.
+  const [anomaliesSectionEl, setAnomaliesSectionEl] = useState<HTMLDivElement | null>(
+    null
+  );
+  const [cashFlowSectionEl, setCashFlowSectionEl] = useState<HTMLDivElement | null>(
+    null
+  );
   const [anomaliesInView, setAnomaliesInView] = useState(false);
   const [cashFlowInView, setCashFlowInView] = useState(false);
 
   useEffect(() => {
+    if (!anomaliesSectionEl) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -242,12 +251,12 @@ export default function Dashboard() {
       },
       { threshold: 0.1 }
     );
-    const el = anomaliesSectionRef.current;
-    if (el) observer.observe(el);
+    observer.observe(anomaliesSectionEl);
     return () => observer.disconnect();
-  }, []);
+  }, [anomaliesSectionEl]);
 
   useEffect(() => {
+    if (!cashFlowSectionEl) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -257,10 +266,9 @@ export default function Dashboard() {
       },
       { threshold: 0.1 }
     );
-    const el = cashFlowSectionRef.current;
-    if (el) observer.observe(el);
+    observer.observe(cashFlowSectionEl);
     return () => observer.disconnect();
-  }, []);
+  }, [cashFlowSectionEl]);
 
   // forecastDays is in the key — changing it transparently fetches a new result
   // while the previous period's data stays cached (no loading flash when switching back).
@@ -972,7 +980,7 @@ export default function Dashboard() {
             >
               <div className="space-y-lg">
                 {/* 8. Anomalias de Gastos */}
-                <div ref={anomaliesSectionRef} />
+                <div ref={setAnomaliesSectionEl} />
                 {anomalies.length > 0 && (
                   <motion.div
                     variants={itemVariants}
@@ -1368,7 +1376,7 @@ export default function Dashboard() {
 
                 {/* 9. Projeção de Fluxo de Caixa | Evolução Diária (2 cols) */}
                 <div
-                  ref={cashFlowSectionRef}
+                  ref={setCashFlowSectionEl}
                   className="gap-lg grid grid-cols-1 lg:grid-cols-2"
                 >
                   {/* Projeção de Fluxo de Caixa */}

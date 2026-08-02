@@ -366,6 +366,9 @@ CACHE_TTL_ACCOUNT_BALANCES = 30  # 30 segundos - saldos sao criticos
 CACHE_TTL_CATEGORY_BREAKDOWN = 300  # 5 minutos - agregacoes pesadas
 CACHE_TTL_BALANCE_FORECAST = 120  # 2 minutos - previsoes
 CACHE_TTL_CASH_FLOW_FORECAST = 300  # 5 minutos - projecao de fluxo de caixa
+CACHE_TTL_DEBT_PAYOFF_PLAN = (
+    300  # 5 minutos - planejador de quitacao de dividas
+)
 
 # Budget enforcement mode: 'soft' (201 + budget_warning), 'hard' (400 block)
 BUDGET_ENFORCEMENT_MODE = os.getenv("BUDGET_ENFORCEMENT_MODE", "soft")

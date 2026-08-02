@@ -406,14 +406,6 @@ class TaskInstanceStatusUpdateSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True)
 
 
-class InstancesForDateResponseSerializer(serializers.Serializer):
-    """Serializer para resposta do endpoint instances-for-date."""
-
-    date = serializers.DateField()
-    instances = TaskInstanceSerializer(many=True)
-    summary = serializers.DictField()
-
-
 # ============================================================================
 # WORKOUT SERIALIZERS
 # ============================================================================
@@ -517,7 +509,9 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
     def get_exercise_count(self, obj):
-        return obj.exercises.filter(deleted_at__isnull=True).count()
+        # `exercises` já vem filtrado por soft-delete via Prefetch na view;
+        # `.all()` reaproveita o cache do prefetch em vez de nova query.
+        return len(obj.exercises.all())
 
 
 class WorkoutDayCreateUpdateSerializer(serializers.ModelSerializer):
@@ -557,12 +551,12 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
     def get_day_count(self, obj):
-        return obj.days.filter(deleted_at__isnull=True).count()
+        # `days` (e `days.exercises`) já vêm filtrados por soft-delete via
+        # Prefetch na view; `.all()` reaproveita o cache do prefetch.
+        return len(obj.days.all())
 
     def get_exercise_count(self, obj):
-        return WorkoutExercise.objects.filter(
-            workout_day__plan=obj, deleted_at__isnull=True
-        ).count()
+        return sum(len(day.exercises.all()) for day in obj.days.all())
 
 
 class WorkoutPlanCreateUpdateSerializer(serializers.ModelSerializer):

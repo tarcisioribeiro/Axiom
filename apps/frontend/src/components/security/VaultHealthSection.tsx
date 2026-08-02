@@ -9,7 +9,6 @@ import {
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
-  TrendingUp,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -188,7 +187,6 @@ function PasswordRow({ pw, onNavigate }: PasswordRowProps) {
 // ============================================================================
 
 function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
-  const { t } = useTranslation();
   if (!data.length) return null;
 
   const chartData = [...data].reverse().map((s) => ({
@@ -200,14 +198,8 @@ function ScoreHistoryChart({ data }: { data: VaultHealthSnapshot[] }) {
   }));
 
   return (
-    <div className="space-y-sm">
-      <div className="gap-sm flex items-center">
-        <TrendingUp className="text-muted-foreground h-4 w-4" />
-        <p className="text-sm font-medium">
-          {t('pages.vaultHealth.scoreHistory', { defaultValue: 'Evolução do Score' })}
-        </p>
-      </div>
-      <ResponsiveContainer width="100%" height={120}>
+    <div className="h-full min-h-[160px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
@@ -286,10 +278,12 @@ export function VaultHealthSection() {
   );
   const otherIssues = problematic_passwords.filter((p) => !p.issues.includes('weak'));
 
+  const attentionCount = criticalPasswords.length + otherIssues.length;
+
   return (
-    <div className="space-y-md">
-      {/* Section 1 — Score header */}
-      <Card>
+    <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
+      {/* Saúde do Cofre */}
+      <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="gap-sm flex items-center">
             <ShieldCheck className="h-5 w-5" />
@@ -301,10 +295,10 @@ export function VaultHealthSection() {
               : t('pages.vaultHealth.analysisOf', { count: total_passwords })}
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="gap-lg flex flex-col items-center sm:flex-row sm:items-start sm:justify-around">
+        <CardContent className="flex flex-1 flex-col justify-center">
+          <div className="gap-md flex flex-col items-center">
             <CircularScore score={score} />
-            <div className="gap-md grid grid-cols-2 sm:grid-cols-4">
+            <div className="gap-sm grid w-full grid-cols-4">
               <IssueCount
                 icon={<ShieldAlert className="h-5 w-5" />}
                 count={issues_summary.weak}
@@ -338,21 +332,28 @@ export function VaultHealthSection() {
         </CardContent>
       </Card>
 
-      {/* Section 2 — Critical issues */}
-      {criticalPasswords.length > 0 && (
-        <Card className="border-destructive/30">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm text-destructive flex items-center text-base">
-              <ShieldAlert className="h-4 w-4" />
-              {t('pages.vaultHealth.criticalPasswords')}
-              <Badge variant="destructive" className="ml-auto">
-                {criticalPasswords.length}
+      {/* Senhas que precisam de atenção */}
+      <Card
+        className={`flex flex-col ${criticalPasswords.length > 0 ? 'border-destructive/30' : ''}`}
+      >
+        <CardHeader className="pb-sm">
+          <CardTitle className="gap-sm flex items-center text-base">
+            <AlertTriangle className="text-warning h-4 w-4" />
+            {t('pages.vaultHealth.needsAttention')}
+            {attentionCount > 0 && (
+              <Badge
+                variant={criticalPasswords.length > 0 ? 'destructive' : 'secondary'}
+                className="ml-auto"
+              >
+                {attentionCount}
               </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-sm pr-xs max-h-60 overflow-y-auto">
-              {criticalPasswords.map((pw) => (
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex min-h-0 flex-1 flex-col">
+          {attentionCount > 0 ? (
+            <div className="space-y-sm pr-xs min-h-0 flex-1 overflow-y-auto">
+              {[...criticalPasswords, ...otherIssues].map((pw) => (
                 <PasswordRow
                   key={pw.id}
                   pw={pw}
@@ -360,56 +361,31 @@ export function VaultHealthSection() {
                 />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Section 3 — Other issues */}
-      {otherIssues.length > 0 && (
-        <Card>
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-base">
-              <AlertTriangle className="text-warning h-4 w-4" />
-              {t('pages.vaultHealth.needsAttention')}
-              <Badge variant="secondary" className="ml-auto">
-                {otherIssues.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-sm pr-xs max-h-60 overflow-y-auto">
-              {otherIssues.map((pw) => (
-                <PasswordRow
-                  key={pw.id}
-                  pw={pw}
-                  onNavigate={() => navigate('/security/passwords')}
-                />
-              ))}
+          ) : total_passwords > 0 ? (
+            <div className="gap-sm flex flex-1 flex-col items-center justify-center">
+              <CheckCircle2 className="text-chart-2 h-10 w-10" />
+              <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-muted-foreground text-sm">
+                {t('pages.vaultHealth.noPasswords')}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Section 4 — All good */}
-      {problematic_passwords.length === 0 && total_passwords > 0 && (
-        <Card>
-          <CardContent className="gap-sm py-lg flex flex-col items-center">
-            <CheckCircle2 className="text-chart-2 h-10 w-10" />
-            <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Section 5 — Score history chart */}
-      {history.length > 1 && (
-        <Card>
-          <CardHeader className="pb-sm">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {t('pages.vaultHealth.scoreHistory', {
-                  defaultValue: 'Evolução do Score',
-                })}
-              </CardTitle>
+      {/* Evolução do Score */}
+      <Card className="flex flex-col">
+        <CardHeader className="pb-sm">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">
+              {t('pages.vaultHealth.scoreHistory', {
+                defaultValue: 'Evolução do Score',
+              })}
+            </CardTitle>
+            {history.length > 1 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -419,13 +395,24 @@ export function VaultHealthSection() {
                 <RefreshCw className="h-3 w-3" />
                 {t('common.actions.refresh')}
               </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="flex min-h-0 flex-1 flex-col">
+          {history.length > 1 ? (
             <ScoreHistoryChart data={history} />
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-muted-foreground text-center text-sm">
+                {t('pages.vaultHealth.noScoreHistory', {
+                  defaultValue:
+                    'Ainda não há histórico suficiente para exibir a evolução.',
+                })}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

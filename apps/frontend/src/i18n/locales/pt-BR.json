@@ -1365,6 +1365,7 @@
         "endDatePlaceholder": "Selecione a data de fim",
         "dueDateLabel": "Data de Vencimento",
         "dueDatePlaceholder": "Selecione a data de vencimento",
+        "autoFilledHint": "Datas preenchidas automaticamente com base na fatura do mês anterior. Você pode ajustá-las se necessário.",
         "totalAmountLabel": "Valor Total",
         "totalAmountHint": "Calculado automaticamente. Pode ser editado manualmente.",
         "calculating": "Calculando...",
@@ -6065,12 +6066,13 @@
       "snowballDesc": "Menor dívida primeiro — progresso rápido e motivação",
       "avalanche": "Avalanche",
       "avalancheDesc": "Maior juros primeiro — economiza mais no total",
-      "extraMonthly": "Extra Mensal Disponível",
-      "extraMonthlyHint": "Valor adicional além dos pagamentos mínimos",
+      "extraMonthly": "Extra Além da Sobra Real",
+      "extraMonthlyHint": "Valor adicional somado à sobra real projetada (ex: um bônus esperado)",
       "interestSavedWithAvalanche": "A avalanche economizaria {{amount}} em juros comparado à bola de neve.",
       "plan": "Plano — {{strategy}}",
       "month": "mês",
       "payoffBy": "Quitação em",
+      "payoffNotReached": "Sem sobra suficiente no horizonte projetado",
       "interest": "Juros totais:",
       "comparison": "Comparativo entre Estratégias",
       "totalInterest": "Total de Juros",
@@ -6081,10 +6083,19 @@
       "noDebts": "Sem dívidas ativas!",
       "noDebtsDesc": "Parabéns! Você não possui dívidas ativas no momento.",
       "creditCard": "Cartão de Crédito",
+      "projectedSurplus": "Sobra Projetada",
+      "projectedSurplusUntil": "até {{date}}",
+      "dateRecalculated": "Vencimento original ({{original}}) não é viável com a sobra projetada — replanejado para {{feasible}}.",
       "types": {
         "loan": "Empréstimo",
-        "bill": "Fatura",
         "payable": "A Pagar"
+      },
+      "urgency": {
+        "overdue": "Vencida",
+        "critical": "Crítica",
+        "high": "Alta",
+        "medium": "Média",
+        "low": "Baixa"
       }
     },
     "focusBlocks": {
@@ -6661,6 +6672,7 @@
     "applyError": "Erro ao aplicar o plano. Tente novamente.",
     "saveSuccess": "Plano salvo",
     "overrideHint": "Sugestão: {{value}}",
+    "budgetMinValueWarning": "O valor não pode ser menor que o já gasto na categoria ({{value}})",
     "totalRevenues": "Total Receitas",
     "totalExpenses": "Total Despesas",
     "budgets": "Orçamentos",

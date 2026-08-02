@@ -11,8 +11,9 @@ import {
   Trophy,
   ArrowRight,
   Info,
+  AlertTriangle,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,117 +26,28 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { loansService } from '@/services/loans-service';
-import { payablesService } from '@/services/payables-service';
-import type { CreditCardBill } from '@/types';
+import { dashboardService } from '@/services/dashboard-service';
+import type { DebtPayoffPlanDebt } from '@/types';
 
 type Strategy = 'snowball' | 'avalanche';
 
-interface Debt {
-  id: string;
-  name: string;
-  balance: number;
-  interestRate: number;
-  minimumPayment: number;
-  type: 'loan' | 'bill' | 'payable';
-  dueDate?: string;
-}
+const URGENCY_BADGE_CLASS: Record<DebtPayoffPlanDebt['urgency'], string> = {
+  overdue: 'bg-destructive/10 text-destructive',
+  critical: 'bg-destructive/10 text-destructive',
+  high: 'bg-warning/10 text-warning',
+  medium: 'bg-warning/10 text-warning',
+  low: 'bg-muted text-muted-foreground',
+};
 
-interface DebtPlan {
-  debt: Debt;
-  payoffDate: Date;
-  totalPaid: number;
-  totalInterest: number;
-  monthlyPayment: number;
-  priority: number;
-}
-
-function computePayoffPlan(
-  debts: Debt[],
-  monthlyExtra: number,
-  strategy: Strategy
-): DebtPlan[] {
-  if (debts.length === 0) return [];
-
-  const sorted = [...debts].sort((a, b) => {
-    if (strategy === 'snowball') return a.balance - b.balance;
-    return b.interestRate - a.interestRate;
-  });
-
-  const today = new Date();
-  const state = sorted.map((d) => ({
-    debt: d,
-    remaining: d.balance,
-    totalPaid: 0,
-    totalInterest: 0,
-    payoffDate: null as Date | null,
-    priority: 0,
-  }));
-
-  let extraPool = monthlyExtra;
-
-  let month = 0;
-  const MAX_MONTHS = 600;
-
-  while (state.some((s) => s.remaining > 0) && month < MAX_MONTHS) {
-    month++;
-    const date = new Date(today);
-    date.setMonth(date.getMonth() + month);
-
-    let currentExtra = extraPool;
-    for (let i = 0; i < state.length; i++) {
-      const s = state[i];
-      if (s.remaining <= 0) continue;
-
-      const monthlyRate = s.debt.interestRate / 100 / 12;
-      const interest = s.remaining * monthlyRate;
-      s.totalInterest += interest;
-      s.remaining += interest;
-
-      let payment = s.debt.minimumPayment;
-      if (i === state.findIndex((x) => x.remaining > 0)) {
-        payment += currentExtra;
-        currentExtra = 0;
-      }
-
-      payment = Math.min(payment, s.remaining);
-      s.remaining -= payment;
-      s.totalPaid += payment;
-
-      if (s.remaining <= 0.01) {
-        s.remaining = 0;
-        if (!s.payoffDate) {
-          s.payoffDate = date;
-          s.priority = state.filter((x) => x.payoffDate !== null).length;
-          extraPool += s.debt.minimumPayment;
-        }
-      }
-    }
-  }
-
-  return state.map((s, idx) => ({
-    debt: s.debt,
-    payoffDate: s.payoffDate ?? new Date(today.setMonth(today.getMonth() + MAX_MONTHS)),
-    totalPaid: s.totalPaid,
-    totalInterest: s.totalInterest,
-    monthlyPayment:
-      s.debt.minimumPayment +
-      (idx === state.findIndex((x) => x.payoffDate === null || x.remaining === 0)
-        ? monthlyExtra
-        : 0),
-    priority: s.priority || idx + 1,
-  }));
-}
+const PRIORITY_BORDER_CLASS: Record<number, string> = {
+  1: 'border-l-destructive',
+  2: 'border-l-warning',
+  3: 'border-l-accent',
+};
+const DEFAULT_PRIORITY_BORDER = 'border-l-muted-foreground';
 
 function getPriorityBorderColor(priority: number): string {
-  const colors = [
-    'border-l-destructive',
-    'border-l-warning',
-    'border-l-accent',
-    'border-l-muted-foreground',
-  ];
-  return colors[Math.min(priority - 1, colors.length - 1)];
+  return PRIORITY_BORDER_CLASS[priority] ?? DEFAULT_PRIORITY_BORDER;
 }
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -149,137 +61,43 @@ export default function DebtPayoffPlanner({
 }) {
   const { t } = useTranslation();
   const [strategy, setStrategy] = useState<Strategy>('snowball');
-  const [monthlyExtra, setMonthlyExtra] = useState(0);
+  const [extraMonthly, setExtraMonthly] = useState(0);
 
-  const loansQuery = useQuery({
-    queryKey: ['loans', 'active'],
-    queryFn: () => loansService.getAll({ payed: false }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
+  const planQuery = useQuery({
+    queryKey: ['dashboard', 'debtPayoffPlan', extraMonthly],
+    queryFn: () => dashboardService.getDebtPayoffPlan(extraMonthly),
+    staleTime: STALE_TIMES.DEBT_PAYOFF_PLAN,
   });
 
-  const billsQuery = useQuery({
-    queryKey: ['creditCardBills', 'open'],
-    queryFn: () => creditCardBillsService.getAll({ status: 'open' }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
+  const isLoading = planQuery.isLoading;
+  const plan = planQuery.data;
 
-  const payablesQuery = useQuery({
-    queryKey: ['payables', 'active'],
-    queryFn: () => payablesService.getAll({ status: 'active' }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
-
-  const isLoading =
-    loansQuery.isLoading || billsQuery.isLoading || payablesQuery.isLoading;
-
-  const debts = useMemo((): Debt[] => {
-    const result: Debt[] = [];
-
-    for (const loan of loansQuery.data ?? []) {
-      if (loan.loan_type !== 'borrowed') continue;
-      const balance = parseFloat(loan.value) - parseFloat(loan.payed_value || '0');
-      if (balance <= 0) continue;
-      result.push({
-        id: `loan-${loan.id}`,
-        name: loan.description,
-        balance,
-        interestRate: parseFloat(loan.interest_rate ?? '0') || 0,
-        minimumPayment: balance / Math.max(loan.installments, 1),
-        type: 'loan',
-        dueDate: loan.due_date,
-      });
-    }
-
-    const billsByCard = new Map<number, CreditCardBill[]>();
-    for (const bill of billsQuery.data ?? []) {
-      const balance =
-        parseFloat(bill.total_amount) - parseFloat(bill.paid_amount ?? '0');
-      if (balance <= 0) continue;
-      const group = billsByCard.get(bill.credit_card) ?? [];
-      group.push(bill);
-      billsByCard.set(bill.credit_card, group);
-    }
-    for (const [cardId, bills] of billsByCard) {
-      if (!bills || bills.length === 0) continue;
-      const totalBalance = bills.reduce(
-        (sum, b) => sum + parseFloat(b.total_amount) - parseFloat(b.paid_amount ?? '0'),
-        0
-      );
-      const totalMinimum = bills.reduce(
-        (sum, b) => sum + parseFloat(b.minimum_payment ?? '0'),
-        0
-      );
-      const cardName = bills[0].credit_card_name ?? t('pages.debtPayoff.creditCard');
-      const dueDates = bills
-        .map((b) => b.due_date)
-        .filter((d): d is string => !!d)
-        .sort();
-      result.push({
-        id: `card-${cardId}`,
-        name: cardName,
-        balance: totalBalance,
-        interestRate: 0,
-        minimumPayment: totalMinimum || totalBalance,
-        type: 'bill',
-        dueDate: dueDates[0],
-      });
-    }
-
-    for (const payable of payablesQuery.data ?? []) {
-      if (payable.status !== 'active' && payable.status !== 'overdue') continue;
-      const remaining =
-        parseFloat(payable.remaining_value ?? payable.value) -
-        parseFloat(payable.paid_value || '0');
-      if (remaining <= 0) continue;
-      result.push({
-        id: `payable-${payable.id}`,
-        name: payable.description,
-        balance: remaining,
-        interestRate: 0,
-        minimumPayment: remaining / Math.max(payable.installments ?? 1, 1),
-        type: 'payable',
-        dueDate: payable.due_date,
-      });
-    }
-
-    return result;
-  }, [loansQuery.data, billsQuery.data, payablesQuery.data, t]);
-
-  const snowballPlan = useMemo(
-    () => computePayoffPlan(debts, monthlyExtra, 'snowball'),
-    [debts, monthlyExtra]
-  );
-
-  const avalanchePlan = useMemo(
-    () => computePayoffPlan(debts, monthlyExtra, 'avalanche'),
-    [debts, monthlyExtra]
-  );
-
+  const snowballPlan = plan?.snowball;
+  const avalanchePlan = plan?.avalanche;
   const activePlan = strategy === 'snowball' ? snowballPlan : avalanchePlan;
+  const activeDebts = useMemo(() => activePlan?.debts ?? [], [activePlan?.debts]);
 
-  const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
-  const totalMinimum = debts.reduce((s, d) => s + d.minimumPayment, 0);
-  const snowballInterest = snowballPlan.reduce((s, p) => s + p.totalInterest, 0);
-  const avalancheInterest = avalanchePlan.reduce((s, p) => s + p.totalInterest, 0);
+  const totalDebt = activeDebts.reduce((s, d) => s + d.balance, 0);
+  const totalMinimum = activeDebts.reduce((s, d) => s + d.minimum_payment, 0);
+  const snowballInterest = snowballPlan?.total_interest ?? 0;
+  const avalancheInterest = avalanchePlan?.total_interest ?? 0;
   const interestSaved = snowballInterest - avalancheInterest;
-  const lastPayoff =
-    activePlan.length > 0
-      ? new Date(
-          Math.max(
-            ...activePlan.map((p) => (p.payoffDate ? p.payoffDate.getTime() : 0))
-          )
-        )
-      : null;
+  const projectedSurplus = plan?.surplus_at_due_dates ?? null;
+  const projectedSurplusMonth = plan?.surplus_at_due_dates_month;
+  const projectedSurplusLabel = projectedSurplusMonth
+    ? new Date(
+        projectedSurplusMonth.year,
+        projectedSurplusMonth.month - 1
+      ).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    : undefined;
 
-  const typeColors: Record<Debt['type'], string> = {
+  const typeColors: Record<DebtPayoffPlanDebt['type'], string> = {
     loan: 'bg-primary/10 text-primary',
-    bill: 'bg-warning/10 text-warning',
     payable: 'bg-destructive/10 text-destructive',
   };
 
-  const typeLabels: Record<Debt['type'], string> = {
+  const typeLabels: Record<DebtPayoffPlanDebt['type'], string> = {
     loan: t('pages.debtPayoff.types.loan'),
-    bill: t('pages.debtPayoff.types.bill'),
     payable: t('pages.debtPayoff.types.payable'),
   };
 
@@ -297,7 +115,7 @@ export default function DebtPayoffPlanner({
         <div className="text-muted-foreground flex h-64 items-center justify-center">
           {t('common.actions.loading')}
         </div>
-      ) : debts.length === 0 ? (
+      ) : activeDebts.length === 0 ? (
         <div className="gap-md flex h-64 flex-col items-center justify-center text-center">
           <Trophy className="text-success h-16 w-16 opacity-60" />
           <div>
@@ -321,7 +139,7 @@ export default function DebtPayoffPlanner({
             />
             <StatCard
               title={t('pages.debtPayoff.totalDebts')}
-              value={String(debts.length)}
+              value={String(activeDebts.length)}
               icon={<Target className="h-4 w-4" />}
             />
             <StatCard
@@ -329,12 +147,19 @@ export default function DebtPayoffPlanner({
               value={formatCurrency(totalMinimum)}
               icon={<DollarSign className="h-4 w-4" />}
             />
-            {lastPayoff && (
+            {projectedSurplus !== null && (
               <StatCard
-                title={t('pages.debtPayoff.estimatedPayoff')}
-                value={formatDate(lastPayoff.toISOString())}
+                title={t('pages.debtPayoff.projectedSurplus')}
+                value={formatCurrency(projectedSurplus)}
+                description={
+                  projectedSurplusLabel
+                    ? t('pages.debtPayoff.projectedSurplusUntil', {
+                        date: projectedSurplusLabel,
+                      })
+                    : undefined
+                }
                 icon={<CalendarDays className="h-4 w-4" />}
-                variant="success"
+                variant={projectedSurplus >= 0 ? 'success' : 'danger'}
               />
             )}
           </div>
@@ -405,14 +230,14 @@ export default function DebtPayoffPlanner({
                   </div>
                 </div>
 
-                {/* Monthly extra */}
+                {/* Extra beyond real surplus */}
                 <div className="space-y-sm">
                   <p className="text-sm font-medium">
                     {t('pages.debtPayoff.extraMonthly')}
                   </p>
                   <CurrencyInput
-                    value={monthlyExtra || ''}
-                    onChange={(e) => setMonthlyExtra(parseFloat(e.target.value) || 0)}
+                    value={extraMonthly || ''}
+                    onChange={(e) => setExtraMonthly(parseFloat(e.target.value) || 0)}
                     placeholder="0,00"
                   />
                   <p className="text-muted-foreground text-xs">
@@ -455,20 +280,20 @@ export default function DebtPayoffPlanner({
             <CardContent>
               <div className="space-y-sm">
                 <AnimatePresence mode="sync">
-                  {activePlan.map((plan, idx) => {
+                  {activeDebts.map((debt, idx) => {
                     const debtBalancePct =
-                      totalDebt > 0 ? (plan.debt.balance / totalDebt) * 100 : 0;
+                      totalDebt > 0 ? (debt.balance / totalDebt) * 100 : 0;
 
                     return (
                       <motion.div
-                        key={plan.debt.id}
+                        key={debt.id}
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.05 }}
                         className={cn(
                           'bg-card p-md rounded-lg border border-l-4',
-                          getPriorityBorderColor(plan.priority)
+                          getPriorityBorderColor(debt.priority)
                         )}
                       >
                         <div className="gap-sm flex items-start justify-between">
@@ -476,39 +301,47 @@ export default function DebtPayoffPlanner({
                             <div
                               className={cn(
                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-2 ring-offset-1',
-                                plan.priority === 1
+                                debt.priority === 1
                                   ? 'bg-destructive/10 text-destructive ring-destructive/40'
-                                  : plan.priority === 2
+                                  : debt.priority === 2
                                     ? 'bg-warning/10 text-warning ring-warning/40'
-                                    : plan.priority === 3
+                                    : debt.priority === 3
                                       ? 'bg-accent/10 text-accent ring-accent/40'
                                       : 'bg-muted text-muted-foreground ring-muted-foreground/20'
                               )}
                             >
-                              {plan.priority}
+                              {debt.priority}
                             </div>
                             <div className="min-w-0">
                               <div className="gap-xs flex flex-wrap items-center">
                                 <p className="truncate text-sm font-semibold">
-                                  {plan.debt.name}
+                                  {debt.name}
                                 </p>
                                 <span
                                   className={cn(
                                     'px-xs rounded-full py-0.5 text-xs font-medium',
-                                    typeColors[plan.debt.type]
+                                    typeColors[debt.type]
                                   )}
                                 >
-                                  {typeLabels[plan.debt.type]}
+                                  {typeLabels[debt.type]}
+                                </span>
+                                <span
+                                  className={cn(
+                                    'px-xs rounded-full py-0.5 text-xs font-medium',
+                                    URGENCY_BADGE_CLASS[debt.urgency]
+                                  )}
+                                >
+                                  {t(`pages.debtPayoff.urgency.${debt.urgency}`)}
                                 </span>
                               </div>
                               <div className="mt-xs gap-sm text-muted-foreground flex flex-wrap text-xs">
-                                {plan.debt.interestRate > 0 && (
-                                  <span>{plan.debt.interestRate}% a.a.</span>
+                                {debt.interest_rate > 0 && (
+                                  <span>{debt.interest_rate}% a.a.</span>
                                 )}
-                                {plan.debt.dueDate && (
+                                {debt.due_date && (
                                   <span className="gap-xs flex items-center">
                                     <CalendarDays className="h-3 w-3" />
-                                    {formatDate(plan.debt.dueDate)}
+                                    {formatDate(debt.due_date)}
                                   </span>
                                 )}
                               </div>
@@ -516,10 +349,10 @@ export default function DebtPayoffPlanner({
                           </div>
                           <div className="shrink-0 text-right">
                             <p className="text-destructive text-sm font-bold">
-                              {formatCurrency(plan.debt.balance)}
+                              {formatCurrency(debt.balance)}
                             </p>
                             <p className="text-muted-foreground text-xs">
-                              {formatCurrency(plan.monthlyPayment)}/
+                              {formatCurrency(debt.monthly_payment)}/
                               {t('pages.debtPayoff.month')}
                             </p>
                           </div>
@@ -537,19 +370,35 @@ export default function DebtPayoffPlanner({
                             <ArrowRight className="h-3 w-3" />
                             {t('pages.debtPayoff.payoffBy')}{' '}
                             <strong className="text-foreground">
-                              {plan.payoffDate.toLocaleDateString('pt-BR', {
-                                month: 'short',
-                                year: 'numeric',
-                              })}
+                              {debt.payoff_date
+                                ? new Date(debt.payoff_date).toLocaleDateString(
+                                    'pt-BR',
+                                    { month: 'short', year: 'numeric' }
+                                  )
+                                : t('pages.debtPayoff.payoffNotReached')}
                             </strong>
                           </span>
-                          {plan.totalInterest > 0 && (
+                          {debt.total_interest > 0 && (
                             <span>
                               {t('pages.debtPayoff.interest')}{' '}
-                              {formatCurrency(plan.totalInterest)}
+                              {formatCurrency(debt.total_interest)}
                             </span>
                           )}
                         </div>
+
+                        {debt.date_recalculated &&
+                          debt.original_target_date &&
+                          debt.feasible_date && (
+                            <div className="mt-sm gap-xs border-warning/30 bg-warning/5 p-sm flex items-start rounded-md border">
+                              <AlertTriangle className="text-warning mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <p className="text-warning text-xs">
+                                {t('pages.debtPayoff.dateRecalculated', {
+                                  original: formatDate(debt.original_target_date),
+                                  feasible: formatDate(debt.feasible_date),
+                                })}
+                              </p>
+                            </div>
+                          )}
                       </motion.div>
                     );
                   })}
@@ -586,14 +435,14 @@ export default function DebtPayoffPlanner({
                         {t('pages.debtPayoff.payoffDate')}
                       </span>
                       <span className="font-semibold">
-                        {snowballPlan.length > 0 &&
-                        snowballPlan[snowballPlan.length - 1]?.payoffDate
-                          ? snowballPlan[
-                              snowballPlan.length - 1
-                            ].payoffDate.toLocaleDateString('pt-BR', {
-                              month: 'short',
-                              year: 'numeric',
-                            })
+                        {snowballPlan?.last_payoff_date
+                          ? new Date(snowballPlan.last_payoff_date).toLocaleDateString(
+                              'pt-BR',
+                              {
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )
                           : '-'}
                       </span>
                     </div>
@@ -621,14 +470,14 @@ export default function DebtPayoffPlanner({
                         {t('pages.debtPayoff.payoffDate')}
                       </span>
                       <span className="font-semibold">
-                        {avalanchePlan.length > 0 &&
-                        avalanchePlan[avalanchePlan.length - 1]?.payoffDate
-                          ? avalanchePlan[
-                              avalanchePlan.length - 1
-                            ].payoffDate.toLocaleDateString('pt-BR', {
-                              month: 'short',
-                              year: 'numeric',
-                            })
+                        {avalanchePlan?.last_payoff_date
+                          ? new Date(avalanchePlan.last_payoff_date).toLocaleDateString(
+                              'pt-BR',
+                              {
+                                month: 'short',
+                                year: 'numeric',
+                              }
+                            )
                           : '-'}
                       </span>
                     </div>

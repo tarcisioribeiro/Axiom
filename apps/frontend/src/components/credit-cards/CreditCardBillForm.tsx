@@ -19,9 +19,28 @@ import {
 import { TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { logger } from '@/lib/logger';
-import { formatLocalDate } from '@/lib/utils';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardExpensesService } from '@/services/credit-card-expenses-service';
 import type { CreditCardBill, CreditCardBillFormData, CreditCard } from '@/types';
+
+const MONTH_KEYS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
+const MAX_DUE_DATE_OFFSET_DAYS = 7;
+
 interface CreditCardBillFormProps {
   bill?: CreditCardBill;
   creditCards: CreditCard[];
@@ -79,6 +98,77 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const watchedInvoiceEndingDate = useWatch({ control, name: 'invoice_ending_date' });
   const watchedDueDate = useWatch({ control, name: 'due_date' });
   const watchedPaymentDate = useWatch({ control, name: 'payment_date' });
+  const [autoFilledFromPrevious, setAutoFilledFromPrevious] = useState(false);
+
+  // Preenchimento rápido: quando cartão + ano + mês são selecionados numa fatura
+  // nova e a fatura do mês imediatamente anterior já existe, deriva início/fim/
+  // vencimento a partir dela (início = fim anterior + 1 dia; fim mantém o mesmo
+  // dia de fechamento dentro do mês selecionado; vencimento repete o intervalo
+  // usado antes, limitado a 7 dias corridos após o fim).
+  useQuery({
+    queryKey: [
+      'credit-card-bill-form-autofill',
+      bill?.id,
+      watchedCreditCard,
+      watchedYear,
+      watchedMonth,
+    ],
+    enabled: !bill && !!watchedCreditCard && watchedCreditCard > 0 && !!watchedYear,
+    queryFn: async () => {
+      setAutoFilledFromPrevious(false);
+
+      const monthIndex = MONTH_KEYS.indexOf(
+        watchedMonth as (typeof MONTH_KEYS)[number]
+      );
+      if (monthIndex === -1) return null;
+
+      const selectedYear = parseInt(watchedYear, 10);
+      const previousMonth = MONTH_KEYS[(monthIndex + 11) % 12];
+      const previousYear = monthIndex === 0 ? selectedYear - 1 : selectedYear;
+
+      const previousBills = await creditCardBillsService.getAll({
+        credit_card: watchedCreditCard,
+        year: previousYear.toString(),
+      });
+      const previousBill = previousBills.find((b) => b.month === previousMonth);
+      if (!previousBill) return null;
+
+      const previousEnd = parseLocalDate(previousBill.invoice_ending_date);
+      if (!previousEnd) return null;
+
+      const newStart = new Date(previousEnd);
+      newStart.setDate(newStart.getDate() + 1);
+
+      const daysInSelectedMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
+      const targetDay = Math.min(previousEnd.getDate(), daysInSelectedMonth);
+      let newEnd = new Date(selectedYear, monthIndex, targetDay);
+      if (newEnd <= newStart) {
+        newEnd = new Date(selectedYear, monthIndex, daysInSelectedMonth);
+      }
+
+      let dueOffsetDays = MAX_DUE_DATE_OFFSET_DAYS;
+      const previousDue = previousBill.due_date
+        ? parseLocalDate(previousBill.due_date)
+        : undefined;
+      if (previousDue) {
+        const previousOffset = Math.round(
+          (previousDue.getTime() - previousEnd.getTime()) / 86_400_000
+        );
+        if (previousOffset > 0) {
+          dueOffsetDays = Math.min(previousOffset, MAX_DUE_DATE_OFFSET_DAYS);
+        }
+      }
+      const newDue = new Date(newEnd);
+      newDue.setDate(newDue.getDate() + dueOffsetDays);
+
+      setValue('invoice_beginning_date', formatLocalDate(newStart));
+      setValue('invoice_ending_date', formatLocalDate(newEnd));
+      setValue('due_date', formatLocalDate(newDue));
+      setAutoFilledFromPrevious(true);
+
+      return true;
+    },
+  });
 
   // Função para calcular valores automaticamente
   const calculateBillAmounts = async (billId?: number) => {
@@ -285,6 +375,12 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {autoFilledFromPrevious && (
+            <p className="text-success text-xs md:col-span-2">
+              {t('pages.creditCardBills.form.autoFilledHint')}
+            </p>
+          )}
 
           <div className="space-y-sm">
             <Label htmlFor="invoice_beginning_date">

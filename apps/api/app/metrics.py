@@ -24,33 +24,6 @@ revenues_created_total = Counter(
     ["category"],
 )
 
-transfers_created_total = Counter(
-    "axiom_transfers_created_total",
-    "Total de transferências criadas",
-)
-
-loans_created_total = Counter(
-    "axiom_loans_created_total",
-    "Total de empréstimos criados",
-    ["status"],
-)
-
-vault_deposits_total = Counter(
-    "axiom_vault_deposits_total",
-    "Total de depósitos em cofres",
-)
-
-vault_withdrawals_total = Counter(
-    "axiom_vault_withdrawals_total",
-    "Total de saques de cofres",
-)
-
-budget_exceeded_total = Counter(
-    "axiom_budget_exceeded_total",
-    "Total de orçamentos ultrapassados",
-    ["category"],
-)
-
 health_score_average = Gauge(
     "axiom_health_score_average",
     "Score médio de saúde financeira dos usuários ativos",
@@ -173,26 +146,6 @@ def record_expense_created(category: str) -> None:
 
 def record_revenue_created(category: str) -> None:
     revenues_created_total.labels(category=category).inc()
-
-
-def record_transfer_created() -> None:
-    transfers_created_total.inc()
-
-
-def record_loan_created(loan_status: str = "active") -> None:
-    loans_created_total.labels(status=loan_status).inc()
-
-
-def record_vault_deposit() -> None:
-    vault_deposits_total.inc()
-
-
-def record_vault_withdrawal() -> None:
-    vault_withdrawals_total.inc()
-
-
-def record_budget_exceeded(category: str) -> None:
-    budget_exceeded_total.labels(category=category).inc()
 
 
 def record_webhook_delivered(event: str) -> None:

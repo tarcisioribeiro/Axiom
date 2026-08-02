@@ -26,6 +26,8 @@ export const STALE_TIMES = {
   BALANCE_FORECAST: 120_000,
   /** Cash-flow forecast — treated the same as balance forecast */
   CASH_FLOW_FORECAST: 120_000,
+  /** Debt payoff plan — backend: CACHE_TTL_DEBT_PAYOFF_PLAN (300s) */
+  DEBT_PAYOFF_PLAN: 300_000,
   /** General list endpoints (accounts, expenses, revenues, etc.) */
   DEFAULT_LIST: 60_000,
 } as const;
@@ -70,15 +72,16 @@ export const queryClient = new QueryClient({
     },
   }),
   mutationCache: new MutationCache({
-    // After any successful mutation (create/update/delete), invalidate all
-    // active queries so every view that reads from the database is refreshed.
+    // Cache freshening after a mutation is each page's own responsibility
+    // (scoped `invalidateQueries`/`setQueryData` in its `onSuccess`) — this
+    // handler only centralizes the sound feedback so it isn't wired into
+    // every individual page.
     onSuccess: (data) => {
       if (data === undefined || data === null) {
         playDeleteSound();
       } else {
         playSuccessSound();
       }
-      void queryClient.invalidateQueries();
     },
     onError: () => {
       playErrorSound();

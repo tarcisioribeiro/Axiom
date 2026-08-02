@@ -10,7 +10,7 @@ PERF-03: Cache Redis para reduzir carga no banco de dados.
 
 import calendar
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any, Optional
 
 from django.conf import settings
@@ -42,7 +42,8 @@ from expenses.models import Expense, FixedExpense
 from loans.models import Loan
 from members.models import Member
 from payables.models import Payable
-from revenues.models import Revenue
+from receivables.models import Receivable
+from revenues.models import FixedRevenue, Revenue
 from transfers.models import Transfer
 
 
@@ -63,6 +64,8 @@ def invalidate_user_dashboard_cache(user_id: int) -> None:
         get_cache_key("cash_flow_forecast:days:30", user_id),
         get_cache_key("cash_flow_forecast:days:60", user_id),
         get_cache_key("cash_flow_forecast:days:90", user_id),
+        get_cache_key("debt_payoff_plan:strategy:snowball:extra:0", user_id),
+        get_cache_key("debt_payoff_plan:strategy:avalanche:extra:0", user_id),
     ]
     cache.delete_many(cache_keys)
 
@@ -629,6 +632,220 @@ class MonthlyStatementView(APIView):
         )
 
 
+def _add_ungenerated_fixed_expenses(
+    user: Any, today: date, end_date: date, expenses_by_date: dict
+) -> None:
+    """
+    Adiciona despesas fixas nao geradas ao dicionario de despesas.
+
+    Para cada template de despesa fixa com conta bancaria, verifica
+    quais meses dentro do janela de projecao ainda nao possuem
+    lancamento avulso gerado e adiciona uma entrada virtual.
+    """
+    fixed_expenses = FixedExpense.objects.filter(
+        is_active=True,
+        account__isnull=False,
+        created_by=user,
+    ).select_related("account")
+
+    if not fixed_expenses.exists():
+        return
+
+    # Pre-fetch lancamentos ja gerados no periodo para evitar N+1
+    existing = set(
+        Expense.objects.filter(
+            fixed_expense_template__isnull=False,
+            date__gte=today,
+            date__lte=end_date,
+        ).values_list(
+            "fixed_expense_template_id",
+            "date__year",
+            "date__month",
+        )
+    )
+
+    # Itera pelos meses dentro da janela
+    months_in_range = []
+    month_iter = today.replace(day=1)
+    end_month = end_date.replace(day=1)
+    while month_iter <= end_month:
+        months_in_range.append(month_iter)
+        # Avanca para o proximo mes
+        if month_iter.month == 12:
+            month_iter = month_iter.replace(year=month_iter.year + 1, month=1)
+        else:
+            month_iter = month_iter.replace(month=month_iter.month + 1)
+
+    for fe in fixed_expenses:
+        for month_start in months_in_range:
+            year = month_start.year
+            month = month_start.month
+            month_key = f"{year:04d}-{month:02d}"
+
+            # Ja foi marcado como gerado pelo template
+            if (
+                fe.last_generated_month
+                and fe.last_generated_month >= month_key
+            ):
+                continue
+
+            # Ja existe lancamento avulso gerado para este mes
+            if (fe.pk, year, month) in existing:
+                continue
+
+            # Calcula a data de vencimento respeitando o ultimo dia
+            max_day = calendar.monthrange(year, month)[1]
+            due_day = min(fe.due_day, max_day)
+            due_date = month_start.replace(day=due_day)
+
+            if today <= due_date <= end_date:
+                prev = expenses_by_date.get(due_date, Decimal("0.00"))
+                expenses_by_date[due_date] = prev + fe.default_value
+
+
+def _add_ungenerated_fixed_revenues(
+    user: Any, today: date, end_date: date, revenues_by_date: dict
+) -> None:
+    """
+    Adiciona receitas fixas nao geradas ao dicionario de receitas.
+
+    Espelha `_add_ungenerated_fixed_expenses` para o lado de receitas:
+    para cada template de receita fixa, verifica quais meses dentro da
+    janela de projecao ainda nao possuem lancamento avulso gerado e
+    adiciona uma entrada virtual.
+    """
+    fixed_revenues = FixedRevenue.objects.filter(
+        is_active=True,
+        account__isnull=False,
+        created_by=user,
+    ).select_related("account")
+
+    if not fixed_revenues.exists():
+        return
+
+    existing = set(
+        Revenue.objects.filter(
+            fixed_revenue_template__isnull=False,
+            date__gte=today,
+            date__lte=end_date,
+        ).values_list(
+            "fixed_revenue_template_id",
+            "date__year",
+            "date__month",
+        )
+    )
+
+    months_in_range = []
+    month_iter = today.replace(day=1)
+    end_month = end_date.replace(day=1)
+    while month_iter <= end_month:
+        months_in_range.append(month_iter)
+        if month_iter.month == 12:
+            month_iter = month_iter.replace(year=month_iter.year + 1, month=1)
+        else:
+            month_iter = month_iter.replace(month=month_iter.month + 1)
+
+    for fr in fixed_revenues:
+        for month_start in months_in_range:
+            year = month_start.year
+            month = month_start.month
+            month_key = f"{year:04d}-{month:02d}"
+
+            if (
+                fr.last_generated_month
+                and fr.last_generated_month >= month_key
+            ):
+                continue
+
+            if (fr.pk, year, month) in existing:
+                continue
+
+            max_day = calendar.monthrange(year, month)[1]
+            due_day = min(fr.due_day, max_day)
+            due_date = month_start.replace(day=due_day)
+
+            if today <= due_date <= end_date:
+                prev = revenues_by_date.get(due_date, Decimal("0.00"))
+                revenues_by_date[due_date] = prev + fr.default_value
+
+
+def _add_credit_card_bills(
+    user: Any, today: date, end_date: date, expenses_by_date: dict
+) -> None:
+    """
+    Adiciona o saldo devedor das faturas de cartao de credito nao pagas
+    ao dicionario de despesas, agrupado pela data de vencimento.
+
+    Para faturas com due_date explícito, usa a data real.
+    Para faturas sem due_date (abertas), estima a data a partir do
+    due_day configurado no cartão.
+    """
+    _MONTH_MAP = {
+        "Jan": 1,
+        "Feb": 2,
+        "Mar": 3,
+        "Apr": 4,
+        "May": 5,
+        "Jun": 6,
+        "Jul": 7,
+        "Aug": 8,
+        "Sep": 9,
+        "Oct": 10,
+        "Nov": 11,
+        "Dec": 12,
+    }
+
+    # Faturas com due_date explícito dentro da janela
+    bills_with_date = CreditCardBill.objects.filter(
+        credit_card__created_by=user,
+        due_date__isnull=False,
+        due_date__gte=today,
+        due_date__lte=end_date,
+    ).exclude(status="paid")
+
+    for bill in bills_with_date:
+        remaining = (bill.total_amount or Decimal("0.00")) - (
+            bill.paid_amount or Decimal("0.00")
+        )
+        if remaining > Decimal("0.00"):
+            prev = expenses_by_date.get(bill.due_date, Decimal("0.00"))
+            expenses_by_date[bill.due_date] = prev + remaining
+
+    # Faturas sem due_date: estima vencimento pelo due_day do cartão
+    bills_no_date = (
+        CreditCardBill.objects.filter(
+            credit_card__created_by=user,
+            due_date__isnull=True,
+        )
+        .exclude(status="paid")
+        .select_related("credit_card")
+    )
+
+    for bill in bills_no_date:
+        cc = bill.credit_card
+        if not cc.due_day:
+            continue
+        month_num = _MONTH_MAP.get(bill.month, 0)
+        if not month_num:
+            continue
+        year_num = int(bill.year)
+        # Vencimento ocorre normalmente no mês seguinte ao fechamento
+        if month_num == 12:
+            due_month, due_year = 1, year_num + 1
+        else:
+            due_month, due_year = month_num + 1, year_num
+        max_day = calendar.monthrange(due_year, due_month)[1]
+        estimated_due = date(due_year, due_month, min(cc.due_day, max_day))
+        if not (today <= estimated_due <= end_date):
+            continue
+        remaining = (bill.total_amount or Decimal("0.00")) - (
+            bill.paid_amount or Decimal("0.00")
+        )
+        if remaining > Decimal("0.00"):
+            prev = expenses_by_date.get(estimated_due, Decimal("0.00"))
+            expenses_by_date[estimated_due] = prev + remaining
+
+
 class CashFlowForecastView(APIView):
     """
     GET /api/v1/dashboard/cash-flow-forecast/?days=30
@@ -729,10 +946,12 @@ class CashFlowForecastView(APIView):
         }
 
         # Despesas fixas ainda nao geradas como lancamentos avulsos
-        self._add_ungenerated_fixed_expenses(today, end_date, expenses_by_date)
+        _add_ungenerated_fixed_expenses(
+            self._user, today, end_date, expenses_by_date
+        )
 
         # Faturas de cartão de crédito não pagas com vencimento no periodo
-        self._add_credit_card_bills(today, end_date, expenses_by_date)
+        _add_credit_card_bills(self._user, today, end_date, expenses_by_date)
 
         # Construir serie diaria (dia 0 = hoje com saldo atual)
         running_balance = current_balance
@@ -784,153 +1003,633 @@ class CashFlowForecastView(APIView):
         cache.set(cache_key, result, cache_ttl)
         return Response(result)
 
-    def _add_ungenerated_fixed_expenses(
-        self, today: date, end_date: date, expenses_by_date: dict
-    ) -> None:
-        """
-        Adiciona despesas fixas nao geradas ao dicionario de despesas.
 
-        Para cada template de despesa fixa com conta bancaria, verifica
-        quais meses dentro do janela de projecao ainda nao possuem
-        lancamento avulso gerado e adiciona uma entrada virtual.
-        """
-        fixed_expenses = FixedExpense.objects.filter(
-            is_active=True,
-            account__isnull=False,
-            created_by=self._user,
-        ).select_related("account")
+class DebtPayoffPlanView(APIView):
+    """
+    GET /api/v1/dashboard/debt-payoff-plan/
 
-        if not fixed_expenses.exists():
-            return
+    Retorna um plano de quitação de dívidas (empréstimos tomados e
+    valores a pagar) baseado na sobra de caixa REAL projetada mês a
+    mês, em vez de um valor de "extra mensal" digitado manualmente.
 
-        # Pre-fetch lancamentos ja gerados no periodo para evitar N+1
-        existing = set(
-            Expense.objects.filter(
-                fixed_expense_template__isnull=False,
-                date__gte=today,
-                date__lte=end_date,
-            ).values_list(
-                "fixed_expense_template_id",
-                "date__year",
-                "date__month",
-            )
+    Sobra provável de cada mês = saldo atual das contas
+        + receitas fixas que vencem naquele mês
+        + valores a receber (Receivable) com vencimento naquele mês
+        - despesas fixas que vencem naquele mês
+        - faturas de cartão de crédito que vencem naquele mês (valor
+          integral - faturas NÃO entram na lista de dívidas do
+          planejador, pois presume-se que são sempre pagas por
+          completo, nunca "roladas")
+
+    Essa sobra mensal alimenta a mesma mecânica de simulação
+    snowball/avalanche do planejador: ordena as dívidas (por saldo ou
+    por taxa de juros), aplica o pagamento mínimo em todas e destina a
+    sobra daquele mês para acelerar a quitação da dívida prioritária,
+    realocando o mínimo liberado quando uma dívida é quitada. Se a
+    data de vencimento de uma dívida não for alcançável com a sobra
+    projetada, a data de quitação é recalculada (empurrada para uma
+    data viável) e sinalizada na resposta via `date_recalculated`.
+
+    Query Parameters
+    ----------------
+    strategy : str
+        "snowball" (default) ou "avalanche" - define apenas a ordem
+        usada nos campos `priority`/`urgency` retornados; a resposta
+        sempre inclui os dois planos completos (`snowball`/
+        `avalanche`) para permitir alternar sem nova requisição.
+    extra_monthly : decimal
+        Valor extra opcional somado à sobra real de cada mês (ex: um
+        bônus esperado). Default 0.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    VALID_STRATEGIES = {"snowball", "avalanche"}
+    URGENCY_TIERS = ["low", "medium", "high", "critical", "overdue"]
+    URGENCY_ORDER = {tier: idx for idx, tier in enumerate(URGENCY_TIERS)}
+    # Meses de folga alem do vencimento mais distante, para dar espaco
+    # a simulacao encontrar uma data de quitacao viavel quando a
+    # original nao for alcancavel.
+    HORIZON_BUFFER_MONTHS = 24
+    MAX_HORIZON_MONTHS = 120  # teto de seguranca (10 anos)
+    DEFAULT_HORIZON_MONTHS = 24
+
+    def get(self, request) -> Response:
+        user = request.user
+        strategy_param = request.query_params.get("strategy", "snowball")
+        strategy = (
+            strategy_param
+            if strategy_param in self.VALID_STRATEGIES
+            else "snowball"
         )
 
-        # Itera pelos meses dentro da janela
-        months_in_range = []
+        try:
+            extra_monthly = Decimal(
+                str(request.query_params.get("extra_monthly", "0"))
+            ).quantize(Decimal("0.01"))
+        except (InvalidOperation, ValueError, TypeError):
+            extra_monthly = Decimal("0.00")
+
+        cache_key = get_cache_key(
+            f"debt_payoff_plan:strategy:{strategy}:extra:{extra_monthly}",
+            user.id,
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        today = date.today()
+        member = Member.objects.filter(user=user).first()
+        debts = self._collect_debts(user, member)
+
+        current_balance = Account.objects.filter(
+            created_by=user, is_active=True
+        ).aggregate(total=Sum("current_balance"))["total"] or Decimal("0.00")
+
+        cache_ttl = getattr(settings, "CACHE_TTL_DEBT_PAYOFF_PLAN", 300)
+
+        if not debts:
+            result: dict[str, Any] = {
+                "current_total_balance": float(current_balance),
+                "extra_monthly": float(extra_monthly),
+                "surplus_at_due_dates": float(current_balance),
+                "surplus_at_due_dates_month": None,
+                "surplus_projection": [],
+                "snowball": {
+                    "debts": [],
+                    "total_interest": 0.0,
+                    "last_payoff_date": None,
+                },
+                "avalanche": {
+                    "debts": [],
+                    "total_interest": 0.0,
+                    "last_payoff_date": None,
+                },
+            }
+            cache.set(cache_key, result, cache_ttl)
+            return Response(result)
+
+        months_to_furthest_due = self._months_to_furthest_due_date(
+            today, debts
+        )
+        horizon_months = min(
+            months_to_furthest_due + self.HORIZON_BUFFER_MONTHS,
+            self.MAX_HORIZON_MONTHS,
+        )
+        horizon_end = self._add_months(today, horizon_months)
+
+        surplus_by_month = self._project_monthly_surplus(
+            user, today, horizon_end, current_balance, extra_monthly, debts
+        )
+
+        snowball_plan = self._simulate_payoff(
+            debts, surplus_by_month, "snowball", current_balance
+        )
+        avalanche_plan = self._simulate_payoff(
+            debts, surplus_by_month, "avalanche", current_balance
+        )
+
+        self._apply_urgency(snowball_plan, today)
+        self._apply_urgency(avalanche_plan, today)
+
+        # Sobra na data de vencimento mais distante ENTRE AS DÍVIDAS
+        # ATUAIS (sem o buffer de recalculo) - esse é o número que
+        # representa de fato "quanto sobra até o vencimento da
+        # quitação", em vez do total acumulado até o fim do horizonte
+        # de simulação (que inclui meses extras só para achar uma data
+        # viável, e por isso soma renda demais para ser uma sobra
+        # realista de se mostrar como destaque).
+        due_date_index = min(months_to_furthest_due, len(surplus_by_month) - 1)
+        surplus_at_due_dates = surplus_by_month[due_date_index]
+
+        result = {
+            "current_total_balance": float(current_balance),
+            "extra_monthly": float(extra_monthly),
+            "surplus_at_due_dates": float(
+                surplus_at_due_dates["cumulative_surplus"]
+            ),
+            "surplus_at_due_dates_month": {
+                "year": surplus_at_due_dates["year"],
+                "month": surplus_at_due_dates["month"],
+            },
+            "surplus_projection": [
+                self._serialize_surplus_month(m) for m in surplus_by_month
+            ],
+            "snowball": self._serialize_plan(snowball_plan),
+            "avalanche": self._serialize_plan(avalanche_plan),
+        }
+
+        cache.set(cache_key, result, cache_ttl)
+        return Response(result)
+
+    def _collect_debts(self, user: Any, member: Any) -> list:
+        """
+        Coleta as dívidas planejáveis do usuário: empréstimos tomados
+        (não pagos) e valores a pagar ativos/em atraso. Faturas de
+        cartão de crédito NÃO entram aqui - ver docstring da classe.
+        """
+        debts: list = []
+
+        loans_qs = Loan.objects.filter(
+            loan_type="borrowed",
+            payed=False,
+            status__in=["active", "overdue"],
+        )
+        loans_qs = (
+            loans_qs.filter(benefited=member) if member else loans_qs.none()
+        )
+
+        for loan in loans_qs:
+            balance = (loan.value or Decimal("0.00")) - (
+                loan.payed_value or Decimal("0.00")
+            )
+            if balance <= 0:
+                continue
+            installments = max(loan.installments or 1, 1)
+            debts.append(
+                {
+                    "id": f"loan-{loan.id}",
+                    "raw_id": loan.id,
+                    "type": "loan",
+                    "name": loan.description,
+                    "balance": balance,
+                    "interest_rate": loan.interest_rate or Decimal("0.00"),
+                    "minimum_payment": (balance / installments).quantize(
+                        Decimal("0.01")
+                    ),
+                    "due_date": loan.due_date,
+                }
+            )
+
+        payables_qs = Payable.objects.filter(
+            created_by=user,
+            status__in=["active", "overdue"],
+        )
+        for payable in payables_qs:
+            remaining = payable.remaining_value or Decimal("0.00")
+            if remaining <= 0:
+                continue
+            debts.append(
+                {
+                    "id": f"payable-{payable.id}",
+                    "raw_id": payable.id,
+                    "type": "payable",
+                    "name": payable.description,
+                    "balance": remaining,
+                    "interest_rate": Decimal("0.00"),
+                    "minimum_payment": remaining,
+                    "due_date": payable.due_date,
+                }
+            )
+
+        return debts
+
+    def _months_to_furthest_due_date(self, today: date, debts: list) -> int:
+        """
+        Meses entre hoje e o vencimento mais distante entre as dívidas
+        coletadas - SEM o buffer de recalculo. Representa a janela que
+        o usuário realmente pediu ("sobra até o vencimento da
+        quitação da dívida"), diferente do horizonte de simulação
+        (que precisa de folga extra para achar uma data viável quando
+        a original não é alcançável).
+        """
+        due_dates = [d["due_date"] for d in debts if d["due_date"]]
+        if not due_dates:
+            return self.DEFAULT_HORIZON_MONTHS
+        furthest = max(due_dates)
+        return max(
+            (furthest.year - today.year) * 12 + (furthest.month - today.month),
+            0,
+        )
+
+    def _determine_horizon_months(self, today: date, debts: list) -> int:
+        months_to_furthest = self._months_to_furthest_due_date(today, debts)
+        return min(
+            months_to_furthest + self.HORIZON_BUFFER_MONTHS,
+            self.MAX_HORIZON_MONTHS,
+        )
+
+    @staticmethod
+    def _add_months(d: date, months: int) -> date:
+        total_month = d.month - 1 + months
+        year = d.year + total_month // 12
+        month = total_month % 12 + 1
+        max_day = calendar.monthrange(year, month)[1]
+        return date(year, month, min(d.day, max_day))
+
+    @staticmethod
+    def _month_range(today: date, end_date: date) -> list:
+        months = []
         month_iter = today.replace(day=1)
         end_month = end_date.replace(day=1)
         while month_iter <= end_month:
-            months_in_range.append(month_iter)
-            # Avanca para o proximo mes
+            months.append((month_iter.year, month_iter.month))
             if month_iter.month == 12:
                 month_iter = month_iter.replace(
                     year=month_iter.year + 1, month=1
                 )
             else:
                 month_iter = month_iter.replace(month=month_iter.month + 1)
+        return months
 
-        for fe in fixed_expenses:
-            for month_start in months_in_range:
-                year = month_start.year
-                month = month_start.month
-                month_key = f"{year:04d}-{month:02d}"
+    @staticmethod
+    def _sum_in_month(day_dict: dict, year: int, month: int) -> Decimal:
+        total = Decimal("0.00")
+        for d, value in day_dict.items():
+            if d.year == year and d.month == month:
+                total += value
+        return total
 
-                # Ja foi marcado como gerado pelo template
-                if (
-                    fe.last_generated_month
-                    and fe.last_generated_month >= month_key
-                ):
-                    continue
+    def _project_monthly_surplus(
+        self,
+        user: Any,
+        today: date,
+        horizon_end: date,
+        current_balance: Decimal,
+        extra_monthly: Decimal,
+        debts: list,
+    ) -> list:
+        loan_ids = [d["raw_id"] for d in debts if d["type"] == "loan"]
+        payable_ids = [d["raw_id"] for d in debts if d["type"] == "payable"]
 
-                # Ja existe lancamento avulso gerado para este mes
-                if (fe.pk, year, month) in existing:
-                    continue
-
-                # Calcula a data de vencimento respeitando o ultimo dia
-                max_day = calendar.monthrange(year, month)[1]
-                due_day = min(fe.due_day, max_day)
-                due_date = month_start.replace(day=due_day)
-
-                if today <= due_date <= end_date:
-                    prev = expenses_by_date.get(due_date, Decimal("0.00"))
-                    expenses_by_date[due_date] = prev + fe.default_value
-
-    def _add_credit_card_bills(
-        self, today: date, end_date: date, expenses_by_date: dict
-    ) -> None:
-        """
-        Adiciona o saldo devedor das faturas de cartao de credito nao pagas
-        ao dicionario de despesas, agrupado pela data de vencimento.
-
-        Para faturas com due_date explícito, usa a data real.
-        Para faturas sem due_date (abertas), estima a data a partir do
-        due_day configurado no cartão.
-        """
-        _MONTH_MAP = {
-            "Jan": 1,
-            "Feb": 2,
-            "Mar": 3,
-            "Apr": 4,
-            "May": 5,
-            "Jun": 6,
-            "Jul": 7,
-            "Aug": 8,
-            "Sep": 9,
-            "Oct": 10,
-            "Nov": 11,
-            "Dec": 12,
-        }
-
-        # Faturas com due_date explícito dentro da janela
-        bills_with_date = CreditCardBill.objects.filter(
-            credit_card__created_by=self._user,
-            due_date__isnull=False,
-            due_date__gte=today,
-            due_date__lte=end_date,
-        ).exclude(status="paid")
-
-        for bill in bills_with_date:
-            remaining = (bill.total_amount or Decimal("0.00")) - (
-                bill.paid_amount or Decimal("0.00")
+        # Despesas fixas: lancamentos ja existentes (nao pagos), exceto
+        # os que ja pertencem a uma das dividas planejadas - o principal
+        # dessas dividas ja e amortizado dentro da propria simulacao,
+        # contabiliza-lo aqui de novo dobraria a subtracao.
+        fixed_expenses_by_date: dict = {}
+        scheduled_expenses = (
+            Expense.objects.filter(
+                created_by=user,
+                payed=False,
+                related_transfer__isnull=True,
+                date__gte=today,
+                date__lte=horizon_end,
             )
-            if remaining > Decimal("0.00"):
-                prev = expenses_by_date.get(bill.due_date, Decimal("0.00"))
-                expenses_by_date[bill.due_date] = prev + remaining
-
-        # Faturas sem due_date: estima vencimento pelo due_day do cartão
-        bills_no_date = (
-            CreditCardBill.objects.filter(
-                credit_card__created_by=self._user,
-                due_date__isnull=True,
-            )
-            .exclude(status="paid")
-            .select_related("credit_card")
+            .exclude(related_loan_id__in=loan_ids)
+            .exclude(related_payable_id__in=payable_ids)
+            .values("date")
+            .annotate(total=Sum("value"))
+        )
+        for item in scheduled_expenses:
+            fixed_expenses_by_date[item["date"]] = item["total"]
+        _add_ungenerated_fixed_expenses(
+            user, today, horizon_end, fixed_expenses_by_date
         )
 
-        for bill in bills_no_date:
-            cc = bill.credit_card
-            if not cc.due_day:
-                continue
-            month_num = _MONTH_MAP.get(bill.month, 0)
-            if not month_num:
-                continue
-            year_num = int(bill.year)
-            # Vencimento ocorre normalmente no mês seguinte ao fechamento
-            if month_num == 12:
-                due_month, due_year = 1, year_num + 1
-            else:
-                due_month, due_year = month_num + 1, year_num
-            max_day = calendar.monthrange(due_year, due_month)[1]
-            estimated_due = date(due_year, due_month, min(cc.due_day, max_day))
-            if not (today <= estimated_due <= end_date):
-                continue
-            remaining = (bill.total_amount or Decimal("0.00")) - (
-                bill.paid_amount or Decimal("0.00")
+        # Faturas de cartao: sempre pagas integralmente, nunca fazem
+        # parte da lista de dividas do planejador.
+        card_bills_by_date: dict = {}
+        _add_credit_card_bills(user, today, horizon_end, card_bills_by_date)
+
+        # Receitas ja lancadas + fixas ainda nao geradas
+        revenues_by_date: dict = {}
+        scheduled_revenues = (
+            Revenue.objects.filter(
+                created_by=user,
+                received=False,
+                related_transfer__isnull=True,
+                date__gte=today,
+                date__lte=horizon_end,
             )
-            if remaining > Decimal("0.00"):
-                prev = expenses_by_date.get(estimated_due, Decimal("0.00"))
-                expenses_by_date[estimated_due] = prev + remaining
+            .values("date")
+            .annotate(total=Sum("value"))
+        )
+        for item in scheduled_revenues:
+            revenues_by_date[item["date"]] = item["total"]
+        _add_ungenerated_fixed_revenues(
+            user, today, horizon_end, revenues_by_date
+        )
+
+        # Valores a receber
+        receivables_by_date: dict = {}
+        receivables = Receivable.objects.filter(
+            created_by=user,
+            status__in=["active", "overdue"],
+            due_date__isnull=False,
+            due_date__gte=today,
+            due_date__lte=horizon_end,
+        )
+        for receivable in receivables:
+            remaining = (receivable.value or Decimal("0.00")) - (
+                receivable.received_value or Decimal("0.00")
+            )
+            if remaining > 0:
+                prev = receivables_by_date.get(
+                    receivable.due_date, Decimal("0.00")
+                )
+                receivables_by_date[receivable.due_date] = prev + remaining
+
+        months = self._month_range(today, horizon_end)
+        surplus_by_month = []
+        cumulative = current_balance
+        for year, month in months:
+            month_revenues = self._sum_in_month(revenues_by_date, year, month)
+            month_receivables = self._sum_in_month(
+                receivables_by_date, year, month
+            )
+            month_fixed_expenses = self._sum_in_month(
+                fixed_expenses_by_date, year, month
+            )
+            month_card_bills = self._sum_in_month(
+                card_bills_by_date, year, month
+            )
+            delta = (
+                month_revenues
+                + month_receivables
+                - month_fixed_expenses
+                - month_card_bills
+                + extra_monthly
+            )
+            cumulative += delta
+            surplus_by_month.append(
+                {
+                    "year": year,
+                    "month": month,
+                    "revenues": month_revenues,
+                    "receivables": month_receivables,
+                    "fixed_expenses": month_fixed_expenses,
+                    "credit_card_bills": month_card_bills,
+                    "surplus_delta": delta,
+                    "cumulative_surplus": cumulative,
+                }
+            )
+
+        return surplus_by_month
+
+    def _simulate_payoff(
+        self,
+        debts: list,
+        surplus_by_month: list,
+        strategy: str,
+        current_balance: Decimal,
+    ) -> list:
+        """
+        Simulacao snowball/avalanche mes a mes.
+
+        Mantem uma posicao de caixa cumulativa (`cash_position`,
+        comecando do saldo atual das contas) que cresce/diminui com a
+        sobra projetada de cada mes. Todo pagamento de divida - tanto
+        o minimo quanto o extra que acelera a divida prioritaria - sai
+        dessa MESMA posicao de caixa, na ordem de prioridade da
+        estrategia; nada e pago com dinheiro que a projecao nao indica
+        existir (`available` nunca ultrapassa `cash_position`, que por
+        sua vez nunca fica negativo por causa de pagamento de divida -
+        se nao ha caixa suficiente para pagar nem o minimo de uma
+        divida em um dado mes, ela simplesmente nao recebe pagamento
+        naquele mes e os juros continuam acumulando).
+        """
+        if strategy == "snowball":
+            sorted_debts = sorted(debts, key=lambda d: d["balance"])
+        else:
+            sorted_debts = sorted(
+                debts, key=lambda d: d["interest_rate"], reverse=True
+            )
+
+        state = [
+            {
+                "debt": debt,
+                "remaining": debt["balance"],
+                "total_paid": Decimal("0.00"),
+                "total_interest": Decimal("0.00"),
+                "payoff_date": None,
+                "priority": 0,
+            }
+            for debt in sorted_debts
+        ]
+
+        cash_position = current_balance
+        payoff_order = 0
+
+        for month_data in surplus_by_month:
+            if all(s["remaining"] <= 0 for s in state):
+                break
+
+            cash_position += month_data["surplus_delta"]
+            available = max(cash_position, Decimal("0.00"))
+            spent_this_month = Decimal("0.00")
+
+            # Juros do mes em todas as dividas ainda ativas
+            for s in state:
+                if s["remaining"] <= 0:
+                    continue
+                monthly_rate = (
+                    s["debt"]["interest_rate"] / Decimal("100")
+                ) / 12
+                interest = s["remaining"] * monthly_rate
+                s["total_interest"] += interest
+                s["remaining"] += interest
+
+            # 1) pagamento minimo em todas as dividas ativas, na ordem
+            # de prioridade da estrategia - se o caixa nao alcancar
+            # todos os minimos, as dividas de menor prioridade ficam
+            # sem pagamento naquele mes.
+            for s in state:
+                if s["remaining"] <= 0 or available <= 0:
+                    continue
+                payment = min(
+                    s["debt"]["minimum_payment"], s["remaining"], available
+                )
+                if payment <= 0:
+                    continue
+                s["remaining"] -= payment
+                s["total_paid"] += payment
+                available -= payment
+                spent_this_month += payment
+
+            # 2) caixa restante acelera a divida prioritaria (primeira
+            # ainda ativa, na ordem da estrategia)
+            if available > 0:
+                top = next((s for s in state if s["remaining"] > 0), None)
+                if top is not None:
+                    extra_payment = min(available, top["remaining"])
+                    top["remaining"] -= extra_payment
+                    top["total_paid"] += extra_payment
+                    available -= extra_payment
+                    spent_this_month += extra_payment
+
+            cash_position -= spent_this_month
+
+            for s in state:
+                if (
+                    s["remaining"] <= Decimal("0.01")
+                    and s["payoff_date"] is None
+                ):
+                    s["remaining"] = Decimal("0.00")
+                    year = month_data["year"]
+                    month = month_data["month"]
+                    last_day = calendar.monthrange(year, month)[1]
+                    s["payoff_date"] = date(year, month, last_day)
+                    payoff_order += 1
+                    s["priority"] = payoff_order
+
+        result = []
+        for idx, s in enumerate(state):
+            debt = s["debt"]
+            result.append(
+                {
+                    **debt,
+                    "payoff_date": s["payoff_date"],
+                    "total_paid": s["total_paid"],
+                    "total_interest": s["total_interest"],
+                    "monthly_payment": debt["minimum_payment"],
+                    "priority": s["priority"] or (idx + 1),
+                }
+            )
+        return result
+
+    @staticmethod
+    def _elevate_urgency(tier: str, tiers: list) -> str:
+        idx = tiers.index(tier)
+        return tiers[min(idx + 1, len(tiers) - 1)]
+
+    def _apply_urgency(self, plan: list, today: date) -> None:
+        for entry in plan:
+            due_date = entry["due_date"]
+            if due_date is None:
+                tier = "low"
+            else:
+                days_left = (due_date - today).days
+                if days_left < 0:
+                    tier = "overdue"
+                elif days_left <= 7:
+                    tier = "critical"
+                elif days_left <= 30:
+                    tier = "high"
+                elif days_left <= 90:
+                    tier = "medium"
+                else:
+                    tier = "low"
+
+            # A divida so e recalculada se a quitacao efetivamente cair
+            # em um MES posterior ao vencimento - comparar por dia exato
+            # geraria falsos positivos, ja que `payoff_date` e sempre o
+            # ultimo dia do mes em que o caixa acumulado deu conta da
+            # divida (granularidade mensal da simulacao), mesmo quando
+            # o dinheiro esteve disponivel desde o inicio daquele mes.
+            payoff_date = entry["payoff_date"]
+            date_recalculated = bool(
+                due_date
+                and payoff_date
+                and (payoff_date.year, payoff_date.month)
+                > (due_date.year, due_date.month)
+            )
+            if date_recalculated:
+                tier = self._elevate_urgency(tier, self.URGENCY_TIERS)
+
+            entry["urgency"] = tier
+            entry["date_recalculated"] = date_recalculated
+            entry["original_target_date"] = due_date
+            entry["feasible_date"] = payoff_date if date_recalculated else None
+
+        plan.sort(
+            key=lambda e: (
+                self.URGENCY_ORDER.get(e["urgency"], len(self.URGENCY_TIERS)),
+                e["priority"],
+            )
+        )
+
+    def _serialize_plan(self, plan: list) -> dict:
+        total_interest = sum(
+            (entry["total_interest"] for entry in plan), Decimal("0.00")
+        )
+        payoff_dates = [e["payoff_date"] for e in plan if e["payoff_date"]]
+        last_payoff_date = max(payoff_dates) if payoff_dates else None
+
+        return {
+            "debts": [self._serialize_debt(entry) for entry in plan],
+            "total_interest": float(total_interest),
+            "last_payoff_date": (
+                last_payoff_date.isoformat() if last_payoff_date else None
+            ),
+        }
+
+    @staticmethod
+    def _serialize_debt(entry: dict) -> dict:
+        return {
+            "id": entry["id"],
+            "type": entry["type"],
+            "name": entry["name"],
+            "balance": float(entry["balance"]),
+            "interest_rate": float(entry["interest_rate"]),
+            "minimum_payment": float(entry["minimum_payment"]),
+            "due_date": (
+                entry["due_date"].isoformat() if entry["due_date"] else None
+            ),
+            "payoff_date": (
+                entry["payoff_date"].isoformat()
+                if entry["payoff_date"]
+                else None
+            ),
+            "total_paid": float(entry["total_paid"]),
+            "total_interest": float(entry["total_interest"]),
+            "monthly_payment": float(entry["monthly_payment"]),
+            "priority": entry["priority"],
+            "urgency": entry["urgency"],
+            "date_recalculated": entry["date_recalculated"],
+            "original_target_date": (
+                entry["original_target_date"].isoformat()
+                if entry["original_target_date"]
+                else None
+            ),
+            "feasible_date": (
+                entry["feasible_date"].isoformat()
+                if entry["feasible_date"]
+                else None
+            ),
+        }
+
+    @staticmethod
+    def _serialize_surplus_month(month_data: dict) -> dict:
+        return {
+            "year": month_data["year"],
+            "month": month_data["month"],
+            "revenues": float(month_data["revenues"]),
+            "receivables": float(month_data["receivables"]),
+            "fixed_expenses": float(month_data["fixed_expenses"]),
+            "credit_card_bills": float(month_data["credit_card_bills"]),
+            "surplus_delta": float(month_data["surplus_delta"]),
+            "cumulative_surplus": float(month_data["cumulative_surplus"]),
+        }
 
 
 class FinancialAlertsView(APIView):
