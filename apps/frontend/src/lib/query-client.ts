@@ -26,6 +26,8 @@ export const STALE_TIMES = {
   BALANCE_FORECAST: 120_000,
   /** Cash-flow forecast — treated the same as balance forecast */
   CASH_FLOW_FORECAST: 120_000,
+  /** Debt payoff plan — backend: CACHE_TTL_DEBT_PAYOFF_PLAN (300s) */
+  DEBT_PAYOFF_PLAN: 300_000,
   /** General list endpoints (accounts, expenses, revenues, etc.) */
   DEFAULT_LIST: 60_000,
 } as const;

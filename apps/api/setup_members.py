@@ -42,6 +42,7 @@ apps = [
     "notifications",
     "budgets",
     "bank_reconciliation",
+    "monthly_planning",
 ]
 
 # Buscar e adicionar permissões

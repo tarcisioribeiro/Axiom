@@ -100,6 +100,10 @@ export type {
   BalanceForecast,
   CashFlowForecastDay,
   CashFlowForecast,
+  DebtPayoffSurplusMonth,
+  DebtPayoffPlanDebt,
+  DebtPayoffStrategyPlan,
+  DebtPayoffPlan,
   ChartData,
   TimeSeriesData,
 } from './dashboard';

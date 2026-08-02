@@ -1365,6 +1365,7 @@
         "endDatePlaceholder": "Select end date",
         "dueDateLabel": "Due Date",
         "dueDatePlaceholder": "Select due date",
+        "autoFilledHint": "Dates auto-filled based on the previous month's bill. You can adjust them if needed.",
         "totalAmountLabel": "Total Amount",
         "totalAmountHint": "Automatically calculated. Can be manually edited.",
         "calculating": "Calculating...",
@@ -6020,12 +6021,13 @@
       "snowballDesc": "Smallest debt first — quick wins and motivation",
       "avalanche": "Avalanche",
       "avalancheDesc": "Highest interest first — saves more overall",
-      "extraMonthly": "Extra Monthly Amount",
-      "extraMonthlyHint": "Extra amount beyond minimum payments",
+      "extraMonthly": "Extra Beyond Real Surplus",
+      "extraMonthlyHint": "Additional amount added on top of the real projected surplus (e.g. an expected bonus)",
       "interestSavedWithAvalanche": "Avalanche would save {{amount}} in interest vs. snowball.",
       "plan": "Plan — {{strategy}}",
       "month": "month",
       "payoffBy": "Paid off by",
+      "payoffNotReached": "Not enough surplus within the projected horizon",
       "interest": "Total interest:",
       "comparison": "Strategy Comparison",
       "totalInterest": "Total Interest",
@@ -6036,10 +6038,19 @@
       "noDebts": "No active debts!",
       "noDebtsDesc": "Congratulations! You have no active debts at the moment.",
       "creditCard": "Credit Card",
+      "projectedSurplus": "Projected Surplus",
+      "projectedSurplusUntil": "through {{date}}",
+      "dateRecalculated": "Original due date ({{original}}) isn't feasible with the projected surplus — rescheduled to {{feasible}}.",
       "types": {
         "loan": "Loan",
-        "bill": "Bill",
         "payable": "Payable"
+      },
+      "urgency": {
+        "overdue": "Overdue",
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
       }
     },
     "focusBlocks": {
@@ -6630,6 +6641,7 @@
     "applyError": "Error applying the plan. Please try again.",
     "saveSuccess": "Plan saved",
     "overrideHint": "Suggestion: {{value}}",
+    "budgetMinValueWarning": "Value cannot be lower than what's already spent in this category ({{value}})",
     "totalRevenues": "Total Revenues",
     "totalExpenses": "Total Expenses",
     "budgets": "Budgets",

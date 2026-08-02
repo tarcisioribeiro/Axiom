@@ -73,6 +73,7 @@ class Command(BaseCommand):
             "vaults": ["vault", "vaulttransaction", "financialgoal"],
             "notifications": ["notification"],
             "budgets": ["budget"],
+            "monthly_planning": ["monthlyplan"],
         }
 
         # Define the permissions: view, add, change, delete (full CRUD)
