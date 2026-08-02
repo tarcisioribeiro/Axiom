@@ -652,7 +652,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-h-[98vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedBill

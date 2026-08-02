@@ -11,6 +11,7 @@ from .views import (
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
     DashboardSummaryView,
+    DebtPayoffPlanView,
     FinancialAlertsView,
     FinancialHealthScoreView,
     IRReportView,
@@ -46,6 +47,11 @@ urlpatterns = [
         "cash-flow-forecast/",
         CashFlowForecastView.as_view(),
         name="cash-flow-forecast",
+    ),
+    path(
+        "debt-payoff-plan/",
+        DebtPayoffPlanView.as_view(),
+        name="debt-payoff-plan",
     ),
     path(
         "financial-alerts/",

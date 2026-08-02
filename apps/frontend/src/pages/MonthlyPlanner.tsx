@@ -682,10 +682,17 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     scheduleSave(planId, buildPayload({ extra_expenses: updated }));
   };
 
-  const updateBudgetOverride = (category: string, value: string) => {
+  const updateBudgetOverride = (category: string, value: string, minAllowed = 0) => {
     if (!planId) return;
     const updated = { ...budgetOverrides, [category]: value };
     setBudgetOverrides(updated);
+    // Só persiste valores válidos (>= 0 e >= o já gasto na categoria); o
+    // valor digitado continua aparecendo no campo para o usuário terminar
+    // de editar, mas não é salvo enquanto estiver abaixo do mínimo.
+    const parsed = parseFloat(value);
+    const isValid =
+      value === '' || (!isNaN(parsed) && parsed >= 0 && parsed >= minAllowed);
+    if (!isValid) return;
     scheduleSave(planId, buildPayload({ budget_overrides: updated }));
   };
 
@@ -1172,14 +1179,25 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                       </div>
                       <Input
                         type="number"
-                        min="0"
+                        min={catActual}
                         step="0.01"
                         value={currentOverride}
-                        onChange={(e) => updateBudgetOverride(cat, e.target.value)}
+                        onChange={(e) =>
+                          updateBudgetOverride(cat, e.target.value, catActual)
+                        }
                         placeholder={suggested ? suggested.toFixed(2) : '0.00'}
                         className="h-7 text-sm"
-                        disabled={isApplied || isDisabled}
+                        disabled={isDisabled}
                       />
+                      {currentOverride !== '' &&
+                        !isNaN(parseFloat(currentOverride)) &&
+                        parseFloat(currentOverride) < catActual && (
+                          <p className="text-destructive text-xs">
+                            {t('monthlyPlanner.budgetMinValueWarning', {
+                              value: formatCurrency(catActual),
+                            })}
+                          </p>
+                        )}
                       {executionPct !== null && !isDisabled && (
                         <div>
                           <p className="mb-xs text-muted-foreground text-xs">

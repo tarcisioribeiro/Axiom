@@ -78,6 +78,53 @@ export interface CashFlowForecast {
   daily_breakdown: CashFlowForecastDay[];
 }
 
+export interface DebtPayoffSurplusMonth {
+  year: number;
+  month: number;
+  revenues: number;
+  receivables: number;
+  fixed_expenses: number;
+  credit_card_bills: number;
+  surplus_delta: number;
+  cumulative_surplus: number;
+}
+
+export interface DebtPayoffPlanDebt {
+  id: string;
+  type: 'loan' | 'payable';
+  name: string;
+  balance: number;
+  interest_rate: number;
+  minimum_payment: number;
+  due_date: string | null;
+  payoff_date: string | null;
+  total_paid: number;
+  total_interest: number;
+  monthly_payment: number;
+  priority: number;
+  urgency: 'overdue' | 'critical' | 'high' | 'medium' | 'low';
+  date_recalculated: boolean;
+  original_target_date: string | null;
+  feasible_date: string | null;
+}
+
+export interface DebtPayoffStrategyPlan {
+  debts: DebtPayoffPlanDebt[];
+  total_interest: number;
+  last_payoff_date: string | null;
+}
+
+export interface DebtPayoffPlan {
+  current_total_balance: number;
+  extra_monthly: number;
+  /** Sobra acumulada até o vencimento mais distante entre as dívidas atuais (sem o buffer usado internamente para recalculo de datas). */
+  surplus_at_due_dates: number;
+  surplus_at_due_dates_month: { year: number; month: number } | null;
+  surplus_projection: DebtPayoffSurplusMonth[];
+  snowball: DebtPayoffStrategyPlan;
+  avalanche: DebtPayoffStrategyPlan;
+}
+
 export interface ChartData {
   name: string;
   value: number;

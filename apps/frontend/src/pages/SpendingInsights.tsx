@@ -74,15 +74,19 @@ function CurrencyTooltip({
   active,
   payload,
   label,
+  labelFormatter,
 }: {
   active?: boolean;
   payload?: TooltipEntry[];
   label?: string;
+  labelFormatter?: (label: string) => string;
 }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-popover px-md py-sm rounded-lg border text-sm shadow-lg">
-      <p className="mb-xs text-foreground font-medium">{label}</p>
+      <p className="mb-xs text-foreground font-medium">
+        {labelFormatter && label ? labelFormatter(label) : label}
+      </p>
       {payload.map((entry) => (
         <p key={entry.dataKey} style={{ color: entry.color }} className="text-xs">
           {formatCurrency(entry.value)}
@@ -90,6 +94,13 @@ function CurrencyTooltip({
       ))}
     </div>
   );
+}
+
+// Backend retorna "YYYY-MM"; exibimos no padrão brasileiro MM/YYYY.
+function formatMonthLabel(month: string): string {
+  const [year, m] = month.split('-');
+  if (!year || !m) return month;
+  return `${m}/${year}`;
 }
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -297,6 +308,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis
                     dataKey="month"
+                    tickFormatter={formatMonthLabel}
                     tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                     axisLine={false}
                     tickLine={false}
@@ -308,7 +320,9 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
                     tickLine={false}
                     width={70}
                   />
-                  <Tooltip content={<CurrencyTooltip />} />
+                  <Tooltip
+                    content={<CurrencyTooltip labelFormatter={formatMonthLabel} />}
+                  />
                   <Line
                     type="monotone"
                     dataKey="total"
