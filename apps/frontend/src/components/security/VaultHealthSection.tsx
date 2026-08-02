@@ -405,7 +405,8 @@ export function VaultHealthSection() {
             <div className="flex flex-1 items-center justify-center">
               <p className="text-muted-foreground text-center text-sm">
                 {t('pages.vaultHealth.noScoreHistory', {
-                  defaultValue: 'Ainda não há histórico suficiente para exibir a evolução.',
+                  defaultValue:
+                    'Ainda não há histórico suficiente para exibir a evolução.',
                 })}
               </p>
             </div>
