@@ -14,6 +14,7 @@ from django.db.models import (
     F,
     FloatField,
     Max,
+    Prefetch,
     Q,
     Sum,
 )
@@ -327,7 +328,19 @@ class BookListCreateView(BaseListCreateView):
                 owner__user=self.request.user, deleted_at__isnull=True
             )
             .select_related("owner", "publisher")
-            .prefetch_related("authors", "readings")
+            .prefetch_related(
+                "authors",
+                Prefetch(
+                    "readings",
+                    queryset=Reading.objects.filter(deleted_at__isnull=True),
+                    to_attr="active_readings",
+                ),
+                Prefetch(
+                    "summaries",
+                    queryset=Summary.objects.filter(deleted_at__isnull=True),
+                    to_attr="active_summaries",
+                ),
+            )
         )
         params = self.request.query_params
         if read_status := params.get("read_status"):

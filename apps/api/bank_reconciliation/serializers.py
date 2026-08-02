@@ -3,20 +3,6 @@ from rest_framework import serializers
 from .models import BankStatementEntry, BankStatementImport
 
 
-class MatchedExpenseSummarySerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    description = serializers.CharField()
-    value = serializers.DecimalField(max_digits=10, decimal_places=2)
-    date = serializers.DateField()
-
-
-class MatchedRevenueSummarySerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    description = serializers.CharField()
-    value = serializers.DecimalField(max_digits=10, decimal_places=2)
-    date = serializers.DateField()
-
-
 class BankStatementEntrySerializer(serializers.ModelSerializer):
     matched_expense = serializers.SerializerMethodField()
     matched_revenue = serializers.SerializerMethodField()

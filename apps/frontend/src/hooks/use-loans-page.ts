@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
-import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { expensesService } from '@/services/expenses-service';
 import { loansService } from '@/services/loans-service';
@@ -32,23 +31,6 @@ export interface UseLoansPageReturn {
   handleDelete: (loan: Loan) => Promise<void>;
   handleSubmit: (data: LoanFormData) => void;
 }
-
-const DEFAULT_FORM_DATA: LoanFormData = {
-  description: '',
-  value: 0,
-  payed_value: 0,
-  date: formatLocalDate(new Date()),
-  horary: new Date().toTimeString().slice(0, 5),
-  category: 'loans',
-  account: 0,
-  benefited: 0,
-  creditor: 0,
-  payed: false,
-  installments: 1,
-  payment_frequency: 'monthly',
-  late_fee: 0,
-  status: 'active',
-};
 
 export function useLoansPage(): UseLoansPageReturn {
   const { t } = useTranslation();
@@ -129,6 +111,12 @@ export function useLoansPage(): UseLoansPageReturn {
     onSuccess: (_, variables) => {
       void invalidateLoans();
       const { loan_type, generate_revenue, generate_expense } = variables;
+      if (loan_type === 'borrowed' && generate_revenue) {
+        void queryClient.invalidateQueries({ queryKey: ['revenues'] });
+      }
+      if (loan_type === 'lent' && generate_expense) {
+        void queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      }
       const hasExtra =
         (loan_type === 'borrowed' && generate_revenue) ||
         (loan_type === 'lent' && generate_expense);
@@ -270,5 +258,3 @@ export function useLoansPage(): UseLoansPageReturn {
     handleSubmit,
   };
 }
-
-export { DEFAULT_FORM_DATA as LOAN_DEFAULT_FORM_DATA };

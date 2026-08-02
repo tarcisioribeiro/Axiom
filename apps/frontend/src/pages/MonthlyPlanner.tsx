@@ -564,6 +564,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       apiClient.post(`${API_CONFIG.ENDPOINTS.MONTHLY_PLAN}${id}/apply/`, {}),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['monthlyPlan', month, year] });
+      void queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      void queryClient.invalidateQueries({ queryKey: ['revenues'] });
+      void queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      void queryClient.invalidateQueries({ queryKey: ['fixed-expenses'] });
+      void queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
       toast({ title: t('monthlyPlanner.applySuccess') });
     },
     onError: () => {

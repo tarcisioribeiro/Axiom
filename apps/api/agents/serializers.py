@@ -51,13 +51,6 @@ class AgentAskSerializer(serializers.Serializer):
         return value
 
 
-class AgentResponseSerializer(serializers.Serializer):
-    answer = serializers.CharField()
-    agent = serializers.CharField()
-    sources = serializers.ListField(child=serializers.CharField())
-    session_id = serializers.CharField()
-
-
 class AgentConversationSerializer(serializers.ModelSerializer):
     class Meta:
         model = AgentConversation

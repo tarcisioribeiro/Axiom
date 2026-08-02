@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -115,6 +116,7 @@ export default function BankReconciliationDetail() {
   const { importId } = useParams<{ importId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [importData, setImportData] = useState<BankStatementImport | null>(null);
   const [entries, setEntries] = useState<BankStatementEntry[]>([]);
@@ -162,6 +164,7 @@ export default function BankReconciliationDetail() {
       const updated = await bankReconciliationService.runMatch(importData.id);
       setImportData(updated);
       setEntries(updated.entries ?? []);
+      void queryClient.invalidateQueries({ queryKey: ['bank-reconciliation'] });
       toast({ title: t('pages.bankReconciliation.detail.runSuccess') });
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
@@ -188,6 +191,7 @@ export default function BankReconciliationDetail() {
         const updated = await bankReconciliationService.getImport(importData.id);
         setImportData(updated);
         setEntries(updated.entries ?? []);
+        void queryClient.invalidateQueries({ queryKey: ['bank-reconciliation'] });
       }
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
@@ -256,6 +260,7 @@ export default function BankReconciliationDetail() {
       const updated = await bankReconciliationService.getImport(importData.id);
       setImportData(updated);
       setEntries(updated.entries ?? []);
+      void queryClient.invalidateQueries({ queryKey: ['bank-reconciliation'] });
       toast({ title: t('pages.bankReconciliation.detail.linkSuccess') });
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });

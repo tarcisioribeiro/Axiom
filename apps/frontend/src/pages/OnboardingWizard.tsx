@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -124,6 +124,7 @@ function matchesTemplate(
 export default function OnboardingWizard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
   const [focusAreas, setFocusAreas] = useState<FocusAreaId[]>([]);
   const [dailyMinutes, setDailyMinutes] = useState<number>(60);
@@ -147,6 +148,9 @@ export default function OnboardingWizard() {
       }
     },
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['daily-checklist'] });
+      void queryClient.invalidateQueries({ queryKey: ['routine-templates'] });
       toast({
         title: 'Rotina criada com sucesso!',
         description: 'Redirecionando para a tela Hoje...',

@@ -303,19 +303,6 @@ class VaultRecurringContributionCreateSerializer(
         ]
 
 
-class VaultSummarySerializer(serializers.Serializer):
-    """Serializer para resumo de cofres (usado em metas)."""
-
-    id = serializers.IntegerField()
-    uuid = serializers.UUIDField()
-    description = serializers.CharField()
-    current_balance = serializers.DecimalField(max_digits=15, decimal_places=2)
-    accumulated_yield = serializers.DecimalField(
-        max_digits=15, decimal_places=2
-    )
-    account_name = serializers.CharField()
-
-
 class FinancialGoalSerializer(serializers.ModelSerializer):
     """Serializer para metas financeiras."""
 

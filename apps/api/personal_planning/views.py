@@ -3,7 +3,7 @@ import logging
 from datetime import date, timedelta
 from pathlib import Path
 
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -1780,6 +1780,20 @@ class WorkoutPlanListCreateView(BaseListCreateView):
         member = Member.objects.get(user=self.request.user)
         return WorkoutPlan.objects.filter(
             owner=member, deleted_at__isnull=True
+        ).prefetch_related(
+            Prefetch(
+                "days",
+                queryset=WorkoutDay.objects.filter(
+                    deleted_at__isnull=True
+                ).prefetch_related(
+                    Prefetch(
+                        "exercises",
+                        queryset=WorkoutExercise.objects.filter(
+                            deleted_at__isnull=True
+                        ),
+                    )
+                ),
+            )
         )
 
 
@@ -1801,7 +1815,16 @@ class WorkoutDayListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = WorkoutDay.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = WorkoutDay.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).prefetch_related(
+            Prefetch(
+                "exercises",
+                queryset=WorkoutExercise.objects.filter(
+                    deleted_at__isnull=True
+                ),
+            )
+        )
         plan_id = self.request.query_params.get("plan")
         if plan_id:
             qs = qs.filter(plan_id=plan_id)
@@ -1849,8 +1872,26 @@ class WorkoutSessionListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = WorkoutSession.objects.filter(
-            owner=member, deleted_at__isnull=True
+        qs = (
+            WorkoutSession.objects.filter(
+                owner=member, deleted_at__isnull=True
+            )
+            .select_related("workout_day")
+            .prefetch_related(
+                Prefetch(
+                    "session_exercises",
+                    queryset=WorkoutSessionExercise.objects.filter(
+                        deleted_at__isnull=True
+                    ).prefetch_related(
+                        Prefetch(
+                            "sets",
+                            queryset=WorkoutSessionSet.objects.filter(
+                                deleted_at__isnull=True
+                            ),
+                        )
+                    ),
+                )
+            )
         )
         workout_day_id = self.request.query_params.get("workout_day")
         if workout_day_id:
@@ -1964,7 +2005,23 @@ class MealTypeListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = MealType.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = MealType.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).prefetch_related(
+            Prefetch(
+                "options",
+                queryset=MenuOption.objects.filter(
+                    deleted_at__isnull=True
+                ).prefetch_related(
+                    Prefetch(
+                        "ingredients",
+                        queryset=MenuOptionIngredient.objects.filter(
+                            deleted_at__isnull=True
+                        ).select_related("food"),
+                    )
+                ),
+            )
+        )
         is_active = self.request.query_params.get("is_active")
         if is_active is not None:
             qs = qs.filter(is_active=is_active.lower() == "true")
@@ -2036,7 +2093,9 @@ class MealLogListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = MealLog.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).select_related("meal_type", "menu_option")
         date_param = self.request.query_params.get("date")
         if date_param:
             qs = qs.filter(date=date_param)

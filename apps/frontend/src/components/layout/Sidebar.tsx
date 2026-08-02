@@ -30,6 +30,7 @@ import {
   type NavModule,
   type NavSubItem,
 } from '@/config/nav-config';
+import { prefetchRoute } from '@/config/route-prefetch';
 import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { APP_ENV, APP_VERSION, IS_PRODUCTION } from '@/lib/app-info';
@@ -104,6 +105,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
       to={item.href}
       className={base}
       onClick={onClick}
+      onMouseEnter={() => prefetchRoute(item.href)}
       aria-current={active ? 'page' : undefined}
     >
       <Icon

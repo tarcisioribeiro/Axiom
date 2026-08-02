@@ -1,4 +1,3 @@
-from django.contrib.auth.models import Permission
 from rest_framework import serializers
 
 from members.models import Member
@@ -78,14 +77,6 @@ class MemberSerializer(serializers.ModelSerializer):
             instance.document = document
         instance.save()
         return instance
-
-
-class PermissionSerializer(serializers.ModelSerializer):
-    """Serializer para permissões do Django"""
-
-    class Meta:
-        model = Permission
-        fields = ["id", "name", "codename", "content_type"]
 
 
 class MemberPermissionsSerializer(serializers.Serializer):
