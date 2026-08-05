@@ -109,7 +109,7 @@ Axiom/
 
 **Stack**: Flutter 3.27.x / Dart 3.6.x, Material 3, targeting Android and iOS. See `documentation/architecture/architectural_decisions.md` §16 for why Flutter was chosen over React Native/native.
 
-**State**: Scaffolding only — `lib/main.dart` (`AxiomMobileApp`, a `MaterialApp`) renders `lib/screens/login_screen.dart`, a static placeholder login screen with no API integration yet. Real auth/API consumption is future work; see `documentation/mobile/README.md`.
+**State**: `lib/main.dart` (`AxiomMobileApp`) wires up `ThemeController`, `ApiEnvironmentController` and `ApiClient`, then renders `lib/screens/login_screen.dart`. Login is wired to the real backend: `services/auth_service.dart` calls `authentication/token/` (with 2FA follow-up via `users/2fa/verify/`) through `services/api_client.dart`, a `dio` client with a `PersistCookieJar` — same httpOnly-cookie session model as the web app, since the backend never returns JWTs in the response body. `config/api_environment.dart` lets the user switch between the local Docker API and the production VPS (`https://axiom.tjtux.duckdns.org`) at runtime. `theme/` implements all 16 web theme variants (`app_themes.dart`, transcribed from `apps/frontend/src/index.css`) with a picker sheet on the login screen. Remaining future work: consuming the rest of the API beyond auth, and app distribution — see `documentation/mobile/README.md`.
 
 **Dependencies**: Pinned to exact versions in `pubspec.yaml` (no `^` ranges), same policy as the rest of the repo; `pubspec.lock` is committed.
 
