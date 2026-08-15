@@ -1093,14 +1093,17 @@ class TaskInstanceListCreateView(BaseListCreateView):
     (tarefa avulsa)."""
 
     def get_queryset(self):
-        qs = TaskInstance.objects.filter(
-            owner__user=self.request.user, deleted_at__isnull=True
-        ).select_related("owner", "template")
-
         # Filtro por data (exata ou intervalo)
         date_param = self.request.query_params.get("date")
         date_from = self.request.query_params.get("date_from")
         date_to = self.request.query_params.get("date_to")
+
+        self._ensure_instances_generated(date_param, date_from, date_to)
+
+        qs = TaskInstance.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "template")
+
         if date_param:
             try:
                 filter_date = date.fromisoformat(date_param)
@@ -1133,6 +1136,45 @@ class TaskInstanceListCreateView(BaseListCreateView):
         return qs.order_by(
             "scheduled_date", "scheduled_time", "occurrence_index"
         )
+
+    def _ensure_instances_generated(self, date_param, date_from, date_to):
+        """Gera (lazy) as instancias de rotina para o intervalo consultado.
+
+        Sem isso, dias que o usuario nunca abriu na Rotina Diaria (que e
+        quem normalmente dispara a geracao via InstancesForDateView) nunca
+        ganham TaskInstance no banco, entao somem da grade do Planejamento
+        Semanal mesmo tendo templates de rotina ativos.
+        """
+        try:
+            if date_param:
+                start = end = date.fromisoformat(date_param)
+            elif date_from or date_to:
+                start = date.fromisoformat(date_from) if date_from else None
+                end = date.fromisoformat(date_to) if date_to else None
+            else:
+                return
+        except ValueError:
+            return
+
+        if not start or not end or end < start:
+            return
+
+        # Limite de seguranca para evitar geracao em massa por engano
+        if (end - start).days > 62:
+            return
+
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return
+
+        from personal_planning.services.instance_generator import (
+            InstanceGenerator,
+        )
+
+        current = start
+        while current <= end:
+            InstanceGenerator.generate_for_date(member, current)
+            current += timedelta(days=1)
 
     def get_serializer_class(self):
         if self.request.method == "POST":
