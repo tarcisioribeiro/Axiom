@@ -426,6 +426,8 @@ export default function WorkoutPage() {
       sets_target: number;
       reps_target_min: number;
       reps_target_max: number;
+      load_target: string;
+      load_target_unit: string;
       order: number;
       sets: Array<{
         id?: number;
@@ -466,6 +468,8 @@ export default function WorkoutPage() {
           sets_target: ex.sets_target,
           reps_target_min: ex.reps_target_min,
           reps_target_max: ex.reps_target_max,
+          load_target: ex.load_target || undefined,
+          load_target_unit: ex.load_target_unit,
           order: exIdx,
           owner: ownerId,
         };
@@ -529,6 +533,8 @@ export default function WorkoutPage() {
             sets_target: ex.sets_target,
             reps_target_min: ex.reps_target_min,
             reps_target_max: ex.reps_target_max,
+            load_target: ex.load_target || undefined,
+            load_target_unit: ex.load_target_unit,
             order: exIdx,
             owner: ownerId,
           });
@@ -1447,11 +1453,16 @@ function QuickLogForm({
       ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
       : days;
 
+  const handleDaySelect = (dayId: string) => {
+    setSelectedDayId(dayId);
+    const day = dayId !== 'none' ? days.find((d) => d.id === Number(dayId)) : undefined;
+    setDuration(day?.default_duration_minutes ?? 45);
+  };
+
   const handleConfirm = async () => {
     try {
       setIsSubmitting(true);
       const now = new Date();
-      const finished = new Date(now.getTime() + duration * 60 * 1000);
       const toTimeStr = (d: Date) =>
         `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -1460,28 +1471,51 @@ function QuickLogForm({
           ? days.find((d) => d.id === Number(selectedDayId))
           : undefined;
 
+      const started = selectedDay?.default_start_time
+        ? selectedDay.default_start_time.slice(0, 5)
+        : toTimeStr(now);
+      const [startH, startM] = started.split(':').map(Number);
+      const finishedTotal = (((startH * 60 + startM + duration) % 1440) + 1440) % 1440;
+      const finished = `${String(Math.floor(finishedTotal / 60)).padStart(2, '0')}:${String(finishedTotal % 60).padStart(2, '0')}`;
+
       const session = await workoutSessionService.create({
         date: format(now, 'yyyy-MM-dd'),
-        started_at: toTimeStr(now),
-        finished_at: toTimeStr(finished),
+        started_at: started,
+        finished_at: finished,
         owner: ownerId,
         workout_day: selectedDay?.id,
       });
 
-      // auto-populate session exercises from the plan day
+      // auto-populate session exercises and sets from the plan day
       if (selectedDay && selectedDay.exercises.length > 0) {
         await Promise.all(
-          selectedDay.exercises.map((ex, idx) =>
-            workoutSessionExerciseService.create({
+          selectedDay.exercises.map(async (ex, idx) => {
+            const sessionEx = await workoutSessionExerciseService.create({
               session: session.id,
               exercise_name: ex.name,
               sets_target: ex.sets,
               reps_target_min: ex.reps_min,
               reps_target_max: ex.reps_max,
+              load_target: ex.load || undefined,
+              load_target_unit: ex.load_unit,
               order: idx,
               owner: ownerId,
-            })
-          )
+            });
+
+            await Promise.all(
+              Array.from({ length: ex.sets }, (_, setIdx) =>
+                workoutSessionSetService.create({
+                  session_exercise: sessionEx.id,
+                  set_number: setIdx + 1,
+                  load: ex.load || undefined,
+                  load_unit: ex.load_unit,
+                  reps_done: ex.reps_min,
+                  completed: true,
+                  owner: ownerId,
+                })
+              )
+            );
+          })
         );
       }
 
@@ -1509,7 +1543,7 @@ function QuickLogForm({
               <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
               <select
                 value={selectedDayId}
-                onChange={(e) => setSelectedDayId(e.target.value)}
+                onChange={(e) => handleDaySelect(e.target.value)}
                 className="border-border bg-background px-sm py-xs focus:ring-ring w-full rounded-md border text-sm focus:ring-2 focus:outline-none"
               >
                 <option value="none">

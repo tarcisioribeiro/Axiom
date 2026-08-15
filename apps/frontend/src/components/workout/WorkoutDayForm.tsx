@@ -3,6 +3,7 @@
 import {
   Activity,
   Calendar,
+  Clock,
   Dumbbell,
   Flame,
   Layers,
@@ -17,6 +18,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { TimePicker } from '@/components/ui/time-picker';
 import { cn } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
 
@@ -35,6 +38,8 @@ interface WorkoutDayFormValues {
   muscle_groups: string;
   day_of_week: number | '';
   order: number;
+  default_start_time: string;
+  default_duration_minutes: number | '';
 }
 
 interface WorkoutDayFormProps {
@@ -42,8 +47,13 @@ interface WorkoutDayFormProps {
   planId: number;
   ownerId: number;
   onSubmit: (
-    data: Omit<WorkoutDayFormValues, 'day_of_week'> & {
+    data: Omit<
+      WorkoutDayFormValues,
+      'day_of_week' | 'default_start_time' | 'default_duration_minutes'
+    > & {
       day_of_week: number | null;
+      default_start_time: string | null;
+      default_duration_minutes: number | null;
       plan: number;
       owner: number;
     }
@@ -79,6 +89,10 @@ const MUSCLE_CHIP_KEYS = [
   { key: 'fullBody', icon: Layers },
 ];
 
+function toHHMM(time?: string | null): string {
+  return time ? time.slice(0, 5) : '';
+}
+
 export function WorkoutDayForm({
   day,
   planId,
@@ -109,6 +123,8 @@ export function WorkoutDayForm({
       muscle_groups: day?.muscle_groups ?? '',
       day_of_week: day?.day_of_week ?? '',
       order: day?.order ?? 0,
+      default_start_time: toHHMM(day?.default_start_time),
+      default_duration_minutes: day?.default_duration_minutes ?? '',
     },
   });
 
@@ -126,6 +142,8 @@ export function WorkoutDayForm({
         muscle_groups: day.muscle_groups ?? '',
         day_of_week: day.day_of_week ?? '',
         order: day.order,
+        default_start_time: toHHMM(day.default_start_time),
+        default_duration_minutes: day.default_duration_minutes ?? '',
       });
     }
   }, [day, reset]);
@@ -146,6 +164,9 @@ export function WorkoutDayForm({
     await onSubmit({
       ...data,
       day_of_week: data.day_of_week === '' ? null : data.day_of_week,
+      default_start_time: data.default_start_time || null,
+      default_duration_minutes:
+        data.default_duration_minutes === '' ? null : data.default_duration_minutes,
       plan: planId,
       owner: ownerId,
     });
@@ -264,6 +285,33 @@ export function WorkoutDayForm({
             {t('pages.workoutPlans.muscleGroupsHint')}
           </p>
         </div>
+      </FormSection>
+
+      {/* Horário padrão */}
+      <FormSection title={t('pages.workoutPlans.defaultScheduleSection')} icon={Clock}>
+        <div className="gap-sm grid grid-cols-2">
+          <div className="space-y-sm">
+            <Label>{t('pages.workoutPlans.defaultStartTime')}</Label>
+            <TimePicker
+              value={watch('default_start_time') || undefined}
+              onChange={(v) => setValue('default_start_time', v ?? '')}
+            />
+          </div>
+          <div className="space-y-sm">
+            <Label>{t('pages.workoutPlans.defaultDurationMinutes')}</Label>
+            <Input
+              type="number"
+              min={0}
+              placeholder="45"
+              {...register('default_duration_minutes', {
+                setValueAs: (v) => (v === '' ? '' : Number(v)),
+              })}
+            />
+          </div>
+        </div>
+        <p className="mt-xs text-muted-foreground text-xs">
+          {t('pages.workoutPlans.defaultScheduleHint')}
+        </p>
       </FormSection>
 
       <div className="gap-sm border-border pt-md flex justify-end border-t">

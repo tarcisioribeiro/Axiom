@@ -500,6 +500,8 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
             "muscle_groups",
             "day_of_week",
             "order",
+            "default_start_time",
+            "default_duration_minutes",
             "exercises",
             "exercise_count",
             "owner",
@@ -524,6 +526,8 @@ class WorkoutDayCreateUpdateSerializer(serializers.ModelSerializer):
             "muscle_groups",
             "day_of_week",
             "order",
+            "default_start_time",
+            "default_duration_minutes",
             "owner",
         ]
 
@@ -620,6 +624,8 @@ class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
             "sets_target",
             "reps_target_min",
             "reps_target_max",
+            "load_target",
+            "load_target_unit",
             "order",
             "sets",
             "owner",
@@ -642,6 +648,8 @@ class WorkoutSessionExerciseCreateUpdateSerializer(
             "sets_target",
             "reps_target_min",
             "reps_target_max",
+            "load_target",
+            "load_target_unit",
             "order",
             "owner",
         ]

@@ -23,6 +23,7 @@ import { formatLocalDate } from '@/lib/utils';
 import type { WorkoutDay, WorkoutSession } from '@/types/workout';
 
 const LOAD_UNITS = ['kg', 'lb'] as const;
+const DEFAULT_SESSION_DURATION_MINUTES = 45;
 
 interface SessionSetValues {
   id?: number;
@@ -40,6 +41,8 @@ interface SessionExerciseValues {
   sets_target: number;
   reps_target_min: number;
   reps_target_max: number;
+  load_target: string;
+  load_target_unit: string;
   order: number;
   sets: SessionSetValues[];
 }
@@ -62,15 +65,31 @@ interface WorkoutSessionFormProps {
   isLoading?: boolean;
 }
 
-function newSet(setNumber: number): SessionSetValues {
+function newSet(
+  setNumber: number,
+  load = '',
+  loadUnit = 'kg',
+  repsDone = ''
+): SessionSetValues {
   return {
     set_number: setNumber,
-    load: '',
-    load_unit: 'kg',
-    reps_done: '',
+    load,
+    load_unit: loadUnit,
+    reps_done: repsDone,
     completed: true,
     notes: '',
   };
+}
+
+function nowTimeStr(): string {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function addMinutesToTimeStr(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number);
+  const wrapped = (((h * 60 + m + minutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, '0')}:${String(wrapped % 60).padStart(2, '0')}`;
 }
 
 export function WorkoutSessionForm({
@@ -85,6 +104,7 @@ export function WorkoutSessionForm({
   const { toast } = useToast();
 
   const today = new Date().toISOString().slice(0, 10);
+  const defaultStart = nowTimeStr();
 
   const { register, handleSubmit, control, watch, setValue } =
     useForm<WorkoutSessionFormValues>({
@@ -103,6 +123,8 @@ export function WorkoutSessionForm({
                 sets_target: ex.sets_target,
                 reps_target_min: ex.reps_target_min,
                 reps_target_max: ex.reps_target_max,
+                load_target: ex.load_target ?? '',
+                load_target_unit: ex.load_target_unit || 'kg',
                 order: ex.order,
                 sets: [...ex.sets]
                   .sort((a, b) => a.set_number - b.set_number)
@@ -120,8 +142,11 @@ export function WorkoutSessionForm({
         : {
             workout_day: '',
             date: today,
-            started_at: '',
-            finished_at: '',
+            started_at: defaultStart,
+            finished_at: addMinutesToTimeStr(
+              defaultStart,
+              DEFAULT_SESSION_DURATION_MINUTES
+            ),
             notes: '',
             exercises: [],
           },
@@ -152,12 +177,28 @@ export function WorkoutSessionForm({
           sets_target: ex.sets,
           reps_target_min: ex.reps_min,
           reps_target_max: ex.reps_max,
+          load_target: ex.load ?? '',
+          load_target_unit: ex.load_unit || 'kg',
           order: idx,
-          sets: Array.from({ length: ex.sets }, (_, i) => newSet(i + 1)),
+          sets: Array.from({ length: ex.sets }, (_, i) =>
+            newSet(i + 1, ex.load ?? '', ex.load_unit || 'kg', String(ex.reps_min))
+          ),
         }));
         setValue('exercises', preloaded);
       } else {
         setValue('exercises', []);
+      }
+
+      if (day?.default_start_time) {
+        const start = day.default_start_time.slice(0, 5);
+        setValue('started_at', start);
+        setValue(
+          'finished_at',
+          addMinutesToTimeStr(
+            start,
+            day.default_duration_minutes ?? DEFAULT_SESSION_DURATION_MINUTES
+          )
+        );
       }
     }
   }, [selectedDayId, workoutDays, setValue]);
@@ -239,6 +280,8 @@ export function WorkoutSessionForm({
                 sets_target: 3,
                 reps_target_min: 8,
                 reps_target_max: 12,
+                load_target: '',
+                load_target_unit: 'kg',
                 order: exerciseFields.length,
                 sets: [newSet(1)],
               })
@@ -397,7 +440,16 @@ function ExerciseBlock({
           variant="ghost"
           size="sm"
           className="text-muted-foreground w-full text-xs"
-          onClick={() => appendSet(newSet(setFields.length + 1))}
+          onClick={() =>
+            appendSet(
+              newSet(
+                setFields.length + 1,
+                watch(`exercises.${exIdx}.load_target`),
+                watch(`exercises.${exIdx}.load_target_unit`) || 'kg',
+                String(watch(`exercises.${exIdx}.reps_target_min`) ?? '')
+              )
+            )
+          }
         >
           <Plus className="mr-1 h-3 w-3" />
           {t('pages.workoutSessions.addSet')}

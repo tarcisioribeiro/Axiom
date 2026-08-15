@@ -5279,6 +5279,10 @@
       "dayNamePlaceholder": "e.g. Workout A",
       "dayOfWeek": "Day of Week",
       "dayOfWeekHint": "Select the day this split will be performed. Leave empty to show every day.",
+      "defaultScheduleSection": "Default Schedule",
+      "defaultStartTime": "Default Start Time",
+      "defaultDurationMinutes": "Default Duration (min)",
+      "defaultScheduleHint": "Used to pre-fill the time when logging a session for this day.",
       "weekdays": {
         "monday": "Mon",
         "tuesday": "Tue",

@@ -1421,6 +1421,24 @@ class WorkoutDay(BaseModel):
         verbose_name="Ordem",
         help_text="Ordem de exibição dentro do plano",
     )
+    default_start_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário de Início Padrão",
+        help_text=(
+            "Horário usado para pré-preencher o início ao registrar"
+            " uma sessão desta divisão."
+        ),
+    )
+    default_duration_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Duração Padrão (minutos)",
+        help_text=(
+            "Usada junto com o horário de início padrão para"
+            " pré-preencher o término da sessão."
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1608,6 +1626,22 @@ class WorkoutSessionExercise(BaseModel):
     )
     reps_target_max = models.PositiveIntegerField(
         default=12, verbose_name="Repetições Alvo (máx.)"
+    )
+    load_target = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name="Carga Alvo",
+        help_text=(
+            "Snapshot da carga planejada,"
+            " usada para pré-preencher as séries."
+        ),
+    )
+    load_target_unit = models.CharField(
+        max_length=10,
+        choices=LOAD_UNIT_CHOICES,
+        default="kg",
+        verbose_name="Unidade da Carga Alvo",
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     owner = models.ForeignKey(
