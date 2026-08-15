@@ -285,6 +285,11 @@ class TaskInstanceFilterTest(BasePlanningCoverageTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_filter_by_date_range(self):
+        # A rotina diaria ativa deve ter suas instancias geradas de forma
+        # lazy para cada dia do intervalo consultado (nao apenas para a
+        # instancia ja existente em `self.today`), para que o Planejamento
+        # Semanal nao mostre dias vazios que nunca foram abertos
+        # individualmente na Rotina Diaria.
         url = reverse("task-instance-list-create")
         response = self.client.get(
             url,
@@ -294,7 +299,7 @@ class TaskInstanceFilterTest(BasePlanningCoverageTestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["count"], 3)
 
     def test_filter_by_invalid_date_range_ignored(self):
         url = reverse("task-instance-list-create")
