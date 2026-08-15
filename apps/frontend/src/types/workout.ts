@@ -45,6 +45,8 @@ export interface WorkoutDay {
   muscle_groups?: string | null;
   day_of_week?: number | null;
   order: number;
+  default_start_time?: string | null;
+  default_duration_minutes?: number | null;
   exercises: WorkoutExercise[];
   exercise_count: number;
   owner: number;
@@ -58,6 +60,8 @@ export interface WorkoutDayFormData {
   muscle_groups?: string | null;
   day_of_week?: number | null;
   order: number;
+  default_start_time?: string | null;
+  default_duration_minutes?: number | null;
   owner: number;
 }
 
@@ -132,6 +136,8 @@ export interface WorkoutSessionExercise {
   sets_target: number;
   reps_target_min: number;
   reps_target_max: number;
+  load_target?: string | null;
+  load_target_unit: string;
   order: number;
   sets: WorkoutSessionSet[];
   owner: number;
@@ -146,6 +152,8 @@ export interface WorkoutSessionExerciseFormData {
   sets_target: number;
   reps_target_min: number;
   reps_target_max: number;
+  load_target?: string | null;
+  load_target_unit?: string;
   order: number;
   owner: number;
 }

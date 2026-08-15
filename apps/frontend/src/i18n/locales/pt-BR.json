@@ -5345,6 +5345,10 @@
       "dayNamePlaceholder": "Ex: Treino A",
       "dayOfWeek": "Dia da Semana",
       "dayOfWeekHint": "Selecione o dia em que esta divisão será executada. Vazio = aparece todos os dias.",
+      "defaultScheduleSection": "Horário Padrão",
+      "defaultStartTime": "Horário de Início Padrão",
+      "defaultDurationMinutes": "Duração Padrão (min)",
+      "defaultScheduleHint": "Usado para pré-preencher o horário ao registrar uma sessão desta divisão.",
       "weekdays": {
         "monday": "Seg",
         "tuesday": "Ter",
