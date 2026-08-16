@@ -3639,6 +3639,9 @@
       },
       "certificate": {
         "fileLabel": "Comprovante de Conclusão",
+        "viewLink": "Arquivo do certificado",
+        "previewTitle": "Certificado",
+        "previewError": "Não foi possível carregar o certificado.",
         "emptyTitle": "Nenhum comprovante anexado",
         "emptyHint": "Clique para enviar o certificado ou comprovante de conclusão (PDF, JPG, PNG).",
         "uploaded": "Comprovante enviado",

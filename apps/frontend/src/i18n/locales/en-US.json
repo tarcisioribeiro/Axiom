@@ -3573,6 +3573,9 @@
       },
       "certificate": {
         "fileLabel": "Completion Certificate",
+        "viewLink": "Certificate file",
+        "previewTitle": "Certificate",
+        "previewError": "Could not load the certificate.",
         "emptyTitle": "No certificate attached",
         "emptyHint": "Click to upload your completion certificate (PDF, JPG, PNG).",
         "uploaded": "Certificate uploaded",

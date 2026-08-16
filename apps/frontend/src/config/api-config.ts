@@ -122,6 +122,7 @@ export const API_CONFIG = {
     COURSE_LESSONS: '/api/v1/library/course-lessons/',
     COURSE_LESSONS_BULK_COMPLETE: '/api/v1/library/course-lessons/bulk-complete/',
     COURSE_SESSIONS: '/api/v1/library/course-sessions/',
+    COURSE_CERTIFICATE_STREAM: '/api/v1/library/courses/',
     SKILLS: '/api/v1/library/skills/',
     KNOWLEDGE_GRAPH: '/api/v1/library/knowledge-graph/',
     KNOWLEDGE_LINKS: '/api/v1/library/knowledge-links/',

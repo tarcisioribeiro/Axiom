@@ -2459,6 +2459,54 @@ class CourseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
 
 # ============================================================================
+# COURSE CERTIFICATE STREAM VIEW
+# ============================================================================
+
+
+class CourseCertificateStreamView(APIView):
+    """Faz proxy do certificado do curso via Django, contornando CORS do
+    MinIO (mesmo motivo de BookFileStreamView: o frontend renderiza o PDF
+    localmente com react-pdf, o que exige um fetch() same-origin)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Course.objects.all()
+
+    def get(self, request, pk):
+        try:
+            course = Course.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Course.DoesNotExist:
+            return Response(
+                {"detail": "Curso não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not course.completion_certificate:
+            return Response(
+                {"detail": "Este curso não possui certificado anexado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        filename = course.completion_certificate.name.split("/")[-1]
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        content_type = {
+            "pdf": "application/pdf",
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+        }.get(ext, "application/octet-stream")
+        try:
+            file_obj = course.completion_certificate.open("rb")
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = FileResponse(file_obj, content_type=content_type)
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
+
+
+# ============================================================================
 # COURSE MODULE VIEWS
 # ============================================================================
 

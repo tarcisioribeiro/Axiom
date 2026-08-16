@@ -20,9 +20,13 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+// Configure PDF.js worker via Vite ?url import for reliable asset bundling
+// (same setup as BookReader.tsx — safe to register more than once).
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +44,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
@@ -60,6 +65,8 @@ import type {
   CourseSessionFormData,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 interface CourseDetailModalProps {
   course: Course | null;
@@ -594,6 +601,9 @@ export function CourseDetailModal({
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [showAddSession, setShowAddSession] = useState(false);
   const [uploadingCert, setUploadingCert] = useState(false);
+  const [showCertPreview, setShowCertPreview] = useState(false);
+  const [certPdfData, setCertPdfData] = useState<ArrayBuffer | null>(null);
+  const [certNumPages, setCertNumPages] = useState(0);
 
   const { data: modules = [], refetch: refetchModules } = useQuery({
     queryKey: ['course-modules', course?.id],
@@ -617,6 +627,38 @@ export function CourseDetailModal({
   });
 
   const displayCourse = freshCourse ?? course;
+
+  const isCertificateImage = useMemo(() => {
+    const url = displayCourse?.completion_certificate;
+    if (!url) return false;
+    const path = url.split('?')[0].toLowerCase();
+    return path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png');
+  }, [displayCourse?.completion_certificate]);
+
+  // Streamed same-origin through Django (see CourseCertificateStreamView) so
+  // both <img> and the PDF.js fetch below carry auth cookies without hitting
+  // MinIO's CORS restrictions directly.
+  const certificateStreamUrl = displayCourse
+    ? `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COURSE_CERTIFICATE_STREAM}${displayCourse.id}/certificate/stream/`
+    : null;
+
+  useEffect(() => {
+    if (!showCertPreview || isCertificateImage || !certificateStreamUrl) return;
+    let cancelled = false;
+    fetch(certificateStreamUrl, { credentials: 'include' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.arrayBuffer();
+      })
+      .then((buf) => {
+        if (!cancelled) setCertPdfData(buf);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      setCertPdfData(null);
+    };
+  }, [showCertPreview, isCertificateImage, certificateStreamUrl]);
 
   const addModule = useMutation({
     mutationFn: (data: CourseModuleFormData) => courseModulesService.create(data),
@@ -704,343 +746,371 @@ export function CourseDetailModal({
   if (!displayCourse) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
-        {/* Colored header */}
-        <div className="bg-category-intellect/10 px-xl pb-md pt-xl">
-          <DialogHeader>
-            <div className="gap-md flex items-start justify-between">
-              <div className="gap-md flex min-w-0 flex-1 items-center">
-                <div className="bg-category-intellect/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                  <GraduationCap className="text-category-intellect h-5 w-5" />
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+          {/* Colored header */}
+          <div className="bg-category-intellect/10 px-xl pb-md pt-xl">
+            <DialogHeader>
+              <div className="gap-md flex items-start justify-between">
+                <div className="gap-md flex min-w-0 flex-1 items-center">
+                  <div className="bg-category-intellect/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                    <GraduationCap className="text-category-intellect h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <DialogTitle className="truncate text-lg font-bold">
+                      {displayCourse.title}
+                    </DialogTitle>
+                    <DialogDescription className="mt-xs gap-sm flex items-center">
+                      <span>{displayCourse.platform_display}</span>
+                      <span className="text-muted-foreground/50">·</span>
+                      <span>{displayCourse.category_display}</span>
+                    </DialogDescription>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <DialogTitle className="truncate text-lg font-bold">
-                    {displayCourse.title}
-                  </DialogTitle>
-                  <DialogDescription className="mt-xs gap-sm flex items-center">
-                    <span>{displayCourse.platform_display}</span>
-                    <span className="text-muted-foreground/50">·</span>
-                    <span>{displayCourse.category_display}</span>
-                  </DialogDescription>
-                </div>
+                <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
+                  {displayCourse.status_display}
+                </Badge>
               </div>
-              <Badge variant={STATUS_VARIANT[displayCourse.status] ?? 'outline'}>
-                {displayCourse.status_display}
-              </Badge>
-            </div>
 
-            {/* Progress bar */}
-            <div className="mt-md">
-              <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
-                <span>{t('pages.courses.stats.progress')}</span>
-                <span className="text-category-intellect font-semibold">
-                  {displayCourse.progress_percentage}%
-                </span>
-              </div>
-              <Progress
-                value={displayCourse.progress_percentage}
-                className="bg-category-intellect/20 h-2"
-              />
-            </div>
-
-            {/* Stats row */}
-            <div className="mt-md gap-sm grid grid-cols-3">
-              <div className="bg-background/60 p-sm rounded-lg text-center">
-                <div className="text-category-intellect text-lg font-bold">
-                  {displayCourse.completed_lessons}/{displayCourse.total_lessons}
+              {/* Progress bar */}
+              <div className="mt-md">
+                <div className="mb-xs text-muted-foreground flex items-center justify-between text-xs">
+                  <span>{t('pages.courses.stats.progress')}</span>
+                  <span className="text-category-intellect font-semibold">
+                    {displayCourse.progress_percentage}%
+                  </span>
                 </div>
-                <div className="text-muted-foreground text-xs">
-                  {t('pages.courses.stats.lessons')}
-                </div>
-              </div>
-              <div className="bg-background/60 p-sm rounded-lg text-center">
-                <div className="text-category-intellect text-lg font-bold">
-                  {displayCourse.invested_hours.toFixed(1)}h
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  {t('pages.courses.stats.investedHours')}
-                </div>
-              </div>
-              <div className="bg-background/60 p-sm rounded-lg text-center">
-                <div className="text-category-intellect text-lg font-bold">
-                  {displayCourse.estimated_hours
-                    ? `${displayCourse.estimated_hours}h`
-                    : '—'}
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  {t('pages.courses.stats.estimatedHours')}
-                </div>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="mt-md gap-sm flex">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-xs h-8"
-              onClick={() => onEdit(displayCourse)}
-            >
-              <Edit className="h-3.5 w-3.5" />
-              {t('common.actions.edit')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-xs text-destructive hover:text-destructive h-8"
-              onClick={() => onDelete(displayCourse)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              {t('common.actions.delete')}
-            </Button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="modules" className="p-xl pt-md">
-          <TabsList className="w-full">
-            <TabsTrigger value="overview" className="flex-1">
-              <BookOpen className="mr-xs h-4 w-4" />
-              {t('pages.courses.tabs.overview')}
-            </TabsTrigger>
-            <TabsTrigger value="modules" className="flex-1">
-              <Layers className="mr-xs h-4 w-4" />
-              {t('pages.courses.tabs.modules')}
-            </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex-1">
-              <Timer className="mr-xs h-4 w-4" />
-              {t('pages.courses.tabs.sessions')}
-            </TabsTrigger>
-            <TabsTrigger value="certificate" className="flex-1">
-              <Award className="mr-xs h-4 w-4" />
-              {t('pages.courses.tabs.certificate')}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-md space-y-md">
-            {displayCourse.description && (
-              <div className="bg-muted/30 p-md text-muted-foreground rounded-lg text-sm leading-relaxed">
-                {displayCourse.description}
-              </div>
-            )}
-            {displayCourse.url && (
-              <a
-                href={displayCourse.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="gap-sm text-category-intellect flex items-center text-sm hover:underline"
-              >
-                <GraduationCap className="h-4 w-4" />
-                {displayCourse.url}
-              </a>
-            )}
-            <div className="gap-sm grid grid-cols-2 text-sm">
-              {displayCourse.start_date && (
-                <div className="gap-xs text-muted-foreground flex items-center">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {formatDate(displayCourse.start_date)}
-                </div>
-              )}
-              {displayCourse.end_date && (
-                <div className="gap-xs text-muted-foreground flex items-center">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {formatDate(displayCourse.end_date)}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="modules" className="mt-md space-y-sm">
-            {modules.length === 0 && !showAddModule && (
-              <div className="border-category-intellect/30 bg-category-intellect/5 p-lg rounded-lg border border-dashed text-center">
-                <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
-                <p className="text-foreground text-sm font-medium">
-                  {t('pages.courses.modules.emptyTitle')}
-                </p>
-                <p className="mt-xs text-muted-foreground text-xs">
-                  {t('pages.courses.modules.emptyHint')}
-                </p>
-              </div>
-            )}
-
-            {modules.map((mod) => (
-              <ModuleItem
-                key={mod.id}
-                mod={mod}
-                ownerId={displayCourse.owner}
-                onUpdated={handleModuleUpdated}
-                onDeleted={handleModuleUpdated}
-              />
-            ))}
-
-            {showAddModule ? (
-              <div className="gap-sm flex">
-                <Input
-                  value={newModuleTitle}
-                  onChange={(e) => setNewModuleTitle(e.target.value)}
-                  placeholder={t('pages.courses.modules.titlePlaceholder')}
-                  className="text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newModuleTitle.trim()) {
-                      addModule.mutate({
-                        course: displayCourse.id,
-                        title: newModuleTitle.trim(),
-                        order: modules.length + 1,
-                        owner: displayCourse.owner,
-                      });
-                    }
-                    if (e.key === 'Escape') setShowAddModule(false);
-                  }}
+                <Progress
+                  value={displayCourse.progress_percentage}
+                  className="bg-category-intellect/20 h-2"
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (newModuleTitle.trim()) {
-                      addModule.mutate({
-                        course: displayCourse.id,
-                        title: newModuleTitle.trim(),
-                        order: modules.length + 1,
-                        owner: displayCourse.owner,
-                      });
-                    }
-                  }}
-                  disabled={addModule.isPending}
-                >
-                  {addModule.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Check className="h-4 w-4" />
-                  )}
-                </Button>
               </div>
-            ) : (
-              <Button
-                variant="outline"
-                className="gap-sm text-muted-foreground hover:border-category-intellect/50 hover:text-category-intellect w-full border-dashed"
-                onClick={() => setShowAddModule(true)}
-              >
-                <Plus className="h-4 w-4" />
-                {t('pages.courses.modules.newBtn')}
-              </Button>
-            )}
-          </TabsContent>
 
-          <TabsContent value="sessions" className="mt-md space-y-sm">
-            {weeklyHoursData.length > 1 && (
-              <div className="border-border p-sm rounded-lg border">
-                <p className="mb-sm text-muted-foreground text-xs font-medium">
-                  {t('pages.courses.studyHours.title')}
-                </p>
-                <ResponsiveContainer width="100%" height={100}>
-                  <BarChart
-                    data={weeklyHoursData}
-                    margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
-                  >
-                    <XAxis
-                      dataKey="week"
-                      tick={{ fontSize: 9 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
-                    <Tooltip
-                      formatter={(v) => [
-                        `${Number(v)}h`,
-                        t('pages.courses.studyHours.hours'),
-                      ]}
-                      labelStyle={{ fontSize: 11 }}
-                      contentStyle={{ fontSize: 11 }}
-                    />
-                    <Bar
-                      dataKey="hours"
-                      fill="hsl(var(--category-intellect))"
-                      radius={[3, 3, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+              {/* Stats row */}
+              <div className="mt-md gap-sm grid grid-cols-3">
+                <div className="bg-background/60 p-sm rounded-lg text-center">
+                  <div className="text-category-intellect text-lg font-bold">
+                    {displayCourse.completed_lessons}/{displayCourse.total_lessons}
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {t('pages.courses.stats.lessons')}
+                  </div>
+                </div>
+                <div className="bg-background/60 p-sm rounded-lg text-center">
+                  <div className="text-category-intellect text-lg font-bold">
+                    {displayCourse.invested_hours.toFixed(1)}h
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {t('pages.courses.stats.investedHours')}
+                  </div>
+                </div>
+                <div className="bg-background/60 p-sm rounded-lg text-center">
+                  <div className="text-category-intellect text-lg font-bold">
+                    {displayCourse.estimated_hours
+                      ? `${displayCourse.estimated_hours}h`
+                      : '—'}
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {t('pages.courses.stats.estimatedHours')}
+                  </div>
+                </div>
               </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-sm">
-                {t('pages.courses.sessions.totalHours', {
-                  hours: totalSessionHours.toFixed(1),
-                })}
-              </span>
+            </DialogHeader>
+
+            <div className="mt-md gap-sm flex">
               <Button
                 size="sm"
-                className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
-                onClick={() => setShowAddSession(true)}
+                variant="outline"
+                className="gap-xs h-8"
+                onClick={() => onEdit(displayCourse)}
               >
-                <Plus className="h-3.5 w-3.5" />
-                {t('pages.courses.sessions.newBtn')}
+                <Edit className="h-3.5 w-3.5" />
+                {t('common.actions.edit')}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-xs text-destructive hover:text-destructive h-8"
+                onClick={() => onDelete(displayCourse)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {t('common.actions.delete')}
               </Button>
             </div>
+          </div>
 
-            {showAddSession && (
-              <AddSessionForm
-                courseId={displayCourse.id}
-                ownerId={displayCourse.owner}
-                onSaved={() => {
-                  setShowAddSession(false);
-                  handleSessionUpdated();
-                }}
-                onCancel={() => setShowAddSession(false)}
-              />
-            )}
+          {/* Tabs */}
+          <Tabs defaultValue="modules" className="p-xl pt-md">
+            <TabsList className="w-full">
+              <TabsTrigger value="overview" className="flex-1">
+                <BookOpen className="mr-xs h-4 w-4" />
+                {t('pages.courses.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger value="modules" className="flex-1">
+                <Layers className="mr-xs h-4 w-4" />
+                {t('pages.courses.tabs.modules')}
+              </TabsTrigger>
+              <TabsTrigger value="sessions" className="flex-1">
+                <Timer className="mr-xs h-4 w-4" />
+                {t('pages.courses.tabs.sessions')}
+              </TabsTrigger>
+              <TabsTrigger value="certificate" className="flex-1">
+                <Award className="mr-xs h-4 w-4" />
+                {t('pages.courses.tabs.certificate')}
+              </TabsTrigger>
+            </TabsList>
 
-            {sessions.length === 0 && !showAddSession ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {t('pages.courses.sessions.emptyState')}
-              </p>
-            ) : (
-              sessions.map((s) => (
-                <SessionItem key={s.id} session={s} onDeleted={handleSessionUpdated} />
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="certificate" className="mt-md space-y-md">
-            {displayCourse.completion_certificate ? (
-              <div className="space-y-md">
-                <div className="gap-md border-category-intellect/20 bg-category-intellect/5 p-md flex items-center rounded-lg border">
-                  <Award className="text-category-intellect h-8 w-8 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">
-                      {t('pages.courses.certificate.fileLabel')}
-                    </p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {displayCourse.completion_certificate.split('/').pop()}
-                    </p>
-                  </div>
-                  <div className="gap-xs flex shrink-0">
-                    <a
-                      href={displayCourse.completion_certificate}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                    <button
-                      type="button"
-                      disabled={uploadingCert}
-                      onClick={() => void handleCertificateRemove()}
-                      className="border-border text-destructive hover:bg-destructive/10 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors"
-                    >
-                      {uploadingCert ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <X className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
+            <TabsContent value="overview" className="mt-md space-y-md">
+              {displayCourse.description && (
+                <div className="bg-muted/30 p-md text-muted-foreground rounded-lg text-sm leading-relaxed">
+                  {displayCourse.description}
                 </div>
-                <label className="gap-sm border-border p-md hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
-                  <Upload className="text-muted-foreground h-5 w-5" />
-                  <span className="text-muted-foreground text-xs">
-                    {t('pages.courses.certificate.replace')}
-                  </span>
+              )}
+              {displayCourse.url && (
+                <a
+                  href={displayCourse.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="gap-sm text-category-intellect flex items-center text-sm hover:underline"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  {displayCourse.url}
+                </a>
+              )}
+              <div className="gap-sm grid grid-cols-2 text-sm">
+                {displayCourse.start_date && (
+                  <div className="gap-xs text-muted-foreground flex items-center">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {formatDate(displayCourse.start_date)}
+                  </div>
+                )}
+                {displayCourse.end_date && (
+                  <div className="gap-xs text-muted-foreground flex items-center">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {formatDate(displayCourse.end_date)}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="modules" className="mt-md space-y-sm">
+              {modules.length === 0 && !showAddModule && (
+                <div className="border-category-intellect/30 bg-category-intellect/5 p-lg rounded-lg border border-dashed text-center">
+                  <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
+                  <p className="text-foreground text-sm font-medium">
+                    {t('pages.courses.modules.emptyTitle')}
+                  </p>
+                  <p className="mt-xs text-muted-foreground text-xs">
+                    {t('pages.courses.modules.emptyHint')}
+                  </p>
+                </div>
+              )}
+
+              {modules.map((mod) => (
+                <ModuleItem
+                  key={mod.id}
+                  mod={mod}
+                  ownerId={displayCourse.owner}
+                  onUpdated={handleModuleUpdated}
+                  onDeleted={handleModuleUpdated}
+                />
+              ))}
+
+              {showAddModule ? (
+                <div className="gap-sm flex">
+                  <Input
+                    value={newModuleTitle}
+                    onChange={(e) => setNewModuleTitle(e.target.value)}
+                    placeholder={t('pages.courses.modules.titlePlaceholder')}
+                    className="text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newModuleTitle.trim()) {
+                        addModule.mutate({
+                          course: displayCourse.id,
+                          title: newModuleTitle.trim(),
+                          order: modules.length + 1,
+                          owner: displayCourse.owner,
+                        });
+                      }
+                      if (e.key === 'Escape') setShowAddModule(false);
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      if (newModuleTitle.trim()) {
+                        addModule.mutate({
+                          course: displayCourse.id,
+                          title: newModuleTitle.trim(),
+                          order: modules.length + 1,
+                          owner: displayCourse.owner,
+                        });
+                      }
+                    }}
+                    disabled={addModule.isPending}
+                  >
+                    {addModule.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="gap-sm text-muted-foreground hover:border-category-intellect/50 hover:text-category-intellect w-full border-dashed"
+                  onClick={() => setShowAddModule(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('pages.courses.modules.newBtn')}
+                </Button>
+              )}
+            </TabsContent>
+
+            <TabsContent value="sessions" className="mt-md space-y-sm">
+              {weeklyHoursData.length > 1 && (
+                <div className="border-border p-sm rounded-lg border">
+                  <p className="mb-sm text-muted-foreground text-xs font-medium">
+                    {t('pages.courses.studyHours.title')}
+                  </p>
+                  <ResponsiveContainer width="100%" height={100}>
+                    <BarChart
+                      data={weeklyHoursData}
+                      margin={{ top: 2, right: 4, left: -20, bottom: 0 }}
+                    >
+                      <XAxis
+                        dataKey="week"
+                        tick={{ fontSize: 9 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        formatter={(v) => [
+                          `${Number(v)}h`,
+                          t('pages.courses.studyHours.hours'),
+                        ]}
+                        labelStyle={{ fontSize: 11 }}
+                        contentStyle={{ fontSize: 11 }}
+                      />
+                      <Bar
+                        dataKey="hours"
+                        fill="hsl(var(--category-intellect))"
+                        radius={[3, 3, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">
+                  {t('pages.courses.sessions.totalHours', {
+                    hours: totalSessionHours.toFixed(1),
+                  })}
+                </span>
+                <Button
+                  size="sm"
+                  className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
+                  onClick={() => setShowAddSession(true)}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('pages.courses.sessions.newBtn')}
+                </Button>
+              </div>
+
+              {showAddSession && (
+                <AddSessionForm
+                  courseId={displayCourse.id}
+                  ownerId={displayCourse.owner}
+                  onSaved={() => {
+                    setShowAddSession(false);
+                    handleSessionUpdated();
+                  }}
+                  onCancel={() => setShowAddSession(false)}
+                />
+              )}
+
+              {sessions.length === 0 && !showAddSession ? (
+                <p className="py-md text-muted-foreground text-center text-sm">
+                  {t('pages.courses.sessions.emptyState')}
+                </p>
+              ) : (
+                sessions.map((s) => (
+                  <SessionItem
+                    key={s.id}
+                    session={s}
+                    onDeleted={handleSessionUpdated}
+                  />
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="certificate" className="mt-md space-y-md">
+              {displayCourse.completion_certificate ? (
+                <div className="space-y-md">
+                  <div className="gap-md border-category-intellect/20 bg-category-intellect/5 p-md flex items-center rounded-lg border">
+                    <Award className="text-category-intellect h-8 w-8 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">
+                        {t('pages.courses.certificate.fileLabel')}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowCertPreview(true)}
+                        className="gap-xs text-primary inline-flex items-center text-xs underline-offset-2 hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {t('pages.courses.certificate.viewLink')}
+                      </button>
+                    </div>
+                    <div className="gap-xs flex shrink-0">
+                      <button
+                        type="button"
+                        disabled={uploadingCert}
+                        onClick={() => void handleCertificateRemove()}
+                        className="border-border text-destructive hover:bg-destructive/10 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors"
+                      >
+                        {uploadingCert ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <label className="gap-sm border-border p-md hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                    <Upload className="text-muted-foreground h-5 w-5" />
+                    <span className="text-muted-foreground text-xs">
+                      {t('pages.courses.certificate.replace')}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleCertificateUpload(file);
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                  {uploadingCert ? (
+                    <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
+                  ) : (
+                    <Award className="text-category-intellect/40 h-10 w-10" />
+                  )}
+                  <div>
+                    <p className="text-foreground text-sm font-medium">
+                      {t('pages.courses.certificate.emptyTitle')}
+                    </p>
+                    <p className="mt-xs text-muted-foreground text-xs">
+                      {t('pages.courses.certificate.emptyHint')}
+                    </p>
+                  </div>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -1051,36 +1121,67 @@ export function CourseDetailModal({
                     }}
                   />
                 </label>
-              </div>
-            ) : (
-              <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
-                {uploadingCert ? (
-                  <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
-                ) : (
-                  <Award className="text-category-intellect/40 h-10 w-10" />
-                )}
-                <div>
-                  <p className="text-foreground text-sm font-medium">
-                    {t('pages.courses.certificate.emptyTitle')}
-                  </p>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.courses.certificate.emptyHint')}
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void handleCertificateUpload(file);
-                  }}
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {displayCourse.completion_certificate && certificateStreamUrl && (
+        <Dialog open={showCertPreview} onOpenChange={setShowCertPreview}>
+          <DialogContent size="xl" className="max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>{t('pages.courses.certificate.previewTitle')}</DialogTitle>
+            </DialogHeader>
+            <div className="bg-muted/20 border-border h-[75vh] w-full overflow-auto rounded-md border">
+              {isCertificateImage ? (
+                <img
+                  src={certificateStreamUrl}
+                  alt={t('pages.courses.certificate.previewTitle')}
+                  className="mx-auto h-full w-auto object-contain"
                 />
-              </label>
-            )}
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+              ) : (
+                <div className="py-lg gap-md flex flex-col items-center">
+                  {certPdfData ? (
+                    <Document
+                      file={certPdfData}
+                      onLoadSuccess={({ numPages }) => setCertNumPages(numPages)}
+                      loading={
+                        <div className="flex h-64 items-center justify-center">
+                          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                        </div>
+                      }
+                      error={
+                        <div className="gap-sm text-muted-foreground flex h-64 flex-col items-center justify-center">
+                          <Award className="h-10 w-10" />
+                          <p className="text-sm">
+                            {t('pages.courses.certificate.previewError')}
+                          </p>
+                        </div>
+                      }
+                    >
+                      {Array.from({ length: certNumPages }, (_, i) => (
+                        <Page
+                          key={i}
+                          pageNumber={i + 1}
+                          renderAnnotationLayer={false}
+                          renderTextLayer={false}
+                          className="shadow-md"
+                          width={Math.min(760, window.innerWidth - 96)}
+                        />
+                      ))}
+                    </Document>
+                  ) : (
+                    <div className="flex h-64 items-center justify-center">
+                      <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
