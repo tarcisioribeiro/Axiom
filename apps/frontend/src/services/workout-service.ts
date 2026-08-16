@@ -1,8 +1,10 @@
 import { API_CONFIG } from '@/config/api-config';
+import type { PaginatedResponse } from '@/types';
 import type {
   BodyMetric,
   BodyMetricFormData,
   Exercise,
+  ExerciseDatasetEntry,
   ExerciseFormData,
   WorkoutDay,
   WorkoutDayFormData,
@@ -18,11 +20,29 @@ import type {
   WorkoutSessionSetFormData,
 } from '@/types/workout';
 
+import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
 class ExerciseService extends BaseService<Exercise, ExerciseFormData> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.EXERCISES);
+  }
+
+  /** Busca somente-leitura no catálogo vendorizado do dataset de
+   * exercícios (hasaneyldrm/exercises-dataset) — usada pelo picker de
+   * imagens. Não é CRUD, por isso fica fora do BaseService. */
+  async searchDataset(params?: {
+    search?: string;
+    category?: string;
+    body_part?: string;
+    target?: string;
+    equipment?: string;
+    page?: number;
+  }): Promise<PaginatedResponse<ExerciseDatasetEntry>> {
+    return apiClient.get<PaginatedResponse<ExerciseDatasetEntry>>(
+      API_CONFIG.ENDPOINTS.EXERCISE_DATASET,
+      params
+    );
   }
 }
 

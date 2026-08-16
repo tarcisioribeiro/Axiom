@@ -4,14 +4,16 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from django.db.models import Count, Prefetch
+from django.http import HttpResponseRedirect
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response
+from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
@@ -19,6 +21,7 @@ from personal_planning.models import (
     Challenge,
     DailyReflection,
     Exercise,
+    ExerciseDatasetEntry,
     Food,
     GamificationProfile,
     Goal,
@@ -45,6 +48,7 @@ from personal_planning.serializers import (
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
     ExerciseCreateUpdateSerializer,
+    ExerciseDatasetEntrySerializer,
     ExerciseSerializer,
     FoodCreateUpdateSerializer,
     FoodSerializer,
@@ -1802,7 +1806,9 @@ class ExerciseListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+        return Exercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).select_related("dataset_entry")
 
 
 class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -1811,7 +1817,166 @@ class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+        return Exercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).select_related("dataset_entry")
+
+
+class ExerciseGifStreamView(APIView):
+    """Redireciona para o GIF do exercício (ver docstring de
+    BookCoverStreamView, apps/api/library/views.py)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Exercise.objects.all()
+
+    def get(self, request, pk):
+        try:
+            exercise = Exercise.objects.select_related("dataset_entry").get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Exercise.DoesNotExist:
+            return Response(
+                {"detail": "Exercício não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not exercise.dataset_entry or not exercise.dataset_entry.gif:
+            return Response(
+                {"detail": "Este exercício não possui GIF."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = exercise.dataset_entry.gif.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseThumbnailStreamView(APIView):
+    """Redireciona para a miniatura do exercício (ver docstring de
+    BookCoverStreamView, apps/api/library/views.py)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Exercise.objects.all()
+
+    def get(self, request, pk):
+        try:
+            exercise = Exercise.objects.select_related("dataset_entry").get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Exercise.DoesNotExist:
+            return Response(
+                {"detail": "Exercício não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not exercise.dataset_entry or not exercise.dataset_entry.thumbnail:
+            return Response(
+                {"detail": "Este exercício não possui miniatura."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = exercise.dataset_entry.thumbnail.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseDatasetEntryListView(generics.ListAPIView):
+    """Busca somente-leitura no catálogo vendorizado do dataset
+    hasaneyldrm/exercises-dataset — usada pelo picker de imagens de
+    exercícios. Dado global compartilhado (sem escopo por owner)."""
+
+    serializer_class = ExerciseDatasetEntrySerializer
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def get_queryset(self):
+        qs = ExerciseDatasetEntry.objects.filter(deleted_at__isnull=True)
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(name__icontains=search)
+        for param in ("category", "body_part", "target", "equipment"):
+            value = self.request.query_params.get(param)
+            if value:
+                qs = qs.filter(**{param: value})
+        return qs
+
+
+class ExerciseDatasetGifStreamView(APIView):
+    """Redireciona para o GIF de uma entrada do dataset — usada pelo grid
+    de resultados do picker, antes de qualquer seleção. Sem checagem de
+    dono: é dado de referência compartilhado entre usuários autenticados."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = ExerciseDatasetEntry.objects.all()
+
+    def get(self, request, pk):
+        try:
+            entry = ExerciseDatasetEntry.objects.get(
+                pk=pk, deleted_at__isnull=True
+            )
+        except ExerciseDatasetEntry.DoesNotExist:
+            return Response(
+                {"detail": "Entrada do dataset não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not entry.gif:
+            return Response(
+                {"detail": "Esta entrada não possui GIF."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = entry.gif.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseDatasetThumbnailStreamView(APIView):
+    """Redireciona para a miniatura de uma entrada do dataset (ver
+    docstring de ExerciseDatasetGifStreamView)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = ExerciseDatasetEntry.objects.all()
+
+    def get(self, request, pk):
+        try:
+            entry = ExerciseDatasetEntry.objects.get(
+                pk=pk, deleted_at__isnull=True
+            )
+        except ExerciseDatasetEntry.DoesNotExist:
+            return Response(
+                {"detail": "Entrada do dataset não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not entry.thumbnail:
+            return Response(
+                {"detail": "Esta entrada não possui miniatura."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = entry.thumbnail.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
 
 
 class WorkoutPlanListCreateView(BaseListCreateView):
@@ -1832,7 +1997,7 @@ class WorkoutPlanListCreateView(BaseListCreateView):
                         "exercises",
                         queryset=WorkoutExercise.objects.filter(
                             deleted_at__isnull=True
-                        ),
+                        ).select_related("exercise__dataset_entry"),
                     )
                 ),
             )
@@ -1864,7 +2029,7 @@ class WorkoutDayListCreateView(BaseListCreateView):
                 "exercises",
                 queryset=WorkoutExercise.objects.filter(
                     deleted_at__isnull=True
-                ),
+                ).select_related("exercise__dataset_entry"),
             )
         )
         plan_id = self.request.query_params.get("plan")
@@ -1890,7 +2055,7 @@ class WorkoutExerciseListCreateView(BaseListCreateView):
         member = Member.objects.get(user=self.request.user)
         qs = WorkoutExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__dataset_entry")
         workout_day_id = self.request.query_params.get("workout_day")
         if workout_day_id:
             qs = qs.filter(workout_day_id=workout_day_id)
@@ -1905,7 +2070,7 @@ class WorkoutExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         member = Member.objects.get(user=self.request.user)
         return WorkoutExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__dataset_entry")
 
 
 class WorkoutSessionListCreateView(BaseListCreateView):
@@ -1924,7 +2089,9 @@ class WorkoutSessionListCreateView(BaseListCreateView):
                     "session_exercises",
                     queryset=WorkoutSessionExercise.objects.filter(
                         deleted_at__isnull=True
-                    ).prefetch_related(
+                    )
+                    .select_related("exercise__exercise__dataset_entry")
+                    .prefetch_related(
                         Prefetch(
                             "sets",
                             queryset=WorkoutSessionSet.objects.filter(
@@ -1966,7 +2133,7 @@ class WorkoutSessionExerciseListCreateView(BaseListCreateView):
         member = Member.objects.get(user=self.request.user)
         qs = WorkoutSessionExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__exercise__dataset_entry")
         session_id = self.request.query_params.get("session")
         if session_id:
             qs = qs.filter(session_id=session_id)
@@ -1983,7 +2150,7 @@ class WorkoutSessionExerciseRetrieveUpdateDestroyView(
         member = Member.objects.get(user=self.request.user)
         return WorkoutSessionExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__exercise__dataset_entry")
 
 
 class WorkoutSessionSetListCreateView(BaseListCreateView):
