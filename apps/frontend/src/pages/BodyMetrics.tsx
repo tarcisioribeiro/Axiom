@@ -913,9 +913,7 @@ export default function BodyMetrics() {
                                     (m) => m.key === baseKey
                                   );
                                   const raw = entry.payload[baseKey] as
-                                    | number
-                                    | null
-                                    | undefined;
+                                    number | null | undefined;
                                   const rawStr =
                                     raw !== null && raw !== undefined
                                       ? `${raw.toFixed(1)}${meta?.unit ? ` ${meta.unit}` : ''}`
