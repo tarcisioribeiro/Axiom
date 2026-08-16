@@ -16,6 +16,7 @@ from library.views import (
     BookMarkAsReadView,
     BookReadingQueueView,
     BookReorderView,
+    CourseCertificateStreamView,
     CourseLessonBulkCompleteView,
     CourseLessonListCreateView,
     CourseLessonRetrieveUpdateDestroyView,
@@ -193,6 +194,11 @@ urlpatterns = [
         "courses/<int:pk>/",
         CourseRetrieveUpdateDestroyView.as_view(),
         name="course-detail",
+    ),
+    path(
+        "courses/<int:pk>/certificate/stream/",
+        CourseCertificateStreamView.as_view(),
+        name="course-certificate-stream",
     ),
     # Course Modules
     path(
