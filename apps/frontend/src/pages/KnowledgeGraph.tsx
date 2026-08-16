@@ -17,9 +17,10 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ForceGraph2D } from 'react-force-graph';
+import { ForceGraph3D } from 'react-force-graph';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import * as THREE from 'three';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -144,6 +145,55 @@ function readCanvasColors(): CanvasColors {
     linkImplicit: hsla('--muted-foreground', 0.35),
     linkingRing: hsl('--accent'),
   };
+}
+
+// ============================================================================
+// 3D SCENE HELPERS
+// ============================================================================
+
+// THREE.Color only parses comma-separated hsl(); our CSS vars are space-separated.
+function toThreeColor(hsl: string): string {
+  const match = /^hsl\((-?[\d.]+)\s+([\d.]+%)\s+([\d.]+%)\)$/.exec(hsl);
+  return match ? `hsl(${match[1]}, ${match[2]}, ${match[3]})` : hsl;
+}
+
+function createLabelSprite(
+  text: string,
+  colors: CanvasColors,
+  dimmed: boolean
+): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const fontSize = 28;
+  const paddingX = 10;
+  const paddingY = 6;
+  ctx.font = `${fontSize}px Inter, sans-serif`;
+  const textWidth = ctx.measureText(text).width;
+  canvas.width = textWidth + paddingX * 2;
+  canvas.height = fontSize + paddingY * 2;
+  // canvas resize clears context state, so the font must be reapplied
+  ctx.font = `${fontSize}px Inter, sans-serif`;
+  ctx.fillStyle = colors.labelBg;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, canvas.width, canvas.height, 6);
+  ctx.fill();
+  ctx.fillStyle = dimmed ? colors.labelDim : colors.labelText;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 1);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthWrite: false,
+    opacity: dimmed ? 0.35 : 1,
+  });
+  const sprite = new THREE.Sprite(material);
+  const desiredHeight = 6;
+  const scaleFactor = desiredHeight / canvas.height;
+  sprite.scale.set(canvas.width * scaleFactor, canvas.height * scaleFactor, 1);
+  return sprite;
 }
 
 // ============================================================================
@@ -528,10 +578,23 @@ function CreateLinkModal({
 
 const KG_POSITIONS_KEY = 'axiom-kg-node-positions';
 
-function loadSavedPositions(): Record<string, { x: number; y: number }> {
+interface GraphInstance {
+  zoomToFit: (ms?: number, padding?: number) => void;
+  cameraPosition: (
+    position: Partial<{ x: number; y: number; z: number }>,
+    lookAt?: { x: number; y: number; z: number },
+    ms?: number
+  ) => void;
+  camera: () => THREE.Camera;
+  graphData: () => { nodes: GraphNode[] };
+}
+
+function loadSavedPositions(): Record<string, { x: number; y: number; z: number }> {
   try {
     const raw = localStorage.getItem(KG_POSITIONS_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, { x: number; y: number }>) : {};
+    return raw
+      ? (JSON.parse(raw) as Record<string, { x: number; y: number; z: number }>)
+      : {};
   } catch {
     return {};
   }
@@ -539,7 +602,7 @@ function loadSavedPositions(): Record<string, { x: number; y: number }> {
 
 export default function KnowledgeGraph() {
   const { t } = useTranslation();
-  const graphRef = useRef<{ zoomToFit: (ms?: number) => void } | null>(null);
+  const graphRef = useRef<GraphInstance | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const colorsRef = useRef<CanvasColors>(readCanvasColors());
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -661,13 +724,12 @@ export default function KnowledgeGraph() {
 
   // Save node positions when simulation stops
   const handleEngineStop = useCallback(() => {
-    const g = graphRef.current as { graphData?: () => { nodes: GraphNode[] } } | null;
-    const nodes = g?.graphData?.()?.nodes;
+    const nodes = graphRef.current?.graphData?.()?.nodes;
     if (!nodes) return;
-    const positions: Record<string, { x: number; y: number }> = {};
+    const positions: Record<string, { x: number; y: number; z: number }> = {};
     nodes.forEach((n) => {
-      if (n.x !== undefined && n.y !== undefined) {
-        positions[n.id] = { x: n.x, y: n.y };
+      if (n.x !== undefined && n.y !== undefined && n.z !== undefined) {
+        positions[n.id] = { x: n.x, y: n.y, z: n.z };
       }
     });
     localStorage.setItem(KG_POSITIONS_KEY, JSON.stringify(positions));
@@ -687,7 +749,17 @@ export default function KnowledgeGraph() {
       )
       .map((n) => {
         const saved = savedPositions[n.id];
-        return saved ? { ...n, x: saved.x, y: saved.y, fx: saved.x, fy: saved.y } : n;
+        return saved
+          ? {
+              ...n,
+              x: saved.x,
+              y: saved.y,
+              z: saved.z,
+              fx: saved.x,
+              fy: saved.y,
+              fz: saved.z,
+            }
+          : n;
       });
     const visibleIds = new Set(visibleNodes.map((n) => n.id));
 
@@ -717,70 +789,47 @@ export default function KnowledgeGraph() {
 
   const hasFocus = highlightedNeighbors.size > 0 && (hoveredNode || selectedNode);
 
-  // Node canvas renderer
-  const nodeCanvasObject = useCallback(
-    (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const { x = 0, y = 0 } = node;
-      const baseSize = NODE_SIZES[node.type];
+  // Node 3D object renderer (sphere + optional selection ring + text label)
+  const nodeThreeObject = useCallback(
+    (node: GraphNode) => {
       const isFocused = highlightedNeighbors.has(node.id);
-      const isDimmed = hasFocus && !isFocused;
+      const isDimmed = Boolean(hasFocus) && !isFocused;
       const isHovered = hoveredNode?.id === node.id;
       const isSelected = selectedNode?.id === node.id;
       const isLinking = linkingFrom?.id === node.id;
 
       const colors = colorsRef.current;
-      const color = colors.nodes[node.type];
-      const alpha = isDimmed ? 0.15 : 1;
+      const baseColor = colors.nodes[node.type];
+      const baseSize = NODE_SIZES[node.type];
 
-      ctx.globalAlpha = alpha;
+      const group = new THREE.Group();
 
-      // Glow for focused/hovered
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(baseSize, 16, 16),
+        new THREE.MeshLambertMaterial({
+          color: toThreeColor(baseColor),
+          transparent: true,
+          opacity: isDimmed ? 0.15 : 1,
+        })
+      );
+      group.add(sphere);
+
+      // Ring for hovered / selected / linking
       if (isHovered || isSelected || isLinking) {
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 12;
+        const ringColor = isLinking ? colors.linkingRing : baseColor;
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(baseSize + 2.5, 0.5, 8, 32),
+          new THREE.MeshBasicMaterial({ color: toThreeColor(ringColor) })
+        );
+        group.add(ring);
       }
 
-      // Outer ring for selected / linking
-      if (isSelected || isLinking) {
-        ctx.beginPath();
-        ctx.arc(x, y, baseSize + 3, 0, 2 * Math.PI);
-        ctx.strokeStyle = isLinking ? colors.linkingRing : color;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
+      const label = node.label.length > 20 ? node.label.slice(0, 20) + '…' : node.label;
+      const sprite = createLabelSprite(label, colors, isDimmed);
+      sprite.position.set(0, baseSize + 5, 0);
+      group.add(sprite);
 
-      // Main circle
-      ctx.beginPath();
-      ctx.arc(x, y, baseSize, 0, 2 * Math.PI);
-      ctx.fillStyle = color;
-      ctx.fill();
-
-      ctx.shadowBlur = 0;
-
-      // Label (show when zoomed in or focused)
-      if (globalScale >= 1.5 || isHovered || isSelected) {
-        const label =
-          node.label.length > 20 ? node.label.slice(0, 20) + '…' : node.label;
-        const fontSize = Math.max(9, 11 / globalScale);
-        ctx.font = `${fontSize}px Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-
-        const textWidth = ctx.measureText(label).width;
-        const bx = x - textWidth / 2 - 3;
-        const by = y + baseSize + 3;
-        const bw = textWidth + 6;
-        const bh = fontSize + 4;
-        ctx.fillStyle = colors.labelBg;
-        ctx.beginPath();
-        ctx.roundRect(bx, by, bw, bh, 3);
-        ctx.fill();
-
-        ctx.fillStyle = isDimmed ? colors.labelDim : colors.labelText;
-        ctx.fillText(label, x, by + 2);
-      }
-
-      ctx.globalAlpha = 1;
+      return group;
     },
     [highlightedNeighbors, hasFocus, hoveredNode, selectedNode, linkingFrom]
   );
@@ -810,11 +859,6 @@ export default function KnowledgeGraph() {
 
   const getLinkWidth = useCallback(
     (link: GraphLink) => (link.type === 'explicit' ? 2 : 1),
-    []
-  );
-
-  const getLinkDash = useCallback(
-    (link: GraphLink): number[] => (link.type === 'explicit' ? [4, 3] : []),
     []
   );
 
@@ -1082,32 +1126,18 @@ export default function KnowledgeGraph() {
                 )}
               </div>
             ) : (
-              <ForceGraph2D
+              <ForceGraph3D
                 ref={graphRef as never}
                 graphData={filteredGraphData}
                 width={dimensions.width}
                 height={dimensions.height}
-                backgroundColor="transparent"
-                nodeCanvasObject={nodeCanvasObject}
-                nodePointerAreaPaint={(
-                  node: GraphNode,
-                  color: string,
-                  ctx: CanvasRenderingContext2D
-                ) => {
-                  ctx.fillStyle = color;
-                  ctx.beginPath();
-                  ctx.arc(
-                    node.x ?? 0,
-                    node.y ?? 0,
-                    NODE_SIZES[node.type] + 4,
-                    0,
-                    2 * Math.PI
-                  );
-                  ctx.fill();
-                }}
+                backgroundColor="rgba(0,0,0,0)"
+                rendererConfig={{ preserveDrawingBuffer: true }}
+                nodeThreeObject={nodeThreeObject}
+                nodeThreeObjectExtend={false}
                 linkColor={getLinkColor}
                 linkWidth={getLinkWidth}
-                linkLineDash={getLinkDash}
+                linkOpacity={0.8}
                 linkDirectionalParticles={2}
                 linkDirectionalParticleWidth={(link: GraphLink) =>
                   link.type === 'explicit' ? 2.5 : 0
@@ -1203,10 +1233,14 @@ export default function KnowledgeGraph() {
               </Tooltip>
               <button
                 onClick={() => {
-                  const g = graphRef.current as {
-                    zoom: (n: number, ms: number) => void;
-                  } | null;
-                  g?.zoom(1.5, 300);
+                  const g = graphRef.current;
+                  if (!g) return;
+                  const { x, y, z } = g.camera().position;
+                  g.cameraPosition(
+                    { x: x * 0.7, y: y * 0.7, z: z * 0.7 },
+                    undefined,
+                    300
+                  );
                 }}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
@@ -1214,10 +1248,14 @@ export default function KnowledgeGraph() {
               </button>
               <button
                 onClick={() => {
-                  const g = graphRef.current as {
-                    zoom: (n: number, ms: number) => void;
-                  } | null;
-                  g?.zoom(0.67, 300);
+                  const g = graphRef.current;
+                  if (!g) return;
+                  const { x, y, z } = g.camera().position;
+                  g.cameraPosition(
+                    { x: x * 1.4, y: y * 1.4, z: z * 1.4 },
+                    undefined,
+                    300
+                  );
                 }}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >

@@ -221,10 +221,13 @@ export interface GraphNode {
   // runtime fields populated by force-graph
   x?: number;
   y?: number;
+  z?: number;
   vx?: number;
   vy?: number;
+  vz?: number;
   fx?: number;
   fy?: number;
+  fz?: number;
   [others: string]: unknown;
 }
 
