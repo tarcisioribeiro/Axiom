@@ -48,7 +48,7 @@ export const EnhancedTooltip = ({
 
             {/* Valor */}
             <span className="text-foreground text-sm font-bold tabular-nums">
-              {formatter ? formatter(entry.value) : entry.value}
+              {formatter ? formatter(entry.value, entry) : entry.value}
             </span>
           </div>
         ))}

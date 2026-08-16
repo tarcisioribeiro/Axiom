@@ -77,7 +77,7 @@ export interface ChartTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadItem[];
   label?: string | number;
-  formatter?: (value: number | string) => string;
+  formatter?: (value: number | string, entry?: TooltipPayloadItem) => string;
   labelFormatter?: (label: string | number) => string;
 }
 
