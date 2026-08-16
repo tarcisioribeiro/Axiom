@@ -5455,7 +5455,17 @@
       "fieldMuscles": "Grupos Musculares",
       "fieldMusclesPlaceholder": "Ex: Peitoral / Tríceps",
       "fieldDescription": "Descrição",
-      "fieldDescriptionPlaceholder": "Técnica, variações, dicas..."
+      "fieldDescriptionPlaceholder": "Técnica, variações, dicas...",
+      "changeImage": "Alterar imagem",
+      "picker": {
+        "title": "Escolher imagem do exercício",
+        "description": "Busque um exercício no catálogo de imagens e selecione o GIF correspondente.",
+        "searchPlaceholder": "Buscar exercício (em inglês, ex: squat)...",
+        "loadMore": "Carregar mais",
+        "empty": "Nenhum exercício encontrado",
+        "emptyDesc": "Tente buscar por outro termo, em inglês.",
+        "selectError": "Erro ao definir a imagem do exercício"
+      }
     },
     "workoutSessions": {
       "sectionSession": "Dados da Sessão",

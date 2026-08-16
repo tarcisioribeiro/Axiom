@@ -27,7 +27,7 @@ Axiom/
 
 **Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, monthly_planning, agents, exchange_rates, webhooks, admin_panel
 
-**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances. `personal_planning` also includes workout tracking (exercises, workout plans, days, sessions, sets) and nutrition tracking (foods, meal types, menu options, meal logs) under the same app.
+**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances. `personal_planning` also includes workout tracking (exercises, workout plans, days, sessions, sets) and nutrition tracking (foods, meal types, menu options, meal logs) under the same app. `ExerciseDatasetEntry` vendors the public `hasaneyldrm/exercises-dataset` catalog (GitHub) — metadata + GIF/thumbnail media hosted on MinIO, populated once per environment via `manage.py import_exercise_dataset`. `Exercise.dataset_entry` (nullable FK) is the only source of exercise cover images — there is no free-form image upload; users pick one via a search picker in the frontend. The GIF propagates read-only through `WorkoutExercise` and `WorkoutSessionExercise` via `gif_url`/`thumbnail_url` `SerializerMethodField`s that resolve the FK chain (`WorkoutExercise.exercise` → `Exercise.dataset_entry`; `WorkoutSessionExercise.exercise` → `WorkoutExercise` → ...), proxied through `exercises/<pk>/gif|thumbnail/` (mirrors the `library` book-cover MinIO redirect pattern).
 
 **Receivables** (`apps/api/receivables/`): Mirror of `payables` for the revenue side — tracks money owed to the user (fees, reimbursements, services rendered). Creating a `Receivable` does NOT auto-create a revenue record; only recording receipt (`received_value`) triggers that. Statuses: `active`, `received`, `overdue`, `cancelled`.
 
@@ -159,6 +159,7 @@ $DC exec api python manage.py process_existing_transfers
 $DC exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
 $DC exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
 $DC exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
+$DC exec api python manage.py import_exercise_dataset     # One-time per environment: import hasaneyldrm/exercises-dataset (1,324 exercises + GIF/thumbnail media) into ExerciseDatasetEntry via MinIO. Supports --dry-run, --limit
 ```
 
 ### Frontend

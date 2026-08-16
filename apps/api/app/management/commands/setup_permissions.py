@@ -64,6 +64,7 @@ class Command(BaseCommand):
                 "workoutsession",
                 "workoutsessionexercise",
                 "workoutsessionset",
+                "exercisedatasetentry",
                 "food",
                 "mealtype",
                 "menuoption",

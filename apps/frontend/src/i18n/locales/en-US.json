@@ -5389,7 +5389,17 @@
       "fieldMuscles": "Muscle Groups",
       "fieldMusclesPlaceholder": "e.g. Chest / Triceps",
       "fieldDescription": "Description",
-      "fieldDescriptionPlaceholder": "Technique, variations, tips..."
+      "fieldDescriptionPlaceholder": "Technique, variations, tips...",
+      "changeImage": "Change image",
+      "picker": {
+        "title": "Choose exercise image",
+        "description": "Search the exercise image catalog and select the matching GIF.",
+        "searchPlaceholder": "Search exercise...",
+        "loadMore": "Load more",
+        "empty": "No exercises found",
+        "emptyDesc": "Try a different search term.",
+        "selectError": "Error setting exercise image"
+      }
     },
     "workoutSessions": {
       "sectionSession": "Session Details",

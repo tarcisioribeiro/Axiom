@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
+import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { useToast } from '@/hooks/use-toast';
 import { formatLocalDate } from '@/lib/utils';
 import type { WorkoutDay, WorkoutSession } from '@/types/workout';
@@ -37,7 +38,10 @@ interface SessionSetValues {
 
 interface SessionExerciseValues {
   id?: number;
+  exercise?: number | null;
   exercise_name: string;
+  gif_url?: string | null;
+  thumbnail_url?: string | null;
   sets_target: number;
   reps_target_min: number;
   reps_target_max: number;
@@ -119,7 +123,10 @@ export function WorkoutSessionForm({
               .sort((a, b) => a.order - b.order)
               .map((ex) => ({
                 id: ex.id,
+                exercise: ex.exercise,
                 exercise_name: ex.exercise_name,
+                gif_url: ex.gif_url,
+                thumbnail_url: ex.thumbnail_url,
                 sets_target: ex.sets_target,
                 reps_target_min: ex.reps_target_min,
                 reps_target_max: ex.reps_target_max,
@@ -173,7 +180,10 @@ export function WorkoutSessionForm({
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
         const preloaded: SessionExerciseValues[] = day.exercises.map((ex, idx) => ({
+          exercise: ex.exercise,
           exercise_name: ex.name,
+          gif_url: ex.gif_url,
+          thumbnail_url: ex.thumbnail_url,
           sets_target: ex.sets,
           reps_target_min: ex.reps_min,
           reps_target_max: ex.reps_max,
@@ -363,6 +373,11 @@ function ExerciseBlock({
   return (
     <div className="space-y-sm border-category-exercise bg-card p-sm rounded-md border-l-2">
       <div className="gap-sm flex items-center">
+        <ExerciseThumbnail
+          gifUrl={watch(`exercises.${exIdx}.gif_url`)}
+          thumbnailUrl={watch(`exercises.${exIdx}.thumbnail_url`)}
+          size="sm"
+        />
         <Input
           className="flex-1"
           placeholder={t('pages.workoutSessions.exerciseNamePlaceholder')}

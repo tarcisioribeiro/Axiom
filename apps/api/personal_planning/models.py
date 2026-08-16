@@ -1327,6 +1327,15 @@ class Exercise(BaseModel):
             "Usado para estimar calorias gastas: kcal = MET × peso_kg × horas."
         ),
     )
+    dataset_entry = models.ForeignKey(
+        "ExerciseDatasetEntry",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_exercises",
+        verbose_name="Mídia do Catálogo",
+        help_text="Entrada do dataset de exercícios usada como GIF/imagem.",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1717,6 +1726,60 @@ class WorkoutSessionSet(BaseModel):
         load_str = f"{self.load}{self.load_unit}" if self.load else "s/carga"
         reps_str = f"×{self.reps_done}" if self.reps_done else ""
         return f"Série {self.set_number} — {load_str}{reps_str}"
+
+
+class ExerciseDatasetEntry(BaseModel):
+    """Entrada vendorizada do dataset público hasaneyldrm/exercises-dataset
+    (GitHub, MIT + mídia © Gym visual). Dado de referência global,
+    compartilhado entre todos os usuários — não possui `owner`. Populado
+    via `manage.py import_exercise_dataset`; é a única fonte de mídia
+    (GIF/thumbnail) aceita para o catálogo de exercícios."""
+
+    dataset_id = models.CharField(
+        max_length=4,
+        unique=True,
+        db_index=True,
+        verbose_name="ID no Dataset",
+        help_text="ID de 4 dígitos do dataset de origem (ex: '0001').",
+    )
+    name = models.CharField(max_length=200, verbose_name="Nome (EN)")
+    category = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    body_part = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    equipment = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    target = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    muscle_group = models.CharField(max_length=100, null=True, blank=True)
+    secondary_muscles = models.CharField(max_length=300, null=True, blank=True)
+    media_id = models.CharField(max_length=100, null=True, blank=True)
+    attribution = models.CharField(max_length=300, null=True, blank=True)
+    thumbnail = models.ImageField(
+        upload_to="personal_planning/exercise_dataset/thumbnails/",
+        null=True,
+        blank=True,
+        verbose_name="Miniatura (JPG estático)",
+    )
+    gif = models.FileField(
+        upload_to="personal_planning/exercise_dataset/gifs/",
+        null=True,
+        blank=True,
+        verbose_name="GIF Animado",
+    )
+
+    class Meta:
+        verbose_name = "Entrada do Catálogo de Exercícios (Dataset)"
+        verbose_name_plural = "Entradas do Catálogo de Exercícios (Dataset)"
+        ordering = ["name"]
+        indexes = [models.Index(fields=["category", "body_part"])]
+
+    def __str__(self):
+        return f"{self.dataset_id} — {self.name}"
 
 
 # ============================================================================

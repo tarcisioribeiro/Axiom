@@ -1,9 +1,14 @@
+/* eslint-disable max-lines */
 export interface Exercise {
   id: number;
   uuid: string;
   name: string;
   muscle_groups?: string | null;
   description?: string | null;
+  dataset_entry?: number | null;
+  dataset_entry_name?: string | null;
+  gif_url?: string | null;
+  thumbnail_url?: string | null;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -13,7 +18,21 @@ export interface ExerciseFormData {
   name: string;
   muscle_groups?: string | null;
   description?: string | null;
+  dataset_entry?: number | null;
   owner: number;
+}
+
+export interface ExerciseDatasetEntry {
+  id: number;
+  dataset_id: string;
+  name: string;
+  category?: string | null;
+  body_part?: string | null;
+  equipment?: string | null;
+  target?: string | null;
+  muscle_group?: string | null;
+  thumbnail_url?: string | null;
+  gif_url?: string | null;
 }
 
 export interface WorkoutPlan {
@@ -71,6 +90,8 @@ export interface WorkoutExercise {
   workout_day: number;
   exercise?: number | null;
   exercise_catalog_name?: string | null;
+  gif_url?: string | null;
+  thumbnail_url?: string | null;
   name: string;
   sets: number;
   reps_min: number;
@@ -133,6 +154,8 @@ export interface WorkoutSessionExercise {
   session: number;
   exercise?: number | null;
   exercise_name: string;
+  gif_url?: string | null;
+  thumbnail_url?: string | null;
   sets_target: number;
   reps_target_min: number;
   reps_target_max: number;
