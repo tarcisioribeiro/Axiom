@@ -148,7 +148,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <Card
         className={cn(
-          `transition-shadow ${cardClass}`,
+          `h-full transition-shadow ${cardClass}`,
           onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
         )}
         onClick={onClick}
