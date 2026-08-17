@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 
 import { AgentChatWidget } from '@/components/agents/AgentChatWidget';
 
@@ -8,8 +8,19 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { StudyTimer } from './StudyTimer';
 
+// Controle Financeiro module routes (see nav-config.ts `finance` module +
+// standalone finance pages linked from the dashboard, not all of which are
+// in the sidebar).
+const FINANCE_MODULE_PATTERN =
+  /^\/(dashboard|accounts|transactions|recurring|fixed-expenses|fixed-revenues|finance|categorization-rules|automation-rules|tags|credit-cards|credit-card-bills|credit-card-expenses|transfers|loans|bills|members|budgets|webhooks|bank-reconciliation|vaults|financial-goals)(\/|$)/;
+
+// Intelecto module routes (see nav-config.ts `library` module — titled
+// "Intelecto" in the UI).
+const INTELLECT_MODULE_PATTERN = /^\/library(\/|$)/;
+
 export const Layout = () => {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
 
   return (
     <div className="bg-background flex min-h-screen">
@@ -35,11 +46,11 @@ export const Layout = () => {
       {/* Command Palette (Ctrl+K / Cmd+K) */}
       <CommandPalette />
 
-      {/* Floating study timer */}
-      <StudyTimer />
+      {/* Floating study timer — Intelecto module only */}
+      {INTELLECT_MODULE_PATTERN.test(pathname) && <StudyTimer />}
 
-      {/* Floating AI chat widget */}
-      <AgentChatWidget />
+      {/* Floating AI chat widget — Controle Financeiro module only */}
+      {FINANCE_MODULE_PATTERN.test(pathname) && <AgentChatWidget />}
     </div>
   );
 };
