@@ -205,7 +205,7 @@ class LoanReceiptView(APIView):
                 value=value,
                 date=date,
                 horary=timezone.now().time(),
-                category=loan.category,
+                category="loan_devolution",
                 account=account,
                 received=received,
                 notes=notes,

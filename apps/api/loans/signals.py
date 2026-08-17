@@ -104,8 +104,9 @@ def update_loan_payed_value(loan):
         related_loan=loan, is_deleted=False
     ).aggregate(total=Sum("value"))["total"] or Decimal("0")
 
-    # Total pago = despesas + receitas
-    total_paid = expense_payments + revenue_payments
+    # Total pago = valor inicial informado na criação (sem despesa/receita
+    # vinculada) + despesas + receitas vinculadas
+    total_paid = loan.initial_payed_value + expense_payments + revenue_payments
 
     # Atualizar payed_value do empréstimo
     loan.payed_value = total_paid

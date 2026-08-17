@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from accounts.models import Account
@@ -27,6 +29,21 @@ class Loan(BaseModel):
         blank=False,
         max_digits=10,
         decimal_places=2,
+    )
+    initial_payed_value = models.DecimalField(
+        verbose_name="Valor Pago Inicial",
+        null=False,
+        blank=True,
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        editable=False,
+        help_text=(
+            "Valor pago/recebido informado na criação do empréstimo, sem"
+            " despesa/receita vinculada. Preenchido automaticamente e"
+            " somado ao total apurado de despesas/receitas vinculadas ao"
+            " recalcular payed_value."
+        ),
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
     horary = models.TimeField(verbose_name="Horário", null=False, blank=False)
@@ -154,6 +171,12 @@ class Loan(BaseModel):
 
     def save(self, *args, **kwargs):
         """Auto-deriva payed a partir de payed_value e chama full_clean."""
+        if self._state.adding:
+            # payed_value informado na criação não tem despesa/receita
+            # vinculada ainda; guardamos como baseline para que o
+            # recálculo feito pelos signals (que soma despesas/receitas
+            # vinculadas) não descarte esse valor inicial.
+            self.initial_payed_value = self.payed_value or Decimal("0.00")
         if self.payed_value is not None and self.value is not None:
             self.payed = self.payed_value >= self.value
         self.full_clean()
