@@ -17,7 +17,12 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from members.models import Member
-from personal_planning.models import Goal, RoutineTask, TaskInstance
+from personal_planning.models import (
+    Goal,
+    GoalFailure,
+    RoutineTask,
+    TaskInstance,
+)
 
 
 class BasePlanningImprovementsTestCase(APITestCase):
@@ -309,14 +314,20 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
         self.goal.refresh_from_db()
         self.assertEqual(self.goal.status, "active")
 
-    def test_restart_clears_end_date(self):
-        self.goal.end_date = now().date()
-        self.goal.save()
+    def test_restart_recomputes_end_date_from_tomorrow(self):
+        # end_date nao e mais um campo manual para os tipos automaticos:
+        # e sempre start_date + target_value dias enquanto o objetivo
+        # estiver ativo. Apos o restart, start_date vira amanha.
         self.client.post(
             f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
         )
         self.goal.refresh_from_db()
-        self.assertIsNone(self.goal.end_date)
+        tomorrow = now().date() + timedelta(days=1)
+        self.assertEqual(self.goal.start_date, tomorrow)
+        self.assertEqual(
+            self.goal.end_date,
+            tomorrow + timedelta(days=self.goal.target_value),
+        )
 
     def test_restart_calculated_current_value_is_zero(self):
         response = self.client.post(
@@ -379,14 +390,18 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_register_failure_sets_start_date(self):
+    def test_register_failure_resets_start_date_to_today(self):
+        # Para os tipos automaticos, end_date agora e sempre derivado
+        # (start_date + target_value) — o objetivo sempre tem um prazo.
+        # Registrar uma falha reinicia a contagem a partir de hoje, nao
+        # da data da falha, recalculando a meta para os dias restantes.
         failure_date = now().date() - timedelta(days=5)
         self.client.post(
             self.failure_url,
             {"failure_date": failure_date.isoformat()},
         )
         self.goal.refresh_from_db()
-        self.assertEqual(self.goal.start_date, failure_date)
+        self.assertEqual(self.goal.start_date, now().date())
 
     def test_register_failure_resets_current_value(self):
         self.goal.current_value = 100
@@ -425,14 +440,20 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         self.goal.status = "completed"
         self.goal.end_date = now().date()
         self.goal.save()
-        failure_date = (now().date() - timedelta(days=2)).isoformat()
+        failure_date = now().date() - timedelta(days=2)
         self.client.post(
             self.failure_url,
-            {"failure_date": failure_date},
+            {"failure_date": failure_date.isoformat()},
         )
         self.goal.refresh_from_db()
         self.assertEqual(self.goal.status, "active")
-        self.assertIsNone(self.goal.end_date)
+        # end_date nao e mais um campo manual para os tipos automaticos:
+        # ao reativar, e recalculado como failure_date + target_value dias
+        # em vez de ficar nulo.
+        self.assertEqual(
+            self.goal.end_date,
+            failure_date + timedelta(days=self.goal.target_value),
+        )
 
     def test_register_failure_requires_authentication(self):
         self.client.credentials()
@@ -441,3 +462,347 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
             {"failure_date": now().date().isoformat()},
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_register_failure_creates_failure_record(self):
+        failure_date = now().date() - timedelta(days=4)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        failure = GoalFailure.objects.get(goal=self.goal)
+        self.assertEqual(failure.failure_date, failure_date)
+
+    def test_register_failure_updates_best_streak(self):
+        # start_date is 15 days ago, sem tarefa relacionada -> streak =
+        # min(days_active, target_value) = 15
+        failure_date = now().date() - timedelta(days=2)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.best_streak, 15)
+
+    def test_register_failure_best_streak_keeps_higher_previous_record(self):
+        self.goal.best_streak = 50
+        self.goal.save(update_fields=["best_streak"])
+        failure_date = now().date() - timedelta(days=2)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.best_streak, 50)
+
+
+class GoalRegisterFailureDeadlineTest(BasePlanningImprovementsTestCase):
+    """
+    Quando o objetivo tem end_date (prazo fixo) definido, registrar uma
+    falha deve reiniciar a contagem a partir de hoje e recalcular a meta
+    como os dias restantes ate o prazo original, preservando end_date.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.today = now().date()
+        self.deadline = self.today + timedelta(days=29)
+        self.goal = Goal.objects.create(
+            title="Deadline Goal",
+            goal_type="consecutive_days",
+            target_value=45,
+            start_date=self.today - timedelta(days=16),
+            end_date=self.deadline,
+            owner=self.member,
+        )
+        self.failure_url = (
+            f"/api/v1/personal-planning/goals/"
+            f"{self.goal.id}/register-failure/"
+        )
+
+    def test_register_failure_resets_start_date_to_today(self):
+        failure_date = self.today - timedelta(days=6)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.start_date, self.today)
+
+    def test_register_failure_recalculates_target_from_deadline(self):
+        failure_date = self.today - timedelta(days=6)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.target_value, 29)
+
+    def test_register_failure_preserves_end_date(self):
+        failure_date = self.today - timedelta(days=6)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.end_date, self.deadline)
+
+    def test_register_failure_deadline_already_passed_floors_target_at_one(
+        self,
+    ):
+        # end_date nao e mais editavel diretamente: para simular um prazo
+        # ja vencido, empurra-se start_date para tras o suficiente para
+        # que start_date + target_value fique no passado.
+        self.goal.start_date = self.today - timedelta(days=50)
+        self.goal.save(update_fields=["start_date"])
+        self.assertLess(self.goal.end_date, self.today)
+        failure_date = self.today - timedelta(days=1)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.target_value, 1)
+        self.assertEqual(self.goal.start_date, self.today)
+
+
+class GoalRegisterFailureCustomTypeTest(BasePlanningImprovementsTestCase):
+    """
+    Objetivos do tipo "custom" nao tem end_date auto-computado, entao
+    register-failure continua reiniciando a contagem a partir da propria
+    data da falha (comportamento anterior, ainda valido para esse tipo).
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.goal = Goal.objects.create(
+            title="Custom Failure Goal",
+            goal_type="custom",
+            target_value=100,
+            current_value=40,
+            start_date=now().date() - timedelta(days=15),
+            owner=self.member,
+        )
+        self.failure_url = (
+            f"/api/v1/personal-planning/goals/"
+            f"{self.goal.id}/register-failure/"
+        )
+
+    def test_register_failure_uses_failure_date_as_start_date(self):
+        failure_date = now().date() - timedelta(days=5)
+        self.client.post(
+            self.failure_url,
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.start_date, failure_date)
+        self.assertIsNone(self.goal.end_date)
+
+
+class GoalEvaluateCompletionTest(BasePlanningImprovementsTestCase):
+    def test_calculated_current_value_is_capped_at_target(self):
+        goal = Goal.objects.create(
+            title="No Related Task Goal",
+            goal_type="consecutive_days",
+            target_value=5,
+            start_date=now().date() - timedelta(days=30),
+            owner=self.member,
+        )
+        # days_active (30) ultrapassa target_value (5) de longe.
+        self.assertEqual(goal.calculated_current_value, 5)
+
+    def test_evaluate_completion_marks_goal_completed(self):
+        goal = Goal.objects.create(
+            title="Auto Complete Goal",
+            goal_type="consecutive_days",
+            target_value=5,
+            start_date=now().date() - timedelta(days=10),
+            owner=self.member,
+        )
+        completed = goal.evaluate_completion()
+        goal.refresh_from_db()
+        self.assertTrue(completed)
+        self.assertEqual(goal.status, "completed")
+        self.assertEqual(goal.end_date, now().date())
+        self.assertEqual(goal.best_streak, 5)
+
+    def test_evaluate_completion_updates_best_streak_without_completing(self):
+        goal = Goal.objects.create(
+            title="In Progress Goal",
+            goal_type="consecutive_days",
+            target_value=20,
+            start_date=now().date() - timedelta(days=7),
+            owner=self.member,
+        )
+        completed = goal.evaluate_completion()
+        goal.refresh_from_db()
+        self.assertFalse(completed)
+        self.assertEqual(goal.status, "active")
+        self.assertEqual(goal.best_streak, 7)
+
+    def test_evaluate_completion_skips_custom_goal_type(self):
+        goal = Goal.objects.create(
+            title="Custom Goal",
+            goal_type="custom",
+            target_value=5,
+            current_value=5,
+            start_date=now().date() - timedelta(days=10),
+            owner=self.member,
+        )
+        completed = goal.evaluate_completion()
+        goal.refresh_from_db()
+        self.assertFalse(completed)
+        self.assertEqual(goal.status, "active")
+
+
+class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
+    """
+    end_date nao e mais um campo que o usuario preenche para os tipos de
+    contagem automatica (dias consecutivos, total de dias, evitar
+    habito): e sempre derivado de start_date + target_value dias enquanto
+    o objetivo estiver ativo.
+    """
+
+    def test_end_date_computed_on_create(self):
+        start = now().date()
+        goal = Goal.objects.create(
+            title="Auto End Date",
+            goal_type="consecutive_days",
+            target_value=21,
+            start_date=start,
+            owner=self.member,
+        )
+        self.assertEqual(goal.end_date, start + timedelta(days=21))
+
+    def test_end_date_recomputes_when_target_value_changes(self):
+        goal = Goal.objects.create(
+            title="Auto End Date Target Change",
+            goal_type="total_days",
+            target_value=10,
+            start_date=now().date(),
+            owner=self.member,
+        )
+        goal.target_value = 40
+        goal.save()
+        self.assertEqual(goal.end_date, goal.start_date + timedelta(days=40))
+
+    def test_end_date_recomputes_when_start_date_changes(self):
+        goal = Goal.objects.create(
+            title="Auto End Date Start Change",
+            goal_type="avoid_habit",
+            target_value=15,
+            start_date=now().date(),
+            owner=self.member,
+        )
+        new_start = now().date() + timedelta(days=3)
+        goal.start_date = new_start
+        goal.save()
+        self.assertEqual(goal.end_date, new_start + timedelta(days=15))
+
+    def test_end_date_ignores_manually_supplied_value(self):
+        start = now().date()
+        goal = Goal.objects.create(
+            title="Auto End Date Manual Override Attempt",
+            goal_type="consecutive_days",
+            target_value=10,
+            start_date=start,
+            end_date=start + timedelta(days=999),
+            owner=self.member,
+        )
+        self.assertEqual(goal.end_date, start + timedelta(days=10))
+
+    def test_end_date_not_auto_computed_for_custom_goal_type(self):
+        goal = Goal.objects.create(
+            title="Custom Type No Auto End Date",
+            goal_type="custom",
+            target_value=100,
+            start_date=now().date(),
+            owner=self.member,
+        )
+        self.assertIsNone(goal.end_date)
+
+    def test_end_date_frozen_after_completion(self):
+        goal = Goal.objects.create(
+            title="Freeze End Date On Complete",
+            goal_type="consecutive_days",
+            target_value=3,
+            start_date=now().date() - timedelta(days=5),
+            owner=self.member,
+        )
+        goal.evaluate_completion()
+        goal.refresh_from_db()
+        self.assertEqual(goal.status, "completed")
+        self.assertEqual(goal.end_date, now().date())
+
+
+class GoalStartDateProgressTest(BasePlanningImprovementsTestCase):
+    """
+    Cobre o comportamento esperado ao definir start_date no futuro ou no
+    passado para objetivos sem tarefa relacionada (progresso calculado a
+    partir do tempo decorrido).
+    """
+
+    def test_future_start_date_yields_zero_progress(self):
+        goal = Goal.objects.create(
+            title="Future Start",
+            goal_type="total_days",
+            target_value=10,
+            start_date=now().date() + timedelta(days=5),
+            owner=self.member,
+        )
+        self.assertEqual(goal.calculated_current_value, 0)
+
+    def test_retroactive_start_date_adds_elapsed_days_immediately(self):
+        goal = Goal.objects.create(
+            title="Retroactive Start",
+            goal_type="total_days",
+            target_value=30,
+            start_date=now().date() - timedelta(days=12),
+            owner=self.member,
+        )
+        self.assertEqual(goal.calculated_current_value, 12)
+
+    def test_progress_does_not_jump_to_full_target_on_creation(self):
+        # Regressao: como end_date agora e sempre auto-computado como
+        # start_date + target_value, calculated_current_value NAO pode
+        # usar (end_date - start_date) para medir progresso de um
+        # objetivo ativo — isso faria o progresso aparecer 100% completo
+        # imediatamente na criacao, independente do tempo decorrido.
+        goal = Goal.objects.create(
+            title="No Instant Full Progress",
+            goal_type="total_days",
+            target_value=10,
+            start_date=now().date(),
+            owner=self.member,
+        )
+        self.assertEqual(goal.calculated_current_value, 0)
+
+
+class CheckGoalCompletionsTaskTest(BasePlanningImprovementsTestCase):
+    def test_task_completes_eligible_goal_without_related_task(self):
+        from personal_planning.tasks import check_goal_completions
+
+        goal = Goal.objects.create(
+            title="Periodic Task Goal",
+            goal_type="consecutive_days",
+            target_value=5,
+            start_date=now().date() - timedelta(days=10),
+            owner=self.member,
+        )
+        result = check_goal_completions.run()
+        goal.refresh_from_db()
+        self.assertEqual(goal.status, "completed")
+        self.assertEqual(result["completed"], 1)
+
+    def test_task_ignores_goals_not_yet_at_target(self):
+        from personal_planning.tasks import check_goal_completions
+
+        goal = Goal.objects.create(
+            title="Not Ready Goal",
+            goal_type="consecutive_days",
+            target_value=30,
+            start_date=now().date() - timedelta(days=5),
+            owner=self.member,
+        )
+        check_goal_completions.run()
+        goal.refresh_from_db()
+        self.assertEqual(goal.status, "active")

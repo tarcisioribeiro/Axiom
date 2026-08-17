@@ -8,6 +8,7 @@ from personal_planning.models import (
     ExerciseDatasetEntry,
     Food,
     Goal,
+    GoalFailure,
     MealLog,
     MealType,
     MenuOption,
@@ -177,6 +178,15 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
 # ============================================================================
 
 
+class GoalFailureSerializer(serializers.ModelSerializer):
+    """Serializer para o historico de falhas de um objetivo."""
+
+    class Meta:
+        model = GoalFailure
+        fields = ["id", "failure_date", "streak_at_failure", "created_at"]
+        read_only_fields = fields
+
+
 class GoalSerializer(serializers.ModelSerializer):
     """Serializer para visualizacao de objetivos."""
 
@@ -196,6 +206,8 @@ class GoalSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.ReadOnlyField()
     days_active = serializers.ReadOnlyField()
     calculated_current_value = serializers.ReadOnlyField()
+    best_streak = serializers.ReadOnlyField()
+    failures = GoalFailureSerializer(many=True, read_only=True)
 
     class Meta:
         model = Goal
@@ -213,6 +225,8 @@ class GoalSerializer(serializers.ModelSerializer):
             "target_value",
             "current_value",
             "calculated_current_value",
+            "best_streak",
+            "failures",
             "start_date",
             "end_date",
             "status",

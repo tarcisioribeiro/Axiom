@@ -188,6 +188,7 @@ export type {
 } from './planning';
 export type {
   Goal,
+  GoalFailure,
   GoalFormData,
   DailyReflection,
   DailyReflectionFormData,

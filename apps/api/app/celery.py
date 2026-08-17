@@ -71,6 +71,12 @@ app.conf.beat_schedule = {
         "task": "library.tasks.send_weekly_learning_recommendations",
         "schedule": crontab(hour=10, minute=0, day_of_week=1),
     },
+    # Marca objetivos ativos concluídos diariamente às 00h10 (rede de
+    # segurança para objetivos sem tarefa vinculada).
+    "check-goal-completions-daily": {
+        "task": "personal_planning.tasks.check_goal_completions",
+        "schedule": crontab(hour=0, minute=10),
+    },
     # Detecta metas em risco (pace atrasado) diariamente às 07h.
     "detect-goal-risk-daily": {
         "task": "personal_planning.tasks.detect_goal_risk",

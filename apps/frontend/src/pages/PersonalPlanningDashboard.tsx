@@ -438,95 +438,19 @@ export default function PersonalPlanningDashboard() {
           icon={<Target className="h-4 w-4" />}
         />
 
-        <Card className="gap-md flex items-center p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/15">
-            <Flame className="h-5 w-5 text-orange-500" />
-          </div>
-          <div>
-            <p className="text-2xl leading-none font-bold">
-              {stats.best_streak}
-              <span className="ml-xs text-muted-foreground text-sm font-normal">
-                {t('pages.planningDashboard.days')}
-              </span>
-            </p>
-            <p className="mt-xs text-muted-foreground text-sm">
-              {t('pages.planningDashboard.bestStreak')}
-            </p>
-          </div>
-        </Card>
+        <StatCard
+          title={t('pages.planningDashboard.bestStreak')}
+          value={`${stats.best_streak} ${t('pages.planningDashboard.days')}`}
+          icon={<Flame className="h-4 w-4" />}
+          accentColor="orange"
+        />
 
-        <Card className="gap-md flex items-center p-5">
-          <div className="bg-primary/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-            <Award className="text-primary h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-2xl leading-none font-bold">
-              {stats.current_streak}
-              <span className="ml-xs text-muted-foreground text-sm font-normal">
-                {t('pages.planningDashboard.days')}
-              </span>
-            </p>
-            <p className="mt-xs text-muted-foreground text-sm">
-              {t('pages.planningDashboard.currentStreak')}
-            </p>
-          </div>
-        </Card>
-
-        {gamification && (
-          <Card className="gap-sm col-span-1 flex flex-col p-5 sm:col-span-2 lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <div className="gap-sm flex items-center">
-                <div className="bg-primary/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
-                  <Zap className="text-primary h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-xl leading-none font-bold">
-                    {t('pages.planningDashboard.level')} {gamification.current_level}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    {gamification.total_xp} XP · {gamification.tasks_completed_total}{' '}
-                    {t('pages.planningDashboard.tasksCompleted')}
-                  </p>
-                </div>
-              </div>
-              {gamification.badges.length > 0 && (
-                <div className="-space-x-xs flex">
-                  {gamification.badges.slice(0, 5).map((b) => (
-                    <span
-                      key={b.slug}
-                      title={b.name}
-                      className="border-background bg-muted flex h-7 w-7 items-center justify-center rounded-full border text-sm"
-                    >
-                      <Trophy className="text-primary h-3.5 w-3.5" />
-                    </span>
-                  ))}
-                  {gamification.badges.length > 5 && (
-                    <span className="border-background bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium">
-                      +{gamification.badges.length - 5}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="mb-xs text-muted-foreground flex justify-between text-xs">
-                <span>{gamification.xp_in_level} XP</span>
-                <span>
-                  {gamification.xp_needed_for_next_level} XP{' '}
-                  {t('pages.planningDashboard.toNextLevel')}
-                </span>
-              </div>
-              <div className="bg-muted h-2 overflow-hidden rounded-full">
-                <div
-                  className="bg-primary h-full rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(gamification.level_progress_pct, 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </Card>
-        )}
+        <StatCard
+          title={t('pages.planningDashboard.currentStreak')}
+          value={`${stats.current_streak} ${t('pages.planningDashboard.days')}`}
+          icon={<Award className="h-4 w-4" />}
+          accentColor="blue"
+        />
 
         <StatCard
           title={t('pages.planningDashboard.completedGoals')}
@@ -534,6 +458,123 @@ export default function PersonalPlanningDashboard() {
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
       </div>
+
+      {/* Linha 2b: Nível/Gamificação | Progresso Semanal */}
+      {(gamification || weeklyProgressData.length > 0) && (
+        <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
+          {gamification && (
+            <Card className="gap-sm flex flex-col p-5">
+              <div className="flex items-center justify-between">
+                <div className="gap-sm flex items-center">
+                  <div className="bg-primary/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                    <Zap className="text-primary h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xl leading-none font-bold">
+                      {t('pages.planningDashboard.level')} {gamification.current_level}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                      {gamification.total_xp} XP · {gamification.tasks_completed_total}{' '}
+                      {t('pages.planningDashboard.tasksCompleted')}
+                    </p>
+                  </div>
+                </div>
+                {gamification.badges.length > 0 && (
+                  <div className="-space-x-xs flex">
+                    {gamification.badges.slice(0, 5).map((b) => (
+                      <span
+                        key={b.slug}
+                        title={b.name}
+                        className="border-background bg-muted flex h-7 w-7 items-center justify-center rounded-full border text-sm"
+                      >
+                        <Trophy className="text-primary h-3.5 w-3.5" />
+                      </span>
+                    ))}
+                    {gamification.badges.length > 5 && (
+                      <span className="border-background bg-muted text-muted-foreground flex h-7 w-7 items-center justify-center rounded-full border text-xs font-medium">
+                        +{gamification.badges.length - 5}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div>
+                <div className="mb-xs text-muted-foreground flex justify-between text-xs">
+                  <span>{gamification.xp_in_level} XP</span>
+                  <span>
+                    {gamification.xp_needed_for_next_level} XP{' '}
+                    {t('pages.planningDashboard.toNextLevel')}
+                  </span>
+                </div>
+                <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div
+                    className="bg-primary h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {weeklyProgressData.length > 0 && (
+            <Card>
+              <CardHeader className="pb-sm">
+                <CardTitle className="gap-sm flex items-center text-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  {t('pages.planningDashboard.weeklyProgress')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  chartId="planning-weekly-progress"
+                  data={weeklyProgressData}
+                  dataKey="total"
+                  nameKey="date"
+                  formatter={(value) => value.toString()}
+                  colors={COLORS}
+                  emptyMessage={t('pages.planningDashboard.noProgressData')}
+                  lockChartType="line"
+                  dualYAxis={{
+                    left: {
+                      dataKey: 'total',
+                      label: t('pages.planningDashboard.total'),
+                      color: COLORS[0],
+                    },
+                    right: {
+                      dataKey: 'taxa',
+                      label: t('pages.planningDashboard.rate'),
+                      color: COLORS[1],
+                    },
+                  }}
+                  lines={[
+                    {
+                      dataKey: 'total',
+                      stroke: COLORS[0],
+                      yAxisId: 'left',
+                      name: t('pages.planningDashboard.total'),
+                    },
+                    {
+                      dataKey: 'completadas',
+                      stroke: COLORS[3],
+                      yAxisId: 'left',
+                      name: t('pages.planningDashboard.completed'),
+                    },
+                    {
+                      dataKey: 'taxa',
+                      stroke: COLORS[1],
+                      yAxisId: 'right',
+                      name: t('pages.planningDashboard.rate'),
+                    },
+                  ]}
+                  height={280}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Linha 2b: XP Semanal */}
       <Card>
@@ -842,64 +883,8 @@ export default function PersonalPlanningDashboard() {
             className="overflow-hidden"
           >
             <div className="space-y-lg">
-              {/* Linha 4: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência | Treinos/dia */}
+              {/* Linha 4: Tarefas por categoria | Progresso de objetivos | Consistência | Treinos/dia */}
               <div className="gap-lg grid grid-cols-1 lg:grid-cols-4">
-                {weeklyProgressData.length > 0 && (
-                  <Card className="lg:col-span-1">
-                    <CardHeader className="pb-sm">
-                      <CardTitle className="gap-sm flex items-center text-sm">
-                        <TrendingUp className="h-4 w-4" />
-                        {t('pages.planningDashboard.weeklyProgress')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ChartContainer
-                        chartId="planning-weekly-progress"
-                        data={weeklyProgressData}
-                        dataKey="total"
-                        nameKey="date"
-                        formatter={(value) => value.toString()}
-                        colors={COLORS}
-                        emptyMessage={t('pages.planningDashboard.noProgressData')}
-                        lockChartType="line"
-                        dualYAxis={{
-                          left: {
-                            dataKey: 'total',
-                            label: t('pages.planningDashboard.total'),
-                            color: COLORS[0],
-                          },
-                          right: {
-                            dataKey: 'taxa',
-                            label: t('pages.planningDashboard.rate'),
-                            color: COLORS[1],
-                          },
-                        }}
-                        lines={[
-                          {
-                            dataKey: 'total',
-                            stroke: COLORS[0],
-                            yAxisId: 'left',
-                            name: t('pages.planningDashboard.total'),
-                          },
-                          {
-                            dataKey: 'completadas',
-                            stroke: COLORS[3],
-                            yAxisId: 'left',
-                            name: t('pages.planningDashboard.completed'),
-                          },
-                          {
-                            dataKey: 'taxa',
-                            stroke: COLORS[1],
-                            yAxisId: 'right',
-                            name: t('pages.planningDashboard.rate'),
-                          },
-                        ]}
-                        height={280}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-
                 {tasksByCategoryData.length > 0 && (
                   <Card className="lg:col-span-1">
                     <CardHeader className="pb-sm">
