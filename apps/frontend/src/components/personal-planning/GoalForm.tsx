@@ -1,7 +1,8 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { addDays, parseISO } from 'date-fns';
 import { Activity, CalendarDays, Loader2, Tag, Target, Trophy } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -20,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { GOAL_TYPE_ICONS, GOAL_STATUS_ICONS } from '@/config/icons';
+import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { goalSchema } from '@/lib/validations';
@@ -106,9 +108,20 @@ export function GoalForm({
 
   const watchedGoalType = watch('goal_type');
   const watchedGoalSource = watch('goal_source');
+  const watchedStartDate = watch('start_date');
+  const watchedTargetValue = watch('target_value');
   const isAutoType =
     AUTO_GOAL_TYPES.has(watchedGoalType) && watchedGoalSource !== 'custom';
   const isTaskSource = watchedGoalSource === 'task_instances';
+
+  const computedEndDate = useMemo(() => {
+    if (!isAutoType || !watchedStartDate || !watchedTargetValue) return null;
+    try {
+      return formatLocalDate(addDays(parseISO(watchedStartDate), watchedTargetValue));
+    } catch {
+      return null;
+    }
+  }, [isAutoType, watchedStartDate, watchedTargetValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
@@ -318,7 +331,20 @@ export function GoalForm({
             )}
           </div>
 
-          {!isAutoType && (
+          {isAutoType ? (
+            <div className="space-y-sm">
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.goals.form.endDateLabel')}
+              </Label>
+              <div className="border-input bg-muted/40 text-muted-foreground flex h-10 items-center rounded-md border px-3 text-sm">
+                {computedEndDate ? formatDate(computedEndDate) : '—'}
+              </div>
+              <p className="text-muted-foreground text-xs">
+                {t('pages.goals.form.endDateComputedHint')}
+              </p>
+            </div>
+          ) : (
             <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />

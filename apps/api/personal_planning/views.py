@@ -17,6 +17,7 @@ from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
+    AUTO_COMPLETION_GOAL_TYPES,
     BodyMetric,
     Challenge,
     DailyReflection,
@@ -25,6 +26,7 @@ from personal_planning.models import (
     Food,
     GamificationProfile,
     Goal,
+    GoalFailure,
     MealLog,
     MealType,
     MenuOption,
@@ -571,11 +573,7 @@ class GoalRecalculateView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if goal.goal_type not in (
-            "consecutive_days",
-            "total_days",
-            "avoid_habit",
-        ):
+        if goal.goal_type not in AUTO_COMPLETION_GOAL_TYPES:
             return Response(
                 {
                     "detail": (
@@ -588,15 +586,7 @@ class GoalRecalculateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        current = goal.calculated_current_value
-        update_fields = ["updated_at"]
-
-        if current >= goal.target_value and goal.status == "active":
-            goal.status = "completed"
-            goal.end_date = timezone.now().date()
-            update_fields += ["status", "end_date"]
-
-        goal.save(update_fields=update_fields)
+        goal.evaluate_completion()
 
         log_activity(
             request,
@@ -706,28 +696,67 @@ class GoalRegisterFailureView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        goal.start_date = failure_date
-        goal.current_value = 0
-        goal.end_date = None
-        goal.status = "active"
-        goal.save(
-            update_fields=[
-                "start_date",
-                "current_value",
-                "end_date",
-                "status",
-                "updated_at",
-            ]
+        streak_before_failure = goal.calculated_current_value
+
+        GoalFailure.objects.create(
+            goal=goal,
+            failure_date=failure_date,
+            streak_at_failure=streak_before_failure,
+            created_by=request.user,
+            updated_by=request.user,
         )
+
+        # `end_date` so representa um prazo fixo definido pelo usuario
+        # quando o objetivo ainda esta ativo. Quando o objetivo ja estava
+        # "completed", `end_date` guarda a data em que ele foi concluido
+        # (nao um prazo) e deve ser descartada normalmente ao reativar.
+        has_fixed_deadline = goal.status == "active" and goal.end_date
+
+        goal.best_streak = max(goal.best_streak, streak_before_failure)
+        goal.current_value = 0
+        goal.status = "active"
+        update_fields = [
+            "best_streak",
+            "current_value",
+            "status",
+            "start_date",
+            "updated_at",
+        ]
+
+        if has_fixed_deadline:
+            # Objetivo com prazo fixo: recomeça a contagem hoje, mas
+            # recalcula a meta para os dias restantes até o prazo original
+            # em vez de descartá-lo.
+            remaining_days = (goal.end_date - today).days
+            goal.start_date = today
+            goal.target_value = max(remaining_days, 1)
+            update_fields.append("target_value")
+        else:
+            # Sem prazo fixo (ou reativando um objetivo já concluído):
+            # reinicia a contagem a partir da data da falha e limpa
+            # end_date, preservando o comportamento anterior.
+            goal.start_date = failure_date
+            goal.end_date = None
+            update_fields.append("end_date")
+
+        goal.save(update_fields=update_fields)
 
         log_activity(
             request,
             "update",
             "Goal",
             goal.id,
-            f"Registrou falha no objetivo: {goal.title} em {failure_date}",
+            (
+                f"Registrou falha no objetivo: {goal.title} em"
+                f" {failure_date} (sequência alcançada:"
+                f" {streak_before_failure})"
+            ),
             description_key="goal.register_failure",
-            description_params={"title": goal.title, "date": failure_date_str},
+            description_params={
+                "title": goal.title,
+                "date": failure_date_str,
+                "streak": streak_before_failure,
+            },
         )
 
         serializer = GoalSerializer(goal)

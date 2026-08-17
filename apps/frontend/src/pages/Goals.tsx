@@ -12,6 +12,8 @@ import {
   Ban,
   Star,
   Flame,
+  Award,
+  History,
   Calendar,
   AlertTriangle,
   Loader2,
@@ -46,6 +48,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { formatDate } from '@/lib/formatters';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
@@ -90,6 +93,7 @@ function GoalCard({
   onRecalculate,
   onRegisterFailure,
   onRestart,
+  onViewFailures,
 }: {
   goal: Goal;
   onEdit: (g: Goal) => void;
@@ -97,6 +101,7 @@ function GoalCard({
   onRecalculate: (g: Goal) => void;
   onRegisterFailure: (g: Goal) => void;
   onRestart: (g: Goal) => void;
+  onViewFailures: (g: Goal) => void;
 }) {
   const { t } = useTranslation();
   const pct = goal.progress_percentage;
@@ -264,6 +269,36 @@ function GoalCard({
           </div>
         )}
 
+        {/* Sequência atual / melhor sequência / histórico de falhas */}
+        {isAutoType && (
+          <div className="gap-xs mb-3 flex flex-wrap items-center text-xs">
+            <span className="gap-xs px-sm flex items-center rounded bg-orange-500/10 py-0.5 font-medium text-orange-500">
+              <Flame className="h-3 w-3" />
+              {t('pages.goals.currentStreakLabel')}: {displayValue}
+            </span>
+            <span className="bg-primary/10 gap-xs px-sm text-primary flex items-center rounded py-0.5 font-medium">
+              <Award className="h-3 w-3" />
+              {t('pages.goals.bestStreakLabel')}: {goal.best_streak}
+            </span>
+            {goal.end_date && (
+              <span className="text-muted-foreground gap-xs px-sm bg-muted/60 flex items-center rounded py-0.5 font-medium">
+                <Calendar className="h-3 w-3" />
+                {t('pages.goals.endDateLabelShort')}: {formatDate(goal.end_date)}
+              </span>
+            )}
+            {goal.failures.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onViewFailures(goal)}
+                className="gap-xs px-sm bg-muted/60 text-muted-foreground hover:bg-muted flex items-center rounded py-0.5 font-medium transition-colors"
+              >
+                <History className="h-3 w-3" />
+                {t('pages.goals.failuresCount', { count: goal.failures.length })}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Completion badge */}
         {isCompleted && (
           <motion.div
@@ -377,6 +412,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
   const [failureGoal, setFailureGoal] = useState<Goal | undefined>();
   const [failureDate, setFailureDate] = useState<string>('');
   const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
+  const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -588,6 +624,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
     onRecalculate: (g: Goal) => void handleRecalculate(g),
     onRegisterFailure: handleRegisterFailure,
     onRestart: (g: Goal) => void handleRestart(g),
+    onViewFailures: setViewingFailuresGoal,
   };
 
   return (
@@ -739,6 +776,43 @@ export default function Goals({ embedded = false }: GoalsProps) {
               ) : (
                 t('pages.goals.registerFailureConfirmBtn')
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal histórico de falhas */}
+      <Dialog
+        open={!!viewingFailuresGoal}
+        onOpenChange={(open) => {
+          if (!open) setViewingFailuresGoal(undefined);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('pages.goals.failuresHistoryTitle')}</DialogTitle>
+            <DialogDescription>{viewingFailuresGoal?.title}</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-sm max-h-80 overflow-y-auto">
+            {viewingFailuresGoal?.failures.map((failure) => (
+              <li
+                key={failure.id}
+                className="gap-sm p-sm flex items-center justify-between rounded-md border text-sm"
+              >
+                <span className="text-muted-foreground">
+                  {formatDate(failure.failure_date)}
+                </span>
+                <span className="font-medium">
+                  {t('pages.goals.failureStreakReached', {
+                    count: failure.streak_at_failure,
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingFailuresGoal(undefined)}>
+              {t('common.actions.close')}
             </Button>
           </DialogFooter>
         </DialogContent>
