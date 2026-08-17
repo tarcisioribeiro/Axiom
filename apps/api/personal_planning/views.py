@@ -1125,6 +1125,21 @@ class TaskInstanceListCreateView(BaseListCreateView):
     """Lista todas as instancias de tarefas ou cria uma nova
     (tarefa avulsa)."""
 
+    @property
+    def paginator(self):
+        # Consultas filtradas por data (usadas pela Rotina Diaria e pelo
+        # Planejamento Semanal) esperam o conjunto completo de instancias
+        # do intervalo. Paginar aqui trunca dias no fim do intervalo quando
+        # o total de instancias passa do PAGE_SIZE padrao.
+        request = getattr(self, "request", None)
+        if request is not None and (
+            request.query_params.get("date")
+            or request.query_params.get("date_from")
+            or request.query_params.get("date_to")
+        ):
+            return None
+        return super().paginator
+
     def get_queryset(self):
         # Filtro por data (exata ou intervalo)
         date_param = self.request.query_params.get("date")

@@ -30,13 +30,16 @@ import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { expensesService } from '@/services/expenses-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import { receivablesService } from '@/services/receivables-service';
 import { revenuesService } from '@/services/revenues-service';
 import type { Payable, Receivable, Loan, CreditCardBill, Revenue } from '@/types';
+import type { Expense } from '@/types/expenses';
 
-type EventType = 'payable' | 'receivable' | 'creditCard' | 'loan' | 'revenue';
+type EventType =
+  'payable' | 'receivable' | 'creditCard' | 'loan' | 'revenue' | 'expense';
 
 interface CalendarEvent {
   id: string;
@@ -52,6 +55,7 @@ const EVENT_COLORS: Record<EventType, string> = {
   creditCard: 'bg-orange-500/15 text-orange-600 border-orange-500/30',
   loan: 'bg-purple-500/15 text-purple-600 border-purple-500/30',
   revenue: 'bg-teal-500/15 text-teal-600 border-teal-500/30',
+  expense: 'bg-rose-500/15 text-rose-600 border-rose-500/30',
 };
 
 const EVENT_DOT_COLORS: Record<EventType, string> = {
@@ -60,6 +64,7 @@ const EVENT_DOT_COLORS: Record<EventType, string> = {
   creditCard: 'bg-orange-500',
   loan: 'bg-purple-500',
   revenue: 'bg-teal-500',
+  expense: 'bg-rose-500',
 };
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -112,12 +117,19 @@ export default function FinancialCalendar({
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const expensesQuery = useQuery({
+    queryKey: ['expenses', 'calendar'],
+    queryFn: () => expensesService.getAllPages(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
   const isLoading =
     payablesQuery.isLoading ||
     receivablesQuery.isLoading ||
     loansQuery.isLoading ||
     billsQuery.isLoading ||
-    revenuesQuery.isLoading;
+    revenuesQuery.isLoading ||
+    expensesQuery.isLoading;
 
   const events = useMemo<CalendarEvent[]>(() => {
     const result: CalendarEvent[] = [];
@@ -200,6 +212,18 @@ export default function FinancialCalendar({
       }
     });
 
+    (expensesQuery.data ?? []).forEach((e: Expense) => {
+      if (!e.payed && e.date >= startStr && e.date <= endStr) {
+        result.push({
+          id: `expense-${e.id}`,
+          type: 'expense',
+          description: e.description,
+          value: parseFloat(String(e.value)),
+          date: e.date,
+        });
+      }
+    });
+
     return result;
   }, [
     payablesQuery.data,
@@ -207,6 +231,7 @@ export default function FinancialCalendar({
     loansQuery.data,
     billsQuery.data,
     revenuesQuery.data,
+    expensesQuery.data,
     startStr,
     endStr,
     t,

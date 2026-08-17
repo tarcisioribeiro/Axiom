@@ -6441,7 +6441,8 @@
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
       "loan": "Parcela Empréstimo",
-      "revenue": "Receita Pendente"
+      "revenue": "Receita Pendente",
+      "expense": "Despesa Pendente"
     },
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",

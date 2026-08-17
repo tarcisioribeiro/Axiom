@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -77,14 +77,17 @@ export function VaultContributionsDialog({
     }
   };
 
-  const handleOpenChange = async (isOpen: boolean) => {
-    if (isOpen && vault) {
-      setIsFormOpen(false);
-      setEditing(null);
-      await loadContributions();
-    }
-    onOpenChange(isOpen);
-  };
+  // Radix's Dialog only calls onOpenChange for user-driven close interactions
+  // (Esc, overlay click, close button) — not when the parent programmatically
+  // sets `open` to true. Load fresh data here instead, keyed to the dialog
+  // actually being open, so newly generated contributions always show up.
+  useEffect(() => {
+    if (!open || !vault) return;
+    setIsFormOpen(false);
+    setEditing(null);
+    void loadContributions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, vault?.id]);
 
   const openForm = (contribution?: VaultRecurringContribution) => {
     if (contribution) {
@@ -158,7 +161,7 @@ export function VaultContributionsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => void handleOpenChange(v)}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.vaults.recurringContributions.title')}</DialogTitle>

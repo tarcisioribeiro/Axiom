@@ -222,6 +222,104 @@ class LoanPaymentViewTest(BaseMissingCoverageTestCase):
 
 
 # ===========================================================================
+# loans/views.py — LoanReceiptView
+# ===========================================================================
+
+
+class LoanReceiptViewTest(BaseMissingCoverageTestCase):
+    def _make_loan_with_initial_payed_value(self, payed_value):
+        from loans.models import Loan
+
+        creditor = Member.objects.create(
+            name="Receipt Creditor",
+            document_hash="r" * 64,
+            phone="11944444444",
+            sex="M",
+        )
+        benefited = Member.objects.create(
+            name="Receipt Benefited",
+            document_hash="s" * 64,
+            phone="11955555555",
+            sex="F",
+        )
+        return Loan.objects.create(
+            description="Receipt Loan",
+            value=Decimal("1000.00"),
+            payed_value=payed_value,
+            date=date.today(),
+            horary=time(10, 0),
+            category="transport",
+            account=self.account,
+            benefited=benefited,
+            creditor=creditor,
+            payed=False,
+            status="active",
+            created_by=self.user,
+            updated_by=self.user,
+        )
+
+    def test_post_receipt_accumulates_on_top_of_initial_payed_value(self):
+        """A receipt must add to any pre-existing payed_value baseline
+        entered at loan creation, not discard it."""
+        loan = self._make_loan_with_initial_payed_value(Decimal("130.00"))
+
+        url = reverse("loan-receipt", args=[loan.pk])
+        response = self.client.post(
+            url,
+            {
+                "value": "60.00",
+                "account": self.account.pk,
+                "date": str(date.today()),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        loan.refresh_from_db()
+        self.assertEqual(loan.payed_value, Decimal("190.00"))
+
+    def test_post_receipt_creates_revenue_with_loan_devolution_category(self):
+        """The generated Revenue must use the loan-repayment category, not
+        the loan's own (expense-side) category."""
+        loan = self._make_loan_with_initial_payed_value(Decimal("0.00"))
+
+        url = reverse("loan-receipt", args=[loan.pk])
+        response = self.client.post(
+            url,
+            {
+                "value": "60.00",
+                "account": self.account.pk,
+                "date": str(date.today()),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data["revenue"]["category"], "loan_devolution"
+        )
+
+    def test_post_multiple_receipts_accumulate_sequentially(self):
+        loan = self._make_loan_with_initial_payed_value(Decimal("0.00"))
+        url = reverse("loan-receipt", args=[loan.pk])
+
+        for value in ("60.00", "40.00"):
+            response = self.client.post(
+                url,
+                {
+                    "value": value,
+                    "account": self.account.pk,
+                    "date": str(date.today()),
+                },
+                format="json",
+            )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        loan.refresh_from_db()
+        self.assertEqual(loan.payed_value, Decimal("100.00"))
+
+
+# ===========================================================================
 # loans/views.py — LoanAmortizationView
 # ===========================================================================
 

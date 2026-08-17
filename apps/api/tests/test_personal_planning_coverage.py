@@ -277,7 +277,9 @@ class TaskInstanceFilterTest(BasePlanningCoverageTestCase):
         url = reverse("task-instance-list-create")
         response = self.client.get(url, {"date": str(self.today)})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
+        # Filtros por data desabilitam a paginacao (resposta e uma lista
+        # crua) para que o Planejamento Semanal receba o intervalo inteiro.
+        self.assertEqual(len(response.data), 1)
 
     def test_filter_by_invalid_date_ignored(self):
         url = reverse("task-instance-list-create")
@@ -299,7 +301,7 @@ class TaskInstanceFilterTest(BasePlanningCoverageTestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 3)
+        self.assertEqual(len(response.data), 3)
 
     def test_filter_by_invalid_date_range_ignored(self):
         url = reverse("task-instance-list-create")

@@ -6396,7 +6396,8 @@
       "receivable": "Receivable",
       "creditCard": "Credit Card Bill",
       "loan": "Loan Installment",
-      "revenue": "Pending Revenue"
+      "revenue": "Pending Revenue",
+      "expense": "Pending Expense"
     },
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",

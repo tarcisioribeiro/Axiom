@@ -259,6 +259,7 @@ class VaultRecurringContributionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "uuid",
+            "vault",
             "fixed_expense_id",
             "last_generated_month",
             "next_contribution_date",
@@ -289,18 +290,11 @@ class VaultRecurringContributionCreateSerializer(
     VaultRecurringContributionSerializer
 ):
     """
-    Serializer para criação de contribuições recorrentes (vault é obrigatório).
-    """
+    Serializer para criação de contribuições recorrentes.
 
-    class Meta(VaultRecurringContributionSerializer.Meta):
-        read_only_fields = [
-            "uuid",
-            "fixed_expense_id",
-            "last_generated_month",
-            "next_contribution_date",
-            "created_at",
-            "updated_at",
-        ]
+    `vault` é preenchido em `perform_create` a partir do `vault_pk` da URL,
+    não pelo cliente.
+    """
 
 
 class FinancialGoalSerializer(serializers.ModelSerializer):
