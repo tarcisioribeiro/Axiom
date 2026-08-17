@@ -233,7 +233,7 @@ export function StudyTimer() {
             {/* Header */}
             <div className="px-md py-sm flex items-center justify-between border-b">
               <div className="gap-sm flex items-center">
-                <Timer className="text-primary h-4 w-4" />
+                <Timer className="text-category-intellect h-4 w-4" />
                 <span className="text-sm font-semibold">
                   {t('pages.libraryDashboard.studyTimerTitle')}
                 </span>
@@ -260,7 +260,7 @@ export function StudyTimer() {
                     }
                     className={`px-sm py-xs flex-1 rounded text-xs transition-colors ${
                       state.mode === m
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-category-intellect text-white dark:text-black'
                         : 'text-muted-foreground hover:text-foreground disabled:cursor-not-allowed'
                     }`}
                   >
@@ -322,7 +322,12 @@ export function StudyTimer() {
               {/* Controls */}
               <div className="gap-sm flex items-center justify-center">
                 {state.phase === 'idle' && (
-                  <Button size="sm" disabled={!canStart} onClick={handleStart}>
+                  <Button
+                    size="sm"
+                    disabled={!canStart}
+                    onClick={handleStart}
+                    className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+                  >
                     <Play className="mr-xs h-3.5 w-3.5" />
                     {t('pages.libraryDashboard.studyTimerStart')}
                   </Button>
@@ -341,7 +346,11 @@ export function StudyTimer() {
                 )}
                 {state.phase === 'paused' && (
                   <>
-                    <Button size="sm" onClick={handleStart}>
+                    <Button
+                      size="sm"
+                      onClick={handleStart}
+                      className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+                    >
                       <Play className="mr-xs h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerResume')}
                     </Button>
@@ -359,7 +368,7 @@ export function StudyTimer() {
         {/* FAB button */}
         <button
           onClick={() => setIsOpen((o) => !o)}
-          className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+          className="bg-category-intellect flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 dark:text-black"
           aria-label={t('pages.libraryDashboard.studyTimerTitle')}
         >
           {state.phase === 'running' ? (
@@ -425,7 +434,12 @@ export function StudyTimer() {
             >
               {t('pages.libraryDashboard.studyTimerCancel')}
             </Button>
-            <Button size="sm" onClick={() => void handleSave()} disabled={isSaving}>
+            <Button
+              size="sm"
+              onClick={() => void handleSave()}
+              disabled={isSaving}
+              className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
+            >
               {t('pages.libraryDashboard.studyTimerSave')}
             </Button>
           </div>
