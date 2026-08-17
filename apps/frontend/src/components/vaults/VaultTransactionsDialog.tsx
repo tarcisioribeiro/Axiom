@@ -93,11 +93,23 @@ export function VaultTransactionsDialog({
   // actually being open, so a new deposit/withdrawal always shows up.
   useEffect(() => {
     if (!open || !vault) return;
-    setFilter('all');
-    setEditingTx(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch triggered by dialog opening, not a derived-state update
     void loadTransactions('all');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, vault?.id]);
+
+  // Reset transient state when the dialog opens (or switches vault) during
+  // render rather than in an effect — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const openKey = open ? vault?.id : undefined;
+  const [prevOpenKey, setPrevOpenKey] = useState(openKey);
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+    if (openKey !== undefined) {
+      setFilter('all');
+      setEditingTx(null);
+    }
+  }
 
   const startEdit = (tx: VaultTransaction) => {
     setEditingTx(tx);
