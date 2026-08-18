@@ -1,7 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bot, Database, HardDrive, Mail, RefreshCw, Server, Zap } from 'lucide-react';
+import {
+  Bot,
+  Database,
+  HardDrive,
+  Link2,
+  Mail,
+  RefreshCw,
+  Server,
+  Zap,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 
@@ -19,32 +30,31 @@ export default function AdminIntegrations() {
   });
 
   return (
-    <div>
-      <div className="mb-lg flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            {t('pages.adminIntegrations.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('pages.adminIntegrations.subtitle')}
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            void refetch();
-            void queryClient.invalidateQueries({ queryKey: ['admin', 'integrations'] });
-          }}
-          disabled={isLoading}
-          className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
-        >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-          {t('pages.adminIntegrations.testAll')}
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('pages.adminIntegrations.title')}
+        subtitle={t('pages.adminIntegrations.subtitle')}
+        icon={<Link2 />}
+        actions={
+          <button
+            onClick={() => {
+              void refetch();
+              void queryClient.invalidateQueries({
+                queryKey: ['admin', 'integrations'],
+              });
+            }}
+            disabled={isLoading}
+            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
+          >
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            {t('pages.adminIntegrations.testAll')}
+          </button>
+        }
+      />
 
       {/* LLM provider info */}
       {data && (
-        <div className="mb-md border-border bg-card px-md rounded-lg border py-3">
+        <div className="border-border bg-card px-md rounded-lg border py-3">
           <div className="gap-md flex flex-wrap items-center text-sm">
             <span className="text-muted-foreground">
               {t('pages.adminIntegrations.activeProvider')}
@@ -114,6 +124,6 @@ export default function AdminIntegrations() {
           details={<EmailTestPanel />}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }
