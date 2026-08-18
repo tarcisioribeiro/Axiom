@@ -609,7 +609,9 @@ export default function PersonalPlanningDashboard() {
                 indicatorClassName="bg-warning duration-700"
               />
             </div>
-            {weeklyXP.streak > 3 && <StreakBadge days={weeklyXP.streak} size="sm" pulse />}
+            {weeklyXP.streak > 3 && (
+              <StreakBadge days={weeklyXP.streak} size="sm" pulse />
+            )}
           </div>
         </CardContent>
       </Card>
