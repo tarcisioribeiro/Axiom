@@ -31,6 +31,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -1394,17 +1395,6 @@ function ReportTab() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function EmotionalWellness() {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-
-  const tabContent = {
-    dashboard: <DashboardTab />,
-    'self-esteem': <SelfEsteemTab />,
-    checkin: <CheckinTab />,
-    crisis: <CrisisTab />,
-    library: <LibraryTab />,
-    report: <ReportTab />,
-  };
-
   return (
     <AnimatedPage>
       <PageContainer>
@@ -1413,40 +1403,38 @@ export default function EmotionalWellness() {
           description="Autoconhecimento, equilíbrio emocional e crescimento pessoal"
         />
 
-        {/* Tab navigation */}
-        <div className="-mx-xs mb-lg gap-xs border-border/50 px-xs pb-xs flex overflow-x-auto border-b">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  'gap-xs.5 py-sm -mb-px flex items-center rounded-t-lg border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-all',
-                  activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground border-transparent'
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <Tabs defaultValue="dashboard">
+          <TabsList className="mb-lg w-full overflow-x-auto">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger key={tab.id} value={tab.id} className="gap-xs.5 flex-1">
+                  <Icon className="h-3.5 w-3.5" />
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        {/* Tab content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.15 }}
-          >
-            {tabContent[activeTab]}
-          </motion.div>
-        </AnimatePresence>
+          <TabsContent value="dashboard">
+            <DashboardTab />
+          </TabsContent>
+          <TabsContent value="self-esteem">
+            <SelfEsteemTab />
+          </TabsContent>
+          <TabsContent value="checkin">
+            <CheckinTab />
+          </TabsContent>
+          <TabsContent value="crisis">
+            <CrisisTab />
+          </TabsContent>
+          <TabsContent value="library">
+            <LibraryTab />
+          </TabsContent>
+          <TabsContent value="report">
+            <ReportTab />
+          </TabsContent>
+        </Tabs>
       </PageContainer>
     </AnimatedPage>
   );
