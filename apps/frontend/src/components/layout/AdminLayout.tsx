@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import {
   Activity,
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
+import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -128,7 +130,11 @@ export const AdminLayout = () => {
         </header>
 
         <main className="p-lg flex-1 overflow-auto">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <AnimatedPage key={location.pathname}>
+              <Outlet />
+            </AnimatedPage>
+          </AnimatePresence>
         </main>
       </div>
     </div>
