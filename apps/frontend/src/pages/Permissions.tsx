@@ -4,6 +4,7 @@ import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PageContainer } from '@/components/common/PageContainer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -154,7 +155,7 @@ export default function Permissions() {
   }
 
   return (
-    <div className="space-y-lg">
+    <PageContainer>
       <div>
         <h1 className="gap-sm flex items-center text-3xl font-bold">
           <Shield className="h-8 w-8" />
@@ -334,6 +335,6 @@ export default function Permissions() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

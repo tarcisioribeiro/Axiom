@@ -1,7 +1,7 @@
 import { Receipt, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import Payables from './Payables';
@@ -19,7 +19,7 @@ export default function PayablesReceivables() {
   };
 
   return (
-    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
+    <PageContainer className="flex flex-1 flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
@@ -44,6 +44,6 @@ export default function PayablesReceivables() {
           <Receivables embedded />
         </TabsContent>
       </Tabs>
-    </AnimatedPage>
+    </PageContainer>
   );
 }
