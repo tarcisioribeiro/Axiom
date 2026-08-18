@@ -26,13 +26,14 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 
 interface ModuleCard {
   title: string;
   icon: React.ReactNode;
   href: string;
-  color: string;
+  badgeClass: string;
   features: string[];
 }
 
@@ -50,28 +51,28 @@ export default function Home() {
       title: t('pages.home.planning.title'),
       icon: <Calendar className="h-8 w-8" />,
       href: '/planning/dashboard',
-      color: 'from-warning to-warning/70',
+      badgeClass: 'agent-badge-personal',
       features: t('pages.home.planning.features', { returnObjects: true }) as string[],
     },
     {
       title: t('pages.home.finance.title'),
       icon: <Wallet className="h-8 w-8" />,
       href: '/dashboard',
-      color: 'from-success to-success/70',
+      badgeClass: 'agent-badge-financial',
       features: t('pages.home.finance.features', { returnObjects: true }) as string[],
     },
     {
       title: t('pages.home.security.title'),
       icon: <Shield className="h-8 w-8" />,
       href: '/security/passwords',
-      color: 'from-info to-primary',
+      badgeClass: 'agent-badge-security',
       features: t('pages.home.security.features', { returnObjects: true }) as string[],
     },
     {
       title: t('pages.home.library.title'),
       icon: <Library className="h-8 w-8" />,
       href: '/library/books',
-      color: 'from-primary to-accent',
+      badgeClass: 'agent-badge-intellect',
       features: t('pages.home.library.features', { returnObjects: true }) as string[],
     },
   ];
@@ -163,10 +164,13 @@ export default function Home() {
                   module: module.title,
                 })}
               >
-                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-xl">
+                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-md">
                   <CardHeader>
                     <motion.div
-                      className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-md flex items-center justify-center text-white`}
+                      className={cn(
+                        'mb-md flex h-16 w-16 items-center justify-center rounded-lg',
+                        module.badgeClass
+                      )}
                       whileHover={{ scale: 1.15, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >

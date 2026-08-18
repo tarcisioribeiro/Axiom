@@ -42,6 +42,11 @@ def deliver_webhook(self: Any, delivery_id: int) -> dict:
 
     start = time.monotonic()
     try:
+        # TODO(security #342): re-resolve webhook.url and reject
+        # private/loopback/link-local hosts here (not just at registration
+        # time) to defeat DNS-rebinding; also stop following redirects
+        # blindly (allow_redirects defaults to True) without re-validating
+        # the redirect target host.
         resp = requests.post(
             webhook.url,
             data=body,

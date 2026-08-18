@@ -46,6 +46,10 @@ class MemberCreateListView(BaseListCreateView):
 
     serializer_class = MemberSerializer
 
+    # TODO(security #340): IDOR - queryset is not scoped to the requesting
+    # user, so any authenticated user can list/create members belonging to
+    # other users. Filter by the owning user, mirroring every sibling app
+    # (Account, Expense, Transfer, ...).
     def get_queryset(self):
         return Member.objects.filter(is_deleted=False).defer("_document")
 
@@ -69,6 +73,9 @@ class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     serializer_class = MemberSerializer
 
+    # TODO(security #340): IDOR - queryset is not scoped to the requesting
+    # user, so any authenticated user can read/update/delete any other
+    # user's Member record (including decrypted PII such as `document`).
     def get_queryset(self):
         return Member.objects.filter(is_deleted=False)
 
@@ -137,6 +144,9 @@ def manage_profile_photo(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+# TODO(security #339): missing ownership check - any authenticated user can
+# read any other member's permission list by pk. Scope to
+# member.user == request.user (or require staff) before this ships.
 def get_member_permissions(request, pk):
     """
     Retorna as permissões de um membro específico.
@@ -176,6 +186,11 @@ def get_member_permissions(request, pk):
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
+# TODO(security #339): CRITICAL - privilege escalation. No ownership/staff
+# check on `pk` and no allowlist on `permission_codenames`, so any
+# authenticated user can grant themselves arbitrary Django permissions.
+# Restrict to staff/admin, or to member.user == request.user plus a fixed
+# allowlist of non-privileged codenames, before this ships.
 def update_member_permissions(request, pk):
     """
     Atualiza as permissões de um membro específico.
@@ -307,6 +322,9 @@ class MemberPhotoStreamView(APIView):
     """Redireciona para a foto de perfil do membro (ver docstring de
     BookCoverStreamView em library/views.py para o motivo)."""
 
+    # TODO(security #340): IDOR - get() below fetches by pk with no
+    # ownership check, so any authenticated user can stream another user's
+    # member profile photo.
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk):

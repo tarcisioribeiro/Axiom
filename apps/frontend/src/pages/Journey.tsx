@@ -1,5 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { Award, Flame, Star, Target, TrendingUp, Trophy } from 'lucide-react';
+import {
+  Award,
+  CheckCircle2,
+  Flame,
+  Medal,
+  Star,
+  Target,
+  TrendingUp,
+  Trophy,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -24,12 +33,6 @@ const BADGE_LEVEL_COLORS: Record<string, string> = {
   silver:
     'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
   gold: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300',
-};
-
-const BADGE_LEVEL_ICONS: Record<string, string> = {
-  bronze: '🥉',
-  silver: '🥈',
-  gold: '🥇',
 };
 
 type TimelineEvent =
@@ -135,9 +138,7 @@ export default function Journey() {
                       key={b.id}
                       className={`p-sm flex flex-col items-center rounded-lg border text-center ${BADGE_LEVEL_COLORS[b.level] ?? ''}`}
                     >
-                      <span className="text-2xl">
-                        {BADGE_LEVEL_ICONS[b.level] ?? '🏅'}
-                      </span>
+                      <Medal className="h-6 w-6" aria-hidden="true" />
                       <span className="mt-xs text-xs font-semibold">
                         {b.code_display}
                       </span>
@@ -169,13 +170,15 @@ export default function Journey() {
                     <li key={idx} className="mb-md ml-sm last:mb-0">
                       <div className="mt-xs bg-background absolute -left-1.5 h-3 w-3 rounded-full border">
                         {ev.kind === 'badge' ? (
-                          <span className="absolute -top-0.5 -left-0.5 text-[10px]">
-                            🏅
-                          </span>
+                          <Award
+                            className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-amber-500"
+                            aria-hidden="true"
+                          />
                         ) : (
-                          <span className="absolute -top-0.5 -left-0.5 text-[10px]">
-                            ✅
-                          </span>
+                          <CheckCircle2
+                            className="absolute -top-0.5 -left-0.5 h-2.5 w-2.5 text-[hsl(var(--success))]"
+                            aria-hidden="true"
+                          />
                         )}
                       </div>
                       <p className="text-muted-foreground text-xs">

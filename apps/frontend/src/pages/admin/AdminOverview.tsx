@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import {
+  Activity,
   AlertTriangle,
   CheckCircle2,
   Database,
@@ -13,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 import type { ServiceCheck, ServiceStatus } from '@/types';
@@ -117,38 +120,35 @@ export default function AdminOverview() {
     : null;
 
   return (
-    <div>
-      <div className="mb-lg flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            {t('pages.adminOverview.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('pages.adminOverview.subtitle')}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {lastUpdate && (
-            <span className="text-muted-foreground text-xs">
-              {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
-            </span>
-          )}
-          <button
-            onClick={() => void refetch()}
-            disabled={isLoading}
-            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-            {t('pages.adminOverview.refresh')}
-          </button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('pages.adminOverview.title')}
+        subtitle={t('pages.adminOverview.subtitle')}
+        icon={<Activity />}
+        actions={
+          <div className="flex items-center gap-3">
+            {lastUpdate && (
+              <span className="text-muted-foreground text-xs">
+                {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
+              </span>
+            )}
+            <button
+              onClick={() => void refetch()}
+              disabled={isLoading}
+              className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+              {t('pages.adminOverview.refresh')}
+            </button>
+          </div>
+        }
+      />
 
       {/* Overall status banner */}
       {data && (
         <div
           className={cn(
-            'mb-lg py-md flex items-center gap-3 rounded-lg border px-5',
+            'py-md flex items-center gap-3 rounded-lg border px-5',
             data.status === 'healthy' && 'border-green-500/30 bg-green-500/10',
             data.status === 'warning' && 'border-yellow-500/30 bg-yellow-500/10',
             data.status === 'unhealthy' && 'border-destructive/30 bg-destructive/10'
@@ -217,6 +217,6 @@ export default function AdminOverview() {
           loading={isLoading}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

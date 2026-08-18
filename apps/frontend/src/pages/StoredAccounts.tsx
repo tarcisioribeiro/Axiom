@@ -102,7 +102,7 @@ export default function StoredAccounts() {
   >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [revealedData, setRevealedData] = useState<
-    Map<number, { password?: string; password2?: string }>
+    Map<number, { account_number?: string; password?: string; password2?: string }>
   >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [copyingId, setCopyingId] = useState<number | null>(null);
@@ -206,7 +206,11 @@ export default function StoredAccounts() {
       setRevealingId(id);
       const data = await storedAccountsService.reveal(id);
       const newMap = new Map(revealedData);
-      newMap.set(id, { password: data.password, password2: data.password2 });
+      newMap.set(id, {
+        account_number: data.account_number,
+        password: data.password,
+        password2: data.digital_password,
+      });
       setRevealedData(newMap);
       toast({
         title: t('pages.storedAccounts.revealed'),
@@ -399,7 +403,9 @@ export default function StoredAccounts() {
                         <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                           {t('pages.storedAccounts.columns.number')}
                         </span>
-                        <span className="font-mono">{acc.account_number_masked}</span>
+                        <span className="font-mono">
+                          {revealed?.account_number ?? acc.account_number_masked}
+                        </span>
                       </div>
                       {acc.agency && (
                         <div className="flex items-center justify-between text-sm">
@@ -414,13 +420,16 @@ export default function StoredAccounts() {
                     {/* Passwords section */}
                     {revealed ? (
                       <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
-                        {revealed.password && (
-                          <div className="gap-sm flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                              {t('pages.storedAccounts.password1')}
+                        <div className="gap-sm flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            {t('pages.storedAccounts.password1')}
+                          </span>
+                          <div className="gap-xs flex items-center">
+                            <span className="font-mono">
+                              {revealed.password ||
+                                t('pages.storedAccounts.noPassword')}
                             </span>
-                            <div className="gap-xs flex items-center">
-                              <span className="font-mono">{revealed.password}</span>
+                            {revealed.password && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -435,16 +444,19 @@ export default function StoredAccounts() {
                               >
                                 <Copy className="h-3 w-3" />
                               </Button>
-                            </div>
+                            )}
                           </div>
-                        )}
-                        {revealed.password2 && (
-                          <div className="gap-sm flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                              {t('pages.storedAccounts.password2')}
+                        </div>
+                        <div className="gap-sm flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            {t('pages.storedAccounts.password2')}
+                          </span>
+                          <div className="gap-xs flex items-center">
+                            <span className="font-mono">
+                              {revealed.password2 ||
+                                t('pages.storedAccounts.noPassword')}
                             </span>
-                            <div className="gap-xs flex items-center">
-                              <span className="font-mono">{revealed.password2}</span>
+                            {revealed.password2 && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -459,9 +471,9 @@ export default function StoredAccounts() {
                               >
                                 <Copy className="h-3 w-3" />
                               </Button>
-                            </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ) : (
                       <div className="bg-muted/40 py-sm rounded-lg px-3">

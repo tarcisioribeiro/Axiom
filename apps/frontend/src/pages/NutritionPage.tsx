@@ -752,7 +752,7 @@ export default function NutritionPage() {
             </div>
 
             {/* Header card com aderência */}
-            <div className="mb-lg border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+            <div className="mb-lg border-border bg-card overflow-hidden rounded-lg border shadow-sm">
               <div className="gap-md px-lg py-md flex items-center justify-between">
                 <div className="min-w-0">
                   <p className="text-muted-foreground text-sm font-medium capitalize">
