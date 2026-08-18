@@ -168,7 +168,7 @@ export default function Home() {
                   <CardHeader>
                     <motion.div
                       className={cn(
-                        'h-16 w-16 rounded-lg mb-md flex items-center justify-center',
+                        'mb-md flex h-16 w-16 items-center justify-center rounded-lg',
                         module.badgeClass
                       )}
                       whileHover={{ scale: 1.15, rotate: 5 }}
