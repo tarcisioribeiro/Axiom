@@ -3,6 +3,11 @@ from rest_framework import serializers
 from transfers.models import FixedTransfer, Transfer
 
 
+# TODO(security #341): `origin_account`/`destiny_account` are unscoped
+# PrimaryKeyRelatedFields - combined with transfers/signals.py auto-creating
+# a real Expense/Revenue on those accounts, this is a fund-transfer primitive
+# with no ownership check on either account. Validate both accounts belong
+# to request.user before this ships.
 class TransferSerializer(serializers.ModelSerializer):
     origin_account_name = serializers.CharField(
         source="origin_account.account_name", read_only=True

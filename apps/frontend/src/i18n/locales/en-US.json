@@ -2597,6 +2597,7 @@
       "copyAccountNumber": "Copy account number",
       "password1": "Password",
       "password2": "Confirm Password",
+      "noPassword": "This account has no password set",
       "accountTypes": {
         "CC": "Checking Account",
         "CS": "Salary Account",

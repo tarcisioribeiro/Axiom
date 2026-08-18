@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { adminService } from '@/services/admin-service';
 import type { ConfigCategory, SystemConfig } from '@/types';
@@ -39,36 +41,35 @@ export default function AdminConfig() {
 
   if (isLoading) {
     return (
-      <div className="space-y-md">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-card h-32 animate-pulse rounded-lg" />
-        ))}
-      </div>
+      <PageContainer>
+        <div className="space-y-md">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-card h-32 animate-pulse rounded-lg" />
+          ))}
+        </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div>
-      <div className="mb-lg gap-md flex items-start justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            {t('pages.adminConfig.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t('pages.adminConfig.subtitle')}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => setRestartOpen(true)}
-          className="gap-sm flex-shrink-0"
-        >
-          <RotateCcw className="h-4 w-4" />
-          {t('pages.adminConfig.restartBtn')}
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('pages.adminConfig.title')}
+        subtitle={t('pages.adminConfig.subtitle')}
+        icon={<Settings />}
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => setRestartOpen(true)}
+            className="gap-sm flex-shrink-0"
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t('pages.adminConfig.restartBtn')}
+          </Button>
+        }
+      />
 
-      <div className="mb-md px-md flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 py-3">
+      <div className="px-md flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 py-3">
         <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500" />
         <p className="text-sm text-amber-700 dark:text-amber-400">
           {t('pages.adminConfig.restartWarning')}
@@ -82,6 +83,6 @@ export default function AdminConfig() {
       )}
 
       <RestartModal open={restartOpen} onClose={() => setRestartOpen(false)} />
-    </div>
+    </PageContainer>
   );
 }

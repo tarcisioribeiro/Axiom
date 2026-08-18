@@ -13,7 +13,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Save,
   CheckCircle2,
@@ -292,6 +292,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     completion_rate: 0,
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -360,22 +361,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
   }, [hour, t]);
 
-  // Disparo inicial (uma vez por montagem) via useQuery — evita setState direto
-  // dentro de um useEffect puro, mantendo a lógica de carregamento inalterada.
-  useQuery({
-    queryKey: ['daily-checklist', 'init'],
-    queryFn: async () => {
-      await loadCurrentUserMember();
-      try {
-        const serverDate = await appService.getCurrentDate();
-        setSelectedDate(serverDate);
-      } catch {
-        setSelectedDate(formatLocalDate(new Date()));
-      }
-      return true;
-    },
-  });
-
   useQuery({
     queryKey: ['daily-checklist', 'data', selectedDate, ownerId],
     queryFn: async () => {
@@ -424,6 +409,28 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       });
     }
   };
+
+  // Inicialização única por montagem: um `useQuery` com chave fixa fica sujeito
+  // a refetchOnWindowFocus/staleness e pode reexecutar em segundo plano,
+  // sobrescrevendo silenciosamente a data que o usuário selecionou manualmente
+  // com a data atual do servidor. Um `useEffect` guardado por ref roda apenas
+  // uma vez por montagem real do componente e nunca é reacionado por foco de
+  // janela ou reconexão.
+  const didInitRef = useRef(false);
+  useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+    void (async () => {
+      await loadCurrentUserMember();
+      try {
+        const serverDate = await appService.getCurrentDate();
+        setSelectedDate(serverDate);
+      } catch {
+        setSelectedDate(formatLocalDate(new Date()));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadData = async (sync: boolean = false) => {
     try {
@@ -571,7 +578,11 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         title: t('pages.dailyChecklist.saved'),
         description: t('pages.dailyChecklist.savedDesc'),
       });
-      void loadData();
+      // Invalida (em vez de recarregar direto) para que qualquer outra data
+      // já visitada nesta sessão também seja recarregada do servidor da
+      // próxima vez que for selecionada, em vez de servir dados em cache
+      // desatualizados.
+      void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyChecklist.saveError'),
@@ -587,6 +598,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     try {
       setIsSyncing(true);
       await loadData(true);
+      void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
       toast({
         title: t('pages.dailyChecklist.synced'),
         description: t('pages.dailyChecklist.syncedDesc'),

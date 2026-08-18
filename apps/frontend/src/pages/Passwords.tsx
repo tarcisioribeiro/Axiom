@@ -68,6 +68,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -328,38 +329,23 @@ function DetailPanel({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b">
-        <button
-          type="button"
-          className={cn(
-            'gap-xs px-md py-sm flex flex-1 items-center justify-center text-sm font-medium transition-colors',
-            activeTab === 'details'
-              ? 'border-primary text-primary border-b-2'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-          onClick={() => setActiveTab('details')}
-        >
-          <FileText className="h-3.5 w-3.5" />
-          {t('common.actions.details', { defaultValue: 'Detalhes' })}
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'gap-xs px-md py-sm flex flex-1 items-center justify-center text-sm font-medium transition-colors',
-            activeTab === 'history'
-              ? 'border-primary text-primary border-b-2'
-              : 'text-muted-foreground hover:text-foreground'
-          )}
-          onClick={() => setActiveTab('history')}
-        >
-          <History className="h-3.5 w-3.5" />
-          {t('pages.passwords.history', { defaultValue: 'Histórico' })}
-        </button>
-      </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as 'details' | 'history')}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="details" className="gap-xs flex-1">
+            <FileText className="h-3.5 w-3.5" />
+            {t('common.actions.details', { defaultValue: 'Detalhes' })}
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-xs flex-1">
+            <History className="h-3.5 w-3.5" />
+            {t('pages.passwords.history', { defaultValue: 'Histórico' })}
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="p-lg flex-1 overflow-y-auto">
-        {activeTab === 'history' ? (
+        <TabsContent value="history" className="p-lg mt-0 flex-1 overflow-y-auto">
           <div className="space-y-sm">
             {isHistoryLoading ? (
               <div className="py-lg flex justify-center">
@@ -398,7 +384,9 @@ function DetailPanel({
               ))
             )}
           </div>
-        ) : (
+        </TabsContent>
+
+        <TabsContent value="details" className="p-lg mt-0 flex-1 overflow-y-auto">
           <div className="space-y-md">
             <div className="gap-sm flex items-center">
               <Tag className="text-muted-foreground h-4 w-4 shrink-0" />
@@ -501,8 +489,8 @@ function DetailPanel({
               </span>
             </div>
           </div>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
       <div className="gap-sm p-lg flex flex-wrap border-t">
         <Button
