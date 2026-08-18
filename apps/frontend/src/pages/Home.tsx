@@ -163,7 +163,7 @@ export default function Home() {
                   module: module.title,
                 })}
               >
-                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-xl">
+                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-md">
                   <CardHeader>
                     <motion.div
                       className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-md flex items-center justify-center text-white`}
