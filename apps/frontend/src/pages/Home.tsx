@@ -164,7 +164,7 @@ export default function Home() {
                   module: module.title,
                 })}
               >
-                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-xl">
+                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-md">
                   <CardHeader>
                     <motion.div
                       className={cn(
