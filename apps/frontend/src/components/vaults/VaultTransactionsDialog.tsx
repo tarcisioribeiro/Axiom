@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { Pencil, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ReceiptButton } from '@/components/receipts';
@@ -87,14 +87,29 @@ export function VaultTransactionsDialog({
     setTimeout(() => void loadTransactions(value), 0);
   };
 
-  const handleOpenChange = async (isOpen: boolean) => {
-    if (isOpen && vault) {
+  // Radix's Dialog only calls onOpenChange for user-driven close interactions
+  // (Esc, overlay click, close button) — not when the parent programmatically
+  // sets `open` to true. Load fresh data here instead, keyed to the dialog
+  // actually being open, so a new deposit/withdrawal always shows up.
+  useEffect(() => {
+    if (!open || !vault) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch triggered by dialog opening, not a derived-state update
+    void loadTransactions('all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, vault?.id]);
+
+  // Reset transient state when the dialog opens (or switches vault) during
+  // render rather than in an effect — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const openKey = open ? vault?.id : undefined;
+  const [prevOpenKey, setPrevOpenKey] = useState(openKey);
+  if (openKey !== prevOpenKey) {
+    setPrevOpenKey(openKey);
+    if (openKey !== undefined) {
       setFilter('all');
       setEditingTx(null);
-      await loadTransactions('all');
     }
-    onOpenChange(isOpen);
-  };
+  }
 
   const startEdit = (tx: VaultTransaction) => {
     setEditingTx(tx);
@@ -166,7 +181,7 @@ export function VaultTransactionsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => void handleOpenChange(v)}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.vaults.transactionsTitle')}</DialogTitle>

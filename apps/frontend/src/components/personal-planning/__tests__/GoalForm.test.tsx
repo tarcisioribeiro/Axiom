@@ -48,6 +48,8 @@ const mockGoal: Goal = {
   target_value: 30,
   current_value: 5,
   calculated_current_value: 5,
+  best_streak: 5,
+  failures: [],
   start_date: '2025-01-01',
   end_date: '2025-02-01',
   status: 'active',

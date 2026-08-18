@@ -16,8 +16,13 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     DailyReflectionListCreateView,
     EmotionalCheckinDetailView,
     EmotionalCheckinListCreateView,
+    ExerciseDatasetEntryListView,
+    ExerciseDatasetGifStreamView,
+    ExerciseDatasetThumbnailStreamView,
+    ExerciseGifStreamView,
     ExerciseListCreateView,
     ExerciseRetrieveUpdateDestroyView,
+    ExerciseThumbnailStreamView,
     ExportGoalsView,
     ExportMealLogsView,
     ExportReflectionsView,
@@ -201,6 +206,32 @@ urlpatterns = [
         "exercises/<int:pk>/",
         ExerciseRetrieveUpdateDestroyView.as_view(),
         name="exercise-detail",
+    ),
+    path(
+        "exercises/<int:pk>/gif/",
+        ExerciseGifStreamView.as_view(),
+        name="exercise-gif-stream",
+    ),
+    path(
+        "exercises/<int:pk>/thumbnail/",
+        ExerciseThumbnailStreamView.as_view(),
+        name="exercise-thumbnail-stream",
+    ),
+    # Exercise Dataset (picker de imagens)
+    path(
+        "exercise-dataset/",
+        ExerciseDatasetEntryListView.as_view(),
+        name="exercise-dataset-list",
+    ),
+    path(
+        "exercise-dataset/<int:pk>/gif/",
+        ExerciseDatasetGifStreamView.as_view(),
+        name="exercise-dataset-gif-stream",
+    ),
+    path(
+        "exercise-dataset/<int:pk>/thumbnail/",
+        ExerciseDatasetThumbnailStreamView.as_view(),
+        name="exercise-dataset-thumbnail-stream",
     ),
     # Workout Plans
     path(

@@ -1,6 +1,13 @@
 import type { RoutineTask } from './planning';
 import type { InstanceStatus, TaskPriority } from './planning-constants';
 
+export interface GoalFailure {
+  id: number;
+  failure_date: string;
+  streak_at_failure: number;
+  created_at: string;
+}
+
 export interface Goal {
   id: number;
   uuid: string;
@@ -15,6 +22,8 @@ export interface Goal {
   target_value: number;
   current_value: number;
   calculated_current_value?: number;
+  best_streak: number;
+  failures: GoalFailure[];
   start_date: string;
   end_date?: string;
   status: string;

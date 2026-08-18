@@ -5,8 +5,10 @@ from personal_planning.models import (
     Challenge,
     DailyReflection,
     Exercise,
+    ExerciseDatasetEntry,
     Food,
     Goal,
+    GoalFailure,
     MealLog,
     MealType,
     MenuOption,
@@ -176,6 +178,15 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
 # ============================================================================
 
 
+class GoalFailureSerializer(serializers.ModelSerializer):
+    """Serializer para o historico de falhas de um objetivo."""
+
+    class Meta:
+        model = GoalFailure
+        fields = ["id", "failure_date", "streak_at_failure", "created_at"]
+        read_only_fields = fields
+
+
 class GoalSerializer(serializers.ModelSerializer):
     """Serializer para visualizacao de objetivos."""
 
@@ -195,6 +206,8 @@ class GoalSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.ReadOnlyField()
     days_active = serializers.ReadOnlyField()
     calculated_current_value = serializers.ReadOnlyField()
+    best_streak = serializers.ReadOnlyField()
+    failures = GoalFailureSerializer(many=True, read_only=True)
 
     class Meta:
         model = Goal
@@ -212,6 +225,8 @@ class GoalSerializer(serializers.ModelSerializer):
             "target_value",
             "current_value",
             "calculated_current_value",
+            "best_streak",
+            "failures",
             "start_date",
             "end_date",
             "status",
@@ -411,7 +426,49 @@ class TaskInstanceStatusUpdateSerializer(serializers.Serializer):
 # ============================================================================
 
 
+class ExerciseDatasetEntrySerializer(serializers.ModelSerializer):
+    """Somente leitura — resultados de busca no picker de imagens de
+    exercícios. Mídia servida via proxy de stream (evita expor URLs
+    diretas/credenciais do MinIO)."""
+
+    thumbnail_url = serializers.SerializerMethodField()
+    gif_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExerciseDatasetEntry
+        fields = [
+            "id",
+            "dataset_id",
+            "name",
+            "category",
+            "body_part",
+            "equipment",
+            "target",
+            "muscle_group",
+            "thumbnail_url",
+            "gif_url",
+        ]
+
+    def get_thumbnail_url(self, obj):
+        if not obj.thumbnail:
+            return None
+        return (
+            f"/api/v1/personal-planning/exercise-dataset/{obj.pk}/thumbnail/"
+        )
+
+    def get_gif_url(self, obj):
+        if not obj.gif:
+            return None
+        return f"/api/v1/personal-planning/exercise-dataset/{obj.pk}/gif/"
+
+
 class ExerciseSerializer(serializers.ModelSerializer):
+    dataset_entry_name = serializers.CharField(
+        source="dataset_entry.name", read_only=True, default=None
+    )
+    gif_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Exercise
         fields = [
@@ -420,17 +477,38 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "name",
             "muscle_groups",
             "description",
+            "dataset_entry",
+            "dataset_entry_name",
+            "gif_url",
+            "thumbnail_url",
             "owner",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
+    def get_gif_url(self, obj):
+        if not obj.dataset_entry or not obj.dataset_entry.gif:
+            return None
+        return f"/api/v1/personal-planning/exercises/{obj.pk}/gif/"
+
+    def get_thumbnail_url(self, obj):
+        if not obj.dataset_entry or not obj.dataset_entry.thumbnail:
+            return None
+        return f"/api/v1/personal-planning/exercises/{obj.pk}/thumbnail/"
+
 
 class ExerciseCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exercise
-        fields = ["id", "name", "muscle_groups", "description", "owner"]
+        fields = [
+            "id",
+            "name",
+            "muscle_groups",
+            "description",
+            "dataset_entry",
+            "owner",
+        ]
 
 
 class WorkoutExerciseSerializer(serializers.ModelSerializer):
@@ -440,6 +518,8 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
     exercise_catalog_name = serializers.CharField(
         source="exercise.name", read_only=True, default=None
     )
+    gif_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkoutExercise
@@ -449,6 +529,8 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "workout_day",
             "exercise",
             "exercise_catalog_name",
+            "gif_url",
+            "thumbnail_url",
             "name",
             "sets",
             "reps_min",
@@ -464,6 +546,26 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_gif_url(self, obj):
+        catalog = obj.exercise
+        if (
+            not catalog
+            or not catalog.dataset_entry
+            or not catalog.dataset_entry.gif
+        ):
+            return None
+        return f"/api/v1/personal-planning/exercises/{catalog.pk}/gif/"
+
+    def get_thumbnail_url(self, obj):
+        catalog = obj.exercise
+        if (
+            not catalog
+            or not catalog.dataset_entry
+            or not catalog.dataset_entry.thumbnail
+        ):
+            return None
+        return f"/api/v1/personal-planning/exercises/{catalog.pk}/thumbnail/"
 
 
 class WorkoutExerciseCreateUpdateSerializer(serializers.ModelSerializer):
@@ -500,6 +602,8 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
             "muscle_groups",
             "day_of_week",
             "order",
+            "default_start_time",
+            "default_duration_minutes",
             "exercises",
             "exercise_count",
             "owner",
@@ -524,6 +628,8 @@ class WorkoutDayCreateUpdateSerializer(serializers.ModelSerializer):
             "muscle_groups",
             "day_of_week",
             "order",
+            "default_start_time",
+            "default_duration_minutes",
             "owner",
         ]
 
@@ -608,6 +714,8 @@ class WorkoutSessionSetCreateUpdateSerializer(serializers.ModelSerializer):
 
 class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
     sets = WorkoutSessionSetSerializer(many=True, read_only=True)
+    gif_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkoutSessionExercise
@@ -617,9 +725,13 @@ class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
             "session",
             "exercise",
             "exercise_name",
+            "gif_url",
+            "thumbnail_url",
             "sets_target",
             "reps_target_min",
             "reps_target_max",
+            "load_target",
+            "load_target_unit",
             "order",
             "sets",
             "owner",
@@ -627,6 +739,32 @@ class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def _catalog_exercise(self, obj):
+        plan_exercise = obj.exercise
+        if not plan_exercise:
+            return None
+        return plan_exercise.exercise
+
+    def get_gif_url(self, obj):
+        catalog = self._catalog_exercise(obj)
+        if (
+            not catalog
+            or not catalog.dataset_entry
+            or not catalog.dataset_entry.gif
+        ):
+            return None
+        return f"/api/v1/personal-planning/exercises/{catalog.pk}/gif/"
+
+    def get_thumbnail_url(self, obj):
+        catalog = self._catalog_exercise(obj)
+        if (
+            not catalog
+            or not catalog.dataset_entry
+            or not catalog.dataset_entry.thumbnail
+        ):
+            return None
+        return f"/api/v1/personal-planning/exercises/{catalog.pk}/thumbnail/"
 
 
 class WorkoutSessionExerciseCreateUpdateSerializer(
@@ -642,6 +780,8 @@ class WorkoutSessionExerciseCreateUpdateSerializer(
             "sets_target",
             "reps_target_min",
             "reps_target_max",
+            "load_target",
+            "load_target_unit",
             "order",
             "owner",
         ]

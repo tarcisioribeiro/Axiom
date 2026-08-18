@@ -3573,6 +3573,9 @@
       },
       "certificate": {
         "fileLabel": "Completion Certificate",
+        "viewLink": "Certificate file",
+        "previewTitle": "Certificate",
+        "previewError": "Could not load the certificate.",
         "emptyTitle": "No certificate attached",
         "emptyHint": "Click to upload your completion certificate (PDF, JPG, PNG).",
         "uploaded": "Certificate uploaded",
@@ -4046,6 +4049,7 @@
         "startDatePlaceholder": "Select start date",
         "endDateLabel": "End Date",
         "endDatePlaceholder": "Select end date",
+        "endDateComputedHint": "Automatically calculated from the start date and the target.",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Consecutive Days",
@@ -4080,6 +4084,13 @@
       "failureRegistered": "Failure registered",
       "failureRegisteredDesc": "Progress has been recalculated from the failure date.",
       "failureError": "Error registering failure",
+      "currentStreakLabel": "Current streak",
+      "bestStreakLabel": "Best streak",
+      "endDateLabelShort": "Ends",
+      "failuresCount_one": "{{count}} failure",
+      "failuresCount_other": "{{count}} failures",
+      "failuresHistoryTitle": "Failure History",
+      "failureStreakReached": "reached {{count}}",
       "restartBtn": "Restart Task",
       "restartTitle": "Restart Task",
       "restartDesc": "Are you sure you want to restart goal \"{{name}}\"? Progress will be completely zeroed.",
@@ -5279,6 +5290,10 @@
       "dayNamePlaceholder": "e.g. Workout A",
       "dayOfWeek": "Day of Week",
       "dayOfWeekHint": "Select the day this split will be performed. Leave empty to show every day.",
+      "defaultScheduleSection": "Default Schedule",
+      "defaultStartTime": "Default Start Time",
+      "defaultDurationMinutes": "Default Duration (min)",
+      "defaultScheduleHint": "Used to pre-fill the time when logging a session for this day.",
       "weekdays": {
         "monday": "Mon",
         "tuesday": "Tue",
@@ -5382,7 +5397,17 @@
       "fieldMuscles": "Muscle Groups",
       "fieldMusclesPlaceholder": "e.g. Chest / Triceps",
       "fieldDescription": "Description",
-      "fieldDescriptionPlaceholder": "Technique, variations, tips..."
+      "fieldDescriptionPlaceholder": "Technique, variations, tips...",
+      "changeImage": "Change image",
+      "picker": {
+        "title": "Choose exercise image",
+        "description": "Search the exercise image catalog and select the matching GIF.",
+        "searchPlaceholder": "Search exercise...",
+        "loadMore": "Load more",
+        "empty": "No exercises found",
+        "emptyDesc": "Try a different search term.",
+        "selectError": "Error setting exercise image"
+      }
     },
     "workoutSessions": {
       "sectionSession": "Session Details",
@@ -6371,7 +6396,8 @@
       "receivable": "Receivable",
       "creditCard": "Credit Card Bill",
       "loan": "Loan Installment",
-      "revenue": "Pending Revenue"
+      "revenue": "Pending Revenue",
+      "expense": "Pending Expense"
     },
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",

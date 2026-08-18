@@ -109,13 +109,13 @@ export function AgentChatWidget() {
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
-          // Offset above the bottom-right corner (StudyTimer, page FABs like
-          // Books' quick-capture button all anchor at bottom-6/right-6) so
-          // this global widget doesn't sit on top of and block them.
-          'right-lg fixed bottom-[6.5rem] z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors',
+          // Same bottom-right anchor as StudyTimer (right-6/bottom-6) — the
+          // two widgets never render together since each is now scoped to
+          // its own module.
+          'right-lg fixed bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors',
           open
             ? 'bg-muted text-muted-foreground ring-border ring-2'
-            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            : 'bg-category-finance hover:bg-category-finance/90 text-white dark:text-black'
         )}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -152,13 +152,13 @@ export function AgentChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="right-lg bg-background fixed bottom-[10.5rem] z-50 flex w-80 flex-col overflow-hidden rounded-2xl border shadow-2xl sm:w-96"
+            className="right-lg bg-background fixed bottom-[5.5rem] z-50 flex w-80 flex-col overflow-hidden rounded-2xl border shadow-2xl sm:w-96"
             style={{ maxHeight: 'min(520px, calc(100vh - 12rem))' }}
           >
             {/* Header */}
-            <div className="bg-primary/5 px-md py-sm flex items-center justify-between border-b">
+            <div className="bg-category-finance/5 px-md py-sm flex items-center justify-between border-b">
               <div className="gap-sm flex items-center">
-                <BotMessageSquare className="text-primary h-4 w-4" />
+                <BotMessageSquare className="text-category-finance h-4 w-4" />
                 <span className="text-sm font-semibold">{t('agentWidget.title')}</span>
               </div>
               <Button
@@ -198,7 +198,7 @@ export function AgentChatWidget() {
                       className={cn(
                         'px-md py-sm max-w-[85%] rounded-lg text-sm',
                         msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground ml-auto'
+                          ? 'bg-category-finance ml-auto text-white dark:text-black'
                           : 'bg-muted text-foreground'
                       )}
                     >
@@ -248,7 +248,7 @@ export function AgentChatWidget() {
                     onClick={() => void handleSend(input)}
                     disabled={!input.trim()}
                     aria-label={t('agentWidget.sendLabel')}
-                    className="p-xs text-primary hover:text-primary/80 shrink-0 rounded-lg transition-colors disabled:opacity-40"
+                    className="p-xs text-category-finance hover:text-category-finance/80 shrink-0 rounded-lg transition-colors disabled:opacity-40"
                   >
                     <Send className="h-4 w-4" />
                   </button>

@@ -3639,6 +3639,9 @@
       },
       "certificate": {
         "fileLabel": "Comprovante de Conclusão",
+        "viewLink": "Arquivo do certificado",
+        "previewTitle": "Certificado",
+        "previewError": "Não foi possível carregar o certificado.",
         "emptyTitle": "Nenhum comprovante anexado",
         "emptyHint": "Clique para enviar o certificado ou comprovante de conclusão (PDF, JPG, PNG).",
         "uploaded": "Comprovante enviado",
@@ -4112,6 +4115,7 @@
         "startDatePlaceholder": "Selecione a data de início",
         "endDateLabel": "Data de Término",
         "endDatePlaceholder": "Selecione a data de término",
+        "endDateComputedHint": "Calculada automaticamente a partir da data de início e da meta.",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Dias Consecutivos",
@@ -4146,6 +4150,13 @@
       "failureRegistered": "Falha registrada",
       "failureRegisteredDesc": "O progresso foi recalculado a partir da data da falha.",
       "failureError": "Erro ao registrar falha",
+      "currentStreakLabel": "Sequência atual",
+      "bestStreakLabel": "Recorde",
+      "endDateLabelShort": "Término",
+      "failuresCount_one": "{{count}} falha",
+      "failuresCount_other": "{{count}} falhas",
+      "failuresHistoryTitle": "Histórico de Falhas",
+      "failureStreakReached": "chegou a {{count}}",
       "restartBtn": "Reiniciar Tarefa",
       "restartTitle": "Reiniciar Tarefa",
       "restartDesc": "Tem certeza que deseja reiniciar o objetivo \"{{name}}\"? O progresso será zerado completamente.",
@@ -5345,6 +5356,10 @@
       "dayNamePlaceholder": "Ex: Treino A",
       "dayOfWeek": "Dia da Semana",
       "dayOfWeekHint": "Selecione o dia em que esta divisão será executada. Vazio = aparece todos os dias.",
+      "defaultScheduleSection": "Horário Padrão",
+      "defaultStartTime": "Horário de Início Padrão",
+      "defaultDurationMinutes": "Duração Padrão (min)",
+      "defaultScheduleHint": "Usado para pré-preencher o horário ao registrar uma sessão desta divisão.",
       "weekdays": {
         "monday": "Seg",
         "tuesday": "Ter",
@@ -5448,7 +5463,17 @@
       "fieldMuscles": "Grupos Musculares",
       "fieldMusclesPlaceholder": "Ex: Peitoral / Tríceps",
       "fieldDescription": "Descrição",
-      "fieldDescriptionPlaceholder": "Técnica, variações, dicas..."
+      "fieldDescriptionPlaceholder": "Técnica, variações, dicas...",
+      "changeImage": "Alterar imagem",
+      "picker": {
+        "title": "Escolher imagem do exercício",
+        "description": "Busque um exercício no catálogo de imagens e selecione o GIF correspondente.",
+        "searchPlaceholder": "Buscar exercício (em inglês, ex: squat)...",
+        "loadMore": "Carregar mais",
+        "empty": "Nenhum exercício encontrado",
+        "emptyDesc": "Tente buscar por outro termo, em inglês.",
+        "selectError": "Erro ao definir a imagem do exercício"
+      }
     },
     "workoutSessions": {
       "sectionSession": "Dados da Sessão",
@@ -6416,7 +6441,8 @@
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
       "loan": "Parcela Empréstimo",
-      "revenue": "Receita Pendente"
+      "revenue": "Receita Pendente",
+      "expense": "Despesa Pendente"
     },
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",

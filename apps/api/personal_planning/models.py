@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -47,6 +49,11 @@ GOAL_TYPE_CHOICES = (
     ("avoid_habit", "Evitar Hábito"),
     ("custom", "Personalizado"),
 )
+
+# Tipos de objetivo com contagem automática de progresso, elegíveis para
+# conclusão automática (via sinais, endpoint de recálculo ou tarefa
+# periódica).
+AUTO_COMPLETION_GOAL_TYPES = ("consecutive_days", "total_days", "avoid_habit")
 
 GOAL_SOURCE_CHOICES = (
     ("task_instances", "Instâncias de Tarefas"),
@@ -600,6 +607,11 @@ class Goal(BaseModel):
     current_value = models.PositiveIntegerField(
         default=0, verbose_name="Valor Atual"
     )
+    best_streak = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Melhor Sequência",
+        help_text="Maior progresso já alcançado neste objetivo",
+    )
     start_date = models.DateField(
         null=False,
         blank=False,
@@ -641,15 +653,42 @@ class Goal(BaseModel):
             models.Index(fields=["status", "-created_at"]),
         ]
 
+    def save(self, *args, **kwargs):
+        """
+        Para os tipos de contagem automatica (dias consecutivos, total de
+        dias, evitar habito), `end_date` nao e um campo que o usuario
+        preenche: e sempre derivado de `start_date + target_value` dias
+        enquanto o objetivo estiver ativo. Isso mantem a data de termino
+        sempre coerente com a meta e a data de inicio informadas, sem
+        exigir nenhuma acao manual.
+
+        Uma vez que o objetivo deixa de estar ativo (concluido, falhou,
+        cancelado), `end_date` para de ser recalculado e passa a "congelar"
+        o valor que tinha nesse momento (ex: a data em que foi concluido).
+        """
+        if (
+            self.status == "active"
+            and self.goal_type in AUTO_COMPLETION_GOAL_TYPES
+            and self.start_date
+            and self.target_value
+        ):
+            self.end_date = self.start_date + timedelta(days=self.target_value)
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None and "end_date" not in update_fields:
+                kwargs["update_fields"] = list(update_fields) + ["end_date"]
+        super().save(*args, **kwargs)
+
     @property
     def calculated_current_value(self):
         """
         Calcula o valor atual do progresso automaticamente baseado no tipo
         de objetivo e na fonte configurada (tarefas, treinos, refeições ou
         manual).
-        """
-        from datetime import timedelta
 
+        Para os tipos com contagem automática (dias consecutivos, total de
+        dias, evitar hábito), o valor é travado em `target_value` — a
+        contagem não deve continuar subindo depois que a meta é atingida.
+        """
         today = timezone.now().date()
 
         if self.goal_source == "workout_sessions":
@@ -683,9 +722,9 @@ class Goal(BaseModel):
                             break
                     check_date -= timedelta(days=1)
 
-                return consecutive_days
+                return min(consecutive_days, self.target_value)
             else:
-                return self.days_active
+                return min(self.days_active, self.target_value)
 
         if self.goal_type == "avoid_habit":
             if self.related_task:
@@ -712,13 +751,13 @@ class Goal(BaseModel):
                         consecutive_days += 1
                     check_date -= timedelta(days=1)
 
-                return consecutive_days
+                return min(consecutive_days, self.target_value)
             else:
-                return self.days_active
+                return min(self.days_active, self.target_value)
 
         elif self.goal_type == "total_days":
             if self.related_task:
-                return (
+                total_days = (
                     TaskInstance.objects.filter(
                         template=self.related_task,
                         scheduled_date__gte=self.start_date,
@@ -730,8 +769,9 @@ class Goal(BaseModel):
                     .distinct()
                     .count()
                 )
+                return min(total_days, self.target_value)
             else:
-                return self.days_active
+                return min(self.days_active, self.target_value)
 
         return self.current_value
 
@@ -743,7 +783,7 @@ class Goal(BaseModel):
             deleted_at__isnull=True,
         )
         if self.goal_type == "total_days":
-            return qs.values("date").distinct().count()
+            return min(qs.values("date").distinct().count(), self.target_value)
         if self.goal_type == "consecutive_days":
             consecutive = 0
             check_date = today
@@ -753,7 +793,7 @@ class Goal(BaseModel):
                 else:
                     break
                 check_date -= timedelta(days=1)
-            return consecutive
+            return min(consecutive, self.target_value)
         # Para custom/avoid_habit: total de sessões
         return qs.count()
 
@@ -765,7 +805,7 @@ class Goal(BaseModel):
             deleted_at__isnull=True,
         )
         if self.goal_type == "total_days":
-            return qs.values("date").distinct().count()
+            return min(qs.values("date").distinct().count(), self.target_value)
         if self.goal_type == "consecutive_days":
             consecutive = 0
             check_date = today
@@ -775,7 +815,7 @@ class Goal(BaseModel):
                 else:
                     break
                 check_date -= timedelta(days=1)
-            return consecutive
+            return min(consecutive, self.target_value)
         return qs.count()
 
     @property
@@ -792,13 +832,115 @@ class Goal(BaseModel):
 
     @property
     def days_active(self):
-        """Calcula quantos dias o objetivo esta ativo."""
-        if self.end_date:
+        """
+        Calcula quantos dias o objetivo esta ativo.
+
+        Enquanto ativo, usa sempre o tempo decorrido real (hoje -
+        start_date) — mesmo quando `end_date` esta definido, ja que para
+        os tipos automaticos ele agora e apenas a data de termino prevista
+        (start_date + target_value), nao o "hoje" real. Uma vez que o
+        objetivo deixa de estar ativo, `end_date` passa a representar a
+        duracao final (congelada) do objetivo.
+        """
+        if self.status != "active" and self.end_date:
             return max(0, (self.end_date - self.start_date).days)
         return max(0, (timezone.now().date() - self.start_date).days)
 
+    def evaluate_completion(self) -> bool:
+        """
+        Verifica se o objetivo atingiu a meta e, em caso positivo, marca
+        como concluido; caso contrario, apenas atualiza `best_streak`
+        quando um novo recorde e alcancado.
+
+        Usado pelos sinais de progresso, pelo endpoint de recalculo e pela
+        tarefa periodica `check_goal_completions` — e a unica fonte de
+        verdade para a transicao de status "active" -> "completed".
+
+        Retorna True se o objetivo foi concluido nesta chamada.
+        """
+        if (
+            self.status != "active"
+            or self.goal_type not in AUTO_COMPLETION_GOAL_TYPES
+        ):
+            return False
+
+        current = self.calculated_current_value
+
+        if current >= self.target_value:
+            self.status = "completed"
+            self.end_date = timezone.now().date()
+            self.best_streak = max(self.best_streak, current)
+            self.save(
+                update_fields=[
+                    "status",
+                    "end_date",
+                    "best_streak",
+                    "updated_at",
+                ]
+            )
+            _notify_goal_completed(self)
+            return True
+
+        if current > self.best_streak:
+            self.best_streak = current
+            self.save(update_fields=["best_streak", "updated_at"])
+
+        return False
+
     def __str__(self):
         return f"{self.title} ({self.current_value}/{self.target_value})"
+
+
+def _notify_goal_completed(goal):
+    """Cria notificação in-app quando um objetivo é concluído."""
+    try:
+        from notifications.models import Notification
+
+        Notification.objects.create(
+            owner=goal.owner,
+            notification_type="task_today",
+            title=f"Objetivo concluído: {goal.title}",
+            message=(
+                f"Parabéns! Você atingiu sua meta de {goal.target_value} "
+                f'para o objetivo "{goal.title}".'
+            ),
+            content_type="Goal",
+            object_id=goal.id,
+            created_by=goal.owner.user if goal.owner.user_id else None,
+            updated_by=goal.owner.user if goal.owner.user_id else None,
+        )
+    except Exception:
+        pass
+
+
+class GoalFailure(BaseModel):
+    """
+    Registro de uma falha em um objetivo — guarda a data em que a
+    sequência foi quebrada e quantos dias/unidades haviam sido
+    alcançados até então, para exibir histórico e melhor sequência.
+    """
+
+    goal = models.ForeignKey(
+        Goal,
+        on_delete=models.CASCADE,
+        related_name="failures",
+        verbose_name="Objetivo",
+    )
+    failure_date = models.DateField(verbose_name="Data da Falha")
+    streak_at_failure = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Sequência Alcançada",
+        help_text="Progresso que havia sido alcançado até a falha",
+    )
+
+    class Meta:
+        verbose_name = "Falha de Objetivo"
+        verbose_name_plural = "Falhas de Objetivos"
+        ordering = ["-failure_date"]
+        indexes = [models.Index(fields=["goal", "-failure_date"])]
+
+    def __str__(self):
+        return f"{self.goal.title} - falha em {self.failure_date}"
 
 
 # ============================================================================
@@ -1327,6 +1469,15 @@ class Exercise(BaseModel):
             "Usado para estimar calorias gastas: kcal = MET × peso_kg × horas."
         ),
     )
+    dataset_entry = models.ForeignKey(
+        "ExerciseDatasetEntry",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_exercises",
+        verbose_name="Mídia do Catálogo",
+        help_text="Entrada do dataset de exercícios usada como GIF/imagem.",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1420,6 +1571,24 @@ class WorkoutDay(BaseModel):
         default=0,
         verbose_name="Ordem",
         help_text="Ordem de exibição dentro do plano",
+    )
+    default_start_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário de Início Padrão",
+        help_text=(
+            "Horário usado para pré-preencher o início ao registrar"
+            " uma sessão desta divisão."
+        ),
+    )
+    default_duration_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Duração Padrão (minutos)",
+        help_text=(
+            "Usada junto com o horário de início padrão para"
+            " pré-preencher o término da sessão."
+        ),
     )
     owner = models.ForeignKey(
         "members.Member",
@@ -1609,6 +1778,22 @@ class WorkoutSessionExercise(BaseModel):
     reps_target_max = models.PositiveIntegerField(
         default=12, verbose_name="Repetições Alvo (máx.)"
     )
+    load_target = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        verbose_name="Carga Alvo",
+        help_text=(
+            "Snapshot da carga planejada,"
+            " usada para pré-preencher as séries."
+        ),
+    )
+    load_target_unit = models.CharField(
+        max_length=10,
+        choices=LOAD_UNIT_CHOICES,
+        default="kg",
+        verbose_name="Unidade da Carga Alvo",
+    )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     owner = models.ForeignKey(
         "members.Member",
@@ -1683,6 +1868,60 @@ class WorkoutSessionSet(BaseModel):
         load_str = f"{self.load}{self.load_unit}" if self.load else "s/carga"
         reps_str = f"×{self.reps_done}" if self.reps_done else ""
         return f"Série {self.set_number} — {load_str}{reps_str}"
+
+
+class ExerciseDatasetEntry(BaseModel):
+    """Entrada vendorizada do dataset público hasaneyldrm/exercises-dataset
+    (GitHub, MIT + mídia © Gym visual). Dado de referência global,
+    compartilhado entre todos os usuários — não possui `owner`. Populado
+    via `manage.py import_exercise_dataset`; é a única fonte de mídia
+    (GIF/thumbnail) aceita para o catálogo de exercícios."""
+
+    dataset_id = models.CharField(
+        max_length=4,
+        unique=True,
+        db_index=True,
+        verbose_name="ID no Dataset",
+        help_text="ID de 4 dígitos do dataset de origem (ex: '0001').",
+    )
+    name = models.CharField(max_length=200, verbose_name="Nome (EN)")
+    category = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    body_part = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    equipment = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    target = models.CharField(
+        max_length=100, null=True, blank=True, db_index=True
+    )
+    muscle_group = models.CharField(max_length=100, null=True, blank=True)
+    secondary_muscles = models.CharField(max_length=300, null=True, blank=True)
+    media_id = models.CharField(max_length=100, null=True, blank=True)
+    attribution = models.CharField(max_length=300, null=True, blank=True)
+    thumbnail = models.ImageField(
+        upload_to="personal_planning/exercise_dataset/thumbnails/",
+        null=True,
+        blank=True,
+        verbose_name="Miniatura (JPG estático)",
+    )
+    gif = models.FileField(
+        upload_to="personal_planning/exercise_dataset/gifs/",
+        null=True,
+        blank=True,
+        verbose_name="GIF Animado",
+    )
+
+    class Meta:
+        verbose_name = "Entrada do Catálogo de Exercícios (Dataset)"
+        verbose_name_plural = "Entradas do Catálogo de Exercícios (Dataset)"
+        ordering = ["name"]
+        indexes = [models.Index(fields=["category", "body_part"])]
+
+    def __str__(self):
+        return f"{self.dataset_id} — {self.name}"
 
 
 # ============================================================================

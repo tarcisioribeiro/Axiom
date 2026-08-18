@@ -19,7 +19,7 @@ const ENV_CONFIG: Record<
 };
 
 /**
- * Faixa diagonal estilo Flutter no canto superior direito.
+ * Faixa diagonal estilo Flutter no canto inferior esquerdo.
  * Só renderiza em ambientes não-produção (VITE_APP_ENV !== "production").
  * position: fixed + pointer-events: none — não interfere com nenhum layout.
  */
@@ -33,8 +33,8 @@ export function EnvironmentBanner() {
       aria-hidden="true"
       style={{
         position: 'fixed',
-        top: 0,
-        right: 0,
+        bottom: 0,
+        left: 0,
         width: 100,
         height: 100,
         overflow: 'hidden',
@@ -45,8 +45,8 @@ export function EnvironmentBanner() {
       <div
         style={{
           position: 'absolute',
-          top: 22,
-          right: -28,
+          bottom: 22,
+          left: -28,
           width: 130,
           textAlign: 'center',
           background: config.bg,

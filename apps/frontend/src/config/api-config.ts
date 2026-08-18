@@ -122,6 +122,7 @@ export const API_CONFIG = {
     COURSE_LESSONS: '/api/v1/library/course-lessons/',
     COURSE_LESSONS_BULK_COMPLETE: '/api/v1/library/course-lessons/bulk-complete/',
     COURSE_SESSIONS: '/api/v1/library/course-sessions/',
+    COURSE_CERTIFICATE_STREAM: '/api/v1/library/courses/',
     SKILLS: '/api/v1/library/skills/',
     KNOWLEDGE_GRAPH: '/api/v1/library/knowledge-graph/',
     KNOWLEDGE_LINKS: '/api/v1/library/knowledge-links/',
@@ -151,6 +152,7 @@ export const API_CONFIG = {
     GAMIFICATION_PROFILE: '/api/v1/personal-planning/gamification/',
     // Workout
     EXERCISES: '/api/v1/personal-planning/exercises/',
+    EXERCISE_DATASET: '/api/v1/personal-planning/exercise-dataset/',
     WORKOUT_PLANS: '/api/v1/personal-planning/workout-plans/',
     WORKOUT_DAYS: '/api/v1/personal-planning/workout-days/',
     WORKOUT_EXERCISES: '/api/v1/personal-planning/workout-exercises/',

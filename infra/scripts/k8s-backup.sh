@@ -130,8 +130,15 @@ log "pg_dump concluído — tamanho: ${DUMP_SIZE}"
 # ── Backup MinIO via rede direta ──────────────────────────────────────────────
 log "Conectando ao MinIO externo em ${MINIO_ENDPOINT}..."
 log "Configurando alias mc 'k8s-minio' (certificado público confiável)..."
+
+# MINIO_ENDPOINT pode vir com ou sem esquema no Secret — não duplicar o prefixo.
+MINIO_URL="$MINIO_ENDPOINT"
+if [[ "$MINIO_URL" != http://* && "$MINIO_URL" != https://* ]]; then
+    MINIO_URL="https://${MINIO_URL}"
+fi
+
 "$MC" alias set k8s-minio \
-    "https://${MINIO_ENDPOINT}" \
+    "$MINIO_URL" \
     "$MINIO_USER" "$MINIO_PASS" \
     --api S3v4 \
     >/dev/null

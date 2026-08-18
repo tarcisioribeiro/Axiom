@@ -4,6 +4,48 @@ from celery import shared_task
 @shared_task(
     bind=True, max_retries=2, default_retry_delay=300, ignore_result=True
 )
+def check_goal_completions(self) -> dict:
+    """
+    Verifica diariamente todos os objetivos ativos com contagem automática
+    e marca como concluídos os que já atingiram a meta.
+
+    Rede de segurança para objetivos sem `related_task` (cujo progresso é
+    baseado em `days_active` e não depende de nenhuma instância de tarefa
+    sendo salva para disparar `Goal.evaluate_completion` via sinal), além
+    de objetivos com `goal_source="custom"` cujo `current_value` foi
+    atualizado diretamente pela API sem passar por um sinal.
+    """
+    try:
+        from personal_planning.models import AUTO_COMPLETION_GOAL_TYPES, Goal
+
+        active_goals = Goal.objects.filter(
+            status="active",
+            goal_type__in=AUTO_COMPLETION_GOAL_TYPES,
+            deleted_at__isnull=True,
+        ).select_related("owner")
+
+        total_checked = 0
+        total_completed = 0
+        for goal in active_goals:
+            total_checked += 1
+            try:
+                if goal.evaluate_completion():
+                    total_completed += 1
+            except Exception:
+                pass
+
+        return {
+            "status": "ok",
+            "checked": total_checked,
+            "completed": total_completed,
+        }
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
+@shared_task(
+    bind=True, max_retries=2, default_retry_delay=300, ignore_result=True
+)
 def detect_goal_risk(self) -> dict:
     """
     Detecta metas em risco (pace atrasado) e gera notificações para os donos.

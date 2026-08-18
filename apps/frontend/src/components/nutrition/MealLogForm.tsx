@@ -10,7 +10,7 @@ import {
   UtensilsCrossed,
   Zap,
 } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -43,6 +43,10 @@ interface MealLogFormProps {
   isLoading?: boolean;
 }
 
+function timeInputValue(time?: string | null): string {
+  return time ? time.slice(0, 5) : '';
+}
+
 function getPeriodIcon(time?: string | null): ReactNode {
   if (!time) return <UtensilsCrossed className="h-4 w-4" />;
   const h = parseInt(time.slice(0, 2));
@@ -65,6 +69,9 @@ export function MealLogForm({
   const { t } = useTranslation();
   const { toast } = useToast();
   const today = prefillDate ?? new Date().toISOString().slice(0, 10);
+  const initialMealType = mealTypes.find(
+    (mt) => mt.id === (log?.meal_type ?? prefillMealTypeId)
+  );
 
   const {
     register,
@@ -79,11 +86,20 @@ export function MealLogForm({
       menu_option: log?.menu_option ?? undefined,
       is_free_meal: log?.is_free_meal ?? false,
       date: log?.date ?? today,
-      time: log?.time ?? '',
+      time: log
+        ? timeInputValue(log.time)
+        : timeInputValue(initialMealType?.suggested_time),
       notes: log?.notes ?? '',
       owner: ownerId,
     },
   });
+
+  // Remembers the time that was auto-filled from a meal type's suggested_time,
+  // so a later meal-type change can safely replace it without clobbering a
+  // time the user picked manually.
+  const autoFilledTimeRef = useRef<string | null>(
+    log ? null : timeInputValue(initialMealType?.suggested_time) || null
+  );
 
   useEffect(() => {
     if (log) {
@@ -92,10 +108,11 @@ export function MealLogForm({
         menu_option: log.menu_option ?? undefined,
         is_free_meal: log.is_free_meal,
         date: log.date,
-        time: log.time ?? '',
+        time: timeInputValue(log.time),
         notes: log.notes ?? '',
         owner: ownerId,
       });
+      autoFilledTimeRef.current = null;
     }
   }, [log, ownerId, reset]);
 
@@ -150,7 +167,10 @@ export function MealLogForm({
             </Label>
             <TimePicker
               value={watch('time') || undefined}
-              onChange={(t) => setValue('time', t ?? '')}
+              onChange={(t) => {
+                setValue('time', t ?? '');
+                autoFilledTimeRef.current = null;
+              }}
               disabled={isLoading}
             />
           </div>
@@ -164,6 +184,14 @@ export function MealLogForm({
           onValueChange={(v) => {
             setValue('meal_type', Number(v));
             setValue('menu_option', undefined);
+
+            const currentTime = watch('time');
+            if (!currentTime || currentTime === autoFilledTimeRef.current) {
+              const newMealType = mealTypes.find((mt) => mt.id === Number(v));
+              const suggested = timeInputValue(newMealType?.suggested_time);
+              autoFilledTimeRef.current = suggested || null;
+              setValue('time', suggested);
+            }
           }}
         >
           <SelectTrigger className={cn(errors.meal_type && 'border-destructive')}>

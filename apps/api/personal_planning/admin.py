@@ -4,6 +4,7 @@ from personal_planning.models import (
     DailyReflection,
     Food,
     Goal,
+    GoalFailure,
     MealLog,
     MealType,
     MenuOption,
@@ -61,6 +62,13 @@ class GoalAdmin(admin.ModelAdmin):
     )
     list_filter = ("goal_type", "status")
     search_fields = ("title", "description")
+
+
+@admin.register(GoalFailure)
+class GoalFailureAdmin(admin.ModelAdmin):
+    list_display = ("id", "goal", "failure_date", "streak_at_failure")
+    list_filter = ("failure_date",)
+    search_fields = ("goal__title",)
 
 
 @admin.register(DailyReflection)

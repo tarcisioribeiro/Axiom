@@ -4,24 +4,29 @@ from datetime import date, timedelta
 from pathlib import Path
 
 from django.db.models import Count, Prefetch
+from django.http import HttpResponseRedirect
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response
+from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from members.models import Member
 from personal_planning.models import (
+    AUTO_COMPLETION_GOAL_TYPES,
     BodyMetric,
     Challenge,
     DailyReflection,
     Exercise,
+    ExerciseDatasetEntry,
     Food,
     GamificationProfile,
     Goal,
+    GoalFailure,
     MealLog,
     MealType,
     MenuOption,
@@ -45,6 +50,7 @@ from personal_planning.serializers import (
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
     ExerciseCreateUpdateSerializer,
+    ExerciseDatasetEntrySerializer,
     ExerciseSerializer,
     FoodCreateUpdateSerializer,
     FoodSerializer,
@@ -567,11 +573,7 @@ class GoalRecalculateView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if goal.goal_type not in (
-            "consecutive_days",
-            "total_days",
-            "avoid_habit",
-        ):
+        if goal.goal_type not in AUTO_COMPLETION_GOAL_TYPES:
             return Response(
                 {
                     "detail": (
@@ -584,15 +586,7 @@ class GoalRecalculateView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        current = goal.calculated_current_value
-        update_fields = ["updated_at"]
-
-        if current >= goal.target_value and goal.status == "active":
-            goal.status = "completed"
-            goal.end_date = timezone.now().date()
-            update_fields += ["status", "end_date"]
-
-        goal.save(update_fields=update_fields)
+        goal.evaluate_completion()
 
         log_activity(
             request,
@@ -702,28 +696,67 @@ class GoalRegisterFailureView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        goal.start_date = failure_date
-        goal.current_value = 0
-        goal.end_date = None
-        goal.status = "active"
-        goal.save(
-            update_fields=[
-                "start_date",
-                "current_value",
-                "end_date",
-                "status",
-                "updated_at",
-            ]
+        streak_before_failure = goal.calculated_current_value
+
+        GoalFailure.objects.create(
+            goal=goal,
+            failure_date=failure_date,
+            streak_at_failure=streak_before_failure,
+            created_by=request.user,
+            updated_by=request.user,
         )
+
+        # `end_date` so representa um prazo fixo definido pelo usuario
+        # quando o objetivo ainda esta ativo. Quando o objetivo ja estava
+        # "completed", `end_date` guarda a data em que ele foi concluido
+        # (nao um prazo) e deve ser descartada normalmente ao reativar.
+        has_fixed_deadline = goal.status == "active" and goal.end_date
+
+        goal.best_streak = max(goal.best_streak, streak_before_failure)
+        goal.current_value = 0
+        goal.status = "active"
+        update_fields = [
+            "best_streak",
+            "current_value",
+            "status",
+            "start_date",
+            "updated_at",
+        ]
+
+        if has_fixed_deadline:
+            # Objetivo com prazo fixo: recomeça a contagem hoje, mas
+            # recalcula a meta para os dias restantes até o prazo original
+            # em vez de descartá-lo.
+            remaining_days = (goal.end_date - today).days
+            goal.start_date = today
+            goal.target_value = max(remaining_days, 1)
+            update_fields.append("target_value")
+        else:
+            # Sem prazo fixo (ou reativando um objetivo já concluído):
+            # reinicia a contagem a partir da data da falha e limpa
+            # end_date, preservando o comportamento anterior.
+            goal.start_date = failure_date
+            goal.end_date = None
+            update_fields.append("end_date")
+
+        goal.save(update_fields=update_fields)
 
         log_activity(
             request,
             "update",
             "Goal",
             goal.id,
-            f"Registrou falha no objetivo: {goal.title} em {failure_date}",
+            (
+                f"Registrou falha no objetivo: {goal.title} em"
+                f" {failure_date} (sequência alcançada:"
+                f" {streak_before_failure})"
+            ),
             description_key="goal.register_failure",
-            description_params={"title": goal.title, "date": failure_date_str},
+            description_params={
+                "title": goal.title,
+                "date": failure_date_str,
+                "streak": streak_before_failure,
+            },
         )
 
         serializer = GoalSerializer(goal)
@@ -1092,15 +1125,33 @@ class TaskInstanceListCreateView(BaseListCreateView):
     """Lista todas as instancias de tarefas ou cria uma nova
     (tarefa avulsa)."""
 
-    def get_queryset(self):
-        qs = TaskInstance.objects.filter(
-            owner__user=self.request.user, deleted_at__isnull=True
-        ).select_related("owner", "template")
+    @property
+    def paginator(self):
+        # Consultas filtradas por data (usadas pela Rotina Diaria e pelo
+        # Planejamento Semanal) esperam o conjunto completo de instancias
+        # do intervalo. Paginar aqui trunca dias no fim do intervalo quando
+        # o total de instancias passa do PAGE_SIZE padrao.
+        request = getattr(self, "request", None)
+        if request is not None and (
+            request.query_params.get("date")
+            or request.query_params.get("date_from")
+            or request.query_params.get("date_to")
+        ):
+            return None
+        return super().paginator
 
+    def get_queryset(self):
         # Filtro por data (exata ou intervalo)
         date_param = self.request.query_params.get("date")
         date_from = self.request.query_params.get("date_from")
         date_to = self.request.query_params.get("date_to")
+
+        self._ensure_instances_generated(date_param, date_from, date_to)
+
+        qs = TaskInstance.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "template")
+
         if date_param:
             try:
                 filter_date = date.fromisoformat(date_param)
@@ -1133,6 +1184,45 @@ class TaskInstanceListCreateView(BaseListCreateView):
         return qs.order_by(
             "scheduled_date", "scheduled_time", "occurrence_index"
         )
+
+    def _ensure_instances_generated(self, date_param, date_from, date_to):
+        """Gera (lazy) as instancias de rotina para o intervalo consultado.
+
+        Sem isso, dias que o usuario nunca abriu na Rotina Diaria (que e
+        quem normalmente dispara a geracao via InstancesForDateView) nunca
+        ganham TaskInstance no banco, entao somem da grade do Planejamento
+        Semanal mesmo tendo templates de rotina ativos.
+        """
+        try:
+            if date_param:
+                start = end = date.fromisoformat(date_param)
+            elif date_from or date_to:
+                start = date.fromisoformat(date_from) if date_from else None
+                end = date.fromisoformat(date_to) if date_to else None
+            else:
+                return
+        except ValueError:
+            return
+
+        if not start or not end or end < start:
+            return
+
+        # Limite de seguranca para evitar geracao em massa por engano
+        if (end - start).days > 62:
+            return
+
+        member = Member.objects.filter(user=self.request.user).first()
+        if not member:
+            return
+
+        from personal_planning.services.instance_generator import (
+            InstanceGenerator,
+        )
+
+        current = start
+        while current <= end:
+            InstanceGenerator.generate_for_date(member, current)
+            current += timedelta(days=1)
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -1760,7 +1850,9 @@ class ExerciseListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+        return Exercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).select_related("dataset_entry")
 
 
 class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -1769,7 +1861,166 @@ class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+        return Exercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).select_related("dataset_entry")
+
+
+class ExerciseGifStreamView(APIView):
+    """Redireciona para o GIF do exercício (ver docstring de
+    BookCoverStreamView, apps/api/library/views.py)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Exercise.objects.all()
+
+    def get(self, request, pk):
+        try:
+            exercise = Exercise.objects.select_related("dataset_entry").get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Exercise.DoesNotExist:
+            return Response(
+                {"detail": "Exercício não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not exercise.dataset_entry or not exercise.dataset_entry.gif:
+            return Response(
+                {"detail": "Este exercício não possui GIF."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = exercise.dataset_entry.gif.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseThumbnailStreamView(APIView):
+    """Redireciona para a miniatura do exercício (ver docstring de
+    BookCoverStreamView, apps/api/library/views.py)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Exercise.objects.all()
+
+    def get(self, request, pk):
+        try:
+            exercise = Exercise.objects.select_related("dataset_entry").get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Exercise.DoesNotExist:
+            return Response(
+                {"detail": "Exercício não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not exercise.dataset_entry or not exercise.dataset_entry.thumbnail:
+            return Response(
+                {"detail": "Este exercício não possui miniatura."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = exercise.dataset_entry.thumbnail.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseDatasetEntryListView(generics.ListAPIView):
+    """Busca somente-leitura no catálogo vendorizado do dataset
+    hasaneyldrm/exercises-dataset — usada pelo picker de imagens de
+    exercícios. Dado global compartilhado (sem escopo por owner)."""
+
+    serializer_class = ExerciseDatasetEntrySerializer
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def get_queryset(self):
+        qs = ExerciseDatasetEntry.objects.filter(deleted_at__isnull=True)
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(name__icontains=search)
+        for param in ("category", "body_part", "target", "equipment"):
+            value = self.request.query_params.get(param)
+            if value:
+                qs = qs.filter(**{param: value})
+        return qs
+
+
+class ExerciseDatasetGifStreamView(APIView):
+    """Redireciona para o GIF de uma entrada do dataset — usada pelo grid
+    de resultados do picker, antes de qualquer seleção. Sem checagem de
+    dono: é dado de referência compartilhado entre usuários autenticados."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = ExerciseDatasetEntry.objects.all()
+
+    def get(self, request, pk):
+        try:
+            entry = ExerciseDatasetEntry.objects.get(
+                pk=pk, deleted_at__isnull=True
+            )
+        except ExerciseDatasetEntry.DoesNotExist:
+            return Response(
+                {"detail": "Entrada do dataset não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not entry.gif:
+            return Response(
+                {"detail": "Esta entrada não possui GIF."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = entry.gif.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class ExerciseDatasetThumbnailStreamView(APIView):
+    """Redireciona para a miniatura de uma entrada do dataset (ver
+    docstring de ExerciseDatasetGifStreamView)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = ExerciseDatasetEntry.objects.all()
+
+    def get(self, request, pk):
+        try:
+            entry = ExerciseDatasetEntry.objects.get(
+                pk=pk, deleted_at__isnull=True
+            )
+        except ExerciseDatasetEntry.DoesNotExist:
+            return Response(
+                {"detail": "Entrada do dataset não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not entry.thumbnail:
+            return Response(
+                {"detail": "Esta entrada não possui miniatura."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            url = entry.thumbnail.url
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        response = HttpResponseRedirect(url)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
 
 
 class WorkoutPlanListCreateView(BaseListCreateView):
@@ -1790,7 +2041,7 @@ class WorkoutPlanListCreateView(BaseListCreateView):
                         "exercises",
                         queryset=WorkoutExercise.objects.filter(
                             deleted_at__isnull=True
-                        ),
+                        ).select_related("exercise__dataset_entry"),
                     )
                 ),
             )
@@ -1822,7 +2073,7 @@ class WorkoutDayListCreateView(BaseListCreateView):
                 "exercises",
                 queryset=WorkoutExercise.objects.filter(
                     deleted_at__isnull=True
-                ),
+                ).select_related("exercise__dataset_entry"),
             )
         )
         plan_id = self.request.query_params.get("plan")
@@ -1848,7 +2099,7 @@ class WorkoutExerciseListCreateView(BaseListCreateView):
         member = Member.objects.get(user=self.request.user)
         qs = WorkoutExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__dataset_entry")
         workout_day_id = self.request.query_params.get("workout_day")
         if workout_day_id:
             qs = qs.filter(workout_day_id=workout_day_id)
@@ -1863,7 +2114,7 @@ class WorkoutExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         member = Member.objects.get(user=self.request.user)
         return WorkoutExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__dataset_entry")
 
 
 class WorkoutSessionListCreateView(BaseListCreateView):
@@ -1882,7 +2133,9 @@ class WorkoutSessionListCreateView(BaseListCreateView):
                     "session_exercises",
                     queryset=WorkoutSessionExercise.objects.filter(
                         deleted_at__isnull=True
-                    ).prefetch_related(
+                    )
+                    .select_related("exercise__exercise__dataset_entry")
+                    .prefetch_related(
                         Prefetch(
                             "sets",
                             queryset=WorkoutSessionSet.objects.filter(
@@ -1924,7 +2177,7 @@ class WorkoutSessionExerciseListCreateView(BaseListCreateView):
         member = Member.objects.get(user=self.request.user)
         qs = WorkoutSessionExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__exercise__dataset_entry")
         session_id = self.request.query_params.get("session")
         if session_id:
             qs = qs.filter(session_id=session_id)
@@ -1941,7 +2194,7 @@ class WorkoutSessionExerciseRetrieveUpdateDestroyView(
         member = Member.objects.get(user=self.request.user)
         return WorkoutSessionExercise.objects.filter(
             owner=member, deleted_at__isnull=True
-        )
+        ).select_related("exercise__exercise__dataset_entry")
 
 
 class WorkoutSessionSetListCreateView(BaseListCreateView):

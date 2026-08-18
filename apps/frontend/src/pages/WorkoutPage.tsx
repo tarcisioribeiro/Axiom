@@ -27,6 +27,7 @@ import {
   FileText,
   Flame,
   GripVertical,
+  ImagePlus,
   Layers,
   Loader2,
   Plus,
@@ -57,6 +58,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { ExerciseDatasetPicker } from '@/components/workout/ExerciseDatasetPicker';
+import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
 import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
@@ -183,6 +186,7 @@ export default function WorkoutPage() {
     new Set()
   );
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const [imagePickerExercise, setImagePickerExercise] = useState<Exercise | null>(null);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -422,10 +426,13 @@ export default function WorkoutPage() {
     notes: string;
     exercises: Array<{
       id?: number;
+      exercise?: number | null;
       exercise_name: string;
       sets_target: number;
       reps_target_min: number;
       reps_target_max: number;
+      load_target: string;
+      load_target_unit: string;
       order: number;
       sets: Array<{
         id?: number;
@@ -462,10 +469,13 @@ export default function WorkoutPage() {
       ...submittedExercises.map(async (ex, exIdx) => {
         const payload = {
           session: sessionId,
+          exercise: ex.exercise ?? undefined,
           exercise_name: ex.exercise_name,
           sets_target: ex.sets_target,
           reps_target_min: ex.reps_target_min,
           reps_target_max: ex.reps_target_max,
+          load_target: ex.load_target || undefined,
+          load_target_unit: ex.load_target_unit,
           order: exIdx,
           owner: ownerId,
         };
@@ -525,10 +535,13 @@ export default function WorkoutPage() {
         data.exercises.map(async (ex, exIdx) => {
           const sessionEx = await workoutSessionExerciseService.create({
             session: session.id,
+            exercise: ex.exercise ?? undefined,
             exercise_name: ex.exercise_name,
             sets_target: ex.sets_target,
             reps_target_min: ex.reps_target_min,
             reps_target_max: ex.reps_target_max,
+            load_target: ex.load_target || undefined,
+            load_target_unit: ex.load_target_unit,
             order: exIdx,
             owner: ownerId,
           });
@@ -661,6 +674,20 @@ export default function WorkoutPage() {
     });
     if (confirmed) deleteCatalogExerciseMutation.mutate(exercise.id);
   };
+
+  const setExerciseImageMutation = useMutation({
+    mutationFn: ({ id, datasetEntryId }: { id: number; datasetEntryId: number }) =>
+      exerciseService.patch(id, { dataset_entry: datasetEntryId }),
+    onSuccess: () => {
+      void invalidateCatalog();
+      setImagePickerExercise(null);
+    },
+    onError: () =>
+      toast({
+        title: t('pages.exercises.picker.selectError'),
+        variant: 'destructive',
+      }),
+  });
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -1168,6 +1195,7 @@ export default function WorkoutPage() {
                       setDialog({ type: 'edit-catalog-exercise', exercise })
                     }
                     onDelete={() => handleDeleteCatalogExercise(exercise)}
+                    onChangeImage={() => setImagePickerExercise(exercise)}
                   />
                 ))}
               </div>
@@ -1411,6 +1439,18 @@ export default function WorkoutPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        <ExerciseDatasetPicker
+          open={!!imagePickerExercise}
+          onOpenChange={(open) => !open && setImagePickerExercise(null)}
+          onSelect={(entry) => {
+            if (!imagePickerExercise) return;
+            setExerciseImageMutation.mutate({
+              id: imagePickerExercise.id,
+              datasetEntryId: entry.id,
+            });
+          }}
+        />
       </PageContainer>
     </AnimatedPage>
   );
@@ -1446,12 +1486,21 @@ function QuickLogForm({
     activePlans.length > 0
       ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
       : days;
+  const selectedDayPreview =
+    selectedDayId !== 'none'
+      ? days.find((d) => d.id === Number(selectedDayId))
+      : undefined;
+
+  const handleDaySelect = (dayId: string) => {
+    setSelectedDayId(dayId);
+    const day = dayId !== 'none' ? days.find((d) => d.id === Number(dayId)) : undefined;
+    setDuration(day?.default_duration_minutes ?? 45);
+  };
 
   const handleConfirm = async () => {
     try {
       setIsSubmitting(true);
       const now = new Date();
-      const finished = new Date(now.getTime() + duration * 60 * 1000);
       const toTimeStr = (d: Date) =>
         `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
@@ -1460,28 +1509,52 @@ function QuickLogForm({
           ? days.find((d) => d.id === Number(selectedDayId))
           : undefined;
 
+      const started = selectedDay?.default_start_time
+        ? selectedDay.default_start_time.slice(0, 5)
+        : toTimeStr(now);
+      const [startH, startM] = started.split(':').map(Number);
+      const finishedTotal = (((startH * 60 + startM + duration) % 1440) + 1440) % 1440;
+      const finished = `${String(Math.floor(finishedTotal / 60)).padStart(2, '0')}:${String(finishedTotal % 60).padStart(2, '0')}`;
+
       const session = await workoutSessionService.create({
         date: format(now, 'yyyy-MM-dd'),
-        started_at: toTimeStr(now),
-        finished_at: toTimeStr(finished),
+        started_at: started,
+        finished_at: finished,
         owner: ownerId,
         workout_day: selectedDay?.id,
       });
 
-      // auto-populate session exercises from the plan day
+      // auto-populate session exercises and sets from the plan day
       if (selectedDay && selectedDay.exercises.length > 0) {
         await Promise.all(
-          selectedDay.exercises.map((ex, idx) =>
-            workoutSessionExerciseService.create({
+          selectedDay.exercises.map(async (ex, idx) => {
+            const sessionEx = await workoutSessionExerciseService.create({
               session: session.id,
+              exercise: ex.id,
               exercise_name: ex.name,
               sets_target: ex.sets,
               reps_target_min: ex.reps_min,
               reps_target_max: ex.reps_max,
+              load_target: ex.load || undefined,
+              load_target_unit: ex.load_unit,
               order: idx,
               owner: ownerId,
-            })
-          )
+            });
+
+            await Promise.all(
+              Array.from({ length: ex.sets }, (_, setIdx) =>
+                workoutSessionSetService.create({
+                  session_exercise: sessionEx.id,
+                  set_number: setIdx + 1,
+                  load: ex.load || undefined,
+                  load_unit: ex.load_unit,
+                  reps_done: ex.reps_min,
+                  completed: true,
+                  owner: ownerId,
+                })
+              )
+            );
+          })
         );
       }
 
@@ -1509,7 +1582,7 @@ function QuickLogForm({
               <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
               <select
                 value={selectedDayId}
-                onChange={(e) => setSelectedDayId(e.target.value)}
+                onChange={(e) => handleDaySelect(e.target.value)}
                 className="border-border bg-background px-sm py-xs focus:ring-ring w-full rounded-md border text-sm focus:ring-2 focus:outline-none"
               >
                 <option value="none">
@@ -1560,6 +1633,21 @@ function QuickLogForm({
               </div>
             </div>
           </FormSection>
+          {selectedDayPreview && selectedDayPreview.exercises.length > 0 && (
+            <FormSection
+              title={t('pages.workoutPlans.exercisesSection')}
+              icon={Dumbbell}
+            >
+              <div className="space-y-xs">
+                {selectedDayPreview.exercises.map((ex) => (
+                  <div key={ex.id} className="gap-sm flex items-center">
+                    <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
+                    <span className="text-sm">{ex.name}</span>
+                  </div>
+                ))}
+              </div>
+            </FormSection>
+          )}
           <div className="gap-sm pt-md flex justify-end border-t">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
               {t('common.actions.back')}
@@ -1585,18 +1673,32 @@ function ExerciseCatalogCard({
   exercise,
   onEdit,
   onDelete,
+  onChangeImage,
 }: {
   exercise: Exercise;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeImage: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-shadow hover:shadow-md">
       <div className="mb-sm gap-sm flex items-start justify-between">
-        <div className="bg-category-exercise/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <Dumbbell className="text-category-exercise h-5 w-5" />
-        </div>
+        <ExerciseThumbnail
+          gifUrl={exercise.gif_url}
+          thumbnailUrl={exercise.thumbnail_url}
+          size="lg"
+        />
         <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onChangeImage}
+            aria-label={t('pages.exercises.changeImage')}
+          >
+            <ImagePlus className="h-3.5 w-3.5" />
+          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
             <Edit className="h-3.5 w-3.5" />
           </Button>
@@ -1830,6 +1932,7 @@ function SortableExerciseItem({
       <span className="bg-category-exercise/20 text-category-exercise flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {idx + 1}
       </span>
+      <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
       <span className="flex-1 text-sm font-medium">{ex.name}</span>
       <div className="gap-xs flex shrink-0 items-center">
         {ex.load && (
@@ -2242,6 +2345,34 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
         </div>
 
         <div className="mt-sm gap-xs flex flex-wrap items-center">
+          {session.session_exercises && session.session_exercises.length > 0 && (
+            <div className="-space-x-sm flex">
+              {session.session_exercises.slice(0, 4).map((se) => (
+                <div
+                  key={se.id}
+                  className="border-card bg-muted h-6 w-6 overflow-hidden rounded-full border-2"
+                >
+                  {se.thumbnail_url ? (
+                    <img
+                      src={se.thumbnail_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Dumbbell className="text-muted-foreground h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {session.session_exercises.length > 4 && (
+                <div className="border-card bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-full border-2 text-[9px] font-semibold">
+                  +{session.session_exercises.length - 4}
+                </div>
+              )}
+            </div>
+          )}
           {session.duration_minutes != null && (
             <span className="gap-xs border-border bg-background px-sm text-muted-foreground flex items-center rounded-full border py-0.5 text-xs">
               <Clock className="h-3 w-3" />

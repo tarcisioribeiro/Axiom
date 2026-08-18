@@ -375,7 +375,7 @@ export default function BodyMetrics() {
   const [form, setForm] = useState<MetricFormState>(emptyForm);
   const [period, setPeriod] = useState<PeriodKey>('90');
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
-    new Set<MetricKey>(['weight_kg', 'bmi', 'body_fat_pct'])
+    new Set<MetricKey>(METRIC_META.map((m) => m.key))
   );
 
   const chartMetrics = [
@@ -567,19 +567,45 @@ export default function BodyMetrics() {
       .reverse();
   })();
 
-  const chartData = filteredMetrics.map((m) => {
-    const w = m.weight_kg ? parseFloat(m.weight_kg) : null;
-    const h = m.height_cm ? parseFloat(m.height_cm) : null;
-    const bmi = w && h ? calcBmi(w, h) : null;
-    return {
-      date: format(parseISO(m.measured_at + 'T00:00:00'), 'dd/MM', { locale: ptBR }),
-      weight_kg: w,
-      bmi: bmi !== null ? parseFloat(bmi.toFixed(1)) : null,
-      waist_cm: m.waist_cm ? parseFloat(m.waist_cm) : null,
-      arm_cm: m.arm_cm ? parseFloat(m.arm_cm) : null,
-      hip_cm: m.hip_cm ? parseFloat(m.hip_cm) : null,
-      body_fat_pct: m.body_fat_pct ? parseFloat(m.body_fat_pct) : null,
-    };
+  const chartData: ({ date: string } & Record<MetricKey, number | null>)[] =
+    filteredMetrics.map((m) => {
+      const w = m.weight_kg ? parseFloat(m.weight_kg) : null;
+      const h = m.height_cm ? parseFloat(m.height_cm) : null;
+      const bmi = w && h ? calcBmi(w, h) : null;
+      return {
+        date: format(parseISO(m.measured_at + 'T00:00:00'), 'dd/MM', { locale: ptBR }),
+        weight_kg: w,
+        bmi: bmi !== null ? parseFloat(bmi.toFixed(1)) : null,
+        waist_cm: m.waist_cm ? parseFloat(m.waist_cm) : null,
+        arm_cm: m.arm_cm ? parseFloat(m.arm_cm) : null,
+        hip_cm: m.hip_cm ? parseFloat(m.hip_cm) : null,
+        body_fat_pct: m.body_fat_pct ? parseFloat(m.body_fat_pct) : null,
+      };
+    });
+
+  // Medidas corporais mudam devagar e têm unidades diferentes (kg, cm, %, IMC).
+  // Para caberem numa escala única e ainda revelar pequenas variações reais,
+  // cada série é normalizada como variação % em relação ao primeiro valor do período.
+  const metricBaselines = METRIC_META.reduce(
+    (acc, { key }) => {
+      const firstValid = chartData.find((d) => d[key] !== null)?.[key] ?? null;
+      acc[key] = firstValid && firstValid !== 0 ? firstValid : null;
+      return acc;
+    },
+    {} as Record<MetricKey, number | null>
+  );
+
+  const chartDataNormalized = chartData.map((d) => {
+    const pctRow = {} as Record<string, number | null>;
+    for (const { key } of METRIC_META) {
+      const raw = d[key];
+      const baseline = metricBaselines[key];
+      pctRow[`${key}_pct`] =
+        raw !== null && baseline !== null
+          ? parseFloat((((raw - baseline) / baseline) * 100).toFixed(2))
+          : null;
+    }
+    return { ...d, ...pctRow };
   });
 
   const latestTwo = metrics.slice(0, 2);
@@ -820,7 +846,7 @@ export default function BodyMetrics() {
                     ) : (
                       <ResponsiveContainer width="100%" height={360}>
                         <AreaChart
-                          data={chartData}
+                          data={chartDataNormalized}
                           margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
                         >
                           <defs>
@@ -870,11 +896,30 @@ export default function BodyMetrics() {
                             tickLine={false}
                             axisLine={false}
                             width={40}
+                            tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v}%`}
                           />
                           <Tooltip
                             content={
                               <EnhancedTooltip
-                                formatter={(v) => Number(v).toFixed(1)}
+                                formatter={(value, entry) => {
+                                  const pct = Number(value);
+                                  const pctStr = `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`;
+                                  if (!entry) return pctStr;
+                                  const baseKey = entry.dataKey.replace(
+                                    /_pct$/,
+                                    ''
+                                  ) as MetricKey;
+                                  const meta = METRIC_META.find(
+                                    (m) => m.key === baseKey
+                                  );
+                                  const raw = entry.payload[baseKey] as
+                                    number | null | undefined;
+                                  const rawStr =
+                                    raw !== null && raw !== undefined
+                                      ? `${raw.toFixed(1)}${meta?.unit ? ` ${meta.unit}` : ''}`
+                                      : '—';
+                                  return `${rawStr} (${pctStr})`;
+                                }}
                               />
                             }
                             cursor={{
@@ -893,7 +938,7 @@ export default function BodyMetrics() {
                                 <Area
                                   key={key}
                                   type="monotone"
-                                  dataKey={key}
+                                  dataKey={`${key}_pct`}
                                   stroke={color}
                                   strokeWidth={2.5}
                                   fill={`url(#${getGradientId(gradIdx)})`}
