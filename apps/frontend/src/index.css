@@ -41,6 +41,45 @@
   .min-w-xl {
     min-width: 36rem;
   }
+
+  /* Tailwind também gera variantes responsivas (sm:max-w-xl etc.) para essas
+     mesmas classes, cada uma na sua própria media query — a sobrescrita acima
+     não as alcança, então elas continuam colidindo com --spacing-*. Só o
+     prefixo sm: está em uso no código hoje (grep por
+     `(sm|md|lg|xl|2xl):(max|min)-w-(xs|sm|md|lg|xl)`); adicione o breakpoint
+     correspondente aqui se outro prefixo passar a ser usado. */
+  @media (min-width: 640px) {
+    .sm\:max-w-xs {
+      max-width: 20rem;
+    }
+    .sm\:max-w-sm {
+      max-width: 24rem;
+    }
+    .sm\:max-w-md {
+      max-width: 28rem;
+    }
+    .sm\:max-w-lg {
+      max-width: 32rem;
+    }
+    .sm\:max-w-xl {
+      max-width: 36rem;
+    }
+    .sm\:min-w-xs {
+      min-width: 20rem;
+    }
+    .sm\:min-w-sm {
+      min-width: 24rem;
+    }
+    .sm\:min-w-md {
+      min-width: 28rem;
+    }
+    .sm\:min-w-lg {
+      min-width: 32rem;
+    }
+    .sm\:min-w-xl {
+      min-width: 36rem;
+    }
+  }
 }
 
 @layer base {
