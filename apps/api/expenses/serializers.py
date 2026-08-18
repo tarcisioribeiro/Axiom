@@ -64,6 +64,12 @@ class ExpenseSplitSerializer(serializers.ModelSerializer):
         ]
 
 
+# TODO(security #341): the `account` field below (auto-generated as a
+# PrimaryKeyRelatedField over Account.objects.all()) accepts any account's
+# pk, not just ones owned by the requesting user - this is an IDOR that lets
+# an attacker manipulate another user's account balance. Add a
+# validate_account() that checks account.created_by == request.user, or
+# override the field with a queryset scoped to the request user.
 class ExpenseSerializer(serializers.ModelSerializer):
     account_name = serializers.CharField(
         source="account.account_name", read_only=True

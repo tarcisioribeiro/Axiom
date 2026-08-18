@@ -49,6 +49,12 @@ def get_projected_balance(
     return base + pending_revenues - pending_expenses
 
 
+# TODO(security #341): this sums every Expense/Revenue tied to account_id
+# regardless of who created them, so a record created by an attacker but
+# pointing at a victim's account directly overwrites the victim's balance.
+# This is only safe once every write path that sets `account` validates
+# ownership (see expenses/serializers.py, transfers/serializers.py,
+# loans/views.py, payables/views.py, receivables/views.py).
 def recalculate_account_balance(account_id: Union[int, str]) -> Decimal:
     """
     Recalculate and persist the current balance for a given account.
