@@ -2643,6 +2643,7 @@
       "copyAccountNumber": "Copiar número da conta",
       "password1": "Senha 1",
       "password2": "Senha 2",
+      "noPassword": "Conta não possui senha cadastrada",
       "columns": {
         "name": "Nome",
         "institution": "Instituição",

@@ -128,3 +128,5 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+.claude/
