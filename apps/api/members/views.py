@@ -137,6 +137,9 @@ def manage_profile_photo(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+# TODO(security #339): missing ownership check - any authenticated user can
+# read any other member's permission list by pk. Scope to
+# member.user == request.user (or require staff) before this ships.
 def get_member_permissions(request, pk):
     """
     Retorna as permissões de um membro específico.
@@ -176,6 +179,11 @@ def get_member_permissions(request, pk):
 
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
+# TODO(security #339): CRITICAL - privilege escalation. No ownership/staff
+# check on `pk` and no allowlist on `permission_codenames`, so any
+# authenticated user can grant themselves arbitrary Django permissions.
+# Restrict to staff/admin, or to member.user == request.user plus a fixed
+# allowlist of non-privileged codenames, before this ships.
 def update_member_permissions(request, pk):
     """
     Atualiza as permissões de um membro específico.
