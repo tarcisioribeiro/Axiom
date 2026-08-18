@@ -4,15 +4,19 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   Download,
+  FileText,
   GraduationCap,
   Highlighter,
   Link2,
+  type LucideIcon,
   Maximize2,
   Network,
+  PenLine,
   Search,
   Sparkles,
   Trash2,
   X,
+  Zap,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
@@ -74,13 +78,13 @@ const NODE_SIZES: Record<KnowledgeNodeType, number> = {
   highlight: 5,
 };
 
-const NODE_ICONS: Record<KnowledgeNodeType, string> = {
-  book: '📖',
-  author: '✍️',
-  course: '🎓',
-  skill: '⚡',
-  summary: '📝',
-  highlight: '✨',
+const NODE_ICONS: Record<KnowledgeNodeType, LucideIcon> = {
+  book: BookOpen,
+  author: PenLine,
+  course: GraduationCap,
+  skill: Zap,
+  summary: FileText,
+  highlight: Sparkles,
 };
 
 const ALL_NODE_TYPES: KnowledgeNodeType[] = [
@@ -224,6 +228,7 @@ function NodeDetailPanel({
   );
 
   const nodeColorVar = NODE_COLOR_VARS[node.type];
+  const NodeIcon = NODE_ICONS[node.type];
 
   return (
     <motion.div
@@ -243,12 +248,13 @@ function NodeDetailPanel({
       >
         <div className="gap-sm flex items-center">
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
+            className="flex h-8 w-8 items-center justify-center rounded-full"
             style={{
               backgroundColor: `hsl(var(${nodeColorVar}) / 0.2)`,
+              color: `hsl(var(${nodeColorVar}))`,
             }}
           >
-            <span>{NODE_ICONS[node.type]}</span>
+            <NodeIcon className="h-4 w-4" aria-hidden="true" />
           </div>
           <div>
             <p className="text-muted-foreground text-xs">
