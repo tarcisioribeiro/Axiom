@@ -48,6 +48,7 @@ import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StreakBadge } from '@/components/common/StreakBadge';
 import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
@@ -423,23 +424,16 @@ export default function LibraryDashboard() {
         <div className="gap-sm flex flex-wrap items-center">
           {/* Unified Learning Streak */}
           {(unifiedStreak.readingStreak > 0 || unifiedStreak.longestStreak > 0) && (
-            <div className="gap-sm px-md py-sm flex items-center rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <div className="text-xs">
-                <span className="font-bold text-orange-600 dark:text-orange-400">
-                  {unifiedStreak.readingStreak}
-                </span>
-                <span className="ml-xs text-muted-foreground">
-                  {t('pages.libraryDashboard.streakDays')}
-                </span>
-                {unifiedStreak.longestStreak > unifiedStreak.readingStreak && (
-                  <span className="ml-sm text-muted-foreground/70">
-                    ({t('pages.libraryDashboard.bestStreak')}:{' '}
-                    {unifiedStreak.longestStreak})
-                  </span>
-                )}
-              </div>
-            </div>
+            <StreakBadge
+              days={unifiedStreak.readingStreak}
+              label={t('pages.libraryDashboard.streakDays')}
+              bestDays={
+                unifiedStreak.longestStreak > unifiedStreak.readingStreak
+                  ? unifiedStreak.longestStreak
+                  : undefined
+              }
+              bestLabel={t('pages.libraryDashboard.bestStreak')}
+            />
           )}
 
           {/* Study Timer */}

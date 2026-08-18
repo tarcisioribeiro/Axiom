@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { ProgressGauge } from '@/components/common/ProgressGauge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { API_CONFIG } from '@/config/api-config';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -37,12 +38,12 @@ interface HealthScoreData {
   };
 }
 
-const GRADE_COLORS: Record<string, { color: string; ring: string }> = {
-  A: { color: 'text-emerald-500', ring: 'ring-emerald-500' },
-  B: { color: 'text-green-500', ring: 'ring-green-500' },
-  C: { color: 'text-yellow-500', ring: 'ring-yellow-500' },
-  D: { color: 'text-orange-500', ring: 'ring-orange-500' },
-  F: { color: 'text-red-500', ring: 'ring-red-500' },
+const GRADE_COLORS: Record<string, { color: string; hex: string }> = {
+  A: { color: 'text-emerald-500', hex: '#10b981' },
+  B: { color: 'text-green-500', hex: '#22c55e' },
+  C: { color: 'text-yellow-500', hex: '#eab308' },
+  D: { color: 'text-orange-500', hex: '#f97316' },
+  F: { color: 'text-red-500', hex: '#ef4444' },
 };
 
 const DIMENSION_ICONS = {
@@ -168,26 +169,18 @@ export function HealthScore() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Score ring */}
+        {/* Score gauge */}
         <div className="flex flex-col items-center gap-1">
-          <div
-            className={cn(
-              'flex h-20 w-20 flex-col items-center justify-center rounded-full ring-4',
-              gradeColors.ring
-            )}
-          >
-            <span
-              className={cn(
-                'text-3xl leading-none font-bold tabular-nums',
-                gradeColors.color
-              )}
-            >
-              {data.grade}
-            </span>
-            <span className="text-muted-foreground text-xs">
-              {data.score.toFixed(0)}/100
-            </span>
-          </div>
+          <ProgressGauge
+            value={data.score}
+            size={80}
+            strokeWidth={7}
+            color={gradeColors.hex}
+            label={
+              <span className={cn('text-2xl', gradeColors.color)}>{data.grade}</span>
+            }
+            sublabel={`${data.score.toFixed(0)}/100`}
+          />
           <p className={cn('text-sm font-medium', gradeColors.color)}>{gradeLabel}</p>
         </div>
 

@@ -33,6 +33,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import { StreakBadge } from '@/components/common/StreakBadge';
 import {
   DailyCaloricSummaryCard,
   type DailyCaloricSummaryData,
@@ -42,6 +43,7 @@ import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboa
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
 import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
@@ -506,14 +508,11 @@ export default function PersonalPlanningDashboard() {
                     {t('pages.planningDashboard.toNextLevel')}
                   </span>
                 </div>
-                <div className="bg-muted h-2 overflow-hidden rounded-full">
-                  <div
-                    className="bg-primary h-full rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(gamification.level_progress_pct, 100)}%`,
-                    }}
-                  />
-                </div>
+                <Progress
+                  value={Math.min(gamification.level_progress_pct, 100)}
+                  className="bg-muted h-2"
+                  indicatorClassName="duration-700"
+                />
               </div>
             </Card>
           )}
@@ -604,27 +603,13 @@ export default function PersonalPlanningDashboard() {
                 </span>
                 <span>{weeklyXP.xpInLevel}/100 XP</span>
               </div>
-              <div className="bg-muted h-3 overflow-hidden rounded-full">
-                <motion.div
-                  className="bg-warning h-full rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${weeklyXP.xpInLevel}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                />
-              </div>
+              <Progress
+                value={weeklyXP.xpInLevel}
+                className="bg-muted h-3"
+                indicatorClassName="bg-warning duration-700"
+              />
             </div>
-            {weeklyXP.streak > 3 && (
-              <motion.div
-                className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/15"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Flame className="h-4 w-4 text-orange-500" />
-                <span className="text-sm font-bold text-orange-500">
-                  {weeklyXP.streak}
-                </span>
-              </motion.div>
-            )}
+            {weeklyXP.streak > 3 && <StreakBadge days={weeklyXP.streak} size="sm" pulse />}
           </div>
         </CardContent>
       </Card>

@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CircularProgress } from '@/components/ui/circular-progress';
+import { Progress } from '@/components/ui/progress';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { ReadingGoalFormData } from '@/lib/validations';
@@ -16,55 +18,6 @@ import type { LiteraryTypeGoal, ReadingGoal } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 import { ReadingGoalModal, type LiteraryTypeGoalDraft } from './ReadingGoalModal';
-
-// ─── SVG Circular Progress ────────────────────────────────────────────────────
-
-interface CircularProgressProps {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-  isCompleted: boolean;
-}
-
-function CircularProgress({
-  percentage,
-  size = 140,
-  strokeWidth = 10,
-  isCompleted,
-}: CircularProgressProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - Math.min(percentage, 100) / 100);
-
-  const trackColor = 'hsl(var(--muted))';
-  const progressColor = isCompleted ? 'hsl(var(--chart-2))' : 'hsl(var(--primary))';
-
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke={trackColor}
-        strokeWidth={strokeWidth}
-      />
-      <motion.circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke={progressColor}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        initial={{ strokeDashoffset: circumference }}
-        animate={{ strokeDashoffset: offset }}
-        transition={{ duration: 1, ease: 'easeOut' }}
-      />
-    </svg>
-  );
-}
 
 // ─── Celebration Particles ────────────────────────────────────────────────────
 
@@ -148,30 +101,31 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
       <div className="gap-md flex items-center">
         <div className="relative flex items-center justify-center">
           <CircularProgress
-            percentage={goal.progress_percentage}
+            value={goal.progress_percentage}
             size={100}
             strokeWidth={8}
-            isCompleted={isCompleted}
-          />
-          <div className="absolute flex flex-col items-center">
-            {isCompleted ? (
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
-              >
-                <Trophy className="h-5 w-5 text-yellow-500" />
-              </motion.div>
-            ) : (
-              <BookOpen className="text-muted-foreground h-4 w-4" />
-            )}
-            <span className="text-base leading-tight font-bold">
-              {goal.progress_percentage.toFixed(0)}%
-            </span>
-            <span className="text-muted-foreground text-[10px]">
-              {goal.books_read_this_year}/{goal.books_goal}
-            </span>
-          </div>
+            color={isCompleted ? 'hsl(var(--chart-2))' : 'hsl(var(--primary))'}
+          >
+            <div className="flex flex-col items-center">
+              {isCompleted ? (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                >
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                </motion.div>
+              ) : (
+                <BookOpen className="text-muted-foreground h-4 w-4" />
+              )}
+              <span className="text-base leading-tight font-bold">
+                {goal.progress_percentage.toFixed(0)}%
+              </span>
+              <span className="text-muted-foreground text-[10px]">
+                {goal.books_read_this_year}/{goal.books_goal}
+              </span>
+            </div>
+          </CircularProgress>
         </div>
 
         <div className="space-y-sm min-w-0 flex-1">
@@ -198,12 +152,10 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
                   {goal.pages_progress_percentage.toFixed(0)}%)
                 </span>
               </div>
-              <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-                <div
-                  className="bg-primary h-full rounded-full transition-all"
-                  style={{ width: `${Math.min(goal.pages_progress_percentage, 100)}%` }}
-                />
-              </div>
+              <Progress
+                value={Math.min(goal.pages_progress_percentage, 100)}
+                className="bg-muted h-1.5"
+              />
             </div>
           )}
 
@@ -217,12 +169,11 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
                       {ltg.books_read_this_year}/{ltg.goal_count}
                     </span>
                   </div>
-                  <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
-                    <div
-                      className="bg-primary/70 h-full rounded-full transition-all"
-                      style={{ width: `${Math.min(ltg.progress_percentage, 100)}%` }}
-                    />
-                  </div>
+                  <Progress
+                    value={Math.min(ltg.progress_percentage, 100)}
+                    className="bg-muted h-1"
+                    indicatorClassName="bg-primary/70"
+                  />
                 </div>
               ))}
             </div>
