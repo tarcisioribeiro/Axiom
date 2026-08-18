@@ -1,8 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Filter, RefreshCw, Search, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  RefreshCw,
+  ScrollText,
+  Search,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { DatePicker } from '@/components/ui/date-picker';
 import i18n from '@/i18n';
 import { cn, formatLocalDate } from '@/lib/utils';
@@ -59,32 +69,31 @@ export default function AdminLogs() {
   const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
 
   return (
-    <div>
-      <div className="mb-lg flex items-center justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold">
-            {t('pages.adminLogs.title')}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {data
-              ? t('pages.adminLogs.subtitle', {
-                  records: data.count.toLocaleString(i18n.language),
-                })
-              : t('pages.adminLogs.loading')}
-          </p>
-        </div>
-        <button
-          onClick={() => void refetch()}
-          disabled={isLoading}
-          className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
-        >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-          {t('pages.adminLogs.refresh')}
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={t('pages.adminLogs.title')}
+        subtitle={
+          data
+            ? t('pages.adminLogs.subtitle', {
+                records: data.count.toLocaleString(i18n.language),
+              })
+            : t('pages.adminLogs.loading')
+        }
+        icon={<ScrollText />}
+        actions={
+          <button
+            onClick={() => void refetch()}
+            disabled={isLoading}
+            className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
+          >
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            {t('pages.adminLogs.refresh')}
+          </button>
+        }
+      />
 
       {/* Filters */}
-      <div className="mb-md border-border bg-card p-md rounded-lg border">
+      <div className="border-border bg-card p-md rounded-lg border">
         <div className="gap-sm mb-3 flex items-center">
           <Filter className="text-muted-foreground h-4 w-4" />
           <span className="text-foreground text-sm font-medium">
@@ -217,6 +226,6 @@ export default function AdminLogs() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
