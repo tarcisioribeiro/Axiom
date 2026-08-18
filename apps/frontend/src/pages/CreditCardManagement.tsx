@@ -2,7 +2,7 @@ import { CreditCard, Receipt } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { PageContainer } from '@/components/common/PageContainer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 
@@ -35,7 +35,7 @@ export default function CreditCardManagement() {
   };
 
   return (
-    <AnimatedPage className="px-sm py-md md:px-lg md:py-xl flex flex-col">
+    <PageContainer className="flex flex-1 flex-col">
       <Tabs
         defaultValue={defaultTab}
         onValueChange={handleTabChange}
@@ -59,6 +59,6 @@ export default function CreditCardManagement() {
           <CreditCardBills embedded />
         </TabsContent>
       </Tabs>
-    </AnimatedPage>
+    </PageContainer>
   );
 }

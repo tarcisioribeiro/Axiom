@@ -44,8 +44,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
-import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { StatementExportModal } from '@/components/common/StatementExportModal';
@@ -669,10 +669,9 @@ export default function Dashboard() {
   }
 
   return (
-    <AnimatedPage>
-      <div className="space-y-lg px-sm py-md md:px-md md:py-xl">
-        {/* 1. PageHeader */}
-        <PageHeader
+    <PageContainer>
+      {/* 1. PageHeader */}
+      <PageHeader
           title={`${greeting.text}${displayName ? `, ${displayName}` : ''}`}
           icon={<LayoutDashboard />}
           subtitle={t('pages.dashboard.subtitle')}
@@ -1981,7 +1980,6 @@ export default function Dashboard() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* Modal de Alertas Financeiros */}
       <Dialog open={alertsModalOpen} onOpenChange={setAlertsModalOpen}>
@@ -1992,6 +1990,6 @@ export default function Dashboard() {
           <AlertsPanel alerts={financialAlerts} />
         </DialogContent>
       </Dialog>
-    </AnimatedPage>
+    </PageContainer>
   );
 }
