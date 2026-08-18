@@ -34,6 +34,12 @@ class Webhook(BaseModel):
     """Webhook outbound configurado pelo usuário."""
 
     name = models.CharField(max_length=100, verbose_name="Nome")
+    # TODO(security #342): SSRF - no host/scheme allowlist and no block on
+    # private/loopback/link-local ranges. A user can register a webhook
+    # targeting internal services (redis, db, minio, ollama, cloud
+    # metadata) and use the delivery status/timing as a blind SSRF oracle.
+    # Validate the resolved host against a private-IP blocklist at
+    # registration time and again immediately before each delivery.
     url = models.URLField(max_length=500, verbose_name="URL de destino")
     secret = models.CharField(
         max_length=128,
