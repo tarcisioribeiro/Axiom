@@ -1,6 +1,6 @@
 # Fluxo de Dados
 
-> **⚠️ NOTA (Maio/2026)**: As seções sobre embeddings neste documento referenciam a implementação anterior (`sentence-transformers/all-MiniLM-L6-v2`, 384 dims). O sistema atual usa `nomic-embed-text` via Ollama (768 dims), com geração em `LLMClient.embed()` (`apps/api/agents/core/llm_client.py`). O LLM de chat agora suporta múltiplos providers (Ollama/Groq/Anthropic) configurável via `LLM_PROVIDER`. Consulte [`backend/agents.md`](../backend/agents.md) para o fluxo atual.
+> Revisado em 2026-08 contra o código atual. As seções de criptografia e busca semântica abaixo foram reescritas para refletir o estado real: duas famílias de criptografia distintas (app-level Fernet vs. vault-level por usuário) e o pipeline RAG atual do módulo `agents/` (`nomic-embed-text` via Ollama, 768 dims, `AgentEmbedding`/pgvector). Consulte [`backend/agents.md`](../backend/agents.md) para o pipeline de agentes completo.
 
 ## Introdução
 
@@ -374,7 +374,12 @@ sequenceDiagram
 
 ## 3. Fluxo de Dados Sensíveis
 
-### Escrita de Dados Criptografados
+O Axiom usa **duas famílias de criptografia distintas** — não confundir uma com a outra:
+
+- **App-level (Fernet, chave única global)**: protege `Account._account_number`, `CreditCard._card_number/_security_code`, `Member._document`, `CredentialShareToken._encrypted_password` (snapshot). Usa `app/encryption.py:FieldEncryption` com `ENCRYPTION_KEY` do `.env`.
+- **Vault-level (por usuário)**: protege **todo** o app `security` (`Password`, `StoredCreditCard`, `StoredBankAccount`, `Archive`, `PasswordHistory`). Usa `security/vault_crypto.py:VaultEncryptedField`, com uma chave derivada da senha mestre do usuário — não existe chave mestra de admin capaz de decifrar o cofre de todos.
+
+### 3.1 Escrita de Dados Criptografados (App-level, Fernet)
 
 ```mermaid
 sequenceDiagram
@@ -386,150 +391,110 @@ sequenceDiagram
     participant Encryption
     participant Database
 
-    User->>Form: Insere senha ou CVV
-    Form->>Service: create({ password: "secret123" })
+    User->>Form: Insere número de conta ou CVV
+    Form->>Service: create({ account_number: "12345-6" })
     Service->>Backend: POST com dados plain
 
-    Backend->>Model: save(password="secret123")
-    Model->>Encryption: encrypt_data("secret123")
+    Backend->>Model: save(account_number="12345-6")
+    Model->>Encryption: FieldEncryption.encrypt_data("12345-6")
     Encryption->>Encryption: Carrega ENCRYPTION_KEY do .env
-    Encryption->>Encryption: Fernet.encrypt()
+    Encryption->>Encryption: Fernet.encrypt() (AES-128-CBC + HMAC-SHA256)
     Encryption-->>Model: "gAAAAABf..."
 
-    Model->>Model: self.encrypted_password = "gAAAAABf..."
-    Model->>Database: INSERT ... encrypted_password = "gAAAAABf..."
+    Model->>Model: self._account_number = "gAAAAABf..."
+    Model->>Database: INSERT ... _account_number = "gAAAAABf..."
     Database-->>Model: Success
     Model-->>Backend: Success
-    Backend-->>Service: Success (sem devolver campo criptografado)
+    Backend-->>Service: Success (campo criptografado nunca retornado bruto)
 ```
 
-**Criptografia Fernet**:
+**Campos protegidos por Fernet (`ENCRYPTION_KEY`)**: `Account._account_number`, `CreditCard._card_number`/`_security_code`, `Member._document` (+ `document_hash` HMAC-SHA256 para lookup de unicidade sem decifrar), `CredentialShareToken._encrypted_password`, `SystemConfig._value` (quando `is_secret=True`).
 
-- Algoritmo: AES-128 em modo CBC
-- HMAC com SHA256 para integridade
-- Timestamp incluso (detecta adulteração)
-- Chave: 44 caracteres base64 (`ENCRYPTION_KEY` no .env)
-
-**Campos criptografados**:
-- `CreditCard.cvv`
-- `CreditCard.card_number`
-- `Account.account_number`
-- `Password.encrypted_password`
-- `BankAccountSecure.account_number`
-- `BankAccountSecure.bank_password`
-- `BankAccountSecure.digital_password`
-- `CardSecure.card_number`
-- `CardSecure.cvv`
-- `ConfidentialFile.encrypted_content`
-
-### Leitura de Dados Criptografados
+### 3.2 Escrita e Leitura no Cofre de Segurança (Vault-level, por usuário)
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Component
-    participant Service
+    participant Form
+    participant Redis
     participant Backend
-    participant ViewSet
-    participant Serializer
     participant Model
-    participant Encryption
+    participant VaultCrypto
+    participant Database
     participant ActivityLog
 
-    User->>Component: Clica em "Revelar Senha"
-    Component->>Service: revealPassword(id)
-    Service->>Backend: POST /api/v1/passwords/{id}/reveal/
+    Note over User,Redis: Pré-condição: cofre já desbloqueado nesta sessão\n(vault_key em texto plano no Redis, com TTL)
 
-    Backend->>ViewSet: reveal(id)
-    ViewSet->>Model: get object by ID
-    Model->>Model: Verifica permissões
-    Model->>Encryption: decrypt_data(self.encrypted_password)
+    User->>Form: Insere senha de um site
+    Form->>Backend: POST /api/v1/security/passwords/
+    Backend->>Redis: obtém vault_key da sessão
+    Redis-->>Backend: vault_key (ou 401 se expirada/cofre bloqueado)
 
-    Encryption->>Encryption: Carrega ENCRYPTION_KEY
-    Encryption->>Encryption: Fernet.decrypt()
-    alt Descriptografia bem-sucedida
-        Encryption-->>Model: "secret123"
-        Model->>ActivityLog: Registra ação "VIEW_PASSWORD"
-        ActivityLog->>ActivityLog: Salva user, IP, timestamp
-        Model-->>ViewSet: { password: "secret123" }
-        ViewSet-->>Backend: 200 OK
-        Backend-->>Service: Plain data
-        Service-->>Component: "secret123"
-        Component->>Component: Exibe em campo revelado
-        Component-->>User: Mostra senha temporariamente
-    else Descriptografia falha
-        Encryption-->>Model: InvalidToken error
-        Model-->>ViewSet: 500 Error
-        ViewSet-->>Backend: Erro de descriptografia
-        Backend-->>Service: Error
-        Service-->>Component: Error message
-        Component-->>User: "Erro ao descriptografar"
-    end
+    Backend->>Model: save(password="secret123")
+    Model->>VaultCrypto: VaultEncryptedField.__set__(vault_key, "secret123")
+    VaultCrypto-->>Model: "vaultenc:..."
+    Model->>Database: INSERT ... _password = "vaultenc:..."
+
+    User->>Form: Clica em "Revelar Senha"
+    Form->>Backend: POST /api/v1/security/passwords/{id}/reveal/
+    Backend->>Redis: obtém vault_key da sessão
+    Backend->>Model: get object by ID (verifica ownership)
+    Model->>VaultCrypto: decrypt(_password, vault_key)
+    VaultCrypto-->>Model: "secret123"
+    Model->>ActivityLog: log_action(action="reveal", ...)
+    ActivityLog->>ActivityLog: Salva user, IP, user_agent, timestamp
+    Model-->>Backend: { password: "secret123" }
+    Backend-->>Form: Plain data
+    Form-->>User: Mostra senha temporariamente
 ```
 
 **Segurança**:
 
-1. **Endpoints dedicados**: Dados sensíveis só são descriptografados em endpoints específicos (`/reveal/`)
-2. **Auditoria**: Toda visualização é registrada em `ActivityLog`
-3. **Permissões**: Verificação de ownership antes de descriptografar
-4. **Nunca em listagens**: Campos criptografados nunca aparecem em GET lists
-5. **Mascaramento**: Números de cartão são mascarados (ex: `****1234`)
+1. **Chave por usuário, não global**: a `vault_key` é derivada da senha mestre (PBKDF2 + `VaultConfig.salt`), cifrada em repouso (`VaultConfig.encrypted_vault_key`) e só existe em texto plano no Redis durante a sessão (TTL configurável, padrão 60 min).
+2. **Endpoints dedicados**: dados sensíveis só são descriptografados em endpoints específicos (`/reveal/`).
+3. **Auditoria imutável**: toda visualização/revelação é registrada em `ActivityLog` (não é `BaseModel` — não pode ser editado nem soft-deletado).
+4. **Nunca em listagens**: campos criptografados nunca aparecem em GET lists; números de cartão/conta são mascarados (`****1234`) via `VaultMaskedEncryptedField`.
+5. **Compartilhamento sem cofre desbloqueado**: `CredentialShareToken` guarda um snapshot re-cifrado com a chave **app-level** (Fernet), não a `vault_key` — permite que o destinatário do link resgate a credencial mesmo sem a senha mestre do dono.
+6. **Recuperação**: perder a senha mestre exige a `recovery_key` (hash SHA-256 armazenado); perder ambas torna os dados daquele usuário irrecuperáveis — não há bypass de admin.
 
-## 4. Fluxo de Busca Semântica (AI Assistant)
+## 4. Fluxo de Busca Semântica (Módulo Agentes / RAG)
+
+> Não existe mais um módulo genérico "AI Assistant" nem um modelo `ContentEmbedding`. O RAG atual vive em `apps/api/agents/`, é usado principalmente pelo `LibraryAgent` (resumos de livros) e persiste vetores em `AgentEmbedding` (não um modelo por app de origem). Ver [`backend/agents.md`](../backend/agents.md) para o pipeline completo, incluindo o roteador de agentes e o modo streaming.
 
 ### Geração de Embeddings
 
 ```mermaid
 sequenceDiagram
-    participant Admin
+    participant User
     participant Backend
-    participant FinanceApp
-    participant SecurityApp
     participant LibraryApp
-    participant Transformers
+    participant LLMClient
+    participant Ollama
     participant Database
 
-    Admin->>Backend: Cria/Atualiza registro
-
-    alt Finance - Expense
-        Backend->>FinanceApp: save() triggered
-        FinanceApp->>FinanceApp: Extrai description
-        FinanceApp->>Transformers: encode("Compra no supermercado")
-        Transformers->>Transformers: all-MiniLM-L6-v2 model
-        Transformers-->>FinanceApp: [0.123, -0.456, ...] (384 dims)
-        FinanceApp->>Database: UPDATE expense SET embedding = [...]
-    else Security - Password
-        Backend->>SecurityApp: save() triggered
-        SecurityApp->>SecurityApp: Extrai title + notes
-        SecurityApp->>Transformers: encode("Gmail - Email pessoal")
-        Transformers-->>SecurityApp: embedding vector
-        SecurityApp->>Database: UPDATE password SET embedding = [...]
-    else Library - Book Summary
-        Backend->>LibraryApp: save() triggered
-        LibraryApp->>LibraryApp: Extrai summary content
-        LibraryApp->>Transformers: encode(summary_text)
-        Transformers-->>LibraryApp: embedding vector
-        LibraryApp->>Database: UPDATE book_summary SET embedding = [...]
+    User->>Backend: Cria/atualiza Summary de um livro
+    Backend->>LibraryApp: save() → is_vectorized=False
+    LibraryApp->>LLMClient: embed(summary.text)
+    LLMClient->>LLMClient: Verifica cache Redis (5 min)
+    alt Cache miss
+        LLMClient->>Ollama: POST /api/embeddings (nomic-embed-text)
+        Ollama-->>LLMClient: [0.0123, -0.0456, ...] (768 dims)
+    else Cache hit
+        LLMClient-->>LLMClient: vetor cacheado
     end
+    LLMClient-->>LibraryApp: embedding vector (768 dims)
+    LibraryApp->>Database: AgentEmbedding.objects.create(domain="leitura", source_id=summary.uuid, embedding=[...])
+    LibraryApp->>Database: Summary.is_vectorized=True, vectorization_date=now()
 ```
 
 **Modelo de Embedding**:
 
-- **Nome**: all-MiniLM-L6-v2
-- **Dimensões**: 384
-- **Tamanho**: ~80MB
-- **Latência**: ~50ms por texto
-- **Multilingual**: Sim (inclui português)
-- **Custo**: Grátis (local)
+- **Nome**: `nomic-embed-text` (via Ollama, `OLLAMA_EMBED_MODEL`)
+- **Dimensões**: 768
+- **Cache**: Redis, TTL 5 min, chaveado pelo hash do texto
+- **Custo**: Grátis (local, mesmo host Ollama do chat)
 
-**Quando embeddings são gerados**:
-
-- Na criação de novo registro
-- Na atualização de campos de texto
-- Via signal `post_save` no Django
-- Automático e transparente
-
-### Busca Semântica
+### Busca Semântica (Pipeline RAG do `LibraryAgent`)
 
 ```mermaid
 sequenceDiagram
@@ -537,47 +502,49 @@ sequenceDiagram
     participant ChatUI
     participant Service
     participant Backend
-    participant Transformers
+    participant Router
+    participant LLMClient
     participant PGVector
-    participant Groq
-    participant ActivityLog
+    participant LibraryAgent
 
-    User->>ChatUI: "Quanto gastei no mercado?"
-    ChatUI->>Service: askQuestion(query)
-    Service->>Backend: POST /api/v1/ai-assistant/ask/
+    User->>ChatUI: "Resuma o livro X da minha biblioteca"
+    ChatUI->>Service: stream(query, sessionId)
+    Service->>Backend: POST /api/v1/agents/stream/
 
-    Backend->>Backend: Extrai dados de Finance/Security/Library
-    Backend->>Transformers: encode("Quanto gastei no mercado?")
-    Transformers-->>Backend: query_embedding [384 dims]
+    Backend->>Router: AgentRouter.select(ctx)
+    Router->>LLMClient: embed(query)
+    LLMClient-->>Router: query_embedding (768 dims)
+    Router->>PGVector: TOP-3 por domínio (score semântico)
+    PGVector-->>Router: agente selecionado = LibraryAgent
 
-    Backend->>PGVector: SELECT * FROM (...) ORDER BY embedding <-> query_embedding
-    PGVector->>PGVector: Cosine similarity search
-    PGVector-->>Backend: Top-K results com scores
+    Backend->>LibraryAgent: stream(ctx)
+    LibraryAgent->>PGVector: rag_tools.search(query_embedding, domain="leitura")
+    PGVector->>PGVector: ORDER BY embedding <=> query_embedding (cosine)
+    PGVector-->>LibraryAgent: TOP-5 AgentEmbedding + score
 
-    Backend->>Backend: Formata contexto com resultados
-    Backend->>Groq: POST com prompt + contexto
-    Groq->>Groq: llama-3.3-70b-versatile gera resposta
-    Groq-->>Backend: Resposta em português com citações
-
-    Backend->>ActivityLog: Registra query do usuário
-    Backend-->>Service: { answer, sources, scores }
-    Service-->>ChatUI: Resposta formatada
-    ChatUI->>ChatUI: Exibe resposta + fontes
-    ChatUI-->>User: Mostra resultado com citações
+    LibraryAgent->>LibraryAgent: Formata contexto com trechos recuperados
+    LibraryAgent->>LLMClient: stream_chat(prompt + contexto)
+    LLMClient-->>LibraryAgent: tokens em streaming (Ollama/Groq/Anthropic/OpenAI conforme LLM_PROVIDER)
+    LibraryAgent-->>Backend: resposta + sources
+    Backend-->>ChatUI: SSE token a token + {"done":true,"sources":[...]}
+    ChatUI-->>User: Mostra resposta com fontes citadas
 ```
 
-**Busca Vetorial com pgvector**:
+**Busca Vetorial com pgvector** (`tools/rag_tools.py`):
 
 ```sql
 SELECT
     id,
     content,
     source_type,
-    1 - (embedding <=> query_embedding) as similarity_score
-FROM ai_content
-WHERE 1 - (embedding <=> query_embedding) > 0.7
-ORDER BY embedding <=> query_embedding
-LIMIT 10;
+    source_title,
+    1 - (embedding <=> %(query_embedding)s) AS similarity_score
+FROM agents_agentembedding
+WHERE domain = %(domain)s
+  AND "user_id" = %(user_id)s
+  AND is_deleted = false
+ORDER BY embedding <=> %(query_embedding)s
+LIMIT 5;
 ```
 
 **Operadores pgvector**:
@@ -585,25 +552,20 @@ LIMIT 10;
 - `<=>`: Distância de cosseno (usado no Axiom)
 - `<#>`: Produto interno negativo
 
-**Estrutura da Resposta**:
+**Estrutura da Resposta** (`/api/v1/agents/stream/`, evento final):
 
 ```json
 {
-  "answer": "Você gastou R$ 450,00 no mercado em janeiro...",
+  "done": true,
+  "agent": "library",
   "sources": [
     {
       "id": "uuid-123",
-      "type": "expense",
-      "content": "Compra no Supermercado Extra",
-      "score": 0.89,
-      "metadata": {
-        "amount": 450.0,
-        "date": "2026-01-10"
-      }
+      "source_type": "summary",
+      "source_title": "Sapiens",
+      "score": 0.89
     }
-  ],
-  "query": "Quanto gastei no mercado?",
-  "timestamp": "2026-01-12T10:30:00Z"
+  ]
 }
 ```
 
@@ -859,8 +821,10 @@ const Accounts = lazy(() => import('./pages/Accounts'));
 
 ## Links Relacionados
 
-- [Visão Geral da Arquitetura](./visao-geral.md)
-- [Decisões Arquiteturais](./decisoes-arquiteturais.md)
-- [Documentação da API](../05-apps/api/endpoints.md)
-- [Autenticação](../07-authentication-security/autenticacao.md)
-- [Segurança](../07-authentication-security/seguranca.md)
+- [Visão Geral da Arquitetura](./overview.md)
+- [Decisões Arquiteturais](./architectural_decisions.md)
+- [Diagramas UML](./diagrams.md)
+- [Documentação da API](../api/endpoints.md)
+- [Fluxo de Autenticação](../authentication-security/authentication_flow.md)
+- [Boas Práticas de Segurança](../authentication-security/security_best_practices.md)
+- [Sistema de Agentes (IA)](../backend/agents.md)

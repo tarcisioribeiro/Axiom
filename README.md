@@ -24,6 +24,9 @@ Cadastre contas bancárias, carteiras digitais e qualquer conta onde o dinheiro 
 **Receitas e Despesas**
 Registre entradas e saídas com categorias, datas e valores. Há suporte a despesas e receitas fixas (recorrentes) — cadastre uma vez e o sistema as lança automaticamente nos meses seguintes. As despesas também podem ser categorizadas automaticamente por **Regras de Categorização**: basta definir palavras-chave que, quando encontradas na descrição, atribuem a categoria certa sem intervenção manual.
 
+**Tags e Automação Financeira**
+Crie **tags** coloridas para marcar despesas e receitas com visões cruzadas além das categorias fixas (ex.: "filho", "viagem-europa-2026"). Para regras mais elaboradas que uma simples categorização por palavra-chave, as **Regras de Automação** funcionam no formato "SE (condições) → ENTÃO (ações)" — combine múltiplas condições (estabelecimento, valor, conta, forma de pagamento) com E/OU e dispare ações como definir categoria, adicionar tag ou criar alerta. Cada aplicação de regra fica registrada em log. Despesas compartilhadas podem ser divididas entre membros da casa via **Divisão de Despesas**, mantendo o valor total original intacto.
+
 **Cartões de Crédito**
 Gerencie todos os seus cartões, com controle de faturas, parcelamentos e gastos por fatura. O sistema identifica quando uma fatura vence, alerta sobre faturas em atraso e permite registrar o pagamento de cada uma.
 
@@ -63,7 +66,7 @@ Consulte as cotações oficiais do Banco Central (PTAX) para as principais moeda
 Todos os dados deste módulo são protegidos por um **cofre criptografado** com senha mestre própria — diferente da senha de login. Sem a senha mestre, nenhum dado do cofre é acessível, nem mesmo para o administrador do servidor.
 
 **Senhas**
-Guarde credenciais de sites, serviços e aplicativos. O **Gerador de Senhas** cria senhas aleatórias com parâmetros configuráveis (tamanho, uso de símbolos, números, letras maiúsculas). Você também pode **importar senhas exportadas de navegadores** (Chrome, Firefox, Edge) em um único clique. Cada senha pode ser **compartilhada via link temporário** com outra pessoa — o link expira após o prazo definido e pode ser revogado a qualquer momento.
+Guarde credenciais de sites, serviços e aplicativos. O **Gerador de Senhas** cria senhas aleatórias com parâmetros configuráveis (tamanho, uso de símbolos, números, letras maiúsculas). Você também pode **importar senhas exportadas de navegadores** (Chrome, Firefox, Edge) em um único clique. Cada senha pode ser **compartilhada via link temporário** com outra pessoa — o link expira após o prazo definido, tem limite de usos e pode ser revogado a qualquer momento. Senhas individuais podem ter 2FA (TOTP) próprio anotado, e o sistema verifica automaticamente se uma senha foi exposta em vazamentos conhecidos (Have I Been Pwned).
 
 **Cartões Armazenados**
 Armazene dados de cartões físicos (número, validade, CVV) de forma criptografada para consulta rápida.
@@ -79,6 +82,9 @@ O sistema analisa todas as senhas salvas e gera um relatório de saúde: quantas
 
 **Log de Atividade**
 Registro imutável de todas as ações realizadas no cofre (abertura, criação, edição, exclusão, exportação), com data, hora e IP de origem.
+
+**Alertas de Segurança**
+Configure alertas automáticos para atividades incomuns no cofre: acesso a partir de um IP novo, sequência de tentativas de desbloqueio falhas, volume excessivo de senhas reveladas em pouco tempo, ou revelação de dados de cartão. Alertas podem ser enviados também por e-mail.
 
 ---
 
@@ -110,6 +116,9 @@ Escreva e armazene resumos livres de cada livro lido para consulta futura.
 **Autores e Editoras**
 Cadastros auxiliares para manter o acervo organizado e permitir filtros e estatísticas por autor ou editora.
 
+**Intelecto (Cursos, Habilidades e Flashcards)**
+Uma extensão da Biblioteca voltada para aprendizado estruturado. Cadastre **Cursos** feitos em qualquer plataforma (Udemy, Coursera, YouTube, etc.), organizados em módulos e aulas marcáveis como concluídas, com sessões de estudo registradas e certificado de conclusão anexável. Acompanhe **Habilidades** em desenvolvimento com nível de proficiência (iniciante a especialista) e histórico de evolução, vinculando-as aos livros e cursos que contribuíram para elas. Gere **Flashcards** automaticamente a partir de highlights de um livro — a revisão usa repetição espaçada (algoritmo SM-2) para agendar a próxima revisão de cada cartão. O **Grafo de Conhecimento** visualiza as conexões entre livros, autores, resumos, highlights, cursos e habilidades, incluindo relações que você mesmo define (relaciona, aprofunda, deriva de, etc.). Conquistas de leitura e estudo (sequências, marcos) rendem **badges** exibidos na tela de Jornada.
+
 ---
 
 ### Planejamento Pessoal
@@ -136,10 +145,16 @@ Um diário estruturado com perguntas de reflexão configuráveis. Os registros f
 Lista de verificação rápida para os itens fixos do dia (tomar remédio, beber água, meditar) com marcação rápida pela interface.
 
 **Treinos**
-Monte planos de treino com dias, grupos musculares e exercícios específicos (séries, repetições, carga). Registre sessões de treino realizadas, com séries individuais e carga utilizada. O histórico de cargas por exercício permite acompanhar a progressão ao longo do tempo.
+Monte planos de treino com dias, grupos musculares e exercícios específicos (séries, repetições, carga), escolhidos a partir de um catálogo com GIFs demonstrativos. Registre sessões de treino realizadas, com séries individuais e carga utilizada. O histórico de cargas por exercício permite acompanhar a progressão ao longo do tempo. O módulo de **Métricas Corporais** registra medidas antropométricas (peso, circunferências, dobras cutâneas) e calcula o percentual de gordura corporal (protocolos Navy ou Pollock de 7 dobras).
 
 **Nutrição**
-Cadastre alimentos com macronutrientes (proteína, carboidrato, gordura, calorias). Monte cardápios (opções de refeição com ingredientes e quantidades). Registre o que você comeu em cada refeição do dia (café da manhã, almoço, lanche, jantar) com controle calórico e de macros.
+Cadastre alimentos com macronutrientes (proteína, carboidrato, gordura, calorias). Monte cardápios (opções de refeição com ingredientes e quantidades, incluindo ingredientes alternativos entre si). Registre o que você comeu em cada refeição do dia (café da manhã, almoço, lanche, jantar) com controle calórico e de macros.
+
+**Gamificação**
+Cada tarefa concluída, meta atingida e reflexão registrada rende **XP**, que acumula em níveis e desbloqueia **badges** de conquista. O sistema acompanha sua sequência atual e sua maior sequência já alcançada, com marcos especiais em 7, 30 e 100 dias. Crie **Desafios** de duração fixa (7 a 100 dias, ex.: "30 dias sem açúcar") vinculados opcionalmente a um hábito existente, com taxa de conclusão acompanhada em tempo real.
+
+**Bem-Estar Emocional**
+Um espaço de autocuidado psicológico integrado ao planejamento. Faça **check-ins emocionais** diários (solidão, ansiedade, motivação, energia) e avaliações padronizadas de autoestima (Escala de Rosenberg), com análise gerada por IA. O **Modo Crise** permite registrar um impulso (compulsão, procrastinação, etc.) e receber uma resposta de apoio gerada por IA na hora. Um catálogo de **intervenções** (exercícios e técnicas breves) pode ser seguido e avaliado, e um **relatório semanal** gerado por IA resume padrões emocionais e sugere pontos de atenção.
 
 ---
 
