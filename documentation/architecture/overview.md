@@ -114,12 +114,16 @@ Axiom/
 │   │   ├── monthly_planning/   # Overrides de planejamento mensal
 │   │   ├── exchange_rates/     # Cotações BRL (BCB PTAX)
 │   │   ├── dashboard/          # Dashboard e métricas financeiras
-│   │   ├── security/           # Cofre de senhas (sub-apps: passwords,
-│   │   │                       # stored_cards, stored_accounts, archives,
-│   │   │                       # activity_logs)
-│   │   ├── library/            # Biblioteca pessoal (sub-apps: books,
-│   │   │                       # authors, publishers, readings, summaries)
-│   │   ├── personal_planning/  # Hábitos, metas, treinos e nutrição
+│   │   ├── security/            # Cofre de senhas — app flat (um só models.py
+│   │   │                        # agrupado internamente por seção: passwords,
+│   │   │                        # stored_cards, stored_accounts, archives,
+│   │   │                        # activity_logs, vault config/alerts)
+│   │   ├── library/             # Biblioteca pessoal — app flat: acervo
+│   │   │                        # (books/authors/publishers/readings/summaries)
+│   │   │                        # + extensão Intellect (courses/skills/
+│   │   │                        # flashcards/knowledge graph)
+│   │   ├── personal_planning/   # Hábitos, metas, gamificação, bem-estar
+│   │   │                        # emocional, treinos e nutrição
 │   │   ├── notifications/      # Notificações internas
 │   │   ├── webhooks/           # Webhooks outbound assinados (HMAC)
 │   │   ├── agents/             # Agentes de IA / LLM (RAG via pgvector)
@@ -247,10 +251,10 @@ app_name/
 - `admin_panel`: configuração de sistema (chaves LLM, e-mail, MinIO, backups)
 - `app`: configuração central, `BaseModel`, criptografia (`FieldEncryption`)
 
-**Estendidos** (multi-módulo — split em sub-packages):
-- `security`: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`
-- `library`: `books`, `authors`, `publishers`, `readings`, `summaries`
-- `personal_planning`: hábitos/rotinas, metas, treinos, nutrição
+**Apps grandes, flat** (um único `models.py`/`views.py` por app, agrupado internamente por seções — **não** dividido em sub-pacotes de diretório):
+- `security` (11 modelos): senhas, cartões/contas armazenados, arquivos confidenciais, config e alertas do cofre, tokens de compartilhamento, logs de auditoria
+- `library` (17 modelos): acervo (livros, autores, editoras, leituras, resumos, highlights, metas de leitura) + extensão "Intellect" (cursos, habilidades, flashcards, grafo de conhecimento, badges)
+- `personal_planning` (30 modelos): hábitos/rotinas, metas, gamificação (XP/níveis/badges/desafios), bem-estar emocional, treinos, nutrição
 - `agents`: 6 agentes de IA especializados (finance, budget, forecast, insight, library, planning), RAG via pgvector
 
 ### 4. Camada de Middleware
@@ -369,26 +373,27 @@ O API Client do frontend é um singleton que garante configuração única de in
 
 **Responsabilidade**: Armazenamento seguro de credenciais (cofre de senhas)
 
-**App**: `security`, dividido nos sub-pacotes `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`
+**App**: `security` — app flat (11 modelos), criptografia por usuário (`VaultEncryptedField`, chave derivada da senha mestre — ver `authentication-security/data_encryption.md`)
 
 **Funcionalidades principais**:
-- Gerenciamento de senhas criptografadas, com geração e compartilhamento via link temporário
+- Gerenciamento de senhas criptografadas, com geração, verificação HIBP e compartilhamento via link temporário (`CredentialShareToken`)
 - Armazenamento de cartões e contas bancárias
 - Arquivos confidenciais criptografados
-- Logs de auditoria de acesso (imutáveis)
-- Dashboard de saúde das senhas (fracas/duplicadas)
+- Logs de auditoria de acesso (imutáveis) e certificados de remoção LGPD (`DeletionRecord`)
+- Dashboard de saúde das senhas (fracas/duplicadas) com histórico diário (`VaultHealthSnapshot`) e alertas de atividade suspeita (`VaultAlertConfig`)
 
 ### Módulo Library
 
 **Responsabilidade**: Biblioteca pessoal digital
 
-**App**: `library`, dividido nos sub-pacotes `books`, `authors`, `publishers`, `readings`, `summaries`
+**App**: `library` — app flat (17 modelos): acervo (books/authors/publishers/readings/summaries/highlights) + extensão "Intellect" (courses/skills/flashcards/knowledge graph/badges)
 
 **Funcionalidades principais**:
-- Catálogo de livros com metadados completos e leitor de PDF integrado
+- Catálogo de livros com metadados completos e leitor de PDF/EPUB integrado
 - Gestão de autores e editoras
-- Resumos e highlights de leitura
-- Status, fila e progresso de leitura (velocidade, streak)
+- Resumos e highlights de leitura, com geração automática de flashcards (SM-2) a partir de highlights
+- Status, fila e progresso de leitura (velocidade, streak unificado leitura+estudo)
+- Cursos (módulos/aulas/sessões de estudo), habilidades com histórico de proficiência e grafo de conhecimento conectando todo o conteúdo
 - Dashboard com estatísticas
 
 ### Módulo Agents (Assistente de IA)
