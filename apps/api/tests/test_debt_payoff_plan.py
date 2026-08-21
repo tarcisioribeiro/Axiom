@@ -19,6 +19,7 @@ from rest_framework import status
 
 from expenses.models import Expense
 from loans.models import Loan
+from members.models import Member
 from payables.models import Payable
 from receivables.models import Receivable
 from revenues.models import FixedRevenue, Revenue
@@ -35,22 +36,25 @@ class DebtPayoffPlanViewTest(_DashboardCoverageBaseTestCase):
         due_date=None,
         description="Test Loan",
         status_="active",
+        date_=None,
+        loan_type="borrowed",
+        creditor=None,
     ):
         return Loan.objects.create(
             description=description,
             value=value,
             payed_value=payed_value,
-            date=date.today(),
+            date=date_ or date.today(),
             horary=time(9, 0),
             category="others",
             account=self.account,
             benefited=self.member,
-            creditor=self.member,
+            creditor=creditor or self.member,
             interest_rate=interest_rate,
             installments=installments,
             due_date=due_date,
             status=status_,
-            loan_type="borrowed",
+            loan_type=loan_type,
             created_by=self.user,
         )
 
@@ -503,3 +507,189 @@ class DebtPayoffPlanViewTest(_DashboardCoverageBaseTestCase):
         boosted_date = boosted.data["snowball"]["debts"][0]["payoff_date"]
         self.assertIsNone(baseline_date)
         self.assertIsNotNone(boosted_date)
+
+    def test_loan_without_persisted_loan_type_is_still_collected(self):
+        """
+        Regression test: loans created without `loan_type` gravado na
+        coluna (o valor real do frontend antes da correcao em
+        loans-service.ts) devem continuar aparecendo no planejador,
+        via a mesma inferencia usada por LoanSerializer.
+        """
+        creditor = Member.objects.create(
+            name="Creditor Institution",
+            document_hash=self._unique("hash").ljust(64, "0")[:64],
+            phone="11988887777",
+            sex="M",
+            user=None,
+        )
+        self._make_loan(
+            value=Decimal("1000.00"),
+            installments=1,
+            description="Aporte Sicoob",
+            loan_type=None,
+            creditor=creditor,
+        )
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+
+        names = {d["name"] for d in response.data["snowball"]["debts"]}
+        self.assertIn("Aporte Sicoob", names)
+
+    def test_loan_inferred_as_lent_is_not_collected_as_debt(self):
+        """
+        Quando o proprio usuario e o credor (emprestimo realizado, nao
+        tomado), a inferencia deve resolver para "lent" e o registro
+        NAO deve aparecer no planejador de divida.
+        """
+        borrower = Member.objects.create(
+            name="Borrower",
+            document_hash=self._unique("hash").ljust(64, "0")[:64],
+            phone="11977776666",
+            sex="F",
+            user=None,
+        )
+        Loan.objects.create(
+            description="Loan I gave out",
+            value=Decimal("500.00"),
+            payed_value=Decimal("0.00"),
+            date=date.today(),
+            horary=time(9, 0),
+            category="others",
+            account=self.account,
+            benefited=borrower,
+            creditor=self.member,
+            installments=1,
+            status="active",
+            loan_type=None,
+            created_by=self.user,
+        )
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+
+        names = {d["name"] for d in response.data["snowball"]["debts"]}
+        self.assertNotIn("Loan I gave out", names)
+
+    def test_avalanche_ties_prefer_interest_bearing_debt(self):
+        """
+        Empate no saldo devedor: a divida com juros deve vir primeiro
+        na Avalanche, mesmo com valor identico a uma sem juros.
+        """
+        self._make_loan(
+            value=Decimal("500.00"),
+            installments=1,
+            interest_rate=None,
+            due_date=date.today() + timedelta(days=300),
+            description="No interest",
+        )
+        self._make_loan(
+            value=Decimal("500.00"),
+            installments=1,
+            interest_rate=Decimal("2.00"),
+            due_date=date.today() + timedelta(days=300),
+            description="Has interest",
+        )
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+
+        avalanche_first = min(
+            response.data["avalanche"]["debts"], key=lambda d: d["priority"]
+        )
+        self.assertEqual(avalanche_first["name"], "Has interest")
+
+    def test_snowball_and_avalanche_ties_prefer_oldest_record(self):
+        """
+        Empate total (mesmo saldo, ambas sem juros): o registro mais
+        antigo (menor `date`) deve vir primeiro, nas duas estrategias.
+        """
+        self._make_loan(
+            value=Decimal("500.00"),
+            installments=1,
+            due_date=date.today() + timedelta(days=300),
+            description="Newer",
+            date_=date.today() - timedelta(days=5),
+        )
+        self._make_loan(
+            value=Decimal("500.00"),
+            installments=1,
+            due_date=date.today() + timedelta(days=300),
+            description="Older",
+            date_=date.today() - timedelta(days=50),
+        )
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+
+        for strategy in ("snowball", "avalanche"):
+            first = min(
+                response.data[strategy]["debts"], key=lambda d: d["priority"]
+            )
+            self.assertEqual(first["name"], "Older")
+
+    def test_monthly_payment_reflects_strategy_and_extra(self):
+        """
+        `monthly_payment` deve refletir o pagamento real simulado no
+        primeiro mes (minimo + extra quando prioritaria), nao o valor
+        estatico da parcela original - e deve variar entre estrategias
+        quando a ordem de prioridade diverge.
+        """
+        FixedRevenue.objects.create(
+            description="Monthly income",
+            default_value=Decimal("5000.00"),
+            category="salary",
+            account=self.account,
+            due_day=1,
+            is_active=True,
+            created_by=self.user,
+        )
+        # Saldos bem maiores que o caixa disponível no 1o mes (conta +
+        # receita fixa ~ R$ 15.000), para que nenhuma das duas seja
+        # quitada de uma vez no mes 1 - so assim o extra_monthly
+        # tem efeito visivel no monthly_payment daquele mes.
+        self._make_loan(
+            value=Decimal("200000.00"),
+            installments=100,
+            interest_rate=Decimal("30.00"),
+            due_date=date.today() + timedelta(days=300),
+            description="Big high interest",
+        )
+        self._make_loan(
+            value=Decimal("100000.00"),
+            installments=100,
+            interest_rate=Decimal("5.00"),
+            due_date=date.today() + timedelta(days=300),
+            description="Small low interest",
+        )
+
+        url = reverse("debt-payoff-plan")
+        cache.clear()
+        no_extra = self.client.get(url)
+        cache.clear()
+        with_extra = self.client.get(url, {"extra_monthly": "1000"})
+
+        def payment_for(payload, strategy, name):
+            entry = next(
+                d for d in payload.data[strategy]["debts"] if d["name"] == name
+            )
+            return entry["monthly_payment"]
+
+        # A dívida prioritária de cada estratégia recebe o extra além
+        # do mínimo, então seu monthly_payment cresce quando o extra
+        # é informado - o que nunca acontecia antes da correção.
+        self.assertGreater(
+            payment_for(with_extra, "snowball", "Small low interest"),
+            payment_for(no_extra, "snowball", "Small low interest"),
+        )
+        self.assertGreater(
+            payment_for(with_extra, "avalanche", "Big high interest"),
+            payment_for(no_extra, "avalanche", "Big high interest"),
+        )
+        # As duas estratégias priorizam dívidas diferentes (menor
+        # saldo vs. maior saldo), então o monthly_payment do primeiro
+        # mês diverge entre elas para a mesma dívida.
+        self.assertNotEqual(
+            payment_for(with_extra, "snowball", "Small low interest"),
+            payment_for(with_extra, "avalanche", "Small low interest"),
+        )
