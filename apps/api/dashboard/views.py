@@ -1171,7 +1171,6 @@ class DebtPayoffPlanView(APIView):
         debts: list = []
 
         loans_qs = Loan.objects.filter(
-            loan_type="borrowed",
             payed=False,
             status__in=["active", "overdue"],
         )
@@ -1180,6 +1179,12 @@ class DebtPayoffPlanView(APIView):
         )
 
         for loan in loans_qs:
+            # `loan_type` pode nao estar gravado na coluna (dados
+            # legados ou inferencia dinamica) - usar o fallback do
+            # model, o mesmo aplicado em LoanSerializer, em vez do
+            # valor cru do banco.
+            if loan.effective_loan_type != "borrowed":
+                continue
             balance = (loan.value or Decimal("0.00")) - (
                 loan.payed_value or Decimal("0.00")
             )
@@ -1198,6 +1203,7 @@ class DebtPayoffPlanView(APIView):
                         Decimal("0.01")
                     ),
                     "due_date": loan.due_date,
+                    "date": loan.date,
                 }
             )
 
@@ -1219,6 +1225,7 @@ class DebtPayoffPlanView(APIView):
                     "interest_rate": Decimal("0.00"),
                     "minimum_payment": remaining,
                     "due_date": payable.due_date,
+                    "date": payable.date,
                 }
             )
 
@@ -1419,11 +1426,9 @@ class DebtPayoffPlanView(APIView):
         naquele mes e os juros continuam acumulando).
         """
         if strategy == "snowball":
-            sorted_debts = sorted(debts, key=lambda d: d["balance"])
+            sorted_debts = sorted(debts, key=self._snowball_sort_key)
         else:
-            sorted_debts = sorted(
-                debts, key=lambda d: d["interest_rate"], reverse=True
-            )
+            sorted_debts = sorted(debts, key=self._avalanche_sort_key)
 
         state = [
             {
@@ -1433,6 +1438,7 @@ class DebtPayoffPlanView(APIView):
                 "total_interest": Decimal("0.00"),
                 "payoff_date": None,
                 "priority": 0,
+                "monthly_payment": None,
             }
             for debt in sorted_debts
         ]
@@ -1440,13 +1446,14 @@ class DebtPayoffPlanView(APIView):
         cash_position = current_balance
         payoff_order = 0
 
-        for month_data in surplus_by_month:
+        for month_index, month_data in enumerate(surplus_by_month):
             if all(s["remaining"] <= 0 for s in state):
                 break
 
             cash_position += month_data["surplus_delta"]
             available = max(cash_position, Decimal("0.00"))
             spent_this_month = Decimal("0.00")
+            payments_this_month: dict = {}
 
             # Juros do mes em todas as dividas ainda ativas
             for s in state:
@@ -1475,6 +1482,10 @@ class DebtPayoffPlanView(APIView):
                 s["total_paid"] += payment
                 available -= payment
                 spent_this_month += payment
+                payments_this_month[s["debt"]["id"]] = (
+                    payments_this_month.get(s["debt"]["id"], Decimal("0.00"))
+                    + payment
+                )
 
             # 2) caixa restante acelera a divida prioritaria (primeira
             # ainda ativa, na ordem da estrategia)
@@ -1486,8 +1497,24 @@ class DebtPayoffPlanView(APIView):
                     top["total_paid"] += extra_payment
                     available -= extra_payment
                     spent_this_month += extra_payment
+                    payments_this_month[top["debt"]["id"]] = (
+                        payments_this_month.get(
+                            top["debt"]["id"], Decimal("0.00")
+                        )
+                        + extra_payment
+                    )
 
             cash_position -= spent_this_month
+
+            # O valor de parcela mensal exibido reflete o que e de
+            # fato pago no primeiro mes do plano - unico jeito de
+            # refletir tanto a estrategia (quem recebe o extra
+            # primeiro) quanto o valor extra informado pelo usuario.
+            if month_index == 0:
+                for s in state:
+                    s["monthly_payment"] = payments_this_month.get(
+                        s["debt"]["id"], Decimal("0.00")
+                    )
 
             for s in state:
                 if (
@@ -1511,11 +1538,34 @@ class DebtPayoffPlanView(APIView):
                     "payoff_date": s["payoff_date"],
                     "total_paid": s["total_paid"],
                     "total_interest": s["total_interest"],
-                    "monthly_payment": debt["minimum_payment"],
+                    "monthly_payment": (
+                        s["monthly_payment"]
+                        if s["monthly_payment"] is not None
+                        else debt["minimum_payment"]
+                    ),
                     "priority": s["priority"] or (idx + 1),
                 }
             )
         return result
+
+    @staticmethod
+    def _snowball_sort_key(debt: dict):
+        """
+        Bola de Neve: menor saldo devedor primeiro. Empate: dividas
+        com juros primeiro (quitar antes reduz mais o total pago),
+        depois o registro mais antigo primeiro.
+        """
+        has_interest = debt["interest_rate"] > 0
+        return (debt["balance"], 0 if has_interest else 1, debt["date"])
+
+    @staticmethod
+    def _avalanche_sort_key(debt: dict):
+        """
+        Avalanche: maior saldo devedor primeiro. Empate: dividas com
+        juros primeiro, depois o registro mais antigo primeiro.
+        """
+        has_interest = debt["interest_rate"] > 0
+        return (-debt["balance"], 0 if has_interest else 1, debt["date"])
 
     @staticmethod
     def _elevate_urgency(tier: str, tiers: list) -> str:
