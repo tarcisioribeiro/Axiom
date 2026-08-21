@@ -23,6 +23,9 @@ class LoansService extends BaseService<Loan, LoanFormData> {
     formData.append('creditor', data.creditor.toString());
     formData.append('payed', data.payed.toString());
 
+    if (data.loan_type) {
+      formData.append('loan_type', data.loan_type);
+    }
     if (data.interest_rate !== undefined) {
       formData.append('interest_rate', data.interest_rate.toString());
     }

@@ -98,20 +98,5 @@ class LoanSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data.get("loan_type") is None:
-            # Infere o tipo a partir do vínculo user↔membro.
-            # Funciona porque apenas o próprio usuário tem user_id no membro.
-            creditor = instance.creditor
-            benefited = instance.benefited
-            if (
-                creditor
-                and creditor.user_id
-                and creditor.user_id == instance.created_by_id
-            ):
-                data["loan_type"] = "lent"
-            elif (
-                benefited
-                and benefited.user_id
-                and benefited.user_id == instance.created_by_id
-            ):
-                data["loan_type"] = "borrowed"
+            data["loan_type"] = instance.infer_loan_type()
         return data
