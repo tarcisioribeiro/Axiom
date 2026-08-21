@@ -59,6 +59,10 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
     loans,
     fixedRevenues,
     isLoading,
+    page,
+    setPage,
+    pageSize,
+    totalCount,
     isDialogOpen,
     setIsDialogOpen,
     selectedRevenue,
@@ -329,6 +333,12 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         emptyState={{
           icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
           message: t('pages.revenues.emptyState'),
+        }}
+        pagination={{
+          page,
+          pageSize,
+          total: totalCount,
+          onPageChange: setPage,
         }}
         mobileCard={(revenue) => (
           <div className="px-md py-3">

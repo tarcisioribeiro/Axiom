@@ -78,6 +78,27 @@ inteiro para um `.tar.gz` local). Se for necessário RPO diário também para
 mídia, o `backup.sh` precisaria de um passo adicional de `mc mirror` do
 bucket `axiom` (não apenas `/app/media`) para o bucket `axiom-backups`.
 
+## SystemConfig e restore entre ambientes (MinIO aponta para o host errado)
+
+`app/config.py::cfg()` prioriza a tabela `SystemConfig` sobre o `.env`. Como
+`MINIO_ENDPOINT`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` e
+`MINIO_BUCKET_NAME` são editáveis via Django Admin e ficam persistidos em
+`SystemConfig`, um dump de produção/staging restaurado num ambiente Docker
+local carrega esses valores do ambiente de origem — e o backend local passa a
+tentar falar com o MinIO/credenciais errados, mesmo com o `.env` local
+correto.
+
+`infra/scripts/docker-restore.sh` já corrige isso automaticamente (passo
+"Corrigir SystemConfig para ambiente Docker", rodando
+`manage.py fix_storage_config_for_local` dentro do container `axiom-api`
+logo após o restore). Um restore manual (`psql`/`pg_restore` direto, seguindo
+o procedimento documentado em `apps/api/scripts/backup.sh`) **não** passa por
+esse passo — rode manualmente após o restore:
+
+```bash
+docker exec axiom-api python manage.py fix_storage_config_for_local
+```
+
 ## Revisão de 2026-07 — problemas encontrados e corrigidos
 
 A revisão pós-reorganização do monorepo encontrou o pipeline de backup do

@@ -64,7 +64,10 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     payables,
     fixedExpenses,
     isLoading,
-    isFetching,
+    page,
+    setPage,
+    pageSize,
+    totalCount,
     isDialogOpen,
     setIsDialogOpen,
     selectedExpense,
@@ -333,11 +336,17 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         data={expenses}
         columns={columns}
         keyExtractor={(expense) => expense.id}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading}
         rowClassName={(expense) => (expense.payed ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
           message: t('pages.expenses.emptyState'),
+        }}
+        pagination={{
+          page,
+          pageSize,
+          total: totalCount,
+          onPageChange: setPage,
         }}
         mobileCard={(expense) => (
           <div className="px-md py-3">

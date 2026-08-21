@@ -2,3 +2,14 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npm run test:coverage
+
+# Runs the same lint checks the GitLab MR pipeline runs (lint:backend,
+# lint:migrations, lint:bandit, lint:pip-audit, lint:frontend, lint:npm-audit,
+# lint:commits, lint:secrets — see ci-check.sh) before the push leaves the
+# machine, since a plain push to a feature branch triggers no CI pipeline at
+# all until an MR is opened. Redirecting stdin from /dev/null makes
+# ci-check.sh skip its interactive menu and run the full "MR (tudo)" check
+# automatically. Needs Docker running (for lint:migrations) and Node on the
+# host (already true here). To bypass in an emergency: HUSKY=0 git push.
+REPO_ROOT="$(cd "$(dirname -- "$0")/../.." && pwd)"
+"$REPO_ROOT/ci-check.sh" < /dev/null

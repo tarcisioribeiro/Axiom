@@ -29,6 +29,10 @@ export interface UseRevenuesPageReturn {
   loans: Loan[];
   fixedRevenues: FixedRevenue[];
   isLoading: boolean;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  totalCount: number;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
   selectedRevenue: Revenue | undefined;
@@ -89,8 +93,24 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+  const filtersKey = JSON.stringify([
+    debouncedSearch,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+  ]);
+  const [lastFiltersKey, setLastFiltersKey] = useState(filtersKey);
+  if (filtersKey !== lastFiltersKey) {
+    setLastFiltersKey(filtersKey);
+    setPage(1);
+  }
+
   const params = useMemo(() => {
-    const p: Record<string, unknown> = {};
+    const p: Record<string, unknown> = { page };
     if (debouncedSearch) p.search = debouncedSearch;
     if (categoryFilter !== 'all') p.category = categoryFilter;
     if (statusFilter !== 'all')
@@ -100,6 +120,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     if (selectedAccounts.length > 0) p.accounts = selectedAccounts.join(',');
     return p;
   }, [
+    page,
     debouncedSearch,
     categoryFilter,
     statusFilter,
@@ -108,11 +129,15 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     selectedAccounts,
   ]);
 
-  const { data: revenues = [], isLoading: revenuesLoading } = useQuery({
+  const { data: revenuesPage, isLoading: revenuesLoading } = useQuery({
     queryKey: ['revenues', params],
-    queryFn: () => revenuesService.getAll(params),
+    queryFn: () => revenuesService.getAllPaginated(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: (previousData) => previousData,
   });
+
+  const revenues = useMemo(() => revenuesPage?.results ?? [], [revenuesPage]);
+  const totalCount = revenuesPage?.count ?? 0;
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery({
     queryKey: ['accounts'],
@@ -373,6 +398,10 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     loans,
     fixedRevenues,
     isLoading,
+    page,
+    setPage,
+    pageSize: PAGE_SIZE,
+    totalCount,
     isDialogOpen,
     setIsDialogOpen,
     selectedRevenue,

@@ -779,6 +779,16 @@ export const TRANSLATIONS_EN = {
   },
 };
 
+// Loan status label — when the current user is the creditor (lent money to
+// someone else), a fully paid loan reads as "Recebido"/"Received" instead of
+// "Pago"/"Paid", since from the lender's side the money was received back.
+export const getLoanStatusLabel = (status: string, isCreditor: boolean): string => {
+  if (status === 'paid' && isCreditor) {
+    return i18next.language === 'en-US' ? 'Received' : 'Recebido';
+  }
+  return translate('loanStatus', status);
+};
+
 // Helper function to translate
 export const translate = (category: keyof typeof TRANSLATIONS, key: string): string => {
   if (i18next.language === 'en-US' && category in TRANSLATIONS_EN) {

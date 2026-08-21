@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Case, IntegerField, Value, When
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -19,9 +20,19 @@ class PayableCreateListView(BaseListCreateView):
     serializer_class = PayableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(
-            created_by=self.request.user
-        ).select_related("member")
+        return (
+            Payable.objects.filter(created_by=self.request.user)
+            .select_related("member")
+            .order_by(
+                Case(
+                    When(status="active", then=Value(0)),
+                    When(status="overdue", then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                ),
+                "-date",
+            )
+        )
 
     def perform_create(self, serializer):
         serializer.save(

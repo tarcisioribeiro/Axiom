@@ -41,6 +41,10 @@ export interface UseExpensesPageReturn {
   fixedExpenses: FixedExpense[];
   isLoading: boolean;
   isFetching: boolean;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  totalCount: number;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
   selectedExpense: Expense | undefined;
@@ -148,8 +152,24 @@ export function useExpensesPage(opts?: {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+  const filtersKey = JSON.stringify([
+    debouncedSearch,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+  ]);
+  const [lastFiltersKey, setLastFiltersKey] = useState(filtersKey);
+  if (filtersKey !== lastFiltersKey) {
+    setLastFiltersKey(filtersKey);
+    setPage(1);
+  }
+
   const params = useMemo(() => {
-    const p: Record<string, unknown> = {};
+    const p: Record<string, unknown> = { page };
     if (debouncedSearch) p.search = debouncedSearch;
     if (categoryFilter !== 'all') p.category = categoryFilter;
     if (statusFilter !== 'all') p.payed = statusFilter === 'paid' ? 'true' : 'false';
@@ -158,6 +178,7 @@ export function useExpensesPage(opts?: {
     if (selectedAccounts.length > 0) p.accounts = selectedAccounts.join(',');
     return p;
   }, [
+    page,
     debouncedSearch,
     categoryFilter,
     statusFilter,
@@ -167,14 +188,18 @@ export function useExpensesPage(opts?: {
   ]);
 
   const {
-    data: expenses = [],
+    data: expensesPage,
     isLoading: expensesLoading,
     isFetching: expensesFetching,
   } = useQuery({
     queryKey: ['expenses', params],
-    queryFn: () => expensesService.getAll(params),
+    queryFn: () => expensesService.getAllPaginated(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: (previousData) => previousData,
   });
+
+  const expenses = useMemo(() => expensesPage?.results ?? [], [expensesPage]);
+  const totalCount = expensesPage?.count ?? 0;
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery({
     queryKey: ['accounts'],
@@ -428,6 +453,10 @@ export function useExpensesPage(opts?: {
     fixedExpenses,
     isLoading,
     isFetching,
+    page,
+    setPage,
+    pageSize: PAGE_SIZE,
+    totalCount,
     isDialogOpen,
     setIsDialogOpen,
     selectedExpense,
