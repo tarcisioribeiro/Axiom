@@ -204,7 +204,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # 180s cobre o startup síncrono do entrypoint.sh (espera do DB, migrations
+      # completas em banco novo, collectstatic, createsuperuser, setup_members)
+      # antes do Gunicorn abrir a porta. A geração de embeddings RAG roda em
+      # background e não faz parte dessa janela.
+      start_period: 180s
     deploy:
       resources:
         limits:

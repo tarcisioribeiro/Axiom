@@ -48,7 +48,7 @@ export function useTransfersData() {
 
   const { data: transfers = [], isLoading: transfersLoading } = useQuery({
     queryKey: ['transfers'],
-    queryFn: () => transfersService.getAll(),
+    queryFn: () => transfersService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
     select: (data) => (Array.isArray(data) ? data : []),
   });
@@ -84,6 +84,26 @@ export function useTransfersData() {
         return true;
       }),
     [transfers, debouncedSearch, statusFilter, accountFilter, startDate, endDate]
+  );
+
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+  const filtersKey = JSON.stringify([
+    debouncedSearch,
+    statusFilter,
+    accountFilter,
+    startDate,
+    endDate,
+  ]);
+  const [lastFiltersKey, setLastFiltersKey] = useState(filtersKey);
+  if (filtersKey !== lastFiltersKey) {
+    setLastFiltersKey(filtersKey);
+    setPage(1);
+  }
+
+  const paginatedTransfers = useMemo(
+    () => filteredTransfers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredTransfers, page]
   );
 
   const totalVolume = useMemo(
@@ -215,6 +235,11 @@ export function useTransfersData() {
     transfers,
     accounts,
     filteredTransfers,
+    paginatedTransfers,
+    page,
+    setPage,
+    pageSize: PAGE_SIZE,
+    totalFiltered: filteredTransfers.length,
     isLoading: transfersLoading || accountsLoading,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
     isDialogOpen,

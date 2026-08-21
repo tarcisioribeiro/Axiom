@@ -27,7 +27,11 @@ export default function Transfers() {
 
   const {
     accounts,
-    filteredTransfers,
+    paginatedTransfers,
+    page,
+    setPage,
+    pageSize,
+    totalFiltered,
     isLoading,
     isSubmitting,
     isDialogOpen,
@@ -93,13 +97,19 @@ export default function Transfers() {
       />
 
       <DataTable
-        data={filteredTransfers}
+        data={paginatedTransfers}
         columns={columns}
         keyExtractor={(transfer) => transfer.id}
         isLoading={isLoading}
         emptyState={{
           icon: <ArrowLeftRight className="text-muted-foreground h-12 w-12" />,
           message: emptyMessage,
+        }}
+        pagination={{
+          page,
+          pageSize,
+          total: totalFiltered,
+          onPageChange: setPage,
         }}
         actions={(transfer) => (
           <div className="gap-sm flex items-center justify-end">

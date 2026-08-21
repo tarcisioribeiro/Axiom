@@ -46,6 +46,17 @@
 #          -h <PGHOST> -p <PGPORT> -U <DB_USER> -d <DB_NAME> \
 #          -f db_backup_<TS>_kv<VER>.sql
 #
+#   5. IMPORTANT when restoring into a different environment (e.g. a
+#      production/staging dump into a local Docker setup): the SystemConfig
+#      table may still hold the origin environment's MinIO
+#      endpoint/credentials, and app.config.cfg() prioritizes SystemConfig
+#      over .env — this makes the API try to reach the origin MinIO instead
+#      of the local one, breaking media access. Fix it by running:
+#        python manage.py fix_storage_config_for_local
+#      (infra/scripts/docker-restore.sh already runs this automatically for
+#      the Docker Compose restore path — this step is only needed for a
+#      manual psql/pg_restore restore like the one above.)
+#
 # ─────────────────────────────────────────────────────────────────────────────
 # Required Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────

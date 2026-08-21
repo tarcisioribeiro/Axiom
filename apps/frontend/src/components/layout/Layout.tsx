@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Outlet, useLocation } from 'react-router';
+import { useLocation, useOutlet } from 'react-router';
 
 import { AgentChatWidget } from '@/components/agents/AgentChatWidget';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -23,6 +23,7 @@ const INTELLECT_MODULE_PATTERN = /^\/library(\/|$)/;
 export const Layout = () => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const outlet = useOutlet();
 
   return (
     <div className="bg-background flex min-h-screen">
@@ -41,10 +42,8 @@ export const Layout = () => {
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
         <main id="main-content" className="flex-1 p-0" role="main">
-          <AnimatePresence mode="wait">
-            <AnimatedPage key={pathname}>
-              <Outlet />
-            </AnimatedPage>
+          <AnimatePresence mode="wait" initial={false}>
+            <AnimatedPage key={pathname}>{outlet}</AnimatedPage>
           </AnimatePresence>
         </main>
       </div>

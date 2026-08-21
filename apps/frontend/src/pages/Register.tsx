@@ -8,6 +8,7 @@ import { useNavigate, Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/auth-service';
 
@@ -42,6 +43,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { logo } = useThemeAssets();
   const {
     register,
     handleSubmit,
@@ -96,9 +98,9 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="bg-card p-xl rounded-2xl border shadow-2xl">
           <div className="mb-xl text-center">
-            <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
-              Axiom
-            </h1>
+            <div className="mx-auto flex items-center justify-center">
+              <img src={logo} alt="Axiom" className="h-auto w-48" />
+            </div>
             <p className="mt-sm">{t('auth.register.subtitle')}</p>
           </div>
 

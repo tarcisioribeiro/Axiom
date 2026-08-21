@@ -1,7 +1,7 @@
 asgiref==3.12.1
 gunicorn==26.0.0
 cryptography==50.0.0
-Django==6.0.7
+Django==6.0.8
 django-admin-dracula==0.0.3
 django-restframework==0.0.1
 djangorestframework==3.17.1

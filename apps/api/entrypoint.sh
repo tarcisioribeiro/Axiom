@@ -88,11 +88,19 @@ else
   # container é barato — só embeda o que for novo. Nunca bloqueia o boot:
   # timeout + "|| echo" garantem que uma falha (ex: Ollama ainda subindo)
   # apenas adia a indexação para a próxima subida, sem derrubar a API.
-  echo "🧠 Gerando embeddings pendentes para os agentes de IA (RAG)..."
-  timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py vectorize_existing --domain all || \
-    echo "⚠️  vectorize_existing falhou ou expirou — agentes seguem funcionando sem RAG até a próxima subida do container."
-  timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py index_library || \
-    echo "⚠️  index_library falhou ou expirou — RAG da biblioteca fica pendente até a próxima subida do container."
+  # Roda em background: são comandos lentos (podem levar minutos esperando o
+  # Ollama aquecer) e não essenciais para a API responder. Rodá-los em primeiro
+  # plano aqui atrasava o "exec gunicorn" abaixo além da janela do healthcheck
+  # (start_period + interval*retries), derrubando o container como "unhealthy"
+  # antes mesmo do Gunicorn abrir a porta — especialmente em subidas com banco
+  # novo (migrations completas) somado ao tempo de embeddings.
+  echo "🧠 Gerando embeddings pendentes para os agentes de IA (RAG) em background..."
+  (
+    timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py vectorize_existing --domain all || \
+      echo "⚠️  vectorize_existing falhou ou expirou — agentes seguem funcionando sem RAG até a próxima subida do container."
+    timeout "${EMBEDDINGS_TIMEOUT:-240}" python manage.py index_library || \
+      echo "⚠️  index_library falhou ou expirou — RAG da biblioteca fica pendente até a próxima subida do container."
+  ) &
 
   echo "🚀 Iniciando servidor com Gunicorn..."
   # Com múltiplos workers, cada processo Gunicorn mantém seu próprio registro
