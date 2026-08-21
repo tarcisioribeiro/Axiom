@@ -20,6 +20,7 @@ ENV_FILE="${REPO_ROOT}/.env"
 CONTAINER_DB="axiom-db"
 CONTAINER_MINIO="axiom-storage"
 CONTAINER_API="axiom-api"
+CONTAINER_FRONTEND="axiom-frontend"
 CONTAINERS_APP=("axiom-api" "axiom-worker" "axiom-queue" "axiom-db-backup")
 
 # ── Funções auxiliares ────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ INPUT="$1"
 
 # ── Verificação de dependências ───────────────────────────────────────────────
 command -v docker &>/dev/null || err "Dependência não encontrada: 'docker'. Instale antes de continuar."
+command -v curl &>/dev/null || err "Dependência não encontrada: 'curl'. Instale antes de continuar."
 
 # ── Carregar credenciais do .env local ───────────────────────────────────────
 [[ -f "$ENV_FILE" ]] || err "Arquivo .env não encontrado em '${ENV_FILE}'. Está na raiz correta?"
@@ -77,7 +79,7 @@ log "Carregando credenciais de ${ENV_FILE}..."
 set -a
 # shellcheck disable=SC1090
 source <(grep -E '^[A-Z_]+=' "$ENV_FILE" \
-    | grep -E '^(DB_NAME|DB_USER|DB_PASSWORD|MINIO_ROOT_USER|MINIO_ROOT_PASSWORD|MINIO_BUCKET_NAME|MINIO_PORT|MINIO_ENDPOINT)=' \
+    | grep -E '^(DB_NAME|DB_USER|DB_PASSWORD|MINIO_ROOT_USER|MINIO_ROOT_PASSWORD|MINIO_BUCKET_NAME|MINIO_PORT|MINIO_ENDPOINT|API_PORT)=' \
     | sed 's/\r//' \
     | sed "s/^/export /")
 set +a
@@ -85,6 +87,7 @@ set +a
 DB_NAME="${DB_NAME:-axiom_db}"
 MINIO_BUCKET="${MINIO_BUCKET_NAME:-axiom}"
 MINIO_LOCAL_PORT="${MINIO_PORT:-39105}"
+API_LOCAL_PORT="${API_PORT:-39100}"
 
 # ── Resolver entrada (tar.gz ou diretório) ────────────────────────────────────
 WORK_DIR=""
@@ -264,6 +267,34 @@ for c in "${CONTAINERS_APP[@]}"; do
         docker start "$c" &>/dev/null && log "  Iniciado: ${c}" || log "  Não foi possível iniciar: ${c}"
     fi
 done
+
+# ── Recarregar nginx do frontend ──────────────────────────────────────────────
+# O nginx do container axiom-frontend resolve o hostname `api` (proxy_pass
+# http://api:39100, usado pelas rotas de redirect de mídia como
+# books/<pk>/cover/) apenas na inicialização/primeira conexão dos workers, e
+# mantém esse IP em cache. Como axiom-api acabou de ser parado e reiniciado
+# acima, ele normalmente recebe um novo IP na rede bridge do Docker — sem
+# recarregar o nginx, toda capa/foto/PDF servido via esse proxy passa a
+# retornar 502 (upstream connection refused) até o frontend ser reiniciado
+# manualmente.
+if docker inspect "$CONTAINER_FRONTEND" &>/dev/null 2>&1; then
+    log "Aguardando '${CONTAINER_API}' aceitar conexões (máx. 60s) antes de recarregar o nginx..."
+    _api_ready=0
+    for _i in $(seq 1 60); do
+        if curl -sf -o /dev/null "http://localhost:${API_LOCAL_PORT}/health/"; then
+            _api_ready=1
+            break
+        fi
+        sleep 1
+    done
+    [[ $_api_ready -eq 1 ]] || log "AVISO: timeout aguardando '${CONTAINER_API}'. Recarregando o nginx mesmo assim."
+
+    log "Recarregando nginx de '${CONTAINER_FRONTEND}' (evita 502 no proxy /api/ após troca de IP do axiom-api)..."
+    docker exec "$CONTAINER_FRONTEND" nginx -s reload &>/dev/null \
+        || log "AVISO: falha ao recarregar nginx. Rode manualmente: docker restart ${CONTAINER_FRONTEND}"
+else
+    log "AVISO: container '${CONTAINER_FRONTEND}' não encontrado — pule esta etapa se o frontend não estiver em uso."
+fi
 
 log "══════════════════════════════════════════════════"
 log "Restauração concluída com sucesso!"

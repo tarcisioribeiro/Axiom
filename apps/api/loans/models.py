@@ -187,6 +187,32 @@ class Loan(BaseModel):
             self.description
         },{self.category} - {self.date},{self.horary}"""
 
+    def infer_loan_type(self):
+        """
+        Infere o tipo do empréstimo (tomado/realizado) comparando o
+        usuário vinculado ao membro credor/beneficiado com quem criou
+        o registro. Usado como fallback quando `loan_type` não foi
+        gravado explicitamente.
+        """
+        if (
+            self.creditor_id
+            and self.creditor.user_id
+            and self.creditor.user_id == self.created_by_id
+        ):
+            return "lent"
+        if (
+            self.benefited_id
+            and self.benefited.user_id
+            and self.benefited.user_id == self.created_by_id
+        ):
+            return "borrowed"
+        return None
+
+    @property
+    def effective_loan_type(self):
+        """`loan_type` gravado ou, na ausência dele, o valor inferido."""
+        return self.loan_type or self.infer_loan_type()
+
 
 class LoanInstallment(BaseModel):
     """
