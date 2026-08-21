@@ -215,16 +215,17 @@ log "MinIO restaurado com sucesso."
 # ── Corrigir SystemConfig para ambiente Docker ────────────────────────────────
 # O dump restaurado pode conter valores do ambiente de origem (ex: K8s) que
 # sobrescrevem o .env via cfg(). Aqui sincronizamos as chaves MinIO do
-# SystemConfig com as credenciais locais antes de subir os containers.
+# SystemConfig com as credenciais locais (fix_storage_config_for_local) antes
+# de subir os containers de aplicação.
 if docker inspect "$CONTAINER_API" &>/dev/null 2>&1; then
     log "Sincronizando SystemConfig com credenciais locais (${ENV_FILE})..."
 
     log "  Iniciando '${CONTAINER_API}' temporariamente..."
     docker start "$CONTAINER_API" &>/dev/null
 
-    log "  Aguardando Django inicializar (máx. 30s)..."
+    log "  Aguardando Django inicializar (máx. 60s)..."
     _django_ready=0
-    for _i in $(seq 1 30); do
+    for _i in $(seq 1 60); do
         if docker exec "$CONTAINER_API" \
                 python -c "import django; django.setup()" &>/dev/null 2>&1; then
             _django_ready=1
@@ -234,47 +235,26 @@ if docker inspect "$CONTAINER_API" &>/dev/null 2>&1; then
     done
 
     if [[ $_django_ready -eq 1 ]]; then
-        docker exec -i "$CONTAINER_API" python - \
-            "${MINIO_ROOT_USER}" \
-            "${MINIO_ROOT_PASSWORD}" \
-            "${MINIO_ENDPOINT:-minio:9000}" \
-            "${MINIO_BUCKET_NAME:-axiom}" <<'PYEOF'
-import sys, os, django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
-django.setup()
-from admin_panel.models import SystemConfig
-
-minio_user, minio_pass, minio_endpoint, minio_bucket = sys.argv[1:]
-
-updates = {
-    'MINIO_ROOT_USER':     minio_user,
-    'MINIO_ENDPOINT':      minio_endpoint,
-    'MINIO_ROOT_PASSWORD': minio_pass,
-    'MINIO_BUCKET_NAME':   minio_bucket,
-}
-
-for key, val in updates.items():
-    if not val:
-        continue
-    try:
-        obj = SystemConfig.objects.get(key=key)
-        obj.set_value(val)
-        obj.save()
-        masked = '***' if 'PASSWORD' in key else val
-        print(f'  Atualizado: {key} = {masked}')
-    except SystemConfig.DoesNotExist:
-        pass  # chave ausente no SystemConfig — .env já serve de fallback
-    except Exception as e:
-        print(f'  AVISO: {key}: {e}', file=sys.stderr)
-PYEOF
+        docker exec \
+            -e "MINIO_ROOT_USER=${MINIO_ROOT_USER}" \
+            -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}" \
+            -e "MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}" \
+            -e "MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-axiom}" \
+            "$CONTAINER_API" \
+            python manage.py fix_storage_config_for_local \
+            || log "AVISO: falha ao sincronizar SystemConfig. Rode manualmente: docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
         log "SystemConfig sincronizado."
     else
-        log "AVISO: timeout aguardando Django. Atualize manualmente via Django Admin:"
-        log "  MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, MINIO_ENDPOINT, MINIO_BUCKET_NAME"
+        log "AVISO: timeout aguardando Django. Assim que os containers subirem, rode manualmente:"
+        log "  docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
     fi
 
     log "  Parando '${CONTAINER_API}'..."
     docker stop "$CONTAINER_API" &>/dev/null || true
+else
+    log "AVISO: container '${CONTAINER_API}' não existe ainda — SystemConfig NÃO foi sincronizado."
+    log "  Depois de subir os containers ('docker compose ... up -d'), rode manualmente:"
+    log "  docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
 fi
 
 # ── Reiniciar containers de aplicação ─────────────────────────────────────────

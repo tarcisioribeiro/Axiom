@@ -41,7 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { translate } from '@/config/constants';
+import { getLoanStatusLabel, translate } from '@/config/constants';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
@@ -289,7 +289,7 @@ export default function Loans() {
                     </p>
                   </div>
                   <Badge variant={STATUS_VARIANTS[loan.status] ?? 'default'}>
-                    {translate('loanStatus', loan.status)}
+                    {getLoanStatusLabel(loan.status, isCreditor)}
                   </Badge>
                 </div>
 

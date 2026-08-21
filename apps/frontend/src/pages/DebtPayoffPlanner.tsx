@@ -13,7 +13,7 @@ import {
   Info,
   AlertTriangle,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -62,11 +62,18 @@ export default function DebtPayoffPlanner({
   const { t } = useTranslation();
   const [strategy, setStrategy] = useState<Strategy>('snowball');
   const [extraMonthly, setExtraMonthly] = useState(0);
+  const [debouncedExtraMonthly, setDebouncedExtraMonthly] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedExtraMonthly(extraMonthly), 400);
+    return () => clearTimeout(timer);
+  }, [extraMonthly]);
 
   const planQuery = useQuery({
-    queryKey: ['dashboard', 'debtPayoffPlan', extraMonthly],
-    queryFn: () => dashboardService.getDebtPayoffPlan(extraMonthly),
+    queryKey: ['dashboard', 'debtPayoffPlan', debouncedExtraMonthly],
+    queryFn: () => dashboardService.getDebtPayoffPlan(debouncedExtraMonthly),
     staleTime: STALE_TIMES.DEBT_PAYOFF_PLAN,
+    placeholderData: (previousData) => previousData,
   });
 
   const isLoading = planQuery.isLoading;

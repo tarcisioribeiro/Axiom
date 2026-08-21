@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { translate } from '@/config/constants';
+import { getLoanStatusLabel, translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -43,10 +43,6 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 function expenseCategoryLabel(category: string): string {
   return translate('expenseCategories', category) || category;
-}
-
-function loanStatusLabel(status: string): string {
-  return translate('loanStatus', status) || status;
 }
 
 function payableStatusLabel(status: string): string {
@@ -329,6 +325,7 @@ export default function MemberFinancialReportPage() {
               items={report.loans_as_benefited}
               counterpartLabel={t('pages.memberFinancialReport.creditor')}
               counterpartKey="creditor"
+              isCreditor={false}
             />
           </div>
         </TabsContent>
@@ -338,6 +335,7 @@ export default function MemberFinancialReportPage() {
               items={report.loans_as_creditor}
               counterpartLabel={t('pages.memberFinancialReport.benefited')}
               counterpartKey="benefited"
+              isCreditor={true}
             />
           </div>
         </TabsContent>
@@ -469,10 +467,12 @@ function LoansTable({
   items,
   counterpartLabel,
   counterpartKey,
+  isCreditor,
 }: {
   items: MemberReportLoan[];
   counterpartLabel: string;
   counterpartKey: 'creditor' | 'benefited';
+  isCreditor: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -500,7 +500,7 @@ function LoansTable({
               <Td>{item[counterpartKey] ?? '—'}</Td>
               <Td>
                 <Badge variant={item.status === 'paid' ? 'default' : 'outline'}>
-                  {loanStatusLabel(item.status)}
+                  {getLoanStatusLabel(item.status, isCreditor)}
                 </Badge>
               </Td>
             </tr>
