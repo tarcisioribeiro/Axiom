@@ -92,6 +92,8 @@ interface FixedExpenseItem {
   credit_card_name: string;
   allow_value_edit: boolean;
   already_posted: boolean;
+  related_loan_name: string | null;
+  related_payable_name: string | null;
 }
 
 interface FixedItemOverride {
@@ -249,6 +251,7 @@ function EditableFixedItem({
   override,
   alreadyPosted,
   forceDisabled,
+  debtName,
   onToggle,
   onValueChange,
 }: {
@@ -263,6 +266,9 @@ function EditableFixedItem({
    * elsewhere (e.g. a card-linked fixed expense already inside a bill
    * total), so including it here would double-count it. */
   forceDisabled?: boolean;
+  /** Name of the Loan/Payable this fixed expense is the installment of,
+   * when it comes from a debt payment plan. */
+  debtName?: string | null;
   onToggle: (id: number, enabled: boolean) => void;
   onValueChange: (id: number, value: string) => void;
 }) {
@@ -287,6 +293,12 @@ function EditableFixedItem({
         <span className="font-medium">{label}</span>
         {sub && <span className="ml-xs text-muted-foreground text-xs">{sub}</span>}
       </div>
+      {debtName && (
+        <Badge variant="outline" className="gap-xs shrink-0 text-xs" title={debtName}>
+          <Landmark className="h-3 w-3" />
+          {debtName}
+        </Badge>
+      )}
       {alreadyPosted && (
         <Badge
           variant="outline"
@@ -1271,6 +1283,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     override={fixedExpenseOverrides[String(e.id)]}
                     alreadyPosted={e.already_posted}
                     forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
+                    debtName={e.related_loan_name ?? e.related_payable_name}
                     onToggle={toggleFixedExpense}
                     onValueChange={updateFixedExpenseValue}
                   />

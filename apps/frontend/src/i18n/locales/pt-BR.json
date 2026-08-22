@@ -10,6 +10,7 @@
       "add": "Adicionar",
       "close": "Fechar",
       "confirm": "Confirmar",
+      "next": "Próximo",
       "search": "Buscar...",
       "export": "Exportar",
       "loading": "Carregando...",
@@ -740,7 +741,8 @@
         "none": "Nenhum",
         "balanceInfo": "Saldo: R$ {{value}}",
         "splitToggle": "Dividir despesa",
-        "splitToggleHint": "Ao criar, abrirá automaticamente o gerenciador de divisões"
+        "splitToggleHint": "Ao criar, abrirá automaticamente o gerenciador de divisões",
+        "redistributeDesc": "Esta dívida já tem um plano de pagamento. O valor lançado abate o saldo em aberto e as parcelas pendentes serão redistribuídas."
       },
       "splits": {
         "title": "Divisões da Despesa",
@@ -963,6 +965,15 @@
       "payoff": "Quitação",
       "paidAmount": "{{value}} pago",
       "remainingAmount": "{{value}} restante",
+      "paymentPlan": {
+        "title": "Criar Plano de Pagamento",
+        "createBtn": "Criar plano de pagamento",
+        "desc": "Divida o saldo restante deste empréstimo em parcelas mensais, geradas como despesa fixa no Planejador Financeiro Mensal.",
+        "installmentsCountLabel": "Quantidade de Parcelas",
+        "installmentValuePreview": "{{count}}x de {{value}}",
+        "created": "Plano de pagamento criado",
+        "createdDesc": "As parcelas foram geradas e a despesa fixa vinculada foi criada."
+      },
       "form": {
         "descriptionLabel": "Descrição *",
         "totalValueLabel": "Valor Total *",
@@ -1636,7 +1647,28 @@
         "dueTodayLabel": "Vence hoje",
         "overdueLabel": "Vencido há {{days}} dia(s)",
         "progressLabel": "{{paid}} de {{total}} pagos",
-        "paymentProgress": "Progresso do pagamento"
+        "paymentProgress": "Progresso do pagamento",
+        "paymentFrequencyLabel": "Frequência de Pagamento",
+        "isCumulativeLabel": "Dívida cumulativa (permite aumentar o valor depois)",
+        "installmentsLabel": "Parcelas",
+        "createPaymentPlanBtn": "Criar plano de pagamento",
+        "increaseValueBtn": "Aumentar valor",
+        "paymentPlanTitle": "Plano de Pagamento",
+        "paymentPlanDesc": "Divida esta dívida em parcelas — cada parcela vira uma despesa fixa no Planejador Financeiro Mensal.",
+        "installmentsCountLabel": "Número de Parcelas",
+        "accountLabel": "Conta",
+        "installmentValuePreview": "{{count}}x de {{value}}",
+        "paymentPlanCreated": "Plano de pagamento criado",
+        "paymentPlanCreatedDesc": "As parcelas foram geradas e a despesa fixa foi criada.",
+        "increaseValueTitle": "Aumentar Valor",
+        "increaseValueDesc": "Informe o novo valor total da dívida. As parcelas em aberto serão recalculadas.",
+        "newValueLabel": "Novo Valor Total",
+        "recalculationPreviewTitle": "Prévia do Recálculo",
+        "keepCountOption": "Manter {{count}} parcelas",
+        "changeCountOption": "Alterar quantidade de parcelas",
+        "newInstallmentCountLabel": "Nova quantidade de parcelas",
+        "valueIncreased": "Valor aumentado",
+        "valueIncreasedDesc": "O valor foi atualizado e as parcelas foram recalculadas."
       }
     },
     "budgets": {
@@ -6112,6 +6144,8 @@
       "projectedSurplus": "Sobra Projetada",
       "projectedSurplusUntil": "até {{date}}",
       "dateRecalculated": "Vencimento original ({{original}}) não é viável com a sobra projetada — replanejado para {{feasible}}.",
+      "installmentProgress": "parcela {{current}}/{{total}}",
+      "createPaymentPlan": "Criar plano de pagamento",
       "types": {
         "loan": "Empréstimo",
         "payable": "A Pagar"

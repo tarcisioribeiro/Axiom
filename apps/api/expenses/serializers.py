@@ -83,6 +83,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
     payable_description = serializers.CharField(
         source="related_payable.description", read_only=True, allow_null=True
     )
+    loan_description = serializers.CharField(
+        source="related_loan.description", read_only=True, allow_null=True
+    )
     tags = TagSerializer(many=True, read_only=True)
     tag_ids = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
@@ -117,6 +120,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "related_transfer",
             "fixed_expense_template",
             "related_loan",
+            "loan_description",
             "related_bill_payment",
             "related_payable",
             "payable_description",
@@ -131,6 +135,29 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         from budgets.services import validate_budget_limit
+
+        linked = [
+            attrs.get(
+                "related_loan", getattr(self.instance, "related_loan_id", None)
+            ),
+            attrs.get(
+                "related_payable",
+                getattr(self.instance, "related_payable_id", None),
+            ),
+            attrs.get(
+                "fixed_expense_template",
+                getattr(self.instance, "fixed_expense_template_id", None),
+            ),
+        ]
+        if sum(1 for v in linked if v) > 1:
+            raise serializers.ValidationError(
+                {
+                    "related_loan": (
+                        "Só é possível vincular a um empréstimo, conta a"
+                        " pagar ou despesa fixa — nunca mais de um."
+                    )
+                }
+            )
 
         payed = attrs.get("payed", getattr(self.instance, "payed", False))
         if not payed:

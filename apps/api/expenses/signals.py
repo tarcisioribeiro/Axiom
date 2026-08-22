@@ -90,6 +90,69 @@ def auto_categorize_expense(sender, instance, **kwargs):
         _apply_categorization_rules(user, instance)
 
 
+@receiver(pre_save, sender="expenses.Expense")
+def _capture_old_payed_state(sender, instance, **kwargs):
+    """Guarda o valor anterior de `payed` na instância para que o signal
+    `mark_next_installment_paid_on_expense_payed` (post_save) consiga
+    detectar a transição False -> True, já que post_save não tem acesso ao
+    estado anterior do banco."""
+    if instance._state.adding:
+        instance._old_payed = False
+        return
+    try:
+        instance._old_payed = sender.objects.values_list(
+            "payed", flat=True
+        ).get(pk=instance.pk)
+    except sender.DoesNotExist:
+        instance._old_payed = False
+
+
+@receiver(post_save, sender="expenses.Expense")
+def mark_next_installment_paid_on_expense_payed(sender, instance, **kwargs):
+    """
+    Marca a parcela pendente mais antiga (LoanInstallment/PayableInstallment)
+    como paga quando a Expense vinculada a um empréstimo/conta a pagar vira
+    `payed=True`.
+
+    Fonte única de verdade sobre "parcelas pendentes" usada pelo fluxo de
+    recálculo (requisitos 5 e 7 do plano de pagamento de dívidas) — sem
+    isso, nem o pagamento avulso (LoanPaymentView/PayablePaymentView) nem a
+    geração mensal via despesa fixa marcam parcelas como pagas.
+    """
+    if not instance.payed or getattr(instance, "_old_payed", False):
+        return
+    if not (instance.related_loan_id or instance.related_payable_id):
+        return
+
+    if instance.related_loan_id:
+        from loans.models import LoanInstallment
+
+        installment = (
+            LoanInstallment.objects.filter(
+                loan_id=instance.related_loan_id, payed=False
+            )
+            .order_by("installment_number")
+            .first()
+        )
+    else:
+        from payables.models import PayableInstallment
+
+        installment = (
+            PayableInstallment.objects.filter(
+                payable_id=instance.related_payable_id, payed=False
+            )
+            .order_by("installment_number")
+            .first()
+        )
+
+    if installment:
+        installment.payed = True
+        installment.payment_expense = instance
+        installment.save(
+            update_fields=["payed", "payment_expense", "updated_at"]
+        )
+
+
 @receiver(post_save, sender="expenses.Expense")
 @receiver(post_delete, sender="expenses.Expense")
 def invalidate_dashboard_cache_on_expense(sender, instance, **kwargs):

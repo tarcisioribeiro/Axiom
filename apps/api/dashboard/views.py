@@ -39,9 +39,9 @@ from credit_cards.models import (
     CreditCardInstallment,
 )
 from expenses.models import Expense, FixedExpense
-from loans.models import Loan
+from loans.models import Loan, LoanInstallment
 from members.models import Member
-from payables.models import Payable
+from payables.models import Payable, PayableInstallment
 from receivables.models import Receivable
 from revenues.models import FixedRevenue, Revenue
 from transfers.models import Transfer
@@ -1191,6 +1191,9 @@ class DebtPayoffPlanView(APIView):
             if balance <= 0:
                 continue
             installments = max(loan.installments or 1, 1)
+            installments_paid = LoanInstallment.objects.filter(
+                loan=loan, payed=True
+            ).count()
             debts.append(
                 {
                     "id": f"loan-{loan.id}",
@@ -1204,6 +1207,9 @@ class DebtPayoffPlanView(APIView):
                     ),
                     "due_date": loan.due_date,
                     "date": loan.date,
+                    "installments_total": installments,
+                    "installments_paid": installments_paid,
+                    "payment_plan_exists": installments > 1,
                 }
             )
 
@@ -1215,6 +1221,10 @@ class DebtPayoffPlanView(APIView):
             remaining = payable.remaining_value or Decimal("0.00")
             if remaining <= 0:
                 continue
+            installments = max(payable.installments or 1, 1)
+            installments_paid = PayableInstallment.objects.filter(
+                payable=payable, payed=True
+            ).count()
             debts.append(
                 {
                     "id": f"payable-{payable.id}",
@@ -1226,6 +1236,9 @@ class DebtPayoffPlanView(APIView):
                     "minimum_payment": remaining,
                     "due_date": payable.due_date,
                     "date": payable.date,
+                    "installments_total": installments,
+                    "installments_paid": installments_paid,
+                    "payment_plan_exists": installments > 1,
                 }
             )
 
@@ -1666,6 +1679,9 @@ class DebtPayoffPlanView(APIView):
                 if entry["feasible_date"]
                 else None
             ),
+            "installments_total": entry["installments_total"],
+            "installments_paid": entry["installments_paid"],
+            "payment_plan_exists": entry["payment_plan_exists"],
         }
 
     @staticmethod

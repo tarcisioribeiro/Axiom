@@ -136,10 +136,18 @@ def _fixed_expenses_data(
             "already_posted": _is_fixed_expense_already_posted(
                 e, month, year, date_from, date_to
             ),
+            "related_loan_name": (
+                e.related_loan.description if e.related_loan else None
+            ),
+            "related_payable_name": (
+                e.related_payable.description if e.related_payable else None
+            ),
         }
         for e in FixedExpense.objects.filter(
             created_by=user, is_active=True, is_deleted=False
-        ).select_related("account", "credit_card")
+        ).select_related(
+            "account", "credit_card", "related_loan", "related_payable"
+        )
     ]
 
 

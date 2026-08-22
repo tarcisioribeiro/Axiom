@@ -89,6 +89,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     handleEdit,
     handleDelete,
     handleSubmit,
+    handleRedistributedSuccess,
     handleExport,
     totalExpenses,
     hasActiveFilters,
@@ -478,6 +479,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             payables={payables}
             fixedExpenses={fixedExpenses}
             onSubmit={handleSubmit}
+            onRedistributedSuccess={handleRedistributedSuccess}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />

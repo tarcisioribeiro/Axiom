@@ -18,6 +18,82 @@ def nullify_expenses_on_payable_delete(sender, instance, **kwargs):
     )
 
 
+def generate_payable_installments(payable, installment_count, user, account):
+    """
+    Gera o plano de pagamento parcelado de um Payable: cria as
+    PayableInstallment (valor igual, cronograma via
+    app.debt_installment_utils) e a FixedExpense única que representa a
+    parcela corrente no Planejador Financeiro Mensal.
+
+    Diferente de Loan (que já nasce parcelado na criação), o parcelamento
+    de Payable é um passo posterior e opcional — esta função só é chamada
+    explicitamente pela view de plano de pagamento, nunca por um signal
+    post_save.
+
+    Parameters
+    ----------
+    payable : Payable
+        O payable a ser parcelado. Deve ter installments <= 1 (validado
+        na view).
+    installment_count : int
+        Número de parcelas do plano (>= 2).
+    user : User
+        Usuário que está criando o plano (para created_by/updated_by).
+    account : Account
+        Conta bancária usada para gerar as despesas mensais.
+
+    Returns
+    -------
+    FixedExpense
+        A despesa fixa criada, vinculada ao payable.
+    """
+    from app.debt_installment_utils import build_equal_installment_schedule
+    from expenses.models import FixedExpense
+    from payables.models import PayableInstallment
+
+    remaining_value = payable.value - payable.paid_value
+    schedule = build_equal_installment_schedule(
+        remaining_value,
+        installment_count,
+        payable.date,
+        payable.payment_frequency,
+    )
+
+    PayableInstallment.objects.bulk_create(
+        [
+            PayableInstallment(
+                payable=payable,
+                installment_number=item["number"],
+                value=item["value"],
+                due_date=item["due_date"],
+                payed=False,
+                created_by=user,
+                updated_by=user,
+            )
+            for item in schedule
+        ]
+    )
+
+    payable.installments = installment_count
+    payable.save(update_fields=["installments", "updated_at"])
+
+    first = schedule[0]
+    fixed_expense = FixedExpense.objects.create(
+        description=payable.description,
+        default_value=first["value"],
+        category=payable.category,
+        account=account,
+        due_day=first["due_date"].day,
+        member=payable.member,
+        is_active=True,
+        allow_value_edit=False,
+        related_payable=payable,
+        created_by=user,
+        updated_by=user,
+    )
+    return fixed_expense
+
+
 def update_payable_paid_value(payable):
     """
     Recalcula o paid_value de um Payable baseado nas despesas vinculadas.
@@ -27,7 +103,7 @@ def update_payable_paid_value(payable):
     payable : Payable
         O payable a ser atualizado
     """
-    from expenses.models import Expense
+    from expenses.models import Expense, FixedExpense
 
     # Soma das despesas pagas vinculadas a este payable
     total_paid = Expense.objects.filter(
@@ -50,6 +126,12 @@ def update_payable_paid_value(payable):
     Payable.objects.filter(pk=payable.pk).update(
         paid_value=payable.paid_value, status=payable.status
     )
+
+    # Requisito 3: ao quitar a dívida, desativa a despesa fixa vinculada.
+    if payable.status == "paid":
+        FixedExpense.objects.filter(
+            related_payable=payable, is_active=True
+        ).update(is_active=False)
 
 
 @receiver(post_save, sender="expenses.Expense")
