@@ -10,6 +10,7 @@
       "add": "Add",
       "close": "Close",
       "confirm": "Confirm",
+      "next": "Next",
       "search": "Search...",
       "export": "Export",
       "loading": "Loading...",
@@ -740,7 +741,8 @@
         "none": "None",
         "balanceInfo": "Balance: {{value}}",
         "splitToggle": "Split expense",
-        "splitToggleHint": "After creating, the split manager will open automatically"
+        "splitToggleHint": "After creating, the split manager will open automatically",
+        "redistributeDesc": "This debt already has a payment plan. The amount reduces the open balance and pending installments will be redistributed."
       },
       "splits": {
         "title": "Expense Splits",
@@ -963,6 +965,15 @@
       "payoff": "Payoff",
       "paidAmount": "{{value}} paid",
       "remainingAmount": "{{value}} remaining",
+      "paymentPlan": {
+        "title": "Create Payment Plan",
+        "createBtn": "Create payment plan",
+        "desc": "Split this loan's remaining balance into monthly installments, generated as a fixed expense in the Monthly Financial Planner.",
+        "installmentsCountLabel": "Number of Installments",
+        "installmentValuePreview": "{{count}}x of {{value}}",
+        "created": "Payment plan created",
+        "createdDesc": "The installments were generated and the linked fixed expense was created."
+      },
       "form": {
         "descriptionLabel": "Description *",
         "totalValueLabel": "Total Amount *",
@@ -1636,7 +1647,28 @@
         "dueTodayLabel": "Due today",
         "overdueLabel": "Overdue by {{days}} day(s)",
         "progressLabel": "{{paid}} of {{total}} paid",
-        "paymentProgress": "Payment progress"
+        "paymentProgress": "Payment progress",
+        "paymentFrequencyLabel": "Payment Frequency",
+        "isCumulativeLabel": "Cumulative debt (allows increasing the value later)",
+        "installmentsLabel": "Installments",
+        "createPaymentPlanBtn": "Create payment plan",
+        "increaseValueBtn": "Increase value",
+        "paymentPlanTitle": "Payment Plan",
+        "paymentPlanDesc": "Split this debt into installments — each installment becomes a fixed expense in the Monthly Financial Planner.",
+        "installmentsCountLabel": "Number of Installments",
+        "accountLabel": "Account",
+        "installmentValuePreview": "{{count}}x of {{value}}",
+        "paymentPlanCreated": "Payment plan created",
+        "paymentPlanCreatedDesc": "The installments were generated and the fixed expense was created.",
+        "increaseValueTitle": "Increase Value",
+        "increaseValueDesc": "Enter the new total debt value. Open installments will be recalculated.",
+        "newValueLabel": "New Total Value",
+        "recalculationPreviewTitle": "Recalculation Preview",
+        "keepCountOption": "Keep {{count}} installments",
+        "changeCountOption": "Change installment count",
+        "newInstallmentCountLabel": "New installment count",
+        "valueIncreased": "Value increased",
+        "valueIncreasedDesc": "The value was updated and installments were recalculated."
       }
     },
     "budgets": {
@@ -6067,6 +6099,8 @@
       "projectedSurplus": "Projected Surplus",
       "projectedSurplusUntil": "through {{date}}",
       "dateRecalculated": "Original due date ({{original}}) isn't feasible with the projected surplus — rescheduled to {{feasible}}.",
+      "installmentProgress": "installment {{current}}/{{total}}",
+      "createPaymentPlan": "Create payment plan",
       "types": {
         "loan": "Loan",
         "payable": "Payable"

@@ -106,6 +106,9 @@ export interface DebtPayoffPlanDebt {
   date_recalculated: boolean;
   original_target_date: string | null;
   feasible_date: string | null;
+  installments_total: number;
+  installments_paid: number;
+  payment_plan_exists: boolean;
 }
 
 export interface DebtPayoffStrategyPlan {

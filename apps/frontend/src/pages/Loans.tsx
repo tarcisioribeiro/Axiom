@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Trash2,
@@ -13,6 +14,7 @@ import {
   Banknote,
   Users,
   Building2,
+  CalendarRange,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -28,6 +30,7 @@ import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialo
 import { LoanForm } from '@/components/loans/LoanForm';
 import { LoanInstallmentsDialog } from '@/components/loans/LoanInstallmentsDialog';
 import { LoanPaymentDialog } from '@/components/loans/LoanPaymentDialog';
+import { LoanPaymentPlanDialog } from '@/components/loans/LoanPaymentPlanDialog';
 import { LoanProgressDialog } from '@/components/loans/LoanProgressDialog';
 import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
 import { ReceiptButton } from '@/components/receipts';
@@ -65,6 +68,8 @@ type LoanRole = 'all' | 'benefited' | 'creditor';
 export default function Loans() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
   const {
     loans,
     accounts,
@@ -91,6 +96,8 @@ export default function Loans() {
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  const [paymentPlanLoan, setPaymentPlanLoan] = useState<Loan | null>(null);
 
   const [progressLoan, setProgressLoan] = useState<Loan | null>(null);
 
@@ -398,7 +405,7 @@ export default function Loans() {
                       {t('pages.loans.payBtn')}
                     </Button>
                   )}
-                  {loan.installments > 1 && (
+                  {loan.installments > 1 ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -409,6 +416,20 @@ export default function Loans() {
                       <List className="h-3 w-3" />
                       {t('pages.loans.installments.title')}
                     </Button>
+                  ) : (
+                    loan.status !== 'paid' &&
+                    loan.status !== 'cancelled' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPaymentPlanLoan(loan)}
+                        title={t('pages.loans.paymentPlan.title')}
+                        className="gap-xs text-xs"
+                      >
+                        <CalendarRange className="h-3 w-3" />
+                        {t('pages.loans.paymentPlan.createBtn')}
+                      </Button>
+                    )
                   )}
                   <Button
                     variant="outline"
@@ -510,6 +531,12 @@ export default function Loans() {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsLoan(null)}
+      />
+
+      <LoanPaymentPlanDialog
+        loan={paymentPlanLoan}
+        onClose={() => setPaymentPlanLoan(null)}
+        onSuccess={invalidateLoans}
       />
 
       <LoanAmortizationDialog

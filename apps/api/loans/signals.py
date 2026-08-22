@@ -148,6 +148,14 @@ def update_loan_status(loan):
         loan.status = new_status
         loan.save(update_fields=["status", "updated_at"])
 
+    # Requisito 3: ao quitar a dívida, desativa a despesa fixa vinculada.
+    if new_status == "paid":
+        from expenses.models import FixedExpense
+
+        FixedExpense.objects.filter(related_loan=loan, is_active=True).update(
+            is_active=False
+        )
+
 
 @receiver(post_save, sender="expenses.Expense")
 def update_loan_on_expense_save(sender, instance, created, **kwargs):

@@ -182,9 +182,19 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
             if existing_expense:
                 if upsert:
                     existing_expense.value = item["value"]
+                    existing_expense.related_loan = fixed_exp.related_loan
+                    existing_expense.related_payable = (
+                        fixed_exp.related_payable
+                    )
                     existing_expense.updated_by = user
                     existing_expense.save(
-                        update_fields=["value", "updated_by", "updated_at"]
+                        update_fields=[
+                            "value",
+                            "related_loan",
+                            "related_payable",
+                            "updated_by",
+                            "updated_at",
+                        ]
                     )
                 continue
 
@@ -201,6 +211,8 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 notes=fixed_exp.notes,
                 member=fixed_exp.member,
                 fixed_expense_template=fixed_exp,
+                related_loan=fixed_exp.related_loan,
+                related_payable=fixed_exp.related_payable,
                 created_by=user,
                 updated_by=user,
             )

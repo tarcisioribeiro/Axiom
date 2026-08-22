@@ -1,6 +1,6 @@
 from django.db import models
 
-from app.models import BaseModel
+from app.models import PAYMENT_FREQUENCY_CHOICES, BaseModel
 from expenses.models import EXPENSES_CATEGORIES
 
 PAYABLE_STATUS_CHOICES = (
@@ -65,6 +65,18 @@ class Payable(BaseModel):
         choices=PAYABLE_STATUS_CHOICES,
         verbose_name="Status",
         default="active",
+    )
+    installments = models.PositiveIntegerField(
+        default=1, verbose_name="Parcelas"
+    )
+    is_cumulative = models.BooleanField(
+        default=False, verbose_name="Dívida cumulativa"
+    )
+    payment_frequency = models.CharField(
+        max_length=20,
+        choices=PAYMENT_FREQUENCY_CHOICES,
+        default="monthly",
+        verbose_name="Frequência de Pagamento",
     )
 
     class Meta:
@@ -134,7 +146,7 @@ class PayableInstallment(BaseModel):
     payable = models.ForeignKey(
         Payable,
         on_delete=models.CASCADE,
-        related_name="installments",
+        related_name="installment_schedule",
         verbose_name="Valor a Pagar",
     )
     installment_number = models.PositiveIntegerField(

@@ -1,6 +1,7 @@
 import { API_CONFIG } from '@/config/api-config';
 import type {
   AmortizationSchedule,
+  Loan,
   LoanInstallment,
   LoanPaymentRequest,
   LoanReceiptRequest,
@@ -45,6 +46,15 @@ class LoanInstallmentsService {
     return apiClient.get<AmortizationSchedule>(
       `${API_CONFIG.ENDPOINTS.LOAN_AMORTIZATION(loanId)}?method=${method}`
     );
+  }
+
+  async createPaymentPlan(
+    loanId: number,
+    installments: number
+  ): Promise<{ loan: Loan; fixed_expense: unknown }> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.LOAN_PAYMENT_PLAN(loanId), {
+      installments,
+    });
   }
 }
 

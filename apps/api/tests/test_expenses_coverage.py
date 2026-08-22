@@ -123,6 +123,56 @@ class BulkGenerateFixedExpensesAccountTest(BaseExpenseServiceTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_bulk_generate_copies_related_loan_and_payable_from_template(self):
+        """A FixedExpense that is a debt payment-plan template (has
+        related_payable set) propagates that FK to the generated Expense —
+        needed so the existing update_payable_paid_value signal fires when
+        the monthly agenda expense is later marked paid."""
+        from payables.models import Payable
+
+        payable = Payable.objects.create(
+            description="Dívida parcelada",
+            value=Decimal("300.00"),
+            date=timezone.now().date(),
+            category="others",
+            status="active",
+            created_by=self.user,
+        )
+        debt_fixed_expense = FixedExpense.objects.create(
+            description="Parcela dívida",
+            default_value=Decimal("100.00"),
+            category="others",
+            account=self.account,
+            due_day=15,
+            is_active=True,
+            allow_value_edit=False,
+            related_payable=payable,
+            created_by=self.user,
+        )
+        month_str = timezone.now().strftime("%Y-%m")
+        url = reverse("fixed-expense-generate")
+        response = self.client.post(
+            url,
+            {
+                "month": month_str,
+                "expense_values": [
+                    {
+                        "fixed_expense_id": debt_fixed_expense.pk,
+                        "value": "100.00",
+                    }
+                ],
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        from expenses.models import Expense
+
+        expense = Expense.objects.get(
+            fixed_expense_template=debt_fixed_expense
+        )
+        self.assertEqual(expense.related_payable_id, payable.id)
+
 
 # ---------------------------------------------------------------------------
 # bulk_generate_fixed_expenses — credit-card path (get_or_create_bill)
