@@ -25,6 +25,7 @@ import {
   ExpenseOCRUpload,
   type OCRResult,
 } from '@/components/expenses/ExpenseOCRUpload';
+import { RecalculationPreviewDialog } from '@/components/payables/RecalculationPreviewDialog';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -42,6 +43,7 @@ import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
@@ -52,6 +54,7 @@ import { categorizationRulesService } from '@/services/categorization-rules-serv
 import type { CategorySuggestion } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
 import { membersService } from '@/services/members-service';
+import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type {
   Account,
   CategorizationRule,
@@ -61,7 +64,9 @@ import type {
   Loan,
   Member,
   Payable,
+  RecalculationPreview,
 } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export interface ExpensePrefillData {
   description?: string;
@@ -77,6 +82,12 @@ interface ExpenseFormProps {
   payables?: Payable[];
   fixedExpenses?: FixedExpense[];
   onSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
+  /** Called when the redistribution flow (requirement 7) commits the
+   * Expense itself via the atomic redistribute-after-payment endpoint —
+   * the parent should treat this the same as a successful onSubmit
+   * (invalidate the list, toast, close the dialog) without calling
+   * onSubmit again. */
+  onRedistributedSuccess?: () => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -89,16 +100,23 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   payables,
   fixedExpenses,
   onSubmit,
+  onRedistributedSuccess,
   onCancel,
   isLoading = false,
 }) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
     []
   );
   const [linksOpen, setLinksOpen] = useState(false);
   const [splitOnCreate, setSplitOnCreate] = useState(false);
+  const [redistributePreview, setRedistributePreview] =
+    useState<RecalculationPreview | null>(null);
+  const [pendingRedistributeData, setPendingRedistributeData] =
+    useState<ExpenseFormData | null>(null);
+  const [isRedistributing, setIsRedistributing] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<CategorySuggestion | null>(null);
   const [isLoadingAiSuggestion, setIsLoadingAiSuggestion] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -333,9 +351,91 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     accounts,
   ]);
 
+  // Requisito 7 do plano de pagamento de dívidas: lançar uma Expense nova
+  // vinculada a um Payable que já tem plano de pagamento (installments > 1)
+  // dispara o fluxo de preview + confirmação de redistribuição, em vez do
+  // submit normal — o endpoint atômico redistribute-after-payment cria a
+  // Expense e redistribui o saldo pelas parcelas pendentes numa única
+  // transação no backend.
+  const requestRedistributePreview = async (
+    data: ExpenseFormData,
+    payableId: number
+  ) => {
+    try {
+      const { preview } = await payableInstallmentsService.redistributeAfterPayment(
+        payableId,
+        {
+          expense: {
+            value: data.value,
+            account: data.account,
+            date: data.date,
+            payed: data.payed,
+            description: data.description,
+          },
+          mode: 'keep_count',
+          dry_run: true,
+        }
+      );
+      setPendingRedistributeData(data);
+      setRedistributePreview(preview);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleConfirmRedistribute = async () => {
+    if (!pendingRedistributeData?.related_payable) return;
+    setIsRedistributing(true);
+    try {
+      await payableInstallmentsService.redistributeAfterPayment(
+        pendingRedistributeData.related_payable,
+        {
+          expense: {
+            value: pendingRedistributeData.value,
+            account: pendingRedistributeData.account,
+            date: pendingRedistributeData.date,
+            payed: pendingRedistributeData.payed,
+            description: pendingRedistributeData.description,
+          },
+          mode: 'keep_count',
+          dry_run: false,
+        }
+      );
+      setRedistributePreview(null);
+      setPendingRedistributeData(null);
+      onRedistributedSuccess?.();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRedistributing(false);
+    }
+  };
+
+  const handleCancelRedistribute = () => {
+    setRedistributePreview(null);
+    setPendingRedistributeData(null);
+  };
+
   const handleFormSubmit = (data: ExpenseFormData) => {
     if (data.payed && balanceInfo && !balanceInfo.canPay) return;
     if (futureBalanceInfo && !futureBalanceInfo.canPay) return;
+
+    if (!expense && data.related_payable) {
+      const linkedPayable = payables?.find((p) => p.id === data.related_payable);
+      if (linkedPayable && (linkedPayable.installments ?? 0) > 1) {
+        void requestRedistributePreview(data, linkedPayable.id);
+        return;
+      }
+    }
+
     onSubmit(data, !expense && splitOnCreate);
   };
 
@@ -626,9 +726,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   </Label>
                   <Select
                     value={watchedRelatedLoan?.toString() || 'none'}
-                    onValueChange={(v) =>
-                      setValue('related_loan', v === 'none' ? null : parseInt(v))
-                    }
+                    onValueChange={(v) => {
+                      setValue('related_loan', v === 'none' ? null : parseInt(v));
+                      if (v !== 'none') {
+                        setValue('related_payable', null);
+                        setValue('fixed_expense_template', null);
+                      }
+                    }}
                     disabled={isLoading}
                   >
                     <SelectTrigger>
@@ -657,9 +761,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   </Label>
                   <Select
                     value={watchedRelatedPayable?.toString() || 'none'}
-                    onValueChange={(v) =>
-                      setValue('related_payable', v === 'none' ? null : parseInt(v))
-                    }
+                    onValueChange={(v) => {
+                      setValue('related_payable', v === 'none' ? null : parseInt(v));
+                      if (v !== 'none') {
+                        setValue('related_loan', null);
+                        setValue('fixed_expense_template', null);
+                      }
+                    }}
                     disabled={isLoading}
                   >
                     <SelectTrigger>
@@ -688,12 +796,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   </Label>
                   <Select
                     value={watchedFixedExpenseTemplate?.toString() || 'none'}
-                    onValueChange={(v) =>
+                    onValueChange={(v) => {
                       setValue(
                         'fixed_expense_template',
                         v === 'none' ? null : parseInt(v)
-                      )
-                    }
+                      );
+                      if (v !== 'none') {
+                        setValue('related_loan', null);
+                        setValue('related_payable', null);
+                      }
+                    }}
                     disabled={isLoading}
                   >
                     <SelectTrigger>
@@ -832,6 +944,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           )}
         </Button>
       </div>
+
+      <RecalculationPreviewDialog
+        open={!!redistributePreview}
+        title={t('pages.payables.form.recalculationPreviewTitle')}
+        description={t('pages.expenses.form.redistributeDesc')}
+        preview={redistributePreview}
+        isLoading={isRedistributing}
+        onConfirm={() => void handleConfirmRedistribute()}
+        onCancel={handleCancelRedistribute}
+      />
     </form>
   );
 };

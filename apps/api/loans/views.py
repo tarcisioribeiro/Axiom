@@ -317,6 +317,91 @@ class LoanAmortizationView(APIView):
         return Response({"method": method, "schedule": schedule})
 
 
+class LoanPaymentPlanView(APIView):
+    """POST /loans/<pk>/payment-plan/ — converte um Loan sem parcelamento
+    (installments <= 1) em um plano de pagamento parcelado, dando a Loan
+    paridade com o fluxo de plano de pagamento de Payable (requisito 1).
+    Fora do escopo de increase-value/recalculate-installments (decisão de
+    negócio 5.2) — Loan mantém o parcelamento imutável após criado."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Loan.objects.none()
+
+    def post(self, request, pk):
+        from app.debt_installment_utils import build_equal_installment_schedule
+        from expenses.models import FixedExpense
+        from expenses.serializers import FixedExpenseSerializer
+
+        loan = Loan.objects.filter(
+            pk=pk, created_by=request.user, is_deleted=False
+        ).first()
+        if not loan:
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if loan.installments and loan.installments > 1:
+            return Response(
+                {"detail": "Este empréstimo já tem um plano de pagamento."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        installment_count = request.data.get("installments")
+        if not installment_count or int(installment_count) < 2:
+            return Response(
+                {"detail": "installments deve ser um número >= 2."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        remaining_value = loan.value - loan.payed_value
+        schedule = build_equal_installment_schedule(
+            remaining_value,
+            int(installment_count),
+            loan.date,
+            loan.payment_frequency,
+        )
+
+        with transaction.atomic():
+            LoanInstallment.objects.bulk_create(
+                [
+                    LoanInstallment(
+                        loan=loan,
+                        installment_number=item["number"],
+                        value=item["value"],
+                        due_date=item["due_date"],
+                        payed=False,
+                        created_by=request.user,
+                        updated_by=request.user,
+                    )
+                    for item in schedule
+                ]
+            )
+            loan.installments = int(installment_count)
+            loan.save(update_fields=["installments", "updated_at"])
+
+            first = schedule[0]
+            fixed_expense = FixedExpense.objects.create(
+                description=loan.description,
+                default_value=first["value"],
+                category=loan.category,
+                account=loan.account,
+                due_day=first["due_date"].day,
+                is_active=True,
+                allow_value_edit=False,
+                related_loan=loan,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+
+        return Response(
+            {
+                "loan": LoanSerializer(loan).data,
+                "fixed_expense": FixedExpenseSerializer(fixed_expense).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 def _add_months(date, months):
     from calendar import monthrange
 

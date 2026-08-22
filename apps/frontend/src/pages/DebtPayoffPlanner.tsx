@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -350,6 +351,27 @@ export default function DebtPayoffPlanner({
                                     <CalendarDays className="h-3 w-3" />
                                     {formatDate(debt.due_date)}
                                   </span>
+                                )}
+                                {debt.payment_plan_exists ? (
+                                  <Link
+                                    to={debt.type === 'loan' ? '/loans' : '/bills'}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {t('pages.debtPayoff.installmentProgress', {
+                                      current: Math.min(
+                                        debt.installments_paid + 1,
+                                        debt.installments_total
+                                      ),
+                                      total: debt.installments_total,
+                                    })}
+                                  </Link>
+                                ) : (
+                                  <Link
+                                    to={debt.type === 'loan' ? '/loans' : '/bills'}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {t('pages.debtPayoff.createPaymentPlan')}
+                                  </Link>
                                 )}
                               </div>
                             </div>

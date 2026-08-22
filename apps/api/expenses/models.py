@@ -326,6 +326,30 @@ class FixedExpense(BaseModel):
         verbose_name="Último Mês Gerado",
         help_text="Formato: YYYY-MM",
     )
+    related_loan = models.ForeignKey(
+        "loans.Loan",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Empréstimo Vinculado",
+        related_name="fixed_expense_templates",
+        help_text=(
+            "Preenchido quando esta despesa fixa é a parcela de um"
+            " plano de pagamento"
+        ),
+    )
+    related_payable = models.ForeignKey(
+        "payables.Payable",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Conta a Pagar Vinculada",
+        related_name="fixed_expense_templates",
+        help_text=(
+            "Preenchido quando esta despesa fixa é a parcela de um"
+            " plano de pagamento"
+        ),
+    )
 
     class Meta:
         ordering = ["due_day", "description"]
@@ -335,6 +359,8 @@ class FixedExpense(BaseModel):
             models.Index(fields=["account", "is_active"]),
             models.Index(fields=["due_day", "is_active"]),
             models.Index(fields=["credit_card", "is_active"]),
+            models.Index(fields=["related_loan", "is_active"]),
+            models.Index(fields=["related_payable", "is_active"]),
         ]
 
     def clean(self):
@@ -360,6 +386,18 @@ class FixedExpense(BaseModel):
                 {
                     "account": _msg2,
                     "credit_card": _msg2,
+                }
+            )
+
+        if self.related_loan and self.related_payable:
+            _msg3 = (
+                "Uma despesa fixa só pode estar vinculada a um"
+                " empréstimo ou a uma conta a pagar, nunca aos dois."
+            )
+            raise ValidationError(
+                {
+                    "related_loan": _msg3,
+                    "related_payable": _msg3,
                 }
             )
 
