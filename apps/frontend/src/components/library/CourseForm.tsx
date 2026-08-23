@@ -1,19 +1,18 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Atom,
-  Briefcase,
-  Clock,
-  Code2,
-  ExternalLink,
-  Globe,
-  GraduationCap,
-  Layers,
-  MoreHorizontal,
-  Paintbrush,
-  Palette,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+  CubeTransparentIcon as Atom,
+  BriefcaseIcon as Briefcase,
+  ClockIcon as Clock,
+  CodeBracketSquareIcon as Code2,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+  GlobeAltIcon as Globe,
+  AcademicCapIcon as GraduationCap,
+  Square3Stack3DIcon as Layers,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  PaintBrushIcon as Paintbrush,
+  SwatchIcon as Palette,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +39,7 @@ import type {
   CourseStatus,
   IntellectCategory,
 } from '@/types';
+import type { IconComponent } from '@/types/icon';
 
 const courseSchema = z.object({
   title: z.string().min(1),
@@ -83,7 +83,7 @@ const CATEGORIES: IntellectCategory[] = [
   'other',
 ];
 
-const CATEGORY_ICONS: Record<IntellectCategory, LucideIcon> = {
+const CATEGORY_ICONS: Record<IntellectCategory, IconComponent> = {
   technology: Code2,
   languages: Globe,
   design: Palette,

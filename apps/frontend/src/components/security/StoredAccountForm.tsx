@@ -1,16 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Building2,
-  Eye,
-  EyeOff,
-  FileText,
-  Hash,
-  Link2,
-  Loader2,
-  Lock,
-  Search,
-} from 'lucide-react';
+  BuildingOffice2Icon as Building2,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  DocumentTextIcon as FileText,
+  HashtagIcon as Hash,
+  LinkIcon as Link2,
+  ArrowPathIcon as Loader2,
+  LockClosedIcon as Lock,
+  MagnifyingGlassIcon as Search,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

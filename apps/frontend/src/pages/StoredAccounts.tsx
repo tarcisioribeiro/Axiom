@@ -1,19 +1,19 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  EyeOff,
-  ExternalLink,
-  Loader2,
-  Copy,
-  Check,
-  Star,
-  Wallet,
-  Building2,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+  ArrowPathIcon as Loader2,
+  Square2StackIcon as Copy,
+  CheckIcon as Check,
+  StarIcon as Star,
+  WalletIcon as Wallet,
+  BuildingOffice2Icon as Building2,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -604,7 +604,7 @@ export default function StoredAccounts() {
         )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogContent className="custom-scrollbar max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {selectedAccount

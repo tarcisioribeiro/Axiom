@@ -1,5 +1,10 @@
+import {
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  CalendarIcon as Calendar,
+  CurrencyDollarIcon as DollarSign,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingDown, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { StatCard } from '@/components/common/StatCard';

@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  Download,
-  CheckCircle2,
-  Clock,
-  Tag,
-  CircleDot,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowDownTrayIcon as Download,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  TagIcon as Tag,
+  ViewfinderCircleIcon as CircleDot,
+} from '@heroicons/react/24/solid';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -303,7 +303,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             {categoryBreakdown.map(({ cat, pct }, i) => (
               <div
                 key={cat}
-                className={`h-full transition-all ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                className={`h-full transition-[width] ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
                 style={{ width: `${pct}%` }}
                 title={`${translateCategory(cat, 'revenue')}: ${pct.toFixed(1)}%`}
               />
@@ -355,7 +355,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
                   {formatCurrency(parseFloat(revenue.value))}
                 </p>
                 <span
-                  className={`px-xs mt-0.5 inline-block rounded py-0.5 text-[10px] font-medium ${
+                  className={`px-xs text-2xs mt-0.5 inline-block rounded py-0.5 font-medium ${
                     revenue.received
                       ? 'bg-success/10 text-success'
                       : 'bg-warning/10 text-warning'

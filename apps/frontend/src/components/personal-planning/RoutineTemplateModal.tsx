@@ -1,6 +1,12 @@
 /* eslint-disable max-lines */
+import {
+  ArrowDownTrayIcon as Download,
+  ArrowPathIcon as Loader2,
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  UserIcon as User,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

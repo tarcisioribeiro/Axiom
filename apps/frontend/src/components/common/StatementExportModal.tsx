@@ -1,4 +1,8 @@
-import { FileText, Loader2, Download } from 'lucide-react';
+import {
+  DocumentTextIcon as FileText,
+  ArrowPathIcon as Loader2,
+  ArrowDownTrayIcon as Download,
+} from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

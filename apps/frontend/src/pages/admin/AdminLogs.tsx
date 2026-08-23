@@ -1,13 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  RefreshCw,
-  ScrollText,
-  Search,
-  X,
-} from 'lucide-react';
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  FunnelIcon as Filter,
+  ArrowPathIcon as RefreshCw,
+  DocumentTextIcon as ScrollText,
+  MagnifyingGlassIcon as Search,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

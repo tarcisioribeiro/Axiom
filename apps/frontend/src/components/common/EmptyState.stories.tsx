@@ -1,5 +1,9 @@
+import {
+  FolderOpenIcon as FolderOpen,
+  MagnifyingGlassIcon as Search,
+  PlusCircleIcon as PlusCircle,
+} from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
-import { FolderOpen, Search, PlusCircle } from 'lucide-react';
 
 import { EmptyState } from './EmptyState';
 
@@ -26,7 +30,7 @@ export const WithTitle: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: <FolderOpen size={48} />,
+    icon: <FolderOpen className="h-12 w-12" />,
     title: 'Pasta vazia',
     message: 'Não há arquivos nesta pasta.',
   },
@@ -34,7 +38,7 @@ export const WithIcon: Story = {
 
 export const WithAction: Story = {
   args: {
-    icon: <Search size={48} />,
+    icon: <Search className="h-12 w-12" />,
     title: 'Sem resultados',
     message: 'Nenhum resultado foi encontrado para sua busca.',
     action: {
@@ -46,7 +50,7 @@ export const WithAction: Story = {
 
 export const FullFeatured: Story = {
   args: {
-    icon: <PlusCircle size={48} />,
+    icon: <PlusCircle className="h-12 w-12" />,
     title: 'Nenhuma despesa',
     message: 'Você ainda não cadastrou nenhuma despesa. Comece agora!',
     action: {

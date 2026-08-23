@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
+import {
+  ExclamationCircleIcon as AlertCircle,
+  CalendarDaysIcon as CalendarDays,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  ClockIcon as Clock,
+  ShareIcon as GitFork,
+  LinkIcon as Link2,
+  ArrowPathIcon as Loader2,
+  SparklesIcon as Sparkles,
+  BuildingStorefrontIcon as Store,
+  TagIcon as Tag,
+  WalletIcon as Wallet,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertCircle,
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  GitFork,
-  Link2,
-  Loader2,
-  Sparkles,
-  Store,
-  Tag,
-  Wallet,
-  X,
-} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
@@ -535,12 +535,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 {
                   value: 'false',
                   label: t('pages.expenses.form.pending'),
-                  activeClass: 'bg-background text-foreground shadow-sm',
                 },
                 {
                   value: 'true',
                   label: t('pages.expenses.form.paid'),
-                  activeClass: 'bg-success/15 text-success shadow-sm',
+                  accentColor: 'success',
                 },
               ]}
               onChange={(v) => setValue('payed', v === 'true')}

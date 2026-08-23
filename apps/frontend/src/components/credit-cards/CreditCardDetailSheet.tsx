@@ -1,22 +1,22 @@
 /* eslint-disable max-lines */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  CreditCard as CreditCardIcon,
-  Receipt,
-  ShoppingCart,
-  Settings,
-  Wallet,
-  TrendingDown,
-  CalendarDays,
-  Pencil,
-  Trash2,
-  DollarSign,
-  CheckCircle2,
-  AlertTriangle,
-  CircleDot,
-  RotateCcw,
-  Plus,
-} from 'lucide-react';
+  CreditCardIcon,
+  ReceiptRefundIcon as Receipt,
+  ShoppingCartIcon as ShoppingCart,
+  Cog6ToothIcon as Settings,
+  WalletIcon as Wallet,
+  ArrowTrendingDownIcon as TrendingDown,
+  CalendarDaysIcon as CalendarDays,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  CurrencyDollarIcon as DollarSign,
+  CheckCircleIcon as CheckCircle2,
+  ExclamationTriangleIcon as AlertTriangle,
+  ViewfinderCircleIcon as CircleDot,
+  ArrowUturnLeftIcon as RotateCcw,
+  PlusIcon as Plus,
+} from '@heroicons/react/24/solid';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -517,14 +517,14 @@ export function CreditCardDetailSheet({
                   <div className="mt-sm bg-muted h-1.5 w-full overflow-hidden rounded-full">
                     <div
                       className={cn(
-                        'h-full rounded-full transition-all',
+                        'h-full w-full origin-left rounded-full transition-transform',
                         usagePct >= 90
                           ? 'bg-destructive'
                           : usagePct >= 70
                             ? 'bg-warning'
                             : 'bg-success'
                       )}
-                      style={{ width: `${100 - usagePct}%` }}
+                      style={{ transform: `scaleX(${(100 - usagePct) / 100})` }}
                     />
                   </div>
                 </div>

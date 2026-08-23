@@ -1,5 +1,5 @@
+import { FireIcon as Flame } from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
-import { Flame } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 

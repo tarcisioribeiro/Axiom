@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { StarIcon as Star } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -54,7 +54,7 @@ export function StarRating({
           onMouseEnter={() => !disabled && setHoverValue(rating)}
           aria-label={`${rating} estrela${rating > 1 ? 's' : ''}`}
           className={cn(
-            'focus:ring-ring rounded-sm transition-colors duration-150 focus:ring-2 focus:ring-offset-1 focus:outline-none',
+            'focus-visible:ring-ring rounded-sm transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             disabled
               ? 'cursor-not-allowed opacity-50'
               : 'cursor-pointer hover:scale-110'

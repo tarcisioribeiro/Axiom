@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Wallet,
-  ArrowLeftRight,
-  FileUp,
-  RefreshCw,
-  Banknote,
-  ShieldCheck,
-  Building2,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  WalletIcon as Wallet,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  DocumentArrowUpIcon as FileUp,
+  ArrowPathIcon as RefreshCw,
+  BanknotesIcon as Banknote,
+  ShieldCheckIcon as ShieldCheck,
+  BuildingOffice2Icon as Building2,
+} from '@heroicons/react/24/solid';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -389,7 +389,7 @@ export default function Accounts() {
             {balanceDistribution.positiveAccounts.map((acc, i) => (
               <div
                 key={acc.id}
-                className={`h-full transition-all ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
+                className={`h-full transition-[width] ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
                 style={{
                   width: `${(parseFloat(acc.balance) / balanceDistribution.totalPositive) * 100}%`,
                 }}
@@ -560,7 +560,7 @@ export default function Accounts() {
 
       {/* Bank Reconciliation dialog */}
       <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-3xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <ArrowLeftRight className="h-5 w-5" />

@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  EyeOff,
-  ExternalLink,
-  Loader2,
-  Copy,
-  Check,
-  Star,
-  CreditCard as CreditCardIcon,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+  ArrowPathIcon as Loader2,
+  Square2StackIcon as Copy,
+  CheckIcon as Check,
+  StarIcon as Star,
+  CreditCardIcon,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -387,7 +387,7 @@ export default function StoredCards() {
                     {/* Bottom row: holder + expiry/cvv */}
                     <div className="mt-md gap-sm relative flex items-end justify-between">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-medium tracking-widest uppercase opacity-50">
+                        <p className="text-2xs font-medium tracking-widest uppercase opacity-50">
                           {t('pages.storedCards.columns.holder')}
                         </p>
                         <p className="truncate text-sm font-semibold tracking-wide uppercase">
@@ -395,7 +395,7 @@ export default function StoredCards() {
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-[10px] font-medium tracking-widest uppercase opacity-50">
+                        <p className="text-2xs font-medium tracking-widest uppercase opacity-50">
                           {t('pages.storedCards.columns.expiry')}
                         </p>
                         <p className="font-mono text-sm font-semibold">
@@ -540,7 +540,7 @@ export default function StoredCards() {
         )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogContent className="custom-scrollbar max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {selectedCard

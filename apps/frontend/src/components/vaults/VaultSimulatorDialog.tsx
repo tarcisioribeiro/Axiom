@@ -1,4 +1,7 @@
-import { Calculator, TrendingUp } from 'lucide-react';
+import {
+  CalculatorIcon as Calculator,
+  ArrowTrendingUpIcon as TrendingUp,
+} from '@heroicons/react/24/solid';
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

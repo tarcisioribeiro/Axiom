@@ -1,14 +1,14 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import {
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  Vault as VaultIcon,
-  CreditCard,
-  HandCoins,
-  AlertTriangle,
-} from 'lucide-react';
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  WalletIcon as Wallet,
+  LockClosedIcon as VaultIcon,
+  CreditCardIcon as CreditCard,
+  BanknotesIcon as HandCoins,
+  ExclamationTriangleIcon as AlertTriangle,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,4 +1,9 @@
-import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
+import {
+  Square2StackIcon as Copy,
+  ArrowPathIcon as RefreshCw,
+  ArrowPathIcon as Loader2,
+  CheckIcon as Check,
+} from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -243,7 +248,7 @@ export function PasswordGenerator({
               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                 <div
                   className={cn(
-                    'h-full rounded-full transition-all duration-300',
+                    'h-full rounded-full transition-[width,background-color] duration-300',
                     strengthInfo.color,
                     strengthInfo.width
                   )}

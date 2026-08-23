@@ -1,17 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  Atom,
-  Brain,
-  Briefcase,
-  Code2,
-  Globe,
-  Layers,
-  MoreHorizontal,
-  Paintbrush,
-  Palette,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+  CubeTransparentIcon as Atom,
+  LightBulbIcon as Brain,
+  BriefcaseIcon as Briefcase,
+  CodeBracketSquareIcon as Code2,
+  GlobeAltIcon as Globe,
+  Square3Stack3DIcon as Layers,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  PaintBrushIcon as Paintbrush,
+  SwatchIcon as Palette,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +36,7 @@ import type {
   SkillProficiency,
   SkillStatus,
 } from '@/types';
+import type { IconComponent } from '@/types/icon';
 
 const skillSchema = z.object({
   name: z.string().min(1),
@@ -75,7 +75,7 @@ const CATEGORIES: IntellectCategory[] = [
   'other',
 ];
 
-const CATEGORY_ICONS: Record<IntellectCategory, LucideIcon> = {
+const CATEGORY_ICONS: Record<IntellectCategory, IconComponent> = {
   technology: Code2,
   languages: Globe,
   design: Palette,
@@ -113,7 +113,7 @@ function ProficiencySelector({
           type="button"
           onClick={() => onChange(lvl)}
           className={cn(
-            'gap-xs p-sm flex flex-col items-center rounded-lg border-2 transition-all',
+            'gap-xs p-sm flex flex-col items-center rounded-lg border-2 transition',
             value === lvl
               ? 'border-category-intellect bg-category-intellect/10 shadow-sm'
               : 'border-border bg-background hover:border-category-intellect/40 hover:bg-category-intellect/5'
@@ -136,7 +136,7 @@ function ProficiencySelector({
           </div>
           <span
             className={cn(
-              'text-center text-[10px] leading-tight font-medium',
+              'text-2xs text-center leading-tight font-medium',
               value === lvl ? 'text-category-intellect' : 'text-muted-foreground'
             )}
           >
@@ -260,7 +260,7 @@ export function SkillForm({
                 type="button"
                 onClick={() => setValue('status', s)}
                 className={cn(
-                  'px-sm py-sm flex-1 rounded-lg border-2 text-xs font-semibold transition-all',
+                  'px-sm py-sm flex-1 rounded-lg border-2 text-xs font-semibold transition',
                   currentStatus === s
                     ? STATUS_COLORS[s]
                     : 'border-border bg-background text-muted-foreground hover:border-border/80'

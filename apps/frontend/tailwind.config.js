@@ -163,13 +163,13 @@ export default {
         'bounce-in': {
           '0%': {
             opacity: '0',
-            transform: 'translate(-50%, -50%) scale(0.3)',
+            transform: 'translate(-50%, -50%) scale(0.92)',
           },
           '50%': {
-            transform: 'translate(-50%, -50%) scale(1.05)',
+            transform: 'translate(-50%, -50%) scale(1.03)',
           },
           '70%': {
-            transform: 'translate(-50%, -50%) scale(0.9)',
+            transform: 'translate(-50%, -50%) scale(0.98)',
           },
           '100%': {
             opacity: '1',
@@ -183,28 +183,34 @@ export default {
         },
       },
       animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-overlay-hide': 'dialog-overlay-hide 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-show': 'dialog-content-show 250ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-hide': 'dialog-content-hide 250ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-up-fade': 'slide-up-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'slide-down-fade': 'slide-down-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-overlay-show': 'dialog-overlay-show 200ms var(--ease-out)',
+        'dialog-overlay-hide': 'dialog-overlay-hide 200ms var(--ease-out)',
+        'dialog-content-show': 'dialog-content-show 250ms var(--ease-out)',
+        'dialog-content-hide': 'dialog-content-hide 250ms var(--ease-out)',
+        'slide-up-fade': 'slide-up-fade 300ms var(--ease-out)',
+        'slide-down-fade': 'slide-down-fade 300ms var(--ease-out)',
         'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         'shake': 'shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97)',
       },
       transitionDuration: {
         fast: 'var(--duration-fast)',
         normal: 'var(--duration-normal)',
+        medium: 'var(--duration-medium)',
         slow: 'var(--duration-slow)',
+        150: '150ms',
         250: '250ms',
+        500: '500ms',
       },
       transitionTimingFunction: {
         spring: 'var(--ease-spring)',
+        out: 'var(--ease-out)',
+        'in-out': 'var(--ease-in-out)',
       },
       backdropBlur: {
         xs: '2px',
       },
       fontSize: {
+        '2xs': ['var(--text-2xs)', { lineHeight: 'var(--leading-2xs)' }],
         xs: ['var(--text-xs)', { lineHeight: 'var(--leading-xs)' }],
         sm: ['var(--text-sm)', { lineHeight: 'var(--leading-sm)' }],
         base: ['var(--text-base)', { lineHeight: 'var(--leading-base)' }],
@@ -234,5 +240,13 @@ export default {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [
+    require('@tailwindcss/forms'),
+    // `hoverable:` — @media (hover: hover) and (pointer: fine), para gatear
+    // hover:scale/translate/etc. em telas de toque (onde :hover "gruda" após
+    // o tap). Uso: hoverable:hover:-translate-y-px em vez de hover:-translate-y-px.
+    function ({ addVariant }) {
+      addVariant('hoverable', '@media (hover: hover) and (pointer: fine)');
+    },
+  ],
 }

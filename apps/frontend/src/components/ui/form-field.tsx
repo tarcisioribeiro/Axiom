@@ -1,4 +1,8 @@
-import { Check, X, Loader2 } from 'lucide-react';
+import {
+  CheckIcon as Check,
+  XMarkIcon as X,
+  ArrowPathIcon as Loader2,
+} from '@heroicons/react/24/solid';
 import * as React from 'react';
 
 import { Label } from '@/components/ui/label';

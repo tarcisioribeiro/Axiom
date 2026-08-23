@@ -1,12 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
 import {
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  RotateCcw,
-  Send,
-  XCircle,
-} from 'lucide-react';
+  ExclamationTriangleIcon as AlertTriangle,
+  CheckCircleIcon as CheckCircle2,
+  ArrowPathIcon as RefreshCw,
+  ArrowUturnLeftIcon as RotateCcw,
+  PaperAirplaneIcon as Send,
+  XCircleIcon as XCircle,
+} from '@heroicons/react/24/solid';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

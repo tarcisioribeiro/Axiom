@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRightIcon as ArrowRight } from '@heroicons/react/24/solid';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

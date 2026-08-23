@@ -1,16 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  Lock,
-  Pencil,
-  RefreshCw,
-  X,
-} from 'lucide-react';
+  ExclamationTriangleIcon as AlertTriangle,
+  CheckIcon as Check,
+  ChevronDownIcon as ChevronDown,
+  ChevronRightIcon as ChevronRight,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  LockClosedIcon as Lock,
+  PencilIcon as Pencil,
+  ArrowPathIcon as RefreshCw,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,13 +1,13 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  BadgeDollarSign,
-  Building2,
-  CreditCard,
-  Hash,
-  Landmark,
-  ShieldAlert,
-} from 'lucide-react';
+  CurrencyDollarIcon as BadgeDollarSign,
+  BuildingOffice2Icon as Building2,
+  CreditCardIcon as CreditCard,
+  HashtagIcon as Hash,
+  BuildingLibraryIcon as Landmark,
+  ShieldExclamationIcon as ShieldAlert,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -157,7 +157,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     setValue('account_type', key as AccountFormData['account_type'])
                   }
                   disabled={isLoading}
-                  className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition-all ${
+                  className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition ${
                     accountType === key
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'

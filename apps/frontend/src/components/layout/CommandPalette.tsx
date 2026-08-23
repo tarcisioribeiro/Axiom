@@ -1,5 +1,8 @@
+import {
+  MagnifyingGlassIcon as Search,
+  CommandLineIcon as CommandIcon,
+} from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Command as CommandIcon } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 

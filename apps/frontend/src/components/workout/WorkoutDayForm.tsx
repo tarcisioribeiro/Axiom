@@ -1,16 +1,16 @@
 /* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable max-lines */
 import {
-  Activity,
-  Calendar,
-  Clock,
-  Dumbbell,
-  Flame,
-  Layers,
-  Loader2,
-  Target,
-  Zap,
-} from 'lucide-react';
+  BoltIcon as Activity,
+  CalendarIcon as Calendar,
+  ClockIcon as Clock,
+  FireIcon as Dumbbell,
+  FireIcon as Flame,
+  Square3Stack3DIcon as Layers,
+  ArrowPathIcon as Loader2,
+  ViewfinderCircleIcon as Target,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -228,7 +228,7 @@ export function WorkoutDayForm({
                 type="button"
                 onClick={() => setValue('day_of_week', selected ? '' : i)}
                 className={cn(
-                  'px-sm rounded-full border py-1 text-xs font-medium transition-all',
+                  'px-sm rounded-full border py-1 text-xs font-medium transition',
                   selected
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -256,7 +256,7 @@ export function WorkoutDayForm({
                   type="button"
                   onClick={() => toggleChip(label)}
                   className={cn(
-                    'px-sm rounded-full border py-1 text-xs font-medium transition-all',
+                    'px-sm rounded-full border py-1 text-xs font-medium transition',
                     selectedChips.includes(label)
                       ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                       : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'

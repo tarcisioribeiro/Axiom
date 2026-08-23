@@ -1,17 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
 import {
-  Activity,
-  AlertTriangle,
-  CheckCircle2,
-  Database,
-  HardDrive,
-  Mail,
-  RefreshCw,
-  Server,
-  Wifi,
-  XCircle,
-  Zap,
-} from 'lucide-react';
+  BoltIcon as Activity,
+  ExclamationTriangleIcon as AlertTriangle,
+  CheckCircleIcon as CheckCircle2,
+  CircleStackIcon as Database,
+  ServerStackIcon as HardDrive,
+  EnvelopeIcon as Mail,
+  ArrowPathIcon as RefreshCw,
+  ServerIcon as Server,
+  WifiIcon as Wifi,
+  XCircleIcon as XCircle,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -94,7 +94,7 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
           <div className="bg-secondary h-1.5 w-full rounded-full">
             <div
               className={cn(
-                'h-1.5 rounded-full transition-all',
+                'h-1.5 rounded-full transition',
                 check.free_percent < 10 ? 'bg-destructive' : 'bg-green-500'
               )}
               style={{ width: `${check.free_percent}%` }}

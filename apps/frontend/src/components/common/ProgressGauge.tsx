@@ -42,7 +42,7 @@ export function ProgressGauge({
           <span className="text-lg leading-none font-bold tabular-nums">{label}</span>
         )}
         {sublabel && (
-          <span className="text-muted-foreground mt-0.5 text-[10px]">{sublabel}</span>
+          <span className="text-muted-foreground text-2xs mt-0.5">{sublabel}</span>
         )}
       </div>
     </CircularProgress>

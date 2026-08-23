@@ -1,28 +1,28 @@
 /* eslint-disable max-lines */
+import {
+  ExclamationCircleIcon as AlertCircle,
+  BookOpenIcon as BookOpen,
+  CalendarDaysIcon as CalendarDays,
+  CheckCircleIcon as CheckCircle2,
+  ChevronDownIcon as ChevronDown,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ClockIcon as Clock,
+  PencilSquareIcon as Edit,
+  FireIcon as Flame,
+  ArrowPathIcon as Loader2,
+  MoonIcon as Moon,
+  PlusIcon as Plus,
+  CakeIcon as Salad,
+  MagnifyingGlassIcon as Search,
+  SparklesIcon as Sparkles,
+  SunIcon as Sun,
+  SunIcon as Sunrise,
+  TrashIcon as Trash2,
+  CakeIcon as UtensilsCrossed,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  AlertCircle,
-  BookOpen,
-  CalendarDays,
-  CheckCircle2,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Edit,
-  Flame,
-  Loader2,
-  Moon,
-  Plus,
-  Salad,
-  Search,
-  Sparkles,
-  Sun,
-  Sunrise,
-  Trash2,
-  UtensilsCrossed,
-} from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -50,6 +50,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -798,7 +799,7 @@ export default function NutritionPage() {
                         fill="none"
                         strokeWidth="7"
                         strokeLinecap="round"
-                        className="stroke-category-nutrition transition-all duration-500"
+                        className="stroke-category-nutrition transition duration-500"
                         strokeDasharray={CIRC}
                         strokeDashoffset={dashOffset}
                       />
@@ -966,7 +967,7 @@ export default function NutritionPage() {
 
         {/* ── Dialog ────────────────────────────────────────────────────── */}
         <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
-          <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
+          <DialogContent className="max-w-xl">
             <DialogHeader>
               <DialogTitle>{dialogTitle()}</DialogTitle>
               <DialogDescription>{dialogDesc()}</DialogDescription>
@@ -1270,7 +1271,7 @@ function MealTypeCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
             <div className="border-border bg-card p-md border-t">
@@ -1427,7 +1428,7 @@ function MealTimeline({
               {theme.label && !log && !isLate && (
                 <div
                   className={cn(
-                    'px-sm border-b py-0.5 text-[10px] font-semibold tracking-wider uppercase',
+                    'px-sm text-2xs border-b py-0.5 font-semibold tracking-wider uppercase',
                     theme.border,
                     theme.iconColor
                   )}
@@ -1540,7 +1541,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
   const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
-    <div className="group gap-sm border-border bg-card p-md hover:border-category-nutrition/40 flex items-center rounded-lg border transition-all hover:shadow-sm">
+    <div className="group gap-sm border-border bg-card p-md hover:border-category-nutrition/40 flex items-center rounded-lg border transition hover:shadow-sm">
       <div className="bg-category-nutrition/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
         <span className="text-category-nutrition text-base font-bold">{initial}</span>
       </div>
@@ -1646,7 +1647,7 @@ function IngredientList({ ingredients }: { ingredients: MenuOptionIngredient[] }
               <div key={ing.id}>
                 <IngredientItem ing={ing} />
                 {idx < items.length - 1 && (
-                  <p className="text-category-nutrition/60 ml-3 text-[10px] font-semibold tracking-wider uppercase">
+                  <p className="text-category-nutrition/60 text-2xs ml-3 font-semibold tracking-wider uppercase">
                     {t('pages.nutritionMealTypes.ingredientOr')}
                   </p>
                 )}

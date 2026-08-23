@@ -1,7 +1,7 @@
+import { ClockIcon as Clock, XMarkIcon as X } from '@heroicons/react/24/solid';
 import flatpickr from 'flatpickr';
 import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
-import { Clock, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -118,7 +118,7 @@ export function TimePicker({
           'py-sm h-10 w-full pr-10 pl-10',
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
-          'focus:border-primary focus:ring-ring focus:ring-2 focus:outline-none',
+          'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
           'transition-all duration-200',
           'hover:border-primary/40',
           disabled && 'cursor-not-allowed opacity-50'

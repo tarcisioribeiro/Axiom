@@ -1,12 +1,12 @@
 import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  Plus,
-  Trash2,
-  X,
-} from 'lucide-react';
+  CheckCircleIcon as CheckCircle2,
+  ChevronDownIcon as ChevronDown,
+  ChevronRightIcon as ChevronRight,
+  StopCircleIcon as Circle,
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -110,10 +110,10 @@ export function FocusBlockCard({
         <div className="mx-md mb-xs bg-muted/50 h-1 overflow-hidden rounded-full">
           <div
             className={cn(
-              'h-full rounded-full transition-all duration-500',
+              'h-full w-full origin-left rounded-full transition-transform duration-500',
               isAllDone ? 'bg-success' : 'bg-primary'
             )}
-            style={{ width: `${progressPct}%` }}
+            style={{ transform: `scaleX(${progressPct / 100})` }}
           />
         </div>
       )}

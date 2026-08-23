@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
+import {
+  BookOpenIcon as BookOpen,
+  LightBulbIcon as Brain,
+  ClockIcon as Clock,
+  PencilSquareIcon as Edit,
+  AcademicCapIcon as GraduationCap,
+  Squares2X2Icon as LayoutGrid,
+  PlusIcon as Plus,
+  SignalIcon as Radar,
+  MagnifyingGlassIcon as Search,
+  TrashIcon as Trash2,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  BookOpen,
-  Brain,
-  Clock,
-  Edit,
-  GraduationCap,
-  LayoutGrid,
-  Plus,
-  Radar,
-  Search,
-  Trash2,
-} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -124,14 +124,14 @@ function SkillCard({
 
       {(skill.books.length > 0 || skill.courses.length > 0) && (
         <div className="space-y-xs border-border/40 pt-xs border-t">
-          <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+          <p className="text-muted-foreground text-2xs font-semibold tracking-wider uppercase">
             {t('pages.skills.developedWith')}
           </p>
           <div className="gap-xs flex flex-wrap">
             {skill.books.slice(0, 2).map((b) => (
               <span
                 key={b.id}
-                className="bg-primary/10 px-xs text-primary flex items-center gap-0.5 rounded-full py-0.5 text-[10px]"
+                className="bg-primary/10 px-xs text-primary text-2xs flex items-center gap-0.5 rounded-full py-0.5"
               >
                 <BookOpen className="h-2.5 w-2.5" />
                 {b.title.length > 18 ? b.title.slice(0, 18) + '…' : b.title}
@@ -140,14 +140,14 @@ function SkillCard({
             {skill.courses.slice(0, 2).map((c) => (
               <span
                 key={c.id}
-                className="bg-info/10 px-xs text-info flex items-center gap-0.5 rounded-full py-0.5 text-[10px]"
+                className="bg-info/10 px-xs text-info text-2xs flex items-center gap-0.5 rounded-full py-0.5"
               >
                 <GraduationCap className="h-2.5 w-2.5" />
                 {c.title.length > 18 ? c.title.slice(0, 18) + '…' : c.title}
               </span>
             ))}
             {skill.books.length + skill.courses.length > 4 && (
-              <span className="bg-muted px-xs text-muted-foreground rounded-full py-0.5 text-[10px]">
+              <span className="bg-muted px-xs text-muted-foreground text-2xs rounded-full py-0.5">
                 +{skill.books.length + skill.courses.length - 4}
               </span>
             )}
