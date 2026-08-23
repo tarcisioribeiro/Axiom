@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
+import {
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  CreditCardIcon,
+  CalendarIcon as Calendar,
+  WalletIcon as Wallet,
+  ReceiptRefundIcon as Receipt,
+  FunnelIcon as Filter,
+  ArrowUturnLeftIcon as RotateCcw,
+  ArrowTrendingDownIcon as TrendingDown,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  CreditCard as CreditCardIcon,
-  Calendar,
-  Wallet,
-  Receipt,
-  Filter,
-  RotateCcw,
-  TrendingDown,
-} from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -46,6 +46,7 @@ import {
 import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import {
   getCurrentCreditCardBill,
@@ -605,7 +606,10 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                 key={card.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: creditCards.indexOf(card) * 0.05 }}
+                transition={{
+                  duration: DURATION.fast,
+                  delay: creditCards.indexOf(card) * 0.05,
+                }}
                 whileHover={{ y: -2, transition: { duration: 0.15 } }}
                 whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
                 onClick={() => setHubCard(card)}
@@ -772,7 +776,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
       {/* Bills dialog */}
       <Dialog open={isBillsOpen} onOpenChange={setIsBillsOpen}>
-        <DialogContent className="custom-scrollbar max-h-[95vh] w-full max-w-6xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-h-[95vh] w-full max-w-6xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <Receipt className="h-5 w-5" />
@@ -921,7 +925,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
 
       {/* Bill payment dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('pages.creditCardBills.payTitle')}</DialogTitle>
             <DialogDescription>{t('pages.creditCardBills.payDesc')}</DialogDescription>

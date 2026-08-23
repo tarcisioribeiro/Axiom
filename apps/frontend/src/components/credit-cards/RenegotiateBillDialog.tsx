@@ -1,4 +1,7 @@
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  ExclamationCircleIcon as AlertCircle,
+  ArrowPathIcon as RefreshCw,
+} from '@heroicons/react/24/solid';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 

@@ -1,33 +1,33 @@
 /* eslint-disable max-lines */
+import {
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  ArrowPathIcon as Loader2,
+  Square2StackIcon as Copy,
+  CheckIcon as Check,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+  KeyIcon as Key,
+  ShareIcon as Share2,
+  StarIcon as Star,
+  SparklesIcon as Wand2,
+  ArrowUpTrayIcon as Upload,
+  XMarkIcon as X,
+  CalendarIcon as Calendar,
+  UserIcon as User,
+  GlobeAltIcon as Globe,
+  DocumentTextIcon as FileText,
+  TagIcon as Tag,
+  ShieldExclamationIcon as ShieldAlert,
+  ShieldCheckIcon as ShieldCheck,
+  ArrowPathIcon as History,
+  ShieldCheckIcon as Shield,
+} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  EyeOff,
-  Loader2,
-  Copy,
-  Check,
-  ExternalLink,
-  Key,
-  Share2,
-  Star,
-  Wand2,
-  Upload,
-  X,
-  Calendar,
-  User,
-  Globe,
-  FileText,
-  Tag,
-  ShieldAlert,
-  ShieldCheck,
-  History,
-  Shield,
-} from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
@@ -73,6 +73,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
@@ -1224,7 +1225,7 @@ export default function Passwords() {
                 initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 40 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
+                transition={{ duration: DURATION.fast, ease: 'easeOut' }}
                 className="hidden lg:block lg:w-[60%] lg:shrink-0"
               >
                 <div className="bg-card sticky top-4 rounded-lg border shadow-lg">
@@ -1292,7 +1293,7 @@ export default function Passwords() {
             if (!open) void refresh();
           }}
         >
-          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogContent className="custom-scrollbar max-w-4xl">
             <DialogHeader>
               <DialogTitle>{t('pages.passwordImport.title')}</DialogTitle>
               <DialogDescription>

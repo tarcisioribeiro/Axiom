@@ -1,4 +1,8 @@
-import { Check, Moon, Sun } from 'lucide-react';
+import {
+  CheckIcon as Check,
+  MoonIcon as Moon,
+  SunIcon as Sun,
+} from '@heroicons/react/24/solid';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -87,7 +91,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         <Button
           variant="ghost"
           size="icon"
-          className={cn('hover:bg-secondary transition-all', className)}
+          className={cn('hover:bg-secondary transition', className)}
           aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
         >
           {isDark ? (

@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Edit,
-  Trash2,
-  BookOpen,
-  User,
-  UserPen,
-  Calendar,
-  UserCircle,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilSquareIcon as Edit,
+  TrashIcon as Trash2,
+  BookOpenIcon as BookOpen,
+  UserIcon as User,
+  UserPlusIcon as UserPen,
+  CalendarIcon as Calendar,
+  UserCircleIcon as UserCircle,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

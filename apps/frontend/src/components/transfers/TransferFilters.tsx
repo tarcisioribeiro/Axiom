@@ -1,4 +1,4 @@
-import { CircleDot } from 'lucide-react';
+import { ViewfinderCircleIcon as CircleDot } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { FilterBar } from '@/components/common/FilterBar';

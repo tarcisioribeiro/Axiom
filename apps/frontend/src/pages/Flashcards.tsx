@@ -1,7 +1,13 @@
 /* eslint-disable max-lines */
+import {
+  LightBulbIcon as Brain,
+  ChevronLeftIcon as ChevronLeft,
+  PlusIcon as Plus,
+  ArrowUturnLeftIcon as RotateCcw,
+  StarIcon as Star,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Brain, ChevronLeft, Plus, RotateCcw, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -24,6 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import {
@@ -256,7 +263,7 @@ export default function Flashcards() {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: DURATION.fast }}
               className="space-y-md"
             >
               {currentCard ? (

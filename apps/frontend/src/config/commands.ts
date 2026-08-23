@@ -1,38 +1,39 @@
 /* eslint-disable max-lines */
-import type { LucideIcon } from 'lucide-react';
 import {
-  Home,
-  Wallet,
-  Shield,
-  ShieldCheck,
-  Library,
-  Calendar,
-  LayoutDashboard,
-  CreditCard,
-  Receipt,
-  TrendingDown,
-  TrendingUp,
-  CalendarClock,
-  ArrowLeftRight,
-  HandCoins,
-  Users,
-  Key,
-  Archive,
-  BookOpen,
-  UserPen,
-  Building2,
-  FileText,
-  BookMarked,
-  CheckCircle2,
-  Target,
-  Vault,
-  LogOut,
-  Moon,
-  Sun,
-  Plus,
-  ShoppingCart,
-  FileUp,
-} from 'lucide-react';
+  HomeIcon as Home,
+  WalletIcon as Wallet,
+  ShieldCheckIcon as Shield,
+  ShieldCheckIcon as ShieldCheck,
+  BuildingLibraryIcon as Library,
+  CalendarIcon as Calendar,
+  Squares2X2Icon as LayoutDashboard,
+  CreditCardIcon as CreditCard,
+  ReceiptRefundIcon as Receipt,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  CalendarDateRangeIcon as CalendarClock,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  BanknotesIcon as HandCoins,
+  UsersIcon as Users,
+  KeyIcon as Key,
+  ArchiveBoxIcon as Archive,
+  BookOpenIcon as BookOpen,
+  UserPlusIcon as UserPen,
+  BuildingOffice2Icon as Building2,
+  DocumentTextIcon as FileText,
+  BookmarkSquareIcon as BookMarked,
+  CheckCircleIcon as CheckCircle2,
+  ViewfinderCircleIcon as Target,
+  LockClosedIcon as Vault,
+  ArrowLeftOnRectangleIcon as LogOut,
+  MoonIcon as Moon,
+  SunIcon as Sun,
+  PlusIcon as Plus,
+  ShoppingCartIcon as ShoppingCart,
+  DocumentArrowUpIcon as FileUp,
+} from '@heroicons/react/24/solid';
+
+import type { IconComponent } from '@/types/icon';
 
 export type CommandSection = 'navigation' | 'actions' | 'settings';
 
@@ -40,7 +41,7 @@ export interface Command {
   id: string;
   title: string;
   description?: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   href?: string;
   action?: () => void;
   keywords: string[];

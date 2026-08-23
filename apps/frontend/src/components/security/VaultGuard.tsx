@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  Lock,
-  Shield,
-  Eye,
-  EyeOff,
-  Clock,
-  AlertTriangle,
-  Key,
-  RefreshCw,
-  Keyboard,
-} from 'lucide-react';
+  LockClosedIcon as Lock,
+  ShieldCheckIcon as Shield,
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  ClockIcon as Clock,
+  ExclamationTriangleIcon as AlertTriangle,
+  KeyIcon as Key,
+  ArrowPathIcon as RefreshCw,
+  CommandLineIcon as Keyboard,
+} from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -116,7 +116,7 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
           <div
             key={i}
             className={cn(
-              'h-1 flex-1 rounded-full transition-all',
+              'h-1 flex-1 rounded-full transition-colors',
               i <= score ? color : 'bg-muted'
             )}
           />

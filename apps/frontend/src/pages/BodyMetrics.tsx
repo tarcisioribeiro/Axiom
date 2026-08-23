@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
+import {
+  BoltIcon as Activity,
+  ChartBarSquareIcon as BarChart3,
+  FireIcon as Dumbbell,
+  PencilSquareIcon as Edit,
+  Square3Stack3DIcon as Layers,
+  ReceiptPercentIcon as Percent,
+  ChartPieIcon as PieChart,
+  PlusIcon as Plus,
+  ScaleIcon as Ratio,
+  AdjustmentsHorizontalIcon as Ruler,
+  ScaleIcon as Scale,
+  TrashIcon as Trash2,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInYears, format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Activity,
-  BarChart3,
-  Dumbbell,
-  Edit,
-  Layers,
-  Percent,
-  PieChart,
-  Plus,
-  Ratio,
-  Ruler,
-  Scale,
-  Trash2,
-} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -811,7 +811,7 @@ export default function BodyMetrics() {
                             key={key}
                             onClick={() => toggleMetric(key)}
                             className={cn(
-                              'gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium transition-all duration-200',
+                              'gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium transition duration-200',
                               isActive ? 'shadow-sm' : 'hover:opacity-70'
                             )}
                             style={{
@@ -1326,7 +1326,7 @@ export default function BodyMetrics() {
 
         {/* ── Dialog de formulário ── */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editing

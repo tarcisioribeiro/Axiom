@@ -1,36 +1,36 @@
 /* eslint-disable max-lines */
+import {
+  BuildingLibraryIcon as Library,
+  BookOpenIcon as BookOpen,
+  UserIcon as User,
+  BuildingOffice2Icon as Building2,
+  DocumentTextIcon as FileText,
+  BookmarkSquareIcon as BookMarked,
+  DocumentCheckIcon as BookCheck,
+  ClockIcon as Clock,
+  BoltIcon as Zap,
+  CalendarDateRangeIcon as CalendarClock,
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  MinusIcon as Minus,
+  StarIcon as Star,
+  FireIcon as Flame,
+  ArrowDownTrayIcon as Download,
+  AcademicCapIcon as GraduationCap,
+  LightBulbIcon as Brain,
+  CheckCircleIcon as CheckCircle2,
+  PlayIcon as Play,
+  PauseIcon as Pause,
+  TrophyIcon as Award,
+  ChartPieIcon as PieChart,
+  ChartBarIcon as BarChart2,
+  BoltIcon as Activity,
+  ArrowUturnLeftIcon as RotateCcw,
+  ClockIcon as Timer,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Library,
-  BookOpen,
-  User,
-  Building2,
-  FileText,
-  BookMarked,
-  BookCheck,
-  Clock,
-  Zap,
-  CalendarClock,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Star,
-  Flame,
-  Download,
-  GraduationCap,
-  Brain,
-  CheckCircle2,
-  Play,
-  Pause,
-  Award,
-  PieChart,
-  BarChart2,
-  Activity,
-  RotateCcw,
-  Timer,
-} from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -854,7 +854,7 @@ export default function LibraryDashboard() {
                       <div className="gap-sm flex flex-1 items-center">
                         <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                           <div
-                            className={`h-full rounded-full transition-all ${s.colorClass}`}
+                            className={`h-full rounded-full transition-[width] ${s.colorClass}`}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -996,7 +996,7 @@ export default function LibraryDashboard() {
                     <div className="gap-sm flex flex-1 items-center">
                       <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                         <div
-                          className="bg-category-intellect/70 h-full rounded-full transition-all"
+                          className="bg-category-intellect/70 h-full rounded-full transition-[width]"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -1264,7 +1264,7 @@ export default function LibraryDashboard() {
                         <div className="gap-sm flex flex-1 items-center">
                           <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                             <div
-                              className="bg-category-intellect/70 h-full rounded-full transition-all"
+                              className="bg-category-intellect/70 h-full rounded-full transition-[width]"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -1777,7 +1777,7 @@ export default function LibraryDashboard() {
                         </div>
                         <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                           <div
-                            className="h-full rounded-full transition-all"
+                            className="h-full rounded-full transition-[width]"
                             style={{ width: `${pct}%`, backgroundColor: COLORS[index] }}
                           />
                         </div>

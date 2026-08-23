@@ -1,28 +1,28 @@
 /* eslint-disable max-lines */
+import {
+  PlusIcon as Plus,
+  TrophyIcon as Trophy,
+  PencilSquareIcon as Edit,
+  TrashIcon as Trash2,
+  ArrowPathIcon as RefreshCw,
+  ArrowUturnLeftIcon as RotateCcw,
+  NoSymbolIcon as Ban,
+  StarIcon as Star,
+  FireIcon as Flame,
+  TrophyIcon as Award,
+  ArrowPathIcon as History,
+  CalendarIcon as Calendar,
+  ExclamationTriangleIcon as AlertTriangle,
+  ArrowPathIcon as Loader2,
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowDownTrayIcon as Download,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Plus,
-  Trophy,
-  Edit,
-  Trash2,
-  RefreshCw,
-  RotateCcw,
-  Ban,
-  Star,
-  Flame,
-  Award,
-  History,
-  Calendar,
-  AlertTriangle,
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-  Download,
-  CheckCircle2,
-  Clock,
-} from 'lucide-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -48,6 +48,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { formatDate } from '@/lib/formatters';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
@@ -167,7 +168,7 @@ function GoalCard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: DURATION.medium }}
           />
         )}
       </AnimatePresence>
@@ -219,7 +220,7 @@ function GoalCard({
                 )}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(pct, 100)}%` }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                transition={{ duration: DURATION.slow, ease: 'easeOut' }}
               />
             </div>
             <div className="flex justify-between text-sm">
@@ -709,7 +710,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
       {/* Modal edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}

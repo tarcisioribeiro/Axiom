@@ -1,4 +1,8 @@
-import { CheckCircle2, Calendar, Trophy } from 'lucide-react';
+import {
+  CheckCircleIcon as CheckCircle2,
+  CalendarIcon as Calendar,
+  TrophyIcon as Trophy,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

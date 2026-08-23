@@ -4,13 +4,13 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'rounded-lg border border-border/70 bg-card text-card-foreground shadow-soft transition-all duration-200',
+  'rounded-lg border border-border/70 bg-card text-card-foreground shadow-soft transition duration-200',
   {
     variants: {
       variant: {
-        default: 'hover:border-border/80',
+        default: 'hoverable:hover:border-border/80',
         interactive:
-          'cursor-pointer hover:-translate-y-px hover:shadow-medium hover:border-primary/20',
+          'cursor-pointer hoverable:hover:-translate-y-px hoverable:hover:shadow-medium hoverable:hover:border-primary/20',
         elevated: 'shadow-medium',
         flat: 'shadow-none border-transparent',
       },

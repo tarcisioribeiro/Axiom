@@ -1,5 +1,5 @@
+import { ArrowRightIcon as ArrowRight } from '@heroicons/react/24/solid';
 import type { TFunction } from 'i18next';
-import { ArrowRight } from 'lucide-react';
 
 import type { Column } from '@/components/common/DataTable';
 import { Badge } from '@/components/ui/badge';

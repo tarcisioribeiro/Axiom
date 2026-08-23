@@ -1,18 +1,17 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
-import type { LucideIcon } from 'lucide-react';
 import {
-  AlertCircle,
-  ArrowLeftRight,
-  ArrowRight,
-  Building2,
-  CalendarDays,
-  Clock,
-  FileText,
-  Loader2,
-  Wallet,
-  Zap,
-} from 'lucide-react';
+  ExclamationCircleIcon as AlertCircle,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  ArrowRightIcon as ArrowRight,
+  BuildingOffice2Icon as Building2,
+  CalendarDaysIcon as CalendarDays,
+  ClockIcon as Clock,
+  DocumentTextIcon as FileText,
+  ArrowPathIcon as Loader2,
+  WalletIcon as Wallet,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +37,7 @@ import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import type { Account, Transfer, TransferFormData } from '@/types';
+import type { IconComponent } from '@/types/icon';
 
 interface TransferFormProps {
   transfer?: Transfer;
@@ -47,7 +47,7 @@ interface TransferFormProps {
   isLoading?: boolean;
 }
 
-const TRANSFER_TYPE_ICONS: Record<string, LucideIcon> = {
+const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
   pix: Zap,
   ted: Building2,
   doc: FileText,
@@ -214,7 +214,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 key={k}
                 type="button"
                 onClick={() => setValue('category', k)}
-                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition-all ${
+                className={`p-sm flex flex-col items-center gap-1 rounded-lg border text-sm font-medium transition ${
                   watchedCategory === k
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -350,12 +350,11 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 {
                   value: 'false',
                   label: t('common.status.pending'),
-                  activeClass: 'bg-background text-foreground shadow-sm',
                 },
                 {
                   value: 'true',
                   label: t('common.status.completed'),
-                  activeClass: 'bg-success/15 text-success shadow-sm',
+                  accentColor: 'success',
                 },
               ]}
               onChange={(v) => setValue('transfered', v === 'true')}

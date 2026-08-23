@@ -1,14 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
 import {
-  Award,
-  CheckCircle2,
-  Flame,
-  Medal,
-  Star,
-  Target,
-  TrendingUp,
-  Trophy,
-} from 'lucide-react';
+  TrophyIcon as Award,
+  CheckCircleIcon as CheckCircle2,
+  FireIcon as Flame,
+  TrophyIcon as Medal,
+  StarIcon as Star,
+  ViewfinderCircleIcon as Target,
+  ArrowTrendingUpIcon as TrendingUp,
+  TrophyIcon as Trophy,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -142,7 +142,7 @@ export default function Journey() {
                       <span className="mt-xs text-xs font-semibold">
                         {b.code_display}
                       </span>
-                      <span className="text-[10px] opacity-70">{b.level_display}</span>
+                      <span className="text-2xs opacity-70">{b.level_display}</span>
                     </div>
                   ))}
                 </div>
@@ -190,7 +190,7 @@ export default function Journey() {
                             name: ev.badge.code_display,
                           })}
                           <Badge
-                            className={`ml-xs text-[10px] ${BADGE_LEVEL_COLORS[ev.badge.level] ?? ''}`}
+                            className={`ml-xs text-2xs ${BADGE_LEVEL_COLORS[ev.badge.level] ?? ''}`}
                           >
                             {ev.badge.level_display}
                           </Badge>

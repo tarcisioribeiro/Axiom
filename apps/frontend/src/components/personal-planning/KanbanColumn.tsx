@@ -1,7 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CheckCircleIcon as CheckCircle2 } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useCounter } from '@/lib/animations';

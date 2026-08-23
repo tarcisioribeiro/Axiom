@@ -1,4 +1,7 @@
-import { AlertTriangle, HelpCircle } from 'lucide-react';
+import {
+  ExclamationTriangleIcon as AlertTriangle,
+  QuestionMarkCircleIcon as HelpCircle,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

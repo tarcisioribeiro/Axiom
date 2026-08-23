@@ -51,7 +51,7 @@ describe('SearchInput', () => {
 
   it('renders the search icon', () => {
     const { container } = render(<SearchInput value="" onValueChange={vi.fn()} />);
-    // lucide-react Search renders an SVG
+    // the search icon renders an SVG
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
 

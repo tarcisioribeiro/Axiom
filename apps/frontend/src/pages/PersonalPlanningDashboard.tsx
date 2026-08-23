@@ -1,29 +1,29 @@
 /* eslint-disable max-lines */
+import {
+  ViewfinderCircleIcon as Target,
+  CheckCircleIcon as CheckCircle2,
+  CalendarIcon as Calendar,
+  ArrowTrendingUpIcon as TrendingUp,
+  TrophyIcon as Award,
+  ListBulletIcon as ListTodo,
+  FlagIcon as Flag,
+  BoltIcon as Activity,
+  LightBulbIcon as Lightbulb,
+  ChartBarSquareIcon as BarChart3,
+  FireIcon as Flame,
+  FireIcon as Dumbbell,
+  CakeIcon as UtensilsCrossed,
+  ClockIcon as Timer,
+  CakeIcon as Utensils,
+  ClipboardDocumentListIcon as ClipboardList,
+  BoltIcon as Zap,
+  StarIcon as Star,
+  TrophyIcon as Trophy,
+  ChevronDownIcon as ChevronDown,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Target,
-  CheckCircle2,
-  Calendar,
-  TrendingUp,
-  Award,
-  ListTodo,
-  Flag,
-  Activity,
-  Lightbulb,
-  BarChart3,
-  Flame,
-  Dumbbell,
-  UtensilsCrossed,
-  Timer,
-  Utensils,
-  ClipboardList,
-  Zap,
-  Star,
-  Trophy,
-  ChevronDown,
-} from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';
@@ -47,6 +47,7 @@ import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
 import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
+import { DURATION } from '@/lib/animations';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -379,7 +380,7 @@ export default function PersonalPlanningDashboard() {
             key={card.route + card.titleKey}
             onClick={() => void navigate(card.route)}
             className={cn(
-              'gap-sm p-md flex flex-col items-start rounded-lg border text-left transition-all hover:scale-[1.02]',
+              'gap-sm p-md hoverable:hover:scale-[1.02] flex flex-col items-start rounded-lg border text-left transition',
               card.bg
             )}
           >
@@ -643,7 +644,7 @@ export default function PersonalPlanningDashboard() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: DURATION.fast }}
             className="overflow-hidden"
           >
             <div className="space-y-lg">
@@ -818,7 +819,7 @@ export default function PersonalPlanningDashboard() {
                                 <div className="gap-sm flex flex-1 items-center">
                                   <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                                     <div
-                                      className="bg-primary/70 h-full rounded-full transition-all"
+                                      className="bg-primary/70 h-full rounded-full transition-[width]"
                                       style={{ width: `${pct}%` }}
                                     />
                                   </div>
@@ -866,7 +867,7 @@ export default function PersonalPlanningDashboard() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: DURATION.fast }}
             className="overflow-hidden"
           >
             <div className="space-y-lg">
@@ -1052,7 +1053,7 @@ export default function PersonalPlanningDashboard() {
                             <div className="gap-xs flex items-center">
                               <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                                 <div
-                                  className="bg-primary h-full rounded-full transition-all"
+                                  className="bg-primary h-full rounded-full transition-[width]"
                                   style={{ width: `${barWidth}%` }}
                                 />
                               </div>
@@ -1088,7 +1089,7 @@ export default function PersonalPlanningDashboard() {
                             <div className="gap-sm flex flex-1 items-center">
                               <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                                 <div
-                                  className="bg-primary h-full rounded-full transition-all"
+                                  className="bg-primary h-full rounded-full transition-[width]"
                                   style={{ width: `${day.rate ?? 0}%` }}
                                 />
                               </div>

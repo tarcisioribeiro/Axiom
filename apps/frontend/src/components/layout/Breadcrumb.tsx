@@ -1,4 +1,7 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 

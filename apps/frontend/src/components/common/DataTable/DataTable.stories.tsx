@@ -1,5 +1,5 @@
+import { PencilIcon as Pencil, TrashIcon as Trash2 } from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';

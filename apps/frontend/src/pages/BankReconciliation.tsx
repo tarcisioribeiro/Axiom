@@ -1,13 +1,13 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeftRight,
-  FileUp,
-  RefreshCw,
-  Upload,
-  Search,
-  CheckCircle2,
-} from 'lucide-react';
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  DocumentArrowUpIcon as FileUp,
+  ArrowPathIcon as RefreshCw,
+  ArrowUpTrayIcon as Upload,
+  MagnifyingGlassIcon as Search,
+  CheckCircleIcon as CheckCircle2,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -427,7 +427,7 @@ export default function BankReconciliation() {
                       <div className="bg-muted h-2 overflow-hidden rounded-full">
                         <div
                           className={cn(
-                            'h-full rounded-full transition-all',
+                            'h-full rounded-full transition',
                             matchPct === 100
                               ? 'bg-success'
                               : matchPct >= 70

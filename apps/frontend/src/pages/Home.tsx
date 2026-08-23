@@ -1,23 +1,23 @@
 /* eslint-disable max-lines */
+import {
+  WalletIcon as Wallet,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  CreditCardIcon as CreditCard,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  KeyIcon as Key,
+  LockClosedIcon as Lock,
+  BookOpenIcon as BookOpen,
+  BookmarkSquareIcon as BookMarked,
+  Squares2X2Icon as LayoutDashboard,
+  ShieldCheckIcon as Shield,
+  BuildingLibraryIcon as Library,
+  CalendarIcon as Calendar,
+  ShareIcon as GitFork,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  CreditCard,
-  ArrowLeftRight,
-  Key,
-  Lock,
-  BookOpen,
-  BookMarked,
-  LayoutDashboard,
-  Shield,
-  Library,
-  Calendar,
-  GitFork,
-  ExternalLink,
-} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -131,7 +131,7 @@ export default function Home() {
               <motion.div key={action.href} variants={itemVariants}>
                 <Link
                   to={action.href}
-                  className="gap-sm border-border p-md hover:border-primary hover:bg-accent flex flex-col items-center justify-center rounded-lg border transition-all hover:scale-105"
+                  className="gap-sm border-border p-md hover:border-primary hover:bg-accent hoverable:hover:scale-105 flex flex-col items-center justify-center rounded-lg border transition"
                 >
                   <div className="bg-primary/10 text-primary rounded-full p-3">
                     {action.icon}
@@ -164,7 +164,7 @@ export default function Home() {
                   module: module.title,
                 })}
               >
-                <Card className="hover:border-primary h-full border-2 transition-all hover:scale-[1.02] hover:shadow-md">
+                <Card className="hover:border-primary hoverable:hover:scale-[1.02] h-full border-2 transition hover:shadow-md">
                   <CardHeader>
                     <motion.div
                       className={cn(
@@ -197,7 +197,7 @@ export default function Home() {
 
       {/* Knowledge Graph Widget */}
       <Link to="/library/knowledge-graph" className="block">
-        <Card className="border-primary/20 hover:border-primary transition-all hover:shadow-md">
+        <Card className="border-primary/20 hover:border-primary transition hover:shadow-md">
           <CardHeader className="pb-sm">
             <CardTitle className="gap-sm flex items-center text-sm font-medium">
               <GitFork className="text-primary h-4 w-4" />

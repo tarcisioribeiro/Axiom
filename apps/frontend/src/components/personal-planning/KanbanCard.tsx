@@ -1,14 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
-  GripVertical,
-  Clock,
-  CheckCircle2,
-  Flame,
-  AlertTriangle,
-  Minus,
-} from 'lucide-react';
+  Bars3Icon as GripVertical,
+  ClockIcon as Clock,
+  CheckCircleIcon as CheckCircle2,
+  FireIcon as Flame,
+  ExclamationTriangleIcon as AlertTriangle,
+  MinusIcon as Minus,
+} from '@heroicons/react/24/solid';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
 import { PomodoroTriggerButton } from '@/components/personal-planning/PomodoroTimer';
@@ -19,7 +19,7 @@ import type { TaskCard } from '@/types';
 
 function TaskIconDisplay({ icon }: { icon: string | null | undefined }) {
   const Icon = getIconByName(icon);
-  // eslint-disable-next-line react-hooks/static-components -- Icon is a stable Lucide reference, not a dynamic component
+  // eslint-disable-next-line react-hooks/static-components -- Icon is a stable icon-component reference, not a dynamic component
   return Icon ? <Icon className="h-4 w-4 shrink-0" /> : null;
 }
 

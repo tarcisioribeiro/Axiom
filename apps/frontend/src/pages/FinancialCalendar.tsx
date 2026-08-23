@@ -1,4 +1,10 @@
 /* eslint-disable max-lines */
+import {
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  CalendarDaysIcon as CalendarDays,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import {
   format,
@@ -15,7 +21,6 @@ import {
 } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, CalendarDays, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -364,7 +369,7 @@ export default function FinancialCalendar({
                         />
                       ))}
                       {dayEvents.length > 3 && (
-                        <span className="text-muted-foreground text-[10px]">
+                        <span className="text-muted-foreground text-2xs">
                           +{dayEvents.length - 3}
                         </span>
                       )}

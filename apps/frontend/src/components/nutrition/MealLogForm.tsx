@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CalendarDays,
-  CheckCircle2,
-  Loader2,
-  Moon,
-  StickyNote,
-  Sun,
-  Sunrise,
-  UtensilsCrossed,
-  Zap,
-} from 'lucide-react';
+  CalendarDaysIcon as CalendarDays,
+  CheckCircleIcon as CheckCircle2,
+  ArrowPathIcon as Loader2,
+  MoonIcon as Moon,
+  DocumentTextIcon as StickyNote,
+  SunIcon as Sun,
+  SunIcon as Sunrise,
+  CakeIcon as UtensilsCrossed,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -218,7 +218,7 @@ export function MealLogForm({
       {/* Refeição livre */}
       <div
         className={cn(
-          'gap-sm p-sm flex items-start rounded-lg border-2 transition-all',
+          'gap-sm p-sm flex items-start rounded-lg border-2 transition',
           isFreeMeal ? 'border-primary/30 bg-primary/5' : 'border-border bg-card'
         )}
       >
@@ -256,7 +256,7 @@ export function MealLogForm({
                     setValue('menu_option', isSelected ? undefined : opt.id)
                   }
                   className={cn(
-                    'p-sm rounded-lg border-2 text-left transition-all',
+                    'p-sm rounded-lg border-2 text-left transition',
                     isSelected
                       ? 'bg-category-nutrition/8 border-category-nutrition/50 ring-category-nutrition/20 ring-1'
                       : 'border-border bg-card hover:border-category-nutrition/30 hover:bg-category-nutrition/5'
@@ -265,7 +265,7 @@ export function MealLogForm({
                   <div className="mb-xs gap-xs flex items-center">
                     <div
                       className={cn(
-                        'flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all',
+                        'flex h-5 w-5 items-center justify-center rounded-full border-2 transition',
                         isSelected
                           ? 'border-category-nutrition bg-category-nutrition'
                           : 'border-border'

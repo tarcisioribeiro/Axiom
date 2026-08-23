@@ -287,7 +287,16 @@ lint:commits:
     # @commitlint/config-conventional resolves correctly. before_script (from
     # .node_base) already cd's into apps/frontend/, so npx finds the config here.
     # .cjs extension is required because apps/frontend/package.json has "type":"module".
-    - npx commitlint --from "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --to "$CI_COMMIT_SHA"
+    #
+    # CI_MERGE_REQUEST_DIFF_BASE_SHA can go stale on long-lived branches that
+    # weren't rebased onto the target branch before the last push — it then
+    # points far behind the target branch's tip, and commitlint ends up
+    # relinting hundreds of already-merged historical commits instead of just
+    # this MR's own commits. Compute the merge-base ourselves instead, the
+    # same way ci-check.sh approximates it locally.
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" --quiet
+    - MERGE_BASE_SHA=$(git merge-base HEAD "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME")
+    - npx commitlint --from "$MERGE_BASE_SHA" --to "$CI_COMMIT_SHA"
 
 lint:secrets:
   image:

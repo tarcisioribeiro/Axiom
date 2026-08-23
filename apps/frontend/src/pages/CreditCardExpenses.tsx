@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Filter,
-  ShoppingCart,
-  Calendar,
-  DollarSign,
-  Link2,
-  Tag,
-  CircleDot,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  FunnelIcon as Filter,
+  ShoppingCartIcon as ShoppingCart,
+  CalendarIcon as Calendar,
+  CurrencyDollarIcon as DollarSign,
+  LinkIcon as Link2,
+  TagIcon as Tag,
+  ViewfinderCircleIcon as CircleDot,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -720,7 +720,7 @@ export default function CreditCardExpenses({
             {categoryBreakdown.map(({ cat, pct }, i) => (
               <div
                 key={cat}
-                className={`h-full transition-all ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                className={`h-full transition-[width] ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
                 style={{ width: `${pct}%` }}
                 title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
               />
@@ -1128,7 +1128,7 @@ export default function CreditCardExpenses({
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {selectedPurchase
@@ -1152,7 +1152,7 @@ export default function CreditCardExpenses({
       </Dialog>
 
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {t('pages.creditCardExpenses.editInstallmentTitle')}

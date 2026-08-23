@@ -1,5 +1,8 @@
+import {
+  ChartBarIcon as BarChart2,
+  ArrowPathIcon as RefreshCw,
+} from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,6 +1,13 @@
 /* eslint-disable max-lines */
+import {
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  ArrowPathIcon as History,
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, History, Plus, Trash2, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -364,13 +371,11 @@ function RuleFormDialog({
                   {
                     value: 'active',
                     label: t('pages.automationRules.active'),
-                    activeClass:
-                      'bg-emerald-500/20 text-emerald-600 border-emerald-500/30',
+                    accentColor: 'success',
                   },
                   {
                     value: 'inactive',
                     label: t('pages.automationRules.inactive'),
-                    activeClass: 'bg-muted text-muted-foreground border-border',
                   },
                 ]}
               />
@@ -521,7 +526,7 @@ function RuleCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border-border/60 bg-card p-md rounded-lg border transition-all hover:shadow-sm">
+    <div className="border-border/60 bg-card p-md rounded-lg border transition hover:shadow-sm">
       <div className="gap-sm flex items-start justify-between">
         <div className="flex-1">
           <div className="gap-sm flex items-center">

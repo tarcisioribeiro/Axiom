@@ -1,5 +1,12 @@
 /* eslint-disable react-hooks/incompatible-library */
-import { Check, FileText, Mail, Phone, Shield, User } from 'lucide-react';
+import {
+  CheckIcon as Check,
+  DocumentTextIcon as FileText,
+  EnvelopeIcon as Mail,
+  PhoneIcon as Phone,
+  ShieldCheckIcon as Shield,
+  UserIcon as User,
+} from '@heroicons/react/24/solid';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -91,7 +98,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                   type="button"
                   onClick={() => setValue('sex', sex)}
                   disabled={isLoading}
-                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
                     watchedSex === sex
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -146,7 +153,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
               if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
                 setValue('is_creditor', !watchedIsCreditor);
             }}
-            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition-all ${
+            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition ${
               watchedIsCreditor
                 ? 'border-primary/50 bg-primary/5 ring-primary/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'
@@ -188,7 +195,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
               if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
                 setValue('is_benefited', !watchedIsBenefited);
             }}
-            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition-all ${
+            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition ${
               watchedIsBenefited
                 ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'

@@ -1,5 +1,9 @@
+import {
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  KeyIcon as KeyRound,
+} from '@heroicons/react/24/solid';
 import { useMutation } from '@tanstack/react-query';
-import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

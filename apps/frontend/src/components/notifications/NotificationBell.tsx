@@ -1,4 +1,7 @@
-import { Bell, CheckCheck } from 'lucide-react';
+import {
+  BellIcon as Bell,
+  CheckBadgeIcon as CheckCheck,
+} from '@heroicons/react/24/solid';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -34,12 +37,12 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="hover-lift hover:bg-secondary relative transition-all"
+          className="hover-lift hover:bg-secondary relative transition"
           aria-label={t('layout.notifications.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="bg-destructive px-xs text-primary-foreground absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full text-[10px] font-bold">
+            <span className="bg-destructive px-xs text-primary-foreground text-2xs absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full font-bold">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}

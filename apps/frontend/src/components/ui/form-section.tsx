@@ -1,10 +1,9 @@
-import type { LucideIcon } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
+import type { IconComponent } from '@/types/icon';
 
 interface FormSectionProps {
   title: string;
-  icon?: LucideIcon;
+  icon?: IconComponent;
   children: React.ReactNode;
   className?: string;
 }

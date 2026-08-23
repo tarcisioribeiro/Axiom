@@ -5,7 +5,7 @@
  * Suporta dois modos: spinner tradicional ou skeleton para melhor perceived performance.
  */
 
-import { Loader2 } from 'lucide-react';
+import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,20 +1,20 @@
 /* eslint-disable max-lines */
+import {
+  BoltIcon as Activity,
+  LightBulbIcon as Brain,
+  CheckCircleIcon as CheckCircle2,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ClockIcon as Clock,
+  CurrencyDollarIcon as DollarSign,
+  FireIcon as Dumbbell,
+  HeartIcon as Heart,
+  RocketLaunchIcon as Rocket,
+  SparklesIcon as Sparkles,
+  StarIcon as Star,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Activity,
-  Brain,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  DollarSign,
-  Dumbbell,
-  Heart,
-  Rocket,
-  Sparkles,
-  Star,
-} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import type { RoutineTemplate } from '@/types';
@@ -220,7 +221,7 @@ export default function OnboardingWizard() {
                 <div
                   key={i}
                   className={cn(
-                    'h-1.5 flex-1 rounded-full transition-all duration-300',
+                    'h-1.5 flex-1 rounded-full transition duration-300',
                     i <= step ? 'bg-primary' : 'bg-muted'
                   )}
                 />
@@ -234,7 +235,7 @@ export default function OnboardingWizard() {
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: DURATION.fast }}
             >
               {step === 0 && (
                 <StepGoals focusAreas={focusAreas} onToggle={toggleFocus} />
@@ -326,7 +327,7 @@ function StepGoals({
               type="button"
               onClick={() => onToggle(area.id)}
               className={cn(
-                'gap-sm p-md flex flex-col items-center rounded-lg border transition-all',
+                'gap-sm p-md flex flex-col items-center rounded-lg border transition',
                 isSelected
                   ? area.bg + ' ring-primary/30 ring-2'
                   : 'border-border bg-card hover:border-primary/30'
@@ -377,7 +378,7 @@ function StepTime({
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              'gap-xs p-md flex flex-col items-start rounded-lg border text-left transition-all',
+              'gap-xs p-md flex flex-col items-start rounded-lg border text-left transition',
               dailyMinutes === opt.value
                 ? 'border-primary bg-primary/5 ring-primary/20 ring-2'
                 : 'border-border bg-card hover:border-primary/30'
@@ -434,7 +435,7 @@ function StepDays({
               type="button"
               onClick={() => onToggle(idx)}
               className={cn(
-                'gap-xs py-md flex flex-1 flex-col items-center rounded-lg border transition-all',
+                'gap-xs py-md flex flex-1 flex-col items-center rounded-lg border transition',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-card text-muted-foreground hover:border-primary/30'
@@ -523,7 +524,7 @@ function StepRoutine({
                 type="button"
                 onClick={() => onToggle(template.id)}
                 className={cn(
-                  'gap-md p-md flex w-full items-center rounded-lg border text-left transition-all',
+                  'gap-md p-md flex w-full items-center rounded-lg border text-left transition',
                   isSelected
                     ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
                     : 'border-border bg-card hover:border-primary/30'

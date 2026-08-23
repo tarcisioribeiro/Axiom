@@ -1,4 +1,8 @@
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import {
+  EyeIcon as Eye,
+  EyeSlashIcon as EyeOff,
+  ShieldCheckIcon as ShieldCheck,
+} from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';

@@ -1,17 +1,17 @@
+import {
+  ExclamationCircleIcon as AlertCircle,
+  CheckCircleIcon as CheckCircle2,
+  XCircleIcon as XCircle,
+  ExclamationTriangleIcon as AlertTriangle,
+  InformationCircleIcon as Info,
+} from '@heroicons/react/24/solid';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
-import {
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Info,
-  type LucideIcon,
-} from 'lucide-react';
 import * as React from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { IconComponent } from '@/types/icon';
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -111,12 +111,12 @@ const AlertDialogContent = React.forwardRef<
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
 interface AlertDialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  icon?: LucideIcon | React.ReactNode;
+  icon?: IconComponent | React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info';
   showIcon?: boolean;
 }
 
-const variantIcons: Record<string, LucideIcon> = {
+const variantIcons: Record<string, IconComponent> = {
   success: CheckCircle2,
   warning: AlertTriangle,
   destructive: XCircle,

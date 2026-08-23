@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import {
-  AlertTriangle,
-  Calendar,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Circle,
-  AlertCircle,
-  Clock,
-  Zap,
-} from 'lucide-react';
+  ExclamationTriangleIcon as AlertTriangle,
+  CalendarIcon as Calendar,
+  CheckCircleIcon as CheckCircle2,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  StopCircleIcon as Circle,
+  ExclamationCircleIcon as AlertCircle,
+  ClockIcon as Clock,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { createElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -288,7 +288,7 @@ export default function WeeklyPlanning() {
             <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
               <div
                 className={cn(
-                  'h-full rounded-full transition-all',
+                  'h-full rounded-full transition',
                   weekPct >= 100 ? 'bg-success' : 'bg-primary'
                 )}
                 style={{ width: `${weekPct}%` }}
@@ -359,7 +359,7 @@ export default function WeeklyPlanning() {
                     <div className="bg-muted h-1 w-full overflow-hidden rounded-full">
                       <div
                         className={cn(
-                          'h-full rounded-full transition-all',
+                          'h-full rounded-full transition',
                           dayPct >= 100
                             ? 'bg-success'
                             : dayPct >= 60
@@ -381,7 +381,7 @@ export default function WeeklyPlanning() {
                     >
                       <div
                         className={cn(
-                          'h-full rounded-full transition-all',
+                          'h-full rounded-full transition',
                           isOverloaded ? 'bg-warning' : 'bg-primary/40'
                         )}
                         style={{

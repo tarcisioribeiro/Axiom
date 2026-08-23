@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
+import {
+  ChartBarSquareIcon as BarChart3,
+  PencilIcon as Pencil,
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  UsersIcon as Users,
+  BanknotesIcon as Banknote,
+  BanknotesIcon as HandCoins,
+  UserPlusIcon as UserCheck,
+  PhoneIcon as Phone,
+  EnvelopeIcon as Mail,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import {
-  BarChart3,
-  Pencil,
-  Plus,
-  Trash2,
-  Users,
-  Banknote,
-  HandCoins,
-  UserCheck,
-  Phone,
-  Mail,
-} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -309,7 +309,7 @@ export default function Members() {
                       {isCurrentUser && (
                         <Badge
                           variant="secondary"
-                          className="px-sm shrink-0 py-0 text-[10px]"
+                          className="px-sm text-2xs shrink-0 py-0"
                         >
                           Você
                         </Badge>
@@ -321,19 +321,19 @@ export default function Members() {
                     {/* Papéis */}
                     <div className="mt-sm gap-xs flex flex-wrap">
                       {member.is_creditor && (
-                        <span className="gap-xs px-sm inline-flex items-center rounded-full bg-blue-500/10 py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-blue-500/10 py-0.5 font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
                           <Banknote className="h-2.5 w-2.5" />
                           {t('pages.members.form.isCreditor')}
                         </span>
                       )}
                       {member.is_benefited && (
-                        <span className="gap-xs px-sm inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
                           <HandCoins className="h-2.5 w-2.5" />
                           {t('pages.members.form.isBenefited')}
                         </span>
                       )}
                       {!member.is_creditor && !member.is_benefited && (
-                        <span className="text-muted-foreground text-[10px]">
+                        <span className="text-muted-foreground text-2xs">
                           {t('pages.members.noRole')}
                         </span>
                       )}

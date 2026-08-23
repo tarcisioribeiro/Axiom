@@ -1,22 +1,21 @@
 /* eslint-disable max-lines */
-import { useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Trash2,
-  Pencil,
-  Download,
-  HandCoins,
-  CreditCard,
-  List,
-  TableProperties,
-  CheckCircle2,
-  Clock,
-  Banknote,
-  Users,
-  Building2,
-  CalendarRange,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  PencilIcon as Pencil,
+  ArrowDownTrayIcon as Download,
+  BanknotesIcon as HandCoins,
+  CreditCardIcon as CreditCard,
+  ListBulletIcon as List,
+  TableCellsIcon as TableProperties,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  BanknotesIcon as Banknote,
+  UsersIcon as Users,
+  BuildingOffice2Icon as Building2,
+  CalendarDateRangeIcon as CalendarRange,
+} from '@heroicons/react/24/solid';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -52,6 +51,7 @@ import { cn } from '@/lib/utils';
 import { loanInstallmentsService } from '@/services/loan-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AmortizationSchedule, LoanInstallment, Loan } from '@/types';
+import type { IconComponent } from '@/types/icon';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -248,7 +248,7 @@ export default function Loans() {
                 { key: 'all', icon: List },
                 { key: 'benefited', icon: Users },
                 { key: 'creditor', icon: Building2 },
-              ] as { key: LoanRole; icon: LucideIcon }[]
+              ] as { key: LoanRole; icon: IconComponent }[]
             ).map(({ key, icon: Icon }) => (
               <button
                 key={key}
@@ -309,7 +309,7 @@ export default function Loans() {
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={cn(
-                        'h-full rounded-full transition-all',
+                        'h-full rounded-full transition',
                         pct >= 100
                           ? 'bg-success'
                           : loan.status === 'defaulted'
@@ -491,7 +491,7 @@ export default function Loans() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}

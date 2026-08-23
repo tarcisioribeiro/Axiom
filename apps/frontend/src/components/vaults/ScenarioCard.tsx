@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { TrashIcon as Trash2 } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';

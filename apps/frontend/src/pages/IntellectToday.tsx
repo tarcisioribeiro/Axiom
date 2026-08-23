@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
+import {
+  TrophyIcon as Award,
+  BookOpenIcon as BookOpen,
+  LightBulbIcon as Brain,
+  ClockIcon as Clock,
+  FireIcon as Flame,
+  PlayCircleIcon as PlayCircle,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { Award, BookOpen, Brain, Clock, Flame, PlayCircle, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
