@@ -1,26 +1,26 @@
 /* eslint-disable max-lines */
+import {
+  HeartIcon as Heart,
+  BoltIcon as Zap,
+  LightBulbIcon as Brain,
+  ShieldCheckIcon as Shield,
+  BookOpenIcon as BookOpen,
+  ChartBarSquareIcon as BarChart3,
+  ChevronRightIcon as ChevronRight,
+  CheckCircleIcon as CheckCircle2,
+  ExclamationCircleIcon as AlertCircle,
+  SparklesIcon as Sparkles,
+  ClockIcon as Clock,
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  MinusIcon as Minus,
+  StarIcon as Star,
+  ArrowPathIcon as RefreshCw,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Heart,
-  Zap,
-  Brain,
-  Shield,
-  BookOpen,
-  BarChart3,
-  ChevronRight,
-  CheckCircle2,
-  AlertCircle,
-  Sparkles,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Star,
-  RefreshCw,
-  X,
-} from 'lucide-react';
 import { useState } from 'react';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -317,7 +317,7 @@ function DashboardTab() {
                   </span>
                   <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
                     <div
-                      className="bg-primary h-full rounded-full transition-all"
+                      className="bg-primary h-full rounded-full transition-[width]"
                       style={{ width: `${(a.score / 30) * 100}%` }}
                     />
                   </div>
@@ -469,7 +469,7 @@ function SelfEsteemTab() {
                           setAnswers((prev) => ({ ...prev, [`q${i + 1}`]: opt.value }))
                         }
                         className={cn(
-                          'py-sm rounded-lg border px-3 text-center text-xs font-medium transition-all',
+                          'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
                           answers[`q${i + 1}`] === opt.value
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -955,7 +955,7 @@ function CrisisTab() {
                 key={e.value}
                 onClick={() => setEmotionalState(e.value)}
                 className={cn(
-                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition-all',
+                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition',
                   emotionalState === e.value
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
@@ -985,7 +985,7 @@ function CrisisTab() {
                 key={t.value}
                 onClick={() => setImpulseType(t.value)}
                 className={cn(
-                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition-all',
+                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition',
                   impulseType === t.value
                     ? 'border-destructive bg-destructive text-destructive-foreground'
                     : 'border-border text-muted-foreground hover:border-destructive/50 hover:text-foreground'
@@ -1171,7 +1171,7 @@ function LibraryTab() {
             key={c.value}
             onClick={() => setSelectedCategory(c.value)}
             className={cn(
-              'py-xs.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition-all',
+              'py-xs.5 rounded-full border px-3 text-xs font-medium whitespace-nowrap transition',
               selectedCategory === c.value
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'border-border text-muted-foreground hover:border-primary/50'
@@ -1197,7 +1197,7 @@ function LibraryTab() {
             return (
               <Card
                 key={item.id}
-                className={cn('border-border/50 transition-all', done && 'opacity-70')}
+                className={cn('border-border/50 transition', done && 'opacity-70')}
               >
                 <CardContent className="p-md space-y-3">
                   <div className="flex items-start justify-between gap-3">

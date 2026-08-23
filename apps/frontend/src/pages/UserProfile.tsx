@@ -1,5 +1,12 @@
+import {
+  BellIcon as Bell,
+  CheckCircleIcon as CheckCircle2,
+  ChevronRightIcon as ChevronRight,
+  EnvelopeIcon as Mail,
+  Cog6ToothIcon as Settings,
+  ShieldCheckIcon as Shield,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, CheckCircle2, ChevronRight, Mail, Settings, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 

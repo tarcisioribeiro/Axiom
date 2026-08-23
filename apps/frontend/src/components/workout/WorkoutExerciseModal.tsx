@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  ChevronDown,
-  ChevronUp,
-  Dumbbell,
-  Loader2,
-  Minus,
-  Plus,
-  Search,
-  StickyNote,
-  Timer,
-} from 'lucide-react';
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  FireIcon as Dumbbell,
+  ArrowPathIcon as Loader2,
+  MinusIcon as Minus,
+  PlusIcon as Plus,
+  MagnifyingGlassIcon as Search,
+  DocumentTextIcon as StickyNote,
+  ClockIcon as Timer,
+} from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -72,7 +72,7 @@ function CounterInput({
 }) {
   return (
     <div className="gap-xs flex flex-col items-center">
-      <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+      <span className="text-muted-foreground text-2xs font-semibold tracking-wider uppercase">
         {label}
       </span>
       <div className="border-border bg-background flex flex-col items-center rounded-lg border shadow-sm">
@@ -216,7 +216,7 @@ export function WorkoutExerciseModal({
                     type="button"
                     onClick={() => setSelectedExercise(ex)}
                     className={cn(
-                      'gap-sm px-sm py-xs flex w-full items-center rounded-lg text-left transition-all',
+                      'gap-sm px-sm py-xs flex w-full items-center rounded-lg text-left transition',
                       isSelected
                         ? 'bg-category-exercise/15 ring-category-exercise/30 ring-1'
                         : 'hover:bg-accent'
@@ -318,7 +318,7 @@ export function WorkoutExerciseModal({
                 type="button"
                 onClick={() => setValue('rest_seconds', preset)}
                 className={cn(
-                  'px-sm py-xs rounded-lg border text-xs font-semibold transition-all',
+                  'px-sm py-xs rounded-lg border text-xs font-semibold transition',
                   restSeconds === preset
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
@@ -361,7 +361,7 @@ export function WorkoutExerciseModal({
                 type="button"
                 onClick={() => setValue('load_unit', unit.value)}
                 className={cn(
-                  'px-sm py-xs rounded-lg border text-xs font-semibold transition-all',
+                  'px-sm py-xs rounded-lg border text-xs font-semibold transition',
                   loadUnit === unit.value
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'

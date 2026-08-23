@@ -1,6 +1,10 @@
 /* eslint-disable max-lines */
+import {
+  ExclamationCircleIcon as AlertCircle,
+  CalendarDateRangeIcon as CalendarClock,
+  CreditCardIcon as CreditCard,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, CalendarClock, CreditCard } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

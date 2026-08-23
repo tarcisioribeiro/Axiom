@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Loader2 } from 'lucide-react';
+import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

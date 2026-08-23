@@ -1,5 +1,9 @@
+import {
+  ArrowPathIcon as RefreshCcw,
+  ExclamationTriangleIcon as AlertTriangle,
+  CalendarDateRangeIcon as CalendarClock,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCcw, AlertTriangle, CalendarClock } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

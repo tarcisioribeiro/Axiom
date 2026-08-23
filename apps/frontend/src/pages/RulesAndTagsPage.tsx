@@ -1,4 +1,8 @@
-import { Filter, Tag, Zap } from 'lucide-react';
+import {
+  FunnelIcon as Filter,
+  TagIcon as Tag,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

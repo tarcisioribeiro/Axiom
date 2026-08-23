@@ -1,26 +1,26 @@
 /* eslint-disable max-lines */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Library,
-  Plus,
-  Star,
-  Edit,
-  Trash2,
-  BookMarked,
-  FileText,
-  Highlighter,
-  Loader2,
-  MoreHorizontal,
-  Download,
-  BookText,
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  List,
-  BookOpen,
-  Brain,
-  CheckCircle,
-} from 'lucide-react';
+  BuildingLibraryIcon as Library,
+  PlusIcon as Plus,
+  StarIcon as Star,
+  PencilSquareIcon as Edit,
+  TrashIcon as Trash2,
+  BookmarkSquareIcon as BookMarked,
+  DocumentTextIcon as FileText,
+  PaintBrushIcon as Highlighter,
+  ArrowPathIcon as Loader2,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  ArrowDownTrayIcon as Download,
+  DocumentTextIcon as BookText,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  Squares2X2Icon as LayoutGrid,
+  ListBulletIcon as List,
+  BookOpenIcon as BookOpen,
+  LightBulbIcon as Brain,
+  CheckCircleIcon as CheckCircle,
+} from '@heroicons/react/24/solid';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -201,7 +201,7 @@ function BookGridCard({
           <img
             src={book.cover}
             alt={t('pages.books.coverAlt', { title: book.title })}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="hoverable:group-hover:scale-105 h-full w-full object-cover transition-transform duration-300"
             loading="lazy"
             decoding="async"
           />
@@ -1034,7 +1034,7 @@ export default function Books() {
 
       {/* Create / Edit form dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {editingBook ? t('pages.books.editTitle') : t('pages.books.newTitle')}

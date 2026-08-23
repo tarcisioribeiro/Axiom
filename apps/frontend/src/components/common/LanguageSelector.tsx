@@ -1,4 +1,4 @@
-import { Globe } from 'lucide-react';
+import { GlobeAltIcon as Globe } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';

@@ -1,6 +1,13 @@
 /* eslint-disable max-lines */
+import {
+  BookOpenIcon as BookOpen,
+  ArrowPathIcon as Loader2,
+  PlusIcon as Plus,
+  TagIcon as Tag,
+  ViewfinderCircleIcon as Target,
+  TrashIcon as Trash2,
+} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BookOpen, Loader2, Plus, Tag, Target, Trash2 } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

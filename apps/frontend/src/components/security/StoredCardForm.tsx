@@ -1,14 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  CalendarDays,
-  CreditCard as CreditCardIcon,
-  FileText,
-  Link2,
-  Loader2,
-  Shield,
-  Tag,
-} from 'lucide-react';
+  CalendarDaysIcon as CalendarDays,
+  CreditCardIcon,
+  DocumentTextIcon as FileText,
+  LinkIcon as Link2,
+  ArrowPathIcon as Loader2,
+  ShieldCheckIcon as Shield,
+  TagIcon as Tag,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 

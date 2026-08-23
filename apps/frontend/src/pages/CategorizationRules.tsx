@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
+import {
+  FunnelIcon as Filter,
+  HashtagIcon as Hash,
+  PencilIcon as Pencil,
+  PlusIcon as Plus,
+  TagIcon as Tag,
+  TrashIcon as Trash2,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Filter, Hash, Pencil, Plus, Tag, Trash2, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -185,7 +193,7 @@ function RuleForm({
           <button
             type="button"
             onClick={() => setIsActive(!isActive)}
-            className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
+            className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition ${
               isActive
                 ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                 : 'border-border/60 bg-muted/20 opacity-70'

@@ -1,14 +1,14 @@
 /* eslint-disable max-lines */
-import { useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft,
-  ArrowLeftRight,
-  Link2,
-  Plus,
-  RefreshCw,
-  Search,
-  Unlink,
-} from 'lucide-react';
+  ArrowLeftIcon as ArrowLeft,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  LinkIcon as Link2,
+  PlusIcon as Plus,
+  ArrowPathIcon as RefreshCw,
+  MagnifyingGlassIcon as Search,
+  LinkSlashIcon as Unlink,
+} from '@heroicons/react/24/solid';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
@@ -77,10 +77,7 @@ function ConfidenceBadge({
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className={cn(
-            'w-1.5 rounded-sm transition-all',
-            i <= bars ? color : 'bg-muted'
-          )}
+          className={cn('w-1.5 rounded-sm transition', i <= bars ? color : 'bg-muted')}
           style={{ height: `${i * 4 + 4}px` }}
         />
       ))}
@@ -513,7 +510,7 @@ export default function BankReconciliationDetail() {
         </div>
         <div className="bg-muted h-3 overflow-hidden rounded-full">
           <div
-            className="bg-success h-full rounded-full transition-all"
+            className="bg-success h-full rounded-full transition-[width]"
             style={{ width: `${reconciliationPct}%` }}
           />
         </div>

@@ -1,4 +1,7 @@
-import { BarChart3, GitCompareArrows } from 'lucide-react';
+import {
+  ChartBarSquareIcon as BarChart3,
+  ArrowsRightLeftIcon as GitCompareArrows,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

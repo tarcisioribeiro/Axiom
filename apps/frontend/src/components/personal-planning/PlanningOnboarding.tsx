@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2,
-  Dumbbell,
-  Target,
-  Calendar,
-  ArrowRight,
-  X,
-  BookOpen,
-  Loader2,
-  Sparkles,
-} from 'lucide-react';
+  CheckCircleIcon as CheckCircle2,
+  FireIcon as Dumbbell,
+  ViewfinderCircleIcon as Target,
+  CalendarIcon as Calendar,
+  ArrowRightIcon as ArrowRight,
+  XMarkIcon as X,
+  BookOpenIcon as BookOpen,
+  ArrowPathIcon as Loader2,
+  SparklesIcon as Sparkles,
+} from '@heroicons/react/24/solid';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -266,7 +266,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-[width,background-color] ${
                 i === step ? 'bg-primary w-6' : 'bg-muted w-1.5'
               }`}
             />

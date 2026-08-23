@@ -1,5 +1,9 @@
+import {
+  CurrencyDollarIcon as DollarSign,
+  PlusIcon as Plus,
+  FunnelIcon as Filter,
+} from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
-import { DollarSign, Plus, Filter } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 

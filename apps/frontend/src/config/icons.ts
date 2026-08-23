@@ -1,85 +1,86 @@
 /* eslint-disable max-lines */
-import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowDown,
-  ArrowLeftRight,
-  ArrowRight,
-  ArrowUp,
-  Ban,
-  Banknote,
-  BarChart3,
-  BookOpen,
-  Brain,
-  Briefcase,
-  Building2,
-  Calendar,
-  CalendarDays,
-  Car,
-  CheckCircle,
-  Clock,
-  CloudSun,
-  CreditCard,
-  Dog,
-  Droplets,
-  Dumbbell,
-  FileText,
-  Film,
-  Flame,
-  Frown,
-  Gamepad2,
-  Gift,
-  Globe,
-  GraduationCap,
-  HandCoins,
-  Heart,
-  HeartPulse,
-  Home,
-  Landmark,
-  Languages,
-  Laptop,
-  Mail,
-  Meh,
-  Minus,
-  Monitor,
-  Moon,
-  Package,
-  Pencil,
-  PiggyBank,
-  Plane,
-  Play,
-  RefreshCw,
-  Salad,
-  Scale,
-  Settings,
-  Shield,
-  ShieldCheck,
-  Shirt,
-  ShoppingBag,
-  ShoppingCart,
-  Smartphone,
-  Smile,
-  Sparkles,
-  Stethoscope,
-  Sun,
-  Sunrise,
-  Sunset,
-  ThumbsDown,
-  ThumbsUp,
-  Ticket,
-  TrendingDown,
-  TrendingUp,
-  Trophy,
-  Tv,
-  Undo2,
-  User,
-  Users,
-  Utensils,
-  Wallet,
-  XCircle,
-  Zap,
-} from 'lucide-react';
+  ArrowDownIcon as ArrowDown,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  ArrowRightIcon as ArrowRight,
+  ArrowUpIcon as ArrowUp,
+  NoSymbolIcon as Ban,
+  BanknotesIcon as Banknote,
+  ChartBarSquareIcon as BarChart3,
+  BookOpenIcon as BookOpen,
+  LightBulbIcon as Brain,
+  BriefcaseIcon as Briefcase,
+  BuildingOffice2Icon as Building2,
+  CalendarIcon as Calendar,
+  CalendarDaysIcon as CalendarDays,
+  TruckIcon as Car,
+  CheckCircleIcon as CheckCircle,
+  ClockIcon as Clock,
+  CloudIcon as CloudSun,
+  CreditCardIcon as CreditCard,
+  HandRaisedIcon as Dog,
+  BeakerIcon as Droplets,
+  FireIcon as Dumbbell,
+  DocumentTextIcon as FileText,
+  FilmIcon as Film,
+  FireIcon as Flame,
+  FaceFrownIcon as Frown,
+  PuzzlePieceIcon as Gamepad2,
+  GiftIcon as Gift,
+  GlobeAltIcon as Globe,
+  AcademicCapIcon as GraduationCap,
+  BanknotesIcon as HandCoins,
+  HeartIcon as Heart,
+  HeartIcon as HeartPulse,
+  HomeIcon as Home,
+  BuildingLibraryIcon as Landmark,
+  LanguageIcon as Languages,
+  ComputerDesktopIcon as Laptop,
+  EnvelopeIcon as Mail,
+  FaceSmileIcon as Meh,
+  MinusIcon as Minus,
+  ComputerDesktopIcon as Monitor,
+  MoonIcon as Moon,
+  ArchiveBoxIcon as Package,
+  PencilIcon as Pencil,
+  BanknotesIcon as PiggyBank,
+  PaperAirplaneIcon as Plane,
+  PlayIcon as Play,
+  ArrowPathIcon as RefreshCw,
+  CakeIcon as Salad,
+  ScaleIcon as Scale,
+  Cog6ToothIcon as Settings,
+  ShieldCheckIcon as Shield,
+  ShieldCheckIcon as ShieldCheck,
+  ShoppingBagIcon as Shirt,
+  ShoppingBagIcon as ShoppingBag,
+  ShoppingCartIcon as ShoppingCart,
+  DevicePhoneMobileIcon as Smartphone,
+  FaceSmileIcon as Smile,
+  SparklesIcon as Sparkles,
+  BeakerIcon as Stethoscope,
+  SunIcon as Sun,
+  SunIcon as Sunrise,
+  SunIcon as Sunset,
+  HandThumbDownIcon as ThumbsDown,
+  HandThumbUpIcon as ThumbsUp,
+  TicketIcon as Ticket,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  TrophyIcon as Trophy,
+  TvIcon as Tv,
+  ArrowUturnLeftIcon as Undo2,
+  UserIcon as User,
+  UsersIcon as Users,
+  CakeIcon as Utensils,
+  WalletIcon as Wallet,
+  XCircleIcon as XCircle,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 
-export const EXPENSE_CATEGORY_ICONS: Record<string, LucideIcon> = {
+import type { IconComponent } from '@/types/icon';
+
+export const EXPENSE_CATEGORY_ICONS: Record<string, IconComponent> = {
   'food and drink': Utensils,
   'bills and services': FileText,
   electronics: Smartphone,
@@ -104,7 +105,7 @@ export const EXPENSE_CATEGORY_ICONS: Record<string, LucideIcon> = {
   travels: Plane,
 };
 
-export const REVENUE_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const REVENUE_CATEGORY_ICONS: Record<string, IconComponent> = {
   deposit: Building2,
   award: Trophy,
   salary: Wallet,
@@ -117,7 +118,7 @@ export const REVENUE_CATEGORY_ICONS: Record<string, LucideIcon> = {
   loan_devolution: Undo2,
 };
 
-export const TASK_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const TASK_CATEGORY_ICONS: Record<string, IconComponent> = {
   health: Heart,
   intellect: Brain,
   spiritual: Sparkles,
@@ -131,7 +132,7 @@ export const TASK_CATEGORY_ICONS: Record<string, LucideIcon> = {
   other: Package,
 };
 
-export const ACCOUNT_TYPE_ICONS: Record<string, LucideIcon> = {
+export const ACCOUNT_TYPE_ICONS: Record<string, IconComponent> = {
   CC: Building2,
   CS: Wallet,
   FG: ShieldCheck,
@@ -140,7 +141,7 @@ export const ACCOUNT_TYPE_ICONS: Record<string, LucideIcon> = {
   CP: PiggyBank,
 };
 
-export const STORED_ACCOUNT_TYPE_ICONS: Record<string, LucideIcon> = {
+export const STORED_ACCOUNT_TYPE_ICONS: Record<string, IconComponent> = {
   CC: CreditCard,
   CS: Wallet,
   CP: PiggyBank,
@@ -148,7 +149,7 @@ export const STORED_ACCOUNT_TYPE_ICONS: Record<string, LucideIcon> = {
   OTHER: Building2,
 };
 
-export const INSTITUTION_ICONS: Record<string, LucideIcon> = {
+export const INSTITUTION_ICONS: Record<string, IconComponent> = {
   NUB: CreditCard,
   SIC: Shield,
   MPG: ShoppingCart,
@@ -163,7 +164,7 @@ export const INSTITUTION_ICONS: Record<string, LucideIcon> = {
   PIC: Wallet,
 };
 
-export const BOOK_GENRE_ICONS: Record<string, LucideIcon> = {
+export const BOOK_GENRE_ICONS: Record<string, IconComponent> = {
   Philosophy: Brain,
   History: Landmark,
   Psychology: Brain,
@@ -173,7 +174,7 @@ export const BOOK_GENRE_ICONS: Record<string, LucideIcon> = {
   Theology: Sun,
 };
 
-export const BOOK_LITERARY_TYPE_ICONS: Record<string, LucideIcon> = {
+export const BOOK_LITERARY_TYPE_ICONS: Record<string, IconComponent> = {
   book: BookOpen,
   collection: BookOpen,
   magazine: FileText,
@@ -181,30 +182,30 @@ export const BOOK_LITERARY_TYPE_ICONS: Record<string, LucideIcon> = {
   essay: Pencil,
 };
 
-export const BOOK_LANGUAGE_ICON: LucideIcon = Languages;
+export const BOOK_LANGUAGE_ICON: IconComponent = Languages;
 
-export const READ_STATUS_ICONS: Record<string, LucideIcon> = {
+export const READ_STATUS_ICONS: Record<string, IconComponent> = {
   to_read: BookOpen,
   reading: BookOpen,
   read: CheckCircle,
   paused: Clock,
 };
 
-export const TIME_OF_DAY_ICONS: Record<string, LucideIcon> = {
+export const TIME_OF_DAY_ICONS: Record<string, IconComponent> = {
   morning: Sunrise,
   afternoon: Sun,
   evening: Moon,
   dawn: Sunset,
 };
 
-export const PRIORITY_ICONS: Record<string, LucideIcon> = {
+export const PRIORITY_ICONS: Record<string, IconComponent> = {
   low: ArrowDown,
   medium: Minus,
   high: ArrowUp,
   critical: Flame,
 };
 
-export const PERIODICITY_ICONS: Record<string, LucideIcon> = {
+export const PERIODICITY_ICONS: Record<string, IconComponent> = {
   daily: CalendarDays,
   weekdays: Calendar,
   weekly: Calendar,
@@ -212,21 +213,21 @@ export const PERIODICITY_ICONS: Record<string, LucideIcon> = {
   custom: Settings,
 };
 
-export const GOAL_TYPE_ICONS: Record<string, LucideIcon> = {
+export const GOAL_TYPE_ICONS: Record<string, IconComponent> = {
   consecutive_days: Flame,
   total_days: Calendar,
   avoid_habit: Ban,
   custom: Settings,
 };
 
-export const GOAL_STATUS_ICONS: Record<string, LucideIcon> = {
+export const GOAL_STATUS_ICONS: Record<string, IconComponent> = {
   active: CheckCircle,
   completed: Trophy,
   failed: XCircle,
   cancelled: Ban,
 };
 
-export const FINANCIAL_GOAL_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const FINANCIAL_GOAL_CATEGORY_ICONS: Record<string, IconComponent> = {
   savings: PiggyBank,
   investment: TrendingUp,
   emergency: Shield,
@@ -241,7 +242,7 @@ export const FINANCIAL_GOAL_CATEGORY_ICONS: Record<string, LucideIcon> = {
   other: Package,
 };
 
-export const MOOD_ICONS: Record<string, LucideIcon> = {
+export const MOOD_ICONS: Record<string, IconComponent> = {
   excellent: Smile,
   good: ThumbsUp,
   neutral: Meh,
@@ -249,7 +250,7 @@ export const MOOD_ICONS: Record<string, LucideIcon> = {
   terrible: ThumbsDown,
 };
 
-export const ARCHIVE_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const ARCHIVE_CATEGORY_ICONS: Record<string, IconComponent> = {
   personal: User,
   financial: Wallet,
   legal: Scale,
@@ -259,13 +260,13 @@ export const ARCHIVE_CATEGORY_ICONS: Record<string, LucideIcon> = {
   other: Package,
 };
 
-export const GREETING_ICONS: Record<string, LucideIcon> = {
+export const GREETING_ICONS: Record<string, IconComponent> = {
   morning: Sun,
   afternoon: CloudSun,
   evening: Moon,
 };
 
-export const PASSWORD_CATEGORY_ICONS: Record<string, LucideIcon> = {
+export const PASSWORD_CATEGORY_ICONS: Record<string, IconComponent> = {
   social: Users,
   email: Mail,
   banking: Landmark,
@@ -277,7 +278,7 @@ export const PASSWORD_CATEGORY_ICONS: Record<string, LucideIcon> = {
   other: Package,
 };
 
-export const PLATFORM_ICONS: Record<string, LucideIcon> = {
+export const PLATFORM_ICONS: Record<string, IconComponent> = {
   udemy: GraduationCap,
   coursera: BookOpen,
   youtube: Play,
@@ -287,13 +288,13 @@ export const PLATFORM_ICONS: Record<string, LucideIcon> = {
   other: Globe,
 };
 
-export const TRANSFER_TYPE_ICONS: Record<string, LucideIcon> = {
+export const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
   pix: Zap,
   ted: Building2,
   doc: FileText,
   internal: ArrowLeftRight,
 };
 
-export const CARD_FLAG_ICON: LucideIcon = CreditCard;
-export const NATIONALITY_ICON: LucideIcon = Globe;
-export const COUNTRY_ICON: LucideIcon = Globe;
+export const CARD_FLAG_ICON: IconComponent = CreditCard;
+export const NATIONALITY_ICON: IconComponent = Globe;
+export const COUNTRY_ICON: IconComponent = Globe;

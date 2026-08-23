@@ -78,7 +78,7 @@ export function TagFormDialog({
                   key={c}
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, color: c }))}
-                  className="h-7 w-7 rounded-full transition-transform hover:scale-110"
+                  className="hoverable:hover:scale-110 h-7 w-7 rounded-full transition-transform"
                   style={{
                     backgroundColor: c,
                     outline: form.color === c ? `3px solid ${c}` : 'none',

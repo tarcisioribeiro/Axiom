@@ -14,28 +14,28 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  BoltIcon as Activity,
+  CalendarIcon as Calendar,
+  ClipboardDocumentListIcon as ClipboardList,
+  ClockIcon as Clock,
+  FireIcon as Dumbbell,
+  PencilSquareIcon as Edit,
+  DocumentTextIcon as FileText,
+  FireIcon as Flame,
+  Bars3Icon as GripVertical,
+  PhotoIcon as ImagePlus,
+  Square3Stack3DIcon as Layers,
+  ArrowPathIcon as Loader2,
+  PlusIcon as Plus,
+  SparklesIcon as Sparkles,
+  ViewfinderCircleIcon as Target,
+  TrashIcon as Trash2,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Activity,
-  Calendar,
-  ClipboardList,
-  Clock,
-  Dumbbell,
-  Edit,
-  FileText,
-  Flame,
-  GripVertical,
-  ImagePlus,
-  Layers,
-  Loader2,
-  Plus,
-  Sparkles,
-  Target,
-  Trash2,
-  Zap,
-} from 'lucide-react';
 import React, { type ReactNode, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -66,6 +66,7 @@ import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -995,7 +996,7 @@ export default function WorkoutPage() {
                                   )
                                 }
                                 className={cn(
-                                  'p-sm flex min-w-[130px] flex-col items-start rounded-lg border-2 text-left transition-all',
+                                  'p-sm flex min-w-[130px] flex-col items-start rounded-lg border-2 text-left transition',
                                   activePlanSelectedDay === day.id
                                     ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
                                     : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
@@ -1208,7 +1209,7 @@ export default function WorkoutPage() {
           <DialogContent
             className={cn(
               dialog?.type === 'new-session' || dialog?.type === 'edit-session'
-                ? 'max-h-[90vh] max-w-2xl overflow-y-auto'
+                ? 'max-w-2xl'
                 : 'max-h-[85vh] max-w-xl overflow-y-auto'
             )}
           >
@@ -1836,7 +1837,7 @@ function ExerciseCatalogForm({
                   type="button"
                   onClick={() => toggleChip(label)}
                   className={cn(
-                    'px-sm py-xs rounded-full border text-xs font-medium transition-all',
+                    'px-sm py-xs rounded-full border text-xs font-medium transition',
                     selectedChips.includes(label)
                       ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                       : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -2161,7 +2162,7 @@ function InactivePlanRow({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
             <div className="space-y-sm border-border bg-background p-md border-t">
@@ -2305,13 +2306,13 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
   ).toUpperCase();
 
   return (
-    <div className="group gap-md border-border bg-card p-md hover:border-category-exercise/30 flex rounded-lg border transition-all hover:shadow-sm">
+    <div className="group gap-md border-border bg-card p-md hover:border-category-exercise/30 flex rounded-lg border transition hover:shadow-sm">
       {/* Date block */}
       <div className="bg-category-exercise/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
         <span className="text-category-exercise text-2xl leading-none font-bold">
           {dayNum}
         </span>
-        <span className="text-category-exercise/70 mt-0.5 text-[10px] font-semibold tracking-wide uppercase">
+        <span className="text-category-exercise/70 text-2xs mt-0.5 font-semibold tracking-wide uppercase">
           {monthLabel}
         </span>
       </div>
@@ -2367,7 +2368,7 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
                 </div>
               ))}
               {session.session_exercises.length > 4 && (
-                <div className="border-card bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-full border-2 text-[9px] font-semibold">
+                <div className="border-card bg-muted text-muted-foreground text-2xs flex h-6 w-6 items-center justify-center rounded-full border-2 font-semibold">
                   +{session.session_exercises.length - 4}
                 </div>
               )}

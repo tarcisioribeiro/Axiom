@@ -1,4 +1,22 @@
 /* eslint-disable max-lines */
+import {
+  WalletIcon as Wallet,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  CreditCardIcon as CreditCard,
+  Squares2X2Icon as LayoutDashboard,
+  BuildingOffice2Icon as Building2,
+  CalculatorIcon as Calculator,
+  ArrowUpRightIcon as ArrowUpRight,
+  ArrowDownRightIcon as ArrowDownRight,
+  BanknotesIcon as PiggyBank,
+  DocumentArrowDownIcon as FileDown,
+  ExclamationTriangleIcon as AlertTriangle,
+  ArrowDownTrayIcon as Download,
+  DocumentTextIcon as FileText,
+  ChevronDownIcon as ChevronDown,
+  SparklesIcon as Sparkles,
+} from '@heroicons/react/24/solid';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   format,
@@ -21,24 +39,6 @@ import {
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  CreditCard,
-  LayoutDashboard,
-  Building2,
-  Calculator,
-  ArrowUpRight,
-  ArrowDownRight,
-  PiggyBank,
-  FileDown,
-  AlertTriangle,
-  Download,
-  FileText,
-  ChevronDown,
-  Sparkles,
-} from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -79,7 +79,7 @@ import {
 import { translate, TRANSLATIONS } from '@/config/constants';
 import { GREETING_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
-import { containerVariants, itemVariants } from '@/lib/animations';
+import { containerVariants, itemVariants, DURATION } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -971,7 +971,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: DURATION.fast }}
             className="overflow-hidden"
           >
             <div className="space-y-lg">
@@ -1603,7 +1603,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: DURATION.fast }}
             className="overflow-hidden"
           >
             <div className="space-y-lg">
@@ -1917,7 +1917,7 @@ export default function Dashboard() {
                                 <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                                   <div
                                     className={cn(
-                                      'h-full rounded-full transition-all',
+                                      'h-full rounded-full transition',
                                       barColor
                                     )}
                                     style={{ width: `${pct}%` }}

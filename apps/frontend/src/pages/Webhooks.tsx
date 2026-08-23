@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Activity,
-  CheckCircle2,
-  Clock,
-  Globe,
-  Loader2,
-  Pencil,
-  Plus,
-  Send,
-  Trash2,
-  XCircle,
-  Zap,
-} from 'lucide-react';
+  BoltIcon as Activity,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  GlobeAltIcon as Globe,
+  ArrowPathIcon as Loader2,
+  PencilIcon as Pencil,
+  PlusIcon as Plus,
+  PaperAirplaneIcon as Send,
+  TrashIcon as Trash2,
+  XCircleIcon as XCircle,
+  BoltIcon as Zap,
+} from '@heroicons/react/24/solid';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -344,7 +344,7 @@ export default function Webhooks() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingWebhook

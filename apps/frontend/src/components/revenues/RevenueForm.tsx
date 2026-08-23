@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Link2,
-  Loader2,
-  Tag,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react';
+  CalendarDaysIcon as CalendarDays,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+  ClockIcon as Clock,
+  LinkIcon as Link2,
+  ArrowPathIcon as Loader2,
+  TagIcon as Tag,
+  ArrowTrendingUpIcon as TrendingUp,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -216,12 +216,11 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 {
                   value: 'false',
                   label: t('common.status.pending'),
-                  activeClass: 'bg-background text-foreground shadow-sm',
                 },
                 {
                   value: 'true',
                   label: t('pages.revenues.statusReceived'),
-                  activeClass: 'bg-success/15 text-success shadow-sm',
+                  accentColor: 'success',
                 },
               ]}
               onChange={(v) => setValue('received', v === 'true')}

@@ -1,16 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  File,
-  FileImage,
-  FileText,
-  FolderOpen,
-  Loader2,
-  MoreHorizontal,
-  Package,
-  Tag,
-  Upload,
-} from 'lucide-react';
+  DocumentIcon as File,
+  PhotoIcon as FileImage,
+  DocumentTextIcon as FileText,
+  FolderOpenIcon as FolderOpen,
+  ArrowPathIcon as Loader2,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  ArchiveBoxIcon as Package,
+  TagIcon as Tag,
+  ArrowUpTrayIcon as Upload,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -232,7 +232,7 @@ export function ArchiveForm({
                   type="button"
                   onClick={() => setValue('archive_type', value)}
                   disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition duration-150 ${
                     watchedArchiveType === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

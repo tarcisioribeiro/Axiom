@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/incompatible-library */
 import {
-  CheckCircle2,
-  Clock,
-  Loader2,
-  Moon,
-  Sun,
-  Sunrise,
-  UtensilsCrossed,
-  XCircle,
-} from 'lucide-react';
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  ArrowPathIcon as Loader2,
+  MoonIcon as Moon,
+  SunIcon as Sun,
+  SunIcon as Sunrise,
+  CakeIcon as UtensilsCrossed,
+  XCircleIcon as XCircle,
+} from '@heroicons/react/24/solid';
 import { useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -190,7 +190,7 @@ export function MealTypeForm({
               type="button"
               onClick={() => setValue('is_active', true)}
               className={cn(
-                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition-all',
+                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition',
                 isActive
                   ? 'border-success bg-success/10 text-success'
                   : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
@@ -203,7 +203,7 @@ export function MealTypeForm({
               type="button"
               onClick={() => setValue('is_active', false)}
               className={cn(
-                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition-all',
+                'gap-xs px-sm py-xs flex items-center justify-center rounded-lg border-2 text-xs font-medium transition',
                 !isActive
                   ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
                   : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/20'

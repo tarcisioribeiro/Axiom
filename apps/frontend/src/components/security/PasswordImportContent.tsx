@@ -1,14 +1,14 @@
 /* eslint-disable max-lines */
 import {
-  Upload,
-  FileUp,
-  CheckSquare,
-  Square,
-  CheckCircle2,
-  AlertCircle,
-  Info,
-  Download,
-} from 'lucide-react';
+  ArrowUpTrayIcon as Upload,
+  DocumentArrowUpIcon as FileUp,
+  CheckCircleIcon as CheckSquare,
+  Square2StackIcon as Square,
+  CheckCircleIcon as CheckCircle2,
+  ExclamationCircleIcon as AlertCircle,
+  InformationCircleIcon as Info,
+  ArrowDownTrayIcon as Download,
+} from '@heroicons/react/24/solid';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

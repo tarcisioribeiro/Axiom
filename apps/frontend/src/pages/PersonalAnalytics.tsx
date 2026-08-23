@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import {
-  TrendingUp,
-  TrendingDown,
-  Star,
-  AlertTriangle,
-  Sun,
-  Award,
-  Activity,
-  BarChart3,
-} from 'lucide-react';
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  StarIcon as Star,
+  ExclamationTriangleIcon as AlertTriangle,
+  SunIcon as Sun,
+  TrophyIcon as Award,
+  BoltIcon as Activity,
+  ChartBarSquareIcon as BarChart3,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   BarChart,
@@ -188,7 +188,7 @@ function HeatmapCalendar({ data, year }: HeatmapCalendarProps) {
           {weekdayLabels.map((label, i) => (
             <div
               key={i}
-              className="text-muted-foreground flex h-3 w-3 items-center justify-center text-[9px]"
+              className="text-muted-foreground text-2xs flex h-3 w-3 items-center justify-center"
             >
               {i % 2 === 0 ? label : ''}
             </div>
@@ -205,9 +205,7 @@ function HeatmapCalendar({ data, year }: HeatmapCalendarProps) {
                   : '';
               return (
                 <div key={wIdx} className="flex flex-col gap-px">
-                  <div className="text-muted-foreground h-4 text-[9px]">
-                    {monthLabel}
-                  </div>
+                  <div className="text-muted-foreground text-2xs h-4">{monthLabel}</div>
                   {week.map((cell) => {
                     if (!cell.date)
                       return <div key={cell.key} className="h-3 w-3 rounded-sm" />;
@@ -450,7 +448,7 @@ export default function PersonalAnalytics() {
                         </div>
                         <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                           <div
-                            className="bg-primary h-full rounded-full transition-all"
+                            className="bg-primary h-full rounded-full transition-[width]"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

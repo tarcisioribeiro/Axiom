@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  CheckCircle2,
-  AlertTriangle,
-  Banknote,
-  Clock,
-  Wallet,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  ArrowTrendingUpIcon as TrendingUp,
+  CheckCircleIcon as CheckCircle2,
+  ExclamationTriangleIcon as AlertTriangle,
+  BanknotesIcon as Banknote,
+  ClockIcon as Clock,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -370,7 +370,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                 <div className="space-y-xs">
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
-                      className={cn('h-full rounded-full transition-all', barColor)}
+                      className={cn('h-full rounded-full transition-[width]', barColor)}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -459,7 +459,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedReceivable

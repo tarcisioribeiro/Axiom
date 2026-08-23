@@ -5,7 +5,7 @@
  * Padroniza a interface de busca em todas as páginas.
  */
 
-import { Search } from 'lucide-react';
+import { MagnifyingGlassIcon as Search } from '@heroicons/react/24/solid';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

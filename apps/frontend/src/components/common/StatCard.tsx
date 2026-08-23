@@ -1,5 +1,8 @@
+import {
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+} from '@heroicons/react/24/solid';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

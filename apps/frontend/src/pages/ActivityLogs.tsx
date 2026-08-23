@@ -1,24 +1,24 @@
 /* eslint-disable max-lines */
+import {
+  DocumentTextIcon as ScrollText,
+  CalendarIcon as Calendar,
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  EyeIcon as Eye,
+  KeyIcon as Key,
+  ArrowDownTrayIcon as Download,
+  DocumentArrowDownIcon as FileDown,
+  ArrowRightOnRectangleIcon as LogIn,
+  ArrowLeftOnRectangleIcon as LogOut,
+  ShieldExclamationIcon as ShieldAlert,
+  ShareIcon as Share2,
+  BoltIcon as Activity,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
-import {
-  ScrollText,
-  Calendar,
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Key,
-  Download,
-  FileDown,
-  LogIn,
-  LogOut,
-  ShieldAlert,
-  Share2,
-  Activity,
-} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ElementType } from 'react';
 import { useTranslation } from 'react-i18next';

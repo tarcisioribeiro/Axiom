@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import {
-  Activity,
-  TrendingDown,
-  TrendingUp,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+  BoltIcon as Activity,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  CheckCircleIcon as CheckCircle,
+  ExclamationCircleIcon as AlertCircle,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { ProgressGauge } from '@/components/common/ProgressGauge';
@@ -104,8 +104,11 @@ function DimensionBar({
       </div>
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
         <div
-          className={cn('h-full rounded-full transition-all duration-700', barColor)}
-          style={{ width: `${pct}%` }}
+          className={cn(
+            'h-full w-full origin-left rounded-full transition-transform duration-700',
+            barColor
+          )}
+          style={{ transform: `scaleX(${pct / 100})` }}
         />
       </div>
       {detail && <p className="text-muted-foreground text-xs">{detail}</p>}

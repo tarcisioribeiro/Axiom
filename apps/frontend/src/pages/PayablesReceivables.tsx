@@ -1,4 +1,7 @@
-import { Receipt, TrendingUp } from 'lucide-react';
+import {
+  ReceiptRefundIcon as Receipt,
+  ArrowTrendingUpIcon as TrendingUp,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

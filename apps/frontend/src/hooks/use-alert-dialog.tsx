@@ -1,6 +1,7 @@
-import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
+
+import type { IconComponent } from '@/types/icon';
 
 /** Variante visual do dialog */
 type AlertVariant = 'default' | 'success' | 'warning' | 'destructive' | 'info';
@@ -23,7 +24,7 @@ interface AlertDialogState {
   variant?: AlertVariant;
   animation?: AnimationType;
   blur?: BlurLevel;
-  icon?: LucideIcon | React.ReactNode;
+  icon?: IconComponent | React.ReactNode;
   showIcon?: boolean;
 }
 
@@ -99,7 +100,7 @@ export const useAlertDialog = () => {
     variant?: AlertVariant;
     animation?: AnimationType;
     blur?: BlurLevel;
-    icon?: LucideIcon | React.ReactNode;
+    icon?: IconComponent | React.ReactNode;
     showIcon?: boolean;
   }): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -130,7 +131,7 @@ export const useAlertDialog = () => {
     variant?: AlertVariant;
     animation?: AnimationType;
     blur?: BlurLevel;
-    icon?: LucideIcon | React.ReactNode;
+    icon?: IconComponent | React.ReactNode;
     showIcon?: boolean;
   }): Promise<void> => {
     return new Promise((resolve) => {

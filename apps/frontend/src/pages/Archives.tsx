@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Eye,
-  Download,
-  Star,
-  FileText,
-  File,
-  Archive as ArchiveIcon,
-  Calendar,
-  Tag,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  EyeIcon as Eye,
+  ArrowDownTrayIcon as Download,
+  StarIcon as Star,
+  DocumentTextIcon as FileText,
+  DocumentIcon as File,
+  ArchiveBoxIcon as ArchiveIcon,
+  CalendarIcon as Calendar,
+  TagIcon as Tag,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -530,7 +530,7 @@ export default function Archives() {
 
         {/* Dialog para criar/editar arquivo */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogContent className="custom-scrollbar max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {selectedArchive
@@ -555,7 +555,7 @@ export default function Archives() {
 
         {/* Dialog para visualizar conteúdo de texto */}
         <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogContent className="custom-scrollbar max-w-4xl">
             <DialogHeader>
               <DialogTitle>{selectedArchive?.title}</DialogTitle>
               <DialogDescription>

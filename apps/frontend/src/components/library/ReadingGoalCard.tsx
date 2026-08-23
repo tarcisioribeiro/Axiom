@@ -1,7 +1,14 @@
 /* eslint-disable max-lines */
+import {
+  ViewfinderCircleIcon as Target,
+  PencilIcon as Pencil,
+  PlusIcon as Plus,
+  TrophyIcon as Trophy,
+  BookOpenIcon as BookOpen,
+  TrashIcon as Trash2,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -121,7 +128,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
               <span className="text-base leading-tight font-bold">
                 {goal.progress_percentage.toFixed(0)}%
               </span>
-              <span className="text-muted-foreground text-[10px]">
+              <span className="text-muted-foreground text-2xs">
                 {goal.books_read_this_year}/{goal.books_goal}
               </span>
             </div>
@@ -144,7 +151,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
 
           {goal.pages_goal > 0 && (
             <div className="space-y-0.5">
-              <div className="text-muted-foreground flex justify-between text-[10px]">
+              <div className="text-muted-foreground text-2xs flex justify-between">
                 <span>{t('pages.libraryDashboard.readingGoals.pages')}</span>
                 <span>
                   {goal.pages_read_this_year.toLocaleString(i18n.language)} /{' '}
@@ -163,7 +170,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
             <div className="space-y-xs pt-xs border-t">
               {ltgs.map((ltg) => (
                 <div key={ltg.id} className="space-y-0.5">
-                  <div className="text-muted-foreground flex justify-between text-[10px]">
+                  <div className="text-muted-foreground text-2xs flex justify-between">
                     <span>{t('pages.books.literaryTypes.' + ltg.literary_type)}</span>
                     <span>
                       {ltg.books_read_this_year}/{ltg.goal_count}

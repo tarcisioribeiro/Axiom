@@ -1,19 +1,19 @@
 /* eslint-disable max-lines */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Shield,
-  Key,
-  CreditCard,
-  Wallet,
-  Archive,
-  Download,
-  Search,
-  X,
-  Bell,
-  Loader2,
-  Clock,
-  ArrowRight,
-} from 'lucide-react';
+  ShieldCheckIcon as Shield,
+  KeyIcon as Key,
+  CreditCardIcon as CreditCard,
+  WalletIcon as Wallet,
+  ArchiveBoxIcon as Archive,
+  ArrowDownTrayIcon as Download,
+  MagnifyingGlassIcon as Search,
+  XMarkIcon as X,
+  BellIcon as Bell,
+  ArrowPathIcon as Loader2,
+  ClockIcon as Clock,
+  ArrowRightIcon as ArrowRight,
+} from '@heroicons/react/24/solid';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

@@ -1,68 +1,69 @@
 /* eslint-disable max-lines */
-import type { LucideIcon } from 'lucide-react';
 import {
-  LayoutDashboard,
-  Wallet,
-  Shield,
-  Lightbulb,
-  CreditCard,
-  TrendingDown,
-  CalendarClock,
-  ArrowLeftRight,
-  HandCoins,
-  Archive,
-  Key,
-  UserPen,
-  Building2,
-  Home,
-  Calendar,
-  Target,
-  CheckCircle2,
-  Users,
-  FolderOpen,
-  ClipboardList,
-  Vault,
-  PiggyBank,
-  Receipt,
-  BotMessageSquare,
-  Dumbbell,
-  UtensilsCrossed,
-  GraduationCap,
-  Brain,
-  Network,
-  Library,
-  BookMarked,
-  Scale,
-  CalendarDays,
-  NotebookPen,
-  ListTodo,
-  HeartPulse,
-  Trophy,
-  BarChart3,
-  CalendarRange,
-  Zap,
-  Landmark,
-  Heart,
-} from 'lucide-react';
+  Squares2X2Icon as LayoutDashboard,
+  WalletIcon as Wallet,
+  ShieldCheckIcon as Shield,
+  LightBulbIcon as Lightbulb,
+  CreditCardIcon as CreditCard,
+  ArrowTrendingDownIcon as TrendingDown,
+  CalendarDateRangeIcon as CalendarClock,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  BanknotesIcon as HandCoins,
+  ArchiveBoxIcon as Archive,
+  KeyIcon as Key,
+  UserPlusIcon as UserPen,
+  BuildingOffice2Icon as Building2,
+  HomeIcon as Home,
+  CalendarIcon as Calendar,
+  ViewfinderCircleIcon as Target,
+  CheckCircleIcon as CheckCircle2,
+  UsersIcon as Users,
+  FolderOpenIcon as FolderOpen,
+  ClipboardDocumentListIcon as ClipboardList,
+  LockClosedIcon as Vault,
+  BanknotesIcon as PiggyBank,
+  ReceiptRefundIcon as Receipt,
+  ChatBubbleLeftRightIcon as BotMessageSquare,
+  FireIcon as Dumbbell,
+  CakeIcon as UtensilsCrossed,
+  AcademicCapIcon as GraduationCap,
+  LightBulbIcon as Brain,
+  SignalIcon as Network,
+  BuildingLibraryIcon as Library,
+  BookmarkSquareIcon as BookMarked,
+  ScaleIcon as Scale,
+  CalendarDaysIcon as CalendarDays,
+  PencilSquareIcon as NotebookPen,
+  ListBulletIcon as ListTodo,
+  HeartIcon as HeartPulse,
+  TrophyIcon as Trophy,
+  ChartBarSquareIcon as BarChart3,
+  CalendarDateRangeIcon as CalendarRange,
+  BoltIcon as Zap,
+  BuildingLibraryIcon as Landmark,
+  HeartIcon as Heart,
+} from '@heroicons/react/24/solid';
+
+import type { IconComponent } from '@/types/icon';
 
 export interface NavSubItem {
   titleKey: string;
   href: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   permission?: { appName: string; action: string };
 }
 
 export interface NavSubModule {
   id: string;
   titleKey: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   items: NavSubItem[];
 }
 
 export interface NavModule {
   id: string;
   titleKey: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   items?: NavSubItem[];
   subModules?: NavSubModule[];
   topItems?: NavSubItem[];
@@ -71,7 +72,7 @@ export interface NavModule {
 export interface NavItem {
   titleKey: string;
   href: string;
-  icon: LucideIcon;
+  icon: IconComponent;
   permission?: { appName: string; action: string };
 }
 

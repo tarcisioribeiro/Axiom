@@ -1,5 +1,10 @@
+import {
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  CheckCircleIcon as CheckCircle2,
+  XCircleIcon as XCircle,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

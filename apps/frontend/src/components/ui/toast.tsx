@@ -1,9 +1,10 @@
+import { XMarkIcon as X } from '@heroicons/react/24/solid';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import * as React from 'react';
 
+import { toastVariants as toastMotionVariants } from '@/lib/animations/variants';
 import { cn } from '@/lib/utils';
 
 const ToastProvider = ToastPrimitives.Provider;
@@ -63,17 +64,10 @@ const Toast = React.forwardRef<
     >
       <motion.div
         className={cn(toastVariants({ variant }), className)}
-        initial={{ opacity: 0, x: '100%' }}
-        animate={{
-          opacity: 1,
-          x: 0,
-          transition: { duration: 0.3, ease: [0.21, 1.02, 0.73, 1] },
-        }}
-        exit={{
-          opacity: 0,
-          x: '100%',
-          transition: { duration: 0.2, ease: [0.06, 0.71, 0.55, 1] },
-        }}
+        variants={toastMotionVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
       >
         {children}
       </motion.div>

@@ -1,5 +1,11 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
+import {
+  CalendarDaysIcon as CalendarDays,
+  CreditCardIcon as CreditCard,
+  BuildingStorefrontIcon as Store,
+  TagIcon as Tag,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -235,7 +241,7 @@ export const FixedExpenseForm = ({
                     type="button"
                     onClick={() => setPaymentType(type)}
                     disabled={isLoading}
-                    className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                    className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
                       paymentType === type
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'

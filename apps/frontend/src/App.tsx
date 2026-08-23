@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
+import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { MotionConfig } from 'framer-motion';
 import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 
@@ -808,15 +809,23 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <EnvironmentBanner />
-        <RouteProgressBar />
-        <AnimatedRoutes />
-        <Toaster />
-        <AlertDialogProvider />
-      </BrowserRouter>
-    </QueryClientProvider>
+    // reducedMotion="user" faz o Framer Motion respeitar automaticamente
+    // prefers-reduced-motion do SO em toda a árvore (motion.* em qualquer
+    // componente), removendo transform/layout animation e mantendo opacity —
+    // sem depender de useReducedMotion() manual em cada um dos ~38 arquivos
+    // que usam motion.*. O fallback CSS abaixo cobre apenas animação via
+    // classes/keyframes do Tailwind, que o Framer Motion não usa.
+    <MotionConfig reducedMotion="user">
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <EnvironmentBanner />
+          <RouteProgressBar />
+          <AnimatedRoutes />
+          <Toaster />
+          <AlertDialogProvider />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </MotionConfig>
   );
 }
 

@@ -1,5 +1,12 @@
+import {
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  PlusIcon as Plus,
+  MagnifyingGlassIcon as Search,
+  Cog6ToothIcon as Settings,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Pencil, Trash2, Plus, Search, Settings, X } from 'lucide-react';
 
 import { IconButton } from './IconButton';
 
