@@ -60,66 +60,15 @@ export const cardVariants: Variants = {
   tap: { scale: 0.98 },
 };
 
-// Counter animation (números subindo)
-export const counterVariants: Variants = {
-  initial: { opacity: 0, scale: 0.5 },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: DURATION.slow,
-      ease: EASING.bounce,
-    },
-  },
-};
-
-// Form error shake
-export const shakeVariants: Variants = {
-  shake: {
-    x: [0, -6, 6, -6, 0],
-    transition: { duration: 0.4 },
-  },
-};
-
-// Success celebration
-export const successVariants: Variants = {
-  initial: { scale: 0, rotate: -180 },
-  animate: {
-    scale: 1,
-    rotate: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 260,
-      damping: 20,
-    },
-  },
-};
-
-// Modal/Dialog
-export const modalVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.9, y: 50 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-    transition: {
-      duration: DURATION.normal,
-      ease: EASING.bounce,
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.9,
-    transition: { duration: DURATION.fast },
-  },
-};
-
-// Toast notification
+// Toast notification — consumido por components/ui/toast.tsx (importado
+// como toastMotionVariants para não colidir com o cva() local de mesmo nome).
+// Desliza a partir da borda pela qual a ToastViewport ancora (direita em
+// telas sm+, topo em mobile) — x, não y, para casar com essa direção.
 export const toastVariants: Variants = {
-  initial: { opacity: 0, y: 50, scale: 0.3 },
+  initial: { opacity: 0, x: '100%', scale: 0.97 },
   animate: {
     opacity: 1,
-    y: 0,
+    x: 0,
     scale: 1,
     transition: {
       type: 'spring',
@@ -129,22 +78,8 @@ export const toastVariants: Variants = {
   },
   exit: {
     opacity: 0,
-    scale: 0.5,
+    x: '100%',
     transition: { duration: 0.2 },
-  },
-};
-
-// Checkbox check animation
-export const checkboxVariants: Variants = {
-  unchecked: { scale: 0, opacity: 0 },
-  checked: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 20,
-    },
   },
 };
 
@@ -161,22 +96,9 @@ export const emptyStateVariants: Variants = {
   },
 };
 
-// Scroll-triggered
-export const scrollVariants: Variants = {
-  offscreen: { opacity: 0, y: 100 },
-  onscreen: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: DURATION.slow,
-      ease: EASING.bounce,
-    },
-  },
-};
-
 // Badge scale in
 export const badgeVariants: Variants = {
-  initial: { scale: 0, opacity: 0 },
+  initial: { scale: 0.9, opacity: 0 },
   animate: {
     scale: 1,
     opacity: 1,
@@ -188,22 +110,9 @@ export const badgeVariants: Variants = {
   },
 };
 
-// Success checkmark animation
-export const checkmarkVariants: Variants = {
-  initial: { pathLength: 0, opacity: 0 },
-  animate: {
-    pathLength: 1,
-    opacity: 1,
-    transition: {
-      duration: 0.4,
-      ease: 'easeOut',
-    },
-  },
-};
-
 // Checkmark circle animation
 export const checkmarkCircleVariants: Variants = {
-  initial: { scale: 0, opacity: 0 },
+  initial: { scale: 0.9, opacity: 0 },
   animate: {
     scale: 1,
     opacity: 1,
@@ -215,36 +124,8 @@ export const checkmarkCircleVariants: Variants = {
   },
 };
 
-// Celebration/confetti animation
-export const celebrationVariants: Variants = {
-  initial: { scale: 0, rotate: -180 },
-  animate: {
-    scale: [0, 1.2, 1],
-    rotate: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 260,
-      damping: 20,
-    },
-  },
-};
-
-// Particle burst animation (for confetti effect)
-export const particleVariants: Variants = {
-  initial: { scale: 0, opacity: 1 },
-  animate: (i: number) => ({
-    scale: [0, 1, 0.5],
-    opacity: [1, 1, 0],
-    x: Math.cos((i * Math.PI * 2) / 8) * 50,
-    y: Math.sin((i * Math.PI * 2) / 8) * 50,
-    transition: {
-      duration: 0.6,
-      ease: 'easeOut',
-    },
-  }),
-};
-
-// Pulse ring animation (behind success icon)
+// Pulse ring animation (behind success icon) — expansão decorativa, não uma
+// entrada de conteúdo: o piso de scale 0.9 não se aplica aqui.
 export const pulseRingVariants: Variants = {
   initial: { scale: 0.8, opacity: 0.5 },
   animate: {

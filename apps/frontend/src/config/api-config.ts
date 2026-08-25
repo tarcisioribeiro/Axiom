@@ -254,10 +254,17 @@ export const API_CONFIG = {
     LOAN_PAYMENT: (id: number) => `/api/v1/loans/${id}/pay/`,
     LOAN_RECEIPT: (id: number) => `/api/v1/loans/${id}/receive/`,
     LOAN_AMORTIZATION: (id: number) => `/api/v1/loans/${id}/amortization/`,
+    LOAN_PAYMENT_PLAN: (id: number) => `/api/v1/loans/${id}/payment-plan/`,
 
     // Payable sub-resources (use with id)
     PAYABLE_INSTALLMENTS: (id: number) => `/api/v1/payables/${id}/installments/`,
     PAYABLE_PAYMENT: (id: number) => `/api/v1/payables/${id}/pay/`,
+    PAYABLE_PAYMENT_PLAN: (id: number) => `/api/v1/payables/${id}/payment-plan/`,
+    PAYABLE_INCREASE_VALUE: (id: number) => `/api/v1/payables/${id}/increase-value/`,
+    PAYABLE_RECALCULATE_INSTALLMENTS: (id: number) =>
+      `/api/v1/payables/${id}/recalculate-installments/`,
+    PAYABLE_REDISTRIBUTE_AFTER_PAYMENT: (id: number) =>
+      `/api/v1/payables/${id}/redistribute-after-payment/`,
 
     // Receivables
     RECEIVABLES: '/api/v1/receivables/',

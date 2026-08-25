@@ -1,21 +1,22 @@
 /* eslint-disable max-lines */
+import {
+  ArrowTrendingDownIcon as TrendingDown,
+  SparklesIcon as Snowflake,
+  FireIcon as Flame,
+  CalendarDaysIcon as CalendarDays,
+  CurrencyDollarIcon as DollarSign,
+  ViewfinderCircleIcon as Target,
+  TrophyIcon as Trophy,
+  ArrowRightIcon as ArrowRight,
+  InformationCircleIcon as Info,
+  ExclamationTriangleIcon as AlertTriangle,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  TrendingDown,
-  Snowflake,
-  Flame,
-  CalendarDays,
-  DollarSign,
-  Target,
-  Trophy,
-  ArrowRight,
-  Info,
-  AlertTriangle,
-} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -351,6 +352,27 @@ export default function DebtPayoffPlanner({
                                     {formatDate(debt.due_date)}
                                   </span>
                                 )}
+                                {debt.payment_plan_exists ? (
+                                  <Link
+                                    to={debt.type === 'loan' ? '/loans' : '/bills'}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {t('pages.debtPayoff.installmentProgress', {
+                                      current: Math.min(
+                                        debt.installments_paid + 1,
+                                        debt.installments_total
+                                      ),
+                                      total: debt.installments_total,
+                                    })}
+                                  </Link>
+                                ) : (
+                                  <Link
+                                    to={debt.type === 'loan' ? '/loans' : '/bills'}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {t('pages.debtPayoff.createPaymentPlan')}
+                                  </Link>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -367,7 +389,7 @@ export default function DebtPayoffPlanner({
 
                         <div className="mt-sm bg-muted h-1.5 w-full overflow-hidden rounded-full">
                           <div
-                            className="bg-destructive/60 h-full rounded-full transition-all"
+                            className="bg-destructive/60 h-full rounded-full transition-[width]"
                             style={{ width: `${debtBalancePct}%` }}
                           />
                         </div>

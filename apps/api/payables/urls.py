@@ -23,4 +23,24 @@ urlpatterns = [
         views.PayablePaymentView.as_view(),
         name="payable-payment",
     ),
+    path(
+        "payables/<int:pk>/payment-plan/",
+        views.PayablePaymentPlanView.as_view(),
+        name="payable-payment-plan",
+    ),
+    path(
+        "payables/<int:pk>/increase-value/",
+        views.PayableIncreaseValueView.as_view(),
+        name="payable-increase-value",
+    ),
+    path(
+        "payables/<int:pk>/recalculate-installments/",
+        views.PayableRecalculateInstallmentsView.as_view(),
+        name="payable-recalculate-installments",
+    ),
+    path(
+        "payables/<int:pk>/redistribute-after-payment/",
+        views.PayableRedistributeAfterPaymentView.as_view(),
+        name="payable-redistribute-after-payment",
+    ),
 ]

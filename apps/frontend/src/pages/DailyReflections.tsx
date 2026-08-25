@@ -1,20 +1,20 @@
 /* eslint-disable max-lines */
+import {
+  PlusIcon as Plus,
+  BookOpenIcon as BookOpen,
+  PencilSquareIcon as Edit,
+  TrashIcon as Trash2,
+  FaceSmileIcon as SmilePlus,
+  FaceSmileIcon as Smile,
+  FaceSmileIcon as Meh,
+  FaceFrownIcon as Frown,
+  FaceFrownIcon as Angry,
+  ChevronDownIcon as ChevronDown,
+  ChevronUpIcon as ChevronUp,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  Plus,
-  BookOpen,
-  Edit,
-  Trash2,
-  SmilePlus,
-  Smile,
-  Meh,
-  Frown,
-  Angry,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
@@ -106,12 +106,12 @@ function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
           <div
             title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
             className={cn(
-              'h-3 w-3 rounded-full transition-all',
+              'h-3 w-3 rounded-full transition',
               mood ? MOOD_DOT[mood] : 'bg-muted'
             )}
           />
           {date.getDay() === 0 && (
-            <span className="text-muted-foreground text-[9px]">
+            <span className="text-muted-foreground text-2xs">
               {format(date, 'dd/MM')}
             </span>
           )}
@@ -146,13 +146,13 @@ function ReflectionCard({
         <div className="gap-md flex items-start">
           {/* Data estilo calendário */}
           <div className="bg-muted/40 py-sm flex w-14 shrink-0 flex-col items-center rounded-lg border text-center">
-            <span className="text-muted-foreground text-[10px] font-semibold uppercase">
+            <span className="text-muted-foreground text-2xs font-semibold uppercase">
               {format(date, 'MMM', { locale: ptBR })}
             </span>
             <span className="text-2xl leading-tight font-bold">
               {format(date, 'dd')}
             </span>
-            <span className="text-muted-foreground text-[10px]">
+            <span className="text-muted-foreground text-2xs">
               {format(date, 'yyyy')}
             </span>
           </div>
@@ -438,7 +438,7 @@ export default function DailyReflections() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selected

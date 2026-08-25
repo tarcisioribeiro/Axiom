@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
+import {
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  MinusIcon as Minus,
+  ChartBarSquareIcon as BarChart3,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { format, subMonths } from 'date-fns';
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
-import {
-  ArrowDown,
-  ArrowUp,
-  Minus,
-  BarChart3,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

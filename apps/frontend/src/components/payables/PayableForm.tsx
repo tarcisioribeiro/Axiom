@@ -1,17 +1,20 @@
 /* eslint-disable max-lines */
 import {
-  AlertTriangle,
-  CalendarDays,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  Tag,
-  Wallet,
-} from 'lucide-react';
+  ExclamationTriangleIcon as AlertTriangle,
+  CalendarDaysIcon as CalendarDays,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  ArrowPathIcon as Loader2,
+  ArrowPathIcon as RefreshCw,
+  ArrowPathRoundedSquareIcon as Repeat,
+  TagIcon as Tag,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
@@ -31,6 +34,14 @@ import { formatLocalDate } from '@/lib/utils';
 import type { Payable, PayableFormData } from '@/types';
 
 const PAYABLE_STATUSES = ['active', 'paid', 'overdue', 'cancelled'];
+const PAYMENT_FREQUENCIES = [
+  'daily',
+  'weekly',
+  'monthly',
+  'quarterly',
+  'semiannual',
+  'annual',
+];
 
 interface PayableFormProps {
   payable: Payable | undefined;
@@ -95,6 +106,8 @@ export function PayableForm({
           category: payable.category,
           notes: payable.notes,
           status: payable.status,
+          is_cumulative: payable.is_cumulative ?? false,
+          payment_frequency: payable.payment_frequency ?? 'monthly',
         }
       : {
           description: '',
@@ -103,6 +116,8 @@ export function PayableForm({
           date: formatLocalDate(new Date()),
           category: 'others',
           status: 'active',
+          is_cumulative: false,
+          payment_frequency: 'monthly',
         }
   );
 
@@ -298,6 +313,41 @@ export function PayableForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="payment_frequency" className="gap-xs flex items-center">
+              <RefreshCw className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.payables.form.paymentFrequencyLabel')}
+            </Label>
+            <Select
+              value={formData.payment_frequency}
+              onValueChange={(value) => set({ payment_frequency: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_FREQUENCIES.map((freq) => (
+                  <SelectItem key={freq} value={freq}>
+                    {t(`pages.loans.frequencies.${freq}`, { defaultValue: freq })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-sm flex items-end">
+            <label className="gap-sm flex items-center text-sm">
+              <Checkbox
+                checked={formData.is_cumulative ?? false}
+                onCheckedChange={(checked) => set({ is_cumulative: !!checked })}
+              />
+              <span className="gap-xs flex items-center">
+                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.payables.form.isCumulativeLabel')}
+              </span>
+            </label>
           </div>
 
           <div className="space-y-sm col-span-2">

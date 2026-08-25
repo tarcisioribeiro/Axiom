@@ -156,28 +156,39 @@ export const accountSchema = z
 // SCHEMAS DE DESPESAS
 // ============================================================================
 
-export const expenseSchema = z.object({
-  value: z.number({ message: numberError('Valor') }).positive(positiveError('Valor')),
-  category: z.enum(EXPENSE_CATEGORY_KEYS, {
-    message: 'Selecione uma categoria válida',
-  }),
-  description: z
-    .string()
-    .min(1, requiredError('Descrição'))
-    .max(500, maxError('Descrição', 500)),
-  date: z.string().min(1, requiredError('Data')),
-  horary: z.string().min(1, requiredError('Horário')),
-  payed: z.boolean().default(false),
-  account: z
-    .number({ message: 'Conta inválida' })
-    .int('Conta deve ser um número inteiro')
-    .positive('Selecione uma conta'),
-  member: z.number().int().positive().optional().nullable(),
-  merchant: z.string().optional(),
-  related_loan: z.number().int().positive().optional().nullable(),
-  related_payable: z.number().int().positive().optional().nullable(),
-  fixed_expense_template: z.number().int().positive().optional().nullable(),
-});
+export const expenseSchema = z
+  .object({
+    value: z.number({ message: numberError('Valor') }).positive(positiveError('Valor')),
+    category: z.enum(EXPENSE_CATEGORY_KEYS, {
+      message: 'Selecione uma categoria válida',
+    }),
+    description: z
+      .string()
+      .min(1, requiredError('Descrição'))
+      .max(500, maxError('Descrição', 500)),
+    date: z.string().min(1, requiredError('Data')),
+    horary: z.string().min(1, requiredError('Horário')),
+    payed: z.boolean().default(false),
+    account: z
+      .number({ message: 'Conta inválida' })
+      .int('Conta deve ser um número inteiro')
+      .positive('Selecione uma conta'),
+    member: z.number().int().positive().optional().nullable(),
+    merchant: z.string().optional(),
+    related_loan: z.number().int().positive().optional().nullable(),
+    related_payable: z.number().int().positive().optional().nullable(),
+    fixed_expense_template: z.number().int().positive().optional().nullable(),
+  })
+  .refine(
+    (data) =>
+      [data.related_loan, data.related_payable, data.fixed_expense_template].filter(
+        Boolean
+      ).length <= 1,
+    {
+      message: 'Só é possível vincular a um empréstimo, conta a pagar ou despesa fixa.',
+      path: ['related_loan'],
+    }
+  );
 
 // ============================================================================
 // SCHEMAS DE RECEITAS

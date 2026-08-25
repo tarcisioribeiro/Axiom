@@ -145,14 +145,14 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
               <div className="bg-muted h-3 overflow-hidden rounded-full">
                 <div
                   className={cn(
-                    'h-full rounded-full transition-all',
+                    'h-full w-full origin-left rounded-full transition-transform',
                     stats.pct >= 100
                       ? 'bg-success'
                       : loan?.status === 'defaulted'
                         ? 'bg-destructive'
                         : 'bg-primary'
                   )}
-                  style={{ width: `${stats.pct}%` }}
+                  style={{ transform: `scaleX(${stats.pct / 100})` }}
                 />
               </div>
               <div className="flex justify-between text-xs">

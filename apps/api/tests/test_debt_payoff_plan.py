@@ -266,6 +266,75 @@ class DebtPayoffPlanViewTest(_DashboardCoverageBaseTestCase):
         )
         self.assertEqual(month_entry["fixed_expenses"], 250.0)
 
+    def test_debt_linked_fixed_expense_still_excluded_from_surplus_projection(
+        self,
+    ):
+        """
+        Regression guard for the debt payment plan feature: once a
+        Payable has a payment plan, its parcel is represented by a
+        FixedExpense (related_payable set) that flows through the normal
+        monthly-agenda generation pipeline
+        (expenses.services.bulk_generate_fixed_expenses). The resulting
+        Expense also carries related_payable (copied from the template) -
+        the pre-existing double-counting guard tested above must still
+        exclude it from the generic fixed-expenses surplus projection.
+        """
+        from expenses.models import FixedExpense
+        from expenses.services import bulk_generate_fixed_expenses
+        from payables.signals import generate_payable_installments
+
+        payable = self._make_payable(
+            value=Decimal("300.00"),
+            due_date=date.today() + timedelta(days=20),
+        )
+        generate_payable_installments(payable, 3, self.user, self.account)
+        payable.refresh_from_db()
+        fixed_expense = FixedExpense.objects.get(related_payable=payable)
+
+        today = date.today()
+        month = f"{today.year}-{today.month:02d}"
+        result = bulk_generate_fixed_expenses(
+            month,
+            [
+                {
+                    "fixed_expense_id": fixed_expense.id,
+                    "value": float(fixed_expense.default_value),
+                }
+            ],
+            self.user,
+        )
+        expense = result["expenses"][0]
+        self.assertEqual(expense.related_payable_id, payable.id)
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+        month_entry = next(
+            m
+            for m in response.data["surplus_projection"]
+            if m["year"] == expense.date.year
+            and m["month"] == expense.date.month
+        )
+        self.assertEqual(month_entry["fixed_expenses"], 0.0)
+
+    def test_debt_entries_expose_installment_progress_fields(self):
+        """Each debt entry surfaces installments_total/installments_paid/
+        payment_plan_exists so the frontend can show 'parcela N/M'."""
+        from payables.signals import generate_payable_installments
+
+        payable = self._make_payable(value=Decimal("300.00"))
+        generate_payable_installments(payable, 3, self.user, self.account)
+
+        url = reverse("debt-payoff-plan")
+        response = self.client.get(url)
+        debt = next(
+            d
+            for d in response.data["snowball"]["debts"]
+            if d["type"] == "payable"
+        )
+        self.assertEqual(debt["installments_total"], 3)
+        self.assertEqual(debt["installments_paid"], 0)
+        self.assertTrue(debt["payment_plan_exists"])
+
     def test_fixed_revenue_projection_helper(self):
         """
         Mirrors CashFlowForecastViewTest.

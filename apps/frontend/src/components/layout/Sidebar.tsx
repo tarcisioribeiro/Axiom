@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
+import {
+  ChevronDownIcon as ChevronDown,
+  FireIcon as Flame,
+  XMarkIcon as X,
+  ViewColumnsIcon as PanelLeftClose,
+  ViewColumnsIcon as PanelLeft,
+  Cog6ToothIcon as Settings,
+  ArrowLeftOnRectangleIcon as LogOut,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  ChevronDown,
-  Flame,
-  X,
-  PanelLeftClose,
-  PanelLeft,
-  Settings,
-  LogOut,
-} from 'lucide-react';
 import { useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -88,7 +88,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
   const Icon = item.icon;
 
   const base = cn(
-    'relative flex items-center gap-3 rounded-lg transition-all duration-150',
+    'relative flex items-center gap-3 rounded-lg transition duration-150',
     active
       ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
       : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground',
@@ -259,7 +259,7 @@ export const Sidebar = () => {
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
-                'relative flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-150',
+                'relative flex h-10 w-10 items-center justify-center rounded-lg transition duration-150',
                 hasActiveItem
                   ? 'text-primary font-medium'
                   : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -267,7 +267,7 @@ export const Sidebar = () => {
             >
               <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
               {streak && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-0.5 text-[9px] font-bold text-white">
+                <span className="text-2xs absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-0.5 font-bold text-white">
                   {streak}
                 </span>
               )}
@@ -279,7 +279,7 @@ export const Sidebar = () => {
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
             className={cn(
-              'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition-all duration-200',
+              'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-200',
               hasActiveItem
                 ? 'text-primary font-medium'
                 : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -308,7 +308,7 @@ export const Sidebar = () => {
           <div
             id={`module-${module.id}`}
             className={cn(
-              'grid transition-all duration-200 ease-in-out',
+              'grid transition duration-200 ease-in-out',
               isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             )}
           >
@@ -339,7 +339,7 @@ export const Sidebar = () => {
                         aria-expanded={isSubExpanded}
                         aria-controls={`submodule-${subModule.id}`}
                         className={cn(
-                          'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition-all duration-150',
+                          'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-150',
                           isSubExpanded
                             ? 'bg-primary/10 text-primary font-medium'
                             : hasSubActiveItem
@@ -369,7 +369,7 @@ export const Sidebar = () => {
                       <div
                         id={`submodule-${subModule.id}`}
                         className={cn(
-                          'grid transition-all duration-200 ease-in-out',
+                          'grid transition duration-200 ease-in-out',
                           isSubExpanded
                             ? 'grid-rows-[1fr] opacity-100'
                             : 'grid-rows-[0fr] opacity-0'
@@ -481,7 +481,7 @@ export const Sidebar = () => {
 
             <div className="my-sm border-border/40 border-t" />
 
-            <p className="px-md pb-xs text-muted-foreground/60 text-[10px] font-semibold tracking-widest uppercase">
+            <p className="px-md pb-xs text-muted-foreground/60 text-2xs font-semibold tracking-widest uppercase">
               {t('layout.sectionModules')}
             </p>
 
@@ -587,13 +587,13 @@ export const Sidebar = () => {
       {/* Version info (desktop expanded only) */}
       {!isMobile && !isCollapsed && (
         <div className="mt-sm gap-xs flex items-center justify-center">
-          <span className="text-muted-foreground/40 font-mono text-[10px] select-none">
+          <span className="text-muted-foreground/40 text-2xs font-mono select-none">
             v{APP_VERSION}
           </span>
           {!IS_PRODUCTION && (
             <span
               className={cn(
-                'px-xs rounded py-px text-[9px] font-bold tracking-wide uppercase select-none',
+                'px-xs text-2xs rounded py-px font-bold tracking-wide uppercase select-none',
                 APP_ENV === 'staging'
                   ? 'bg-orange-500/10 text-orange-500'
                   : 'bg-sky-500/10 text-sky-500'

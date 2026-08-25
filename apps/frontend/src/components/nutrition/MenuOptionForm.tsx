@@ -1,14 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import type { TFunction } from 'i18next';
 import {
-  GripVertical,
-  ListChecks,
-  Loader2,
-  Plus,
-  Salad,
-  StickyNote,
-  Trash2,
-} from 'lucide-react';
+  Bars3Icon as GripVertical,
+  QueueListIcon as ListChecks,
+  ArrowPathIcon as Loader2,
+  PlusIcon as Plus,
+  CakeIcon as Salad,
+  DocumentTextIcon as StickyNote,
+  TrashIcon as Trash2,
+} from '@heroicons/react/24/solid';
+import type { TFunction } from 'i18next';
 import { useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -354,7 +354,7 @@ export function MenuOptionForm({
                             t={t}
                           />
                           {position < group.indices.length - 1 && (
-                            <p className="my-xs text-category-nutrition/60 text-center text-[10px] font-bold tracking-widest uppercase">
+                            <p className="my-xs text-category-nutrition/60 text-2xs text-center font-bold tracking-widest uppercase">
                               {t('pages.nutritionMealTypes.ingredientOr')}
                             </p>
                           )}
@@ -372,7 +372,7 @@ export function MenuOptionForm({
             <button
               type="button"
               onClick={addStandalone}
-              className="gap-sm border-category-nutrition/30 py-sm text-category-nutrition hover:border-category-nutrition/60 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-all"
+              className="gap-sm border-category-nutrition/30 py-sm text-category-nutrition hover:border-category-nutrition/60 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addIngredient')}
@@ -380,7 +380,7 @@ export function MenuOptionForm({
             <button
               type="button"
               onClick={addNewGroup}
-              className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition-all"
+              className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
@@ -430,7 +430,7 @@ function IngredientRow({
   t,
 }: IngredientRowProps) {
   return (
-    <div className="group border-border bg-card p-sm hover:border-category-nutrition/30 relative rounded-lg border transition-all">
+    <div className="group border-border bg-card p-sm hover:border-category-nutrition/30 relative rounded-lg border transition">
       {/* Row header */}
       <div className="mb-sm gap-xs flex items-center">
         <GripVertical className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
@@ -449,7 +449,7 @@ function IngredientRow({
       {/* Food + Quantity + Unit */}
       <div className="gap-xs grid grid-cols-[1fr_80px_100px]">
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.food')}
           </Label>
           <Select
@@ -471,7 +471,7 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
           <Input
@@ -484,7 +484,7 @@ function IngredientRow({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.unit')}
           </Label>
           <Select

@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingDown,
-  Download,
-  CheckCircle2,
-  Clock,
-  Tag,
-  CircleDot,
-  GitFork,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowDownTrayIcon as Download,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  TagIcon as Tag,
+  ViewfinderCircleIcon as CircleDot,
+  ShareIcon as GitFork,
+} from '@heroicons/react/24/solid';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -89,6 +89,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     handleEdit,
     handleDelete,
     handleSubmit,
+    handleRedistributedSuccess,
     handleExport,
     totalExpenses,
     hasActiveFilters,
@@ -311,7 +312,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             {categoryBreakdown.map(({ cat, pct }, i) => (
               <div
                 key={cat}
-                className={`h-full transition-all ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                className={`h-full transition-[width] ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
                 style={{ width: `${pct}%` }}
                 title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
               />
@@ -363,7 +364,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                   {formatCurrency(parseFloat(expense.value))}
                 </p>
                 <span
-                  className={`px-xs mt-0.5 inline-block rounded py-0.5 text-[10px] font-medium ${
+                  className={`px-xs text-2xs mt-0.5 inline-block rounded py-0.5 font-medium ${
                     expense.payed
                       ? 'bg-success/10 text-success'
                       : 'bg-warning/10 text-warning'
@@ -478,6 +479,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             payables={payables}
             fixedExpenses={fixedExpenses}
             onSubmit={handleSubmit}
+            onRedistributedSuccess={handleRedistributedSuccess}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />

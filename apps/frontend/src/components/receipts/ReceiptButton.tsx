@@ -1,4 +1,10 @@
-import { FileText, Image, Receipt, Eye, Loader2 } from 'lucide-react';
+import {
+  DocumentTextIcon as FileText,
+  PhotoIcon as Image,
+  ReceiptRefundIcon as Receipt,
+  EyeIcon as Eye,
+  ArrowPathIcon as Loader2,
+} from '@heroicons/react/24/solid';
 import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 

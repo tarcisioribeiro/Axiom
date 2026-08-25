@@ -1,5 +1,12 @@
 /* eslint-disable max-lines */
-import { FileText, Landmark, Percent, Power, TrendingUp, Wallet } from 'lucide-react';
+import {
+  DocumentTextIcon as FileText,
+  BuildingLibraryIcon as Landmark,
+  ReceiptPercentIcon as Percent,
+  PowerIcon as Power,
+  ArrowTrendingUpIcon as TrendingUp,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -239,7 +246,7 @@ export function VaultFormDialog({
                 onClick={() =>
                   setFormData({ ...formData, is_active: !formData.is_active })
                 }
-                className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
+                className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition ${
                   formData.is_active
                     ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                     : 'border-border/60 bg-muted/20 opacity-70'

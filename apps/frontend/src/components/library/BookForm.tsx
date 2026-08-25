@@ -1,17 +1,17 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  BookOpen,
-  FileText,
-  ImagePlus,
-  Loader2,
-  Smartphone,
-  Star,
-  Tag,
-  Upload,
-  User2,
-  X,
-} from 'lucide-react';
+  BookOpenIcon as BookOpen,
+  DocumentTextIcon as FileText,
+  PhotoIcon as ImagePlus,
+  ArrowPathIcon as Loader2,
+  DevicePhoneMobileIcon as Smartphone,
+  StarIcon as Star,
+  TagIcon as Tag,
+  ArrowUpTrayIcon as Upload,
+  UserIcon as User2,
+  XMarkIcon as X,
+} from '@heroicons/react/24/solid';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -361,7 +361,7 @@ export function BookForm({
                   type="button"
                   onClick={() => setValue('media_type', value)}
                   disabled={isLoading}
-                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
                     mediaType === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -677,7 +677,7 @@ export function BookForm({
                   type="button"
                   onClick={() => setValue('read_status', value)}
                   disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition duration-150 ${
                     watch('read_status') === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

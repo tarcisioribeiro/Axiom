@@ -1,22 +1,22 @@
 /* eslint-disable max-lines */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle,
-  CalendarCheck,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  CircleDollarSign,
-  CreditCard,
-  Landmark,
-  Plus,
-  Target,
-  TrendingDown,
-  TrendingUp,
-  Trash2,
-  Wallet,
-} from 'lucide-react';
+  ExclamationTriangleIcon as AlertTriangle,
+  CalendarDateRangeIcon as CalendarCheck,
+  ChevronDownIcon as ChevronDown,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpIcon as ChevronUp,
+  CurrencyDollarIcon as CircleDollarSign,
+  CreditCardIcon as CreditCard,
+  BuildingLibraryIcon as Landmark,
+  PlusIcon as Plus,
+  ViewfinderCircleIcon as Target,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  TrashIcon as Trash2,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +92,8 @@ interface FixedExpenseItem {
   credit_card_name: string;
   allow_value_edit: boolean;
   already_posted: boolean;
+  related_loan_name: string | null;
+  related_payable_name: string | null;
 }
 
 interface FixedItemOverride {
@@ -249,6 +251,7 @@ function EditableFixedItem({
   override,
   alreadyPosted,
   forceDisabled,
+  debtName,
   onToggle,
   onValueChange,
 }: {
@@ -263,6 +266,9 @@ function EditableFixedItem({
    * elsewhere (e.g. a card-linked fixed expense already inside a bill
    * total), so including it here would double-count it. */
   forceDisabled?: boolean;
+  /** Name of the Loan/Payable this fixed expense is the installment of,
+   * when it comes from a debt payment plan. */
+  debtName?: string | null;
   onToggle: (id: number, enabled: boolean) => void;
   onValueChange: (id: number, value: string) => void;
 }) {
@@ -287,6 +293,12 @@ function EditableFixedItem({
         <span className="font-medium">{label}</span>
         {sub && <span className="ml-xs text-muted-foreground text-xs">{sub}</span>}
       </div>
+      {debtName && (
+        <Badge variant="outline" className="gap-xs shrink-0 text-xs" title={debtName}>
+          <Landmark className="h-3 w-3" />
+          {debtName}
+        </Badge>
+      )}
       {alreadyPosted && (
         <Badge
           variant="outline"
@@ -1213,7 +1225,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                           <div className="bg-muted h-1.5 w-full rounded-full">
                             <div
                               className={cn(
-                                'h-1.5 rounded-full transition-all',
+                                'h-1.5 rounded-full transition',
                                 executionPct >= 100
                                   ? 'bg-destructive'
                                   : executionPct >= 80
@@ -1271,6 +1283,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     override={fixedExpenseOverrides[String(e.id)]}
                     alreadyPosted={e.already_posted}
                     forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
+                    debtName={e.related_loan_name ?? e.related_payable_name}
                     onToggle={toggleFixedExpense}
                     onValueChange={updateFixedExpenseValue}
                   />

@@ -1,6 +1,13 @@
 /* eslint-disable max-lines */
+import {
+  BookOpenIcon as BookOpen,
+  XMarkIcon as X,
+  PlayIcon as Play,
+  PauseIcon as Pause,
+  Square2StackIcon as Square,
+  ClockIcon as Timer,
+} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -368,7 +375,7 @@ export function StudyTimer() {
         {/* FAB button */}
         <button
           onClick={() => setIsOpen((o) => !o)}
-          className="bg-category-intellect flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 dark:text-black"
+          className="bg-category-intellect hoverable:hover:scale-105 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95 dark:text-black"
           aria-label={t('pages.libraryDashboard.studyTimerTitle')}
         >
           {state.phase === 'running' ? (

@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import {
-  ArrowLeft,
-  Download,
-  TrendingUp,
-  TrendingDown,
-  Receipt,
-  HandCoins,
-  ArrowLeftRight,
-  BarChart3,
-} from 'lucide-react';
+  ArrowLeftIcon as ArrowLeft,
+  ArrowDownTrayIcon as Download,
+  ArrowTrendingUpIcon as TrendingUp,
+  ArrowTrendingDownIcon as TrendingDown,
+  ReceiptRefundIcon as Receipt,
+  BanknotesIcon as HandCoins,
+  ArrowsRightLeftIcon as ArrowLeftRight,
+  ChartBarSquareIcon as BarChart3,
+} from '@heroicons/react/24/solid';
+import { useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
-  CheckSquare,
-  Edit,
-  Trash2,
-  BarChart2,
-  Library,
-  Download,
-  FileText,
-  Sheet,
-  Save,
-  Bookmark,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  CheckCircleIcon as CheckSquare,
+  PencilSquareIcon as Edit,
+  TrashIcon as Trash2,
+  ChartBarIcon as BarChart2,
+  BuildingLibraryIcon as Library,
+  ArrowDownTrayIcon as Download,
+  DocumentTextIcon as FileText,
+  TableCellsIcon as Sheet,
+  ArrowDownTrayIcon as Save,
+  BookmarkIcon as Bookmark,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -283,7 +283,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
             key={idx}
             title={label}
             className={cn(
-              'flex h-5 w-5 items-center justify-center rounded text-[10px] font-semibold',
+              'text-2xs flex h-5 w-5 items-center justify-center rounded font-semibold',
               activeDays.includes(idx)
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -303,7 +303,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       <div className="gap-sm flex w-28 items-center">
         <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
           <div
-            className={cn('h-full rounded-full transition-all', barColor)}
+            className={cn('h-full rounded-full transition-[width]', barColor)}
             style={{ width: `${Math.min(rate, 100)}%` }}
           />
         </div>
@@ -549,7 +549,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedTask

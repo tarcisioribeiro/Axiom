@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/incompatible-library */
 import {
-  CheckCircle2,
-  ClipboardList,
-  Dumbbell,
-  FileText,
-  Loader2,
-  XCircle,
-} from 'lucide-react';
+  CheckCircleIcon as CheckCircle2,
+  ClipboardDocumentListIcon as ClipboardList,
+  FireIcon as Dumbbell,
+  DocumentTextIcon as FileText,
+  ArrowPathIcon as Loader2,
+  XCircleIcon as XCircle,
+} from '@heroicons/react/24/solid';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -128,7 +128,7 @@ export function WorkoutPlanForm({
             type="button"
             onClick={() => setValue('is_active', true)}
             className={cn(
-              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition-all',
+              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
               isActive
                 ? 'border-success bg-success/10 text-success'
                 : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
@@ -141,7 +141,7 @@ export function WorkoutPlanForm({
             type="button"
             onClick={() => setValue('is_active', false)}
             className={cn(
-              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition-all',
+              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
               !isActive
                 ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
                 : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30'

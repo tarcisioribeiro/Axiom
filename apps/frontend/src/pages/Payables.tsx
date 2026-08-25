@@ -1,17 +1,19 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Receipt,
-  CreditCard,
-  List,
-  CheckCircle2,
-  AlertTriangle,
-  Banknote,
-  Clock,
-} from 'lucide-react';
+  PlusIcon as Plus,
+  PencilIcon as Pencil,
+  TrashIcon as Trash2,
+  ReceiptRefundIcon as Receipt,
+  CreditCardIcon as CreditCard,
+  ListBulletIcon as List,
+  CheckCircleIcon as CheckCircle2,
+  ExclamationTriangleIcon as AlertTriangle,
+  BanknotesIcon as Banknote,
+  ClockIcon as Clock,
+  CalendarDateRangeIcon as CalendarRange,
+  ArrowTrendingUpIcon as TrendingUp,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,9 +23,11 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { IncreaseValueDialog } from '@/components/payables/IncreaseValueDialog';
 import { PayableForm } from '@/components/payables/PayableForm';
 import { PayableInstallmentsDialog } from '@/components/payables/PayableInstallmentsDialog';
 import { PayablePaymentDialog } from '@/components/payables/PayablePaymentDialog';
+import { PaymentPlanDialog } from '@/components/payables/PaymentPlanDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,8 +95,15 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
   });
 
   const isLoading = payablesLoading || accountsLoading;
+  const queryClient = useQueryClient();
+  const invalidatePayables = () =>
+    void queryClient.invalidateQueries({ queryKey: ['payables'] });
 
   const [paymentPayable, setPaymentPayable] = useState<Payable | null>(null);
+  const [paymentPlanPayable, setPaymentPlanPayable] = useState<Payable | null>(null);
+  const [increaseValuePayable, setIncreaseValuePayable] = useState<Payable | null>(
+    null
+  );
 
   const [installmentsPayable, setInstallmentsPayable] = useState<Payable | null>(null);
   const [installments, setInstallments] = useState<PayableInstallment[]>([]);
@@ -303,7 +314,10 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                     <div className="space-y-xs">
                       <div className="bg-muted h-2 overflow-hidden rounded-full">
                         <div
-                          className={cn('h-full rounded-full transition-all', barColor)}
+                          className={cn(
+                            'h-full rounded-full transition-[width]',
+                            barColor
+                          )}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -367,7 +381,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                     <CreditCard className="h-3 w-3" />
                     {t('pages.payables.payBtn')}
                   </Button>
-                  {(payable.installments ?? 0) > 0 && (
+                  {(payable.installments ?? 0) > 1 ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -377,6 +391,32 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                     >
                       <List className="h-3 w-3" />
                       {t('pages.payables.installmentsBtn')}
+                    </Button>
+                  ) : (
+                    payable.status !== 'paid' &&
+                    payable.status !== 'cancelled' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPaymentPlanPayable(payable)}
+                        title={t('pages.payables.form.paymentPlanTitle')}
+                        className="gap-xs text-xs"
+                      >
+                        <CalendarRange className="h-3 w-3" />
+                        {t('pages.payables.form.createPaymentPlanBtn')}
+                      </Button>
+                    )
+                  )}
+                  {payable.is_cumulative && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIncreaseValuePayable(payable)}
+                      title={t('pages.payables.form.increaseValueTitle')}
+                      className="gap-xs text-xs"
+                    >
+                      <TrendingUp className="h-3 w-3" />
+                      {t('pages.payables.form.increaseValueBtn')}
                     </Button>
                   )}
                   <ReceiptButton
@@ -412,7 +452,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedPayable
@@ -445,6 +485,19 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
+      />
+
+      <PaymentPlanDialog
+        payable={paymentPlanPayable}
+        accounts={accounts}
+        onClose={() => setPaymentPlanPayable(null)}
+        onSuccess={invalidatePayables}
+      />
+
+      <IncreaseValueDialog
+        payable={increaseValuePayable}
+        onClose={() => setIncreaseValuePayable(null)}
+        onSuccess={invalidatePayables}
       />
     </Wrapper>
   );

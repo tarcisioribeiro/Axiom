@@ -24,6 +24,7 @@ vi.mock('@/lib/animations', () => ({
   itemVariants: {},
   cardVariants: {},
   useCounter: (end: number) => end,
+  DURATION: { fast: 0.2, normal: 0.3, medium: 0.4, slow: 0.6 },
 }));
 
 vi.mock('@/components/charts', () => ({

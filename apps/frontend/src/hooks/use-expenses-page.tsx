@@ -69,6 +69,7 @@ export interface UseExpensesPageReturn {
   handleDelete: (id: number) => Promise<void>;
   deletingExpenseIds: Set<number | string>;
   handleSubmit: (data: ExpenseFormData, splitOnCreate?: boolean) => void;
+  handleRedistributedSuccess: () => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
     date_from?: string;
@@ -336,6 +337,20 @@ export function useExpensesPage(opts?: {
     }
   };
 
+  // Requisito 7 do plano de pagamento de dívidas: quando a Expense é criada
+  // pelo endpoint atômico de redistribuição (payable já parcelado), o
+  // ExpenseForm lida com a chamada à API sozinho — este handler só espelha
+  // os efeitos colaterais de sucesso do createMutation (invalidar lista,
+  // toast, fechar diálogo).
+  const handleRedistributedSuccess = () => {
+    void invalidateExpenses();
+    toast({
+      title: t('pages.expenses.created'),
+      description: t('pages.expenses.createdDesc'),
+    });
+    setIsDialogOpen(false);
+  };
+
   const handleExport = async (modalParams: {
     export_format: 'csv' | 'pdf';
     date_from?: string;
@@ -481,6 +496,7 @@ export function useExpensesPage(opts?: {
     handleDelete,
     deletingExpenseIds,
     handleSubmit,
+    handleRedistributedSuccess,
     handleExport,
     totalExpenses,
     hasActiveFilters,

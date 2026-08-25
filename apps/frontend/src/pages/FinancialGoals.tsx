@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  CalendarDays,
-  CheckCircle2,
-  FileText,
-  Link,
-  Pencil,
-  PiggyBank,
-  Plus,
-  Sliders,
-  Tag,
-  Target,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
-} from 'lucide-react';
+  CalendarDaysIcon as CalendarDays,
+  CheckCircleIcon as CheckCircle2,
+  DocumentTextIcon as FileText,
+  LinkIcon as Link,
+  PencilIcon as Pencil,
+  BanknotesIcon as PiggyBank,
+  PlusIcon as Plus,
+  AdjustmentsVerticalIcon as Sliders,
+  TagIcon as Tag,
+  ViewfinderCircleIcon as Target,
+  TrashIcon as Trash2,
+  ArrowTrendingDownIcon as TrendingDown,
+  ArrowTrendingUpIcon as TrendingUp,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -686,7 +686,7 @@ export default function FinancialGoals() {
                         onClick={() =>
                           setFormData({ ...formData, category: cat.value })
                         }
-                        className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition-all ${
+                        className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition ${
                           formData.category === cat.value
                             ? 'border-primary bg-primary/10 text-primary'
                             : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
@@ -894,7 +894,7 @@ export default function FinancialGoals() {
                   onClick={() =>
                     setFormData({ ...formData, is_active: !formData.is_active })
                   }
-                  className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition-all ${
+                  className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition ${
                     formData.is_active
                       ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
                       : 'border-border/60 bg-muted/20 opacity-70'

@@ -1,13 +1,13 @@
-import { AnimatePresence } from 'framer-motion';
 import {
-  Activity,
-  LayoutDashboard,
-  Link2,
-  LogOut,
-  Settings,
-  ScrollText,
-  Shield,
-} from 'lucide-react';
+  BoltIcon as Activity,
+  Squares2X2Icon as LayoutDashboard,
+  LinkIcon as Link2,
+  ArrowLeftOnRectangleIcon as LogOut,
+  Cog6ToothIcon as Settings,
+  DocumentTextIcon as ScrollText,
+  ShieldCheckIcon as Shield,
+} from '@heroicons/react/24/solid';
+import { AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router';
 

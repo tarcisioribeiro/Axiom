@@ -1,20 +1,21 @@
 /* eslint-disable max-lines */
 import {
-  Plus,
-  Trash2,
-  Pencil,
-  Download,
-  HandCoins,
-  CreditCard,
-  List,
-  TableProperties,
-  CheckCircle2,
-  Clock,
-  Banknote,
-  Users,
-  Building2,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+  PlusIcon as Plus,
+  TrashIcon as Trash2,
+  PencilIcon as Pencil,
+  ArrowDownTrayIcon as Download,
+  BanknotesIcon as HandCoins,
+  CreditCardIcon as CreditCard,
+  ListBulletIcon as List,
+  TableCellsIcon as TableProperties,
+  CheckCircleIcon as CheckCircle2,
+  ClockIcon as Clock,
+  BanknotesIcon as Banknote,
+  UsersIcon as Users,
+  BuildingOffice2Icon as Building2,
+  CalendarDateRangeIcon as CalendarRange,
+} from '@heroicons/react/24/solid';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -28,6 +29,7 @@ import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialo
 import { LoanForm } from '@/components/loans/LoanForm';
 import { LoanInstallmentsDialog } from '@/components/loans/LoanInstallmentsDialog';
 import { LoanPaymentDialog } from '@/components/loans/LoanPaymentDialog';
+import { LoanPaymentPlanDialog } from '@/components/loans/LoanPaymentPlanDialog';
 import { LoanProgressDialog } from '@/components/loans/LoanProgressDialog';
 import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
 import { ReceiptButton } from '@/components/receipts';
@@ -49,6 +51,7 @@ import { cn } from '@/lib/utils';
 import { loanInstallmentsService } from '@/services/loan-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AmortizationSchedule, LoanInstallment, Loan } from '@/types';
+import type { IconComponent } from '@/types/icon';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -65,6 +68,8 @@ type LoanRole = 'all' | 'benefited' | 'creditor';
 export default function Loans() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
   const {
     loans,
     accounts,
@@ -91,6 +96,8 @@ export default function Loans() {
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  const [paymentPlanLoan, setPaymentPlanLoan] = useState<Loan | null>(null);
 
   const [progressLoan, setProgressLoan] = useState<Loan | null>(null);
 
@@ -241,7 +248,7 @@ export default function Loans() {
                 { key: 'all', icon: List },
                 { key: 'benefited', icon: Users },
                 { key: 'creditor', icon: Building2 },
-              ] as { key: LoanRole; icon: LucideIcon }[]
+              ] as { key: LoanRole; icon: IconComponent }[]
             ).map(({ key, icon: Icon }) => (
               <button
                 key={key}
@@ -302,7 +309,7 @@ export default function Loans() {
                   <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
                       className={cn(
-                        'h-full rounded-full transition-all',
+                        'h-full rounded-full transition',
                         pct >= 100
                           ? 'bg-success'
                           : loan.status === 'defaulted'
@@ -398,7 +405,7 @@ export default function Loans() {
                       {t('pages.loans.payBtn')}
                     </Button>
                   )}
-                  {loan.installments > 1 && (
+                  {loan.installments > 1 ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -409,6 +416,20 @@ export default function Loans() {
                       <List className="h-3 w-3" />
                       {t('pages.loans.installments.title')}
                     </Button>
+                  ) : (
+                    loan.status !== 'paid' &&
+                    loan.status !== 'cancelled' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPaymentPlanLoan(loan)}
+                        title={t('pages.loans.paymentPlan.title')}
+                        className="gap-xs text-xs"
+                      >
+                        <CalendarRange className="h-3 w-3" />
+                        {t('pages.loans.paymentPlan.createBtn')}
+                      </Button>
+                    )
                   )}
                   <Button
                     variant="outline"
@@ -470,7 +491,7 @@ export default function Loans() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="custom-scrollbar max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
@@ -510,6 +531,12 @@ export default function Loans() {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsLoan(null)}
+      />
+
+      <LoanPaymentPlanDialog
+        loan={paymentPlanLoan}
+        onClose={() => setPaymentPlanLoan(null)}
+        onSuccess={invalidateLoans}
       />
 
       <LoanAmortizationDialog

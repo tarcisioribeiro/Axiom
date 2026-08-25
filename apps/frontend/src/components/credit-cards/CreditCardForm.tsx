@@ -1,16 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  BadgePercent,
-  CalendarDays,
-  CreditCard,
-  DollarSign,
-  Hash,
-  Lock,
-  Loader2,
-  Settings,
-  User,
-  Wallet,
-} from 'lucide-react';
+  PercentBadgeIcon as BadgePercent,
+  CalendarDaysIcon as CalendarDays,
+  CreditCardIcon as CreditCard,
+  CurrencyDollarIcon as DollarSign,
+  HashtagIcon as Hash,
+  LockClosedIcon as Lock,
+  ArrowPathIcon as Loader2,
+  Cog6ToothIcon as Settings,
+  UserIcon as User,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -188,7 +188,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
-            className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+            className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
               activeTab === id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -239,7 +239,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                     key={k}
                     type="button"
                     onClick={() => setValue('flag', k)}
-                    className={`p-xs rounded border text-xs font-semibold transition-all ${
+                    className={`p-xs rounded border text-xs font-semibold transition ${
                       watchedFlag === k
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'

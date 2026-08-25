@@ -463,6 +463,28 @@ class PayableSignalTest(TestCase):
         self.payable.refresh_from_db()
         self.assertEqual(self.payable.paid_value, Decimal("150.00"))
 
+    def test_fixed_expense_deactivated_when_payable_paid(self):
+        from expenses.models import FixedExpense
+
+        fixed_expense = FixedExpense.objects.create(
+            description="Parcela dentista",
+            default_value=Decimal("300.00"),
+            category="health and care",
+            account=self.account,
+            due_day=10,
+            is_active=True,
+            allow_value_edit=False,
+            related_payable=self.payable,
+        )
+        _make_expense(
+            self.account,
+            value="300.00",
+            payed=True,
+            related_payable=self.payable,
+        )
+        fixed_expense.refresh_from_db()
+        self.assertFalse(fixed_expense.is_active)
+
     def test_soft_deleted_expense_excluded_from_paid_value(self):
         """is_deleted=True expenses are excluded from the paid_value total."""
         exp = _make_expense(
@@ -567,6 +589,162 @@ class LoanSignalTest(TestCase):
         exp.delete()
         self.loan.refresh_from_db()
         self.assertEqual(self.loan.payed_value, Decimal("0.00"))
+
+    def test_fixed_expense_deactivated_when_loan_paid(self):
+        from expenses.models import FixedExpense
+
+        fixed_expense = FixedExpense.objects.create(
+            description="Parcela empréstimo",
+            default_value=Decimal("500.00"),
+            category="loans",
+            account=self.account,
+            due_day=10,
+            is_active=True,
+            allow_value_edit=False,
+            related_loan=self.loan,
+        )
+        _make_expense(
+            self.account, value="500.00", payed=True, related_loan=self.loan
+        )
+        fixed_expense.refresh_from_db()
+        self.assertFalse(fixed_expense.is_active)
+
+
+# ---------------------------------------------------------------------------
+# expenses/signals.py — mark_next_installment_paid_on_expense_payed
+# ---------------------------------------------------------------------------
+
+
+class ExpenseFixedExpenseLinkSignalTest(TestCase):
+    """Marks the oldest pending Loan/PayableInstallment as paid when a
+    linked Expense flips payed=False -> True."""
+
+    def setUp(self):
+        self.account = _make_account("LinkAcc")
+
+    def _make_payable_with_installments(self, count=3, value="300.00"):
+        from payables.models import Payable, PayableInstallment
+
+        payable = Payable.objects.create(
+            description="Parcelado",
+            value=Decimal(value),
+            date=date.today(),
+            category="health and care",
+            status="active",
+            installments=count,
+        )
+        per = (Decimal(value) / count).quantize(Decimal("0.01"))
+        for i in range(1, count + 1):
+            PayableInstallment.objects.create(
+                payable=payable,
+                installment_number=i,
+                value=per,
+                due_date=date.today(),
+                payed=False,
+            )
+        return payable
+
+    def _make_loan_with_installments(self, count=3, value="300.00"):
+        from loans.models import Loan, LoanInstallment
+
+        member = _make_member("Link Member", document_hash="e" * 64)
+        creditor = _make_member("Link Creditor", document_hash="f" * 64)
+        loan = Loan.objects.create(
+            description="Parcelado",
+            value=Decimal(value),
+            payed_value=Decimal("0.00"),
+            date=date.today(),
+            horary=time(10, 0),
+            category="loans",
+            account=self.account,
+            benefited=member,
+            creditor=creditor,
+            payed=False,
+            status="active",
+            installments=1,  # avoid the creation-time auto-generation signal
+        )
+        per = (Decimal(value) / count).quantize(Decimal("0.01"))
+        for i in range(1, count + 1):
+            LoanInstallment.objects.create(
+                loan=loan,
+                installment_number=i,
+                value=per,
+                due_date=date.today(),
+                payed=False,
+            )
+        return loan
+
+    def test_oldest_open_payable_installment_marked_paid(self):
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        expense = _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        second = PayableInstallment.objects.get(
+            payable=payable, installment_number=2
+        )
+        self.assertTrue(first.payed)
+        self.assertEqual(first.payment_expense_id, expense.id)
+        self.assertFalse(second.payed)
+
+    def test_oldest_open_loan_installment_marked_paid(self):
+        from loans.models import LoanInstallment
+
+        loan = self._make_loan_with_installments()
+        expense = _make_expense(
+            self.account, value="100.00", payed=True, related_loan=loan
+        )
+        first = LoanInstallment.objects.get(loan=loan, installment_number=1)
+        self.assertTrue(first.payed)
+        self.assertEqual(first.payment_expense_id, expense.id)
+
+    def test_creating_expense_already_payed_marks_installment(self):
+        """created=True with payed=True counts as a False->True transition."""
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        self.assertTrue(first.payed)
+
+    def test_unpaid_expense_does_not_mark_installment(self):
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        _make_expense(
+            self.account, value="100.00", payed=False, related_payable=payable
+        )
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        self.assertFalse(first.payed)
+
+    def test_second_payment_marks_next_installment(self):
+        from payables.models import PayableInstallment
+
+        payable = self._make_payable_with_installments()
+        _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        _make_expense(
+            self.account, value="100.00", payed=True, related_payable=payable
+        )
+        first = PayableInstallment.objects.get(
+            payable=payable, installment_number=1
+        )
+        second = PayableInstallment.objects.get(
+            payable=payable, installment_number=2
+        )
+        self.assertTrue(first.payed)
+        self.assertTrue(second.payed)
 
 
 # ---------------------------------------------------------------------------

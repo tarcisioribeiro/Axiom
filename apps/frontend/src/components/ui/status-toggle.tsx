@@ -1,9 +1,12 @@
+import { SEMANTIC_ACCENT_ACTIVE_CLASS } from '@/lib/semantic-accent';
+import type { SemanticAccent } from '@/lib/semantic-accent';
 import { cn } from '@/lib/utils';
 
 interface StatusToggleOption {
   value: string;
   label: string;
-  activeClass?: string;
+  /** @default 'default' */
+  accentColor?: SemanticAccent;
 }
 
 interface StatusToggleProps {
@@ -33,7 +36,7 @@ export function StatusToggle({
             className={cn(
               'flex-1 rounded px-3 py-1.5 text-sm font-medium transition-all duration-150',
               isActive
-                ? (opt.activeClass ?? 'bg-background text-foreground shadow-sm')
+                ? SEMANTIC_ACCENT_ACTIVE_CLASS[opt.accentColor ?? 'default']
                 : 'text-muted-foreground hover:text-foreground',
               disabled && 'cursor-not-allowed opacity-50'
             )}

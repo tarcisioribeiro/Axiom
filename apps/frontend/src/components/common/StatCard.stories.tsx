@@ -1,5 +1,10 @@
+import {
+  CurrencyDollarIcon as DollarSign,
+  ArrowTrendingUpIcon as TrendingUp,
+  CreditCardIcon as CreditCard,
+  ExclamationCircleIcon as AlertCircle,
+} from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
-import { DollarSign, TrendingUp, CreditCard, AlertCircle } from 'lucide-react';
 
 import { StatCard } from './StatCard';
 

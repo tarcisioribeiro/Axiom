@@ -1,23 +1,23 @@
 /* eslint-disable max-lines */
+import {
+  ExclamationTriangleIcon as AlertTriangle,
+  BookOpenIcon as BookOpen,
+  ChatBubbleLeftRightIcon as BotMessageSquare,
+  LightBulbIcon as Brain,
+  CheckCircleIcon as CheckCircle2,
+  CurrencyDollarIcon as DollarSign,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+  ArrowPathIcon as History,
+  ArrowPathIcon as Loader2,
+  PaperAirplaneIcon as Send,
+  ShieldCheckIcon as Shield,
+  Square2StackIcon as Square,
+  TrashIcon as Trash2,
+  UserIcon as User,
+  XCircleIcon as XCircle,
+} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  AlertTriangle,
-  BookOpen,
-  BotMessageSquare,
-  Brain,
-  CheckCircle2,
-  DollarSign,
-  ExternalLink,
-  History,
-  Loader2,
-  Send,
-  Shield,
-  Square,
-  Trash2,
-  User,
-  XCircle,
-} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
@@ -29,6 +29,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { DURATION } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agent-service';
 import type { AgentMessage, AgentName, IndexedSource } from '@/types';
@@ -53,7 +54,7 @@ function CitationLink({
         href={href ?? '#'}
         target="_blank"
         rel="noopener noreferrer"
-        className="gap-xs bg-primary/10 px-sm text-primary hover:bg-primary/20 inline-flex items-center rounded-full py-0.5 text-[11px] font-medium no-underline"
+        className="gap-xs bg-primary/10 px-sm text-primary hover:bg-primary/20 text-2xs inline-flex items-center rounded-full py-0.5 font-medium no-underline"
       >
         <ExternalLink className="h-2.5 w-2.5" />
         {label}
@@ -68,7 +69,7 @@ function CitationLink({
       <span
         title={title}
         aria-label={`Fonte ${num}: ${title}`}
-        className="bg-primary/15 px-xs text-primary inline-flex cursor-help items-center rounded text-[10px] leading-5 font-bold"
+        className="bg-primary/15 px-xs text-primary text-2xs inline-flex cursor-help items-center rounded leading-5 font-bold"
       >
         {num}
       </span>
@@ -174,7 +175,7 @@ function AgentSelectorCard({
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(agentKey)}
       className={cn(
-        'bg-card p-md flex w-full flex-col gap-3 rounded-lg border-2 text-left transition-all duration-200',
+        'bg-card p-md flex w-full flex-col gap-3 rounded-lg border-2 text-left transition duration-200',
         selected
           ? cn('border-2', cardClass, 'shadow-medium')
           : 'border-border hover:border-muted-foreground/40'
@@ -201,7 +202,7 @@ function AgentSelectorCard({
         {examples.slice(0, 3).map((ex) => (
           <span
             key={ex}
-            className="bg-muted px-sm text-muted-foreground rounded-full py-0.5 text-[10px]"
+            className="bg-muted px-sm text-muted-foreground text-2xs rounded-full py-0.5"
           >
             {ex}
           </span>
@@ -227,7 +228,7 @@ function MessageBubble({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: DURATION.fast }}
       className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}
     >
       <div
@@ -274,7 +275,7 @@ function MessageBubble({
             </div>
           )}
         </div>
-        <span className="text-muted-foreground/70 text-[11px]">
+        <span className="text-muted-foreground/70 text-2xs">
           {new Date(message.created_at).toLocaleTimeString('pt-BR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -309,7 +310,7 @@ function StreamingBubble({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: DURATION.fast }}
       className="flex gap-3"
     >
       <div className="bg-muted text-muted-foreground mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
@@ -354,13 +355,13 @@ function StreamingBubble({
 
         {!isStreaming && sources.length > 0 && (
           <div className="gap-xs flex flex-wrap pt-0.5">
-            <span className="text-muted-foreground/70 text-[11px]">
+            <span className="text-muted-foreground/70 text-2xs">
               {t('pages.agents.streaming.sources')}:
             </span>
             {sources.map((src) => (
               <span
                 key={src}
-                className="bg-muted px-sm text-muted-foreground rounded-full py-0.5 text-[11px]"
+                className="bg-muted px-sm text-muted-foreground text-2xs rounded-full py-0.5"
               >
                 {src}
               </span>
@@ -381,7 +382,7 @@ function ThinkingBubble() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: DURATION.fast }}
       className="flex gap-3"
     >
       <div className="bg-muted text-muted-foreground mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
@@ -411,7 +412,7 @@ function AgentSelector({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: DURATION.normal }}
       className="gap-lg px-md py-lg flex h-full flex-col items-center justify-center"
     >
       <div className="text-center">
@@ -800,7 +801,7 @@ export default function Agents() {
                 </button>
               )}
             </div>
-            <p className="mt-sm text-muted-foreground/60 text-center text-[11px]">
+            <p className="mt-sm text-muted-foreground/60 text-2xs text-center">
               {t('pages.agents.keyboardHint')}
             </p>
           </div>

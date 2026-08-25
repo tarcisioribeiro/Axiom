@@ -1,25 +1,24 @@
 /* eslint-disable max-lines */
+import {
+  BookOpenIcon as BookOpen,
+  ArrowDownTrayIcon as Download,
+  DocumentTextIcon as FileText,
+  AcademicCapIcon as GraduationCap,
+  PaintBrushIcon as Highlighter,
+  LinkIcon as Link2,
+  ArrowsPointingOutIcon as Maximize2,
+  SignalIcon as Network,
+  PencilIcon as PenLine,
+  MagnifyingGlassIcon as Search,
+  SparklesIcon as Sparkles,
+  TrashIcon as Trash2,
+  XMarkIcon as X,
+  BoltIcon as Zap,
+  MagnifyingGlassPlusIcon as ZoomIn,
+  MagnifyingGlassMinusIcon as ZoomOut,
+} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  BookOpen,
-  Download,
-  FileText,
-  GraduationCap,
-  Highlighter,
-  Link2,
-  type LucideIcon,
-  Maximize2,
-  Network,
-  PenLine,
-  Search,
-  Sparkles,
-  Trash2,
-  X,
-  Zap,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph3D } from 'react-force-graph';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +37,7 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 import { membersService } from '@/services/members-service';
+import type { IconComponent } from '@/types/icon';
 import type {
   GraphLink,
   GraphNode,
@@ -78,7 +78,7 @@ const NODE_SIZES: Record<KnowledgeNodeType, number> = {
   highlight: 5,
 };
 
-const NODE_ICONS: Record<KnowledgeNodeType, LucideIcon> = {
+const NODE_ICONS: Record<KnowledgeNodeType, IconComponent> = {
   book: BookOpen,
   author: PenLine,
   course: GraduationCap,
@@ -545,7 +545,7 @@ function CreateLinkModal({
               key={key}
               onClick={() => setRelation(key)}
               className={cn(
-                'px-sm py-xs rounded-md border text-xs transition-all',
+                'px-sm py-xs rounded-md border text-xs transition',
                 relation === key
                   ? 'text-background border-transparent'
                   : 'border-border bg-muted/30 text-foreground hover:bg-muted'
@@ -1010,7 +1010,7 @@ export default function KnowledgeGraph() {
                     key={type}
                     onClick={() => toggleType(type)}
                     className={cn(
-                      'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition-all',
+                      'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition',
                       activeTypes.has(type)
                         ? 'bg-muted/60 text-foreground'
                         : 'text-muted-foreground opacity-50 hover:opacity-75'
@@ -1041,7 +1041,7 @@ export default function KnowledgeGraph() {
                   }
                 }}
                 className={cn(
-                  'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition-all',
+                  'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs transition',
                   includeHighlights
                     ? 'bg-muted/60 text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -1294,7 +1294,7 @@ export default function KnowledgeGraph() {
                     </strong>
                   </span>
                   <span className="mx-xs text-accent/40">·</span>
-                  <kbd className="border-accent/30 bg-accent/10 px-xs rounded border py-0.5 font-mono text-[10px]">
+                  <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5 font-mono">
                     Esc
                   </kbd>
                   <button

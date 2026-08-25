@@ -1,15 +1,15 @@
 import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  CalendarClock,
-  History,
-  Pencil,
-  RefreshCcw,
-  Sparkles,
-  Trash2,
-  TrendingUp,
-  Vault,
-} from 'lucide-react';
+  ArrowDownTrayIcon as ArrowDownToLine,
+  ArrowUpTrayIcon as ArrowUpFromLine,
+  CalendarDateRangeIcon as CalendarClock,
+  ArrowPathIcon as History,
+  PencilIcon as Pencil,
+  ArrowPathIcon as RefreshCcw,
+  SparklesIcon as Sparkles,
+  TrashIcon as Trash2,
+  ArrowTrendingUpIcon as TrendingUp,
+  LockClosedIcon as Vault,
+} from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -149,8 +149,11 @@ export function VaultCard({
             </div>
             <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${proportion}%`, backgroundColor: color.barColor }}
+                className="h-full w-full origin-left rounded-full transition-transform duration-500"
+                style={{
+                  transform: `scaleX(${proportion / 100})`,
+                  backgroundColor: color.barColor,
+                }}
               />
             </div>
           </div>

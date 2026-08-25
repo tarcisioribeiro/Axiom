@@ -1,5 +1,5 @@
+import { ShieldExclamationIcon as ShieldOff } from '@heroicons/react/24/solid';
 import { useMutation } from '@tanstack/react-query';
-import { ShieldOff } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,20 +1,20 @@
 /* eslint-disable max-lines */
 import {
-  AlertCircle,
-  ArrowDownToLine,
-  ArrowRight,
-  ArrowUpFromLine,
-  BadgePercent,
-  CalendarDays,
-  Check,
-  Clock,
-  FileText,
-  Loader2,
-  Shield,
-  Tag,
-  Users,
-  Wallet,
-} from 'lucide-react';
+  ExclamationCircleIcon as AlertCircle,
+  ArrowDownTrayIcon as ArrowDownToLine,
+  ArrowRightIcon as ArrowRight,
+  ArrowUpTrayIcon as ArrowUpFromLine,
+  PercentBadgeIcon as BadgePercent,
+  CalendarDaysIcon as CalendarDays,
+  CheckIcon as Check,
+  ClockIcon as Clock,
+  DocumentTextIcon as FileText,
+  ArrowPathIcon as Loader2,
+  ShieldCheckIcon as Shield,
+  TagIcon as Tag,
+  UsersIcon as Users,
+  WalletIcon as Wallet,
+} from '@heroicons/react/24/solid';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -264,7 +264,7 @@ export function LoanForm({
                             : {}),
                         });
                       }}
-                      className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 transition-all ${
+                      className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 transition ${
                         formData.loan_type === type
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border/50 bg-muted/10 text-muted-foreground hover:border-primary/40'

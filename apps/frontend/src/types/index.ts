@@ -75,6 +75,13 @@ export type {
   PayableFormData,
   PayableInstallment,
   PayablePaymentRequest,
+  RecalculationPreview,
+  RecalculationPreviewInstallment,
+  PaymentPlanRequest,
+  PaymentPlanResponse,
+  RecalculationResponse,
+  RedistributeAfterPaymentRequest,
+  RedistributeAfterPaymentResponse,
 } from './payables';
 export type {
   Receivable,
