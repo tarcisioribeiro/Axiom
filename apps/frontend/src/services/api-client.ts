@@ -152,6 +152,9 @@ class ApiClient {
           } catch (refreshError) {
             logger.error('[ApiClient] Token refresh failed:', refreshError);
             this.clearTokens();
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login';
+            }
             return Promise.reject(
               new AuthenticationError(
                 'Sua sessão expirou. Por favor, faça login novamente.'

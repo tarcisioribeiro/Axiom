@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 
+import { logger } from '@/lib/logger';
 import { notificationsService } from '@/services/notifications-service';
 import type { Notification } from '@/types';
+
+const MAX_CONSECUTIVE_POLL_FAILURES = 5;
 
 interface NotificationsState {
   notifications: Notification[];
@@ -9,6 +12,7 @@ interface NotificationsState {
   isLoading: boolean;
   isDropdownOpen: boolean;
   pollingInterval: ReturnType<typeof setInterval> | null;
+  consecutivePollFailures: number;
 
   fetchNotifications: () => Promise<void>;
   fetchSummary: () => Promise<void>;
@@ -25,6 +29,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   isLoading: false,
   isDropdownOpen: false,
   pollingInterval: null,
+  consecutivePollFailures: 0,
 
   fetchNotifications: async () => {
     set({ isLoading: true });
@@ -40,9 +45,16 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   fetchSummary: async () => {
     try {
       const summary = await notificationsService.getSummary();
-      set({ unreadCount: summary.unread_count });
+      set({ unreadCount: summary.unread_count, consecutivePollFailures: 0 });
     } catch {
-      // Silently fail for polling
+      const failures = get().consecutivePollFailures + 1;
+      set({ consecutivePollFailures: failures });
+      if (failures >= MAX_CONSECUTIVE_POLL_FAILURES) {
+        logger.warn(
+          '[NotificationsStore] Stopping polling after repeated summary fetch failures'
+        );
+        get().stopPolling();
+      }
     }
   },
 
@@ -85,6 +97,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   startPolling: () => {
     const { pollingInterval } = get();
     if (pollingInterval) return;
+
+    set({ consecutivePollFailures: 0 });
 
     // Initial fetch
     void get().fetchSummary();
