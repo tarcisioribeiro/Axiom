@@ -612,7 +612,8 @@
         "count": "Active Accounts",
         "institutionsSubtitle": "institutions",
         "accountsCount": "{{count}} accounts",
-        "overdraftIncluded": "including overdraft"
+        "overdraftIncluded": "including overdraft",
+        "reservedInVaults": "minus {{amount}} reserved in vaults"
       },
       "columns": {
         "name": "Account",
@@ -659,6 +660,8 @@
         "statusFailed": "Failed"
       },
       "available": "Available: {{value}}",
+      "reservedInVaults": "Reserved in vaults: {{value}}",
+      "availableForSpending": "Available to spend: {{value}}",
       "bankReconciliation": "Bank Reconciliation",
       "bankReconciliationTitle": "Bank Reconciliation — {{account}}",
       "bankReconciliationDesc": "Import bank statements to reconcile with your transactions.",
@@ -6475,6 +6478,8 @@
     "vaults": "Vaults / Investments",
     "loans": "Loans (payable)",
     "lentLoans": "Loans (receivable)",
+    "receivables": "Receivables",
+    "payables": "Payables",
     "creditCards": "Credit Cards",
     "overdraft": "Overdraft Used",
     "noAssets": "No assets found",

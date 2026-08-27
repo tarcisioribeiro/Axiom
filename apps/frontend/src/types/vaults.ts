@@ -27,6 +27,7 @@ export interface Vault {
   account: number;
   account_name: string;
   account_balance: string;
+  account_available_balance: string;
   institution_name: string;
   current_balance: string;
   accumulated_yield: string;

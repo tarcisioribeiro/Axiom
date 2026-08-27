@@ -381,30 +381,32 @@ export default function Loans() {
                 </div>
 
                 <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                  {Number(loan.creditor) === currentUserMemberId ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setReceiptLoan(loan)}
-                      title={t('pages.loans.receipt.title')}
-                      className="gap-xs text-success text-xs"
-                    >
-                      <CreditCard className="h-3 w-3" />
-                      {t('pages.loans.receiveBtn')}
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPaymentLoan(loan)}
-                      disabled={Number(loan.benefited) !== currentUserMemberId}
-                      title={t('pages.loans.payment.title')}
-                      className="gap-xs text-xs"
-                    >
-                      <CreditCard className="h-3 w-3" />
-                      {t('pages.loans.payBtn')}
-                    </Button>
-                  )}
+                  {loan.status !== 'paid' &&
+                    loan.status !== 'cancelled' &&
+                    (Number(loan.creditor) === currentUserMemberId ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setReceiptLoan(loan)}
+                        title={t('pages.loans.receipt.title')}
+                        className="gap-xs text-success text-xs"
+                      >
+                        <CreditCard className="h-3 w-3" />
+                        {t('pages.loans.receiveBtn')}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPaymentLoan(loan)}
+                        disabled={Number(loan.benefited) !== currentUserMemberId}
+                        title={t('pages.loans.payment.title')}
+                        className="gap-xs text-xs"
+                      >
+                        <CreditCard className="h-3 w-3" />
+                        {t('pages.loans.payBtn')}
+                      </Button>
+                    ))}
                   {loan.installments > 1 ? (
                     <Button
                       variant="outline"

@@ -189,13 +189,24 @@ export default function Accounts() {
     'bg-destructive',
   ] as const;
 
-  const { totalBalance, totalAvailable } = useMemo(() => {
+  const { totalBalance, totalAvailable, totalReserved } = useMemo(() => {
     const balance = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
-    const available = accounts.reduce(
-      (s, a) => s + parseFloat(a.balance) + parseFloat(a.overdraft_limit ?? '0'),
+    const reserved = accounts.reduce(
+      (s, a) => s + parseFloat(a.deposited_in_vaults ?? '0'),
       0
     );
-    return { totalBalance: balance, totalAvailable: available };
+    const available = accounts.reduce(
+      (s, a) =>
+        s +
+        parseFloat(a.available_balance ?? a.balance) +
+        parseFloat(a.overdraft_limit ?? '0'),
+      0
+    );
+    return {
+      totalBalance: balance,
+      totalAvailable: available,
+      totalReserved: reserved,
+    };
   }, [accounts]);
 
   const balanceDistribution = useMemo(() => {
@@ -359,7 +370,11 @@ export default function Accounts() {
               {formatCurrency(totalAvailable)}
             </div>
             <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.accounts.stats.overdraftIncluded')}
+              {totalReserved > 0
+                ? t('pages.accounts.stats.reservedInVaults', {
+                    amount: formatCurrency(totalReserved),
+                  })
+                : t('pages.accounts.stats.overdraftIncluded')}
             </p>
           </CardContent>
         </Card>
@@ -429,6 +444,10 @@ export default function Accounts() {
             const balance = parseFloat(account.balance);
             const overdraft = parseFloat(account.overdraft_limit ?? '0');
             const available = balance + overdraft;
+            const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
+            const availableForSpending = parseFloat(
+              account.available_balance ?? account.balance
+            );
             const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
             const initials = account.account_name
               .split(' ')
@@ -486,6 +505,22 @@ export default function Accounts() {
                           value: formatCurrency(String(available)),
                         })}
                       </p>
+                    )}
+                    {reservedInVaults > 0 && (
+                      <div className="mt-xs border-border/60 pt-xs space-y-0.5 border-t">
+                        <p className="text-muted-foreground text-xs">
+                          {t('pages.accounts.reservedInVaults', {
+                            value: formatCurrency(String(reservedInVaults)),
+                          })}
+                        </p>
+                        <p
+                          className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                        >
+                          {t('pages.accounts.availableForSpending', {
+                            value: formatCurrency(String(availableForSpending)),
+                          })}
+                        </p>
+                      </div>
                     )}
                   </div>
                   <div className="pt-sm flex items-center justify-between border-t">

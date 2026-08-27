@@ -132,6 +132,17 @@ class Revenue(BaseModel):
             "Receita gerada automaticamente a partir do saldo inicial da conta"
         ),
     )
+    related_vault = models.ForeignKey(
+        "vaults.Vault",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="yield_revenues",
+        verbose_name="Cofre Relacionado",
+        help_text=(
+            "Cofre cujo rendimento gerou esta receita (consolidada por mês)"
+        ),
+    )
     fixed_revenue_template = models.ForeignKey(
         "FixedRevenue",
         on_delete=models.SET_NULL,
@@ -161,6 +172,7 @@ class Revenue(BaseModel):
             models.Index(fields=["related_transfer"]),
             models.Index(fields=["related_loan"]),
             models.Index(fields=["related_receivable"]),
+            models.Index(fields=["related_vault"]),
         ]
 
     def save(self, *args, **kwargs):

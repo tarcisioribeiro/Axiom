@@ -371,16 +371,18 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                 </div>
 
                 <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPaymentPayable(payable)}
-                    title={t('pages.payables.payment.title')}
-                    className="gap-xs text-xs"
-                  >
-                    <CreditCard className="h-3 w-3" />
-                    {t('pages.payables.payBtn')}
-                  </Button>
+                  {payable.status !== 'paid' && payable.status !== 'cancelled' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPaymentPayable(payable)}
+                      title={t('pages.payables.payment.title')}
+                      className="gap-xs text-xs"
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      {t('pages.payables.payBtn')}
+                    </Button>
+                  )}
                   {(payable.installments ?? 0) > 1 ? (
                     <Button
                       variant="outline"

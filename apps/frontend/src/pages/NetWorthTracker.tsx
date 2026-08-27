@@ -7,6 +7,8 @@ import {
   CreditCardIcon as CreditCard,
   BanknotesIcon as HandCoins,
   ExclamationTriangleIcon as AlertTriangle,
+  ArrowDownCircleIcon as ReceivableIcon,
+  ArrowUpCircleIcon as PayableIcon,
 } from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
@@ -26,8 +28,17 @@ import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { loansService } from '@/services/loans-service';
+import { payablesService } from '@/services/payables-service';
+import { receivablesService } from '@/services/receivables-service';
 import { vaultsService } from '@/services/vaults-service';
-import type { Account, Vault, Loan, CreditCard as CreditCardType } from '@/types';
+import type {
+  Account,
+  Vault,
+  Loan,
+  CreditCard as CreditCardType,
+  Payable,
+  Receivable,
+} from '@/types';
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
@@ -60,11 +71,25 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const payablesQuery = useQuery({
+    queryKey: ['payables', 'netWorth'],
+    queryFn: () => payablesService.getAllPages(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const receivablesQuery = useQuery({
+    queryKey: ['receivables', 'netWorth'],
+    queryFn: () => receivablesService.getAllPages(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
   const isLoading =
     accountsQuery.isLoading ||
     vaultsQuery.isLoading ||
     loansQuery.isLoading ||
-    creditCardsQuery.isLoading;
+    creditCardsQuery.isLoading ||
+    payablesQuery.isLoading ||
+    receivablesQuery.isLoading;
 
   const {
     positiveAccounts,
@@ -72,7 +97,9 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
     totalBankAssets,
     totalVaultAssets,
     totalLentLoanAssets,
+    totalReceivableAssets,
     totalLoanLiabilities,
+    totalPayableLiabilities,
     totalCreditCardLiabilities,
     totalOverdraftLiabilities,
     totalAssets,
@@ -83,12 +110,18 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
     const vaults: Vault[] = vaultsQuery.data ?? [];
     const loans: Loan[] = loansQuery.data ?? [];
     const cards: CreditCardType[] = creditCardsQuery.data ?? [];
+    const payables: Payable[] = payablesQuery.data ?? [];
+    const receivables: Receivable[] = receivablesQuery.data ?? [];
 
-    const positiveAccts = accounts.filter((a) => parseFloat(a.balance) > 0);
-    const overdraftAccts = accounts.filter((a) => parseFloat(a.balance) < 0);
-    const bankAssets = positiveAccts.reduce((s, a) => s + parseFloat(a.balance), 0);
+    // O saldo disponível já desconta o que está reservado em cofres — evita
+    // contar o dinheiro do cofre duas vezes (na conta e na linha de cofres).
+    const availableOf = (a: Account) => parseFloat(a.available_balance ?? a.balance);
+
+    const positiveAccts = accounts.filter((a) => availableOf(a) > 0);
+    const overdraftAccts = accounts.filter((a) => availableOf(a) < 0);
+    const bankAssets = positiveAccts.reduce((s, a) => s + availableOf(a), 0);
     const overdraftLiabilities = overdraftAccts.reduce(
-      (s, a) => s + Math.abs(parseFloat(a.balance)),
+      (s, a) => s + Math.abs(availableOf(a)),
       0
     );
 
@@ -111,8 +144,27 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
 
     const cardLiabilities = cards.reduce((s, c) => s + (c.used_credit ?? 0), 0);
 
-    const assets = bankAssets + vaultAssets + lentLoanAssets;
-    const liabilities = loanLiabilities + cardLiabilities + overdraftLiabilities;
+    // Valores a receber ainda em aberto (fora received/cancelled) — ativo.
+    const openReceivables = receivables.filter(
+      (r) => r.status !== 'received' && r.status !== 'cancelled'
+    );
+    const receivableAssets = openReceivables.reduce(
+      (s, r) => s + parseFloat(r.remaining_value ?? r.value),
+      0
+    );
+
+    // Valores a pagar ainda em aberto (fora paid/cancelled) — passivo.
+    const openPayables = payables.filter(
+      (p) => p.status !== 'paid' && p.status !== 'cancelled'
+    );
+    const payableLiabilities = openPayables.reduce(
+      (s, p) => s + parseFloat(p.remaining_value ?? p.value),
+      0
+    );
+
+    const assets = bankAssets + vaultAssets + lentLoanAssets + receivableAssets;
+    const liabilities =
+      loanLiabilities + cardLiabilities + overdraftLiabilities + payableLiabilities;
 
     return {
       positiveAccounts: positiveAccts,
@@ -120,14 +172,23 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
       totalBankAssets: bankAssets,
       totalVaultAssets: vaultAssets,
       totalLentLoanAssets: lentLoanAssets,
+      totalReceivableAssets: receivableAssets,
       totalLoanLiabilities: loanLiabilities,
+      totalPayableLiabilities: payableLiabilities,
       totalCreditCardLiabilities: cardLiabilities,
       totalOverdraftLiabilities: overdraftLiabilities,
       totalAssets: assets,
       totalLiabilities: liabilities,
       netWorth: assets - liabilities,
     };
-  }, [accountsQuery.data, vaultsQuery.data, loansQuery.data, creditCardsQuery.data]);
+  }, [
+    accountsQuery.data,
+    vaultsQuery.data,
+    loansQuery.data,
+    creditCardsQuery.data,
+    payablesQuery.data,
+    receivablesQuery.data,
+  ]);
 
   const chartColors = useChartColors();
 
@@ -142,8 +203,14 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
     if (totalLentLoanAssets > 0) {
       data.push({ name: t('netWorth.lentLoans'), value: totalLentLoanAssets });
     }
+    if (totalReceivableAssets > 0) {
+      data.push({ name: t('netWorth.receivables'), value: totalReceivableAssets });
+    }
     if (totalLoanLiabilities > 0) {
       data.push({ name: t('netWorth.loans'), value: totalLoanLiabilities });
+    }
+    if (totalPayableLiabilities > 0) {
+      data.push({ name: t('netWorth.payables'), value: totalPayableLiabilities });
     }
     if (totalCreditCardLiabilities > 0) {
       data.push({ name: t('netWorth.creditCards'), value: totalCreditCardLiabilities });
@@ -156,7 +223,9 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
     totalBankAssets,
     totalVaultAssets,
     totalLentLoanAssets,
+    totalReceivableAssets,
     totalLoanLiabilities,
+    totalPayableLiabilities,
     totalCreditCardLiabilities,
     totalOverdraftLiabilities,
     t,
@@ -245,7 +314,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                 >
                   <span>{a.account_name}</span>
                   <span className="text-success font-medium">
-                    {formatCurrency(parseFloat(a.balance))}
+                    {formatCurrency(parseFloat(a.available_balance ?? a.balance))}
                   </span>
                 </div>
               ))}
@@ -268,6 +337,17 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                   </div>
                   <span className="font-semibold text-teal-500">
                     {formatCurrency(totalLentLoanAssets)}
+                  </span>
+                </div>
+              )}
+              {totalReceivableAssets > 0 && (
+                <div className="p-sm flex items-center justify-between rounded-lg bg-emerald-500/5">
+                  <div className="gap-sm flex items-center">
+                    <ReceivableIcon className="h-4 w-4 text-emerald-500" />
+                    <span className="text-sm">{t('netWorth.receivables')}</span>
+                  </div>
+                  <span className="font-semibold text-emerald-500">
+                    {formatCurrency(totalReceivableAssets)}
                   </span>
                 </div>
               )}
@@ -297,6 +377,17 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                   </div>
                   <span className="text-destructive font-semibold">
                     {formatCurrency(totalLoanLiabilities)}
+                  </span>
+                </div>
+              )}
+              {totalPayableLiabilities > 0 && (
+                <div className="bg-destructive/5 p-sm flex items-center justify-between rounded-lg">
+                  <div className="gap-sm flex items-center">
+                    <PayableIcon className="text-destructive h-4 w-4" />
+                    <span className="text-sm">{t('netWorth.payables')}</span>
+                  </div>
+                  <span className="text-destructive font-semibold">
+                    {formatCurrency(totalPayableLiabilities)}
                   </span>
                 </div>
               )}
@@ -330,7 +421,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
                   >
                     <span>{a.account_name}</span>
                     <span className="text-destructive font-medium">
-                      {formatCurrency(parseFloat(a.balance))}
+                      {formatCurrency(parseFloat(a.available_balance ?? a.balance))}
                     </span>
                   </div>
                 ))}
