@@ -8,8 +8,9 @@ FROM python:3.12-slim AS base
 # across builds indefinitely (the instructions never change), so without this
 # arg, `apt-get upgrade` never actually re-runs and security patches (e.g.
 # Debian CVEs fixed upstream) never land in the image. CI passes a value that
-# changes weekly to force a periodic refresh while keeping the layer cached
-# for same-week rebuilds.
+# changes daily (date +%Y%m%d) to force a refresh while keeping the layer
+# cached for same-day rebuilds — Debian ships security fixes mid-week, so a
+# weekly bust could leave a fixed CVE flagged by the Trivy scan for days.
 ARG APT_CACHE_BUST=1
 
 # Install system dependencies
