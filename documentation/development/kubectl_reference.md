@@ -189,6 +189,9 @@ pg_dump -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> --format=custom \
 pg_restore -h <DB_HOST> -p <DB_PORT> -U <DB_USER> -d <DB_NAME> \
   --clean --if-exists --no-owner --no-privileges \
   --verbose backup_manual.dump
+
+# Clonar produção → staging (banco + MinIO, orquestrando os Deployments)
+./infra/scripts/k8s-restore.sh
 ```
 
 Reiniciar/gerenciar o serviço Postgres é feito na própria VM

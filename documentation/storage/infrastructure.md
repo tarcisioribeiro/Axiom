@@ -159,6 +159,16 @@ port-forward` — o MinIO é acessado da mesma forma direta que o Postgres.
 MinIO local do `docker-compose` — sem nenhuma mudança necessária, já que ele
 só depende da estrutura do arquivo, não de como o dump foi produzido.
 
+### Replicar produção → staging (no cluster)
+
+`infra/scripts/k8s-restore.sh` clona banco + MinIO de produção para staging
+diretamente no cluster: `mc mirror` do bucket `axiom` → `axiom-staging`
+(além do `pg_dump`/`pg_restore` do banco), depois roda
+`fix_storage_config_for_local` num Pod efêmero para reapontar as chaves de
+MinIO do `SystemConfig` para o bucket/endpoint de staging. Veja
+[documentation/database/infrastructure.md](../database/infrastructure.md#replicar-produção--staging)
+para o passo a passo completo e as limitações.
+
 ### Restaurar em produção/staging
 
 ```bash
