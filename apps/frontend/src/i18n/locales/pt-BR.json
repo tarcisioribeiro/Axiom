@@ -612,7 +612,8 @@
         "count": "Contas Ativas",
         "institutionsSubtitle": "instituições",
         "accountsCount": "{{count}} contas",
-        "overdraftIncluded": "incluindo cheque especial"
+        "overdraftIncluded": "incluindo cheque especial",
+        "reservedInVaults": "descontado {{amount}} reservado em cofres"
       },
       "columns": {
         "name": "Conta",
@@ -659,6 +660,8 @@
         "statusFailed": "Falhou"
       },
       "available": "Disponível: {{value}}",
+      "reservedInVaults": "Reservado em cofres: {{value}}",
+      "availableForSpending": "Disponível p/ débito: {{value}}",
       "bankReconciliation": "Conciliação Bancária",
       "bankReconciliationTitle": "Conciliação Bancária — {{account}}",
       "bankReconciliationDesc": "Importe extratos bancários para conciliar com suas transações.",
@@ -6520,6 +6523,8 @@
     "vaults": "Cofres / Investimentos",
     "loans": "Empréstimos (a pagar)",
     "lentLoans": "Empréstimos (a receber)",
+    "receivables": "Valores a Receber",
+    "payables": "Valores a Pagar",
     "creditCards": "Cartões de Crédito",
     "overdraft": "Cheque Especial Utilizado",
     "noAssets": "Nenhum ativo encontrado",

@@ -20,6 +20,12 @@ class AccountSerializer(serializers.ModelSerializer):
     account_number = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
+    available_balance = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
+    deposited_in_vaults = serializers.DecimalField(
+        max_digits=15, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = Account
@@ -32,6 +38,8 @@ class AccountSerializer(serializers.ModelSerializer):
             "account_number",
             "account_number_masked",
             "balance",
+            "available_balance",
+            "deposited_in_vaults",
             "minimum_balance",
             "overdraft_limit",
             "opening_date",

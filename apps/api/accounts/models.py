@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from app.encryption import EncryptedField, MaskedEncryptedField
@@ -100,3 +102,24 @@ class Account(BaseModel):
 
     def __str__(self) -> str:
         return self.account_name
+
+    @property
+    def deposited_in_vaults(self) -> Decimal:
+        """
+        Total reservado em cofres ativos desta conta (principal + rendimento).
+
+        O rendimento é lançado como receita na conta quando aplicado
+        (categoria ``income``), portanto o saldo cheio do cofre fica reservado
+        e não infla o saldo disponível da conta.
+        """
+        total = Decimal("0.00")
+        for vault in self.vaults.all():
+            if vault.is_active and not vault.is_deleted:
+                if vault.current_balance > 0:
+                    total += vault.current_balance
+        return total
+
+    @property
+    def available_balance(self) -> Decimal:
+        """Saldo disponível para débito (total menos reservado em cofres)."""
+        return self.current_balance - self.deposited_in_vaults

@@ -86,7 +86,7 @@ export function VaultDepositDialog({
                 {t('pages.vaults.depositVaultDesc', { name: vault.description })}
                 <br />
                 {t('pages.vaults.availableAccountBalance')}{' '}
-                {formatCurrency(parseFloat(vault.account_balance))}
+                {formatCurrency(parseFloat(vault.account_available_balance))}
               </>
             )}
           </DialogDescription>
@@ -101,7 +101,7 @@ export function VaultDepositDialog({
               type="number"
               step="0.01"
               min="0.01"
-              max={vault ? parseFloat(vault.account_balance) : undefined}
+              max={vault ? parseFloat(vault.account_available_balance) : undefined}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0,00"
