@@ -48,6 +48,8 @@ FROM nginx:alpine
 # Cache-buster for the OS package layer below — see api/Dockerfile for why
 # this is needed: --cache-from reuses this layer forever otherwise, so
 # `apk upgrade` never actually re-runs and security patches never land.
+# CI passes a value that changes daily (date +%Y%m%d) so mid-week fixes are
+# picked up before the next Trivy scan.
 ARG APK_CACHE_BUST=1
 
 # Upgrade OS packages and install curl for healthcheck
