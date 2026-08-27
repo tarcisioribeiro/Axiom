@@ -222,6 +222,34 @@ psql \
   -f db_backup_<TS>_kv<VER>.sql
 ```
 
+### Replicar produção → staging
+
+`infra/scripts/k8s-restore.sh` automatiza um clone completo de produção para
+staging, **no cluster** (não é o mesmo caso do `docker-restore.sh`, que só
+restaura no docker-compose local):
+
+```bash
+./infra/scripts/k8s-restore.sh          # interativo (pede confirmação)
+./infra/scripts/k8s-restore.sh --yes    # sem prompt
+./infra/scripts/k8s-restore.sh --skip-minio --no-rotate --help
+```
+
+O que ele faz: lê as credenciais dos dois namespaces (`axiom` e
+`axiom-staging`) dos Secrets/ConfigMaps, suspende o CronJob de backup de
+staging, escala `api`/`frontend` para 0, roda `pg_dump` (produção) →
+`pg_restore --clean` (staging) e `mc mirror prod/axiom → staging/axiom-staging`,
+sobe um Pod efêmero com a imagem da api de staging para rodar `migrate`,
+`rotate_encryption_key` (só se `PRODUCTION_ENCRYPTION_KEY` ≠
+`STAGING_ENCRYPTION_KEY`) e `fix_storage_config_for_local`, e por fim
+reescala tudo, reativa o CronJob e dá `FLUSHALL` no Redis de staging.
+
+Mesmos pré-requisitos de rede do `k8s-backup.sh` (acesso direto aos dois
+Postgres e ao MinIO externo) mais `pg_restore`/`psql`/`mc` locais. Limitação:
+segredos do `admin_panel.SystemConfig` fora das 4 chaves de MinIO (LLM,
+e-mail, backup) não são rotacionados — se as `ENCRYPTION_KEY` diferirem,
+reconfigure-os no Django Admin, ou iguale `STAGING_ENCRYPTION_KEY` à de
+produção e use `--no-rotate`.
+
 ## Fora de escopo
 
 - `infra/docker/docker-compose.yml` (serviço `db`) continua sendo Postgres

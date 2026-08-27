@@ -58,6 +58,12 @@ class VaultSerializer(serializers.ModelSerializer):
         decimal_places=2,
         read_only=True,
     )
+    account_available_balance = serializers.DecimalField(
+        source="account.available_balance",
+        max_digits=15,
+        decimal_places=2,
+        read_only=True,
+    )
     institution_name = serializers.CharField(
         source="account.institution_name", read_only=True
     )
@@ -79,6 +85,7 @@ class VaultSerializer(serializers.ModelSerializer):
             "account",
             "account_name",
             "account_balance",
+            "account_available_balance",
             "institution_name",
             "current_balance",
             "accumulated_yield",

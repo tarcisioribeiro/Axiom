@@ -41,9 +41,13 @@ class AccountCreateListView(BaseListCreateView):
     def get_queryset(self) -> QuerySet[Account]:
         # Usa defer() para excluir campo criptografado na listagem
         # (performance)
-        return Account.objects.filter(
-            created_by=self.request.user  # type: ignore[misc]
-        ).defer("_account_number")
+        return (
+            Account.objects.filter(
+                created_by=self.request.user  # type: ignore[misc]
+            )
+            .defer("_account_number")
+            .prefetch_related("vaults")
+        )
 
     def perform_create(self, serializer: BaseSerializer[Account]) -> None:
         serializer.save(  # type: ignore[misc]
@@ -74,7 +78,7 @@ class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     def get_queryset(self) -> QuerySet[Account]:
         return Account.objects.filter(  # type: ignore[misc]
             created_by=self.request.user
-        )
+        ).prefetch_related("vaults")
 
     def perform_update(self, serializer: BaseSerializer[Account]) -> None:
         serializer.save(updated_by=self.request.user)  # type: ignore[misc]
