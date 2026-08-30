@@ -928,7 +928,13 @@
         "value": "Amount",
         "status": "Status",
         "paid": "Paid",
-        "pending": "Pending"
+        "pending": "Pending",
+        "editPlan": "Edit plan",
+        "editHint": "Adjust the amount and due date of open installments.",
+        "recalcCountLabel": "New installment count",
+        "recalcApply": "Recalculate installments",
+        "recalcHint": "Redistributes the remaining balance; paid installments are untouched.",
+        "planUpdated": "Payment plan updated"
       },
       "payment": {
         "title": "Register Payment",
@@ -975,7 +981,9 @@
         "installmentsCountLabel": "Number of Installments",
         "installmentValuePreview": "{{count}}x of {{value}}",
         "created": "Payment plan created",
-        "createdDesc": "The installments were generated and the linked fixed expense was created."
+        "createdDesc": "The installments were generated and the linked fixed expense was created.",
+        "firstInstallmentLabel": "First installment due date",
+        "firstInstallmentHint": "The remaining installments follow the loan frequency."
       },
       "form": {
         "descriptionLabel": "Description *",
@@ -1214,7 +1222,8 @@
         "generateBtn_other": "Generate {{count}} Expenses",
         "success": "Expenses launched successfully!",
         "successDesc": "{{count}} expenses were created for {{month}}",
-        "error": "Error launching expenses"
+        "error": "Error launching expenses",
+        "allGenerated": "All entries for this period have already been created."
       },
       "generationLog": {
         "title": "Generation History",
@@ -1604,7 +1613,13 @@
         "value": "Amount",
         "status": "Status",
         "paid": "Paid",
-        "pending": "Pending"
+        "pending": "Pending",
+        "editPlan": "Edit plan",
+        "editHint": "Adjust the amount and due date of open installments.",
+        "recalcCountLabel": "New installment count",
+        "recalcApply": "Recalculate installments",
+        "recalcHint": "Redistributes the remaining balance; paid installments are untouched.",
+        "planUpdated": "Payment plan updated"
       },
       "payment": {
         "title": "Register Payment",
@@ -1671,7 +1686,9 @@
         "changeCountOption": "Change installment count",
         "newInstallmentCountLabel": "New installment count",
         "valueIncreased": "Value increased",
-        "valueIncreasedDesc": "The value was updated and installments were recalculated."
+        "valueIncreasedDesc": "The value was updated and installments were recalculated.",
+        "firstInstallmentLabel": "First installment due date",
+        "firstInstallmentHint": "The remaining installments follow the chosen frequency."
       }
     },
     "budgets": {
@@ -1795,6 +1812,23 @@
         "monthlyDesc": "Expected monthly fixed revenue",
         "activeCount": "active recurring revenues every month",
         "scheduleTitle": "Receipt schedule"
+      },
+      "launchDialog": {
+        "title": "Launch Fixed Revenues for the Month",
+        "desc": "Select the month and adjust values before generating revenues",
+        "selectMonth": "Select Month",
+        "selectMonthPlaceholder": "Select month",
+        "revenuesLabel": "Revenues ({{selected}} of {{total}} selected)",
+        "selectAll": "Select all",
+        "dueDate": "Due: day {{day}}",
+        "total": "Total:",
+        "generating": "Generating...",
+        "generateBtn_one": "Generate {{count}} Revenue",
+        "generateBtn_other": "Generate {{count}} Revenues",
+        "success": "Revenues launched successfully!",
+        "successDesc": "{{count}} revenues were created for {{month}}",
+        "error": "Error launching revenues",
+        "allGenerated": "All entries for this period have already been created."
       }
     },
     "vaults": {

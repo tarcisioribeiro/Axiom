@@ -78,6 +78,8 @@ export interface PaymentPlanRequest {
   installments: number;
   account: number;
   payment_frequency?: string;
+  /** Vencimento da 1ª parcela (`YYYY-MM-DD`). Default: próximo vencimento futuro. */
+  first_due_date?: string;
 }
 
 export interface PaymentPlanResponse {

@@ -241,6 +241,8 @@ export const API_CONFIG = {
     FIXED_REVENUES: '/api/v1/fixed-revenues/',
     FIXED_REVENUES_GENERATE: '/api/v1/fixed-revenues/generate/',
     FIXED_REVENUES_STATS: '/api/v1/fixed-revenues/stats/',
+    FIXED_REVENUES_GENERATED_MONTHS: '/api/v1/fixed-revenues/generated-months/',
+    FIXED_EXPENSES_GENERATED_MONTHS: '/api/v1/fixed-expenses/generated-months/',
 
     // Fixed Transfers
     FIXED_TRANSFERS: '/api/v1/fixed-transfers/',
@@ -255,6 +257,8 @@ export const API_CONFIG = {
     LOAN_RECEIPT: (id: number) => `/api/v1/loans/${id}/receive/`,
     LOAN_AMORTIZATION: (id: number) => `/api/v1/loans/${id}/amortization/`,
     LOAN_PAYMENT_PLAN: (id: number) => `/api/v1/loans/${id}/payment-plan/`,
+    LOAN_RECALCULATE_INSTALLMENTS: (id: number) =>
+      `/api/v1/loans/${id}/recalculate-installments/`,
 
     // Payable sub-resources (use with id)
     PAYABLE_INSTALLMENTS: (id: number) => `/api/v1/payables/${id}/installments/`,

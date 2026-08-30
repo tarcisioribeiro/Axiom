@@ -6,6 +6,7 @@ import type {
   BulkGenerateResponse,
   FixedExpenseStats,
   FixedExpenseGenerationLog,
+  FullyGeneratedMonthsResponse,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -28,6 +29,13 @@ class FixedExpensesService extends BaseService<FixedExpense, FixedExpenseFormDat
     return apiClient.get<FixedExpenseGenerationLog[]>(
       `${this.endpoint}generation-log/`
     );
+  }
+
+  async getFullyGeneratedMonths(): Promise<string[]> {
+    const data = await apiClient.get<FullyGeneratedMonthsResponse>(
+      `${this.endpoint}generated-months/`
+    );
+    return data.fully_generated_months ?? [];
   }
 }
 

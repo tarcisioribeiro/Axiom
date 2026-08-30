@@ -110,6 +110,17 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 year_int, month_int, min(fixed_exp.due_day, last_day)
             ).date()
 
+        # Data explícita informada pelo usuário no diálogo de lançamento
+        # (apenas se cair dentro do mês selecionado; caso contrário mantém
+        # o vencimento padrão do template).
+        override_date = item.get("date")
+        if (
+            override_date is not None
+            and override_date.year == year_int
+            and override_date.month == month_int
+        ):
+            expense_date = override_date
+
         if fixed_exp.credit_card:
             bill, _ = get_or_create_bill(
                 fixed_exp.credit_card, year, month_num, user
@@ -321,3 +332,68 @@ def get_fixed_expenses_stats():
         },
         "category_breakdown": category_breakdown,
     }
+
+
+def _month_key(value):
+    return f"{value.year}-{value.month:02d}"
+
+
+def get_fully_generated_months(months_ahead=6):
+    """Meses (``YYYY-MM``) em que TODOS os templates de despesa fixa ativos
+    já têm lançamento gerado.
+
+    Usado pelo diálogo de lançamento para remover da lista os meses que já
+    foram totalmente lançados. A janela vai do 1º dia do mês corrente até o
+    fim do mês ``months_ahead`` meses à frente.
+    """
+    from collections import defaultdict
+
+    months_ahead = max(0, min(int(months_ahead), 24))
+    today = timezone.now().date()
+    start = today.replace(day=1)
+    end_year = start.year + (start.month - 1 + months_ahead) // 12
+    end_month = (start.month - 1 + months_ahead) % 12 + 1
+    end = datetime(
+        end_year, end_month, monthrange(end_year, end_month)[1]
+    ).date()
+
+    active = list(
+        FixedExpense.objects.filter(is_deleted=False, is_active=True)
+    )
+    active_ids = {fe.id for fe in active}
+    if not active_ids:
+        return []
+
+    covered = defaultdict(set)
+
+    for template_id, gen_date in Expense.objects.filter(
+        fixed_expense_template_id__in=active_ids,
+        is_deleted=False,
+        date__gte=start,
+        date__lte=end,
+    ).values_list("fixed_expense_template_id", "date"):
+        covered[_month_key(gen_date)].add(template_id)
+
+    cc_templates = [fe for fe in active if fe.credit_card_id]
+    if cc_templates:
+        key_to_id = {
+            (fe.credit_card_id, fe.description): fe.id for fe in cc_templates
+        }
+        for (
+            card_id,
+            description,
+            purchase_date,
+        ) in CreditCardPurchase.objects.filter(
+            card_id__in=[fe.credit_card_id for fe in cc_templates],
+            description__in=[fe.description for fe in cc_templates],
+            is_deleted=False,
+            purchase_date__gte=start,
+            purchase_date__lte=end,
+        ).values_list(
+            "card_id", "description", "purchase_date"
+        ):
+            template_id = key_to_id.get((card_id, description))
+            if template_id is not None:
+                covered[_month_key(purchase_date)].add(template_id)
+
+    return sorted(month for month, ids in covered.items() if ids >= active_ids)

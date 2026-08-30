@@ -46,6 +46,16 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
                 year_int, month_int, min(fixed_rev.due_day, last_day)
             ).date()
 
+        # Data explícita informada pelo usuário no diálogo de lançamento
+        # (apenas se cair dentro do mês selecionado).
+        override_date = item.get("date")
+        if (
+            override_date is not None
+            and override_date.year == year_int
+            and override_date.month == month_int
+        ):
+            revenue_date = override_date
+
         existing = Revenue.objects.filter(
             fixed_revenue_template=fixed_rev,
             date__gte=month_start,
@@ -167,3 +177,38 @@ def get_fixed_revenues_stats():
             "total_amount": float(previous_total),
         },
     }
+
+
+def get_fully_generated_months(months_ahead=6):
+    """Meses (``YYYY-MM``) em que TODOS os templates de receita fixa ativos
+    já têm lançamento gerado. Usado pelo diálogo de lançamento para remover
+    da lista os meses já totalmente lançados."""
+    from collections import defaultdict
+
+    months_ahead = max(0, min(int(months_ahead), 24))
+    today = timezone.now().date()
+    start = today.replace(day=1)
+    end_year = start.year + (start.month - 1 + months_ahead) // 12
+    end_month = (start.month - 1 + months_ahead) % 12 + 1
+    end = datetime(
+        end_year, end_month, monthrange(end_year, end_month)[1]
+    ).date()
+
+    active_ids = set(
+        FixedRevenue.objects.filter(
+            is_deleted=False, is_active=True
+        ).values_list("id", flat=True)
+    )
+    if not active_ids:
+        return []
+
+    covered = defaultdict(set)
+    for template_id, gen_date in Revenue.objects.filter(
+        fixed_revenue_template_id__in=active_ids,
+        is_deleted=False,
+        date__gte=start,
+        date__lte=end,
+    ).values_list("fixed_revenue_template_id", "date"):
+        covered[f"{gen_date.year}-{gen_date.month:02d}"].add(template_id)
+
+    return sorted(month for month, ids in covered.items() if ids >= active_ids)

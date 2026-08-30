@@ -77,6 +77,27 @@ export interface LoanPaymentRequest {
   notes?: string;
 }
 
+export interface LoanRecalculationPreview {
+  loan_id: number;
+  mode: 'keep_count' | 'change_count';
+  old_installment_count: number;
+  new_installment_count: number;
+  old_value_per_installment: string;
+  new_value_per_installment: string;
+  remaining_value: string;
+  installments_preview: Array<{
+    number: number;
+    old_value: string | null;
+    new_value: string;
+    due_date: string;
+  }>;
+}
+
+export interface LoanRecalculationResponse {
+  preview: LoanRecalculationPreview;
+  loan: Loan | null;
+}
+
 export interface LoanReceiptRequest {
   value: number;
   account: number;

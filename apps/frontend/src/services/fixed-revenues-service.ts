@@ -4,6 +4,7 @@ import type {
   BulkGenerateRevenuesResponse,
   FixedRevenue,
   FixedRevenueFormData,
+  FullyGeneratedMonthsResponse,
   PaginatedResponse,
 } from '@/types';
 
@@ -46,6 +47,13 @@ class FixedRevenuesService {
 
   async getStats(): Promise<unknown> {
     return apiClient.get(API_CONFIG.ENDPOINTS.FIXED_REVENUES_STATS);
+  }
+
+  async getFullyGeneratedMonths(): Promise<string[]> {
+    const data = await apiClient.get<FullyGeneratedMonthsResponse>(
+      API_CONFIG.ENDPOINTS.FIXED_REVENUES_GENERATED_MONTHS
+    );
+    return data.fully_generated_months ?? [];
   }
 }
 

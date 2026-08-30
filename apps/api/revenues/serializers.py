@@ -123,6 +123,7 @@ class FixedRevenueCreateUpdateSerializer(serializers.ModelSerializer):
 class FixedRevenueValueSerializer(serializers.Serializer):
     fixed_revenue_id = serializers.IntegerField()
     value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    date = serializers.DateField(required=False, allow_null=True)
 
 
 class BulkGenerateRevenuesRequestSerializer(serializers.Serializer):

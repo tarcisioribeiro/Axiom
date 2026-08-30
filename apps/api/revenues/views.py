@@ -28,6 +28,7 @@ from revenues.serializers import (
 from revenues.services import (
     bulk_generate_fixed_revenues,
     get_fixed_revenues_stats,
+    get_fully_generated_months,
 )
 
 # Build a lookup dict for category display names
@@ -189,6 +190,30 @@ class FixedRevenuesStatsView(APIView):
     def get(self, request):
         stats = get_fixed_revenues_stats()
         return Response(stats)
+
+
+class FixedRevenuesGeneratedMonthsView(APIView):
+    """GET /api/v1/fixed-revenues/generated-months/
+
+    Lista os meses (``YYYY-MM``) em que todos os templates de receita fixa
+    ativos já foram lançados. Aceita ``?months=`` (default 6, máx 24)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedRevenue.objects.none()
+
+    def get(self, request):
+        months_ahead = request.query_params.get("months", 6)
+        try:
+            months_ahead = int(months_ahead)
+        except (TypeError, ValueError):
+            months_ahead = 6
+        return Response(
+            {
+                "fully_generated_months": get_fully_generated_months(
+                    months_ahead
+                )
+            }
+        )
 
 
 class ExportRevenuesView(APIView):

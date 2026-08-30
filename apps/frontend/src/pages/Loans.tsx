@@ -108,8 +108,7 @@ export default function Loans() {
   );
   const [isLoadingAmortization, setIsLoadingAmortization] = useState(false);
 
-  const handleOpenInstallments = async (loan: Loan) => {
-    setInstallmentsLoan(loan);
+  const loadInstallments = async (loan: Loan) => {
     setIsLoadingInstallments(true);
     try {
       const data = await loanInstallmentsService.getByLoan(loan.id);
@@ -119,6 +118,11 @@ export default function Loans() {
     } finally {
       setIsLoadingInstallments(false);
     }
+  };
+
+  const handleOpenInstallments = async (loan: Loan) => {
+    setInstallmentsLoan(loan);
+    await loadInstallments(loan);
   };
 
   const handleOpenAmortization = async (
@@ -533,6 +537,10 @@ export default function Loans() {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsLoan(null)}
+        onUpdated={() => {
+          void invalidateLoans();
+          if (installmentsLoan) void loadInstallments(installmentsLoan);
+        }}
       />
 
       <LoanPaymentPlanDialog
