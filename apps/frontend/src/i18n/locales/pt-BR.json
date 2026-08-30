@@ -928,7 +928,13 @@
         "value": "Valor",
         "status": "Status",
         "paid": "Paga",
-        "pending": "Pendente"
+        "pending": "Pendente",
+        "editPlan": "Editar plano",
+        "editHint": "Ajuste o valor e o vencimento das parcelas em aberto.",
+        "recalcCountLabel": "Nova quantidade de parcelas",
+        "recalcApply": "Recalcular parcelas",
+        "recalcHint": "Redistribui o saldo restante; parcelas pagas não são alteradas.",
+        "planUpdated": "Plano de pagamento atualizado"
       },
       "payment": {
         "title": "Registrar Pagamento",
@@ -975,7 +981,9 @@
         "installmentsCountLabel": "Quantidade de Parcelas",
         "installmentValuePreview": "{{count}}x de {{value}}",
         "created": "Plano de pagamento criado",
-        "createdDesc": "As parcelas foram geradas e a despesa fixa vinculada foi criada."
+        "createdDesc": "As parcelas foram geradas e a despesa fixa vinculada foi criada.",
+        "firstInstallmentLabel": "Vencimento da 1ª parcela",
+        "firstInstallmentHint": "As demais parcelas seguem a frequência do empréstimo."
       },
       "form": {
         "descriptionLabel": "Descrição *",
@@ -1214,7 +1222,8 @@
         "generateBtn_other": "Gerar {{count}} Despesas",
         "success": "Despesas lançadas com sucesso!",
         "successDesc": "{{count}} despesas foram criadas para {{month}}",
-        "error": "Erro ao lançar despesas"
+        "error": "Erro ao lançar despesas",
+        "allGenerated": "Todos os lançamentos deste período já foram feitos."
       },
       "generationLog": {
         "title": "Histórico de Gerações",
@@ -1596,7 +1605,13 @@
         "value": "Valor",
         "status": "Status",
         "paid": "Paga",
-        "pending": "Pendente"
+        "pending": "Pendente",
+        "editPlan": "Editar plano",
+        "editHint": "Ajuste o valor e o vencimento das parcelas em aberto.",
+        "recalcCountLabel": "Nova quantidade de parcelas",
+        "recalcApply": "Recalcular parcelas",
+        "recalcHint": "Redistribui o saldo restante; parcelas pagas não são alteradas.",
+        "planUpdated": "Plano de pagamento atualizado"
       },
       "totalValue": "Valor Total:",
       "paidValue": "Valor Pago:",
@@ -1671,7 +1686,9 @@
         "changeCountOption": "Alterar quantidade de parcelas",
         "newInstallmentCountLabel": "Nova quantidade de parcelas",
         "valueIncreased": "Valor aumentado",
-        "valueIncreasedDesc": "O valor foi atualizado e as parcelas foram recalculadas."
+        "valueIncreasedDesc": "O valor foi atualizado e as parcelas foram recalculadas.",
+        "firstInstallmentLabel": "Vencimento da 1ª parcela",
+        "firstInstallmentHint": "As demais parcelas seguem a frequência escolhida."
       }
     },
     "budgets": {
@@ -1795,6 +1812,23 @@
         "monthlyDesc": "Receita mensal fixa prevista",
         "activeCount": "receitas ativas recorrentes todo mês",
         "scheduleTitle": "Calendário de recebimentos"
+      },
+      "launchDialog": {
+        "title": "Lançar Receitas Fixas do Mês",
+        "desc": "Selecione o mês e ajuste os valores antes de gerar as receitas",
+        "selectMonth": "Selecione o Mês",
+        "selectMonthPlaceholder": "Selecione o mês",
+        "revenuesLabel": "Receitas ({{selected}} de {{total}} selecionadas)",
+        "selectAll": "Selecionar todas",
+        "dueDate": "Vencimento: dia {{day}}",
+        "total": "Total:",
+        "generating": "Gerando...",
+        "generateBtn_one": "Gerar {{count}} Receita",
+        "generateBtn_other": "Gerar {{count}} Receitas",
+        "success": "Receitas lançadas com sucesso!",
+        "successDesc": "{{count}} receitas foram criadas para {{month}}",
+        "error": "Erro ao lançar receitas",
+        "allGenerated": "Todos os lançamentos deste período já foram feitos."
       }
     },
     "fixedTransfers": {

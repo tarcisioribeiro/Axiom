@@ -36,4 +36,9 @@ urlpatterns = [
         views.LoanPaymentPlanView.as_view(),
         name="loan-payment-plan",
     ),
+    path(
+        "loans/<int:pk>/recalculate-installments/",
+        views.LoanRecalculateInstallmentsView.as_view(),
+        name="loan-recalculate-installments",
+    ),
 ]

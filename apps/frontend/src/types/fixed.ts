@@ -25,6 +25,11 @@ export interface FixedExpense {
   updated_at: string;
 }
 
+/** Meses (`YYYY-MM`) já totalmente lançados — todos os templates ativos. */
+export interface FullyGeneratedMonthsResponse {
+  fully_generated_months: string[];
+}
+
 export interface FixedExpenseFormData {
   description: string;
   default_value: number;
@@ -43,6 +48,8 @@ export interface FixedExpenseFormData {
 export interface FixedExpenseValue {
   fixed_expense_id: number;
   value: number;
+  /** Data do lançamento dentro do mês (`YYYY-MM-DD`). Default: dia de vencimento. */
+  date?: string;
 }
 
 export interface BulkGenerateRequest {
@@ -116,6 +123,8 @@ export interface FixedRevenueFormData {
 export interface FixedRevenueValue {
   fixed_revenue_id: number;
   value: number;
+  /** Data do lançamento dentro do mês (`YYYY-MM-DD`). Default: dia de vencimento. */
+  date?: string;
 }
 
 export interface BulkGenerateRevenuesRequest {

@@ -28,6 +28,17 @@ class PayableInstallmentsService {
     );
   }
 
+  async updateInstallment(
+    payableId: number,
+    installmentNumber: number,
+    data: { value?: number; due_date?: string }
+  ): Promise<PayableInstallment> {
+    return apiClient.patch<PayableInstallment>(
+      API_CONFIG.ENDPOINTS.PAYABLE_INSTALLMENTS(payableId),
+      { installment_number: installmentNumber, ...data }
+    );
+  }
+
   async pay(payableId: number, data: PayablePaymentRequest): Promise<unknown> {
     return apiClient.post(API_CONFIG.ENDPOINTS.PAYABLE_PAYMENT(payableId), data);
   }

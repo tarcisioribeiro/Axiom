@@ -30,6 +30,11 @@ urlpatterns = [
         name="fixed-revenue-generate",
     ),
     path(
+        "fixed-revenues/generated-months/",
+        views.FixedRevenuesGeneratedMonthsView.as_view(),
+        name="fixed-revenue-generated-months",
+    ),
+    path(
         "fixed-revenues/",
         views.FixedRevenueListCreateView.as_view(),
         name="fixed-revenue-list-create",

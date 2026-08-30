@@ -109,8 +109,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const [installments, setInstallments] = useState<PayableInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
 
-  const handleOpenInstallments = async (payable: Payable) => {
-    setInstallmentsPayable(payable);
+  const loadInstallments = async (payable: Payable) => {
     setIsLoadingInstallments(true);
     try {
       const data = await payableInstallmentsService.getByPayable(payable.id);
@@ -120,6 +119,11 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
     } finally {
       setIsLoadingInstallments(false);
     }
+  };
+
+  const handleOpenInstallments = async (payable: Payable) => {
+    setInstallmentsPayable(payable);
+    await loadInstallments(payable);
   };
 
   const { activeCount, overdueCount, paidCount, totalValue } = useMemo(() => {
@@ -487,6 +491,10 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
+        onUpdated={() => {
+          invalidatePayables();
+          if (installmentsPayable) void loadInstallments(installmentsPayable);
+        }}
       />
 
       <PaymentPlanDialog

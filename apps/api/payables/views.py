@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -95,6 +96,14 @@ class PayableInstallmentListView(APIView):
             return Response(
                 {"detail": "Installment not found."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        edits_schedule = any(
+            field in request.data for field in ("value", "due_date")
+        )
+        if installment.payed and edits_schedule:
+            return Response(
+                {"detail": "Parcela já paga não pode ser editada."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = PayableInstallmentSerializer(
             installment, data=request.data, partial=True
@@ -207,6 +216,7 @@ class PayablePaymentPlanView(APIView):
         installment_count = request.data.get("installments")
         account_id = request.data.get("account")
         payment_frequency = request.data.get("payment_frequency")
+        first_due_date_raw = request.data.get("first_due_date")
 
         if not installment_count or int(installment_count) < 2:
             return Response(
@@ -218,6 +228,15 @@ class PayablePaymentPlanView(APIView):
                 {"detail": "account é obrigatório."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        first_due_date = None
+        if first_due_date_raw:
+            first_due_date = parse_date(str(first_due_date_raw))
+            if first_due_date is None:
+                return Response(
+                    {"detail": "first_due_date inválida (use YYYY-MM-DD)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         try:
             account = Account.objects.get(pk=account_id, is_deleted=False)
@@ -232,7 +251,11 @@ class PayablePaymentPlanView(APIView):
                 payable.payment_frequency = payment_frequency
                 payable.save(update_fields=["payment_frequency", "updated_at"])
             fixed_expense = generate_payable_installments(
-                payable, int(installment_count), request.user, account
+                payable,
+                int(installment_count),
+                request.user,
+                account,
+                first_due_date=first_due_date,
             )
 
         return Response(

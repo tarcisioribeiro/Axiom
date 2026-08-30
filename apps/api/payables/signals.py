@@ -18,7 +18,9 @@ def nullify_expenses_on_payable_delete(sender, instance, **kwargs):
     )
 
 
-def generate_payable_installments(payable, installment_count, user, account):
+def generate_payable_installments(
+    payable, installment_count, user, account, first_due_date=None
+):
     """
     Gera o plano de pagamento parcelado de um Payable: cria as
     PayableInstallment (valor igual, cronograma via
@@ -41,15 +43,30 @@ def generate_payable_installments(payable, installment_count, user, account):
         Usuário que está criando o plano (para created_by/updated_by).
     account : Account
         Conta bancária usada para gerar as despesas mensais.
+    first_due_date : date | None
+        Vencimento da 1ª parcela. Se omitido, usa a próxima ocorrência do
+        dia de vencimento da dívida a partir de hoje (nunca no passado).
 
     Returns
     -------
     FixedExpense
         A despesa fixa criada, vinculada ao payable.
     """
-    from app.debt_installment_utils import build_equal_installment_schedule
+    from django.utils import timezone
+
+    from app.debt_installment_utils import (
+        build_equal_installment_schedule,
+        default_first_due_date,
+    )
     from expenses.models import FixedExpense
     from payables.models import PayableInstallment
+
+    if first_due_date is None:
+        first_due_date = default_first_due_date(
+            payable.date.day,
+            payable.payment_frequency,
+            today=timezone.now().date(),
+        )
 
     remaining_value = payable.value - payable.paid_value
     schedule = build_equal_installment_schedule(
@@ -57,6 +74,7 @@ def generate_payable_installments(payable, installment_count, user, account):
         installment_count,
         payable.date,
         payable.payment_frequency,
+        first_due_date=first_due_date,
     )
 
     PayableInstallment.objects.bulk_create(
