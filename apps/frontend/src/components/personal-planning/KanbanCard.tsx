@@ -1,14 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  Bars3Icon as GripVertical,
-  ClockIcon as Clock,
-  CheckCircleIcon as CheckCircle2,
-  FireIcon as Flame,
-  ExclamationTriangleIcon as AlertTriangle,
-  MinusIcon as Minus,
-} from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  GripVertical,
+  Clock,
+  CheckCircle2,
+  Flame,
+  AlertTriangle,
+  Minus,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PomodoroTriggerButton } from '@/components/personal-planning/PomodoroTimer';

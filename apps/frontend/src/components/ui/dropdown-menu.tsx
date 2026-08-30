@@ -1,9 +1,5 @@
-import {
-  CheckIcon as Check,
-  ChevronRightIcon as ChevronRight,
-  StopCircleIcon as Circle,
-} from '@heroicons/react/24/solid';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import { Check, ChevronRight, Circle } from 'lucide-react';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';

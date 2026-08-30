@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  ExclamationTriangleIcon as AlertTriangle,
-  CalendarDaysIcon as CalendarDays,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  ArrowPathIcon as Loader2,
-  ArrowPathIcon as RefreshCw,
-  ArrowPathRoundedSquareIcon as Repeat,
-  TagIcon as Tag,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  RefreshCw,
+  Repeat,
+  Tag,
+  Wallet,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

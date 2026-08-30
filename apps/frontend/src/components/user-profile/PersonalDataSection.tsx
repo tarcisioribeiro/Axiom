@@ -1,9 +1,5 @@
-import {
-  EnvelopeIcon as Mail,
-  PhoneIcon as Phone,
-  UserIcon as User,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Mail, Phone, User } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,11 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
-import {
-  BuildingOffice2Icon as Building2,
-  CalendarDaysIcon as CalendarDays,
-  GlobeAltIcon as Globe,
-  ArrowPathIcon as Loader2,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Building2, CalendarDays, Globe, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

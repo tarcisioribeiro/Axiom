@@ -1,12 +1,12 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CreditCardIcon as CreditCard,
-  CalendarIcon as Calendar,
-  WalletIcon as Wallet,
-  BuildingOffice2Icon as Building2,
-  ExclamationCircleIcon as AlertCircle,
-  CalendarDateRangeIcon as CalendarClock,
-} from '@heroicons/react/24/solid';
+  CreditCard,
+  Calendar,
+  Wallet,
+  Building2,
+  AlertCircle,
+  CalendarClock,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

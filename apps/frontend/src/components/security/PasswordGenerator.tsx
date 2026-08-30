@@ -1,9 +1,4 @@
-import {
-  Square2StackIcon as Copy,
-  ArrowPathIcon as RefreshCw,
-  ArrowPathIcon as Loader2,
-  CheckIcon as Check,
-} from '@heroicons/react/24/solid';
+import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,14 +1,14 @@
-import {
-  TrophyIcon as Award,
-  CheckCircleIcon as CheckCircle2,
-  FireIcon as Flame,
-  TrophyIcon as Medal,
-  StarIcon as Star,
-  ViewfinderCircleIcon as Target,
-  ArrowTrendingUpIcon as TrendingUp,
-  TrophyIcon as Trophy,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  Award,
+  CheckCircle2,
+  Flame,
+  Medal,
+  Star,
+  Target,
+  TrendingUp,
+  Trophy,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';

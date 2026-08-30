@@ -1,11 +1,11 @@
 import {
-  ExclamationTriangleIcon as AlertTriangle,
-  CheckCircleIcon as CheckCircle,
-  Square2StackIcon as Copy,
-  ArrowTopRightOnSquareIcon as ExternalLink,
-  KeyIcon as KeyRound,
-  ArrowPathIcon as Loader2,
-} from '@heroicons/react/24/solid';
+  AlertTriangle,
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  KeyRound,
+  Loader2,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';

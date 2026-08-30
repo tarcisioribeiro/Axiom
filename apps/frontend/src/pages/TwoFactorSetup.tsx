@@ -1,5 +1,5 @@
-import { ShieldCheckIcon as Shield } from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

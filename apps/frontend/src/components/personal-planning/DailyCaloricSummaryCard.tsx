@@ -1,12 +1,12 @@
-import {
-  FireIcon as Flame,
-  FireIcon as Dumbbell,
-  CakeIcon as Utensils,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  InformationCircleIcon as Info,
-} from '@heroicons/react/24/solid';
 import { format } from 'date-fns';
+import {
+  Flame,
+  Dumbbell,
+  Utensils,
+  TrendingDown,
+  TrendingUp,
+  Info,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 

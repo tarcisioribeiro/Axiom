@@ -1,13 +1,13 @@
 import {
-  ExclamationTriangleIcon as AlertTriangle,
-  ExclamationCircleIcon as AlertCircle,
-  WalletIcon as Wallet,
-  CreditCardIcon as CreditCard,
-  ReceiptRefundIcon as Receipt,
-  BanknotesIcon as HandCoins,
-  BanknotesIcon as PiggyBank,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
+  AlertTriangle,
+  AlertCircle,
+  Wallet,
+  CreditCard,
+  Receipt,
+  HandCoins,
+  PiggyBank,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';

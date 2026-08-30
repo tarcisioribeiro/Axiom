@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/incompatible-library */
 import {
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  ArrowPathIcon as Loader2,
-  MoonIcon as Moon,
-  SunIcon as Sun,
-  SunIcon as Sunrise,
-  CakeIcon as UtensilsCrossed,
-  XCircleIcon as XCircle,
-} from '@heroicons/react/24/solid';
+  CheckCircle2,
+  Clock,
+  Loader2,
+  Moon,
+  Sun,
+  Sunrise,
+  UtensilsCrossed,
+  XCircle,
+} from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

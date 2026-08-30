@@ -1,9 +1,4 @@
-import {
-  ArrowsRightLeftIcon as ArrowLeftRight,
-  PencilIcon as Pencil,
-  PlusIcon as Plus,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
+import { ArrowLeftRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';

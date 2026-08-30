@@ -13,12 +13,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  BookOpenIcon as BookOpen,
-  Bars3Icon as GripVertical,
-  ClockIcon as Clock,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { BookOpen, GripVertical, Clock } from 'lucide-react';
 import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

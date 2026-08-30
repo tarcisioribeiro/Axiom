@@ -1,4 +1,4 @@
-import { CalculatorIcon as Calculator } from '@heroicons/react/24/solid';
+import { Calculator } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

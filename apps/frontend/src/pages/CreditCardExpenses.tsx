@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  FunnelIcon as Filter,
-  ShoppingCartIcon as ShoppingCart,
-  CalendarIcon as Calendar,
-  CurrencyDollarIcon as DollarSign,
-  LinkIcon as Link2,
-  TagIcon as Tag,
-  ViewfinderCircleIcon as CircleDot,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Filter,
+  ShoppingCart,
+  Calendar,
+  DollarSign,
+  Link2,
+  Tag,
+  CircleDot,
+} from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 

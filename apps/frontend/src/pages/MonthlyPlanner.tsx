@@ -1,22 +1,22 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  CalendarDateRangeIcon as CalendarCheck,
-  ChevronDownIcon as ChevronDown,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  ChevronUpIcon as ChevronUp,
-  CurrencyDollarIcon as CircleDollarSign,
-  CreditCardIcon as CreditCard,
-  BuildingLibraryIcon as Landmark,
-  PlusIcon as Plus,
-  ViewfinderCircleIcon as Target,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  TrashIcon as Trash2,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  CalendarCheck,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  CircleDollarSign,
+  CreditCard,
+  Landmark,
+  Plus,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Trash2,
+  Wallet,
+} from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,12 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  ArrowPathIcon as Loader2,
-  ShieldCheckIcon as Shield,
-  UsersIcon as Users,
-  CheckIcon as Check,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

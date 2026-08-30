@@ -1,13 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  BookOpenIcon as BookOpen,
-  XMarkIcon as X,
-  PlayIcon as Play,
-  PauseIcon as Pause,
-  Square2StackIcon as Square,
-  ClockIcon as Timer,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 

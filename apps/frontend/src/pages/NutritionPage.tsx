@@ -1,28 +1,28 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationCircleIcon as AlertCircle,
-  BookOpenIcon as BookOpen,
-  CalendarDaysIcon as CalendarDays,
-  CheckCircleIcon as CheckCircle2,
-  ChevronDownIcon as ChevronDown,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  ClockIcon as Clock,
-  PencilSquareIcon as Edit,
-  FireIcon as Flame,
-  ArrowPathIcon as Loader2,
-  MoonIcon as Moon,
-  PlusIcon as Plus,
-  CakeIcon as Salad,
-  MagnifyingGlassIcon as Search,
-  SparklesIcon as Sparkles,
-  SunIcon as Sun,
-  SunIcon as Sunrise,
-  TrashIcon as Trash2,
-  CakeIcon as UtensilsCrossed,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Edit,
+  Flame,
+  Loader2,
+  Moon,
+  Plus,
+  Salad,
+  Search,
+  Sparkles,
+  Sun,
+  Sunrise,
+  Trash2,
+  UtensilsCrossed,
+} from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

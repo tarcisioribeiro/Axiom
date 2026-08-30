@@ -1,7 +1,4 @@
-import {
-  BuildingLibraryIcon as Landmark,
-  ArrowTrendingUpIcon as TrendingUp,
-} from '@heroicons/react/24/solid';
+import { Landmark, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

@@ -1,8 +1,4 @@
-import {
-  CreditCardIcon as CreditCard,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-} from '@heroicons/react/24/solid';
+import { CreditCard, TrendingDown, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

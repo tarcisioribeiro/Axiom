@@ -1,14 +1,7 @@
 /* eslint-disable max-lines */
-import {
-  ViewfinderCircleIcon as Target,
-  PencilIcon as Pencil,
-  PlusIcon as Plus,
-  TrophyIcon as Trophy,
-  BookOpenIcon as BookOpen,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -30,14 +30,14 @@
  * ```
  */
 
-import {
-  ChevronDownIcon as ChevronDown,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  ChevronUpIcon as ChevronUp,
-  ChevronUpDownIcon as ChevronsUpDown,
-} from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+} from 'lucide-react';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

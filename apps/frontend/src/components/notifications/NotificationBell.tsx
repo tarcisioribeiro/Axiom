@@ -1,7 +1,4 @@
-import {
-  BellIcon as Bell,
-  CheckBadgeIcon as CheckCheck,
-} from '@heroicons/react/24/solid';
+import { Bell, CheckCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

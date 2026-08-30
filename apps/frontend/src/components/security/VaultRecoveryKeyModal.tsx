@@ -1,9 +1,4 @@
-import {
-  KeyIcon as Key,
-  Square2StackIcon as Copy,
-  CheckCircleIcon as CheckCircle2,
-  ExclamationTriangleIcon as AlertTriangle,
-} from '@heroicons/react/24/solid';
+import { Key, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

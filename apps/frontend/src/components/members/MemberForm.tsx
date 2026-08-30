@@ -1,12 +1,5 @@
 /* eslint-disable react-hooks/incompatible-library */
-import {
-  CheckIcon as Check,
-  DocumentTextIcon as FileText,
-  EnvelopeIcon as Mail,
-  PhoneIcon as Phone,
-  ShieldCheckIcon as Shield,
-  UserIcon as User,
-} from '@heroicons/react/24/solid';
+import { Check, FileText, Mail, Phone, Shield, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 

@@ -1,11 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  CalendarDaysIcon as CalendarDays,
-  CreditCardIcon as CreditCard,
-  BuildingStorefrontIcon as Store,
-  TagIcon as Tag,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
+import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

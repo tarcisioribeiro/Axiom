@@ -1,11 +1,11 @@
 import {
-  CheckCircleIcon as CheckCircle2,
-  ArchiveBoxIcon as FileArchive,
-  ArrowDownTrayIcon as Import,
-  KeyIcon as KeyRound,
-  LockClosedIcon as Lock,
-  ShieldCheckIcon as ShieldCheck,
-} from '@heroicons/react/24/solid';
+  CheckCircle2,
+  FileArchive,
+  Import,
+  KeyRound,
+  Lock,
+  ShieldCheck,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

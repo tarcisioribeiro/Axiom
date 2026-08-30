@@ -1,4 +1,4 @@
-import { PaperClipIcon as Paperclip } from '@heroicons/react/24/solid';
+import { Paperclip } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

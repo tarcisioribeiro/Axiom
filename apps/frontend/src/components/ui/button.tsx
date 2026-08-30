@@ -1,6 +1,6 @@
-import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
 import { DURATION } from '@/lib/animations/transitions';

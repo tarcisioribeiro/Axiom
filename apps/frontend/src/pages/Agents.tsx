@@ -1,23 +1,23 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  BookOpenIcon as BookOpen,
-  ChatBubbleLeftRightIcon as BotMessageSquare,
-  LightBulbIcon as Brain,
-  CheckCircleIcon as CheckCircle2,
-  CurrencyDollarIcon as DollarSign,
-  ArrowTopRightOnSquareIcon as ExternalLink,
-  ArrowPathIcon as History,
-  ArrowPathIcon as Loader2,
-  PaperAirplaneIcon as Send,
-  ShieldCheckIcon as Shield,
-  Square2StackIcon as Square,
-  TrashIcon as Trash2,
-  UserIcon as User,
-  XCircleIcon as XCircle,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertTriangle,
+  BookOpen,
+  BotMessageSquare,
+  Brain,
+  CheckCircle2,
+  DollarSign,
+  ExternalLink,
+  History,
+  Loader2,
+  Send,
+  Shield,
+  Square,
+  Trash2,
+  User,
+  XCircle,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';

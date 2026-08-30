@@ -1,7 +1,7 @@
-import { XMarkIcon as X } from '@heroicons/react/24/solid';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import * as React from 'react';
 
 import { toastVariants as toastMotionVariants } from '@/lib/animations/variants';

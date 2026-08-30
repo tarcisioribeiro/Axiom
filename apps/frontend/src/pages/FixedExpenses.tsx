@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  CalendarIcon as Calendar,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowPathIcon as History,
-  ClipboardDocumentListIcon as ClipboardList,
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Calendar,
+  TrendingDown,
+  History,
+  ClipboardList,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 

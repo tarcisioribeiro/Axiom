@@ -14,28 +14,28 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  BoltIcon as Activity,
-  CalendarIcon as Calendar,
-  ClipboardDocumentListIcon as ClipboardList,
-  ClockIcon as Clock,
-  FireIcon as Dumbbell,
-  PencilSquareIcon as Edit,
-  DocumentTextIcon as FileText,
-  FireIcon as Flame,
-  Bars3Icon as GripVertical,
-  PhotoIcon as ImagePlus,
-  Square3Stack3DIcon as Layers,
-  ArrowPathIcon as Loader2,
-  PlusIcon as Plus,
-  SparklesIcon as Sparkles,
-  ViewfinderCircleIcon as Target,
-  TrashIcon as Trash2,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  Calendar,
+  ClipboardList,
+  Clock,
+  Dumbbell,
+  Edit,
+  FileText,
+  Flame,
+  GripVertical,
+  ImagePlus,
+  Layers,
+  Loader2,
+  Plus,
+  Sparkles,
+  Target,
+  Trash2,
+  Zap,
+} from 'lucide-react';
 import React, { type ReactNode, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 

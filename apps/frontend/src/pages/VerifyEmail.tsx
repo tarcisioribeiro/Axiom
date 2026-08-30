@@ -1,8 +1,4 @@
-import {
-  CheckCircleIcon as CheckCircle2,
-  XCircleIcon as XCircle,
-  ArrowPathIcon as Loader2,
-} from '@heroicons/react/24/solid';
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link, useNavigate } from 'react-router';

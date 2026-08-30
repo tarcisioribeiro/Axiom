@@ -1,12 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  BookmarkSquareIcon as BookMarked,
-  ArrowDownTrayIcon as Download,
-  PencilSquareIcon as Edit,
-  PaintBrushIcon as Highlighter,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

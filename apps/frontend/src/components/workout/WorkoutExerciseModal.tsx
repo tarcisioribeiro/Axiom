@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
-  FireIcon as Dumbbell,
-  ArrowPathIcon as Loader2,
-  MinusIcon as Minus,
-  PlusIcon as Plus,
-  MagnifyingGlassIcon as Search,
-  DocumentTextIcon as StickyNote,
-  ClockIcon as Timer,
-} from '@heroicons/react/24/solid';
+  ChevronDown,
+  ChevronUp,
+  Dumbbell,
+  Loader2,
+  Minus,
+  Plus,
+  Search,
+  StickyNote,
+  Timer,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

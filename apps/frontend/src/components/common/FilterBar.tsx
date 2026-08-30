@@ -1,7 +1,4 @@
-import {
-  AdjustmentsHorizontalIcon as SlidersHorizontal,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
+import { SlidersHorizontal, X } from 'lucide-react';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 

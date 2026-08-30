@@ -1,12 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  ArrowsPointingOutIcon as Maximize2,
-  ArrowsPointingInIcon as Minimize2,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
