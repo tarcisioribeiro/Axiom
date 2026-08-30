@@ -2,6 +2,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -81,6 +82,14 @@ class LoanInstallmentListView(APIView):
             return Response(
                 {"detail": "Installment not found."},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        edits_schedule = any(
+            field in request.data for field in ("value", "due_date")
+        )
+        if installment.payed and edits_schedule:
+            return Response(
+                {"detail": "Parcela já paga não pode ser editada."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         serializer = LoanInstallmentSerializer(
             installment, data=request.data, partial=True
@@ -328,7 +337,10 @@ class LoanPaymentPlanView(APIView):
     queryset = Loan.objects.none()
 
     def post(self, request, pk):
-        from app.debt_installment_utils import build_equal_installment_schedule
+        from app.debt_installment_utils import (
+            build_equal_installment_schedule,
+            default_first_due_date,
+        )
         from expenses.models import FixedExpense
         from expenses.serializers import FixedExpenseSerializer
 
@@ -353,12 +365,28 @@ class LoanPaymentPlanView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        first_due_date_raw = request.data.get("first_due_date")
+        if first_due_date_raw:
+            first_due_date = parse_date(str(first_due_date_raw))
+            if first_due_date is None:
+                return Response(
+                    {"detail": "first_due_date inválida (use YYYY-MM-DD)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            first_due_date = default_first_due_date(
+                loan.date.day,
+                loan.payment_frequency,
+                today=timezone.now().date(),
+            )
+
         remaining_value = loan.value - loan.payed_value
         schedule = build_equal_installment_schedule(
             remaining_value,
             int(installment_count),
             loan.date,
             loan.payment_frequency,
+            first_due_date=first_due_date,
         )
 
         with transaction.atomic():
@@ -399,6 +427,61 @@ class LoanPaymentPlanView(APIView):
                 "fixed_expense": FixedExpenseSerializer(fixed_expense).data,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class LoanRecalculateInstallmentsView(APIView):
+    """POST /loans/<pk>/recalculate-installments/ — redistribui as parcelas
+    em aberto de um empréstimo já parcelado, mantendo ou alterando a
+    quantidade (paridade com o fluxo de Payable). Parcelas já pagas nunca
+    são tocadas."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Loan.objects.none()
+
+    def post(self, request, pk):
+        from django.core.exceptions import (
+            ValidationError as DjangoValidationError,
+        )
+
+        from loans.serializers import LoanRecalculationPreviewSerializer
+        from loans.services import recalculate_loan_installments
+
+        loan = Loan.objects.filter(
+            pk=pk, created_by=request.user, is_deleted=False
+        ).first()
+        if not loan:
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        if not loan.installments or loan.installments <= 1:
+            return Response(
+                {"detail": "Este empréstimo não tem plano de pagamento."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        mode = request.data.get("mode")
+        new_installment_count = request.data.get("new_installment_count")
+        dry_run = bool(request.data.get("dry_run", True))
+
+        try:
+            preview = recalculate_loan_installments(
+                loan,
+                mode=mode,
+                new_installment_count=new_installment_count,
+                user=request.user,
+                dry_run=dry_run,
+            )
+        except DjangoValidationError as exc:
+            return Response(
+                exc.message_dict, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {
+                "preview": LoanRecalculationPreviewSerializer(preview).data,
+                "loan": (LoanSerializer(loan).data if not dry_run else None),
+            }
         )
 
 

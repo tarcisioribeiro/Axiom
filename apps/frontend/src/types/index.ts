@@ -67,6 +67,8 @@ export type {
   LoanInstallment,
   LoanPaymentRequest,
   LoanReceiptRequest,
+  LoanRecalculationPreview,
+  LoanRecalculationResponse,
   AmortizationEntry,
   AmortizationSchedule,
 } from './loans';
@@ -225,6 +227,7 @@ export type {
   BulkGenerateRevenuesRequest,
   BulkGenerateRevenuesResponse,
   FixedRevenueStats,
+  FullyGeneratedMonthsResponse,
 } from './fixed';
 export type {
   GoalComputedProgress,

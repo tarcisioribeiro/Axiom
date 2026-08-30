@@ -1,14 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { InstallmentsPlanDialog } from '@/components/common/InstallmentsPlanDialog';
+import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type { Payable, PayableInstallment } from '@/types';
 
 interface PayableInstallmentsDialogProps {
@@ -16,6 +9,7 @@ interface PayableInstallmentsDialogProps {
   installments: PayableInstallment[];
   isLoading: boolean;
   onClose: () => void;
+  onUpdated?: () => void;
 }
 
 export function PayableInstallmentsDialog({
@@ -23,65 +17,34 @@ export function PayableInstallmentsDialog({
   installments,
   isLoading,
   onClose,
+  onUpdated,
 }: PayableInstallmentsDialogProps) {
   const { t } = useTranslation();
 
   return (
-    <Dialog open={!!payable} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('pages.payables.installments.title')}</DialogTitle>
-          <DialogDescription>{payable?.description}</DialogDescription>
-        </DialogHeader>
-        {isLoading ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </div>
-        ) : installments.length === 0 ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('pages.payables.installments.emptyState')}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-left">
-                  <th className="pb-sm pr-md">
-                    {t('pages.payables.installments.number')}
-                  </th>
-                  <th className="pb-sm pr-md">
-                    {t('pages.payables.installments.dueDate')}
-                  </th>
-                  <th className="pb-sm pr-md text-right">
-                    {t('pages.payables.installments.value')}
-                  </th>
-                  <th className="pb-sm">{t('pages.payables.installments.status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {installments.map((inst) => (
-                  <tr key={inst.id} className="border-b last:border-0">
-                    <td className="py-sm pr-md">{inst.installment_number}</td>
-                    <td className="py-sm pr-md">
-                      {formatDate(inst.due_date, 'dd/MM/yyyy')}
-                    </td>
-                    <td className="py-sm pr-md text-right">
-                      {formatCurrency(inst.value)}
-                    </td>
-                    <td className="py-sm">
-                      <Badge variant={inst.payed ? 'secondary' : 'outline'}>
-                        {inst.payed
-                          ? t('pages.payables.installments.paid')
-                          : t('pages.payables.installments.pending')}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <InstallmentsPlanDialog
+      open={!!payable}
+      title={t('pages.payables.installments.title')}
+      description={payable?.description}
+      installments={installments}
+      isLoading={isLoading}
+      i18nBase="pages.payables.installments"
+      onClose={onClose}
+      onChanged={() => onUpdated?.()}
+      saveInstallment={async (num, data) => {
+        if (!payable) return;
+        await payableInstallmentsService.updateInstallment(payable.id, num, data);
+      }}
+      recalculate={async (count, dryRun) => {
+        if (!payable) return { installments_preview: [] };
+        const res = await payableInstallmentsService.recalculateInstallments(
+          payable.id,
+          'change_count',
+          count,
+          dryRun
+        );
+        return { installments_preview: res.preview.installments_preview };
+      }}
+    />
   );
 }
