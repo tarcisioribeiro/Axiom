@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  ArrowTrendingUpIcon as TrendingUp,
-  CheckCircleIcon as CheckCircle2,
-  ExclamationTriangleIcon as AlertTriangle,
-  BanknotesIcon as Banknote,
-  ClockIcon as Clock,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  CheckCircle2,
+  AlertTriangle,
+  Banknote,
+  Clock,
+  Wallet,
+} from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 

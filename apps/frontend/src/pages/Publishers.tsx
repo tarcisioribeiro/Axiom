@@ -1,14 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilSquareIcon as Edit,
-  TrashIcon as Trash2,
-  BuildingOffice2Icon as Building2,
-  GlobeAltIcon as Globe,
-  CalendarIcon as Calendar,
-  BookOpenIcon as BookOpen,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

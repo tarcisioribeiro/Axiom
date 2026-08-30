@@ -1,8 +1,5 @@
-import {
-  EnvelopeOpenIcon as MailWarning,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { MailWarning, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,15 +1,15 @@
 import {
-  ArrowDownTrayIcon as ArrowDownToLine,
-  ArrowUpTrayIcon as ArrowUpFromLine,
-  CalendarDateRangeIcon as CalendarClock,
-  ArrowPathIcon as History,
-  PencilIcon as Pencil,
-  ArrowPathIcon as RefreshCcw,
-  SparklesIcon as Sparkles,
-  TrashIcon as Trash2,
-  ArrowTrendingUpIcon as TrendingUp,
-  LockClosedIcon as Vault,
-} from '@heroicons/react/24/solid';
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  CalendarClock,
+  History,
+  Pencil,
+  RefreshCcw,
+  Sparkles,
+  Trash2,
+  TrendingUp,
+  Vault,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';

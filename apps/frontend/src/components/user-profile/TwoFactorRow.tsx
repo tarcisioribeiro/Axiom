@@ -1,8 +1,5 @@
-import {
-  ShieldCheckIcon as ShieldCheck,
-  ShieldExclamationIcon as ShieldOff,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { ShieldCheck, ShieldOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 

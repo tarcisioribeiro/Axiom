@@ -1,7 +1,4 @@
-import {
-  CreditCardIcon as CreditCard,
-  ReceiptRefundIcon as Receipt,
-} from '@heroicons/react/24/solid';
+import { CreditCard, Receipt } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

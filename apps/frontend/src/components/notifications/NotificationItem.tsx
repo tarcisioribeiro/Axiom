@@ -1,12 +1,12 @@
 import {
-  CheckCircleIcon as CheckSquare,
-  ExclamationTriangleIcon as AlertTriangle,
-  ReceiptRefundIcon as Receipt,
-  BanknotesIcon as HandCoins,
-  CreditCardIcon as CreditCard,
-  BanknotesIcon as PiggyBank,
-  ViewfinderCircleIcon as Target,
-} from '@heroicons/react/24/solid';
+  CheckSquare,
+  AlertTriangle,
+  Receipt,
+  HandCoins,
+  CreditCard,
+  PiggyBank,
+  Target,
+} from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/types';

@@ -1,29 +1,29 @@
 /* eslint-disable max-lines */
-import {
-  ViewfinderCircleIcon as Target,
-  CheckCircleIcon as CheckCircle2,
-  CalendarIcon as Calendar,
-  ArrowTrendingUpIcon as TrendingUp,
-  TrophyIcon as Award,
-  ListBulletIcon as ListTodo,
-  FlagIcon as Flag,
-  BoltIcon as Activity,
-  LightBulbIcon as Lightbulb,
-  ChartBarSquareIcon as BarChart3,
-  FireIcon as Flame,
-  FireIcon as Dumbbell,
-  CakeIcon as UtensilsCrossed,
-  ClockIcon as Timer,
-  CakeIcon as Utensils,
-  ClipboardDocumentListIcon as ClipboardList,
-  BoltIcon as Zap,
-  StarIcon as Star,
-  TrophyIcon as Trophy,
-  ChevronDownIcon as ChevronDown,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Target,
+  CheckCircle2,
+  Calendar,
+  TrendingUp,
+  Award,
+  ListTodo,
+  Flag,
+  Activity,
+  Lightbulb,
+  BarChart3,
+  Flame,
+  Dumbbell,
+  UtensilsCrossed,
+  Timer,
+  Utensils,
+  ClipboardList,
+  Zap,
+  Star,
+  Trophy,
+  ChevronDown,
+} from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';

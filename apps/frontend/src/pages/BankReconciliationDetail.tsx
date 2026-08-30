@@ -1,14 +1,14 @@
 /* eslint-disable max-lines */
-import {
-  ArrowLeftIcon as ArrowLeft,
-  ArrowsRightLeftIcon as ArrowLeftRight,
-  LinkIcon as Link2,
-  PlusIcon as Plus,
-  ArrowPathIcon as RefreshCw,
-  MagnifyingGlassIcon as Search,
-  LinkSlashIcon as Unlink,
-} from '@heroicons/react/24/solid';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Link2,
+  Plus,
+  RefreshCw,
+  Search,
+  Unlink,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';

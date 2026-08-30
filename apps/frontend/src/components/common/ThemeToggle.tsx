@@ -1,8 +1,4 @@
-import {
-  CheckIcon as Check,
-  MoonIcon as Moon,
-  SunIcon as Sun,
-} from '@heroicons/react/24/solid';
+import { Check, Moon, Sun } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

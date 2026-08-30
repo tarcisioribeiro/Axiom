@@ -1,26 +1,26 @@
 /* eslint-disable max-lines */
-import {
-  HeartIcon as Heart,
-  BoltIcon as Zap,
-  LightBulbIcon as Brain,
-  ShieldCheckIcon as Shield,
-  BookOpenIcon as BookOpen,
-  ChartBarSquareIcon as BarChart3,
-  ChevronRightIcon as ChevronRight,
-  CheckCircleIcon as CheckCircle2,
-  ExclamationCircleIcon as AlertCircle,
-  SparklesIcon as Sparkles,
-  ClockIcon as Clock,
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowTrendingDownIcon as TrendingDown,
-  MinusIcon as Minus,
-  StarIcon as Star,
-  ArrowPathIcon as RefreshCw,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Heart,
+  Zap,
+  Brain,
+  Shield,
+  BookOpen,
+  BarChart3,
+  ChevronRight,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Star,
+  RefreshCw,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';

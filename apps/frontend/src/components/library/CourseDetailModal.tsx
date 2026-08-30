@@ -1,25 +1,25 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  TrophyIcon as Award,
-  BookOpenIcon as BookOpen,
-  CalendarIcon as Calendar,
-  CheckIcon as Check,
-  CheckCircleIcon as CheckCircle2,
-  CheckCircleIcon as CheckSquare,
-  StopCircleIcon as Circle,
-  PencilSquareIcon as Edit,
-  ArrowTopRightOnSquareIcon as ExternalLink,
-  AcademicCapIcon as GraduationCap,
-  Square3Stack3DIcon as Layers,
-  ArrowPathIcon as Loader2,
-  PlusIcon as Plus,
-  Square2StackIcon as Square,
-  ClockIcon as Timer,
-  TrashIcon as Trash2,
-  ArrowUpTrayIcon as Upload,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  Check,
+  CheckCircle2,
+  CheckSquare,
+  Circle,
+  Edit,
+  ExternalLink,
+  GraduationCap,
+  Layers,
+  Loader2,
+  Plus,
+  Square,
+  Timer,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 // (same setup as BookReader.tsx — safe to register more than once).
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';

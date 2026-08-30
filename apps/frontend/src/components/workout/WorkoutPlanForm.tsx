@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/incompatible-library */
 import {
-  CheckCircleIcon as CheckCircle2,
-  ClipboardDocumentListIcon as ClipboardList,
-  FireIcon as Dumbbell,
-  DocumentTextIcon as FileText,
-  ArrowPathIcon as Loader2,
-  XCircleIcon as XCircle,
-} from '@heroicons/react/24/solid';
+  CheckCircle2,
+  ClipboardList,
+  Dumbbell,
+  FileText,
+  Loader2,
+  XCircle,
+} from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

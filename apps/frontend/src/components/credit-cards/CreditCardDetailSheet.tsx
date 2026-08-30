@@ -1,22 +1,22 @@
 /* eslint-disable max-lines */
-import {
-  CreditCardIcon,
-  ReceiptRefundIcon as Receipt,
-  ShoppingCartIcon as ShoppingCart,
-  Cog6ToothIcon as Settings,
-  WalletIcon as Wallet,
-  ArrowTrendingDownIcon as TrendingDown,
-  CalendarDaysIcon as CalendarDays,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  CurrencyDollarIcon as DollarSign,
-  CheckCircleIcon as CheckCircle2,
-  ExclamationTriangleIcon as AlertTriangle,
-  ViewfinderCircleIcon as CircleDot,
-  ArrowUturnLeftIcon as RotateCcw,
-  PlusIcon as Plus,
-} from '@heroicons/react/24/solid';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  CreditCard as CreditCardIcon,
+  Receipt,
+  ShoppingCart,
+  Settings,
+  Wallet,
+  TrendingDown,
+  CalendarDays,
+  Pencil,
+  Trash2,
+  DollarSign,
+  CheckCircle2,
+  AlertTriangle,
+  CircleDot,
+  RotateCcw,
+  Plus,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

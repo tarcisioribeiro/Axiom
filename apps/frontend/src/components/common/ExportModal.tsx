@@ -1,7 +1,4 @@
-import {
-  ArrowDownTrayIcon as Download,
-  ArrowPathIcon as Loader2,
-} from '@heroicons/react/24/solid';
+import { Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

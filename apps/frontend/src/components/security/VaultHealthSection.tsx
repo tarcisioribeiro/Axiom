@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowRightIcon as ArrowRight,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  Square2StackIcon as Copy,
-  ArrowPathIcon as RefreshCw,
-  ShieldExclamationIcon as ShieldAlert,
-  ShieldCheckIcon as ShieldCheck,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Copy,
+  RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';

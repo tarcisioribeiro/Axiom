@@ -1,14 +1,14 @@
 /* eslint-disable max-lines */
-import {
-  ArrowDownIcon as ArrowDown,
-  ArrowUpIcon as ArrowUp,
-  ChartBarSquareIcon as BarChart3,
-  FireIcon as Flame,
-  MinusIcon as Minus,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowDown,
+  ArrowUp,
+  BarChart3,
+  Flame,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {

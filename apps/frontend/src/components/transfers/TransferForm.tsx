@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationCircleIcon as AlertCircle,
-  ArrowsRightLeftIcon as ArrowLeftRight,
-  ArrowRightIcon as ArrowRight,
-  BuildingOffice2Icon as Building2,
-  CalendarDaysIcon as CalendarDays,
-  ClockIcon as Clock,
-  DocumentTextIcon as FileText,
-  ArrowPathIcon as Loader2,
-  WalletIcon as Wallet,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  ArrowRight,
+  Building2,
+  CalendarDays,
+  Clock,
+  FileText,
+  Loader2,
+  Wallet,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

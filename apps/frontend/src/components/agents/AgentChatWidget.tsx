@@ -1,10 +1,5 @@
-import {
-  ChatBubbleLeftRightIcon as BotMessageSquare,
-  PaperAirplaneIcon as Send,
-  Square2StackIcon as Square,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
+import { BotMessageSquare, Send, Square, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

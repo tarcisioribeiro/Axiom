@@ -1,28 +1,28 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  TrophyIcon as Trophy,
-  PencilSquareIcon as Edit,
-  TrashIcon as Trash2,
-  ArrowPathIcon as RefreshCw,
-  ArrowUturnLeftIcon as RotateCcw,
-  NoSymbolIcon as Ban,
-  StarIcon as Star,
-  FireIcon as Flame,
-  TrophyIcon as Award,
-  ArrowPathIcon as History,
-  CalendarIcon as Calendar,
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowPathIcon as Loader2,
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowDownTrayIcon as Download,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Plus,
+  Trophy,
+  Edit,
+  Trash2,
+  RefreshCw,
+  RotateCcw,
+  Ban,
+  Star,
+  Flame,
+  Award,
+  History,
+  Calendar,
+  AlertTriangle,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Download,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';

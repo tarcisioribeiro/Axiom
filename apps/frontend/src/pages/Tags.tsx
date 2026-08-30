@@ -1,10 +1,5 @@
-import {
-  PencilIcon as Pencil,
-  PlusIcon as Plus,
-  TagIcon,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Pencil, Plus, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

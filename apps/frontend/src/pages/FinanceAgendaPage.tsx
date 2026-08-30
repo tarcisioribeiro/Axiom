@@ -1,7 +1,4 @@
-import {
-  CalendarDateRangeIcon as CalendarCheck,
-  CalendarDaysIcon as CalendarDays,
-} from '@heroicons/react/24/solid';
+import { CalendarCheck, CalendarDays } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

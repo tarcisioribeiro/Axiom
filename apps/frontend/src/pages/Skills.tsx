@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  BookOpenIcon as BookOpen,
-  LightBulbIcon as Brain,
-  ClockIcon as Clock,
-  PencilSquareIcon as Edit,
-  AcademicCapIcon as GraduationCap,
-  Squares2X2Icon as LayoutGrid,
-  PlusIcon as Plus,
-  SignalIcon as Radar,
-  MagnifyingGlassIcon as Search,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  Brain,
+  Clock,
+  Edit,
+  GraduationCap,
+  LayoutGrid,
+  Plus,
+  Radar,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

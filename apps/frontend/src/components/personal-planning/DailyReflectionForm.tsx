@@ -1,11 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
-import {
-  CalendarDaysIcon as CalendarDays,
-  ArrowPathIcon as Loader2,
-  ChatBubbleLeftIcon as MessageSquare,
-  FaceSmileIcon as Smile,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CalendarDays, Loader2, MessageSquare, Smile } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

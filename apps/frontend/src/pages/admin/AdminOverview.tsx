@@ -1,17 +1,17 @@
-import {
-  BoltIcon as Activity,
-  ExclamationTriangleIcon as AlertTriangle,
-  CheckCircleIcon as CheckCircle2,
-  CircleStackIcon as Database,
-  ServerStackIcon as HardDrive,
-  EnvelopeIcon as Mail,
-  ArrowPathIcon as RefreshCw,
-  ServerIcon as Server,
-  WifiIcon as Wifi,
-  XCircleIcon as XCircle,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Database,
+  HardDrive,
+  Mail,
+  RefreshCw,
+  Server,
+  Wifi,
+  XCircle,
+  Zap,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

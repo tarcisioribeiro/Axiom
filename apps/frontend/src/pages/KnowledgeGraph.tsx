@@ -1,24 +1,24 @@
 /* eslint-disable max-lines */
-import {
-  BookOpenIcon as BookOpen,
-  ArrowDownTrayIcon as Download,
-  DocumentTextIcon as FileText,
-  AcademicCapIcon as GraduationCap,
-  PaintBrushIcon as Highlighter,
-  LinkIcon as Link2,
-  ArrowsPointingOutIcon as Maximize2,
-  SignalIcon as Network,
-  PencilIcon as PenLine,
-  MagnifyingGlassIcon as Search,
-  SparklesIcon as Sparkles,
-  TrashIcon as Trash2,
-  XMarkIcon as X,
-  BoltIcon as Zap,
-  MagnifyingGlassPlusIcon as ZoomIn,
-  MagnifyingGlassMinusIcon as ZoomOut,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  Download,
+  FileText,
+  GraduationCap,
+  Highlighter,
+  Link2,
+  Maximize2,
+  Network,
+  PenLine,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+  Zap,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ForceGraph3D } from 'react-force-graph';
 import { useTranslation } from 'react-i18next';

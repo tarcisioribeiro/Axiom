@@ -1,10 +1,5 @@
-import {
-  CameraIcon as Camera,
-  ArrowPathIcon as Loader2,
-  TrashIcon as Trash2,
-  UserCircleIcon as UserCircle,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Camera, Loader2, Trash2, UserCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

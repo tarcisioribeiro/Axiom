@@ -1,14 +1,7 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  BoltIcon as Activity,
-  CalendarDaysIcon as CalendarDays,
-  ArrowPathIcon as Loader2,
-  TagIcon as Tag,
-  ViewfinderCircleIcon as Target,
-  TrophyIcon as Trophy,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, parseISO } from 'date-fns';
+import { Activity, CalendarDays, Loader2, Tag, Target, Trophy } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

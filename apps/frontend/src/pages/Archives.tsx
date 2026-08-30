@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  EyeIcon as Eye,
-  ArrowDownTrayIcon as Download,
-  StarIcon as Star,
-  DocumentTextIcon as FileText,
-  DocumentIcon as File,
-  ArchiveBoxIcon as ArchiveIcon,
-  CalendarIcon as Calendar,
-  TagIcon as Tag,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Download,
+  Star,
+  FileText,
+  File,
+  ArchiveIcon,
+  Calendar,
+  Tag,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

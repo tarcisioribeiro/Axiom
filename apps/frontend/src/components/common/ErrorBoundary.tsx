@@ -1,7 +1,4 @@
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowPathIcon as RefreshCw,
-} from '@heroicons/react/24/solid';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';

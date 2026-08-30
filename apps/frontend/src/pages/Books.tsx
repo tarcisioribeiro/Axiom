@@ -1,26 +1,26 @@
 /* eslint-disable max-lines */
-import {
-  BuildingLibraryIcon as Library,
-  PlusIcon as Plus,
-  StarIcon as Star,
-  PencilSquareIcon as Edit,
-  TrashIcon as Trash2,
-  BookmarkSquareIcon as BookMarked,
-  DocumentTextIcon as FileText,
-  PaintBrushIcon as Highlighter,
-  ArrowPathIcon as Loader2,
-  EllipsisHorizontalIcon as MoreHorizontal,
-  ArrowDownTrayIcon as Download,
-  DocumentTextIcon as BookText,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  Squares2X2Icon as LayoutGrid,
-  ListBulletIcon as List,
-  BookOpenIcon as BookOpen,
-  LightBulbIcon as Brain,
-  CheckCircleIcon as CheckCircle,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Library,
+  Plus,
+  Star,
+  Edit,
+  Trash2,
+  BookMarked,
+  FileText,
+  Highlighter,
+  Loader2,
+  MoreHorizontal,
+  Download,
+  BookText,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  List,
+  BookOpen,
+  Brain,
+  CheckCircle,
+} from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

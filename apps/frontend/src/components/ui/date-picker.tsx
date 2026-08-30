@@ -1,7 +1,7 @@
-import { CalendarIcon, XMarkIcon as X } from '@heroicons/react/24/solid';
 import flatpickr from 'flatpickr';
 import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
+import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

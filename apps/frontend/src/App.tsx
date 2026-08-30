@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
-import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { MotionConfig } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 

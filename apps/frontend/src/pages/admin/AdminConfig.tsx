@@ -1,9 +1,5 @@
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowUturnLeftIcon as RotateCcw,
-  Cog6ToothIcon as Settings,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, RotateCcw, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

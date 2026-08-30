@@ -1,7 +1,4 @@
-import {
-  Bars3Icon as Menu,
-  MagnifyingGlassIcon as Search,
-} from '@heroicons/react/24/solid';
+import { Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { LanguageSelector } from '@/components/common/LanguageSelector';

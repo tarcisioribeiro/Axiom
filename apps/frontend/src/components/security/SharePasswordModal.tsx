@@ -1,15 +1,7 @@
 /* eslint-disable max-lines */
-import {
-  Square2StackIcon as Copy,
-  ArrowPathIcon as Loader2,
-  ShareIcon as Share2,
-  TrashIcon as Trash2,
-  MagnifyingGlassIcon as Search,
-  UserIcon as User,
-  CheckIcon as Check,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Copy, Loader2, Share2, Trash2, Search, User, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

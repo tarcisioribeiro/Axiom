@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  CheckCircleIcon as CheckSquare,
-  PencilSquareIcon as Edit,
-  TrashIcon as Trash2,
-  ChartBarIcon as BarChart2,
-  BuildingLibraryIcon as Library,
-  ArrowDownTrayIcon as Download,
-  DocumentTextIcon as FileText,
-  TableCellsIcon as Sheet,
-  ArrowDownTrayIcon as Save,
-  BookmarkIcon as Bookmark,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  CheckSquare,
+  Edit,
+  Trash2,
+  BarChart2,
+  Library,
+  Download,
+  FileText,
+  Sheet,
+  Save,
+  Bookmark,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

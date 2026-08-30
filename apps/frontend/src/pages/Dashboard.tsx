@@ -1,22 +1,4 @@
 /* eslint-disable max-lines */
-import {
-  WalletIcon as Wallet,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  CreditCardIcon as CreditCard,
-  Squares2X2Icon as LayoutDashboard,
-  BuildingOffice2Icon as Building2,
-  CalculatorIcon as Calculator,
-  ArrowUpRightIcon as ArrowUpRight,
-  ArrowDownRightIcon as ArrowDownRight,
-  BanknotesIcon as PiggyBank,
-  DocumentArrowDownIcon as FileDown,
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowDownTrayIcon as Download,
-  DocumentTextIcon as FileText,
-  ChevronDownIcon as ChevronDown,
-  SparklesIcon as Sparkles,
-} from '@heroicons/react/24/solid';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   format,
@@ -39,6 +21,24 @@ import {
 import type { Locale } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Wallet,
+  TrendingDown,
+  TrendingUp,
+  CreditCard,
+  LayoutDashboard,
+  Building2,
+  Calculator,
+  ArrowUpRight,
+  ArrowDownRight,
+  PiggyBank,
+  FileDown,
+  AlertTriangle,
+  Download,
+  FileText,
+  ChevronDown,
+  Sparkles,
+} from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

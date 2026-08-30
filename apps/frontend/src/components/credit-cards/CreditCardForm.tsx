@@ -1,16 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  PercentBadgeIcon as BadgePercent,
-  CalendarDaysIcon as CalendarDays,
-  CreditCardIcon as CreditCard,
-  CurrencyDollarIcon as DollarSign,
-  HashtagIcon as Hash,
-  LockClosedIcon as Lock,
-  ArrowPathIcon as Loader2,
-  Cog6ToothIcon as Settings,
-  UserIcon as User,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
+  BadgePercent,
+  CalendarDays,
+  CreditCard,
+  DollarSign,
+  Hash,
+  Lock,
+  Loader2,
+  Settings,
+  User,
+  Wallet,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

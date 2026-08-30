@@ -1,8 +1,4 @@
-import {
-  CalendarDateRangeIcon as CalendarClock,
-  ArrowPathIcon as RefreshCcw,
-  ArrowTrendingUpIcon as TrendingUp,
-} from '@heroicons/react/24/solid';
+import { CalendarClock, RefreshCcw, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

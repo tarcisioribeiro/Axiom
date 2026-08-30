@@ -1,19 +1,19 @@
 /* eslint-disable max-lines */
-import {
-  BookOpenIcon as BookOpen,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  AcademicCapIcon as GraduationCap,
-  Square3Stack3DIcon as Layers,
-  PlusIcon as Plus,
-  MagnifyingGlassIcon as Search,
-  ClockIcon as Timer,
-  TrashIcon as Trash2,
-  PencilSquareIcon as Edit,
-  LightBulbIcon as Brain,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  GraduationCap,
+  Layers,
+  Plus,
+  Search,
+  Timer,
+  Trash2,
+  Edit,
+  Brain,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

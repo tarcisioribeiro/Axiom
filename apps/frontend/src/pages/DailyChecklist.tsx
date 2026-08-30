@@ -13,25 +13,25 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import {
-  ArrowDownTrayIcon as Save,
-  CheckCircleIcon as CheckCircle2,
-  StopCircleIcon as Circle,
-  DocumentTextIcon as StickyNote,
-  ArrowPathIcon as RefreshCw,
-  ArrowTopRightOnSquareIcon as ExternalLink,
-  ExclamationCircleIcon as AlertCircle,
-  FireIcon as Flame,
-  BoltIcon as Zap,
-  MoonIcon as Moon,
-  SunIcon as Sun,
-  SunIcon as Sunset,
-  ClockIcon as Timer,
-  PlayIcon as Play,
-  PauseIcon as Pause,
-  ArrowUturnLeftIcon as RotateCcw,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Save,
+  CheckCircle2,
+  Circle,
+  StickyNote,
+  RefreshCw,
+  ExternalLink,
+  AlertCircle,
+  Flame,
+  Zap,
+  Moon,
+  Sun,
+  Sunset,
+  Timer,
+  Play,
+  Pause,
+  RotateCcw,
+} from 'lucide-react';
 import {
   useState,
   useEffect,

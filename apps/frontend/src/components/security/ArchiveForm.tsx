@@ -1,16 +1,16 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  DocumentIcon as File,
-  PhotoIcon as FileImage,
-  DocumentTextIcon as FileText,
-  FolderOpenIcon as FolderOpen,
-  ArrowPathIcon as Loader2,
-  EllipsisHorizontalIcon as MoreHorizontal,
-  ArchiveBoxIcon as Package,
-  TagIcon as Tag,
-  ArrowUpTrayIcon as Upload,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  File,
+  FileImage,
+  FileText,
+  FolderOpen,
+  Loader2,
+  MoreHorizontal,
+  Package,
+  Tag,
+  Upload,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 

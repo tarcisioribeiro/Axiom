@@ -1,5 +1,5 @@
-import { FireIcon as Dumbbell } from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { Dumbbell } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

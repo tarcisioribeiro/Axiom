@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
-import {
-  BookOpenIcon as BookOpen,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  PaintBrushIcon as Highlighter,
-  ArrowPathIcon as Loader2,
-  MinusIcon as Minus,
-  MoonIcon as Moon,
-  SwatchIcon as Palette,
-  ViewColumnsIcon as PanelRight,
-  PlusIcon as Plus,
-  ArrowDownTrayIcon as Save,
-  SunIcon as Sun,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import Epub, { type Book as EpubBook, type Rendition } from 'epubjs';
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Highlighter,
+  Loader2,
+  Minus,
+  Moon,
+  Palette,
+  PanelRight,
+  Plus,
+  Save,
+  Sun,
+  X,
+} from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

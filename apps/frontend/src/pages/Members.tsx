@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  ChartBarSquareIcon as BarChart3,
-  PencilIcon as Pencil,
-  PlusIcon as Plus,
-  TrashIcon as Trash2,
-  UsersIcon as Users,
-  BanknotesIcon as Banknote,
-  BanknotesIcon as HandCoins,
-  UserPlusIcon as UserCheck,
-  PhoneIcon as Phone,
-  EnvelopeIcon as Mail,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import {
+  BarChart3,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+  Banknote,
+  HandCoins,
+  UserCheck,
+  Phone,
+  Mail,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

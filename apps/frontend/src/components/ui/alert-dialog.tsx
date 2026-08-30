@@ -1,12 +1,6 @@
-import {
-  ExclamationCircleIcon as AlertCircle,
-  CheckCircleIcon as CheckCircle2,
-  XCircleIcon as XCircle,
-  ExclamationTriangleIcon as AlertTriangle,
-  InformationCircleIcon as Info,
-} from '@heroicons/react/24/solid';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { AlertCircle, CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react';
 import * as React from 'react';
 
 import { buttonVariants } from '@/components/ui/button';

@@ -1,17 +1,17 @@
 /* eslint-disable max-lines */
-import {
-  BanknotesIcon as PiggyBank,
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  SparklesIcon as Sparkles,
-  ArrowPathIcon as Loader2,
-  TagIcon as Tag,
-  WalletIcon as Wallet,
-  CalendarDaysIcon as CalendarDays,
-  ArrowUturnLeftIcon as RotateCcw,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  PiggyBank,
+  Plus,
+  Pencil,
+  Trash2,
+  Sparkles,
+  Loader2,
+  Tag,
+  Wallet,
+  CalendarDays,
+  RotateCcw,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
