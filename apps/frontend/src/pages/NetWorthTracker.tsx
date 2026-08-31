@@ -8,8 +8,8 @@ import {
   CreditCard,
   HandCoins,
   AlertTriangle,
-  ReceivableIcon,
-  PayableIcon,
+  ArrowDownCircle as ReceivableIcon,
+  ArrowUpCircle as PayableIcon,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
