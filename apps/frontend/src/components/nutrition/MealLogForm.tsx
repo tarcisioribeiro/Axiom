@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CalendarDaysIcon as CalendarDays,
-  CheckCircleIcon as CheckCircle2,
-  ArrowPathIcon as Loader2,
-  MoonIcon as Moon,
-  DocumentTextIcon as StickyNote,
-  SunIcon as Sun,
-  SunIcon as Sunrise,
-  CakeIcon as UtensilsCrossed,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
+  CalendarDays,
+  CheckCircle2,
+  Loader2,
+  Moon,
+  StickyNote,
+  Sun,
+  Sunrise,
+  UtensilsCrossed,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

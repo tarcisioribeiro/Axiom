@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowDownTrayIcon as Download,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  TagIcon as Tag,
-  ViewfinderCircleIcon as CircleDot,
-} from '@heroicons/react/24/solid';
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  Download,
+  CheckCircle2,
+  Clock,
+  Tag,
+  CircleDot,
+} from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
-import {
-  CalendarDaysIcon as CalendarDays,
-  CheckCircleIcon as CheckCircle2,
-  DocumentTextIcon as FileText,
-  LinkIcon as Link,
-  PencilIcon as Pencil,
-  BanknotesIcon as PiggyBank,
-  PlusIcon as Plus,
-  AdjustmentsVerticalIcon as Sliders,
-  TagIcon as Tag,
-  ViewfinderCircleIcon as Target,
-  TrashIcon as Trash2,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  CalendarDays,
+  CheckCircle2,
+  FileText,
+  Link,
+  Pencil,
+  PiggyBank,
+  Plus,
+  Sliders,
+  Tag,
+  Target,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

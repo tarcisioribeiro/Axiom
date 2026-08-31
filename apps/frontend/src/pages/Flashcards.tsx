@@ -1,13 +1,7 @@
 /* eslint-disable max-lines */
-import {
-  LightBulbIcon as Brain,
-  ChevronLeftIcon as ChevronLeft,
-  PlusIcon as Plus,
-  ArrowUturnLeftIcon as RotateCcw,
-  StarIcon as Star,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Brain, ChevronLeft, Plus, RotateCcw, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

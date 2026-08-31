@@ -1,21 +1,21 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  TrashIcon as Trash2,
-  PencilIcon as Pencil,
-  ArrowDownTrayIcon as Download,
-  BanknotesIcon as HandCoins,
-  CreditCardIcon as CreditCard,
-  ListBulletIcon as List,
-  TableCellsIcon as TableProperties,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-  BanknotesIcon as Banknote,
-  UsersIcon as Users,
-  BuildingOffice2Icon as Building2,
-  CalendarDateRangeIcon as CalendarRange,
-} from '@heroicons/react/24/solid';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Trash2,
+  Pencil,
+  Download,
+  HandCoins,
+  CreditCard,
+  List,
+  TableProperties,
+  CheckCircle2,
+  Clock,
+  Banknote,
+  Users,
+  Building2,
+  CalendarRange,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -108,8 +108,7 @@ export default function Loans() {
   );
   const [isLoadingAmortization, setIsLoadingAmortization] = useState(false);
 
-  const handleOpenInstallments = async (loan: Loan) => {
-    setInstallmentsLoan(loan);
+  const loadInstallments = async (loan: Loan) => {
     setIsLoadingInstallments(true);
     try {
       const data = await loanInstallmentsService.getByLoan(loan.id);
@@ -119,6 +118,11 @@ export default function Loans() {
     } finally {
       setIsLoadingInstallments(false);
     }
+  };
+
+  const handleOpenInstallments = async (loan: Loan) => {
+    setInstallmentsLoan(loan);
+    await loadInstallments(loan);
   };
 
   const handleOpenAmortization = async (
@@ -533,6 +537,10 @@ export default function Loans() {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsLoan(null)}
+        onUpdated={() => {
+          void invalidateLoans();
+          if (installmentsLoan) void loadInstallments(installmentsLoan);
+        }}
       />
 
       <LoanPaymentPlanDialog

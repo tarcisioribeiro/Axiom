@@ -1,9 +1,4 @@
-import {
-  CheckIcon as Check,
-  Square2StackIcon as Copy,
-  EyeIcon as Eye,
-  EyeSlashIcon as EyeOff,
-} from '@heroicons/react/24/solid';
+import { Check, Copy, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

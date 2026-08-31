@@ -1,12 +1,5 @@
 /* eslint-disable max-lines */
-import {
-  DocumentTextIcon as FileText,
-  BuildingLibraryIcon as Landmark,
-  ReceiptPercentIcon as Percent,
-  PowerIcon as Power,
-  ArrowTrendingUpIcon as TrendingUp,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
+import { FileText, Landmark, Percent, Power, TrendingUp, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

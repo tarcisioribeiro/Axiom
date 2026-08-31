@@ -1,9 +1,5 @@
-import {
-  ExclamationCircleIcon as AlertCircle,
-  CalendarDateRangeIcon as CalendarClock,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import { AlertCircle, CalendarClock, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

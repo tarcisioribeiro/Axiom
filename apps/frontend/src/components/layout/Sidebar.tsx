@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
-import {
-  ChevronDownIcon as ChevronDown,
-  FireIcon as Flame,
-  XMarkIcon as X,
-  ViewColumnsIcon as PanelLeftClose,
-  ViewColumnsIcon as PanelLeft,
-  Cog6ToothIcon as Settings,
-  ArrowLeftOnRectangleIcon as LogOut,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronDown,
+  Flame,
+  X,
+  PanelLeftClose,
+  PanelLeft,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 import { useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';

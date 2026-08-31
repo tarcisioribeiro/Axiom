@@ -1,17 +1,17 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  BookOpenIcon as BookOpen,
-  DocumentTextIcon as FileText,
-  PhotoIcon as ImagePlus,
-  ArrowPathIcon as Loader2,
-  DevicePhoneMobileIcon as Smartphone,
-  StarIcon as Star,
-  TagIcon as Tag,
-  ArrowUpTrayIcon as Upload,
-  UserIcon as User2,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  BookOpen,
+  FileText,
+  ImagePlus,
+  Loader2,
+  Smartphone,
+  Star,
+  Tag,
+  Upload,
+  User2,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

@@ -1,14 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  FunnelIcon as Filter,
-  HashtagIcon as Hash,
-  PencilIcon as Pencil,
-  PlusIcon as Plus,
-  TagIcon as Tag,
-  TrashIcon as Trash2,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Filter, Hash, Pencil, Plus, Tag, Trash2, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

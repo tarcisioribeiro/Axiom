@@ -1,13 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  BookOpenIcon as BookOpen,
-  CalendarDaysIcon as CalendarDays,
-  ClockIcon as Clock,
-  DocumentTextIcon as FileText,
-  HashtagIcon as Hash,
-  ArrowPathIcon as Loader2,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { BookOpen, CalendarDays, Clock, FileText, Hash, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

@@ -1,11 +1,5 @@
-import {
-  PauseIcon as Pause,
-  PlayIcon as Play,
-  ArrowUturnLeftIcon as RotateCcw,
-  XMarkIcon as X,
-  ClockIcon as Timer,
-} from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Pause, Play, RotateCcw, X, Timer } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 

@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { PencilIcon as Pencil, TrashIcon as Trash2 } from '@heroicons/react/24/solid';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  ArrowTrendingDownIcon as TrendingDown,
-  SparklesIcon as Snowflake,
-  FireIcon as Flame,
-  CalendarDaysIcon as CalendarDays,
-  CurrencyDollarIcon as DollarSign,
-  ViewfinderCircleIcon as Target,
-  TrophyIcon as Trophy,
-  ArrowRightIcon as ArrowRight,
-  InformationCircleIcon as Info,
-  ExclamationTriangleIcon as AlertTriangle,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  TrendingDown,
+  Snowflake,
+  Flame,
+  CalendarDays,
+  DollarSign,
+  Target,
+  Trophy,
+  ArrowRight,
+  Info,
+  AlertTriangle,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

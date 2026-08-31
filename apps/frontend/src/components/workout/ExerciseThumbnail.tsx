@@ -1,4 +1,4 @@
-import { FireIcon as Dumbbell } from '@heroicons/react/24/solid';
+import { Dumbbell } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 

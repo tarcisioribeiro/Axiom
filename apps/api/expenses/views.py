@@ -47,6 +47,7 @@ from expenses.serializers import (
 from expenses.services import (
     bulk_generate_fixed_expenses,
     get_fixed_expenses_stats,
+    get_fully_generated_months,
 )
 
 
@@ -265,6 +266,31 @@ class FixedExpensesStatsView(APIView):
 
     def get(self, request):
         return Response(get_fixed_expenses_stats(), status=status.HTTP_200_OK)
+
+
+class FixedExpensesGeneratedMonthsView(APIView):
+    """GET /api/v1/expenses/fixed-expenses/generated-months/
+
+    Lista os meses (``YYYY-MM``) em que todos os templates de despesa fixa
+    ativos já foram lançados, para o diálogo de lançamento remover essas
+    opções. Aceita ``?months=`` (default 6, máx 24)."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedExpense.objects.none()
+
+    def get(self, request):
+        months_ahead = request.query_params.get("months", 6)
+        try:
+            months_ahead = int(months_ahead)
+        except (TypeError, ValueError):
+            months_ahead = 6
+        return Response(
+            {
+                "fully_generated_months": get_fully_generated_months(
+                    months_ahead
+                )
+            }
+        )
 
 
 class CategorizationRuleListCreateView(BaseListCreateView):

@@ -1,19 +1,19 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  CheckCircleIcon as CheckSquare,
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
-  ClockIcon as Clock,
-  QuestionMarkCircleIcon as HelpCircle,
-  LinkIcon as Link2,
-  ArrowPathIcon as Loader2,
-  ArrowPathRoundedSquareIcon as Repeat,
-  Cog8ToothIcon as Settings2,
-  TagIcon as Tag,
-  ViewfinderCircleIcon as Target,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
+import {
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  HelpCircle,
+  Link2,
+  Loader2,
+  Repeat,
+  Settings2,
+  Tag,
+  Target,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

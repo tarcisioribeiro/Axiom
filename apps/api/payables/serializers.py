@@ -23,8 +23,7 @@ class PayableInstallmentSerializer(serializers.ModelSerializer):
             "uuid",
             "payable",
             "installment_number",
-            "value",
-            "due_date",
+            "payment_expense",
             "created_at",
             "updated_at",
         ]

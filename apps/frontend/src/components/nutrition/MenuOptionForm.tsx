@@ -1,14 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  Bars3Icon as GripVertical,
-  QueueListIcon as ListChecks,
-  ArrowPathIcon as Loader2,
-  PlusIcon as Plus,
-  CakeIcon as Salad,
-  DocumentTextIcon as StickyNote,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
 import type { TFunction } from 'i18next';
+import {
+  GripVertical,
+  ListChecks,
+  Loader2,
+  Plus,
+  Salad,
+  StickyNote,
+  Trash2,
+} from 'lucide-react';
 import { useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

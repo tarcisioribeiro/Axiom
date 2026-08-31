@@ -1,15 +1,15 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
-  CalendarDaysIcon as CalendarDays,
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
-  ClockIcon as Clock,
-  LinkIcon as Link2,
-  ArrowPathIcon as Loader2,
-  TagIcon as Tag,
-  ArrowTrendingUpIcon as TrendingUp,
-  WalletIcon as Wallet,
-} from '@heroicons/react/24/solid';
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Link2,
+  Loader2,
+  Tag,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

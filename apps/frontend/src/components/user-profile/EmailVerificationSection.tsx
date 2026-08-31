@@ -1,9 +1,5 @@
-import {
-  CheckCircleIcon as CheckCircle2,
-  EnvelopeIcon as Mail,
-  PaperAirplaneIcon as Send,
-} from '@heroicons/react/24/solid';
 import { useMutation } from '@tanstack/react-query';
+import { CheckCircle2, Mail, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';

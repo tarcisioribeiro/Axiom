@@ -1,8 +1,5 @@
-import {
-  Square2StackIcon as Copy,
-  CheckIcon as Check,
-} from '@heroicons/react/24/solid';
 import { AnimatePresence } from 'framer-motion';
+import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

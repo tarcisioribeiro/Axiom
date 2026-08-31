@@ -1,19 +1,19 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  ReceiptRefundIcon as Receipt,
-  CreditCardIcon as CreditCard,
-  ListBulletIcon as List,
-  CheckCircleIcon as CheckCircle2,
-  ExclamationTriangleIcon as AlertTriangle,
-  BanknotesIcon as Banknote,
-  ClockIcon as Clock,
-  CalendarDateRangeIcon as CalendarRange,
-  ArrowTrendingUpIcon as TrendingUp,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Receipt,
+  CreditCard,
+  List,
+  CheckCircle2,
+  AlertTriangle,
+  Banknote,
+  Clock,
+  CalendarRange,
+  TrendingUp,
+} from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -109,8 +109,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const [installments, setInstallments] = useState<PayableInstallment[]>([]);
   const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
 
-  const handleOpenInstallments = async (payable: Payable) => {
-    setInstallmentsPayable(payable);
+  const loadInstallments = async (payable: Payable) => {
     setIsLoadingInstallments(true);
     try {
       const data = await payableInstallmentsService.getByPayable(payable.id);
@@ -120,6 +119,11 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
     } finally {
       setIsLoadingInstallments(false);
     }
+  };
+
+  const handleOpenInstallments = async (payable: Payable) => {
+    setInstallmentsPayable(payable);
+    await loadInstallments(payable);
   };
 
   const { activeCount, overdueCount, paidCount, totalValue } = useMemo(() => {
@@ -487,6 +491,10 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
+        onUpdated={() => {
+          invalidatePayables();
+          if (installmentsPayable) void loadInstallments(installmentsPayable);
+        }}
       />
 
       <PaymentPlanDialog

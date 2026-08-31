@@ -1,7 +1,4 @@
-import {
-  QueueListIcon as LayoutList,
-  PlusIcon as Plus,
-} from '@heroicons/react/24/solid';
+import { LayoutList, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

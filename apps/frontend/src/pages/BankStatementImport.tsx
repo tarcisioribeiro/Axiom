@@ -1,13 +1,13 @@
 /* eslint-disable max-lines */
-import {
-  ArrowsRightLeftIcon as ArrowLeftRight,
-  CheckCircleIcon as CheckCircle2,
-  DocumentArrowUpIcon as FileUp,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowUpTrayIcon as Upload,
-} from '@heroicons/react/24/solid';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeftRight,
+  CheckCircle2,
+  FileUp,
+  TrendingDown,
+  TrendingUp,
+  Upload,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

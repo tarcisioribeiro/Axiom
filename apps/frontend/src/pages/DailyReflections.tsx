@@ -1,20 +1,20 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  BookOpenIcon as BookOpen,
-  PencilSquareIcon as Edit,
-  TrashIcon as Trash2,
-  FaceSmileIcon as SmilePlus,
-  FaceSmileIcon as Smile,
-  FaceSmileIcon as Meh,
-  FaceFrownIcon as Frown,
-  FaceFrownIcon as Angry,
-  ChevronDownIcon as ChevronDown,
-  ChevronUpIcon as ChevronUp,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  Plus,
+  BookOpen,
+  Edit,
+  Trash2,
+  SmilePlus,
+  Smile,
+  Meh,
+  Frown,
+  Angry,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';

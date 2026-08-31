@@ -1,20 +1,20 @@
 /* eslint-disable max-lines */
-import {
-  BoltIcon as Activity,
-  LightBulbIcon as Brain,
-  CheckCircleIcon as CheckCircle2,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  ClockIcon as Clock,
-  CurrencyDollarIcon as DollarSign,
-  FireIcon as Dumbbell,
-  HeartIcon as Heart,
-  RocketLaunchIcon as Rocket,
-  SparklesIcon as Sparkles,
-  StarIcon as Star,
-} from '@heroicons/react/24/solid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Activity,
+  Brain,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  DollarSign,
+  Dumbbell,
+  Heart,
+  Rocket,
+  Sparkles,
+  Star,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 

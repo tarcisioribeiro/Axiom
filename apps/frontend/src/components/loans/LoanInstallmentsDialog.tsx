@@ -1,14 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { InstallmentsPlanDialog } from '@/components/common/InstallmentsPlanDialog';
+import { loanInstallmentsService } from '@/services/loan-installments-service';
 import type { Loan, LoanInstallment } from '@/types';
 
 interface LoanInstallmentsDialogProps {
@@ -16,6 +9,7 @@ interface LoanInstallmentsDialogProps {
   installments: LoanInstallment[];
   isLoading: boolean;
   onClose: () => void;
+  onUpdated?: () => void;
 }
 
 export function LoanInstallmentsDialog({
@@ -23,65 +17,34 @@ export function LoanInstallmentsDialog({
   installments,
   isLoading,
   onClose,
+  onUpdated,
 }: LoanInstallmentsDialogProps) {
   const { t } = useTranslation();
 
   return (
-    <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('pages.loans.installments.title')}</DialogTitle>
-          <DialogDescription>{loan?.description}</DialogDescription>
-        </DialogHeader>
-        {isLoading ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </div>
-        ) : installments.length === 0 ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('pages.loans.installments.emptyState')}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground border-b text-left">
-                  <th className="pb-sm pr-md">
-                    {t('pages.loans.installments.number')}
-                  </th>
-                  <th className="pb-sm pr-md">
-                    {t('pages.loans.installments.dueDate')}
-                  </th>
-                  <th className="pb-sm pr-md text-right">
-                    {t('pages.loans.installments.value')}
-                  </th>
-                  <th className="pb-sm">{t('pages.loans.installments.status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {installments.map((inst) => (
-                  <tr key={inst.id} className="border-b last:border-0">
-                    <td className="py-sm pr-md">{inst.installment_number}</td>
-                    <td className="py-sm pr-md">
-                      {formatDate(inst.due_date, 'dd/MM/yyyy')}
-                    </td>
-                    <td className="py-sm pr-md text-right">
-                      {formatCurrency(inst.value)}
-                    </td>
-                    <td className="py-sm">
-                      <Badge variant={inst.payed ? 'secondary' : 'outline'}>
-                        {inst.payed
-                          ? t('pages.loans.installments.paid')
-                          : t('pages.loans.installments.pending')}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+    <InstallmentsPlanDialog
+      open={!!loan}
+      title={t('pages.loans.installments.title')}
+      description={loan?.description}
+      installments={installments}
+      isLoading={isLoading}
+      i18nBase="pages.loans.installments"
+      onClose={onClose}
+      onChanged={() => onUpdated?.()}
+      saveInstallment={async (num, data) => {
+        if (!loan) return;
+        await loanInstallmentsService.updateInstallment(loan.id, num, data);
+      }}
+      recalculate={async (count, dryRun) => {
+        if (!loan) return { installments_preview: [] };
+        const res = await loanInstallmentsService.recalculateInstallments(
+          loan.id,
+          'change_count',
+          count,
+          dryRun
+        );
+        return { installments_preview: res.preview.installments_preview };
+      }}
+    />
   );
 }

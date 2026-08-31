@@ -1,13 +1,5 @@
-import {
-  BellIcon as Bell,
-  EnvelopeIcon as Mail,
-  BellSlashIcon as BellOff,
-  BellAlertIcon as BellRing,
-  ArrowPathIcon as Loader2,
-  ArrowDownTrayIcon as Save,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Bell, Mail, BellOff, BellRing, Loader2, Save, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

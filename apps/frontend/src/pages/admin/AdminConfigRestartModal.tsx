@@ -1,10 +1,5 @@
-import {
-  ArchiveBoxIcon as Container,
-  ArrowPathIcon as RefreshCw,
-  ArrowUturnLeftIcon as RotateCcw,
-  ServerIcon as Server,
-} from '@heroicons/react/24/solid';
 import { useMutation } from '@tanstack/react-query';
+import { Container, RefreshCw, RotateCcw, Server } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

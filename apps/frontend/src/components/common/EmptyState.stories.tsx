@@ -1,9 +1,5 @@
-import {
-  FolderOpenIcon as FolderOpen,
-  MagnifyingGlassIcon as Search,
-  PlusCircleIcon as PlusCircle,
-} from '@heroicons/react/24/solid';
 import type { Meta, StoryObj } from '@storybook/react';
+import { FolderOpen, Search, PlusCircle } from 'lucide-react';
 
 import { EmptyState } from './EmptyState';
 

@@ -1,14 +1,14 @@
-import {
-  CommandLineIcon as Bot,
-  CircleStackIcon as Database,
-  ServerStackIcon as HardDrive,
-  LinkIcon as Link2,
-  EnvelopeIcon as Mail,
-  ArrowPathIcon as RefreshCw,
-  ServerIcon as Server,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Bot,
+  Database,
+  HardDrive,
+  Link2,
+  Mail,
+  RefreshCw,
+  Server,
+  Zap,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';

@@ -1,14 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  CalendarDaysIcon as CalendarDays,
-  DocumentTextIcon as FileText,
-  GlobeAltIcon as Globe,
-  ArrowPathIcon as Loader2,
-  UserIcon as User,
-  UserCircleIcon as UserCircle,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CalendarDays,
+  FileText,
+  Globe,
+  Loader2,
+  User,
+  UserCircle,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

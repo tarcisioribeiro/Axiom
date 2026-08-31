@@ -1,13 +1,6 @@
 /* eslint-disable max-lines */
-import {
-  BanknotesIcon as PiggyBank,
-  PlusIcon as Plus,
-  SparklesIcon as Sparkles,
-  ArrowTrendingUpIcon as TrendingUp,
-  LockClosedIcon as Vault,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

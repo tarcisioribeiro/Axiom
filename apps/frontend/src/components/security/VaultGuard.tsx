@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
 import {
-  LockClosedIcon as Lock,
-  ShieldCheckIcon as Shield,
-  EyeIcon as Eye,
-  EyeSlashIcon as EyeOff,
-  ClockIcon as Clock,
-  ExclamationTriangleIcon as AlertTriangle,
-  KeyIcon as Key,
-  ArrowPathIcon as RefreshCw,
-  CommandLineIcon as Keyboard,
-} from '@heroicons/react/24/solid';
+  Lock,
+  Shield,
+  Eye,
+  EyeOff,
+  Clock,
+  AlertTriangle,
+  Key,
+  RefreshCw,
+  Keyboard,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

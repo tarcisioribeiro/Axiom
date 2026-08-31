@@ -23,11 +23,27 @@ class LoanInstallmentSerializer(serializers.ModelSerializer):
             "uuid",
             "loan",
             "installment_number",
-            "value",
-            "due_date",
+            "payment_expense",
             "created_at",
             "updated_at",
         ]
+
+
+class LoanRecalculationPreviewSerializer(serializers.Serializer):
+    """Serializa o preview de loans.services.recalculate_loan_installments."""
+
+    loan_id = serializers.IntegerField()
+    mode = serializers.CharField()
+    old_installment_count = serializers.IntegerField()
+    new_installment_count = serializers.IntegerField()
+    old_value_per_installment = serializers.DecimalField(
+        max_digits=10, decimal_places=2
+    )
+    new_value_per_installment = serializers.DecimalField(
+        max_digits=10, decimal_places=2
+    )
+    remaining_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    installments_preview = serializers.ListField(child=serializers.DictField())
 
 
 class LoanSerializer(serializers.ModelSerializer):

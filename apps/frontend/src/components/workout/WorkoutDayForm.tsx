@@ -1,16 +1,16 @@
 /* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable max-lines */
 import {
-  BoltIcon as Activity,
-  CalendarIcon as Calendar,
-  ClockIcon as Clock,
-  FireIcon as Dumbbell,
-  FireIcon as Flame,
-  Square3Stack3DIcon as Layers,
-  ArrowPathIcon as Loader2,
-  ViewfinderCircleIcon as Target,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
+  Activity,
+  Calendar,
+  Clock,
+  Dumbbell,
+  Flame,
+  Layers,
+  Loader2,
+  Target,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

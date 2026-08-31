@@ -1,18 +1,18 @@
 /* eslint-disable max-lines */
-import {
-  PlusIcon as Plus,
-  PencilIcon as Pencil,
-  TrashIcon as Trash2,
-  CreditCardIcon,
-  ReceiptRefundIcon as Receipt,
-  WalletIcon as Wallet,
-  ArrowUturnLeftIcon as RotateCcw,
-  ExclamationTriangleIcon as AlertTriangle,
-  CheckCircleIcon as CheckCircle2,
-  ViewfinderCircleIcon as CircleDot,
-  ArrowPathIcon as RefreshCw,
-} from '@heroicons/react/24/solid';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  CreditCard as CreditCardIcon,
+  Receipt,
+  Wallet,
+  RotateCcw,
+  AlertTriangle,
+  CheckCircle2,
+  CircleDot,
+  RefreshCw,
+} from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 

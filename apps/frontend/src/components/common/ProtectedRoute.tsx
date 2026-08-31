@@ -1,4 +1,4 @@
-import { ArrowPathIcon as Loader2 } from '@heroicons/react/24/solid';
+import { Loader2 } from 'lucide-react';
 import { Navigate } from 'react-router';
 
 import { useAuthStore } from '@/stores/auth-store';

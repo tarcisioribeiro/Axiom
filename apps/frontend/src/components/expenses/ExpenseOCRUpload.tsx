@@ -1,8 +1,4 @@
-import {
-  DocumentMagnifyingGlassIcon as ScanText,
-  ArrowUpTrayIcon as Upload,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
+import { ScanText, Upload, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

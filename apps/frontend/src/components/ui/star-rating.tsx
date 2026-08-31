@@ -1,4 +1,4 @@
-import { StarIcon as Star } from '@heroicons/react/24/solid';
+import { Star } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils';

@@ -1,5 +1,5 @@
-import { ChevronDownIcon as ChevronDown } from '@heroicons/react/24/solid';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';

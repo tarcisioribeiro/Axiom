@@ -1,9 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  ArrowPathIcon as Loader2,
-  PlusIcon as Plus,
-  TrashIcon as Trash2,
-} from '@heroicons/react/24/solid';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';

@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import {
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowTrendingDownIcon as TrendingDown,
-  WalletIcon as Wallet,
-  LockClosedIcon as VaultIcon,
-  CreditCardIcon as CreditCard,
-  BanknotesIcon as HandCoins,
-  ExclamationTriangleIcon as AlertTriangle,
-  ArrowDownCircleIcon as ReceivableIcon,
-  ArrowUpCircleIcon as PayableIcon,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  VaultIcon,
+  CreditCard,
+  HandCoins,
+  AlertTriangle,
+  ArrowDownCircle as ReceivableIcon,
+  ArrowUpCircle as PayableIcon,
+} from 'lucide-react';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';

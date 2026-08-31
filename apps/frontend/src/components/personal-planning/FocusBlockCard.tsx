@@ -1,12 +1,12 @@
 import {
-  CheckCircleIcon as CheckCircle2,
-  ChevronDownIcon as ChevronDown,
-  ChevronRightIcon as ChevronRight,
-  StopCircleIcon as Circle,
-  PlusIcon as Plus,
-  TrashIcon as Trash2,
-  XMarkIcon as X,
-} from '@heroicons/react/24/solid';
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';

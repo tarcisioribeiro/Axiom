@@ -47,6 +47,11 @@ urlpatterns = [
         name="fixed-expense-generate",
     ),
     path(
+        "fixed-expenses/generated-months/",
+        views.FixedExpensesGeneratedMonthsView.as_view(),
+        name="fixed-expense-generated-months",
+    ),
+    path(
         "expenses/bulk-mark-paid/",
         views.BulkMarkPaidView.as_view(),
         name="expense-bulk-mark-paid",

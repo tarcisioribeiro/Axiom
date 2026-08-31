@@ -1,23 +1,23 @@
 /* eslint-disable max-lines */
-import {
-  WalletIcon as Wallet,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  CreditCardIcon as CreditCard,
-  ArrowsRightLeftIcon as ArrowLeftRight,
-  KeyIcon as Key,
-  LockClosedIcon as Lock,
-  BookOpenIcon as BookOpen,
-  BookmarkSquareIcon as BookMarked,
-  Squares2X2Icon as LayoutDashboard,
-  ShieldCheckIcon as Shield,
-  BuildingLibraryIcon as Library,
-  CalendarIcon as Calendar,
-  ShareIcon as GitFork,
-  ArrowTopRightOnSquareIcon as ExternalLink,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import {
+  Wallet,
+  TrendingDown,
+  TrendingUp,
+  CreditCard,
+  ArrowLeftRight,
+  Key,
+  Lock,
+  BookOpen,
+  BookMarked,
+  LayoutDashboard,
+  Shield,
+  Library,
+  Calendar,
+  GitFork,
+  ExternalLink,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 

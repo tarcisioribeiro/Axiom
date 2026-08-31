@@ -1,8 +1,4 @@
-import {
-  BanknotesIcon as Banknote,
-  CheckCircleIcon as CheckCircle2,
-  ClockIcon as Clock,
-} from '@heroicons/react/24/solid';
+import { Banknote, CheckCircle2, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';

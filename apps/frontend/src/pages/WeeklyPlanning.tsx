@@ -1,16 +1,16 @@
 /* eslint-disable max-lines */
-import {
-  ExclamationTriangleIcon as AlertTriangle,
-  CalendarIcon as Calendar,
-  CheckCircleIcon as CheckCircle2,
-  ChevronLeftIcon as ChevronLeft,
-  ChevronRightIcon as ChevronRight,
-  StopCircleIcon as Circle,
-  ExclamationCircleIcon as AlertCircle,
-  ClockIcon as Clock,
-  BoltIcon as Zap,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  AlertCircle,
+  Clock,
+  Zap,
+} from 'lucide-react';
 import { createElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

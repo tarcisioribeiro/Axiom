@@ -1,11 +1,11 @@
-import {
-  BoltIcon as Activity,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowTrendingUpIcon as TrendingUp,
-  CheckCircleIcon as CheckCircle,
-  ExclamationCircleIcon as AlertCircle,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  Activity,
+  TrendingDown,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { ProgressGauge } from '@/components/common/ProgressGauge';

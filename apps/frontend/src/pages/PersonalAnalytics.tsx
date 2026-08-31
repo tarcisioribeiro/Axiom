@@ -1,15 +1,15 @@
 /* eslint-disable max-lines */
-import {
-  ArrowTrendingUpIcon as TrendingUp,
-  ArrowTrendingDownIcon as TrendingDown,
-  StarIcon as Star,
-  ExclamationTriangleIcon as AlertTriangle,
-  SunIcon as Sun,
-  TrophyIcon as Award,
-  BoltIcon as Activity,
-  ChartBarSquareIcon as BarChart3,
-} from '@heroicons/react/24/solid';
 import { useQuery } from '@tanstack/react-query';
+import {
+  TrendingUp,
+  TrendingDown,
+  Star,
+  AlertTriangle,
+  Sun,
+  Award,
+  Activity,
+  BarChart3,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   BarChart,
