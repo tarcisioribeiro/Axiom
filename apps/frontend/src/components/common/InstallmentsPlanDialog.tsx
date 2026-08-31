@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { PencilIcon as Pencil } from '@heroicons/react/24/solid';
+import { Pencil } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
