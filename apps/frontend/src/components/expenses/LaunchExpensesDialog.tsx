@@ -76,12 +76,14 @@ export const LaunchExpensesDialog = ({
     staleTime: 0,
   });
 
-  // Mês corrente + os próximos 2, removendo os que já foram totalmente
+  // Mês corrente + os próximos 3, removendo os que já foram totalmente
   // lançados (todos os templates ativos já têm lançamento naquele mês).
   const monthOptions = useMemo(() => {
-    return Array.from({ length: 3 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() + i);
+    const now = new Date();
+    return Array.from({ length: 4 }, (_, i) => {
+      // Constrói o mês a partir do dia 1 para evitar o "roll-over" do JS
+      // (ex.: 31/ago + 1 mês => 01/out), que duplicava meses e pulava um.
+      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       return {
         value,
