@@ -6,12 +6,19 @@ import '../screens/finance/credit_card_bill_detail_screen.dart';
 import '../screens/finance/credit_card_detail_screen.dart';
 import '../screens/finance/credit_cards_screen.dart';
 import '../screens/finance/dashboard_screen.dart';
+import '../screens/finance/financial_calendar_screen.dart';
+import '../screens/finance/financial_goals_screen.dart';
+import '../screens/finance/loans_screen.dart';
+import '../screens/finance/members_screen.dart';
+import '../screens/finance/payables_receivables_screen.dart';
 import '../screens/finance/transactions_screen.dart';
 import '../screens/finance/transfers_screen.dart';
+import '../screens/finance/vaults_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/planning/nutrition_screen.dart';
 import '../screens/planning/planning_dashboard_screen.dart';
 import '../screens/planning/tasks_goals_screen.dart';
+import '../screens/planning/wellness_screen.dart';
 import '../screens/planning/workout_screen.dart';
 import '../screens/security/security_screen.dart';
 import '../screens/shell/app_shell.dart';
@@ -84,6 +91,32 @@ GoRouter buildAppRouter(SessionController sessionController) {
                     path: 'transfers',
                     builder: (context, state) => const TransfersScreen(),
                   ),
+                  GoRoute(
+                    path: 'payables-receivables',
+                    builder: (context, state) =>
+                        const PayablesReceivablesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'loans',
+                    builder: (context, state) => const LoansScreen(),
+                  ),
+                  GoRoute(
+                    path: 'calendar',
+                    builder: (context, state) =>
+                        const FinancialCalendarScreen(),
+                  ),
+                  GoRoute(
+                    path: 'vaults',
+                    builder: (context, state) => const VaultsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'goals',
+                    builder: (context, state) => const FinancialGoalsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'members',
+                    builder: (context, state) => const MembersScreen(),
+                  ),
                 ],
               ),
             ],
@@ -105,6 +138,10 @@ GoRouter buildAppRouter(SessionController sessionController) {
                   GoRoute(
                     path: 'nutrition',
                     builder: (context, state) => const NutritionScreen(),
+                  ),
+                  GoRoute(
+                    path: 'wellness',
+                    builder: (context, state) => const WellnessScreen(),
                   ),
                 ],
               ),

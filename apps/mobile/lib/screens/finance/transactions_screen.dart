@@ -11,9 +11,11 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/page_header.dart';
+import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
 import 'expense_form_sheet.dart';
 import 'revenue_form_sheet.dart';
@@ -44,7 +46,6 @@ class TransactionsScreen extends StatelessWidget {
               ),
               TabBar(
                 tabs: const [Tab(text: 'Despesas'), Tab(text: 'Receitas')],
-                labelColor: Theme.of(context).colorScheme.primary,
               ),
               const Expanded(
                 child: TabBarView(
@@ -198,6 +199,9 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                         accounts: accounts,
                       ),
                       onDelete: () => _delete(expense),
+                      deleteMessage:
+                          'Excluir a despesa "${expense.description}"? '
+                          'Essa ação não pode ser desfeita.',
                     ),
                   ),
               ],
@@ -348,6 +352,9 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
                         accounts: accounts,
                       ),
                       onDelete: () => _delete(revenue),
+                      deleteMessage:
+                          'Excluir a receita "${revenue.description}"? '
+                          'Essa ação não pode ser desfeita.',
                     ),
                   ),
               ],
@@ -370,6 +377,7 @@ class _TransactionTile extends StatelessWidget {
   final VoidCallback onToggleDone;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final String deleteMessage;
 
   const _TransactionTile({
     required this.title,
@@ -382,84 +390,121 @@ class _TransactionTile extends StatelessWidget {
     required this.onToggleDone,
     required this.onEdit,
     required this.onDelete,
+    required this.deleteMessage,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final valueColor =
-        isPositive ? context.semanticColors.success : theme.colorScheme.error;
-    return Opacity(
-      opacity: done ? 0.65 : 1,
-      child: Container(
-        margin: EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: AppRadius.mdRadius,
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final valueColor = done
+        ? muted
+        : (isPositive
+            ? context.semanticColors.success
+            : theme.colorScheme.error);
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.smd,
+        AppSpacing.smd,
+        AppSpacing.sm,
+        AppSpacing.smd,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${isPositive ? '+' : '-'} ${AppFormatters.currency(value)}',
+                  title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                      color: valueColor, fontWeight: FontWeight.w700),
-                ),
-                GestureDetector(
-                  onTap: onToggleDone,
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 2),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: (done
-                              ? context.semanticColors.success
-                              : context.semanticColors.warning)
-                          .withValues(alpha: 0.12),
-                      borderRadius: AppRadius.smRadius,
-                    ),
-                    child: Text(
-                      done ? doneLabel : pendingLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: done
-                            ? context.semanticColors.success
-                            : context.semanticColors.warning,
-                      ),
-                    ),
+                    color: done ? muted : null,
+                    decoration: done ? TextDecoration.lineThrough : null,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              onPressed: onEdit,
+          ),
+          SizedBox(width: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${isPositive ? '+' : '-'} ${AppFormatters.currency(value)}',
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(color: valueColor, fontWeight: FontWeight.w700),
+              ),
+              SizedBox(height: AppSpacing.xs),
+              _StatusToggle(
+                done: done,
+                label: done ? doneLabel : pendingLabel,
+                onTap: onToggleDone,
+              ),
+            ],
+          ),
+          RowActionsMenu(
+            onEdit: onEdit,
+            onDelete: onDelete,
+            deleteConfirmTitle: 'Excluir lançamento',
+            deleteConfirmMessage: deleteMessage,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tappable pill that toggles a transaction's paid/received state. Sized to
+/// a real 32px-min touch target — the old inline pill was ~18px tall.
+class _StatusToggle extends StatelessWidget {
+  final bool done;
+  final String label;
+  final VoidCallback onTap;
+
+  const _StatusToggle({
+    required this.done,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color =
+        done ? context.semanticColors.success : context.semanticColors.warning;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.smRadius,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 32),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: AppRadius.smRadius,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              done ? Icons.check_circle_rounded : Icons.schedule_rounded,
+              size: 13,
+              color: color,
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 18),
-              onPressed: onDelete,
+            SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(color: color),
             ),
           ],
         ),

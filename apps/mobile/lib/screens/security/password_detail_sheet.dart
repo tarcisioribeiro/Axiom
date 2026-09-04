@@ -7,8 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/password_entry.dart';
 import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
+import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
+import '../../widgets/confirm.dart';
 import 'password_form_sheet.dart';
 
 const _autoHideSeconds = 30;
@@ -106,24 +108,13 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir senha'),
-        content: Text('Excluir "${widget.entry.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
+    final confirmed = await confirmDelete(
+      context,
+      title: 'Excluir senha',
+      message: 'Excluir "${widget.entry.title}" do cofre? '
+          'Essa ação não pode ser desfeita.',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       await ref.read(passwordsServiceProvider).delete(widget.entry.id);
       ref.invalidate(passwordsProvider);
@@ -180,10 +171,10 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
             SizedBox(height: AppSpacing.sm),
             if (_revealed != null)
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.smd),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.mdRadius,
                 ),
                 child: Row(
                   children: [
