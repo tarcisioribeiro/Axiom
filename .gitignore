@@ -130,3 +130,6 @@ temp/
 *.temp
 
 .claude/
+.agents/
+skills-lock.json
+graphify-out/

@@ -6,14 +6,17 @@ import '../../models/workout_plan.dart';
 import '../../models/workout_session.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/page_header.dart';
+import '../../widgets/row_actions.dart';
+import 'ai_generate_sheets.dart';
 import 'exercise_catalog_form_sheet.dart';
+import 'workout_plan_detail_screen.dart';
 import 'workout_plan_form_sheet.dart';
 import 'workout_session_form_sheet.dart';
 
@@ -47,7 +50,6 @@ class WorkoutScreen extends StatelessWidget {
                   Tab(text: 'Planos'),
                   Tab(text: 'Exercícios'),
                 ],
-                labelColor: Theme.of(context).colorScheme.primary,
               ),
               const Expanded(
                 child: TabBarView(
@@ -114,14 +116,9 @@ class _SessionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      margin: EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: AppRadius.mdRadius,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-      ),
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.smd),
       child: Row(
         children: [
           Icon(Icons.fitness_center_rounded,
@@ -172,9 +169,22 @@ class _PlansTab extends ConsumerWidget {
     final plansAsync = ref.watch(workoutPlansProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showWorkoutPlanFormSheet(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'ai-workout',
+            tooltip: 'Gerar com IA',
+            onPressed: () => showAiWorkoutPlanSheet(context, ref),
+            child: const Icon(Icons.auto_awesome_outlined),
+          ),
+          SizedBox(height: AppSpacing.sm),
+          FloatingActionButton(
+            heroTag: 'add-workout',
+            onPressed: () => showWorkoutPlanFormSheet(context),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -195,9 +205,20 @@ class _PlansTab extends ConsumerWidget {
                       .map(
                         (plan) => _PlanTile(
                           plan: plan,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => WorkoutPlanDetailScreen(
+                                planId: plan.id,
+                                planName: plan.name,
+                              ),
+                            ),
+                          ),
                           onEdit: () =>
                               showWorkoutPlanFormSheet(context, existing: plan),
                           onDelete: () => _delete(context, ref, plan),
+                          deleteMessage:
+                              'Excluir o plano "${plan.name}"? Essa ação não '
+                              'pode ser desfeita.',
                         ),
                       )
                       .toList(),
@@ -210,25 +231,30 @@ class _PlansTab extends ConsumerWidget {
 
 class _PlanTile extends StatelessWidget {
   final WorkoutPlan plan;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final String deleteMessage;
 
   const _PlanTile({
     required this.plan,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    required this.deleteMessage,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      margin: EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: AppRadius.mdRadius,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
+    return AppCard(
+      onTap: onTap,
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.smd,
+        AppSpacing.smd,
+        AppSpacing.sm,
+        AppSpacing.smd,
       ),
       child: Row(
         children: [
@@ -260,13 +286,11 @@ class _PlanTile extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18),
-            onPressed: onEdit,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18),
-            onPressed: onDelete,
+          RowActionsMenu(
+            onEdit: onEdit,
+            onDelete: onDelete,
+            deleteConfirmTitle: 'Excluir plano',
+            deleteConfirmMessage: deleteMessage,
           ),
         ],
       ),
@@ -321,23 +345,15 @@ class _ExercisesTab extends ConsumerWidget {
                           subtitle: exercise.muscleGroups == null
                               ? null
                               : Text(exercise.muscleGroups!),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18),
-                                onPressed: () => showExerciseCatalogFormSheet(
-                                  context,
-                                  existing: exercise,
-                                ),
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete_outline, size: 18),
-                                onPressed: () =>
-                                    _delete(context, ref, exercise),
-                              ),
-                            ],
+                          trailing: RowActionsMenu(
+                            onEdit: () => showExerciseCatalogFormSheet(
+                              context,
+                              existing: exercise,
+                            ),
+                            onDelete: () => _delete(context, ref, exercise),
+                            deleteConfirmTitle: 'Excluir exercício',
+                            deleteConfirmMessage:
+                                'Excluir "${exercise.name}" do catálogo?',
                           ),
                         ),
                       )

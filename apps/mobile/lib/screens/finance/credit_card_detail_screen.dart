@@ -44,42 +44,55 @@ class CreditCardDetailScreen extends ConsumerWidget {
             data: (card) => ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.tertiary,
-                      ],
-                    ),
-                    borderRadius: AppRadius.lgRadius,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        card.cardNumberMasked ?? '•••• •••• •••• ••••',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 18),
+                Builder(
+                  builder: (context) {
+                    final scheme = Theme.of(context).colorScheme;
+                    final onCard = scheme.onPrimary;
+                    return Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [scheme.primary, scheme.tertiary],
+                        ),
+                        borderRadius: AppRadius.lgRadius,
                       ),
-                      SizedBox(height: AppSpacing.sm),
-                      Text(
-                        card.onCardName,
-                        style: const TextStyle(color: Colors.white),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            card.cardNumberMasked ?? '•••• •••• •••• ••••',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: onCard,
+                                  letterSpacing: 1.5,
+                                ),
+                          ),
+                          SizedBox(height: AppSpacing.smd),
+                          Text(
+                            card.onCardName,
+                            style: TextStyle(color: onCard),
+                          ),
+                          Text(
+                            ChoiceLabels.of(ChoiceLabels.cardFlags, card.flag),
+                            style: TextStyle(
+                              color: onCard.withValues(alpha: 0.75),
+                            ),
+                          ),
+                          SizedBox(height: AppSpacing.smd),
+                          Text(
+                            'Disponível: '
+                            '${AppFormatters.currency(card.availableCredit)} '
+                            'de ${AppFormatters.currency(card.creditLimit)}',
+                            style: TextStyle(color: onCard),
+                          ),
+                        ],
                       ),
-                      Text(
-                        ChoiceLabels.of(ChoiceLabels.cardFlags, card.flag),
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Disponível: ${AppFormatters.currency(card.availableCredit)} '
-                        'de ${AppFormatters.currency(card.creditLimit)}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
                 SizedBox(height: AppSpacing.md),
                 Text('Faturas', style: Theme.of(context).textTheme.titleMedium),

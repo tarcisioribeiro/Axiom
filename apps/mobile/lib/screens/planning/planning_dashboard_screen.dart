@@ -7,8 +7,10 @@ import '../../providers/planning_providers.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/logout_button.dart';
+import '../../widgets/module_tile.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/stat_card.dart';
 
@@ -88,23 +90,29 @@ class PlanningDashboardScreen extends ConsumerWidget {
                 crossAxisSpacing: AppSpacing.sm,
                 childAspectRatio: 1.6,
                 children: [
-                  _ModuleTile(
+                  ModuleTile(
                     label: 'Tarefas & Metas',
                     icon: Icons.checklist_rounded,
                     color: context.semanticColors.info,
                     onTap: () => context.go('/planning/tasks-goals'),
                   ),
-                  _ModuleTile(
+                  ModuleTile(
                     label: 'Treino',
                     icon: Icons.fitness_center_rounded,
                     color: context.semanticColors.warning,
                     onTap: () => context.go('/planning/workout'),
                   ),
-                  _ModuleTile(
+                  ModuleTile(
                     label: 'Nutrição',
                     icon: Icons.restaurant_rounded,
                     color: context.semanticColors.success,
                     onTap: () => context.go('/planning/nutrition'),
+                  ),
+                  ModuleTile(
+                    label: 'Bem-estar',
+                    icon: Icons.spa_rounded,
+                    color: context.semanticColors.info,
+                    onTap: () => context.go('/planning/wellness'),
                   ),
                 ],
               ),
@@ -124,13 +132,7 @@ class _GamificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: AppRadius.lgRadius,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-      ),
+    return AppCard(
       child: Row(
         children: [
           CircleAvatar(
@@ -165,46 +167,6 @@ class _GamificationCard extends StatelessWidget {
           Icon(Icons.local_fire_department_rounded,
               color: context.semanticColors.warning),
         ],
-      ),
-    );
-  }
-}
-
-class _ModuleTile extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ModuleTile({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: AppRadius.lgRadius,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: AppRadius.lgRadius,
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color),
-            SizedBox(height: AppSpacing.xs),
-            Text(label, style: theme.textTheme.titleSmall),
-          ],
-        ),
       ),
     );
   }

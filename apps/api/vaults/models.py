@@ -3,7 +3,7 @@ from calendar import monthrange
 from decimal import Decimal
 
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from app.models import BaseModel
@@ -170,31 +170,40 @@ class Vault(BaseModel):
             as_of_date = timezone.now().date()
 
         yield_value = self.calculate_yield(as_of_date)
-        if yield_value > 0:
-            self.current_balance += yield_value
-            self.accumulated_yield += yield_value
-            self.last_yield_date = as_of_date
 
-            self._materialize_yield_revenue(yield_value, as_of_date, user)
+        with transaction.atomic():
+            if yield_value > 0:
+                self.current_balance += yield_value
+                self.accumulated_yield += yield_value
+                self.last_yield_date = as_of_date
 
-            # Registrar a transação de rendimento
-            VaultTransaction.objects.create(
-                vault=self,
-                transaction_type="yield",
-                amount=yield_value,
-                balance_after=self.current_balance,
-                description=f"Rendimento automático até {as_of_date}",
-                created_by=user or self.created_by,
-            )
+                self._materialize_yield_revenue(yield_value, as_of_date, user)
 
-            self.save()
+                # Registrar a transação de rendimento
+                VaultTransaction.objects.create(
+                    vault=self,
+                    transaction_type="yield",
+                    amount=yield_value,
+                    balance_after=self.current_balance,
+                    description=f"Rendimento automático até {as_of_date}",
+                    created_by=user or self.created_by,
+                )
 
-            # O rendimento é lançado como receita na conta associada, de modo
-            # que o saldo da conta (receitas - despesas) acompanhe o valor
-            # reservado no cofre e o saldo disponível não seja afetado.
-            from accounts.services import recalculate_account_balance
+                self.save()
 
-            recalculate_account_balance(self.account_id)
+            # Defesa em profundidade: garante Σ(Revenue income ativas) ==
+            # accumulated_yield mesmo se algo fora deste método tiver
+            # desviado um lado do outro (recálculo de taxa, edição manual).
+            drift = self._reconcile_yield_invariant(user)
+
+            if yield_value > 0 or drift != 0:
+                # O rendimento é lançado como receita na conta associada, de
+                # modo que o saldo da conta (receitas - despesas) acompanhe
+                # o valor reservado no cofre e o saldo disponível não seja
+                # afetado.
+                from accounts.services import recalculate_account_balance
+
+                recalculate_account_balance(self.account_id)
 
         return yield_value
 
@@ -303,7 +312,7 @@ class Vault(BaseModel):
         self.save()
 
         # Registrar transação
-        transaction = VaultTransaction.objects.create(
+        vault_transaction = VaultTransaction.objects.create(
             vault=self,
             transaction_type="deposit",
             amount=amount,
@@ -312,7 +321,7 @@ class Vault(BaseModel):
             created_by=user,
         )
 
-        return transaction
+        return vault_transaction
 
     def withdraw(self, amount, description=None, user=None):
         """
@@ -335,50 +344,57 @@ class Vault(BaseModel):
         if amount <= 0:
             raise ValueError("O valor do saque deve ser positivo")
 
-        # Aplicar rendimentos pendentes antes do saque
-        self.apply_yield(user=user)
+        with transaction.atomic():
+            # Aplicar rendimentos pendentes antes do saque
+            self.apply_yield(user=user)
 
-        if amount > self.current_balance:
-            raise ValueError(
-                f"Saldo insuficiente no cofre. "
-                f"Disponível: {self.current_balance}, Solicitado: {amount}"
+            if amount > self.current_balance:
+                raise ValueError(
+                    f"Saldo insuficiente no cofre. "
+                    f"Disponível: {self.current_balance}, Solicitado: {amount}"
+                )
+
+            # Atualizar saldo do cofre. O principal sai primeiro; o valor
+            # deixa de estar reservado e volta a Account.available_balance
+            # automaticamente.
+            yield_before = self.accumulated_yield
+            self.current_balance -= amount
+
+            if self.current_balance <= 0:
+                # Cofre zerado: o rendimento acumulado deixa de existir e o
+                # "relógio" de rendimento é encerrado, para que um próximo
+                # depósito reinicie a contagem a partir da data do depósito.
+                self.current_balance = Decimal("0.00")
+                self.accumulated_yield = Decimal("0.00")
+                self.last_yield_date = None
+            elif self.accumulated_yield > self.current_balance:
+                # accumulated_yield nunca pode exceder o saldo do cofre.
+                self.accumulated_yield = self.current_balance
+
+            self.save()
+
+            # O rendimento consumido no saque deixa de existir: abate as
+            # receitas de rendimento correspondentes para não vazar ao saldo
+            # disponível.
+            yield_consumed = yield_before - self.accumulated_yield
+            if yield_consumed > 0:
+                self._reduce_yield_revenues(yield_consumed, user)
+
+            # Defesa em profundidade: mesma garantia de invariante aplicada
+            # em apply_yield.
+            self._reconcile_yield_invariant(user)
+
+            # Registrar transação
+            vault_transaction = VaultTransaction.objects.create(
+                vault=self,
+                transaction_type="withdrawal",
+                amount=amount,
+                balance_after=self.current_balance,
+                description=description or "Saque",
+                created_by=user,
             )
 
-        # Atualizar saldo do cofre. O principal sai primeiro; o valor deixa de
-        # estar reservado e volta a Account.available_balance automaticamente.
-        yield_before = self.accumulated_yield
-        self.current_balance -= amount
-
-        if self.current_balance <= 0:
-            # Cofre zerado: o rendimento acumulado deixa de existir e o
-            # "relógio" de rendimento é encerrado, para que um próximo depósito
-            # reinicie a contagem a partir da data do depósito.
-            self.current_balance = Decimal("0.00")
-            self.accumulated_yield = Decimal("0.00")
-            self.last_yield_date = None
-        elif self.accumulated_yield > self.current_balance:
-            # accumulated_yield nunca pode exceder o saldo do cofre.
-            self.accumulated_yield = self.current_balance
-
-        self.save()
-
-        # O rendimento consumido no saque deixa de existir: abate as receitas
-        # de rendimento correspondentes para não vazar ao saldo disponível.
-        yield_consumed = yield_before - self.accumulated_yield
-        if yield_consumed > 0:
-            self._reduce_yield_revenues(yield_consumed, user)
-
-        # Registrar transação
-        transaction = VaultTransaction.objects.create(
-            vault=self,
-            transaction_type="withdrawal",
-            amount=amount,
-            balance_after=self.current_balance,
-            description=description or "Saque",
-            created_by=user,
-        )
-
-        return transaction
+        return vault_transaction
 
     def recalculate_yields(self, new_rate=None, from_date=None, user=None):
         """
@@ -402,57 +418,61 @@ class Vault(BaseModel):
         if new_rate is not None:
             self.annual_yield_rate = new_rate
 
-        # Obter todas as transações de rendimento para recalcular
-        yield_transactions = self.transactions.filter(
-            transaction_type="yield", is_deleted=False
-        )
-
-        if from_date:
-            yield_transactions = yield_transactions.filter(
-                created_at__date__gte=from_date
+        with transaction.atomic():
+            # Obter todas as transações de rendimento para recalcular
+            yield_transactions = self.transactions.filter(
+                transaction_type="yield", is_deleted=False
             )
 
-        # Reverter os rendimentos
-        total_reversed = Decimal("0.00")
-        for transaction in yield_transactions:
-            total_reversed += transaction.amount
-            transaction.is_deleted = True
-            transaction.deleted_at = timezone.now()
-            transaction.save()
+            if from_date:
+                yield_transactions = yield_transactions.filter(
+                    created_at__date__gte=from_date
+                )
 
-        # Estornar as receitas de rendimento consolidadas correspondentes.
-        self._reduce_yield_revenues(total_reversed, user, recalc=False)
+            # Reverter os rendimentos
+            total_reversed = Decimal("0.00")
+            for yield_txn in yield_transactions:
+                total_reversed += yield_txn.amount
+                yield_txn.is_deleted = True
+                yield_txn.deleted_at = timezone.now()
+                yield_txn.save()
 
-        # Atualizar o saldo do cofre
-        self.current_balance -= total_reversed
-        self.accumulated_yield -= total_reversed
-        if self.current_balance < 0:
-            self.current_balance = Decimal("0.00")
-        if self.accumulated_yield < 0:
-            self.accumulated_yield = Decimal("0.00")
+            # Estornar as receitas de rendimento consolidadas correspondentes.
+            self._reduce_yield_revenues(total_reversed, user, recalc=False)
 
-        # Recalcular a partir do primeiro depósito ou from_date
-        first_deposit = (
-            self.transactions.filter(
-                transaction_type="deposit", is_deleted=False
+            # Atualizar o saldo do cofre
+            self.current_balance -= total_reversed
+            self.accumulated_yield -= total_reversed
+            if self.current_balance < 0:
+                self.current_balance = Decimal("0.00")
+            if self.accumulated_yield < 0:
+                self.accumulated_yield = Decimal("0.00")
+
+            # Recalcular a partir do primeiro depósito ou from_date
+            first_deposit = (
+                self.transactions.filter(
+                    transaction_type="deposit", is_deleted=False
+                )
+                .order_by("created_at")
+                .first()
             )
-            .order_by("created_at")
-            .first()
-        )
 
-        if first_deposit:
-            start_date = from_date or first_deposit.created_at.date()
-            self.last_yield_date = start_date
+            if first_deposit:
+                start_date = from_date or first_deposit.created_at.date()
+                self.last_yield_date = start_date
 
-        self.save()
+            self.save()
 
-        # O estorno das receitas altera o saldo da conta associada.
-        from accounts.services import recalculate_account_balance
+            # Defesa em profundidade antes de recalcular a conta e reaplicar.
+            self._reconcile_yield_invariant(user)
 
-        recalculate_account_balance(self.account_id)
+            # O estorno das receitas altera o saldo da conta associada.
+            from accounts.services import recalculate_account_balance
 
-        # Aplicar novo rendimento (recalcula a conta novamente por dentro).
-        new_yield = self.apply_yield(user=user)
+            recalculate_account_balance(self.account_id)
+
+            # Aplicar novo rendimento (recalcula a conta novamente por dentro).
+            new_yield = self.apply_yield(user=user)
 
         return {
             "reversed_amount": total_reversed,
@@ -501,6 +521,35 @@ class Vault(BaseModel):
             from accounts.services import recalculate_account_balance
 
             recalculate_account_balance(self.account_id)
+
+    def _reconcile_yield_invariant(self, user=None):
+        """
+        Garante Σ(Revenue income ativas deste cofre) == accumulated_yield.
+
+        Chamado ao final de toda operação que mexe em rendimento, como
+        defesa em profundidade: corrige qualquer desvio entre os dois lados
+        do ledger (receita a mais/a menos), independente da causa — falha
+        parcial, recálculo de taxa, ajuste manual. Não recalcula o saldo da
+        conta; quem chama decide se/quando fazer isso.
+        """
+        from django.db.models import Sum
+
+        from revenues.models import Revenue
+
+        total_income = Revenue.objects.filter(
+            related_vault=self,
+            account=self.account,
+            category="income",
+            is_deleted=False,
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+
+        diff = self.accumulated_yield - total_income
+        if diff > 0:
+            self._materialize_yield_revenue(diff, timezone.now().date(), user)
+        elif diff < 0:
+            self._reduce_yield_revenues(-diff, user, recalc=False)
+
+        return diff
 
 
 class VaultTransaction(BaseModel):
