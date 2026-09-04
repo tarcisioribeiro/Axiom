@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/dashboard_stats.dart';
 import '../../providers/finance_providers.dart';
@@ -8,8 +9,10 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/logout_button.dart';
+import '../../widgets/module_tile.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/stat_card.dart';
 
@@ -52,6 +55,8 @@ class DashboardScreen extends ConsumerWidget {
                 data: (stats) => _StatsGrid(stats: stats),
               ),
               SizedBox(height: AppSpacing.md),
+              const _FinanceModuleGrid(),
+              SizedBox(height: AppSpacing.md),
               healthAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (error, stackTrace) => const SizedBox.shrink(),
@@ -89,6 +94,85 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FinanceModuleGrid extends StatelessWidget {
+  const _FinanceModuleGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.semanticColors;
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.9,
+      children: [
+        ModuleTile(
+          label: 'Contas',
+          icon: Icons.account_balance_outlined,
+          color: colors.success,
+          onTap: () => context.go('/finance/accounts'),
+        ),
+        ModuleTile(
+          label: 'Transações',
+          icon: Icons.receipt_long_outlined,
+          color: colors.info,
+          onTap: () => context.go('/finance/transactions'),
+        ),
+        ModuleTile(
+          label: 'Cartões',
+          icon: Icons.credit_card_outlined,
+          color: colors.warning,
+          onTap: () => context.go('/finance/credit-cards'),
+        ),
+        ModuleTile(
+          label: 'Transferências',
+          icon: Icons.swap_horiz_rounded,
+          color: colors.success,
+          onTap: () => context.go('/finance/transfers'),
+        ),
+        ModuleTile(
+          label: 'A pagar / receber',
+          icon: Icons.request_quote_outlined,
+          color: colors.info,
+          onTap: () => context.go('/finance/payables-receivables'),
+        ),
+        ModuleTile(
+          label: 'Empréstimos',
+          icon: Icons.handshake_outlined,
+          color: colors.warning,
+          onTap: () => context.go('/finance/loans'),
+        ),
+        ModuleTile(
+          label: 'Calendário',
+          icon: Icons.event_note_outlined,
+          color: colors.info,
+          onTap: () => context.go('/finance/calendar'),
+        ),
+        ModuleTile(
+          label: 'Cofres',
+          icon: Icons.savings_outlined,
+          color: colors.success,
+          onTap: () => context.go('/finance/vaults'),
+        ),
+        ModuleTile(
+          label: 'Metas',
+          icon: Icons.flag_outlined,
+          color: colors.warning,
+          onTap: () => context.go('/finance/goals'),
+        ),
+        ModuleTile(
+          label: 'Membros',
+          icon: Icons.groups_outlined,
+          color: colors.info,
+          onTap: () => context.go('/finance/members'),
+        ),
+      ],
     );
   }
 }
@@ -155,13 +239,7 @@ class _HealthScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: AppRadius.lgRadius,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-      ),
+    return AppCard(
       child: Row(
         children: [
           CircleAvatar(
@@ -243,17 +321,12 @@ class _ForecastChart extends StatelessWidget {
         FlSpot(i.toDouble(), forecast.dailyBreakdown[i].balance),
     ];
 
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
+        AppSpacing.smd,
         AppSpacing.md,
         AppSpacing.md,
-        AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: AppRadius.lgRadius,
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
+        AppSpacing.smd,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

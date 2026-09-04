@@ -12,6 +12,7 @@ import '../../widgets/accent_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/page_header.dart';
+import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
 import 'account_form_sheet.dart';
 
@@ -20,25 +21,6 @@ class AccountsScreen extends ConsumerWidget {
 
   Future<void> _delete(
       BuildContext context, WidgetRef ref, Account account) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir conta'),
-        content: Text(
-            'Excluir "${account.accountName}"? Essa ação não pode ser desfeita.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
     try {
       await ref.read(accountsServiceProvider).delete(account.id);
       ref.invalidate(accountsProvider);
@@ -116,6 +98,9 @@ class AccountsScreen extends ConsumerWidget {
                       onEdit: () =>
                           showAccountFormSheet(context, existing: account),
                       onDelete: () => _delete(context, ref, account),
+                      deleteMessage:
+                          'Excluir "${account.accountName}"? Essa ação não '
+                          'pode ser desfeita.',
                     ),
                   ),
               ],
@@ -131,11 +116,13 @@ class _AccountCard extends StatelessWidget {
   final Account account;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final String deleteMessage;
 
   const _AccountCard({
     required this.account,
     required this.onEdit,
     required this.onDelete,
+    required this.deleteMessage,
   });
 
   @override
@@ -184,13 +171,11 @@ class _AccountCard extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 20),
-            onPressed: onEdit,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, size: 20),
-            onPressed: onDelete,
+          RowActionsMenu(
+            onEdit: onEdit,
+            onDelete: onDelete,
+            deleteConfirmTitle: 'Excluir conta',
+            deleteConfirmMessage: deleteMessage,
           ),
         ],
       ),

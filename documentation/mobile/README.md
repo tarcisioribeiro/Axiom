@@ -5,9 +5,11 @@ App mobile do Axiom (`apps/mobile/`), construído em Flutter/Dart.
 ## Estado Atual
 
 O app tem login real (2FA incluso) e, a partir dele, 4 módulos autenticados
-que cobrem o "Tier 1" identificado a partir do frontend web — as telas de
-uso diário (registro/consulta rápida), deixando de fora relatórios,
-configuração e administração, que continuam exclusivos do web.
+que cobrem as telas de uso diário do frontend web (registro/consulta rápida)
+— o "Tier 1" mais os módulos financeiros "Tier 2" (a pagar/receber,
+empréstimos, calendário) e a expansão do cofre (cartões e contas guardados).
+Ficam de fora relatórios, configuração e administração, que continuam
+exclusivos do web.
 
 - **Login real**: `services/auth_service.dart` chama
   `POST /api/v1/authentication/token/`, trata o fluxo de 2FA
@@ -44,17 +46,58 @@ configuração e administração, que continuam exclusivos do web.
   no web. Mutações (criar/editar/excluir) invalidam o provider correspondente
   depois de concluir.
 - **Finanças** (`screens/finance/`): dashboard (saldo, receitas/despesas,
-  crédito, previsão de fluxo de caixa via `fl_chart`), contas, despesas e
+  crédito, previsão de fluxo de caixa via `fl_chart`, **grid de navegação**
+  para os submódulos — antes as telas de contas/transações/cartões/
+  transferências não tinham ponto de entrada na UI), contas, despesas e
   receitas (abas), cartões de crédito com faturas e lançamento de compras
-  (parcelas geradas pelo backend), transferências.
+  (parcelas geradas pelo backend), transferências, **contas a pagar / a
+  receber** (`payables`/`receivables` em abas, com barra de progresso e ação
+  "Pagar"/"Receber" que debita/credita uma conta), **empréstimos** (`loans`
+  — concedidos/tomados, com picker de membros e criação rápida de `Member`
+  via nome + CPF; ação pagar/receber por parcela), **calendário financeiro**
+  (grade mensal com vencimentos de contas a pagar/receber, empréstimos e
+  faturas — agregação client-side, sem endpoint dedicado, igual à página web
+  `FinancialCalendar`), **cofres** (`vaults` — reservas com rendimento anual;
+  depósito/saque/aplicar rendimento e extrato de movimentações; a mecânica de
+  receita/saldo é toda do backend), **metas financeiras**
+  (`vaults.FinancialGoal` — agregam cofres, barra de progresso, vincular/
+  desvincular cofres via `add-vaults`/`remove-vaults`) e **membros**
+  (`members` — cadastro completo: CPF, telefone, sexo, nascimento, endereço,
+  profissão, renda, flags credor/devedor). `loans`/`payables`/`receivables`
+  parcelados mostram a **tabela de parcelas** (read-only) num sheet
+  (`widgets/installments_sheet.dart`).
 - **Planejamento** (`screens/planning/`): dashboard (gamificação, tarefas e
   metas do dia), checklist diário + rotinas + metas (abas), treino (sessões,
   planos, catálogo de exercícios), nutrição (refeições do dia, tipos de
-  refeição, catálogo de alimentos).
+  refeição, catálogo de alimentos), **Bem-estar** (Wellness Center).
+  - **Checklist**: toque cicla o status (pendente → em andamento → concluída);
+    **toque longo** abre um seletor com os 4 status (inclui "pulada"). Um
+    toggle Lista/Quadro no topo agrupa as tarefas em colunas por status
+    (equivalente ao kanban do web — mover é pelo seletor de status, não por
+    arrastar).
+  - **Bem-estar** (`WellnessScreen`, 5 abas): painel (autoestima Rosenberg +
+    médias emocionais 7d), check-in emocional (6 escalas 0–10), **modo crise**
+    (registra estado + impulso e recebe validação/plano de ação/afirmação da
+    IA via `wellness/crisis/`), biblioteca de intervenções (marcar concluída)
+    e relatório semanal gerado por IA (`wellness/weekly-reports/generate/`).
+  - **Consistência**: a aba "Rotinas" mostra um **heatmap anual de hábitos**
+    (`routine-tasks/heatmap/`), estilo GitHub, com scroll horizontal.
+  - **Pomodoro**: timer local (foco 25' / pausa 5') no ícone de cronômetro do
+    cabeçalho de Tarefas & Metas — não persiste nada, é só um apoio de foco.
+  - **Geração via IA**: FAB secundário (✨) em "Planos" (treino) e "Tipos de
+    Refeição" (nutrição) chama `ai-workout-plan/` / `ai-menu-plan/`, que
+    geram e **persistem** o plano/cardápio no backend (timeout de 180s no
+    cliente).
+  - **Edição aninhada**: tocar num plano de treino abre
+    `WorkoutPlanDetailScreen` (dias → exercícios, CRUD completo); tocar num
+    tipo de refeição abre `MealTypeDetailScreen` (opções → ingredientes, com
+    picker de alimento).
 - **Segurança** (`screens/security/`): porta de entrada do cofre
   (configurar/desbloquear conforme `vault/status/`) e, uma vez desbloqueado,
-  lista de senhas com revelar/copiar (contagem regressiva de 30s de
-  auto-ocultar), favoritos e busca.
+  **3 abas** — senhas, cartões guardados (`stored-cards`) e contas guardadas
+  (`stored-accounts`) — cada uma com revelar/copiar (contagem regressiva de
+  30s de auto-ocultar), favoritos e busca. Cartões revelam número + CVV;
+  contas revelam número + agência + senha + senha digital.
 - **Agente IA** (`screens/agents/`): seletor entre 4 assistentes
   (pessoal/financeiro/segurança/intelecto) e chat com streaming via SSE
   (`agents/stream/`), Markdown renderizado com `flutter_markdown_plus`,
@@ -99,25 +142,70 @@ configuração e administração, que continuam exclusivos do web.
   contextual com botão de voltar, e um `AppBar` de shell empilharia uma
   segunda barra de título acima dessas.
 
-Simplificações assumidas nesta entrega em relação ao web (documentadas para
-uma eventual próxima iteração): sem kanban de arrastar-e-soltar no checklist
-diário, sem timer Pomodoro, sem geração de plano de treino/cardápio via IA,
-sem alternância lista/agrupado nas compras de cartão, sem edição aninhada de
-dias/exercícios dentro de um plano de treino, sem edição de opções/
-ingredientes dentro de um tipo de refeição, sem heatmap de hábitos — todos os
-endpoints já existem no backend, só não têm UI mobile ainda.
+Simplificações ainda assumidas em relação ao web:
+- **Checklist**: o "kanban" é um quadro de colunas por status (toggle
+  Lista/Quadro) + seletor de status por toque longo — não há arrastar-e-soltar
+  (má ergonomia numa tela de celular) nem reordenação de tarefas dentro do dia
+  (o endpoint `instances/bulk-update/` não suporta ordem).
+- **Compras de cartão**: sem alternância lista/agrupado.
+- **`payables`/`receivables`/`loans`**: a tabela de parcelas é read-only;
+  amortização, renegociação, plano de pagamento e recálculo/redistribuição de
+  parcelas continuam exclusivos do web (são ferramentas de *preview* pesadas).
+- **Membros**: cadastro completo, mas o **upload de foto** de perfil segue no
+  web (precisa de picker de imagem nativo — dependência fora de proporção);
+  o mobile só exibe a foto quando ela já existe. Permissões de membro (acesso
+  ao sistema) também seguem no web.
+- **Geração via IA**: o mobile só dispara a geração e mostra um resumo —
+  revisar/editar o plano gerado é feito na edição aninhada normal.
+- **Wellness**: a avaliação de autoestima (questionário Rosenberg de 10
+  perguntas) só é *exibida* no painel; preenchê-la segue no web.
+
+### Design system
+
+- **Superfície única**: `widgets/app_card.dart` (`AppCard`) é a primitiva de
+  card — `cardColor` + borda hairline (`outlineVariant`) + raio `lg`, com
+  faixa de acento opcional (`accentColor`). Substituiu ~15 `Container`/
+  `BoxDecoration` copiados pelas telas que tinham divergido em peso de borda,
+  raio e padding. `AccentCard` e `StatCard` são construídos sobre ela.
+- **Ações de linha**: `widgets/row_actions.dart` (`RowActionsMenu`) — menu
+  overflow (⋮) com Editar/Excluir para as listas, no lugar do par de
+  `IconButton` de 18 px. Toda exclusão passa por `widgets/confirm.dart`
+  (`confirmDelete`), então nenhum delete acontece com um toque perdido.
+- **Tokens**: `app_spacing.dart` ganhou `smd` (12); `app_radius.dart` foi
+  arredondado um passo (`sm 6 / md 10 / lg 14 / xl 20`) para um acabamento
+  mais tátil que o `--radius` de 8 px do web.
 
 Lint/test estão validados localmente (`flutter analyze`, `flutter test`) —
 não há job de CI para mobile hoje (veja seção CI/CD abaixo).
 
 ## Stack
 
-- **Flutter** 3.27.x / **Dart** 3.6.x
+- **Flutter** ≥ 3.27 / **Dart** `^3.6.0` (`pubspec.yaml`); testado com Flutter
+  3.47.x
 - Material 3, plataformas alvo Android e iOS
 - `go_router` (navegação) + `flutter_riverpod` (DI/cache de dados)
 - `fl_chart` (gráficos), `flutter_markdown_plus` (Markdown do chat), `intl`
   (formatação de moeda/data pt-BR)
 - `flutter_lints` para análise estática
+
+### Toolchain Android
+
+O Flutter 3.47 exige, para o build Android, versões mínimas mais novas do que
+o template original do projeto trazia:
+
+| Ferramenta | Versão | Onde |
+|---|---|---|
+| Gradle | 8.14.3 | `android/gradle/wrapper/gradle-wrapper.properties` |
+| Android Gradle Plugin | 8.11.1 | `android/settings.gradle` |
+| Kotlin Gradle Plugin | 2.2.20 | `android/settings.gradle` |
+| JDK (para o Gradle) | 17–21 | `flutter config --jdk-dir=<jdk>` |
+
+O JDK 25 que o Android Studio mais recente embute **não** é compatível com
+Gradle 8.x — aponte o Flutter para um JDK 17–21 com
+`flutter config --jdk-dir=…` (o valor fica em `~/.config/flutter/settings`,
+fora do repositório). O build ainda emite avisos "*Flutter support … will
+soon be dropped*" para essas versões; são apenas avisos (o piso de erro do
+Flutter 3.47 é Gradle 8.14 / AGP 8.11.1 / Kotlin 2.2.20).
 
 Ver a justificativa completa da escolha (vs. React Native / nativo) em
 [Decisões Arquiteturais — 16. Flutter vs. React Native vs. Nativo](../architecture/architectural_decisions.md#16-flutter-vs-react-native-vs-nativo).
@@ -149,14 +237,20 @@ apps/mobile/
 │   │   ├── app_radius.dart        # Escala de border-radius (--radius do index.css)
 │   │   ├── theme_controller.dart  # Persistência da escolha de tema
 │   │   └── theme_picker_sheet.dart# Bottom sheet de seleção de tema
-│   ├── widgets/                   # StatCard, EmptyState, LoadingState, PageHeader, AccentCard, ...
+│   ├── widgets/                   # AppCard (base surface), StatCard, EmptyState, LoadingState,
+│   │                             # PageHeader, AccentCard, RowActionsMenu (⋮ edit/excluir),
+│   │                             # confirm.dart, module_tile.dart, habit_heatmap.dart,
+│   │                             # pomodoro_sheet.dart, installments_sheet.dart, ...
 │   ├── utils/                     # formatters.dart (moeda/data), choice_labels.dart (enums do backend)
 │   └── screens/
 │       ├── login_screen.dart
 │       ├── shell/app_shell.dart   # Bottom navigation bar das 4 abas
-│       ├── finance/               # Dashboard, Contas, Transações, Cartões/Faturas, Transferências
-│       ├── planning/               # Dashboard, Tarefas&Metas, Treino, Nutrição
-│       ├── security/               # Vault gate + Senhas
+│       ├── finance/               # Dashboard, Contas, Transações, Cartões/Faturas, Transferências,
+│       │                          # A pagar/receber, Empréstimos, Calendário, Cofres, Metas, Membros
+│       ├── planning/               # Dashboard, Tarefas&Metas, Treino, Nutrição, Bem-estar,
+│       │                          # workout_plan_detail (dias/exercícios), meal_type_detail
+│       │                          # (opções/ingredientes), ai_generate_sheets
+│       ├── security/               # Vault gate + abas Senhas / Cartões / Contas
 │       └── agents/                 # Seletor + chat
 ├── test/
 │   ├── widget_test.dart           # Smoke tests da tela de login, tema e ambiente
@@ -183,38 +277,30 @@ flutter build apk --debug              # Build de verificação (Android)
 
 ## CI/CD
 
-Três jobs em `.gitlab-ci.yml`, seguindo o mesmo padrão de
-`lint:frontend`/`test:frontend` (template `.node_base` + `.rules_verify_frontend`),
-aqui com `.flutter_base` + `.rules_verify_mobile`:
+O módulo mobile **não tem jobs de CI** — foram removidos e `ci-check.sh` só
+cobre backend/frontend. Rode a verificação localmente antes de fazer push:
 
-| Job | Stage | O que faz |
-|---|---|---|
-| `lint:mobile` | `lint` | `dart format --set-exit-if-changed .` + `flutter analyze` |
-| `test:mobile` | `test` | `flutter test --coverage` |
-| `build:mobile` | `build` | `flutter build apk --debug` (verificação de build Android) |
+```bash
+cd apps/mobile
+dart format --set-exit-if-changed .
+flutter analyze            # sai com código 1 se houver infos; hoje há ~43
+                           # infos de `DropdownButtonFormField.value` (deprecado
+                           # em favor de `initialValue` no Flutter 3.35+) — o
+                           # padrão em todos os `*_form_sheet.dart`; migração
+                           # pendente como um sweep único (troca comportamento)
+flutter test
+flutter build apk --debug  # verificação de build Android (iOS exige macOS/Xcode)
+```
 
-Todos rodam apenas quando arquivos em `apps/mobile/**` (ou o próprio
-`.gitlab-ci.yml`) mudam, em MRs ou branches de feature — mesma lógica de
-`.rules_verify_backend`/`_frontend`.
+## Próximos Passos
 
-`build:mobile` difere de `build:api`/`build:frontend`: não há imagem Docker
-nem alvo de deploy para o mobile ainda, então o job é só uma checagem de "o
-app ainda builda", não uma etapa de release. iOS não é validado no CI (exige
-macOS/Xcode, indisponível no runner Linux atual).
-
-**Nota**: esses checks ainda não estão integrados ao `ci-check.sh` (que hoje
-só cobre backend/frontend) — rodar `flutter analyze`/`flutter test` localmente
-via CLI direta até que isso seja adicionado como follow-up.
-
-## Próximos Passos (fora do escopo desta entrega)
-
-- Simplificações listadas em "Estado Atual" (kanban do checklist, Pomodoro,
-  geração via IA, edição aninhada de planos de treino e tipos de refeição,
-  heatmap de hábitos).
-- Telas "Tier 2" do web ainda não avaliadas para o mobile (metas
-  financeiras, empréstimos, pagáveis/recebíveis, cartões/contas guardados no
-  cofre, calendário financeiro).
-- Distribuição (Play Store / TestFlight ou build interno).
+- **Distribuição** (Play Store / TestFlight ou build interno) — pendente:
+  precisa de contas de desenvolvedor e assinatura. Único item ainda não
+  atacado por decisão de escopo.
+- Itens deixados como *web-only* de propósito (ver "Simplificações"): upload de
+  foto de membro, permissões de membro, ferramentas de renegociação/
+  amortização de dívidas, questionário Rosenberg, arrastar-e-soltar do kanban.
+- Migração `DropdownButtonFormField.value` → `initialValue` em massa.
 
 ---
 

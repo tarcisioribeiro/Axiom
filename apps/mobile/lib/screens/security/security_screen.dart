@@ -4,15 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/password_entry.dart';
 import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/logout_button.dart';
 import '../../widgets/page_header.dart';
 import 'password_detail_sheet.dart';
 import 'password_form_sheet.dart';
+import 'stored_account_list.dart';
+import 'stored_card_list.dart';
 
 class SecurityScreen extends ConsumerWidget {
   const SecurityScreen({super.key});
@@ -43,7 +45,7 @@ class SecurityScreen extends ConsumerWidget {
                   data: (status) {
                     if (!status.isConfigured) return const _VaultSetupForm();
                     if (!status.isUnlocked) return const _VaultUnlockForm();
-                    return const _PasswordsList();
+                    return const _VaultTabs();
                   },
                 ),
               ),
@@ -254,6 +256,39 @@ class _VaultUnlockFormState extends ConsumerState<_VaultUnlockForm> {
   }
 }
 
+/// Unlocked-vault content: three tabs over the vault's credential types
+/// (senhas / cartões / contas), mirroring the web vault's section switcher.
+class _VaultTabs extends StatelessWidget {
+  const _VaultTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(text: 'Senhas'),
+              Tab(text: 'Cartões'),
+              Tab(text: 'Contas'),
+            ],
+          ),
+          const Expanded(
+            child: TabBarView(
+              children: [
+                _PasswordsList(),
+                StoredCardList(),
+                StoredAccountList(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PasswordsList extends ConsumerStatefulWidget {
   const _PasswordsList();
 
@@ -356,47 +391,38 @@ class _PasswordTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: AppRadius.mdRadius,
+    return AppCard(
       onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: AppRadius.mdRadius,
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor:
-                  theme.colorScheme.primary.withValues(alpha: 0.12),
-              child: Text(
-                entry.title.isNotEmpty ? entry.title[0].toUpperCase() : '?',
-                style: TextStyle(color: theme.colorScheme.primary),
-              ),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.smd),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+            child: Text(
+              entry.title.isNotEmpty ? entry.title[0].toUpperCase() : '?',
+              style: TextStyle(color: theme.colorScheme.primary),
             ),
-            SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(entry.title, style: theme.textTheme.titleSmall),
-                  Text(
-                    '${ChoiceLabels.of(ChoiceLabels.passwordCategories, entry.category)}'
-                    '${entry.username != null ? ' · ${entry.username}' : ''}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+          ),
+          SizedBox(width: AppSpacing.smd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(entry.title, style: theme.textTheme.titleSmall),
+                Text(
+                  '${ChoiceLabels.of(ChoiceLabels.passwordCategories, entry.category)}'
+                  '${entry.username != null ? ' · ${entry.username}' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            if (entry.isFavorite)
-              const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-          ],
-        ),
+          ),
+          if (entry.isFavorite)
+            const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+        ],
       ),
     );
   }

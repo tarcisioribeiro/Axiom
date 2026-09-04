@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../config/api_environment.dart';
 import '../providers/core_providers.dart';
+import '../theme/app_spacing.dart';
 import '../theme/theme_picker_sheet.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -178,7 +179,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
@@ -193,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       height: 96,
                       semanticLabel: 'Axiom',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       environmentController.current.label,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -201,7 +202,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: AppSpacing.xl),
                     if (_pendingTempToken == null) ...[
                       TextFormField(
                         controller: _usernameController,
@@ -214,7 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? 'Informe o usuário ou e-mail'
                             : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -248,7 +249,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: Theme.of(context).textTheme.bodyMedium,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: _twoFactorCodeController,
                         keyboardType: TextInputType.number,
@@ -261,7 +262,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                     if (_errorMessage != null) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       Text(
                         _errorMessage!,
                         style: TextStyle(
@@ -270,10 +271,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: _isSubmitting ? null : _handleSubmit,
                         child: _isSubmitting
                             ? const SizedBox(

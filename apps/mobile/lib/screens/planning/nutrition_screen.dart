@@ -6,14 +6,17 @@ import '../../models/meal_log.dart';
 import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
+import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/page_header.dart';
+import '../../widgets/row_actions.dart';
+import 'ai_generate_sheets.dart';
 import 'food_form_sheet.dart';
 import 'meal_log_form_sheet.dart';
+import 'meal_type_detail_screen.dart';
 import 'meal_type_form_sheet.dart';
 
 DateTime _today() {
@@ -51,7 +54,6 @@ class NutritionScreen extends StatelessWidget {
                   Tab(text: 'Tipos de Refeição'),
                   Tab(text: 'Alimentos'),
                 ],
-                labelColor: Theme.of(context).colorScheme.primary,
               ),
               const Expanded(
                 child: TabBarView(
@@ -117,18 +119,8 @@ class _TodayTab extends ConsumerWidget {
                   error: (error, stackTrace) => const SizedBox.shrink(),
                   data: (summary) => summary.isEmpty
                       ? const SizedBox.shrink()
-                      : Container(
-                          margin: EdgeInsets.only(bottom: AppSpacing.md),
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: AppRadius.lgRadius,
-                            border: Border.all(
-                              color: Theme.of(context)
-                                  .dividerColor
-                                  .withValues(alpha: 0.4),
-                            ),
-                          ),
+                      : AppCard(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
                           child: Text(
                             summary.entries
                                 .map((e) => '${e.key}: ${e.value}')
@@ -144,17 +136,13 @@ class _TodayTab extends ConsumerWidget {
                   )
                 else
                   ...todayLogs.map(
-                    (log) => Container(
-                      margin: EdgeInsets.only(bottom: AppSpacing.sm),
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: AppRadius.mdRadius,
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .dividerColor
-                              .withValues(alpha: 0.4),
-                        ),
+                    (log) => AppCard(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.smd,
+                        AppSpacing.smd,
+                        AppSpacing.sm,
+                        AppSpacing.smd,
                       ),
                       child: Row(
                         children: [
@@ -173,9 +161,12 @@ class _TodayTab extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            onPressed: () => _delete(context, ref, log),
+                          RowActionsMenu(
+                            onDelete: () => _delete(context, ref, log),
+                            deleteConfirmTitle: 'Excluir refeição',
+                            deleteConfirmMessage:
+                                'Remover "${log.mealTypeName ?? 'esta refeição'}" '
+                                'do registro de hoje?',
                           ),
                         ],
                       ),
@@ -214,9 +205,22 @@ class _MealTypesTab extends ConsumerWidget {
     final mealTypesAsync = ref.watch(mealTypesProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showMealTypeFormSheet(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'ai-menu',
+            tooltip: 'Gerar cardápio com IA',
+            onPressed: () => showAiMenuPlanSheet(context, ref),
+            child: const Icon(Icons.auto_awesome_outlined),
+          ),
+          SizedBox(height: AppSpacing.sm),
+          FloatingActionButton(
+            heroTag: 'add-meal-type',
+            onPressed: () => showMealTypeFormSheet(context),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -240,23 +244,22 @@ class _MealTypesTab extends ConsumerWidget {
                           subtitle: mealType.suggestedTime == null
                               ? null
                               : Text(mealType.suggestedTime!),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18),
-                                onPressed: () => showMealTypeFormSheet(
-                                  context,
-                                  existing: mealType,
-                                ),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MealTypeDetailScreen(
+                                mealTypeId: mealType.id,
+                                mealTypeName: mealType.name,
                               ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete_outline, size: 18),
-                                onPressed: () =>
-                                    _delete(context, ref, mealType),
-                              ),
-                            ],
+                            ),
+                          ),
+                          trailing: RowActionsMenu(
+                            onEdit: () => showMealTypeFormSheet(
+                              context,
+                              existing: mealType,
+                            ),
+                            onDelete: () => _delete(context, ref, mealType),
+                            deleteConfirmTitle: 'Excluir tipo de refeição',
+                            deleteConfirmMessage: 'Excluir "${mealType.name}"?',
                           ),
                         ),
                       )
@@ -315,20 +318,13 @@ class _FoodsTab extends ConsumerWidget {
                             '${food.caloriesPerServing.toStringAsFixed(0)} kcal'
                             '${food.servingSize != null ? ' · ${food.servingSize}${food.servingUnit ?? ''}' : ''}',
                           ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18),
-                                onPressed: () =>
-                                    showFoodFormSheet(context, existing: food),
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete_outline, size: 18),
-                                onPressed: () => _delete(context, ref, food),
-                              ),
-                            ],
+                          trailing: RowActionsMenu(
+                            onEdit: () =>
+                                showFoodFormSheet(context, existing: food),
+                            onDelete: () => _delete(context, ref, food),
+                            deleteConfirmTitle: 'Excluir alimento',
+                            deleteConfirmMessage:
+                                'Excluir "${food.name}" do catálogo?',
                           ),
                         ),
                       )

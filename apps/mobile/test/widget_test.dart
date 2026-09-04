@@ -45,7 +45,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.widgetWithText(TextFormField, 'Senha'), findsOneWidget);
-    expect(find.widgetWithText(ElevatedButton, 'Entrar'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Entrar'), findsOneWidget);
   });
 
   testWidgets('shows validation errors when submitting empty fields', (
@@ -53,7 +53,7 @@ void main() {
   ) async {
     await tester.pumpWidget(await buildApp());
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Entrar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Entrar'));
     await tester.pump();
 
     expect(find.text('Informe o usuário ou e-mail'), findsOneWidget);
