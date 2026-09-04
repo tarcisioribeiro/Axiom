@@ -4,7 +4,7 @@ cryptography==50.0.0
 Django==6.0.8
 django-admin-dracula==0.0.3
 django-restframework==0.0.1
-djangorestframework==3.17.1
+djangorestframework==3.17.2
 djangorestframework_simplejwt==5.5.1
 pillow==12.3.0
 pytesseract==0.3.13
