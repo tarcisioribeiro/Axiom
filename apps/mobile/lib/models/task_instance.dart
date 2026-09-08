@@ -13,6 +13,9 @@ class TaskInstance {
   final DateTime scheduledDate;
   final String status;
   final bool isOverdue;
+
+  /// Optional occurrences don't block the day or the streak (server-side).
+  final bool isOptional;
   final String? notes;
 
   const TaskInstance({
@@ -24,6 +27,7 @@ class TaskInstance {
     required this.scheduledDate,
     required this.status,
     required this.isOverdue,
+    this.isOptional = false,
     this.notes,
   });
 
@@ -40,6 +44,7 @@ class TaskInstance {
                 DateTime.now(),
         status: json['status'] as String? ?? 'pending',
         isOverdue: json['is_overdue'] as bool? ?? false,
+        isOptional: json['is_optional'] as bool? ?? false,
         notes: json['notes'] as String?,
       );
 }

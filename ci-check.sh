@@ -553,8 +553,10 @@ if $RUN_MR; then
 			-e DJANGO_SETTINGS_MODULE="app.settings" \
 			api python manage.py makemigrations --check --dry-run
 
+		# CI runs bandit in a clean container; locally exclude stray virtualenvs
+		# (apps/api/.venv) and vendored deps so they don't drown the report.
 		run_step_safe "lint:bandit" "bandit -r apps/api/ -x apps/api/tests,apps/api/*/migrations -ll" \
-			sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r apps/api/ -x 'apps/api/tests,apps/api/*/migrations' -ll"
+			sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r apps/api/ -x 'apps/api/tests,apps/api/*/migrations,apps/api/.venv,*/node_modules/*' -ll"
 
 		# PYSEC-2025-183 (PyJWT): disputed by supplier — key length is application's responsibility
 		run_step_safe "lint:pip-audit" "pip-audit -r apps/api/requirements.txt --desc --vulnerability-service osv" \
