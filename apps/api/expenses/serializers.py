@@ -133,23 +133,41 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def validate(self, attrs):
-        from budgets.services import validate_budget_limit
+    LINK_FIELDS = ("related_loan", "related_payable", "fixed_expense_template")
 
-        linked = [
-            attrs.get(
-                "related_loan", getattr(self.instance, "related_loan_id", None)
-            ),
-            attrs.get(
-                "related_payable",
-                getattr(self.instance, "related_payable_id", None),
-            ),
-            attrs.get(
-                "fixed_expense_template",
-                getattr(self.instance, "fixed_expense_template_id", None),
-            ),
-        ]
-        if sum(1 for v in linked if v) > 1:
+    def _validate_link_exclusivity(self, attrs):
+        """
+        Requisito 8 (decisão 5.1): no fluxo manual, uma Expense só pode ser
+        vinculada a um de related_loan/related_payable/fixed_expense_template
+        por vez.
+
+        Expenses auto-geradas por bulk_generate_fixed_expenses legitimamente
+        nascem com dois vínculos (fixed_expense_template + related_loan/
+        related_payable herdados do template — expenses/services.py) porque
+        esse pipeline grava direto via ORM, sem passar por este serializer.
+
+        O bug corrigido aqui: qualquer PUT/PATCH subsequente nessas mesmas
+        despesas (ex.: marcar `payed=True` para confirmar o pagamento da
+        parcela) reavaliava os DOIS vínculos já existentes — mesmo sem o
+        request tocar neles — e rejeitava a atualização para sempre. Por
+        isso só contamos um campo como parte do conflito quando o valor
+        efetivamente MUDA em relação ao que já estava salvo; vínculos
+        antigos e não tocados pelo request não são reavaliados.
+        """
+        submitted = {}
+        changed = False
+        for field in self.LINK_FIELDS:
+            current_id = getattr(self.instance, f"{field}_id", None)
+            if field in attrs:
+                new_obj = attrs[field]
+                new_id = new_obj.pk if new_obj is not None else None
+                submitted[field] = new_id
+                if new_id != current_id:
+                    changed = True
+            else:
+                submitted[field] = current_id
+
+        if changed and sum(1 for v in submitted.values() if v) > 1:
             raise serializers.ValidationError(
                 {
                     "related_loan": (
@@ -158,6 +176,11 @@ class ExpenseSerializer(serializers.ModelSerializer):
                     )
                 }
             )
+
+    def validate(self, attrs):
+        from budgets.services import validate_budget_limit
+
+        self._validate_link_exclusivity(attrs)
 
         payed = attrs.get("payed", getattr(self.instance, "payed", False))
         if not payed:
