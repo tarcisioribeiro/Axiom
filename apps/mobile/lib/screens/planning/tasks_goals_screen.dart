@@ -284,12 +284,25 @@ class _InstanceTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(instance.taskName, style: theme.textTheme.titleSmall),
-                  Text(
-                    ChoiceLabels.of(
-                        ChoiceLabels.taskCategories, instance.category),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        ChoiceLabels.of(
+                            ChoiceLabels.taskCategories, instance.category),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (instance.isOptional) ...[
+                        SizedBox(width: AppSpacing.sm),
+                        Text(
+                          '• Opcional',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

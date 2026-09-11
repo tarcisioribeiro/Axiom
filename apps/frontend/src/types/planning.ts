@@ -29,6 +29,7 @@ export interface RoutineTask {
   is_active: boolean;
   priority: TaskPriority;
   priority_display: string;
+  is_optional: boolean;
   allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
@@ -66,6 +67,7 @@ export interface RoutineTaskFormData {
   scheduled_times?: string[] | null;
   is_active: boolean;
   priority: TaskPriority;
+  is_optional: boolean;
   allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
@@ -165,4 +167,5 @@ export interface TaskCard {
   closing_time?: string;
   priority?: string;
   priority_display?: string;
+  is_optional?: boolean;
 }

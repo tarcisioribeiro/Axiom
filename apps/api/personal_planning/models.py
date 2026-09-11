@@ -262,6 +262,14 @@ class RoutineTask(BaseModel):
             " (0 = sem tolerancia)"
         ),
     )
+    is_optional = models.BooleanField(
+        default=False,
+        verbose_name="Tarefa Opcional",
+        help_text=(
+            "Tarefas opcionais nao impedem que o dia seja considerado"
+            " concluido nem quebram o streak"
+        ),
+    )
     linked_financial_goal = models.ForeignKey(
         "vaults.FinancialGoal",
         on_delete=models.SET_NULL,
@@ -1032,6 +1040,14 @@ class TaskInstance(BaseModel):
         choices=PRIORITY_CHOICES,
         default="medium",
         verbose_name="Prioridade",
+    )
+    is_optional = models.BooleanField(
+        default=False,
+        verbose_name="Tarefa Opcional",
+        help_text=(
+            "Tarefas opcionais nao impedem que o dia seja considerado"
+            " concluido nem quebram o streak"
+        ),
     )
 
     # Agendamento

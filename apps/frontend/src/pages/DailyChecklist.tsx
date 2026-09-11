@@ -52,6 +52,7 @@ import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { XPFloating, useXPTrigger } from '@/components/personal-planning/XPFloating';
 import { TaskCategoryBadge } from '@/components/today-tasks/TaskCategoryBadge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -317,6 +318,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       notes: instance.notes || undefined,
       record_id: instance.id,
       scheduled_time: instance.time_display || undefined,
+      is_optional: instance.is_optional,
     }));
 
   const cardsByStatus = useMemo(
@@ -344,8 +346,14 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     [instances, blockedTaskIds]
   );
 
+  // Tarefas opcionais não contam para a conclusão do dia nem para o streak.
+  const requiredCards = useMemo(() => cards.filter((c) => !c.is_optional), [cards]);
+  const requiredDone = useMemo(
+    () => requiredCards.filter((c) => c.status === 'done').length,
+    [requiredCards]
+  );
   const dayRate =
-    cards.length > 0 ? (cardsByStatus.done.length / cards.length) * 100 : 0;
+    requiredCards.length > 0 ? (requiredDone / requiredCards.length) * 100 : 0;
   const dayRingColor =
     dayRate >= 80
       ? 'hsl(var(--chart-2))'
@@ -379,7 +387,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   }
 
   useEffect(() => {
-    if (cards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
+    if (requiredCards.length > 0 && dayRate === 100 && prevDayRateRef.current < 100) {
       const timer = setTimeout(() => {
         setShowCelebration(true);
         toast({
@@ -395,7 +403,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       return () => clearTimeout(timer);
     }
     prevDayRateRef.current = dayRate;
-  }, [dayRate, cards.length, toast, t]);
+  }, [dayRate, requiredCards.length, toast, t]);
 
   const loadCurrentUserMember = async () => {
     try {
@@ -976,9 +984,17 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                     </button>
                     <div className="flex-1">
                       <h3
-                        className={cn('font-semibold', isCompleted && 'line-through')}
+                        className={cn(
+                          'gap-sm flex items-center font-semibold',
+                          isCompleted && 'line-through'
+                        )}
                       >
                         {task.task_name}
+                        {task.is_optional && (
+                          <Badge variant="outline" className="text-xs">
+                            {t('pages.dailyChecklist.optionalBadge')}
+                          </Badge>
+                        )}
                       </h3>
                       {task.time_display && (
                         <p className="text-muted-foreground text-sm">
@@ -1042,10 +1058,8 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
             </DndContext>
           ) : null}
 
-          {cards.length > 0 &&
-            cardsByStatus.todo.length === 0 &&
-            cardsByStatus.doing.length === 0 &&
-            cardsByStatus.done.length === cards.length &&
+          {requiredCards.length > 0 &&
+            requiredCards.every((c) => c.status === 'done') &&
             !reflection.trim() && (
               <div className="gap-md border-success/30 bg-success/5 px-md py-md flex items-center rounded-lg border">
                 <CheckCircle2 className="text-success h-6 w-6 shrink-0" />

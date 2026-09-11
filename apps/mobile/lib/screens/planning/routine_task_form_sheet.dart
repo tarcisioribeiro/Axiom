@@ -37,6 +37,7 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
   String _priority = 'medium';
   String _periodicity = 'daily';
   int _weekday = 0;
+  bool _isOptional = false;
   bool _isSaving = false;
   String? _error;
 
@@ -49,6 +50,7 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
     _priority = existing?.priority ?? 'medium';
     _periodicity = existing?.periodicity ?? 'daily';
     _weekday = existing?.weekday ?? 0;
+    _isOptional = existing?.isOptional ?? false;
   }
 
   @override
@@ -73,6 +75,7 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
       weekday: _periodicity == 'weekly' ? _weekday : null,
       priority: _priority,
       isActive: widget.existing?.isActive ?? true,
+      isOptional: _isOptional,
       completionRate: widget.existing?.completionRate ?? 0,
     );
 
@@ -162,6 +165,16 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
                   onChanged: (v) => setState(() => _weekday = v!),
                 ),
               ],
+              SizedBox(height: AppSpacing.sm),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Tarefa opcional'),
+                subtitle: const Text(
+                  'Não impede o dia de ser concluído nem quebra o streak',
+                ),
+                value: _isOptional,
+                onChanged: (v) => setState(() => _isOptional = v),
+              ),
               FormSheetSubmitFooter(
                 error: _error,
                 isSaving: _isSaving,

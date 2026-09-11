@@ -187,6 +187,13 @@ export function KanbanCard({ card }: KanbanCardProps) {
               onPointerDown={(e) => e.stopPropagation()}
             >
               {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
+              {card.is_optional && (
+                <Badge variant="outline" className="text-xs">
+                  {t('pages.dailyChecklist.optionalBadge', {
+                    defaultValue: 'Opcional',
+                  })}
+                </Badge>
+              )}
               <Badge className={`${getCategoryColor(card.category)} text-xs`}>
                 {t(`pages.todayTasks.categories.${card.category}`, {
                   defaultValue: card.category_display,

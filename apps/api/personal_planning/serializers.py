@@ -77,6 +77,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "is_active",
             "priority",
             "priority_display",
+            "is_optional",
             "allowed_skips_per_month",
             "target_quantity",
             "unit",
@@ -146,6 +147,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "day_of_month",
             "is_active",
             "priority",
+            "is_optional",
             "allowed_skips_per_month",
             "target_quantity",
             "unit",
@@ -357,6 +359,7 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
             "icon",
             "priority",
             "priority_display",
+            "is_optional",
             "scheduled_date",
             "scheduled_time",
             "time_display",
@@ -389,6 +392,7 @@ class TaskInstanceCreateSerializer(serializers.ModelSerializer):
             "task_description",
             "category",
             "icon",
+            "is_optional",
             "scheduled_date",
             "scheduled_time",
             "target_quantity",
@@ -409,7 +413,7 @@ class TaskInstanceUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskInstance
-        fields = ["status", "quantity_completed", "notes"]
+        fields = ["status", "quantity_completed", "notes", "is_optional"]
 
 
 class TaskInstanceStatusUpdateSerializer(serializers.Serializer):

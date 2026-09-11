@@ -4063,6 +4063,10 @@
         "allowedSkipsHint": "Quantas faltas são toleradas por mês sem quebrar o streak",
         "advancedSettings": "Configurações avançadas",
         "isActiveLabel": "Tarefa Ativa",
+        "isOptionalLabel": "Obrigatoriedade",
+        "isOptionalHint": "Tarefas opcionais não impedem o dia de ser concluído nem quebram o streak",
+        "isOptionalRequired": "Obrigatória",
+        "isOptionalOptional": "Opcional",
         "linkedFinancialGoalLabel": "Meta Financeira Vinculada",
         "linkedFinancialGoalPlaceholder": "Selecione uma meta financeira (opcional)",
         "linkedFinancialGoalHint": "Vincule esta rotina a uma meta financeira que ela alimenta",
@@ -4246,6 +4250,7 @@
     },
     "dailyChecklist": {
       "title": "Checklist Diário",
+      "optionalBadge": "Opcional",
       "datePlaceholder": "Selecione a data",
       "syncBtn": "Sincronizar tarefas com dados atuais",
       "addReflection": "Adicionar reflexão do dia",

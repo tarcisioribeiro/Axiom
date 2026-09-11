@@ -778,6 +778,7 @@ export const routineTaskSchema = z
       .nullable(),
     is_active: z.boolean(),
     priority: z.enum(['low', 'medium', 'high', 'critical']),
+    is_optional: z.boolean(),
     allowed_skips_per_month: z
       .number()
       .min(0, 'Valor mínimo é 0')
