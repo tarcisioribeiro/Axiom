@@ -918,11 +918,13 @@ class PersonalPlanningDashboardStatsView(APIView):
                 item["category"], item["category"]
             )
 
-        # Progresso semanal (ultimos 7 dias)
+        # Progresso semanal (ultimos 7 dias) - só tarefas obrigatórias contam
         weekly_progress = []
         for i in range(6, -1, -1):
             day = today - timedelta(days=i)
-            day_instances = instances_qs.filter(scheduled_date=day)
+            day_instances = instances_qs.filter(
+                scheduled_date=day, is_optional=False
+            )
             total_day = day_instances.count()
             completed_day = day_instances.filter(status="completed").count()
 
@@ -1015,10 +1017,12 @@ class PersonalPlanningDashboardStatsView(APIView):
         Calcula sequencia atual de dias com 100% de cumprimento.
 
         Um dia conta para o streak se:
-        1. Há instâncias de tarefas para aquele dia
-        2. TODAS as instâncias foram completadas
+        1. Há instâncias OBRIGATÓRIAS de tarefas para aquele dia
+        2. TODAS as instâncias obrigatórias foram completadas
 
-        NOTA: Se uma instância não está completada, conta como não concluída.
+        Instâncias opcionais (is_optional=True) são ignoradas: não bloqueiam
+        o dia nem contam para ele. Um dia só com tarefas opcionais é neutro
+        (não conta, não quebra), igual a um dia sem tarefas.
         """
         streak = 0
         check_date = today
@@ -1031,12 +1035,13 @@ class PersonalPlanningDashboardStatsView(APIView):
                 owner__user=user,
                 scheduled_date=check_date,
                 deleted_at__isnull=True,
+                is_optional=False,
             )
 
             total_instances = day_instances.count()
 
             if total_instances == 0:
-                # Se não há instâncias para o dia, não quebra o streak
+                # Sem tarefas obrigatórias no dia: não quebra o streak
                 days_without_tasks += 1
                 # Se já passaram 30 dias sem tarefas, pare
                 if days_without_tasks >= 30:
@@ -1064,7 +1069,7 @@ class PersonalPlanningDashboardStatsView(APIView):
         """Calcula a melhor sequencia de todos os tempos."""
         # Buscar todas as instâncias agrupadas por data
         instances = TaskInstance.objects.filter(
-            owner__user=user, deleted_at__isnull=True
+            owner__user=user, deleted_at__isnull=True, is_optional=False
         ).order_by("scheduled_date")
 
         if not instances.exists():

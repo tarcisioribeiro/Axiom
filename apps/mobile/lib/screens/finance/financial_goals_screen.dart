@@ -54,29 +54,45 @@ class FinancialGoalsScreen extends ConsumerWidget {
           child: goalsAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
             error: (e, _) => Center(child: Text('Erro: $e')),
-            data: (goals) => ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                AppPageHeader(
-                  title: 'Metas financeiras',
-                  icon: Icons.flag_outlined,
-                  color: context.semanticColors.success,
-                ),
-                SizedBox(height: AppSpacing.md),
-                if (goals.isEmpty)
-                  const EmptyState(
-                    icon: Icons.flag_outlined,
-                    title: 'Nenhuma meta criada',
-                  )
-                else
-                  ...goals.map(
-                    (g) => _GoalTile(
-                      goal: g,
-                      onManageVaults: () => _showManageVaults(context, ref, g),
-                      onEdit: () => _showGoalForm(context, existing: g),
-                      onDelete: () => _delete(context, ref, g),
+            data: (goals) => CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverToBoxAdapter(
+                    child: AppPageHeader(
+                      title: 'Metas financeiras',
+                      icon: Icons.flag_outlined,
+                      color: context.semanticColors.success,
                     ),
                   ),
+                ),
+                if (goals.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.flag_outlined,
+                      title: 'Nenhuma meta criada',
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverList.builder(
+                      itemCount: goals.length,
+                      itemBuilder: (context, index) {
+                        final g = goals[index];
+                        return _GoalTile(
+                          goal: g,
+                          onManageVaults: () =>
+                              _showManageVaults(context, ref, g),
+                          onEdit: () => _showGoalForm(context, existing: g),
+                          onDelete: () => _delete(context, ref, g),
+                        );
+                      },
+                    ),
+                  ),
+                const SliverPadding(
+                    padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             ),
           ),
@@ -451,7 +467,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ChoiceLabels.goalCategories.entries
@@ -470,6 +486,7 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
                 trailing: _targetDate == null
                     ? const Icon(Icons.calendar_today_outlined, size: 18)
                     : IconButton(
+                        tooltip: 'Limpar data',
                         icon: const Icon(Icons.clear, size: 18),
                         onPressed: () => setState(() => _targetDate = null),
                       ),

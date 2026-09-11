@@ -132,78 +132,97 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                 .where((e) => e.payed)
                 .fold<double>(0, (s, e) => s + e.value);
 
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: 'Buscar despesas...',
-                    prefixIcon: Icon(Icons.search_rounded, size: 20),
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            hintText: 'Buscar despesas...',
+                            prefixIcon: Icon(Icons.search_rounded, size: 20),
+                          ),
+                        ),
+                        SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatCard(
+                                title: 'Total',
+                                value: AppFormatters.currency(total),
+                                icon: Icons.receipt_long_outlined,
+                                accent: StatAccent.neutral,
+                              ),
+                            ),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: StatCard(
+                                title: 'Pago',
+                                value: AppFormatters.currency(paid),
+                                icon: Icons.check_circle_outline,
+                                accent: StatAccent.success,
+                              ),
+                            ),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: StatCard(
+                                title: 'Pendente',
+                                value: AppFormatters.currency(total - paid),
+                                icon: Icons.schedule_outlined,
+                                accent: StatAccent.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'Total',
-                        value: AppFormatters.currency(total),
-                        icon: Icons.receipt_long_outlined,
-                        accent: StatAccent.neutral,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Pago',
-                        value: AppFormatters.currency(paid),
-                        icon: Icons.check_circle_outline,
-                        accent: StatAccent.success,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Pendente',
-                        value: AppFormatters.currency(total - paid),
-                        icon: Icons.schedule_outlined,
-                        accent: StatAccent.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
                 if (expenses.isEmpty)
-                  const EmptyState(
-                    icon: Icons.receipt_long_outlined,
-                    title: 'Nenhuma despesa encontrada',
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Nenhuma despesa encontrada',
+                    ),
                   )
                 else
-                  ...expenses.map(
-                    (expense) => _TransactionTile(
-                      title: expense.description,
-                      subtitle:
-                          '${ChoiceLabels.of(ChoiceLabels.expenseCategories, expense.category)} · ${AppFormatters.date(expense.date)}',
-                      value: expense.value,
-                      isPositive: false,
-                      done: expense.payed,
-                      doneLabel: 'Pago',
-                      pendingLabel: 'Pendente',
-                      onToggleDone: () => _togglePaid(expense),
-                      onEdit: () => showExpenseFormSheet(
-                        context,
-                        existing: expense,
-                        accounts: accounts,
-                      ),
-                      onDelete: () => _delete(expense),
-                      deleteMessage:
-                          'Excluir a despesa "${expense.description}"? '
-                          'Essa ação não pode ser desfeita.',
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverList.builder(
+                      itemCount: expenses.length,
+                      itemBuilder: (context, index) {
+                        final expense = expenses[index];
+                        return _TransactionTile(
+                          title: expense.description,
+                          subtitle:
+                              '${ChoiceLabels.of(ChoiceLabels.expenseCategories, expense.category)} · ${AppFormatters.date(expense.date)}',
+                          value: expense.value,
+                          isPositive: false,
+                          done: expense.payed,
+                          doneLabel: 'Pago',
+                          pendingLabel: 'Pendente',
+                          onToggleDone: () => _togglePaid(expense),
+                          onEdit: () => showExpenseFormSheet(
+                            context,
+                            existing: expense,
+                            accounts: accounts,
+                          ),
+                          onDelete: () => _delete(expense),
+                          deleteMessage:
+                              'Excluir a despesa "${expense.description}"? '
+                              'Essa ação não pode ser desfeita.',
+                        );
+                      },
                     ),
                   ),
+                const SliverPadding(
+                    padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             );
           },
@@ -285,78 +304,97 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
                 .where((r) => r.received)
                 .fold<double>(0, (s, r) => s + r.value);
 
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: 'Buscar receitas...',
-                    prefixIcon: Icon(Icons.search_rounded, size: 20),
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            hintText: 'Buscar receitas...',
+                            prefixIcon: Icon(Icons.search_rounded, size: 20),
+                          ),
+                        ),
+                        SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatCard(
+                                title: 'Total',
+                                value: AppFormatters.currency(total),
+                                icon: Icons.trending_up_rounded,
+                                accent: StatAccent.neutral,
+                              ),
+                            ),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: StatCard(
+                                title: 'Recebido',
+                                value: AppFormatters.currency(received),
+                                icon: Icons.check_circle_outline,
+                                accent: StatAccent.success,
+                              ),
+                            ),
+                            SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: StatCard(
+                                title: 'Pendente',
+                                value: AppFormatters.currency(total - received),
+                                icon: Icons.schedule_outlined,
+                                accent: StatAccent.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'Total',
-                        value: AppFormatters.currency(total),
-                        icon: Icons.trending_up_rounded,
-                        accent: StatAccent.neutral,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Recebido',
-                        value: AppFormatters.currency(received),
-                        icon: Icons.check_circle_outline,
-                        accent: StatAccent.success,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Pendente',
-                        value: AppFormatters.currency(total - received),
-                        icon: Icons.schedule_outlined,
-                        accent: StatAccent.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
                 if (revenues.isEmpty)
-                  const EmptyState(
-                    icon: Icons.trending_up_rounded,
-                    title: 'Nenhuma receita encontrada',
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.trending_up_rounded,
+                      title: 'Nenhuma receita encontrada',
+                    ),
                   )
                 else
-                  ...revenues.map(
-                    (revenue) => _TransactionTile(
-                      title: revenue.description,
-                      subtitle:
-                          '${ChoiceLabels.of(ChoiceLabels.revenueCategories, revenue.category)} · ${AppFormatters.date(revenue.date)}',
-                      value: revenue.value,
-                      isPositive: true,
-                      done: revenue.received,
-                      doneLabel: 'Recebido',
-                      pendingLabel: 'Pendente',
-                      onToggleDone: () => _toggleReceived(revenue),
-                      onEdit: () => showRevenueFormSheet(
-                        context,
-                        existing: revenue,
-                        accounts: accounts,
-                      ),
-                      onDelete: () => _delete(revenue),
-                      deleteMessage:
-                          'Excluir a receita "${revenue.description}"? '
-                          'Essa ação não pode ser desfeita.',
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverList.builder(
+                      itemCount: revenues.length,
+                      itemBuilder: (context, index) {
+                        final revenue = revenues[index];
+                        return _TransactionTile(
+                          title: revenue.description,
+                          subtitle:
+                              '${ChoiceLabels.of(ChoiceLabels.revenueCategories, revenue.category)} · ${AppFormatters.date(revenue.date)}',
+                          value: revenue.value,
+                          isPositive: true,
+                          done: revenue.received,
+                          doneLabel: 'Recebido',
+                          pendingLabel: 'Pendente',
+                          onToggleDone: () => _toggleReceived(revenue),
+                          onEdit: () => showRevenueFormSheet(
+                            context,
+                            existing: revenue,
+                            accounts: accounts,
+                          ),
+                          onDelete: () => _delete(revenue),
+                          deleteMessage:
+                              'Excluir a receita "${revenue.description}"? '
+                              'Essa ação não pode ser desfeita.',
+                        );
+                      },
                     ),
                   ),
+                const SliverPadding(
+                    padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             );
           },

@@ -8,6 +8,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showRevenueFormSheet(
   BuildContext context, {
@@ -149,7 +150,7 @@ class _RevenueFormSheetState extends ConsumerState<_RevenueFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ChoiceLabels.revenueCategories.entries
@@ -160,7 +161,7 @@ class _RevenueFormSheetState extends ConsumerState<_RevenueFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<int>(
-                value: _accountId,
+                initialValue: _accountId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Conta'),
                 items: widget.accounts
@@ -184,26 +185,10 @@ class _RevenueFormSheetState extends ConsumerState<_RevenueFormSheet> {
                 value: _received,
                 onChanged: (v) => setState(() => _received = v),
               ),
-              if (_error != null) ...[
-                SizedBox(height: AppSpacing.sm),
-                Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _save,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Salvar'),
-                ),
+              FormSheetSubmitFooter(
+                error: _error,
+                isSaving: _isSaving,
+                onSubmit: _save,
               ),
               SizedBox(height: AppSpacing.sm),
             ],

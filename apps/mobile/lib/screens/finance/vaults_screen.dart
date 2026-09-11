@@ -512,7 +512,7 @@ class _VaultFormSheetState extends ConsumerState<_VaultFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<int>(
-                value: _accountId,
+                initialValue: _accountId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Conta associada'),
                 items: widget.accounts

@@ -24,6 +24,7 @@ const mockRoutineTasks: RoutineTask[] = [
     is_active: true,
     priority: 'medium',
     priority_display: 'Média',
+    is_optional: false,
     allowed_skips_per_month: 0,
     target_quantity: 1,
     unit: 'vez',

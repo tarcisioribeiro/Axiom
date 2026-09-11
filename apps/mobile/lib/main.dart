@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'config/api_environment.dart';
 import 'providers/core_providers.dart';
@@ -11,10 +13,28 @@ import 'services/auth_service.dart';
 import 'services/session_controller.dart';
 import 'theme/theme_controller.dart';
 
+/// Crash/error reporting DSN, set via `--dart-define=SENTRY_DSN=...` at
+/// build time — mirrors `VITE_SENTRY_DSN` on the web app: unset means
+/// Sentry is silently disabled (the default for local development), no
+/// separate feature flag needed.
+const String _sentryDsn = String.fromEnvironment('SENTRY_DSN');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_BR', null);
-  runApp(const AxiomBootstrap());
+
+  if (_sentryDsn.isEmpty) {
+    runApp(const AxiomBootstrap());
+    return;
+  }
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = _sentryDsn;
+      options.environment = kReleaseMode ? 'production' : 'development';
+    },
+    appRunner: () => runApp(const AxiomBootstrap()),
+  );
 }
 
 /// Renders a minimal splash immediately instead of blocking the first frame

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/stored_card.dart';
@@ -10,6 +9,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
@@ -195,10 +195,12 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
   Future<void> _copyNumber() async {
     try {
       final r = await ref.read(storedCardsServiceProvider).copy(widget.card.id);
-      await Clipboard.setData(ClipboardData(text: r.cardNumber));
+      await copyToClipboardWithAutoClear(r.cardNumber);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Número copiado.')),
+          const SnackBar(
+              content: Text(
+                  'Número copiado. Será apagado da área de transferência em 30s.')),
         );
       }
     } on ApiException catch (e) {
@@ -263,6 +265,9 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
                   child: Text(card.name, style: theme.textTheme.titleLarge),
                 ),
                 IconButton(
+                  tooltip: card.isFavorite
+                      ? 'Remover dos favoritos'
+                      : 'Adicionar aos favoritos',
                   icon: Icon(
                     card.isFavorite
                         ? Icons.star_rounded
@@ -551,7 +556,7 @@ class _CardFormSheetState extends ConsumerState<_CardFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _flag,
+                initialValue: _flag,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Bandeira'),
                 items: ChoiceLabels.storedCardFlags.entries

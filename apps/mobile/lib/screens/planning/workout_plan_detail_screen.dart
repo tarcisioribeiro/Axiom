@@ -181,27 +181,32 @@ class _DayCard extends ConsumerWidget {
                           style: theme.textTheme.bodySmall,
                         ),
                       ),
-                      InkWell(
-                        onTap: () => _showExerciseForm(context, ref, day.id,
-                            planId: planId, existing: ex),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.edit_outlined, size: 16),
+                      Tooltip(
+                        message: 'Editar exercício',
+                        child: InkWell(
+                          onTap: () => _showExerciseForm(context, ref, day.id,
+                              planId: planId, existing: ex),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.edit_outlined, size: 16),
+                          ),
                         ),
                       ),
-                      InkWell(
-                        onTap: () async {
-                          final ok = await confirmDelete(context,
-                              title: 'Excluir exercício',
-                              message: 'Excluir "${ex.name}"?');
-                          if (ok) {
+                      Tooltip(
+                        message: 'Excluir exercício',
+                        child: InkWell(
+                          onTap: () async {
+                            final ok = await confirmDelete(context,
+                                title: 'Excluir exercício',
+                                message: 'Excluir "${ex.name}"?');
+                            if (!context.mounted || !ok) return;
                             await _deleteExercise(context, ref, ex);
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(Icons.delete_outline,
-                              size: 16, color: theme.colorScheme.error),
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(Icons.delete_outline,
+                                size: 16, color: theme.colorScheme.error),
+                          ),
                         ),
                       ),
                     ],
@@ -347,7 +352,7 @@ class _DayFormSheetState extends ConsumerState<_DayFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<int?>(
-                value: _dayOfWeek,
+                initialValue: _dayOfWeek,
                 decoration: const InputDecoration(
                     labelText: 'Dia da semana (opcional)'),
                 items: [

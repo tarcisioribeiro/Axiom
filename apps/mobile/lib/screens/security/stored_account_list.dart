@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/stored_account.dart';
@@ -10,6 +9,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
@@ -194,10 +194,12 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
     try {
       final r =
           await ref.read(storedAccountsServiceProvider).copy(widget.account.id);
-      await Clipboard.setData(ClipboardData(text: r.accountNumber));
+      await copyToClipboardWithAutoClear(r.accountNumber);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Número da conta copiado.')),
+          const SnackBar(
+              content: Text(
+                  'Número da conta copiado. Será apagado da área de transferência em 30s.')),
         );
       }
     } on ApiException catch (e) {
@@ -266,6 +268,9 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
                         Text(account.name, style: theme.textTheme.titleLarge),
                   ),
                   IconButton(
+                    tooltip: account.isFavorite
+                        ? 'Remover dos favoritos'
+                        : 'Adicionar aos favoritos',
                     icon: Icon(
                       account.isFavorite
                           ? Icons.star_rounded
@@ -541,7 +546,7 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _accountType,
+                initialValue: _accountType,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Tipo de conta'),
                 items: ChoiceLabels.storedAccountTypes.entries

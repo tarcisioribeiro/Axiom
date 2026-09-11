@@ -348,21 +348,23 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
             Expanded(
               child: _isLoadingHistory
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView(
+                  : ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.all(AppSpacing.md),
-                      children: [
-                        ..._messages.map((m) => _MessageBubble(message: m)),
-                        if (_isStreaming)
-                          _MessageBubble(
-                            message: ChatMessage(
-                              role: 'assistant',
-                              content:
-                                  _streamingText.isEmpty ? '…' : _streamingText,
-                              agentName: widget.option.key,
-                            ),
+                      itemCount: _messages.length + (_isStreaming ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < _messages.length) {
+                          return _MessageBubble(message: _messages[index]);
+                        }
+                        return _MessageBubble(
+                          message: ChatMessage(
+                            role: 'assistant',
+                            content:
+                                _streamingText.isEmpty ? '…' : _streamingText,
+                            agentName: widget.option.key,
                           ),
-                      ],
+                        );
+                      },
                     ),
             ),
             SafeArea(
@@ -384,6 +386,7 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
                     ),
                     SizedBox(width: AppSpacing.sm),
                     IconButton.filled(
+                      tooltip: _isStreaming ? 'Parar' : 'Enviar',
                       icon: Icon(_isStreaming
                           ? Icons.stop_rounded
                           : Icons.send_rounded),

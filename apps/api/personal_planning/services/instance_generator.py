@@ -222,6 +222,7 @@ class InstanceGenerator:
                 existing.category = template.category
                 existing.icon = template.icon
                 existing.priority = template.priority
+                existing.is_optional = template.is_optional
                 existing.scheduled_time = scheduled_time
                 existing.unit = template.unit
                 needs_update = True
@@ -245,6 +246,7 @@ class InstanceGenerator:
             category=template.category,
             icon=template.icon,
             priority=template.priority,
+            is_optional=template.is_optional,
             scheduled_date=target_date,
             scheduled_time=scheduled_time,
             occurrence_index=occurrence_index,

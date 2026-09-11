@@ -9,16 +9,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum ApiEnvironmentType { development, production }
 
 /// The Axiom production hostname (nginx-ingress path-routes `/api` to the
-/// Django service on the same origin — see dns_infrastructure.md).
-const String kProductionBaseUrl = 'https://axiom.tjtux.duckdns.org';
+/// Django service on the same origin — see dns_infrastructure.md). Override
+/// with `--dart-define=PRODUCTION_BASE_URL=...` for a fork/different
+/// deployment without touching source.
+const String kProductionBaseUrl = String.fromEnvironment(
+  'PRODUCTION_BASE_URL',
+  defaultValue: 'https://axiom.tjtux.duckdns.org',
+);
 
 /// Best-effort default for local Docker dev. Android emulators cannot reach
 /// the host machine via `localhost`, and neither can physical devices on the
 /// same LAN, so the host machine's LAN IPv4 is used for Android instead; iOS
 /// simulators and desktop/web builds can reach the host directly. This
-/// address is specific to the current dev machine — override it in the
-/// login screen if you're developing from a different host.
-const String kDevMachineLanIPv4 = '192.168.2.200';
+/// address is specific to the current dev machine — override per-machine
+/// with `--dart-define=DEV_MACHINE_LAN_IPV4=...`, or in the login screen at
+/// runtime (persisted via [ApiEnvironmentController]).
+const String kDevMachineLanIPv4 = String.fromEnvironment(
+  'DEV_MACHINE_LAN_IPV4',
+  defaultValue: '192.168.2.200',
+);
 
 String defaultDevelopmentBaseUrl() {
   if (kIsWeb) return 'http://localhost:39100';

@@ -93,6 +93,7 @@ export function RoutineTaskForm({
           day_of_month: task.day_of_month,
           is_active: task.is_active,
           priority: task.priority ?? 'medium',
+          is_optional: task.is_optional ?? false,
           allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
           target_quantity: task.target_quantity,
           unit: task.unit as RoutineTaskFormData['unit'],
@@ -115,6 +116,7 @@ export function RoutineTaskForm({
           day_of_month: undefined,
           is_active: true,
           priority: 'medium' as const,
+          is_optional: false,
           allowed_skips_per_month: 0,
           target_quantity: 1,
           unit: 'vez',
@@ -131,6 +133,7 @@ export function RoutineTaskForm({
 
   const periodicity = watch('periodicity');
   const isActive = watch('is_active');
+  const isOptional = watch('is_optional');
   const dailyOccurrences = watch('daily_occurrences');
 
   useEffect(() => {
@@ -145,6 +148,7 @@ export function RoutineTaskForm({
         day_of_month: task.day_of_month,
         is_active: task.is_active,
         priority: task.priority ?? 'medium',
+        is_optional: task.is_optional ?? false,
         allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
         target_quantity: task.target_quantity,
         unit: task.unit as RoutineTaskFormData['unit'],
@@ -744,6 +748,35 @@ export function RoutineTaskForm({
                   },
                 ]}
                 onChange={(v) => setValue('is_active', v === 'true')}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm md:col-span-2">
+              <Label className="gap-xs flex items-center">
+                <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.isOptionalLabel')}
+                <Tooltip
+                  content={t('pages.routineTasks.form.isOptionalHint')}
+                  side="right"
+                >
+                  <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                </Tooltip>
+              </Label>
+              <StatusToggle
+                value={isOptional ? 'true' : 'false'}
+                options={[
+                  {
+                    value: 'false',
+                    label: t('pages.routineTasks.form.isOptionalRequired'),
+                    accentColor: 'success',
+                  },
+                  {
+                    value: 'true',
+                    label: t('pages.routineTasks.form.isOptionalOptional'),
+                  },
+                ]}
+                onChange={(v) => setValue('is_optional', v === 'true')}
                 disabled={isLoading}
               />
             </div>

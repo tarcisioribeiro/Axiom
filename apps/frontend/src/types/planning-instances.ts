@@ -82,6 +82,7 @@ export interface TaskInstance {
   icon?: string | null;
   priority: TaskPriority;
   priority_display: string;
+  is_optional: boolean;
   scheduled_date: string;
   scheduled_time?: string | null;
   time_display?: string | null;

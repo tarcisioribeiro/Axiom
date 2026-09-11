@@ -7,6 +7,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/form_sheet_submit_footer.dart';
 
 /// Logs a new purchase against [cardId] — the backend auto-generates the
 /// installments and links them to the matching bill(s) by date range, so
@@ -136,7 +137,7 @@ class _PurchaseFormSheetState extends ConsumerState<_PurchaseFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Categoria'),
                 items: ChoiceLabels.expenseCategories.entries
@@ -173,26 +174,10 @@ class _PurchaseFormSheetState extends ConsumerState<_PurchaseFormSheet> {
                 trailing: const Icon(Icons.calendar_today_outlined, size: 18),
                 onTap: _pickDate,
               ),
-              if (_error != null) ...[
-                SizedBox(height: AppSpacing.sm),
-                Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _save,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Salvar'),
-                ),
+              FormSheetSubmitFooter(
+                error: _error,
+                isSaving: _isSaving,
+                onSubmit: _save,
               ),
               SizedBox(height: AppSpacing.md),
             ],

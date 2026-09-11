@@ -349,6 +349,9 @@ class _PasswordsListState extends ConsumerState<_PasswordsList> {
                       ),
                     ),
                     IconButton(
+                      tooltip: _favoritesOnly
+                          ? 'Mostrar todos'
+                          : 'Mostrar apenas favoritos',
                       icon: Icon(
                         _favoritesOnly
                             ? Icons.star_rounded

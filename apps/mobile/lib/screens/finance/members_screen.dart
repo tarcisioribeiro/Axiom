@@ -322,7 +322,7 @@ class _MemberFormSheetState extends ConsumerState<_MemberFormSheet> {
                   SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _sex,
+                      initialValue: _sex,
                       decoration: const InputDecoration(labelText: 'Sexo'),
                       items: ChoiceLabels.memberSex.entries
                           .map((e) => DropdownMenuItem(
@@ -349,6 +349,7 @@ class _MemberFormSheetState extends ConsumerState<_MemberFormSheet> {
                 trailing: _birthDate == null
                     ? const Icon(Icons.calendar_today_outlined, size: 18)
                     : IconButton(
+                        tooltip: 'Limpar data',
                         icon: const Icon(Icons.clear, size: 18),
                         onPressed: () => setState(() => _birthDate = null),
                       ),

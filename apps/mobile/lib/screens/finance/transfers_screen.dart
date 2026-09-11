@@ -63,66 +63,85 @@ class TransfersScreen extends ConsumerWidget {
               final pending =
                   transfers.where((t) => t.status == 'pending').length;
 
-              return ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                children: [
-                  AppPageHeader(
-                    title: 'Transferências',
-                    icon: Icons.swap_horiz_rounded,
-                    color: context.semanticColors.success,
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          title: 'Volume',
-                          value: AppFormatters.currency(volume),
-                          icon: Icons.swap_horiz_rounded,
-                          accent: StatAccent.primary,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: StatCard(
-                          title: 'Concluídas',
-                          value: '$completed',
-                          icon: Icons.check_circle_outline,
-                          accent: StatAccent.success,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: StatCard(
-                          title: 'Pendentes',
-                          value: '$pending',
-                          icon: Icons.schedule_outlined,
-                          accent: StatAccent.warning,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  if (transfers.isEmpty)
-                    const EmptyState(
-                      icon: Icons.swap_horiz_rounded,
-                      title: 'Nenhuma transferência registrada',
-                    )
-                  else
-                    ...transfers.map(
-                      (transfer) => _TransferTile(
-                        transfer: transfer,
-                        onEdit: () => showTransferFormSheet(
-                          context,
-                          existing: transfer,
-                          accounts: accounts,
-                        ),
-                        onDelete: () => _delete(context, ref, transfer),
-                        deleteMessage:
-                            'Excluir a transferência "${transfer.description}"? '
-                            'Essa ação não pode ser desfeita.',
+              return CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          AppPageHeader(
+                            title: 'Transferências',
+                            icon: Icons.swap_horiz_rounded,
+                            color: context.semanticColors.success,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Volume',
+                                  value: AppFormatters.currency(volume),
+                                  icon: Icons.swap_horiz_rounded,
+                                  accent: StatAccent.primary,
+                                ),
+                              ),
+                              SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Concluídas',
+                                  value: '$completed',
+                                  icon: Icons.check_circle_outline,
+                                  accent: StatAccent.success,
+                                ),
+                              ),
+                              SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Pendentes',
+                                  value: '$pending',
+                                  icon: Icons.schedule_outlined,
+                                  accent: StatAccent.warning,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+                  ),
+                  if (transfers.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: EmptyState(
+                        icon: Icons.swap_horiz_rounded,
+                        title: 'Nenhuma transferência registrada',
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      sliver: SliverList.builder(
+                        itemCount: transfers.length,
+                        itemBuilder: (context, index) {
+                          final transfer = transfers[index];
+                          return _TransferTile(
+                            transfer: transfer,
+                            onEdit: () => showTransferFormSheet(
+                              context,
+                              existing: transfer,
+                              accounts: accounts,
+                            ),
+                            onDelete: () => _delete(context, ref, transfer),
+                            deleteMessage:
+                                'Excluir a transferência "${transfer.description}"? '
+                                'Essa ação não pode ser desfeita.',
+                          );
+                        },
+                      ),
+                    ),
+                  const SliverPadding(
+                      padding: EdgeInsets.only(bottom: AppSpacing.md)),
                 ],
               );
             },

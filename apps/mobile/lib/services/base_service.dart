@@ -58,19 +58,26 @@ class BaseService<T> {
 
   /// Fetches every page and flattens the results — convenient for small
   /// resources shown as a single scroll (accounts, credit cards) where
-  /// manual pagination UI isn't worth the complexity.
+  /// manual pagination UI isn't worth the complexity. The first page tells
+  /// us the total count, so remaining pages are fetched concurrently
+  /// instead of one-by-one — cuts wall-clock time roughly by the page count
+  /// for resources with more than one page.
   Future<List<T>> getAll({Map<String, dynamic>? query}) async {
-    final items = <T>[];
-    var page = 1;
-    while (true) {
-      final response = await getAllPaginated(
-        query: {...?query, 'page': page},
-      );
-      items.addAll(response.results);
-      if (!response.hasNext) break;
-      page += 1;
-    }
-    return items;
+    final first = await getAllPaginated(query: {...?query, 'page': 1});
+    if (!first.hasNext) return first.results;
+
+    final pageSize = first.results.length;
+    if (pageSize == 0) return first.results;
+    final totalPages = (first.count / pageSize).ceil();
+
+    final rest = await Future.wait([
+      for (var page = 2; page <= totalPages; page++)
+        getAllPaginated(query: {...?query, 'page': page}),
+    ]);
+
+    return [first.results, for (final r in rest) r.results]
+        .expand((results) => results)
+        .toList();
   }
 
   Future<T> getById(dynamic id) async {

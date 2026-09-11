@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/password_entry.dart';
@@ -10,6 +9,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/confirm.dart';
 import 'password_form_sheet.dart';
 
@@ -81,10 +81,11 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
     try {
       final revealed =
           await ref.read(passwordsServiceProvider).copy(widget.entry.id);
-      await Clipboard.setData(ClipboardData(text: revealed.password));
+      await copyToClipboardWithAutoClear(revealed.password);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Senha copiada.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Senha copiada. Será apagada da área de transferência em 30s.')));
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -148,6 +149,9 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
                   child: Text(entry.title, style: theme.textTheme.titleLarge),
                 ),
                 IconButton(
+                  tooltip: entry.isFavorite
+                      ? 'Remover dos favoritos'
+                      : 'Adicionar aos favoritos',
                   icon: Icon(
                     entry.isFavorite
                         ? Icons.star_rounded

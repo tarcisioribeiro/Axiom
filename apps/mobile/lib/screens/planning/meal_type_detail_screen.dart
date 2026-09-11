@@ -165,34 +165,39 @@ class _OptionCard extends ConsumerWidget {
                           style: theme.textTheme.bodySmall,
                         ),
                       ),
-                      InkWell(
-                        onTap: () => _showIngredientForm(
-                          context,
-                          ref,
-                          option.id,
-                          mealTypeId: mealTypeId,
-                          foods: foods,
-                          existing: ing,
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.edit_outlined, size: 16),
+                      Tooltip(
+                        message: 'Editar ingrediente',
+                        child: InkWell(
+                          onTap: () => _showIngredientForm(
+                            context,
+                            ref,
+                            option.id,
+                            mealTypeId: mealTypeId,
+                            foods: foods,
+                            existing: ing,
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.edit_outlined, size: 16),
+                          ),
                         ),
                       ),
-                      InkWell(
-                        onTap: () async {
-                          final ok = await confirmDelete(context,
-                              title: 'Excluir ingrediente',
-                              message:
-                                  'Remover "${ing.foodName ?? 'ingrediente'}"?');
-                          if (ok) {
+                      Tooltip(
+                        message: 'Remover ingrediente',
+                        child: InkWell(
+                          onTap: () async {
+                            final ok = await confirmDelete(context,
+                                title: 'Excluir ingrediente',
+                                message:
+                                    'Remover "${ing.foodName ?? 'ingrediente'}"?');
+                            if (!context.mounted || !ok) return;
                             await _deleteIngredient(context, ref, ing);
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(Icons.delete_outline,
-                              size: 16, color: theme.colorScheme.error),
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(Icons.delete_outline,
+                                size: 16, color: theme.colorScheme.error),
+                          ),
                         ),
                       ),
                     ],
@@ -488,7 +493,7 @@ class _IngredientFormSheetState extends ConsumerState<_IngredientFormSheet> {
                   style: Theme.of(context).textTheme.titleMedium),
               SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<int>(
-                value: _foodId,
+                initialValue: _foodId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Alimento'),
                 items: widget.foods
@@ -516,7 +521,7 @@ class _IngredientFormSheetState extends ConsumerState<_IngredientFormSheet> {
                   SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _unit,
+                      initialValue: _unit,
                       isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Unidade'),
                       items: ChoiceLabels.measurementUnits.entries

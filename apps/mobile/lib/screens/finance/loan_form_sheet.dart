@@ -9,6 +9,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showLoanFormSheet(
   BuildContext context, {
@@ -232,7 +233,7 @@ class _LoanFormSheetState extends ConsumerState<_LoanFormSheet> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: _counterpartyId,
+                        initialValue: _counterpartyId,
                         isExpanded: true,
                         decoration:
                             InputDecoration(labelText: counterpartyLabel),
@@ -254,7 +255,7 @@ class _LoanFormSheetState extends ConsumerState<_LoanFormSheet> {
                 ),
                 SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<int>(
-                  value: _accountId,
+                  initialValue: _accountId,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Conta'),
                   items: widget.accounts
@@ -278,7 +279,7 @@ class _LoanFormSheetState extends ConsumerState<_LoanFormSheet> {
                     SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _frequency,
+                        initialValue: _frequency,
                         isExpanded: true,
                         decoration:
                             const InputDecoration(labelText: 'Frequência'),
@@ -307,6 +308,7 @@ class _LoanFormSheetState extends ConsumerState<_LoanFormSheet> {
                   trailing: _dueDate == null
                       ? const Icon(Icons.calendar_today_outlined, size: 18)
                       : IconButton(
+                          tooltip: 'Limpar data',
                           icon: const Icon(Icons.clear, size: 18),
                           onPressed: () => setState(() => _dueDate = null),
                         ),
@@ -320,25 +322,10 @@ class _LoanFormSheetState extends ConsumerState<_LoanFormSheet> {
                   ),
                   maxLines: 2,
                 ),
-                if (_error != null) ...[
-                  SizedBox(height: AppSpacing.sm),
-                  Text(_error!,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.error)),
-                ],
-                SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _isSaving ? null : _save,
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Salvar'),
-                  ),
+                FormSheetSubmitFooter(
+                  error: _error,
+                  isSaving: _isSaving,
+                  onSubmit: _save,
                 ),
                 SizedBox(height: AppSpacing.sm),
               ],
@@ -432,7 +419,7 @@ class _QuickMemberDialogState extends ConsumerState<_QuickMemberDialog> {
             ),
             SizedBox(height: AppSpacing.sm),
             DropdownButtonFormField<String>(
-              value: _sex,
+              initialValue: _sex,
               decoration: const InputDecoration(labelText: 'Sexo'),
               items: const [
                 DropdownMenuItem(value: 'M', child: Text('Masculino')),

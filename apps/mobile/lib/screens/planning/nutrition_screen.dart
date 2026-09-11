@@ -119,15 +119,7 @@ class _TodayTab extends ConsumerWidget {
                   error: (error, stackTrace) => const SizedBox.shrink(),
                   data: (summary) => summary.isEmpty
                       ? const SizedBox.shrink()
-                      : AppCard(
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: Text(
-                            summary.entries
-                                .map((e) => '${e.key}: ${e.value}')
-                                .join(' · '),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
+                      : _CaloricSummaryCard(summary: summary),
                 ),
                 if (todayLogs.isEmpty)
                   const EmptyState(
@@ -182,6 +174,81 @@ class _TodayTab extends ConsumerWidget {
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// Compact daily caloric balance from `daily-caloric-summary/`. TMB/TDEE need
+/// the member's body metrics *and* birth date (age) — without them the backend
+/// returns `bmr`/`tdee` as null, so we surface a hint instead of a raw dump.
+class _CaloricSummaryCard extends StatelessWidget {
+  const _CaloricSummaryCard({required this.summary});
+
+  final Map<String, dynamic> summary;
+
+  int? _kcal(dynamic v) => v == null ? null : (v as num).round();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final consumed = _kcal(summary['calories_consumed']) ?? 0;
+    final burned = _kcal(summary['calories_burned_exercise']) ?? 0;
+    final tdee = _kcal(summary['tdee']);
+    final net = _kcal(summary['net_calories']);
+    final hasMetrics = summary['has_body_metrics'] == true;
+
+    final String? hint = !hasMetrics
+        ? 'Cadastre suas medidas corporais (peso e altura) para calcular TMB e TDEE.'
+        : tdee == null
+            ? 'Informe sua data de nascimento no perfil de membro para calcular TMB e TDEE.'
+            : null;
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Resumo calórico de hoje', style: theme.textTheme.titleSmall),
+          SizedBox(height: AppSpacing.sm),
+          _row(context, 'Consumido', '$consumed kcal'),
+          if (burned > 0) _row(context, 'Gasto no treino', '-$burned kcal'),
+          if (tdee != null) _row(context, 'Meta (TDEE)', '$tdee kcal'),
+          if (net != null)
+            _row(
+              context,
+              'Saldo',
+              '${net > 0 ? '+' : ''}$net kcal',
+              color: net > 0
+                  ? theme.colorScheme.error
+                  : context.semanticColors.success,
+            ),
+          if (hint != null) ...[
+            SizedBox(height: AppSpacing.sm),
+            Text(hint, style: theme.textTheme.bodySmall),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _row(BuildContext context, String label, String value,
+      {Color? color}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: theme.textTheme.bodySmall),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MealTypesTab extends ConsumerWidget {

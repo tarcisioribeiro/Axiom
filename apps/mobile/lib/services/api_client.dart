@@ -129,6 +129,7 @@ class _SessionInterceptor extends Interceptor {
   void Function()? onSessionExpired;
 
   bool _isRefreshing = false;
+  bool _lastRefreshSucceeded = false;
   final List<Completer<void>> _refreshWaiters = [];
 
   bool _isAuthEndpoint(String path) =>
@@ -146,17 +147,26 @@ class _SessionInterceptor extends Interceptor {
       return;
     }
 
-    _retryAfterRefresh(options, handler);
+    _retryAfterRefresh(options, response, handler);
   }
 
+  /// [originalResponse] is the 401 that triggered this flow — it's what
+  /// gets propagated back to the caller if the refresh attempt fails (rather
+  /// than the refresh endpoint's own response/error), so callers always see
+  /// a response tied to the request they actually made.
   Future<void> _retryAfterRefresh(
     RequestOptions options,
+    Response originalResponse,
     ResponseInterceptorHandler handler,
   ) async {
     if (_isRefreshing) {
       final waiter = Completer<void>();
       _refreshWaiters.add(waiter);
       await waiter.future;
+      if (!_lastRefreshSucceeded) {
+        handler.next(originalResponse);
+        return;
+      }
     } else {
       _isRefreshing = true;
       try {
@@ -164,24 +174,20 @@ class _SessionInterceptor extends Interceptor {
           '/api/v1/authentication/token/refresh/',
           options: Options(extra: {'_sessionRetried': true}),
         );
-        if (refreshResponse.statusCode != 200) {
+        _lastRefreshSucceeded = refreshResponse.statusCode == 200;
+        if (!_lastRefreshSucceeded) {
           onSessionExpired?.call();
-          handler.next(refreshResponse);
+          handler.next(originalResponse);
           _isRefreshing = false;
           _releaseWaiters();
           return;
         }
       } on DioException {
+        _lastRefreshSucceeded = false;
         onSessionExpired?.call();
         _isRefreshing = false;
         _releaseWaiters();
-        handler.next(
-          Response(
-            requestOptions: options,
-            statusCode: 401,
-            statusMessage: 'Sessão expirada',
-          ),
-        );
+        handler.next(originalResponse);
         return;
       }
       _isRefreshing = false;

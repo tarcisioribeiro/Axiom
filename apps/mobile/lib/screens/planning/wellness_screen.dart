@@ -63,6 +63,7 @@ class _DashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(wellnessDashboardProvider);
+    final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(wellnessDashboardProvider);
@@ -115,7 +116,7 @@ class _DashboardTab extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Médias emocionais (7 dias)',
-                      style: Theme.of(context).textTheme.titleSmall),
+                      style: theme.textTheme.titleSmall),
                   SizedBox(height: AppSpacing.sm),
                   _bar(context, 'Solidão', d.avgLoneliness),
                   _bar(context, 'Ansiedade', d.avgAnxiety),
@@ -127,7 +128,7 @@ class _DashboardTab extends ConsumerWidget {
             SizedBox(height: AppSpacing.md),
             Text(
               'Intervenções concluídas nesta semana: ${d.interventionsThisWeek}',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ),
@@ -189,44 +190,38 @@ class _CheckinTab extends ConsumerWidget {
           data: (list) => list.isEmpty
               ? const EmptyState(
                   icon: Icons.mood_rounded, title: 'Nenhum check-in ainda')
-              : ListView(
+              : ListView.builder(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  children: list
-                      .map((c) => AppCard(
-                            margin:
-                                const EdgeInsets.only(bottom: AppSpacing.sm),
-                            padding: const EdgeInsets.all(AppSpacing.smd),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(AppFormatters.date(c.checkedAt),
-                                    style:
-                                        Theme.of(context).textTheme.titleSmall),
-                                SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  'Solidão ${c.loneliness} · Ansiedade ${c.anxiety} · '
-                                  'Tristeza ${c.sadness} · Motivação ${c.motivation} · '
-                                  'Energia ${c.energy}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                ),
-                                if (c.whatHappened?.isNotEmpty ?? false) ...[
-                                  SizedBox(height: AppSpacing.xs),
-                                  Text(c.whatHappened!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall),
-                                ],
-                              ],
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final c = list[index];
+                    final theme = Theme.of(context);
+                    return AppCard(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.smd),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppFormatters.date(c.checkedAt),
+                              style: theme.textTheme.titleSmall),
+                          SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Solidão ${c.loneliness} · Ansiedade ${c.anxiety} · '
+                            'Tristeza ${c.sadness} · Motivação ${c.motivation} · '
+                            'Energia ${c.energy}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                          ))
-                      .toList(),
+                          ),
+                          if (c.whatHappened?.isNotEmpty ?? false) ...[
+                            SizedBox(height: AppSpacing.xs),
+                            Text(c.whatHappened!,
+                                style: theme.textTheme.bodySmall),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
                 ),
         ),
       ),
@@ -310,6 +305,7 @@ class _CheckinFormSheetState extends ConsumerState<_CheckinFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -321,14 +317,13 @@ class _CheckinFormSheetState extends ConsumerState<_CheckinFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Check-in emocional',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text('Check-in emocional', style: theme.textTheme.titleMedium),
             SizedBox(height: AppSpacing.sm),
             ..._labels.entries.map((e) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${e.value}: ${_scores[e.key]}',
-                        style: Theme.of(context).textTheme.bodySmall),
+                        style: theme.textTheme.bodySmall),
                     Slider(
                       value: _scores[e.key]!.toDouble(),
                       min: 0,
@@ -355,8 +350,7 @@ class _CheckinFormSheetState extends ConsumerState<_CheckinFormSheet> {
             ),
             if (_error != null) ...[
               SizedBox(height: AppSpacing.sm),
-              Text(_error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
             SizedBox(height: AppSpacing.md),
             SizedBox(
@@ -389,53 +383,76 @@ class _CrisisTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(crisisLogsProvider);
+    final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(crisisLogsProvider);
         await ref.read(crisisLogsProvider.future);
       },
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          AppCard(
-            accentColor: Theme.of(context).colorScheme.error,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Modo crise',
-                    style: Theme.of(context).textTheme.titleSmall),
-                SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Sentindo um impulso difícil? Registre o que está sentindo '
-                  'e receba um plano de ação imediato.',
-                  style: Theme.of(context).textTheme.bodySmall,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            sliver: SliverToBoxAdapter(
+              child: AppCard(
+                accentColor: theme.colorScheme.error,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Modo crise', style: theme.textTheme.titleSmall),
+                    SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Sentindo um impulso difícil? Registre o que está sentindo '
+                      'e receba um plano de ação imediato.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    SizedBox(height: AppSpacing.sm),
+                    FilledButton.icon(
+                      onPressed: () => _showCrisisForm(context, ref),
+                      icon: const Icon(Icons.emergency_outlined),
+                      label: const Text('Preciso de ajuda agora'),
+                    ),
+                  ],
                 ),
-                SizedBox(height: AppSpacing.sm),
-                FilledButton.icon(
-                  onPressed: () => _showCrisisForm(context, ref),
-                  icon: const Icon(Icons.emergency_outlined),
-                  label: const Text('Preciso de ajuda agora'),
-                ),
-              ],
+              ),
             ),
           ),
-          SizedBox(height: AppSpacing.md),
           async.when(
-            loading: () =>
-                const LoadingState(variant: LoadingVariant.list, itemCount: 2),
-            error: (e, _) => Text('Erro: $e'),
+            loading: () => const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              sliver: SliverToBoxAdapter(
+                child: LoadingState(variant: LoadingVariant.list, itemCount: 2),
+              ),
+            ),
+            error: (e, _) => SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              sliver: SliverToBoxAdapter(child: Text('Erro: $e')),
+            ),
             data: (logs) => logs.isEmpty
-                ? const SizedBox.shrink()
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Registros anteriores',
-                          style: Theme.of(context).textTheme.titleSmall),
-                      SizedBox(height: AppSpacing.sm),
-                      ...logs.map((l) => _CrisisTile(log: l)),
-                    ],
+                ? const SliverToBoxAdapter(child: SizedBox.shrink())
+                : SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverMainAxisGroup(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Text('Registros anteriores',
+                                style: theme.textTheme.titleSmall),
+                          ),
+                        ),
+                        SliverList.builder(
+                          itemCount: logs.length,
+                          itemBuilder: (context, index) =>
+                              _CrisisTile(log: logs[index]),
+                        ),
+                      ],
+                    ),
                   ),
           ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: AppSpacing.md)),
         ],
       ),
     );
@@ -608,6 +625,7 @@ class _CrisisFormSheetState extends ConsumerState<_CrisisFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -619,7 +637,7 @@ class _CrisisFormSheetState extends ConsumerState<_CrisisFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Modo crise', style: Theme.of(context).textTheme.titleMedium),
+            Text('Modo crise', style: theme.textTheme.titleMedium),
             SizedBox(height: AppSpacing.md),
             if (_result != null) ...[
               _CrisisAiView(ai: _result!),
@@ -633,7 +651,7 @@ class _CrisisFormSheetState extends ConsumerState<_CrisisFormSheet> {
               ),
             ] else ...[
               DropdownButtonFormField<String>(
-                value: _emotionalState,
+                initialValue: _emotionalState,
                 decoration: const InputDecoration(labelText: 'Como você está?'),
                 items: ChoiceLabels.emotionalStates.entries
                     .map((e) =>
@@ -648,7 +666,7 @@ class _CrisisFormSheetState extends ConsumerState<_CrisisFormSheet> {
                 ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _impulseType,
+                initialValue: _impulseType,
                 decoration:
                     const InputDecoration(labelText: 'Impulso que quer evitar'),
                 items: ChoiceLabels.impulseTypes.entries
@@ -664,14 +682,12 @@ class _CrisisFormSheetState extends ConsumerState<_CrisisFormSheet> {
                 ),
               SizedBox(height: AppSpacing.sm),
               Text('A resposta pode levar até 1 minuto.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      )),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  )),
               if (_error != null) ...[
                 SizedBox(height: AppSpacing.sm),
-                Text(_error!,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               ],
               SizedBox(height: AppSpacing.md),
               SizedBox(
@@ -705,6 +721,7 @@ class _LibraryTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(wellnessInterventionsProvider);
+    final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(wellnessInterventionsProvider);
@@ -726,9 +743,7 @@ class _LibraryTab extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(i.title,
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
+                              Text(i.title, style: theme.textTheme.titleSmall),
                               Text(
                                 [
                                   i.categoryDisplay ??
@@ -740,20 +755,14 @@ class _LibraryTab extends ConsumerWidget {
                                   if (i.difficultyDisplay != null)
                                     i.difficultyDisplay!,
                                 ].join(' · '),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                    ),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
                               if (i.description?.isNotEmpty ?? false) ...[
                                 SizedBox(height: AppSpacing.xs),
                                 Text(i.description!,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall),
+                                    style: theme.textTheme.bodySmall),
                               ],
                               SizedBox(height: AppSpacing.xs),
                               Align(
@@ -848,55 +857,47 @@ class _ReportTabState extends ConsumerState<_ReportTab> {
               ? const EmptyState(
                   icon: Icons.summarize_outlined,
                   title: 'Nenhum relatório gerado')
-              : ListView(
+              : ListView.builder(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  children: list
-                      .map((r) => AppCard(
-                            margin:
-                                const EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  r.weekStart == null
-                                      ? 'Semana'
-                                      : '${AppFormatters.date(r.weekStart!)} – '
-                                          '${r.weekEnd == null ? '' : AppFormatters.date(r.weekEnd!)}',
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                if (r.aiSummary?.isNotEmpty ?? false) ...[
-                                  SizedBox(height: AppSpacing.xs),
-                                  Text(r.aiSummary!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall),
-                                ],
-                                if (r.attentionPoints.isNotEmpty) ...[
-                                  SizedBox(height: AppSpacing.sm),
-                                  Text('Pontos de atenção',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium),
-                                  ...r.attentionPoints.map((p) => Text('• $p',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall)),
-                                ],
-                                if (r.suggestions.isNotEmpty) ...[
-                                  SizedBox(height: AppSpacing.sm),
-                                  Text('Sugestões',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium),
-                                  ...r.suggestions.map((s) => Text('• $s',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall)),
-                                ],
-                              ],
-                            ),
-                          ))
-                      .toList(),
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final r = list[index];
+                    final theme = Theme.of(context);
+                    return AppCard(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            r.weekStart == null
+                                ? 'Semana'
+                                : '${AppFormatters.date(r.weekStart!)} – '
+                                    '${r.weekEnd == null ? '' : AppFormatters.date(r.weekEnd!)}',
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          if (r.aiSummary?.isNotEmpty ?? false) ...[
+                            SizedBox(height: AppSpacing.xs),
+                            Text(r.aiSummary!,
+                                style: theme.textTheme.bodySmall),
+                          ],
+                          if (r.attentionPoints.isNotEmpty) ...[
+                            SizedBox(height: AppSpacing.sm),
+                            Text('Pontos de atenção',
+                                style: theme.textTheme.labelMedium),
+                            ...r.attentionPoints.map((p) =>
+                                Text('• $p', style: theme.textTheme.bodySmall)),
+                          ],
+                          if (r.suggestions.isNotEmpty) ...[
+                            SizedBox(height: AppSpacing.sm),
+                            Text('Sugestões',
+                                style: theme.textTheme.labelMedium),
+                            ...r.suggestions.map((s) =>
+                                Text('• $s', style: theme.textTheme.bodySmall)),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
                 ),
         ),
       ),

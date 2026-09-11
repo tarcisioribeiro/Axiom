@@ -5,6 +5,7 @@ import '../../models/exercise_catalog.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showExerciseCatalogFormSheet(
   BuildContext context, {
@@ -117,26 +118,10 @@ class _ExerciseCatalogFormSheetState
                   labelText: 'Grupos musculares (opcional)',
                 ),
               ),
-              if (_error != null) ...[
-                SizedBox(height: AppSpacing.sm),
-                Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ],
-              SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _save,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Salvar'),
-                ),
+              FormSheetSubmitFooter(
+                error: _error,
+                isSaving: _isSaving,
+                onSubmit: _save,
               ),
               SizedBox(height: AppSpacing.sm),
             ],

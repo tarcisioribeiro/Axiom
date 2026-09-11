@@ -129,69 +129,85 @@ class _PayablesTab extends ConsumerWidget {
             final outstanding =
                 items.fold<double>(0, (s, p) => s + p.remainingValue);
             final overdue = items.where((p) => p.status == 'overdue').length;
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'Em aberto',
-                        value: AppFormatters.currency(outstanding),
-                        icon: Icons.trending_down_rounded,
-                        accent: StatAccent.destructive,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Em atraso',
-                        value: '$overdue',
-                        icon: Icons.schedule_outlined,
-                        accent: StatAccent.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
-                if (items.isEmpty)
-                  const EmptyState(
-                    icon: Icons.receipt_long_rounded,
-                    title: 'Nada a pagar registrado',
-                  )
-                else
-                  ...items.map(
-                    (p) => _DebtTile(
-                      title: p.description,
-                      subtitle:
-                          '${ChoiceLabels.of(ChoiceLabels.expenseCategories, p.category)}'
-                          '${p.dueDate == null ? '' : ' · vence ${AppFormatters.date(p.dueDate!)}'}',
-                      statusLabel: p.statusDisplay ??
-                          ChoiceLabels.of(
-                              ChoiceLabels.payableStatuses, p.status),
-                      total: p.value,
-                      settled: p.paidValue,
-                      remaining: p.remainingValue,
-                      progress: p.progress,
-                      settleLabel: 'Pagar',
-                      onSettle: p.remainingValue <= 0
-                          ? null
-                          : () => _pay(context, ref, p, accounts),
-                      onInstallments: p.installments <= 1
-                          ? null
-                          : () => showInstallmentsSheet(
-                                context,
-                                title: 'Parcelas — ${p.description}',
-                                load: () => ref
-                                    .read(payablesServiceProvider)
-                                    .installments(p.id),
-                              ),
-                      onEdit: () => showPayableFormSheet(context, existing: p),
-                      onDelete: () => _delete(context, ref, p),
-                      deleteMessage:
-                          'Excluir "${p.description}"? Essa ação não pode ser desfeita.',
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            title: 'Em aberto',
+                            value: AppFormatters.currency(outstanding),
+                            icon: Icons.trending_down_rounded,
+                            accent: StatAccent.destructive,
+                          ),
+                        ),
+                        SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: StatCard(
+                            title: 'Em atraso',
+                            value: '$overdue',
+                            icon: Icons.schedule_outlined,
+                            accent: StatAccent.warning,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                if (items.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'Nada a pagar registrado',
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverList.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final p = items[index];
+                        return _DebtTile(
+                          title: p.description,
+                          subtitle:
+                              '${ChoiceLabels.of(ChoiceLabels.expenseCategories, p.category)}'
+                              '${p.dueDate == null ? '' : ' · vence ${AppFormatters.date(p.dueDate!)}'}',
+                          statusLabel: p.statusDisplay ??
+                              ChoiceLabels.of(
+                                  ChoiceLabels.payableStatuses, p.status),
+                          total: p.value,
+                          settled: p.paidValue,
+                          remaining: p.remainingValue,
+                          progress: p.progress,
+                          settleLabel: 'Pagar',
+                          onSettle: p.remainingValue <= 0
+                              ? null
+                              : () => _pay(context, ref, p, accounts),
+                          onInstallments: p.installments <= 1
+                              ? null
+                              : () => showInstallmentsSheet(
+                                    context,
+                                    title: 'Parcelas — ${p.description}',
+                                    load: () => ref
+                                        .read(payablesServiceProvider)
+                                        .installments(p.id),
+                                  ),
+                          onEdit: () =>
+                              showPayableFormSheet(context, existing: p),
+                          onDelete: () => _delete(context, ref, p),
+                          deleteMessage:
+                              'Excluir "${p.description}"? Essa ação não pode ser desfeita.',
+                        );
+                      },
+                    ),
+                  ),
+                const SliverPadding(
+                    padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             );
           },
@@ -268,70 +284,85 @@ class _ReceivablesTab extends ConsumerWidget {
             final outstanding =
                 items.fold<double>(0, (s, r) => s + r.remainingValue);
             final overdue = items.where((r) => r.status == 'overdue').length;
-            return ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'A receber',
-                        value: AppFormatters.currency(outstanding),
-                        icon: Icons.trending_up_rounded,
-                        accent: StatAccent.success,
-                      ),
-                    ),
-                    SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: StatCard(
-                        title: 'Em atraso',
-                        value: '$overdue',
-                        icon: Icons.schedule_outlined,
-                        accent: StatAccent.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppSpacing.md),
-                if (items.isEmpty)
-                  const EmptyState(
-                    icon: Icons.receipt_long_rounded,
-                    title: 'Nada a receber registrado',
-                  )
-                else
-                  ...items.map(
-                    (r) => _DebtTile(
-                      title: r.description,
-                      subtitle:
-                          '${ChoiceLabels.of(ChoiceLabels.revenueCategories, r.category)}'
-                          '${r.dueDate == null ? '' : ' · vence ${AppFormatters.date(r.dueDate!)}'}',
-                      statusLabel: r.statusDisplay ??
-                          ChoiceLabels.of(
-                              ChoiceLabels.receivableStatuses, r.status),
-                      total: r.value,
-                      settled: r.receivedValue,
-                      remaining: r.remainingValue,
-                      progress: r.progress,
-                      settleLabel: 'Receber',
-                      onSettle: r.remainingValue <= 0
-                          ? null
-                          : () => _receive(context, ref, r, accounts),
-                      onInstallments: r.dueDate == null
-                          ? null
-                          : () => showInstallmentsSheet(
-                                context,
-                                title: 'Parcelas — ${r.description}',
-                                load: () => ref
-                                    .read(receivablesServiceProvider)
-                                    .installments(r.id),
-                              ),
-                      onEdit: () =>
-                          showReceivableFormSheet(context, existing: r),
-                      onDelete: () => _delete(context, ref, r),
-                      deleteMessage:
-                          'Excluir "${r.description}"? Essa ação não pode ser desfeita.',
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: StatCard(
+                            title: 'A receber',
+                            value: AppFormatters.currency(outstanding),
+                            icon: Icons.trending_up_rounded,
+                            accent: StatAccent.success,
+                          ),
+                        ),
+                        SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: StatCard(
+                            title: 'Em atraso',
+                            value: '$overdue',
+                            icon: Icons.schedule_outlined,
+                            accent: StatAccent.warning,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                if (items.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'Nada a receber registrado',
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    sliver: SliverList.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final r = items[index];
+                        return _DebtTile(
+                          title: r.description,
+                          subtitle:
+                              '${ChoiceLabels.of(ChoiceLabels.revenueCategories, r.category)}'
+                              '${r.dueDate == null ? '' : ' · vence ${AppFormatters.date(r.dueDate!)}'}',
+                          statusLabel: r.statusDisplay ??
+                              ChoiceLabels.of(
+                                  ChoiceLabels.receivableStatuses, r.status),
+                          total: r.value,
+                          settled: r.receivedValue,
+                          remaining: r.remainingValue,
+                          progress: r.progress,
+                          settleLabel: 'Receber',
+                          onSettle: r.remainingValue <= 0
+                              ? null
+                              : () => _receive(context, ref, r, accounts),
+                          onInstallments: r.dueDate == null
+                              ? null
+                              : () => showInstallmentsSheet(
+                                    context,
+                                    title: 'Parcelas — ${r.description}',
+                                    load: () => ref
+                                        .read(receivablesServiceProvider)
+                                        .installments(r.id),
+                                  ),
+                          onEdit: () =>
+                              showReceivableFormSheet(context, existing: r),
+                          onDelete: () => _delete(context, ref, r),
+                          deleteMessage:
+                              'Excluir "${r.description}"? Essa ação não pode ser desfeita.',
+                        );
+                      },
+                    ),
+                  ),
+                const SliverPadding(
+                    padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             );
           },

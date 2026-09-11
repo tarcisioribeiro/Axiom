@@ -4,6 +4,7 @@ import '../../models/account.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/form_sheet_submit_footer.dart';
 
 /// Shared bottom sheet for "record a payment" (payables) and "record a
 /// receipt" (receivables) — both take the same `{value, account, date,
@@ -147,7 +148,7 @@ class _SettleFormSheetState extends State<_SettleFormSheet> {
               ),
               SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<int>(
-                value: _accountId,
+                initialValue: _accountId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Conta'),
                 items: widget.accounts
@@ -173,25 +174,11 @@ class _SettleFormSheetState extends State<_SettleFormSheet> {
                 ),
                 maxLines: 2,
               ),
-              if (_error != null) ...[
-                SizedBox(height: AppSpacing.sm),
-                Text(_error!,
-                    style:
-                        TextStyle(color: Theme.of(context).colorScheme.error)),
-              ],
-              SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSaving ? null : _save,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(widget.actionLabel),
-                ),
+              FormSheetSubmitFooter(
+                error: _error,
+                isSaving: _isSaving,
+                onSubmit: _save,
+                label: widget.actionLabel,
               ),
               SizedBox(height: AppSpacing.sm),
             ],

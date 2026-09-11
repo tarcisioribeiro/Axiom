@@ -331,45 +331,45 @@ class _EnvironmentSheet extends StatelessWidget {
               right: 16,
               bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ambiente da API',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                RadioListTile<ApiEnvironmentType>(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Desenvolvimento (Docker local)'),
-                  value: ApiEnvironmentType.development,
-                  groupValue: controller.type,
-                  onChanged: (value) => controller.setType(value!),
-                ),
-                if (controller.type == ApiEnvironmentType.development)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, bottom: 8),
-                    child: TextField(
-                      controller: devUrlController,
-                      decoration: InputDecoration(
-                        labelText: 'URL da API local',
-                        hintText: 'http://$kDevMachineLanIPv4:39100',
-                      ),
-                      onSubmitted: controller.setDevBaseUrl,
-                      onEditingComplete: () => controller
-                          .setDevBaseUrl(devUrlController.text.trim()),
-                    ),
+            child: RadioGroup<ApiEnvironmentType>(
+              groupValue: controller.type,
+              onChanged: (value) => controller.setType(value!),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ambiente da API',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                RadioListTile<ApiEnvironmentType>(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Produção (VPS)'),
-                  subtitle: Text(kProductionBaseUrl),
-                  value: ApiEnvironmentType.production,
-                  groupValue: controller.type,
-                  onChanged: (value) => controller.setType(value!),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  RadioListTile<ApiEnvironmentType>(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Desenvolvimento (Docker local)'),
+                    value: ApiEnvironmentType.development,
+                  ),
+                  if (controller.type == ApiEnvironmentType.development)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, bottom: 8),
+                      child: TextField(
+                        controller: devUrlController,
+                        decoration: InputDecoration(
+                          labelText: 'URL da API local',
+                          hintText: 'http://$kDevMachineLanIPv4:39100',
+                        ),
+                        onSubmitted: controller.setDevBaseUrl,
+                        onEditingComplete: () => controller
+                            .setDevBaseUrl(devUrlController.text.trim()),
+                      ),
+                    ),
+                  RadioListTile<ApiEnvironmentType>(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Produção (VPS)'),
+                    subtitle: Text(kProductionBaseUrl),
+                    value: ApiEnvironmentType.production,
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -13,6 +13,10 @@ class RoutineTask {
   final int? weekday;
   final String priority;
   final bool isActive;
+
+  /// Optional habits don't block the day from completing and don't break
+  /// the streak (evaluated server-side in the dashboard endpoint).
+  final bool isOptional;
   final double completionRate;
 
   const RoutineTask({
@@ -24,6 +28,7 @@ class RoutineTask {
     required this.priority,
     required this.isActive,
     required this.completionRate,
+    this.isOptional = false,
     this.description,
     this.weekday,
   });
@@ -38,6 +43,7 @@ class RoutineTask {
         weekday: json['weekday'] as int?,
         priority: json['priority'] as String? ?? 'medium',
         isActive: json['is_active'] as bool? ?? true,
+        isOptional: json['is_optional'] as bool? ?? false,
         completionRate: (json['completion_rate'] as num?)?.toDouble() ?? 0,
       );
 
@@ -49,5 +55,6 @@ class RoutineTask {
         if (periodicity == 'weekly' && weekday != null) 'weekday': weekday,
         'priority': priority,
         'is_active': isActive,
+        'is_optional': isOptional,
       };
 }

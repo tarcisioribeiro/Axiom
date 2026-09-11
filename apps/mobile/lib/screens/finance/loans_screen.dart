@@ -125,62 +125,82 @@ class LoansScreen extends ConsumerWidget {
                   .where((l) => l.loanType == 'borrowed')
                   .fold<double>(0, (s, l) => s + l.remainingBalance);
 
-              return ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                children: [
-                  AppPageHeader(
-                    title: 'Empréstimos',
-                    icon: Icons.handshake_outlined,
-                    color: context.semanticColors.success,
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          title: 'A receber',
-                          value: AppFormatters.currency(lentOut),
-                          icon: Icons.trending_up_rounded,
-                          accent: StatAccent.success,
-                        ),
-                      ),
-                      SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: StatCard(
-                          title: 'A pagar',
-                          value: AppFormatters.currency(borrowedOut),
-                          icon: Icons.trending_down_rounded,
-                          accent: StatAccent.destructive,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: AppSpacing.md),
-                  if (loans.isEmpty)
-                    const EmptyState(
-                      icon: Icons.handshake_outlined,
-                      title: 'Nenhum empréstimo registrado',
-                    )
-                  else
-                    ...loans.map(
-                      (loan) => _LoanTile(
-                        loan: loan,
-                        onSettle: loan.remainingBalance <= 0
-                            ? null
-                            : () => _settle(context, ref, loan, accounts),
-                        onInstallments: loan.installments <= 1
-                            ? null
-                            : () => showInstallmentsSheet(
-                                  context,
-                                  title: 'Parcelas — ${loan.description}',
-                                  load: () => ref
-                                      .read(loansServiceProvider)
-                                      .installments(loan.id),
+              return CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          AppPageHeader(
+                            title: 'Empréstimos',
+                            icon: Icons.handshake_outlined,
+                            color: context.semanticColors.success,
+                          ),
+                          SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: StatCard(
+                                  title: 'A receber',
+                                  value: AppFormatters.currency(lentOut),
+                                  icon: Icons.trending_up_rounded,
+                                  accent: StatAccent.success,
                                 ),
-                        onEdit: () => _openForm(context, ref, existing: loan),
-                        onDelete: () => _delete(context, ref, loan),
+                              ),
+                              SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: StatCard(
+                                  title: 'A pagar',
+                                  value: AppFormatters.currency(borrowedOut),
+                                  icon: Icons.trending_down_rounded,
+                                  accent: StatAccent.destructive,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+                  ),
+                  if (loans.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: EmptyState(
+                        icon: Icons.handshake_outlined,
+                        title: 'Nenhum empréstimo registrado',
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      sliver: SliverList.builder(
+                        itemCount: loans.length,
+                        itemBuilder: (context, index) {
+                          final loan = loans[index];
+                          return _LoanTile(
+                            loan: loan,
+                            onSettle: loan.remainingBalance <= 0
+                                ? null
+                                : () => _settle(context, ref, loan, accounts),
+                            onInstallments: loan.installments <= 1
+                                ? null
+                                : () => showInstallmentsSheet(
+                                      context,
+                                      title: 'Parcelas — ${loan.description}',
+                                      load: () => ref
+                                          .read(loansServiceProvider)
+                                          .installments(loan.id),
+                                    ),
+                            onEdit: () =>
+                                _openForm(context, ref, existing: loan),
+                            onDelete: () => _delete(context, ref, loan),
+                          );
+                        },
+                      ),
+                    ),
+                  const SliverPadding(
+                      padding: EdgeInsets.only(bottom: AppSpacing.md)),
                 ],
               );
             },

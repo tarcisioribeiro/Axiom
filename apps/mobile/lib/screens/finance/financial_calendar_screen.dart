@@ -172,6 +172,7 @@ class _FinancialCalendarScreenState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
+                    tooltip: 'Mês anterior',
                     onPressed: () => _shiftMonth(-1),
                     icon: const Icon(Icons.chevron_left_rounded),
                   ),
@@ -180,6 +181,7 @@ class _FinancialCalendarScreenState
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   IconButton(
+                    tooltip: 'Próximo mês',
                     onPressed: () => _shiftMonth(1),
                     icon: const Icon(Icons.chevron_right_rounded),
                   ),

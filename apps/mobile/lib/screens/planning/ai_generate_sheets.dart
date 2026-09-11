@@ -98,7 +98,7 @@ class _AiWorkoutSheetState extends ConsumerState<_AiWorkoutSheet> {
         ),
         SizedBox(height: AppSpacing.sm),
         DropdownButtonFormField<String>(
-          value: _level,
+          initialValue: _level,
           decoration: const InputDecoration(labelText: 'Nível'),
           items: const [
             DropdownMenuItem(value: 'iniciante', child: Text('Iniciante')),
@@ -317,11 +317,13 @@ class _DaysStepper extends StatelessWidget {
       children: [
         Expanded(child: Text(label)),
         IconButton(
+          tooltip: 'Diminuir',
           onPressed: value > min ? () => onChanged(value - 1) : null,
           icon: const Icon(Icons.remove_circle_outline),
         ),
         Text('$value', style: Theme.of(context).textTheme.titleMedium),
         IconButton(
+          tooltip: 'Aumentar',
           onPressed: value < max ? () => onChanged(value + 1) : null,
           icon: const Icon(Icons.add_circle_outline),
         ),

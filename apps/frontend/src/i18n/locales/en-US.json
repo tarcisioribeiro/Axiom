@@ -3997,6 +3997,10 @@
         "allowedSkipsHint": "How many skips are allowed per month without breaking the streak",
         "advancedSettings": "Advanced settings",
         "isActiveLabel": "Active Task",
+        "isOptionalLabel": "Requirement",
+        "isOptionalHint": "Optional tasks don't block the day from completing and don't break the streak",
+        "isOptionalRequired": "Required",
+        "isOptionalOptional": "Optional",
         "linkedFinancialGoalLabel": "Linked Financial Goal",
         "linkedFinancialGoalPlaceholder": "Select a financial goal (optional)",
         "linkedFinancialGoalHint": "Link this routine to a financial goal it feeds into",
@@ -4180,6 +4184,7 @@
     },
     "dailyChecklist": {
       "title": "Daily Checklist",
+      "optionalBadge": "Optional",
       "datePlaceholder": "Select a date",
       "syncBtn": "Sync tasks with current data",
       "addReflection": "Add daily reflection",

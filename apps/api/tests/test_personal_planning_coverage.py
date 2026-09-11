@@ -249,6 +249,67 @@ class DashboardStatsStreakTest(BasePlanningCoverageTestCase):
         self.assertEqual(response.data["total_tasks"], 0)
         self.assertEqual(response.data["best_streak"], 0)
 
+    def test_optional_task_does_not_block_streak(self):
+        required = RoutineTask.objects.create(
+            name="Obrigatória",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+        )
+        optional = RoutineTask.objects.create(
+            name="Opcional",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+            is_optional=True,
+        )
+        today = date.today()
+        for i in range(3):
+            TaskInstance.objects.create(
+                owner=self.member,
+                template=required,
+                task_name=required.name,
+                scheduled_date=today - timedelta(days=i),
+                status="completed",
+            )
+            # Opcional pendente todos os dias — não deve quebrar o streak
+            TaskInstance.objects.create(
+                owner=self.member,
+                template=optional,
+                task_name=optional.name,
+                scheduled_date=today - timedelta(days=i),
+                status="pending",
+                is_optional=True,
+            )
+        url = reverse("personal-planning-dashboard-stats")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(response.data["current_streak"], 3)
+        self.assertGreaterEqual(response.data["best_streak"], 3)
+
+    def test_day_with_only_optional_tasks_is_neutral(self):
+        optional = RoutineTask.objects.create(
+            name="Só Opcional",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+            is_optional=True,
+        )
+        today = date.today()
+        TaskInstance.objects.create(
+            owner=self.member,
+            template=optional,
+            task_name=optional.name,
+            scheduled_date=today,
+            status="pending",
+            is_optional=True,
+        )
+        url = reverse("personal-planning-dashboard-stats")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Nenhuma tarefa obrigatória => dia neutro, streak não quebra nem conta
+        self.assertEqual(response.data["current_streak"], 0)
+
 
 # ============================================================================
 # TASK INSTANCE LIST FILTERS / BULK UPDATE / STATUS UPDATE
