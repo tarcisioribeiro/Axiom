@@ -238,7 +238,7 @@ class Vault(BaseModel):
         )
 
         if revenue is None:
-            revenue = Revenue.objects.create(
+            revenue = Revenue(
                 description=(
                     f"Rendimento — {self.description} "
                     f"({month_start.strftime('%m/%Y')})"
@@ -257,10 +257,16 @@ class Vault(BaseModel):
                     "Receita gerada automaticamente pelo rendimento do cofre."
                 ),
             )
+            # Esta escrita já está sincronizada com accumulated_yield pelo
+            # próprio fluxo interno do cofre — não precisa do signal que
+            # resincroniza edições externas (ver vaults/signals.py).
+            revenue._skip_vault_yield_sync = True
+            revenue.save()
         else:
             revenue.value += yield_value
             revenue.net_amount = None  # recalculado no save()
             revenue.updated_by = user or self.created_by
+            revenue._skip_vault_yield_sync = True
             revenue.save()
 
         return revenue
@@ -515,6 +521,7 @@ class Vault(BaseModel):
             else:
                 revenue.net_amount = None
                 revenue.updated_by = user or self.created_by
+            revenue._skip_vault_yield_sync = True
             revenue.save()
 
         if recalc:
@@ -548,6 +555,46 @@ class Vault(BaseModel):
             self._materialize_yield_revenue(diff, timezone.now().date(), user)
         elif diff < 0:
             self._reduce_yield_revenues(-diff, user, recalc=False)
+
+        return diff
+
+    def resync_accumulated_yield_from_ledger(self, user=None):
+        """
+        Recalcula accumulated_yield e current_balance a partir da soma real
+        das receitas de rendimento (``Revenue`` categoria ``income``)
+        vinculadas a este cofre.
+
+        Direção oposta a ``_reconcile_yield_invariant``: aqui a receita é a
+        fonte da verdade. Usado pelo signal em ``vaults/signals.py`` quando
+        uma receita de rendimento é editada/excluída fora do fluxo interno
+        do cofre (API, admin, shell) — para que accumulated_yield nunca
+        fique parado num valor antigo depois de uma edição manual.
+        """
+        from django.db.models import Sum
+
+        from revenues.models import Revenue
+
+        total_income = Revenue.objects.filter(
+            related_vault=self,
+            account=self.account,
+            category="income",
+            is_deleted=False,
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+
+        diff = total_income - self.accumulated_yield
+        if diff == 0:
+            return diff
+
+        self.accumulated_yield = total_income
+        self.current_balance = max(
+            self.current_balance + diff, Decimal("0.00")
+        )
+        self.updated_by = user or self.updated_by
+        self.save()
+
+        from accounts.services import recalculate_account_balance
+
+        recalculate_account_balance(self.account_id)
 
         return diff
 
