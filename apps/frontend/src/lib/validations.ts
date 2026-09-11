@@ -180,12 +180,14 @@ export const expenseSchema = z
     fixed_expense_template: z.number().int().positive().optional().nullable(),
   })
   .refine(
-    (data) =>
-      [data.related_loan, data.related_payable, data.fixed_expense_template].filter(
-        Boolean
-      ).length <= 1,
+    // `fixed_expense_template` fica fora desta checagem: uma despesa gerada
+    // a partir de uma despesa fixa vinculada a um empréstimo/conta a pagar
+    // sempre carrega o template junto com related_loan/related_payable
+    // (herdado do template) — isso é esperado, não um vínculo duplo. O que
+    // não pode coexistir é related_loan e related_payable ao mesmo tempo.
+    (data) => [data.related_loan, data.related_payable].filter(Boolean).length <= 1,
     {
-      message: 'Só é possível vincular a um empréstimo, conta a pagar ou despesa fixa.',
+      message: 'Só é possível vincular a um empréstimo ou a uma conta a pagar.',
       path: ['related_loan'],
     }
   );
