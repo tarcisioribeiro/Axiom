@@ -204,7 +204,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           placeholder={t('pages.expenses.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
-          className="w-44 flex-none"
+          className="w-44"
         />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger

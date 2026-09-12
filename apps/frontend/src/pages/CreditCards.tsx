@@ -915,7 +915,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
           </DialogHeader>
           <CreditCardBillForm
             bill={selectedBill}
-            creditCards={creditCards}
+            creditCards={billsCard ? [billsCard] : creditCards}
             onSubmit={handleBillSubmit}
             onCancel={() => setIsBillFormOpen(false)}
             isLoading={isBillSubmitting}

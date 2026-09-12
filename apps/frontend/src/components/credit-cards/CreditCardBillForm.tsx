@@ -302,43 +302,45 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       <FormSection title={t('pages.creditCardBills.form.sectionBasic')}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
-            <Select
-              value={watchedCreditCard > 0 ? watchedCreditCard.toString() : ''}
-              onValueChange={(v) => setValue('credit_card', parseInt(v))}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.creditCardBills.form.creditCardPlaceholder')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {creditCards.map((c) => {
-                  // Extrai apenas os dígitos do número mascarado
-                  const digitsOnly = c.card_number_masked
-                    ? c.card_number_masked.replace(/[^\d]/g, '')
-                    : '';
-                  const last4 =
-                    digitsOnly && digitsOnly.length >= 4
-                      ? digitsOnly.slice(-4)
-                      : '****';
-                  const brandName =
-                    TRANSLATIONS.cardBrands[
-                      c.flag as keyof typeof TRANSLATIONS.cardBrands
-                    ] || c.flag;
-                  const accountName =
-                    c.associated_account_name ||
-                    t('components.creditCards.accountNotProvided');
-                  return (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.on_card_name} ****{last4} - {brandName} - {accountName}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+          {creditCards.length > 1 && (
+            <div className="space-y-sm md:col-span-2">
+              <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
+              <Select
+                value={watchedCreditCard > 0 ? watchedCreditCard.toString() : ''}
+                onValueChange={(v) => setValue('credit_card', parseInt(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={t('pages.creditCardBills.form.creditCardPlaceholder')}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {creditCards.map((c) => {
+                    // Extrai apenas os dígitos do número mascarado
+                    const digitsOnly = c.card_number_masked
+                      ? c.card_number_masked.replace(/[^\d]/g, '')
+                      : '';
+                    const last4 =
+                      digitsOnly && digitsOnly.length >= 4
+                        ? digitsOnly.slice(-4)
+                        : '****';
+                    const brandName =
+                      TRANSLATIONS.cardBrands[
+                        c.flag as keyof typeof TRANSLATIONS.cardBrands
+                      ] || c.flag;
+                    const accountName =
+                      c.associated_account_name ||
+                      t('components.creditCards.accountNotProvided');
+                    return (
+                      <SelectItem key={c.id} value={c.id.toString()}>
+                        {c.on_card_name} ****{last4} - {brandName} - {accountName}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-sm">
             <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
