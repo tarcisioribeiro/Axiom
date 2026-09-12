@@ -250,7 +250,10 @@ export default function CreditCardExpenses({
         (b) => b.id.toString() === billFilter
       );
       if (!currentBillValid) {
-        setBillFilter('all');
+        // availableBills já vem ordenada com faturas abertas primeiro, então o
+        // primeiro item é a fatura em aberto mais antiga (ou a mais recente
+        // fechada/paga, se não houver nenhuma aberta).
+        setBillFilter(availableBills[0] ? availableBills[0].id.toString() : 'all');
       }
     }
   }

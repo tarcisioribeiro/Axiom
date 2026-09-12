@@ -36,7 +36,25 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <span className="text-xs font-medium">{t('common.actions.filter')}</span>
         </div>
         <div className="bg-border h-4 w-px shrink-0" />
-        <div className="gap-sm flex flex-1 flex-wrap items-center">{children}</div>
+        <div className="gap-sm flex flex-1 flex-wrap items-center">
+          {React.Children.map(children, (child) => {
+            // Botões de ação (ex: "Favoritos") mantêm o tamanho natural;
+            // os demais campos (busca, selects, date range) esticam para
+            // ocupar o espaço horizontal disponível em vez de ficarem
+            // espremidos à esquerda. A regra `[&>*]` aplica flex-1 no
+            // elemento renderizado de fato, o que sobrepõe qualquer largura
+            // fixa (w-40, w-52...) que a página tenha passado, já que
+            // flex-basis tem prioridade sobre width no eixo principal.
+            if (!React.isValidElement(child) || child.type === Button) {
+              return child;
+            }
+            return (
+              <div className="flex min-w-[9rem] flex-1 [&>*]:min-w-0 [&>*]:flex-1">
+                {child}
+              </div>
+            );
+          })}
+        </div>
         {hasActiveFilters && onClear && (
           <Button
             variant="ghost"
