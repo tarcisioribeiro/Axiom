@@ -5,7 +5,7 @@
 # Substitui: banco PostgreSQL + arquivos MinIO
 # Fonte    : arquivo gerado pelo k8s-backup.sh
 #
-# Dependências: docker (MinIO Client executado via imagem minio/mc)
+# Dependências: docker (MinIO Client executado via imagem quay.io/minio/mc)
 # Uso: ./infra/scripts/docker-restore.sh <backup.tar.gz>
 #      ./infra/scripts/docker-restore.sh <diretório_backup>
 # =============================================================================
@@ -45,7 +45,7 @@ mc_cmd() {
     docker run --rm \
         --network host \
         -v "${MC_CONFIG_DIR}:/root/.mc" \
-        minio/mc "$@"
+        quay.io/minio/mc "$@"
 }
 
 mc_mirror() {
@@ -54,7 +54,7 @@ mc_mirror() {
         --network host \
         -v "${MC_CONFIG_DIR}:/root/.mc" \
         -v "${src_dir}:/mnt/backup:ro" \
-        minio/mc "$@"
+        quay.io/minio/mc "$@"
 }
 
 # ── Argumento obrigatório ─────────────────────────────────────────────────────

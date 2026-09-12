@@ -1158,35 +1158,60 @@ test:backup-restore:
     DJANGO_SETTINGS_MODULE: "app.settings"
     BACKUP_DIR: "/tmp/ci-backups"
     MIN_TABLE_COUNT: "20"
-    MINIO_ALIAS: "staging-minio"
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
   before_script:
     - *python_before_script
-    - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
-    - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+    - apt-get update -qq && apt-get install -y -qq openssl postgresql-client && rm -rf /var/lib/apt/lists/*
     - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
     - until pg_isready -h postgres -p 5432; do sleep 1; done
     - mkdir -p "$BACKUP_DIR"
     - |
       # STAGING_MINIO_ENDPOINT is a bare host:port (same convention as
-      # apps/api/app/settings.py) — mc requires a scheme, so add one if
+      # apps/api/app/settings.py) — boto3 requires a scheme, so add one if
       # missing rather than assuming the variable already has it (see
       # incident #18382: this exact gap made backup:staging fail silently).
+      #
+      # NOTE: this used to shell out to the `mc` CLI, downloaded from
+      # dl.min.io. MinIO discontinued that binary distribution (the whole
+      # release path now returns 410 Gone), so we talk to MinIO's S3-compatible
+      # API directly via boto3 instead, already a pinned dependency in
+      # requirements.txt and installed above — no new tooling needed.
       MC_ENDPOINT="$STAGING_MINIO_ENDPOINT"
       case "$MC_ENDPOINT" in
         http://*|https://*) ;;
         *) MC_ENDPOINT="http://${MC_ENDPOINT}" ;;
       esac
-      mc alias set "$MINIO_ALIAS" "$MC_ENDPOINT" \
-        "$STAGING_MINIO_BACKUP_ACCESS_KEY" "$STAGING_MINIO_BACKUP_SECRET_KEY"
-    - |
-      LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/" --json \
-        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".sql.gz.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
-      mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-axiom-backups-staging}/db/${LATEST_FILE}" \
-        "${BACKUP_DIR}/${LATEST_FILE}"
-      echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
-      echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
+      export MC_ENDPOINT
+      export STAGING_MINIO_BUCKET="${STAGING_MINIO_BUCKET:-axiom-backups-staging}"
+      python3 - <<'PYEOF'
+      import os
+      import boto3
+
+      s3 = boto3.client(
+          "s3",
+          endpoint_url=os.environ["MC_ENDPOINT"],
+          aws_access_key_id=os.environ["STAGING_MINIO_BACKUP_ACCESS_KEY"],
+          aws_secret_access_key=os.environ["STAGING_MINIO_BACKUP_SECRET_KEY"],
+      )
+      bucket = os.environ["STAGING_MINIO_BUCKET"]
+      objects = [
+          o
+          for o in s3.list_objects_v2(Bucket=bucket, Prefix="db/").get("Contents", [])
+          if o["Key"].endswith(".sql.gz.enc")
+      ]
+      if not objects:
+          raise SystemExit(f"no .sql.gz.enc backups found in {bucket}/db/")
+      latest_key = max(objects, key=lambda o: o["LastModified"])["Key"]
+      filename = latest_key.rsplit("/", 1)[-1]
+      backup_dir = os.environ["BACKUP_DIR"]
+      dest = os.path.join(backup_dir, filename)
+      s3.download_file(bucket, latest_key, dest)
+      with open(os.path.join(backup_dir, ".ci_latest"), "w") as f:
+          f.write(filename)
+      size_mb = os.path.getsize(dest) / (1024 * 1024)
+      print(f"Downloaded: {filename} ({size_mb:.1f}M)")
+      PYEOF
   script:
     - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
     - chmod +x apps/api/scripts/verify-backup.sh

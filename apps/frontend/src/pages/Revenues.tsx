@@ -198,7 +198,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           placeholder={t('pages.revenues.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
-          className="w-44 flex-none"
+          className="w-44"
         />
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-40" startIcon={<Tag className="h-3.5 w-3.5" />}>
