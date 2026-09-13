@@ -535,49 +535,60 @@ build:api:
       - api-sbom.spdx.json
     expire_in: 90 days
 
-build:frontend:
-  extends: .build_base
+# Builds the Vite production bundle as a plain node job so it reuses the same
+# node_modules cache as lint:frontend/test:frontend (GitLab job cache, persists
+# across pipelines) instead of the DinD-scoped BuildKit cache mount, which is
+# recreated from scratch on every job and therefore never actually cached
+# npm ci/build. This is what used to dominate the ~15min build:frontend time.
+build:frontend:assets:
+  extends: .node_base
+  stage: build
   needs:
     - job: test:backend
       optional: true
     - job: test:frontend
       optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
   script:
-    # On main: always rebuild (VITE_APP_ENV is baked into the JS bundle, so the
-    # staging image from develop can't be re-tagged for production), but still
-    # pass --cache-from against the previous main image (built with
-    # BUILDKIT_INLINE_CACHE=1) — same VITE_APP_ENV value each time, so the
-    # npm ci layer is reusable even though the app-code layers aren't.
+    # VITE_APP_ENV is baked into the JS bundle at build time, so main/develop
+    # need separate builds (production vs staging) — can't share one dist/.
+    - export VITE_APP_ENV=$([ "$CI_COMMIT_BRANCH" = "main" ] && echo production || echo staging)
+    - npm run build
+  artifacts:
+    paths:
+      - apps/frontend/dist/
+    expire_in: 1 hour
+
+build:frontend:
+  extends: .build_base
+  needs:
+    - job: build:frontend:assets
+      artifacts: true
+    - job: test:backend
+      optional: true
+    - job: test:frontend
+      optional: true
+  script:
     - |
+      docker build --network=host \
+        -f ./apps/frontend/Dockerfile.ci \
+        --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
+      docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+      if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"
+        docker push "$FRONTEND_IMAGE:develop"
+      fi
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        echo "main: building production image with VITE_APP_ENV=production"
-        docker pull "$FRONTEND_IMAGE:main" 2>/dev/null || true
-        docker build --network=host \
-          --build-arg VITE_APP_ENV=production \
-          --build-arg BUILDKIT_INLINE_CACHE=1 \
-          --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
-          --cache-from "$FRONTEND_IMAGE:main" \
-          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         docker push "$FRONTEND_IMAGE:main"
-      else
-        docker pull "$FRONTEND_IMAGE:develop" 2>/dev/null || true
-        docker build --network=host \
-          --build-arg VITE_APP_ENV=staging \
-          --build-arg BUILDKIT_INLINE_CACHE=1 \
-          --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
-          --cache-from "$FRONTEND_IMAGE:develop" \
-          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-        if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
-          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"
-          docker push "$FRONTEND_IMAGE:develop"
-        fi
-        if [ -n "${CI_COMMIT_TAG:-}" ]; then
-          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-          docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-        fi
+      fi
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────

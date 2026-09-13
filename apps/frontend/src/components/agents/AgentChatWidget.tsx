@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agent-service';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 const WIDGET_SESSION_KEY = 'agent-widget-session';
 
@@ -40,6 +41,7 @@ export function AgentChatWidget() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { isStreaming, accumulatedText, send, cancel, reset } = useAgentStream();
+  const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
 
   const suggestedQuestions = i18n.language.startsWith('pt')
     ? SUGGESTED_QUESTIONS_PT
@@ -106,6 +108,12 @@ export function AgentChatWidget() {
       <motion.button
         aria-label={t('agentWidget.openLabel')}
         onClick={() => setOpen((v) => !v)}
+        animate={
+          hiddenByNav && !open
+            ? { opacity: 0, scale: 0.6, y: 16 }
+            : { opacity: 1, scale: 1, y: 0 }
+        }
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
@@ -115,7 +123,10 @@ export function AgentChatWidget() {
           'right-lg fixed bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-colors',
           open
             ? 'bg-muted text-muted-foreground ring-border ring-2'
-            : 'bg-category-finance hover:bg-category-finance/90 text-white dark:text-black'
+            : 'bg-category-finance hover:bg-category-finance/90 text-white dark:text-black',
+          // Fica fora do caminho quando o mouse está sobre a navegação de
+          // páginas (evita sobrepor os botões Anterior/Próximo do DataTable).
+          hiddenByNav && !open && 'pointer-events-none'
         )}
       >
         <AnimatePresence mode="wait" initial={false}>

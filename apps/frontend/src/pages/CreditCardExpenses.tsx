@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
 import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
 import { ReceiptButton } from '@/components/receipts';
@@ -71,6 +72,21 @@ const EMPTY_INSTALLMENTS: CreditCardInstallment[] = [];
 const EMPTY_CARDS: CreditCard[] = [];
 const EMPTY_BILLS: CreditCardBill[] = [];
 
+const isBillOpen = (bill: CreditCardBill) =>
+  bill.status !== 'paid' && bill.status !== 'closed';
+
+// Faturas abertas primeiro (mais recente para a mais antiga), depois as
+// fechadas/pagas (também da mais recente para a mais antiga).
+const compareBillsOpenFirst = (a: CreditCardBill, b: CreditCardBill) => {
+  const aOpen = isBillOpen(a);
+  const bOpen = isBillOpen(b);
+  if (aOpen !== bOpen) return aOpen ? -1 : 1;
+  return (
+    new Date(b.invoice_beginning_date).getTime() -
+    new Date(a.invoice_beginning_date).getTime()
+  );
+};
+
 function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
   return embedded ? (
     <div className="space-y-lg">{children}</div>
@@ -109,22 +125,6 @@ export default function CreditCardExpenses({
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
   const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
-
-  // Mapeamento de abreviações de mês para número
-  const MONTH_TO_NUMBER: Record<string, number> = {
-    Jan: 1,
-    Feb: 2,
-    Mar: 3,
-    Apr: 4,
-    May: 5,
-    Jun: 6,
-    Jul: 7,
-    Aug: 8,
-    Sep: 9,
-    Oct: 10,
-    Nov: 11,
-    Dec: 12,
-  };
 
   const { data: pageData, isLoading } = useQuery({
     queryKey: ['credit-card-expenses'],
@@ -174,32 +174,14 @@ export default function CreditCardExpenses({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, creditCards]);
 
-  // Faturas filtradas pelo cartão selecionado e ordenadas (abertas primeiro em ordem crescente, depois fechadas/pagas em ordem crescente)
+  // Faturas filtradas pelo cartão selecionado e ordenadas (abertas primeiro,
+  // da mais recente para a mais antiga, depois fechadas/pagas na mesma ordem)
   const availableBills = useMemo(() => {
     const filtered =
       cardFilter === 'all'
         ? [...bills]
         : bills.filter((b) => b.credit_card.toString() === cardFilter);
-
-    // Sort: open bills first (ascending by date), then closed/paid bills (ascending by date)
-    return filtered.sort((a, b) => {
-      const aMonth = MONTH_TO_NUMBER[a.month] || 1;
-      const bMonth = MONTH_TO_NUMBER[b.month] || 1;
-
-      // Check if bill is open (not paid and not closed)
-      const aIsOpen = a.status !== 'paid' && a.status !== 'closed';
-      const bIsOpen = b.status !== 'paid' && b.status !== 'closed';
-
-      // Open bills before closed/paid ones
-      if (aIsOpen && !bIsOpen) return -1;
-      if (!aIsOpen && bIsOpen) return 1;
-
-      // Within same group, sort by date ascending (oldest to newest)
-      const aDate = new Date(parseInt(a.year), aMonth - 1);
-      const bDate = new Date(parseInt(b.year), bMonth - 1);
-      return aDate.getTime() - bDate.getTime();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return filtered.sort(compareBillsOpenFirst);
   }, [cardFilter, bills]);
 
   // Seleciona automaticamente o primeiro cartão e sua primeira fatura aberta
@@ -213,46 +195,24 @@ export default function CreditCardExpenses({
     const firstCardBills = bills.filter(
       (b) => b.credit_card.toString() === firstCardId
     );
-    const sortedBills = [...firstCardBills].sort((a, b) => {
-      const aMonth = MONTH_TO_NUMBER[a.month] || 1;
-      const bMonth = MONTH_TO_NUMBER[b.month] || 1;
-      const aIsOpen = a.status !== 'paid' && a.status !== 'closed';
-      const bIsOpen = b.status !== 'paid' && b.status !== 'closed';
-      if (aIsOpen && !bIsOpen) return -1;
-      if (!aIsOpen && bIsOpen) return 1;
-      const aDate = new Date(parseInt(a.year), aMonth - 1);
-      const bDate = new Date(parseInt(b.year), bMonth - 1);
-      return aDate.getTime() - bDate.getTime();
-    });
-    const firstOpenBill = sortedBills.find(
-      (b) => b.status !== 'paid' && b.status !== 'closed'
-    );
-    if (firstOpenBill) {
-      setBillFilter(firstOpenBill.id.toString());
-    } else if (sortedBills.length > 0) {
-      setBillFilter(sortedBills[0].id.toString());
-    }
+    const sortedBills = [...firstCardBills].sort(compareBillsOpenFirst);
+    setBillFilter(sortedBills[0] ? sortedBills[0].id.toString() : 'all');
   }
 
-  // Reseta o filtro de fatura quando o cartão muda e a fatura selecionada
-  // deixa de pertencer a ele (derivado durante o render).
-  const [lastBillResetKey, setLastBillResetKey] = useState<{
-    cardFilter: string;
-    availableBills: CreditCardBill[];
-  } | null>(null);
-  if (
-    lastBillResetKey?.cardFilter !== cardFilter ||
-    lastBillResetKey.availableBills !== availableBills
-  ) {
-    setLastBillResetKey({ cardFilter, availableBills });
+  // Reseta o filtro de fatura para a primeira fatura em aberto sempre que o
+  // cartão selecionado MUDA (derivado durante o render, comparando apenas
+  // `cardFilter`) — nunca em reação a um re-fetch de `bills` (ex.: após
+  // vincular uma parcela sem fatura ou lançar uma nova compra), pois nesses
+  // casos o usuário normalmente está com 'Todas as Faturas' selecionado de
+  // propósito para conseguir vincular parcelas.
+  const [lastCardFilter, setLastCardFilter] = useState(cardFilter);
+  if (lastCardFilter !== cardFilter) {
+    setLastCardFilter(cardFilter);
     if (cardFilter !== 'all') {
       const currentBillValid = availableBills.some(
         (b) => b.id.toString() === billFilter
       );
       if (!currentBillValid) {
-        // availableBills já vem ordenada com faturas abertas primeiro, então o
-        // primeiro item é a fatura em aberto mais antiga (ou a mais recente
-        // fechada/paga, se não houver nenhuma aberta).
         setBillFilter(availableBills[0] ? availableBills[0].id.toString() : 'all');
       }
     }
@@ -341,21 +301,17 @@ export default function CreditCardExpenses({
               .reduce((sum, i) => sum + i.value, 0),
           };
         })
-        // Ordenar: abertas primeiro (por data crescente), depois fechadas/pagas (por data crescente)
+        // Ordenar: faturas em aberto primeiro (da mais recente para a mais
+        // antiga), depois as parcelas sem fatura vinculada, depois faturas
+        // fechadas/pagas (também da mais recente para a mais antiga)
         .sort((a, b) => {
-          if (!a.bill) return 1;
-          if (!b.bill) return -1;
-          // Check if bill is open
-          const aIsOpen = a.bill.status !== 'paid' && a.bill.status !== 'closed';
-          const bIsOpen = b.bill.status !== 'paid' && b.bill.status !== 'closed';
-          // Open bills first
-          if (aIsOpen && !bIsOpen) return -1;
-          if (!aIsOpen && bIsOpen) return 1;
-          // Within same group, sort by date ascending (oldest to newest)
-          return (
-            new Date(a.bill.invoice_beginning_date).getTime() -
-            new Date(b.bill.invoice_beginning_date).getTime()
-          );
+          const groupOf = (bill?: CreditCardBill) =>
+            !bill ? 1 : isBillOpen(bill) ? 0 : 2;
+          const aGroup = groupOf(a.bill);
+          const bGroup = groupOf(b.bill);
+          if (aGroup !== bGroup) return aGroup - bGroup;
+          if (!a.bill || !b.bill) return 0;
+          return compareBillsOpenFirst(a.bill, b.bill);
         })
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -682,36 +638,21 @@ export default function CreditCardExpenses({
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardContent className="p-md">
-            <p className="text-muted-foreground text-xs">
-              {t('pages.creditCardExpenses.totalPaid')}
-            </p>
-            <p className="text-success text-xl font-bold">
-              {formatCurrency(totalPaid)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-t-warning/60 overflow-hidden border-t-2">
-          <CardContent className="p-md">
-            <p className="text-muted-foreground text-xs">
-              {t('pages.creditCardExpenses.totalPending')}
-            </p>
-            <p className="text-warning text-xl font-bold">
-              {formatCurrency(totalPending)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardContent className="p-md">
-            <p className="text-muted-foreground text-xs">
-              {t('pages.creditCardExpenses.totalAmount')}
-            </p>
-            <p className="text-destructive text-xl font-bold">
-              {formatCurrency(totalInstallments)}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title={t('pages.creditCardExpenses.totalPaid')}
+          value={formatCurrency(totalPaid)}
+          accentColor="green"
+        />
+        <StatCard
+          title={t('pages.creditCardExpenses.totalPending')}
+          value={formatCurrency(totalPending)}
+          accentColor="orange"
+        />
+        <StatCard
+          title={t('pages.creditCardExpenses.totalAmount')}
+          value={formatCurrency(totalInstallments)}
+          accentColor="red"
+        />
       </div>
 
       {categoryBreakdown.length > 1 && (

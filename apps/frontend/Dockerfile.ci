@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1.4
+# Production image for the React frontend.
+#
+# Used ONLY by the build:frontend CI job — local dev (docker-compose) still
+# uses the plain ./Dockerfile, which builds the Vite bundle itself.
+#
+# The Vite build happens in the build:frontend:assets CI job (plain
+# node:22-alpine, reusing the same node_modules cache as
+# lint:frontend/test:frontend), which uploads dist/ as an artifact. This image
+# just packages that pre-built dist/ into nginx.
+# Reason: BuildKit's --mount=type=cache is scoped to the DinD daemon, which
+# CI recreates on every job — so npm ci/build had zero cache reuse there and
+# dominated the ~15min build time. GitLab's job cache (used by .node_base)
+# actually persists across pipeline runs.
+FROM nginx:alpine
+
+# Cache-buster for the OS package layer below — see api/Dockerfile for why
+# this is needed: --cache-from reuses this layer forever otherwise, so
+# `apk upgrade` never actually re-runs and security patches never land.
+# CI passes a value that changes daily (date +%Y%m%d) so mid-week fixes are
+# picked up before the next Trivy scan.
+ARG APK_CACHE_BUST=1
+
+# Upgrade OS packages and install curl for healthcheck
+RUN echo "cache-bust: ${APK_CACHE_BUST}" && \
+    apk upgrade --no-cache && apk add --no-cache curl
+
+
+# Create non-root user for nginx
+RUN addgroup -g 1000 appuser && \
+    adduser -D -u 1000 -G appuser appuser && \
+    chown -R appuser:appuser /var/cache/nginx && \
+    chown -R appuser:appuser /var/log/nginx && \
+    chown -R appuser:appuser /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown -R appuser:appuser /var/run/nginx.pid && \
+    chown -R appuser:appuser /usr/share/nginx/html
+
+# Copy pre-built assets (--chown ensures files are owned by appuser, not root)
+COPY --chown=appuser:appuser dist /usr/share/nginx/html
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Switch to non-root user
+USER appuser
+
+# Expose port 80
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${NGINX_PORT:-80}/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
