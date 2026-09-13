@@ -364,9 +364,14 @@ show_develop_info() {
 		"push em develop" \
 		"Precisa de GHCR_TOKEN/GHCR_USERNAME e publica uma imagem real no registry — não reproduzível localmente sem efeitos colaterais."
 
-	print_job_card "build:frontend" "build" \
-		"Builda a imagem Docker do frontend (VITE_APP_ENV=staging), gera SBOM e faz push para o GHCR." \
+	print_job_card "build:frontend:assets" "build" \
+		"Roda 'npm run build' (VITE_APP_ENV=staging) num job node:22-alpine simples, reaproveitando o cache de node_modules do lint/test, e sobe dist/ como artifact." \
 		"push em develop" \
+		"Nada de especial — reproduzível localmente com 'npm run build' em apps/frontend."
+
+	print_job_card "build:frontend" "build" \
+		"Empacota o dist/ (artifact do job anterior) numa imagem nginx (Dockerfile.ci, sem builder stage), gera SBOM e faz push para o GHCR." \
+		"após build:frontend:assets, em develop" \
 		"Mesmo motivo do build:api — precisa de credenciais do GHCR."
 
 	print_job_card "scan:api" "scan" \
@@ -430,9 +435,14 @@ show_main_info() {
 		"push em main" \
 		"Precisa de GHCR_TOKEN/GHCR_USERNAME — compartilhado com o job de develop, mas roda de novo aqui para gerar as tags :main."
 
-	print_job_card "build:frontend" "build" \
-		"Sempre rebuilda com VITE_APP_ENV=production (o valor é embutido no bundle JS, não dá pra reaproveitar a imagem de staging) e faz push das tags :main." \
+	print_job_card "build:frontend:assets" "build" \
+		"Sempre rebuilda com VITE_APP_ENV=production (o valor é embutido no bundle JS, não dá pra reaproveitar o dist/ de staging)." \
 		"push em main" \
+		"Nada de especial — reproduzível localmente com 'npm run build' em apps/frontend."
+
+	print_job_card "build:frontend" "build" \
+		"Empacota o dist/ de produção numa imagem nginx e faz push das tags :main." \
+		"após build:frontend:assets, em main" \
 		"Mesmo motivo — credenciais do GHCR."
 
 	print_job_card "scan:api" "scan" \

@@ -4,15 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { useCounter } from '@/lib/animations';
 import type { TaskCard, KanbanStatus } from '@/types';
 
 import { KanbanCard } from './KanbanCard';
-
-function AnimatedCount({ value }: { value: number }) {
-  const count = useCounter(value, 0.4);
-  return <span>{count}</span>;
-}
 
 interface KanbanColumnProps {
   status: KanbanStatus;
@@ -48,10 +42,19 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
     return colors[status] || colors.todo;
   };
 
+  const getHeaderTextColor = () => {
+    const colors = {
+      todo: 'text-muted',
+      doing: 'text-info-foreground',
+      done: 'text-success-foreground',
+    };
+    return colors[status] || colors.todo;
+  };
+
   return (
     <div className="flex max-h-[calc(100vh-14rem)] flex-col">
       <div
-        className={`${getHeaderColor()} px-md flex-shrink-0 rounded-t-lg py-3 text-white`}
+        className={`${getHeaderColor()} ${getHeaderTextColor()} px-md flex-shrink-0 rounded-t-lg py-3`}
       >
         <div className="flex items-center justify-between">
           <div className="gap-sm flex items-center">
@@ -62,19 +65,13 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 18 }}
               >
-                <CheckCircle2 className="h-5 w-5 text-white" aria-hidden="true" />
+                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
               </motion.div>
             )}
           </div>
-          <motion.span
-            key={cards.length}
-            initial={{ scale: 1.4, opacity: 0.6 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm font-bold"
-          >
-            <AnimatedCount value={cards.length} />
-          </motion.span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
+            {cards.length}
+          </span>
         </div>
         <p className="text-sm opacity-90">
           {t('pages.todayTasks.taskCount', { count: cards.length })}
