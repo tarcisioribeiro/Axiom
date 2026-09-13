@@ -2,7 +2,6 @@ import path from 'path'
 
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import compression from 'vite-plugin-compression'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import pkg from './package.json'
@@ -14,18 +13,6 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    // Gzip compression
-    compression({
-      algorithm: 'gzip',
-      ext: '.gz',
-      threshold: 1024, // Apenas arquivos > 1KB
-    }),
-    // Brotli compression (melhor taxa de compressao)
-    compression({
-      algorithm: 'brotliCompress',
-      ext: '.br',
-      threshold: 1024,
-    }),
     // PWA — service worker + manifest
     VitePWA({
       registerType: 'autoUpdate',
@@ -95,17 +82,16 @@ export default defineConfig({
     port: 3000,
     host: true,
   },
+  esbuild: {
+    // Remove console.log/debugger em producao (build) — mantido do terser antigo
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
   build: {
     // Otimizacoes de build
     target: 'es2020',
     sourcemap: false, // Desabilitar sourcemaps em producao
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log em producao
-        drop_debugger: true,
-      },
-    },
+    // esbuild minify (~10x mais rapido que terser, ~1% maior no bundle final)
+    minify: 'esbuild',
     rollupOptions: {},
     // Aumenta limite de aviso de chunk
     chunkSizeWarningLimit: 1000,
