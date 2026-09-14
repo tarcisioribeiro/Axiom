@@ -66,12 +66,11 @@ export const formatDateTime = (date: string, time?: string): string => {
     if (!dateObj)
       return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
 
-    if (time) {
-      const [hours, minutes] = time.split(':');
-      dateObj.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-    }
-
     const locale = i18next.language || 'pt-BR';
+    if (!time) return format(dateObj, locale === 'en-US' ? 'MM/dd/yyyy' : 'dd/MM/yyyy');
+
+    const [hours, minutes] = time.split(':');
+    dateObj.setHours(parseInt(hours, 10), parseInt(minutes, 10));
     const fmt = locale === 'en-US' ? 'MM/dd/yyyy HH:mm' : 'dd/MM/yyyy HH:mm';
     return format(dateObj, fmt);
   } catch {

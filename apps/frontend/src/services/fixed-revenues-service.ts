@@ -4,6 +4,7 @@ import type {
   BulkGenerateRevenuesResponse,
   FixedRevenue,
   FixedRevenueFormData,
+  FixedRevenueGenerationLog,
   FullyGeneratedMonthsResponse,
   PaginatedResponse,
 } from '@/types';
@@ -54,6 +55,12 @@ class FixedRevenuesService {
       API_CONFIG.ENDPOINTS.FIXED_REVENUES_GENERATED_MONTHS
     );
     return data.fully_generated_months ?? [];
+  }
+
+  async getGenerationLog(): Promise<FixedRevenueGenerationLog[]> {
+    return apiClient.get<FixedRevenueGenerationLog[]>(
+      API_CONFIG.ENDPOINTS.FIXED_REVENUES_GENERATION_LOG
+    );
   }
 }
 

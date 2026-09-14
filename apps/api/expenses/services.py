@@ -76,12 +76,17 @@ def get_or_create_bill(credit_card, year, month_num, user):
 def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
     """Generate fixed expenses for a given month.
 
-    Returns a dict with keys: success, created_count, month, expenses.
+    Returns a dict with keys: success, created_count, skipped_count, month,
+    expenses. `skipped_count` counts templates that already had a launch for
+    this month (deduplicated, not an error). `created_count` includes both
+    plain expenses and credit-card-linked purchases.
     Raises FixedExpense.DoesNotExist if any fixed expense id is invalid.
     """
     year, month_num = month.split("-")
     year_int, month_int = int(year), int(month_num)
     created_expenses = []
+    created_count = 0
+    skipped_count = 0
     fixed_expense_ids = []
 
     ids = [item["fixed_expense_id"] for item in expense_values]
@@ -139,6 +144,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
             )
 
             if existing_installment:
+                skipped_count += 1
                 if upsert:
                     existing_installment.value = item["value"]
                     existing_installment.updated_by = user
@@ -180,6 +186,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 created_by=user,
                 updated_by=user,
             )
+            created_count += 1
         else:
             month_start = datetime(year_int, month_int, 1).date()
             month_end = datetime(year_int, month_int, last_day).date()
@@ -191,6 +198,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 is_deleted=False,
             ).first()
             if existing_expense:
+                skipped_count += 1
                 if upsert:
                     existing_expense.value = item["value"]
                     existing_expense.related_loan = fixed_exp.related_loan
@@ -228,6 +236,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 updated_by=user,
             )
             created_expenses.append(expense)
+            created_count += 1
 
         fixed_exp.last_generated_month = month
         fixed_exp.save()
@@ -256,7 +265,8 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
 
     return {
         "success": True,
-        "created_count": len(created_expenses),
+        "created_count": created_count,
+        "skipped_count": skipped_count,
         "month": month,
         "expenses": created_expenses,
     }

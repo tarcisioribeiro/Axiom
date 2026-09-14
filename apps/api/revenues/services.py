@@ -10,11 +10,14 @@ from revenues.models import FixedRevenue, FixedRevenueGenerationLog, Revenue
 def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
     """Generate fixed revenues for a given month.
 
-    Returns a dict with keys: success, created_count, month, revenues.
+    Returns a dict with keys: success, created_count, skipped_count, month,
+    revenues. `skipped_count` counts templates that already had a launch
+    for this month (deduplicated, not an error).
     """
     year, month_num = month.split("-")
     year_int, month_int = int(year), int(month_num)
     created_revenues = []
+    skipped_count = 0
     fixed_revenue_ids = []
 
     ids = [item["fixed_revenue_id"] for item in revenue_values]
@@ -63,6 +66,7 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
             is_deleted=False,
         ).first()
         if existing:
+            skipped_count += 1
             if upsert:
                 existing.value = item["value"]
                 existing.updated_by = user
@@ -114,6 +118,7 @@ def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
     return {
         "success": True,
         "created_count": len(created_revenues),
+        "skipped_count": skipped_count,
         "month": month,
         "revenues": created_revenues,
     }

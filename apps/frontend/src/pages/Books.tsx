@@ -21,9 +21,9 @@ import {
   Brain,
   CheckCircle,
 } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
 const BookReader = lazy(() => import('./BookReader'));
 
@@ -75,11 +75,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { authorsService } from '@/services/authors-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
 import { publishersService } from '@/services/publishers-service';
 import { readingsService } from '@/services/readings-service';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { BOOK_GENRES, READ_STATUS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -320,7 +322,8 @@ function BookGridCard({
 }
 
 export default function Books() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') ?? '');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -352,6 +355,10 @@ export default function Books() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
+  const setHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
+  useEffect(() => () => setHiddenByNav(false), [setHiddenByNav]);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -965,7 +972,11 @@ export default function Books() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="text-muted-foreground flex items-center justify-between text-sm">
+                <div
+                  className="text-muted-foreground flex items-center justify-between text-sm"
+                  onMouseEnter={() => setHiddenByNav(true)}
+                  onMouseLeave={() => setHiddenByNav(false)}
+                >
                   <span>
                     {t('pages.books.paginationInfo', {
                       count: filteredBooks.length,
@@ -1060,7 +1071,12 @@ export default function Books() {
       {activeTab === 'books' && (
         <button
           onClick={() => setIsQuickCaptureOpen(true)}
-          className="gap-sm bg-primary px-md text-primary-foreground fixed right-24 bottom-6 z-40 flex items-center rounded-full py-3 text-sm font-semibold shadow-lg transition-shadow hover:shadow-xl"
+          className={cn(
+            'gap-sm bg-primary px-md text-primary-foreground fixed right-24 bottom-6 z-40 flex items-center rounded-full py-3 text-sm font-semibold shadow-lg transition-all hover:shadow-xl',
+            // Fica fora do caminho quando o mouse está perto da paginação
+            // da lista (mesmo padrão do AgentChatWidget/hiddenByNav).
+            hiddenByNav && 'pointer-events-none scale-75 opacity-0'
+          )}
           aria-label={t('pages.books.quickCapture.title')}
         >
           <CheckCircle className="h-4 w-4" />

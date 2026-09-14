@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
+import { BookMarked, Download, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -459,5 +459,3 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
     </div>
   );
 }
-
-export { Highlighter };

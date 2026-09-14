@@ -628,6 +628,13 @@ export function CourseDetailModal({
 
   const displayCourse = freshCourse ?? course;
 
+  const canAttachCertificate = Boolean(
+    displayCourse?.estimated_hours &&
+    displayCourse.total_lessons > 0 &&
+    displayCourse.progress_percentage === 100 &&
+    displayCourse.invested_hours >= displayCourse.estimated_hours
+  );
+
   const isCertificateImage = useMemo(() => {
     const url = displayCourse?.completion_certificate;
     if (!url) return false;
@@ -957,7 +964,7 @@ export function CourseDetailModal({
                     )}
                   </Button>
                 </div>
-              ) : (
+              ) : displayCourse.estimated_hours ? (
                 <Button
                   variant="outline"
                   className="gap-sm text-muted-foreground hover:border-category-intellect/50 hover:text-category-intellect w-full border-dashed"
@@ -966,6 +973,10 @@ export function CourseDetailModal({
                   <Plus className="h-4 w-4" />
                   {t('pages.courses.modules.newBtn')}
                 </Button>
+              ) : (
+                <p className="text-muted-foreground border-border p-sm rounded-lg border border-dashed text-center text-xs">
+                  {t('pages.courses.modules.needsEstimatedHours')}
+                </p>
               )}
             </TabsContent>
 
@@ -982,18 +993,28 @@ export function CourseDetailModal({
                     >
                       <XAxis
                         dataKey="week"
-                        tick={{ fontSize: 9 }}
+                        tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
                         tickLine={false}
                         axisLine={false}
                       />
-                      <YAxis tick={{ fontSize: 9 }} tickLine={false} axisLine={false} />
+                      <YAxis
+                        tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
                       <Tooltip
                         formatter={(v) => [
                           `${Number(v)}h`,
                           t('pages.courses.studyHours.hours'),
                         ]}
-                        labelStyle={{ fontSize: 11 }}
-                        contentStyle={{ fontSize: 11 }}
+                        labelStyle={{ fontSize: 11, color: 'hsl(var(--foreground))' }}
+                        itemStyle={{ color: 'hsl(var(--foreground))' }}
+                        contentStyle={{
+                          fontSize: 11,
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 6,
+                        }}
                       />
                       <Bar
                         dataKey="hours"
@@ -1014,11 +1035,22 @@ export function CourseDetailModal({
                   size="sm"
                   className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
                   onClick={() => setShowAddSession(true)}
+                  disabled={displayCourse.total_lessons === 0}
+                  title={
+                    displayCourse.total_lessons === 0
+                      ? t('pages.courses.sessions.needsLesson')
+                      : undefined
+                  }
                 >
                   <Plus className="h-3.5 w-3.5" />
                   {t('pages.courses.sessions.newBtn')}
                 </Button>
               </div>
+              {displayCourse.total_lessons === 0 && (
+                <p className="text-muted-foreground text-xs">
+                  {t('pages.courses.sessions.needsLesson')}
+                </p>
+              )}
 
               {showAddSession && (
                 <AddSessionForm
@@ -1080,23 +1112,29 @@ export function CourseDetailModal({
                       </button>
                     </div>
                   </div>
-                  <label className="gap-sm border-border p-md hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
-                    <Upload className="text-muted-foreground h-5 w-5" />
-                    <span className="text-muted-foreground text-xs">
-                      {t('pages.courses.certificate.replace')}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void handleCertificateUpload(file);
-                      }}
-                    />
-                  </label>
+                  {canAttachCertificate ? (
+                    <label className="gap-sm border-border p-md hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                      <Upload className="text-muted-foreground h-5 w-5" />
+                      <span className="text-muted-foreground text-xs">
+                        {t('pages.courses.certificate.replace')}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void handleCertificateUpload(file);
+                        }}
+                      />
+                    </label>
+                  ) : (
+                    <p className="text-muted-foreground border-border p-md rounded-lg border border-dashed text-center text-xs">
+                      {t('pages.courses.certificate.needsCompletion')}
+                    </p>
+                  )}
                 </div>
-              ) : (
+              ) : canAttachCertificate ? (
                 <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
                   {uploadingCert ? (
                     <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
@@ -1121,6 +1159,13 @@ export function CourseDetailModal({
                     }}
                   />
                 </label>
+              ) : (
+                <div className="gap-md border-border p-xl flex flex-col items-center rounded-lg border border-dashed text-center">
+                  <Award className="text-muted-foreground/40 h-10 w-10" />
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.courses.certificate.needsCompletion')}
+                  </p>
+                </div>
               )}
             </TabsContent>
           </Tabs>

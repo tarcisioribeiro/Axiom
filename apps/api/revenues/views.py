@@ -17,11 +17,17 @@ from app.export_utils import (
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from revenues.filters import RevenueFilter
-from revenues.models import REVENUES_CATEGORIES, FixedRevenue, Revenue
+from revenues.models import (
+    REVENUES_CATEGORIES,
+    FixedRevenue,
+    FixedRevenueGenerationLog,
+    Revenue,
+)
 from revenues.serializers import (
     BulkGenerateRevenuesRequestSerializer,
     BulkGenerateRevenuesResponseSerializer,
     FixedRevenueCreateUpdateSerializer,
+    FixedRevenueGenerationLogSerializer,
     FixedRevenueSerializer,
     RevenueSerializer,
 )
@@ -181,6 +187,25 @@ class BulkGenerateFixedRevenuesView(APIView):
         return Response(
             response_serializer.data, status=status.HTTP_201_CREATED
         )
+
+
+class FixedRevenueGenerationLogListView(APIView):
+    """
+    GET /api/v1/fixed-revenues/generation-log/
+
+    Returns the history of automatic fixed revenue generation for the
+    current user.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedRevenueGenerationLog.objects.none()
+
+    def get(self, request):
+        logs = FixedRevenueGenerationLog.objects.filter(
+            generated_by=request.user
+        ).order_by("-month")[:24]
+        serializer = FixedRevenueGenerationLogSerializer(logs, many=True)
+        return Response(serializer.data)
 
 
 class FixedRevenuesStatsView(APIView):

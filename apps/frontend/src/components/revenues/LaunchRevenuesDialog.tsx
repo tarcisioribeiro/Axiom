@@ -140,10 +140,17 @@ export function LaunchRevenuesDialog({
         monthOptions.find((m) => m.value === validMonth)?.label || validMonth;
       toast({
         title: t('pages.fixedRevenues.launchDialog.success'),
-        description: t('pages.fixedRevenues.launchDialog.successDesc', {
-          count: response.created_count,
-          month: monthLabel,
-        }),
+        description:
+          response.skipped_count > 0
+            ? t('pages.fixedRevenues.launchDialog.successDescWithSkipped', {
+                count: response.created_count,
+                month: monthLabel,
+                skipped: response.skipped_count,
+              })
+            : t('pages.fixedRevenues.launchDialog.successDesc', {
+                count: response.created_count,
+                month: monthLabel,
+              }),
       });
       onSuccess();
       onClose();

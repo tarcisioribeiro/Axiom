@@ -241,6 +241,11 @@ class BulkGenerateFixedExpensesCreditCardTest(BaseExpenseServiceTestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # Credit-card-linked launches must count towards created_count too,
+        # not just plain account-based expenses (regression: they used to
+        # be silently excluded from the total).
+        self.assertEqual(response.data["created_count"], 1)  # type: ignore
+        self.assertEqual(response.data["skipped_count"], 0)  # type: ignore
 
     def test_bulk_generate_credit_card_idempotent(self):
         """get_or_create_bill returns existing bill on second call."""
@@ -260,6 +265,8 @@ class BulkGenerateFixedExpensesCreditCardTest(BaseExpenseServiceTestCase):
         # Second call: bill already exists, installment already exists → skip
         response = self.client.post(url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["created_count"], 0)  # type: ignore
+        self.assertEqual(response.data["skipped_count"], 1)  # type: ignore
 
 
 # ---------------------------------------------------------------------------

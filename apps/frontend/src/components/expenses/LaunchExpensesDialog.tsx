@@ -171,10 +171,17 @@ export const LaunchExpensesDialog = ({
 
       toast({
         title: t('pages.fixedExpenses.launchDialog.success'),
-        description: t('pages.fixedExpenses.launchDialog.successDesc', {
-          count: response.created_count,
-          month: monthLabel,
-        }),
+        description:
+          response.skipped_count > 0
+            ? t('pages.fixedExpenses.launchDialog.successDescWithSkipped', {
+                count: response.created_count,
+                month: monthLabel,
+                skipped: response.skipped_count,
+              })
+            : t('pages.fixedExpenses.launchDialog.successDesc', {
+                count: response.created_count,
+                month: monthLabel,
+              }),
       });
 
       onSuccess();

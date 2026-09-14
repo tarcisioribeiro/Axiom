@@ -1609,7 +1609,7 @@ export default function BodyMetrics() {
                   </div>
                 </div>
 
-                {liveBodyFat !== null ? (
+                {liveBodyFat !== null && (
                   <div className="mt-sm gap-sm border-success/30 bg-success/10 px-md py-sm flex items-center rounded-md border text-sm">
                     <span className="text-muted-foreground">
                       {t('pages.bodyMetrics.bodyFat')}:
@@ -1623,15 +1623,18 @@ export default function BodyMetrics() {
                       )
                     </span>
                   </div>
-                ) : hasAllSkinfolds && age === null ? (
-                  <p className="mt-sm text-muted-foreground text-xs">
+                )}
+                {hasAllSkinfolds && age === null ? (
+                  <p className="mt-sm text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
                     {t('pages.bodyMetrics.pollockMissingBirthDate')}
                   </p>
-                ) : skinfoldValues.some((v) => v > 0) && !hasAllSkinfolds ? (
+                ) : liveBodyFat === null &&
+                  skinfoldValues.some((v) => v > 0) &&
+                  !hasAllSkinfolds ? (
                   <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.bodyMetrics.pollockMethodIncomplete')}
                   </p>
-                ) : liveWaist > 0 || liveNeck > 0 ? (
+                ) : liveBodyFat === null && (liveWaist > 0 || liveNeck > 0) ? (
                   <p className="mt-sm text-muted-foreground text-xs">
                     {t('pages.bodyMetrics.navyMethodIncomplete')}
                   </p>

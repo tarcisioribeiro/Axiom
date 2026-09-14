@@ -242,6 +242,7 @@ export const API_CONFIG = {
     FIXED_REVENUES_GENERATE: '/api/v1/fixed-revenues/generate/',
     FIXED_REVENUES_STATS: '/api/v1/fixed-revenues/stats/',
     FIXED_REVENUES_GENERATED_MONTHS: '/api/v1/fixed-revenues/generated-months/',
+    FIXED_REVENUES_GENERATION_LOG: '/api/v1/fixed-revenues/generation-log/',
     FIXED_EXPENSES_GENERATED_MONTHS: '/api/v1/fixed-expenses/generated-months/',
 
     // Fixed Transfers
