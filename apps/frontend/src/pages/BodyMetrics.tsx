@@ -1343,7 +1343,7 @@ export default function BodyMetrics() {
                             CardHeader) — sem header aqui, isso zerava o espaçamento
                             do topo e colava o conteúdo na borda do card. */}
                             <div className="gap-md p-lg flex items-start justify-between">
-                              <div className="min-w-0 flex-1 space-y-sm">
+                              <div className="space-y-sm min-w-0 flex-1">
                                 {(isLatest || sameDayCount[metric.measured_at] > 1) && (
                                   <div className="gap-sm flex flex-wrap items-center">
                                     {isLatest && (
@@ -1439,7 +1439,7 @@ export default function BodyMetrics() {
                                       {secondaryFields.map(([field, labelKey]) => (
                                         <span
                                           key={field}
-                                          className="bg-muted text-muted-foreground px-sm rounded-full py-0.5 text-2xs"
+                                          className="bg-muted text-muted-foreground px-sm text-2xs rounded-full py-0.5"
                                         >
                                           {t(`pages.bodyMetrics.${labelKey}`)}:{' '}
                                           <strong className="text-foreground">
