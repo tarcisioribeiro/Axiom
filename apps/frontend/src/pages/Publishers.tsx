@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -265,13 +266,21 @@ export default function Publishers() {
                   </div>
                 )}
                 <div className="pt-sm mt-auto">
-                  <Badge
-                    variant="secondary"
-                    className="gap-sm flex w-fit items-center text-xs"
+                  <Link
+                    to={`/library/books?search=${encodeURIComponent(publisher.name)}`}
                   >
-                    <BookOpen className="h-3 w-3" />
-                    {t('pages.publishers.booksCount', { count: publisher.books_count })}
-                  </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="gap-sm hover:bg-secondary/70 flex w-fit items-center text-xs"
+                    >
+                      <BookOpen className="h-3 w-3" />
+                      {publisher.books_count === 0
+                        ? t('pages.publishers.booksCountZero')
+                        : t('pages.publishers.booksCount', {
+                            count: publisher.books_count,
+                          })}
+                    </Badge>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

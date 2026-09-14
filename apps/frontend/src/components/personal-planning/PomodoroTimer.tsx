@@ -16,7 +16,7 @@ interface PomodoroTimerProps {
   onClose?: () => void;
 }
 
-export function PomodoroTimer({
+function PomodoroTimer({
   taskName,
   workMinutes = 25,
   breakMinutes = 5,

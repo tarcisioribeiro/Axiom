@@ -1115,6 +1115,7 @@
         "phonePlaceholder": "Ex: (11) 98765-4321",
         "emailLabel": "Email",
         "emailPlaceholder": "Ex: joao@email.com",
+        "birthDateLabel": "Data de Nascimento",
         "sexLabel": "Sexo *",
         "sexMale": "Masculino",
         "sexFemale": "Feminino",
@@ -1222,6 +1223,7 @@
         "generateBtn_other": "Gerar {{count}} Despesas",
         "success": "Despesas lançadas com sucesso!",
         "successDesc": "{{count}} despesas foram criadas para {{month}}",
+        "successDescWithSkipped": "{{count}} despesas foram criadas para {{month}}. {{skipped}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Erro ao lançar despesas",
         "allGenerated": "Todos os lançamentos deste período já foram feitos."
       },
@@ -1777,6 +1779,20 @@
       "launchSection": "Lançar Receitas do Mês",
       "launchDesc": "Gere todas as receitas fixas para o mês selecionado",
       "launchBtn": "Lançar Receitas",
+      "historyTitle": "Histórico de Lançamentos",
+      "historyDesc": "Receitas geradas a partir deste template de receita fixa.",
+      "historyBtn": "Ver lançamentos gerados",
+      "historyEmpty": "Nenhum lançamento gerado ainda.",
+      "generationLog": {
+        "title": "Histórico de Gerações",
+        "subtitle": "Registros de geração automática de receitas fixas",
+        "emptyState": "Nenhuma geração registrada.",
+        "month": "Mês",
+        "totalGenerated": "Lançamentos",
+        "generatedBy": "Gerado por",
+        "generatedAt": "Gerado em",
+        "viewLog": "Ver histórico"
+      },
       "columns": {
         "description": "Descrição",
         "defaultAmount": "Valor Padrão",
@@ -1827,6 +1843,7 @@
         "generateBtn_other": "Gerar {{count}} Receitas",
         "success": "Receitas lançadas com sucesso!",
         "successDesc": "{{count}} receitas foram criadas para {{month}}",
+        "successDescWithSkipped": "{{count}} receitas foram criadas para {{month}}. {{skipped}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Erro ao lançar receitas",
         "allGenerated": "Todos os lançamentos deste período já foram feitos."
       }
@@ -3365,7 +3382,8 @@
         "UKR": "Ucraniana"
       },
       "booksCount_one": "{{count}} livro",
-      "booksCount_other": "{{count}} livros"
+      "booksCount_other": "{{count}} livros",
+      "booksCountZero": "0 livros"
     },
     "publishers": {
       "title": "Editoras",
@@ -3403,7 +3421,8 @@
         "POR": "Portugal"
       },
       "booksCount_one": "{{count}} livro",
-      "booksCount_other": "{{count}} livros"
+      "booksCount_other": "{{count}} livros",
+      "booksCountZero": "0 livros"
     },
     "summaries": {
       "title": "Resumos",
@@ -3669,7 +3688,8 @@
         "orderLabel": "Ordem",
         "lessonsCount": "{{count}} aula",
         "lessonsCount_other": "{{count}} aulas",
-        "completedCount": "{{completed}}/{{total}} concluídas"
+        "completedCount": "{{completed}}/{{total}} concluídas",
+        "needsEstimatedHours": "Informe a carga horária estimada do curso antes de cadastrar módulos."
       },
       "lessons": {
         "title": "Aulas",
@@ -3705,7 +3725,8 @@
         "durationPlaceholder": "Ex: 90",
         "notesLabel": "Notas",
         "notesPlaceholder": "O que estudou nessa sessão?",
-        "totalHours": "Total: {{hours}}h"
+        "totalHours": "Total: {{hours}}h",
+        "needsLesson": "Cadastre ao menos uma aula do curso antes de registrar sessões de estudo."
       },
       "certificate": {
         "fileLabel": "Comprovante de Conclusão",
@@ -3717,7 +3738,8 @@
         "uploaded": "Comprovante enviado",
         "removed": "Comprovante removido",
         "uploadError": "Erro ao enviar comprovante",
-        "replace": "Clique para substituir o comprovante"
+        "replace": "Clique para substituir o comprovante",
+        "needsCompletion": "Conclua todas as aulas e registre horas de estudo suficientes para atingir a carga horária estimada antes de anexar o certificado."
       }
     },
     "skills": {
@@ -3762,13 +3784,17 @@
       "form": {
         "sectionInfo": "Identificação",
         "sectionProgress": "Progresso & Status",
+        "sectionCourses": "Cursos relacionados",
         "nameLabel": "Nome da Habilidade",
         "namePlaceholder": "Ex: Python, Inglês, Figma...",
         "categoryLabel": "Categoria",
         "proficiencyLabel": "Nível de Proficiência",
         "statusLabel": "Status",
         "notesLabel": "Notas",
-        "notesPlaceholder": "Observações sobre esta habilidade..."
+        "notesPlaceholder": "Observações sobre esta habilidade...",
+        "coursesLabel": "Cursos que desenvolveram esta habilidade",
+        "coursesPlaceholder": "Selecione um curso",
+        "removeCourse": "Remover {{name}}"
       },
       "radarChart": {
         "title": "Radar de Habilidades",

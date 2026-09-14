@@ -3,9 +3,12 @@ Tests for the Intelecto module — courses, modules, lessons, sessions and
 skills.
 """
 
+import shutil
+import tempfile
 from datetime import date
 
 from django.contrib.auth.models import User
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -181,7 +184,7 @@ class CourseDetailTest(BaseIntellectTestCase):
 class CourseModuleListCreateTest(BaseIntellectTestCase):
     def setUp(self):
         super().setUp()
-        self.course = self._make_course()
+        self.course = self._make_course(estimated_hours=10)
 
     def test_create_module(self):
         url = reverse("course-module-list-create")
@@ -194,6 +197,18 @@ class CourseModuleListCreateTest(BaseIntellectTestCase):
         response = self.client.post(url, payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "Fundamentos")
+
+    def test_create_module_without_estimated_hours_is_rejected(self):
+        course = self._make_course(title="Sem carga horária")
+        url = reverse("course-module-list-create")
+        payload = {
+            "course": course.pk,
+            "title": "Fundamentos",
+            "order": 1,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_modules_filtered_by_course(self):
         self._make_module(self.course)
@@ -315,6 +330,8 @@ class CourseSessionListCreateTest(BaseIntellectTestCase):
     def setUp(self):
         super().setUp()
         self.course = self._make_course()
+        module = self._make_module(self.course)
+        self._make_lesson(module)
 
     def test_create_session(self):
         url = reverse("course-session-list-create")
@@ -327,6 +344,18 @@ class CourseSessionListCreateTest(BaseIntellectTestCase):
         response = self.client.post(url, payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["duration_minutes"], 120)
+
+    def test_create_session_without_lesson_is_rejected(self):
+        course = self._make_course(title="Sem aulas")
+        url = reverse("course-session-list-create")
+        payload = {
+            "course": course.pk,
+            "session_date": str(date.today()),
+            "duration_minutes": 60,
+            "owner": self.member.pk,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_session_duration_hours(self):
         url = reverse("course-session-list-create")
@@ -388,6 +417,76 @@ class CourseInvestedHoursTest(BaseIntellectTestCase):
         url = reverse("course-detail", args=[course.pk])
         response = self.client.get(url)
         self.assertEqual(response.data["invested_hours"], 2.5)
+
+
+# ---------------------------------------------------------------------------
+# Course completion certificate upload gate
+# ---------------------------------------------------------------------------
+
+
+class CourseCertificateUploadTest(BaseIntellectTestCase):
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        self.override.disable()
+        shutil.rmtree(self.media_root, ignore_errors=True)
+
+    def _certificate_file(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        return SimpleUploadedFile(
+            "certificado.pdf", b"conteudo", content_type="application/pdf"
+        )
+
+    def test_reject_without_lessons_or_hours(self):
+        course = self._make_course(estimated_hours=10)
+        url = reverse("course-detail", args=[course.pk])
+        response = self.client.patch(
+            url,
+            {
+                "completion_certificate": self._certificate_file(),
+                "owner": self.member.pk,
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reject_when_hours_not_reached(self):
+        course = self._make_course(estimated_hours=10)
+        module = self._make_module(course)
+        self._make_lesson(module, is_completed=True)
+        self._make_session(course, duration_minutes=60)
+        url = reverse("course-detail", args=[course.pk])
+        response = self.client.patch(
+            url,
+            {
+                "completion_certificate": self._certificate_file(),
+                "owner": self.member.pk,
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_allow_when_completed_and_hours_reached(self):
+        course = self._make_course(estimated_hours=1)
+        module = self._make_module(course)
+        self._make_lesson(module, is_completed=True)
+        self._make_session(course, duration_minutes=90)
+        url = reverse("course-detail", args=[course.pk])
+        response = self.client.patch(
+            url,
+            {
+                "completion_certificate": self._certificate_file(),
+                "owner": self.member.pk,
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 # ---------------------------------------------------------------------------

@@ -153,6 +153,7 @@ export interface SkillFormData {
   status: SkillStatus;
   notes?: string | null;
   owner: number;
+  course_ids?: number[];
 }
 
 // ============================================================================

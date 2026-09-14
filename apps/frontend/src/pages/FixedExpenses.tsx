@@ -8,8 +8,6 @@ import {
   TrendingDown,
   History,
   ClipboardList,
-  ChevronDown,
-  ChevronUp,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +20,7 @@ import { FixedExpenseStats } from '@/components/expenses/FixedExpenseStats';
 import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -414,71 +413,57 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       />
 
       {/* Generation Log */}
-      <div className="bg-card rounded-lg border">
-        <button
-          type="button"
-          className="px-md py-sm flex w-full items-center justify-between text-left"
-          onClick={() => setShowGenerationLog((v) => !v)}
-        >
-          <div className="gap-sm flex items-center">
-            <ClipboardList className="text-muted-foreground h-4 w-4" />
-            <span className="text-sm font-medium">
-              {t('pages.fixedExpenses.generationLog.viewLog')}
-            </span>
-          </div>
-          {showGenerationLog ? (
-            <ChevronUp className="text-muted-foreground h-4 w-4" />
-          ) : (
-            <ChevronDown className="text-muted-foreground h-4 w-4" />
-          )}
-        </button>
-        {showGenerationLog && (
-          <div className="px-md pb-md pt-sm border-t">
-            {generationLogQuery.isLoading ? (
-              <p className="py-sm text-muted-foreground text-center text-sm">
-                {t('common.actions.loading')}
-              </p>
-            ) : !generationLogQuery.data?.length ? (
-              <p className="py-sm text-muted-foreground text-center text-sm">
-                {t('pages.fixedExpenses.generationLog.emptyState')}
-              </p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left text-xs">
-                    <th className="pb-xs pr-md">
-                      {t('pages.fixedExpenses.generationLog.month')}
-                    </th>
-                    <th className="pb-xs pr-md text-right">
-                      {t('pages.fixedExpenses.generationLog.totalGenerated')}
-                    </th>
-                    <th className="pb-xs pr-md">
-                      {t('pages.fixedExpenses.generationLog.generatedBy')}
-                    </th>
-                    <th className="pb-xs text-right">
-                      {t('pages.fixedExpenses.generationLog.generatedAt')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {generationLogQuery.data.map((log) => (
-                    <tr key={log.id}>
-                      <td className="py-xs pr-md font-medium">{log.month}</td>
-                      <td className="py-xs pr-md text-right">{log.total_generated}</td>
-                      <td className="py-xs pr-md text-muted-foreground">
-                        {log.generated_by_name ?? '—'}
-                      </td>
-                      <td className="py-xs text-muted-foreground text-right">
-                        {formatDate(log.created_at, 'dd/MM/yyyy HH:mm')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+      <CollapsibleSection
+        title={t('pages.fixedExpenses.generationLog.viewLog')}
+        icon={<ClipboardList className="h-4 w-4" />}
+        open={showGenerationLog}
+        onToggle={() => setShowGenerationLog((v) => !v)}
+      >
+        {generationLogQuery.isLoading ? (
+          <p className="py-sm text-muted-foreground text-center text-sm">
+            {t('common.actions.loading')}
+          </p>
+        ) : !generationLogQuery.data?.length ? (
+          <p className="py-sm text-muted-foreground text-center text-sm">
+            {t('pages.fixedExpenses.generationLog.emptyState')}
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted-foreground border-b text-left text-xs">
+                <th className="pb-xs pr-md">
+                  {t('pages.fixedExpenses.generationLog.month')}
+                </th>
+                <th className="pb-xs pr-md text-right">
+                  {t('pages.fixedExpenses.generationLog.totalGenerated')}
+                </th>
+                <th className="pb-xs pr-md">
+                  {t('pages.fixedExpenses.generationLog.generatedBy')}
+                </th>
+                <th className="pb-xs text-right">
+                  {t('pages.fixedExpenses.generationLog.generatedAt')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {generationLogQuery.data.map((log) => (
+                <tr key={log.id}>
+                  <td className="py-xs pr-md font-medium">
+                    {log.month.split('-').reverse().join('/')}
+                  </td>
+                  <td className="py-xs pr-md text-right">{log.total_generated}</td>
+                  <td className="py-xs pr-md text-muted-foreground">
+                    {log.generated_by_name ?? '—'}
+                  </td>
+                  <td className="py-xs text-muted-foreground text-right">
+                    {formatDate(log.created_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-      </div>
+      </CollapsibleSection>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

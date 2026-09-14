@@ -60,6 +60,8 @@ export interface BulkGenerateRequest {
 export interface BulkGenerateResponse {
   success: boolean;
   created_count: number;
+  /** Templates que já tinham lançamento neste mês e foram ignorados (não é erro). */
+  skipped_count: number;
   month: string;
   expenses: Expense[];
 }
@@ -135,6 +137,8 @@ export interface BulkGenerateRevenuesRequest {
 export interface BulkGenerateRevenuesResponse {
   success: boolean;
   created_count: number;
+  /** Templates que já tinham lançamento neste mês e foram ignorados (não é erro). */
+  skipped_count: number;
   month: string;
   revenues: Revenue[];
 }
@@ -155,6 +159,15 @@ export interface FixedRevenueStats {
 }
 
 export interface FixedExpenseGenerationLog {
+  id: number;
+  uuid: string;
+  month: string;
+  total_generated: number;
+  generated_by_name: string | null;
+  created_at: string;
+}
+
+export interface FixedRevenueGenerationLog {
   id: number;
   uuid: string;
   month: string;

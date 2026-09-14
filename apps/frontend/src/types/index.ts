@@ -227,6 +227,7 @@ export type {
   BulkGenerateRevenuesRequest,
   BulkGenerateRevenuesResponse,
   FixedRevenueStats,
+  FixedRevenueGenerationLog,
   FullyGeneratedMonthsResponse,
 } from './fixed';
 export type {

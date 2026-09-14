@@ -387,6 +387,7 @@ class BulkGenerateResponseSerializer(serializers.Serializer):
 
     success = serializers.BooleanField()
     created_count = serializers.IntegerField()
+    skipped_count = serializers.IntegerField(default=0)
     month = serializers.CharField()
     expenses = ExpenseSerializer(many=True)
 

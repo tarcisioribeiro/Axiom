@@ -12,6 +12,8 @@ import {
   Tag,
   Wallet,
   CalendarDays,
+  History,
+  ClipboardList,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +26,7 @@ import { LaunchRevenuesDialog } from '@/components/revenues/LaunchRevenuesDialog
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
@@ -48,15 +51,19 @@ import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { fixedRevenuesService } from '@/services/fixed-revenues-service';
+import { revenuesService } from '@/services/revenues-service';
 import type {
   FixedRevenue,
   FixedRevenueFormData,
+  FixedRevenueGenerationLog,
   Account,
   FixedRevenueStats,
+  Revenue,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -78,8 +85,19 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedRevenue, setSelectedRevenue] = useState<FixedRevenue | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [historyItem, setHistoryItem] = useState<FixedRevenue | null>(null);
+  const [historyRevenues, setHistoryRevenues] = useState<Revenue[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showGenerationLog, setShowGenerationLog] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+
+  const generationLogQuery = useQuery<FixedRevenueGenerationLog[]>({
+    queryKey: ['fixedRevenues', 'generationLog'],
+    queryFn: () => fixedRevenuesService.getGenerationLog(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: showGenerationLog,
+  });
 
   const [formData, setFormData] = useState<FixedRevenueFormData>({
     description: '',
@@ -129,6 +147,20 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
   const stats = pageData?.stats ?? null;
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
+
+  const openHistory = async (item: FixedRevenue) => {
+    setHistoryItem(item);
+    setHistoryRevenues([]);
+    setHistoryLoading(true);
+    try {
+      const results = await revenuesService.getAll({ fixed_revenue_template: item.id });
+      setHistoryRevenues(Array.isArray(results) ? results : []);
+    } catch {
+      setHistoryRevenues([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const openCreate = () => {
     setSelectedRevenue(undefined);
@@ -445,6 +477,15 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => void openHistory(item)}
+              aria-label={t('pages.fixedRevenues.historyBtn')}
+              title={t('pages.fixedRevenues.historyBtn')}
+            >
+              <History className="text-muted-foreground h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => openEdit(item)}
               aria-label={t('common.actions.edit')}
               title={t('common.actions.edit')}
@@ -463,6 +504,59 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
           </div>
         )}
       />
+
+      {/* Generation Log */}
+      <CollapsibleSection
+        title={t('pages.fixedRevenues.generationLog.viewLog')}
+        icon={<ClipboardList className="h-4 w-4" />}
+        open={showGenerationLog}
+        onToggle={() => setShowGenerationLog((v) => !v)}
+      >
+        {generationLogQuery.isLoading ? (
+          <p className="py-sm text-muted-foreground text-center text-sm">
+            {t('common.actions.loading')}
+          </p>
+        ) : !generationLogQuery.data?.length ? (
+          <p className="py-sm text-muted-foreground text-center text-sm">
+            {t('pages.fixedRevenues.generationLog.emptyState')}
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted-foreground border-b text-left text-xs">
+                <th className="pb-xs pr-md">
+                  {t('pages.fixedRevenues.generationLog.month')}
+                </th>
+                <th className="pb-xs pr-md text-right">
+                  {t('pages.fixedRevenues.generationLog.totalGenerated')}
+                </th>
+                <th className="pb-xs pr-md">
+                  {t('pages.fixedRevenues.generationLog.generatedBy')}
+                </th>
+                <th className="pb-xs text-right">
+                  {t('pages.fixedRevenues.generationLog.generatedAt')}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {generationLogQuery.data.map((log) => (
+                <tr key={log.id}>
+                  <td className="py-xs pr-md font-medium">
+                    {log.month.split('-').reverse().join('/')}
+                  </td>
+                  <td className="py-xs pr-md text-right">{log.total_generated}</td>
+                  <td className="py-xs pr-md text-muted-foreground">
+                    {log.generated_by_name ?? '—'}
+                  </td>
+                  <td className="py-xs text-muted-foreground text-right">
+                    {formatDate(log.created_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </CollapsibleSection>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -672,6 +766,65 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         fixedRevenues={activeRevenues}
         onSuccess={refresh}
       />
+
+      {/* History Dialog */}
+      <Dialog
+        open={!!historyItem}
+        onOpenChange={(v) => {
+          if (!v) setHistoryItem(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              <History className="h-4 w-4" />
+              {t('pages.fixedRevenues.historyTitle')}: {historyItem?.description}
+            </DialogTitle>
+            <DialogDescription>
+              {t('pages.fixedRevenues.historyDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          {historyLoading ? (
+            <p className="py-md text-muted-foreground text-center text-sm">
+              {t('common.actions.loading')}
+            </p>
+          ) : historyRevenues.length === 0 ? (
+            <p className="py-md text-muted-foreground text-center text-sm">
+              {t('pages.fixedRevenues.historyEmpty')}
+            </p>
+          ) : (
+            <div className="max-h-96 overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground border-b text-left text-xs">
+                    <th className="pb-xs pr-md">{t('common.fields.date')}</th>
+                    <th className="pb-xs pr-md">{t('common.fields.description')}</th>
+                    <th className="pb-xs text-right">{t('common.fields.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {historyRevenues.map((rev) => (
+                    <tr key={rev.id}>
+                      <td className="py-xs pr-md text-muted-foreground">
+                        {formatDate(rev.date)}
+                      </td>
+                      <td className="py-xs pr-md">{rev.description}</td>
+                      <td
+                        className={cn(
+                          'py-xs text-right font-medium',
+                          rev.received ? 'text-success' : 'text-muted-foreground'
+                        )}
+                      >
+                        {formatCurrency(rev.value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Wrapper>
   );
 }
