@@ -44,6 +44,27 @@ function parseDateBR(dateStr: string): Date | undefined {
   return date;
 }
 
+// Confirma no flatpickr um texto digitado (mas não confirmado com Enter) que
+// já é uma data válida. Compartilhado entre o onClose do flatpickr e o blur
+// nativo do input — o blur nativo é o que garante a confirmação a tempo
+// quando o usuário digita e clica direto em outro botão (ex.: "Salvar"): o
+// clique em outro elemento dispara blur antes do seu próprio evento de
+// click, enquanto o onClose do flatpickr (detecção de clique fora) só
+// dispara depois, tarde demais para o submit já em curso.
+// Sempre chama setDate com triggerChange=true (mesmo se instance.selectedDates
+// já parecer igual ao texto digitado): o próprio flatpickr, com allowInput,
+// já atualiza selectedDates silenciosamente a cada tecla digitada (via
+// setDate(..., false) interno) — então comparar contra selectedDates aqui
+// não detecta uma edição pendente e o onChange (e o setValue do formulário)
+// nunca disparava.
+function commitTypedDate(instance: flatpickr.Instance): void {
+  const dateStr = instance.input.value;
+  if (!dateStr) return;
+  const parsed = parseDateBR(dateStr);
+  if (!parsed) return;
+  instance.setDate(parsed, true);
+}
+
 /**
  * DatePicker component using Flatpickr
  * - Formato DD/MM/YYYY
@@ -110,19 +131,18 @@ export function DatePicker({
       onReady: (_selectedDates, _dateStr, instance) => {
         instance.calendarContainer.classList.add('flatpickr-calendar-custom');
       },
-      // Validação ao fechar - se o usuário digitou uma data válida mas não pressionou
-      // Enter/Tab, confirma a data ao fechar (ex: clicou em outro campo)
-      onClose: (selectedDates, dateStr, instance) => {
-        if (dateStr) {
-          const parsed = parseDateBR(dateStr);
-          if (!parsed) {
-            instance.input.classList.add('flatpickr-invalid');
-            setTimeout(() => {
-              instance.input.classList.remove('flatpickr-invalid');
-            }, 1500);
-          } else if (selectedDates.length === 0) {
-            instance.setDate(parsed, true);
-          }
+      // Feedback visual quando o texto digitado não fecha como data válida
+      // (o commit em si, quando válido, já aconteceu no blur nativo do input
+      // — ver commitTypedDate — mas onClose também cobre fechar com Escape,
+      // que não passa pelo blur).
+      onClose: (_selectedDates, dateStr, instance) => {
+        if (dateStr && !parseDateBR(dateStr)) {
+          instance.input.classList.add('flatpickr-invalid');
+          setTimeout(() => {
+            instance.input.classList.remove('flatpickr-invalid');
+          }, 1500);
+        } else {
+          commitTypedDate(instance);
         }
       },
     };
@@ -169,6 +189,9 @@ export function DatePicker({
       {/* Input do Flatpickr */}
       <input
         ref={inputRef}
+        onBlur={() => {
+          if (flatpickrRef.current) commitTypedDate(flatpickrRef.current);
+        }}
         type="text"
         placeholder={resolvedPlaceholder}
         disabled={disabled}

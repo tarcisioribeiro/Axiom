@@ -41,6 +41,11 @@ urlpatterns = [
         views.VaultUpdateYieldView.as_view(),
         name="vault-update-yield",
     ),
+    path(
+        "vaults/<int:pk>/yield-preview/",
+        views.VaultYieldPreviewView.as_view(),
+        name="vault-yield-preview",
+    ),
     # Transações
     path(
         "vaults/<int:pk>/transactions/",

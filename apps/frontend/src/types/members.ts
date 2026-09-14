@@ -30,7 +30,7 @@ export interface MemberFormData {
   email?: string;
   is_creditor?: boolean;
   is_benefited?: boolean;
-  birth_date?: string;
+  birth_date?: string | null;
   address?: string;
   emergency_contact?: string;
   monthly_income?: number;

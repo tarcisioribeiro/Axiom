@@ -147,7 +147,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                 watchedBirthDate ? parseISO(watchedBirthDate + 'T00:00:00') : undefined
               }
               onChange={(d) =>
-                setValue('birth_date', d ? format(d, 'yyyy-MM-dd') : undefined)
+                setValue('birth_date', d ? format(d, 'yyyy-MM-dd') : null)
               }
               disabled={isLoading}
               maxDate={new Date()}

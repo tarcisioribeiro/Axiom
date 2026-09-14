@@ -107,7 +107,14 @@ export default function Members() {
   const members = pageData?.members ?? EMPTY_MEMBERS;
   const currentUserMemberId = pageData?.currentUserMemberId ?? null;
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['members'] });
+  const refresh = () => {
+    // 'current-member' is cached separately (BodyMetrics, WorkoutPage,
+    // NutritionPage, etc. all key off it for age-dependent calculations) —
+    // invalidate it too so a birth_date edit reflects immediately instead of
+    // waiting out its own staleTime.
+    void queryClient.invalidateQueries({ queryKey: ['members'] });
+    void queryClient.invalidateQueries({ queryKey: ['current-member'] });
+  };
 
   const handleSubmit = async (data: MemberFormData) => {
     try {
