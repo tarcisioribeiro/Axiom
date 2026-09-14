@@ -20,10 +20,9 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ForceGraph3D } from 'react-force-graph';
+import { ForceGraph2D } from 'react-force-graph';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import * as THREE from 'three';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -37,6 +36,7 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 import { membersService } from '@/services/members-service';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { IconComponent } from '@/types/icon';
 import type {
   GraphLink,
@@ -149,55 +149,6 @@ function readCanvasColors(): CanvasColors {
     linkImplicit: hsla('--muted-foreground', 0.35),
     linkingRing: hsl('--accent'),
   };
-}
-
-// ============================================================================
-// 3D SCENE HELPERS
-// ============================================================================
-
-// THREE.Color only parses comma-separated hsl(); our CSS vars are space-separated.
-function toThreeColor(hsl: string): string {
-  const match = /^hsl\((-?[\d.]+)\s+([\d.]+%)\s+([\d.]+%)\)$/.exec(hsl);
-  return match ? `hsl(${match[1]}, ${match[2]}, ${match[3]})` : hsl;
-}
-
-function createLabelSprite(
-  text: string,
-  colors: CanvasColors,
-  dimmed: boolean
-): THREE.Sprite {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d')!;
-  const fontSize = 28;
-  const paddingX = 10;
-  const paddingY = 6;
-  ctx.font = `${fontSize}px Inter, sans-serif`;
-  const textWidth = ctx.measureText(text).width;
-  canvas.width = textWidth + paddingX * 2;
-  canvas.height = fontSize + paddingY * 2;
-  // canvas resize clears context state, so the font must be reapplied
-  ctx.font = `${fontSize}px Inter, sans-serif`;
-  ctx.fillStyle = colors.labelBg;
-  ctx.beginPath();
-  ctx.roundRect(0, 0, canvas.width, canvas.height, 6);
-  ctx.fill();
-  ctx.fillStyle = dimmed ? colors.labelDim : colors.labelText;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 1);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    transparent: true,
-    depthWrite: false,
-    opacity: dimmed ? 0.35 : 1,
-  });
-  const sprite = new THREE.Sprite(material);
-  const desiredHeight = 6;
-  const scaleFactor = desiredHeight / canvas.height;
-  sprite.scale.set(canvas.width * scaleFactor, canvas.height * scaleFactor, 1);
-  return sprite;
 }
 
 // ============================================================================
@@ -586,21 +537,14 @@ const KG_POSITIONS_KEY = 'axiom-kg-node-positions';
 
 interface GraphInstance {
   zoomToFit: (ms?: number, padding?: number) => void;
-  cameraPosition: (
-    position: Partial<{ x: number; y: number; z: number }>,
-    lookAt?: { x: number; y: number; z: number },
-    ms?: number
-  ) => void;
-  camera: () => THREE.Camera;
+  zoom: (zoom?: number, ms?: number) => number;
   graphData: () => { nodes: GraphNode[] };
 }
 
-function loadSavedPositions(): Record<string, { x: number; y: number; z: number }> {
+function loadSavedPositions(): Record<string, { x: number; y: number }> {
   try {
     const raw = localStorage.getItem(KG_POSITIONS_KEY);
-    return raw
-      ? (JSON.parse(raw) as Record<string, { x: number; y: number; z: number }>)
-      : {};
+    return raw ? (JSON.parse(raw) as Record<string, { x: number; y: number }>) : {};
   } catch {
     return {};
   }
@@ -626,6 +570,8 @@ export default function KnowledgeGraph() {
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const setHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
+  useEffect(() => () => setHiddenByNav(false), [setHiddenByNav]);
 
   // Update canvas colors when theme changes
   useEffect(() => {
@@ -732,10 +678,10 @@ export default function KnowledgeGraph() {
   const handleEngineStop = useCallback(() => {
     const nodes = graphRef.current?.graphData?.()?.nodes;
     if (!nodes) return;
-    const positions: Record<string, { x: number; y: number; z: number }> = {};
+    const positions: Record<string, { x: number; y: number }> = {};
     nodes.forEach((n) => {
-      if (n.x !== undefined && n.y !== undefined && n.z !== undefined) {
-        positions[n.id] = { x: n.x, y: n.y, z: n.z };
+      if (n.x !== undefined && n.y !== undefined) {
+        positions[n.id] = { x: n.x, y: n.y };
       }
     });
     localStorage.setItem(KG_POSITIONS_KEY, JSON.stringify(positions));
@@ -755,17 +701,7 @@ export default function KnowledgeGraph() {
       )
       .map((n) => {
         const saved = savedPositions[n.id];
-        return saved
-          ? {
-              ...n,
-              x: saved.x,
-              y: saved.y,
-              z: saved.z,
-              fx: saved.x,
-              fy: saved.y,
-              fz: saved.z,
-            }
-          : n;
+        return saved ? { ...n, x: saved.x, y: saved.y, fx: saved.x, fy: saved.y } : n;
       });
     const visibleIds = new Set(visibleNodes.map((n) => n.id));
 
@@ -795,9 +731,31 @@ export default function KnowledgeGraph() {
 
   const hasFocus = highlightedNeighbors.size > 0 && (hoveredNode || selectedNode);
 
-  // Node 3D object renderer (sphere + optional selection ring + text label)
-  const nodeThreeObject = useCallback(
+  // Node degree (connection count) — drives node radius, Obsidian-style
+  // ("more linked" nodes render bigger).
+  const nodeDegree = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredGraphData.links.forEach((l) => {
+      const srcId = typeof l.source === 'string' ? l.source : l.source.id;
+      const tgtId = typeof l.target === 'string' ? l.target : l.target.id;
+      map.set(srcId, (map.get(srcId) ?? 0) + 1);
+      map.set(tgtId, (map.get(tgtId) ?? 0) + 1);
+    });
+    return map;
+  }, [filteredGraphData.links]);
+
+  const nodeRadius = useCallback(
     (node: GraphNode) => {
+      const degree = nodeDegree.get(node.id) ?? 0;
+      return NODE_SIZES[node.type] * 0.55 + Math.min(degree, 12) * 0.6;
+    },
+    [nodeDegree]
+  );
+
+  // Flat 2D node renderer (circle + optional selection ring + label),
+  // matching Obsidian's graph view look.
+  const nodeCanvasObject = useCallback(
+    (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isFocused = highlightedNeighbors.has(node.id);
       const isDimmed = Boolean(hasFocus) && !isFocused;
       const isHovered = hoveredNode?.id === node.id;
@@ -806,38 +764,49 @@ export default function KnowledgeGraph() {
 
       const colors = colorsRef.current;
       const baseColor = colors.nodes[node.type];
-      const baseSize = NODE_SIZES[node.type];
+      const radius = nodeRadius(node);
+      const x = node.x ?? 0;
+      const y = node.y ?? 0;
 
-      const group = new THREE.Group();
+      ctx.globalAlpha = isDimmed ? 0.15 : 1;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = baseColor;
+      ctx.fill();
 
-      const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(baseSize, 16, 16),
-        new THREE.MeshLambertMaterial({
-          color: toThreeColor(baseColor),
-          transparent: true,
-          opacity: isDimmed ? 0.15 : 1,
-        })
-      );
-      group.add(sphere);
-
-      // Ring for hovered / selected / linking
       if (isHovered || isSelected || isLinking) {
-        const ringColor = isLinking ? colors.linkingRing : baseColor;
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(baseSize + 2.5, 0.5, 8, 32),
-          new THREE.MeshBasicMaterial({ color: toThreeColor(ringColor) })
-        );
-        group.add(ring);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = isLinking ? colors.linkingRing : baseColor;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 2.5, 0, 2 * Math.PI);
+        ctx.stroke();
       }
+      ctx.globalAlpha = 1;
 
-      const label = node.label.length > 20 ? node.label.slice(0, 20) + '…' : node.label;
-      const sprite = createLabelSprite(label, colors, isDimmed);
-      sprite.position.set(0, baseSize + 5, 0);
-      group.add(sprite);
-
-      return group;
+      // Labels only near/hover/selected, or once zoomed in enough — avoids
+      // clutter when zoomed out, same as Obsidian's graph view.
+      if (isHovered || isSelected || isFocused || globalScale > 2.2) {
+        const label =
+          node.label.length > 24 ? node.label.slice(0, 24) + '…' : node.label;
+        const fontSize = Math.max(3, 11 / globalScale);
+        ctx.font = `${fontSize}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = isDimmed ? colors.labelDim : colors.labelText;
+        ctx.fillText(label, x, y + radius + 2);
+      }
     },
-    [highlightedNeighbors, hasFocus, hoveredNode, selectedNode, linkingFrom]
+    [highlightedNeighbors, hasFocus, hoveredNode, selectedNode, linkingFrom, nodeRadius]
+  );
+
+  const nodePointerAreaPaint = useCallback(
+    (node: GraphNode, color: string, ctx: CanvasRenderingContext2D) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(node.x ?? 0, node.y ?? 0, nodeRadius(node), 0, 2 * Math.PI);
+      ctx.fill();
+    },
+    [nodeRadius]
   );
 
   // Link color
@@ -1132,23 +1101,16 @@ export default function KnowledgeGraph() {
                 )}
               </div>
             ) : (
-              <ForceGraph3D
+              <ForceGraph2D
                 ref={graphRef as never}
                 graphData={filteredGraphData}
                 width={dimensions.width}
                 height={dimensions.height}
                 backgroundColor="rgba(0,0,0,0)"
-                rendererConfig={{ preserveDrawingBuffer: true }}
-                nodeThreeObject={nodeThreeObject}
-                nodeThreeObjectExtend={false}
+                nodeCanvasObject={nodeCanvasObject}
+                nodePointerAreaPaint={nodePointerAreaPaint}
                 linkColor={getLinkColor}
                 linkWidth={getLinkWidth}
-                linkOpacity={0.8}
-                linkDirectionalParticles={2}
-                linkDirectionalParticleWidth={(link: GraphLink) =>
-                  link.type === 'explicit' ? 2.5 : 0
-                }
-                linkDirectionalParticleColor={getLinkColor}
                 onNodeClick={handleNodeClick}
                 onNodeHover={(node: GraphNode | null) => setHoveredNode(node)}
                 onBackgroundClick={() => {
@@ -1228,7 +1190,11 @@ export default function KnowledgeGraph() {
             )}
 
             {/* Zoom controls */}
-            <div className="bottom-md right-md gap-xs absolute flex flex-col">
+            <div
+              className="bottom-md right-md gap-xs absolute flex flex-col"
+              onMouseEnter={() => setHiddenByNav(true)}
+              onMouseLeave={() => setHiddenByNav(false)}
+            >
               <Tooltip content={t('pages.knowledgeGraph.exportPNG')} side="left">
                 <button
                   onClick={handleExportPNG}
@@ -1241,12 +1207,7 @@ export default function KnowledgeGraph() {
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
-                  const { x, y, z } = g.camera().position;
-                  g.cameraPosition(
-                    { x: x * 0.7, y: y * 0.7, z: z * 0.7 },
-                    undefined,
-                    300
-                  );
+                  g.zoom(g.zoom() * 1.4, 300);
                 }}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
@@ -1256,12 +1217,7 @@ export default function KnowledgeGraph() {
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
-                  const { x, y, z } = g.camera().position;
-                  g.cameraPosition(
-                    { x: x * 1.4, y: y * 1.4, z: z * 1.4 },
-                    undefined,
-                    300
-                  );
+                  g.zoom(g.zoom() * 0.7, 300);
                 }}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >

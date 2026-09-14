@@ -35,6 +35,11 @@ urlpatterns = [
         name="fixed-revenue-generated-months",
     ),
     path(
+        "fixed-revenues/generation-log/",
+        views.FixedRevenueGenerationLogListView.as_view(),
+        name="fixed-revenue-generation-log",
+    ),
+    path(
         "fixed-revenues/",
         views.FixedRevenueListCreateView.as_view(),
         name="fixed-revenue-list-create",

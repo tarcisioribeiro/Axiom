@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from expenses.serializers import TagSerializer
-from revenues.models import FixedRevenue, Revenue
+from revenues.models import FixedRevenue, FixedRevenueGenerationLog, Revenue
 
 
 class RevenueSerializer(serializers.ModelSerializer):
@@ -146,5 +146,27 @@ class BulkGenerateRevenuesRequestSerializer(serializers.Serializer):
 class BulkGenerateRevenuesResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField()
     created_count = serializers.IntegerField()
+    skipped_count = serializers.IntegerField(default=0)
     month = serializers.CharField()
     revenues = RevenueSerializer(many=True)
+
+
+class FixedRevenueGenerationLogSerializer(serializers.ModelSerializer):
+    generated_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FixedRevenueGenerationLog
+        fields = [
+            "id",
+            "uuid",
+            "month",
+            "total_generated",
+            "generated_by_name",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+    def get_generated_by_name(self, obj):
+        if obj.generated_by:
+            return obj.generated_by.get_full_name() or obj.generated_by.email
+        return None

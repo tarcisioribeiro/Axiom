@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -164,10 +165,17 @@ function AuthorCard({
         )}
 
         <div className="pt-sm mt-auto flex items-center justify-between">
-          <Badge variant="secondary" className="gap-sm flex items-center text-xs">
-            <BookOpen className="h-3 w-3" />
-            {t('pages.authors.booksCount', { count: author.books_count })}
-          </Badge>
+          <Link to={`/library/books?search=${encodeURIComponent(author.name)}`}>
+            <Badge
+              variant="secondary"
+              className="gap-sm hover:bg-secondary/70 flex items-center text-xs"
+            >
+              <BookOpen className="h-3 w-3" />
+              {author.books_count === 0
+                ? t('pages.authors.booksCountZero')
+                : t('pages.authors.booksCount', { count: author.books_count })}
+            </Badge>
+          </Link>
         </div>
       </CardContent>
     </Card>

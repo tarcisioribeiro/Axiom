@@ -865,6 +865,32 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
             "owner",
         ]
 
+    def validate(self, data):
+        certificate = data.get("completion_certificate")
+        if certificate:
+            course = self.instance
+            estimated_hours = data.get(
+                "estimated_hours", course.estimated_hours if course else None
+            )
+            if (
+                not course
+                or not estimated_hours
+                or course.total_lessons == 0
+                or course.progress_percentage < 100
+                or course.invested_hours < estimated_hours
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "completion_certificate": (
+                            "Só é possível anexar o certificado quando "
+                            "todas as aulas do curso estiverem concluídas "
+                            "e o total de horas estudadas atingir a carga "
+                            "horária estimada."
+                        )
+                    }
+                )
+        return data
+
 
 # ============================================================================
 # COURSE MODULE SERIALIZERS
@@ -952,6 +978,20 @@ class CourseModuleCreateUpdateSerializer(serializers.ModelSerializer):
         model = CourseModule
         fields = ["id", "course", "title", "order", "owner"]
 
+    def validate(self, data):
+        if self.instance is None:
+            course = data.get("course")
+            if course and not course.estimated_hours:
+                raise serializers.ValidationError(
+                    {
+                        "course": (
+                            "Informe a carga horária estimada do curso antes "
+                            "de cadastrar módulos."
+                        )
+                    }
+                )
+        return data
+
 
 # ============================================================================
 # COURSE SESSION SERIALIZERS
@@ -1000,6 +1040,25 @@ class CourseSessionCreateUpdateSerializer(serializers.ModelSerializer):
             "notes",
             "owner",
         ]
+
+    def validate(self, data):
+        if self.instance is None:
+            course = data.get("course")
+            if (
+                course
+                and not CourseLesson.objects.filter(
+                    module__course=course, deleted_at__isnull=True
+                ).exists()
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "course": (
+                            "Cadastre ao menos uma aula do curso antes de "
+                            "registrar sessões de estudo."
+                        )
+                    }
+                )
+        return data
 
 
 # ============================================================================

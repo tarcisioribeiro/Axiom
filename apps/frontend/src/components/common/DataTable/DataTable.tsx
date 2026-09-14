@@ -38,10 +38,11 @@ import {
   ChevronUp,
   ChevronsUpDown,
 } from 'lucide-react';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
@@ -111,6 +112,8 @@ export function DataTable<T>({
   const cellPad = density === 'compact' ? 'px-md py-sm' : 'px-lg py-md';
   const { t } = useTranslation();
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  const setAgentWidgetHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
+  useEffect(() => () => setAgentWidgetHiddenByNav(false), [setAgentWidgetHiddenByNav]);
 
   const handleRowKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTableRowElement>, index: number) => {
@@ -318,7 +321,11 @@ export function DataTable<T>({
                   total: pagination.total,
                 })}
               </p>
-              <div className="gap-sm flex items-center">
+              <div
+                className="gap-sm flex items-center"
+                onMouseEnter={() => setAgentWidgetHiddenByNav(true)}
+                onMouseLeave={() => setAgentWidgetHiddenByNav(false)}
+              >
                 <Button
                   variant="outline"
                   size="sm"

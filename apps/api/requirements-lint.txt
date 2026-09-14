@@ -1,0 +1,10 @@
+# Static-analysis tools only — no runtime dependency on Django/psycopg2/etc.
+# Split out of requirements-dev.txt so CI lint jobs (lint:backend, lint:bandit,
+# lint:pip-audit) don't have to install the full production stack just to run
+# a formatter/linter. Install with: pip install -r requirements-lint.txt
+
+black==26.5.1
+flake8==7.3.0
+isort==8.0.1
+bandit==1.9.4
+pip-audit==2.10.1

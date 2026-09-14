@@ -79,6 +79,26 @@ workflow:
       - .pip_cache/
   before_script: *python_before_script
 
+# Static-analysis-only variant: installs apps/api/requirements-lint.txt
+# (black/isort/flake8/bandit/pip-audit) instead of the full production stack
+# (Django, psycopg2-binary, cryptography, boto3, Pillow, anthropic, celery...).
+# None of these tools import or run application code, so the full install was
+# pure overhead — the dominant cost of lint:backend/lint:bandit/lint:pip-audit.
+# lint:migrations is the one job here that still needs the real app installed
+# (it runs manage.py), so it stays on .python_base.
+.python_lint_base:
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - apps/api/requirements-lint.txt
+    paths:
+      - .pip_cache/
+  before_script:
+    - |
+      pip install --quiet --cache-dir "$PIP_CACHE_DIR" \
+        -r apps/api/requirements-lint.txt
+
 .node_base:
   image: node:22-alpine
   variables:
@@ -91,11 +111,13 @@ workflow:
       files:
         - apps/frontend/package-lock.json
     paths:
+      # Only npm's own download cache (compressed tarballs, ~500MB) plus the
+      # small lint caches. Deliberately NOT caching node_modules/ itself
+      # (~1.1GB / 64k files): transferring+extracting that many small files
+      # via GitLab's cache store was slower in practice than just running
+      # `npm ci --prefer-offline` against a warm .npm/ cache, which installs
+      # from local tarballs in ~20s regardless of file count.
       - .npm/
-      # Caching node_modules itself (not just npm's download cache) lets the
-      # before_script below skip `npm ci` entirely when the lockfile hasn't
-      # changed — that's the dominant cost of this job, not just a speedup.
-      - apps/frontend/node_modules/
       # eslint/prettier caches ride the same lockfile-keyed cache scope. Both
       # tools content-hash individual files internally, so an incrementally
       # updated cache stays valid across commits even though the scope key
@@ -111,17 +133,9 @@ workflow:
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd apps/frontend
-    # node_modules is cached above and keyed by package-lock.json's content
-    # hash, so a restored non-empty directory already matches the current
-    # lockfile — reinstalling would just repeat work. --no-audit/--no-fund:
-    # audit runs separately in lint:npm-audit; skipping it here avoids a
-    # redundant network round-trip on every node job.
-    - |
-      if [ -d node_modules ] && [ -n "$(ls -A node_modules 2>/dev/null)" ]; then
-        echo "node_modules restored from cache (package-lock.json unchanged) — skipping npm ci"
-      else
-        npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
-      fi
+    # --no-audit/--no-fund: audit runs separately in lint:npm-audit; skipping
+    # it here avoids a redundant network round-trip on every node job.
+    - npm ci --prefer-offline --legacy-peer-deps --no-audit --no-fund
 
 # Runner com acesso ao cluster via túnel — network_mode=host → acesso direto a 127.0.0.1:6443.
 # KUBECONFIG_CONTENT deve usar server: https://127.0.0.1:6443
@@ -180,7 +194,7 @@ workflow:
 
 lint:backend:
   extends:
-    - .python_base
+    - .python_lint_base
     - .rules_verify_backend
   stage: lint
   script:
@@ -217,12 +231,10 @@ lint:migrations:
     - .python_base
     - .rules_verify_backend
   stage: lint
-  needs:
-    - lint:backend
-  # lint:backend is the primary pull-push job for this cache key; avoid every
-  # parallel python job re-uploading an unchanged pip cache archive.
-  cache:
-    policy: pull
+  # The only job on the full-install .python_base cache key now (lint:backend/
+  # lint:bandit/lint:pip-audit moved to the lighter .python_lint_base — see
+  # comment there), so it owns pull-push for its own cache directly instead of
+  # depending on another job's pipeline-order to have warmed it first.
   variables:
     SECRET_KEY: "ci-insecure-key-for-migrations-check-only"
     DEBUG: "False"
@@ -239,7 +251,7 @@ lint:migrations:
 
 lint:bandit:
   extends:
-    - .python_base
+    - .python_lint_base
     - .rules_verify_backend
   stage: lint
   cache:
@@ -249,7 +261,7 @@ lint:bandit:
 
 lint:pip-audit:
   extends:
-    - .python_base
+    - .python_lint_base
     - .rules_verify_backend
   stage: lint
   cache:
@@ -258,34 +270,56 @@ lint:pip-audit:
     - pip-audit -r apps/api/requirements.txt --desc --vulnerability-service osv --ignore-vuln PYSEC-2025-183
 
 lint:npm-audit:
+  image: node:22-alpine
   extends:
-    - .node_base
     - .rules_verify_frontend
   stage: lint
-  # lint:frontend is the primary pull-push job for this cache key.
-  cache:
-    policy: pull
+  # `npm audit` reads package.json/package-lock.json directly — it does not
+  # need node_modules installed at all. Previously extended .node_base, which
+  # restored/installed the full ~1.1GB, 64k-file node_modules just to run a
+  # lockfile audit that needs none of it.
   script:
+    - cd apps/frontend
     - npm audit --audit-level=high
 
 lint:commits:
-  extends: .node_base
+  image: node:22-alpine
   stage: lint
+  # commitlint only needs @commitlint/cli + @commitlint/config-conventional,
+  # not the full ~1.1GB/64k-file frontend node_modules (previously installed
+  # via .node_base just to run this). Cache the small download here instead
+  # of pulling the frontend's giant node_modules cache for an unrelated tool.
   cache:
-    policy: pull
+    key:
+      files:
+        - apps/frontend/package.json
+    paths:
+      - .npm/
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+    # Fetch the full git history so every commit in the MR range is reachable.
+    GIT_DEPTH: 0
   # Only run on MRs targeting develop (feature/bugfix branches). A develop ->
   # main promotion MR re-bundles commits that were already linted individually
   # when they landed on develop, so re-running commitlint over that whole
   # range just re-fails on old commits (including ones that predate this hook).
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != "main"
-  # Fetch the full git history so every commit in the MR range is reachable.
-  variables:
-    GIT_DEPTH: 0
+  before_script:
+    - apk add --no-cache git
+    - cd apps/frontend
+    # Versions read from package.json (not hardcoded) so they can't drift from
+    # the project's pinned-exact-version policy.
+    - |
+      CLI_VERSION=$(node -p "require('./package.json').devDependencies['@commitlint/cli']")
+      CONV_VERSION=$(node -p "require('./package.json').devDependencies['@commitlint/config-conventional']")
+      npm install --no-save --prefer-offline --no-audit --no-fund \
+        "@commitlint/cli@$CLI_VERSION" "@commitlint/config-conventional@$CONV_VERSION"
   script:
-    # commitlint.config.cjs lives in apps/frontend/ alongside its node_modules so that
-    # @commitlint/config-conventional resolves correctly. before_script (from
-    # .node_base) already cd's into apps/frontend/, so npx finds the config here.
+    # commitlint.config.cjs lives in apps/frontend/ alongside the commitlint
+    # packages installed above, so @commitlint/config-conventional resolves
+    # correctly. before_script already cd's into apps/frontend/, so npx finds
+    # the config here.
     # .cjs extension is required because apps/frontend/package.json has "type":"module".
     #
     # CI_MERGE_REQUEST_DIFF_BASE_SHA can go stale on long-lived branches that
@@ -535,49 +569,60 @@ build:api:
       - api-sbom.spdx.json
     expire_in: 90 days
 
-build:frontend:
-  extends: .build_base
+# Builds the Vite production bundle as a plain node job so it reuses the same
+# node_modules cache as lint:frontend/test:frontend (GitLab job cache, persists
+# across pipelines) instead of the DinD-scoped BuildKit cache mount, which is
+# recreated from scratch on every job and therefore never actually cached
+# npm ci/build. This is what used to dominate the ~15min build:frontend time.
+build:frontend:assets:
+  extends: .node_base
+  stage: build
   needs:
     - job: test:backend
       optional: true
     - job: test:frontend
       optional: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
   script:
-    # On main: always rebuild (VITE_APP_ENV is baked into the JS bundle, so the
-    # staging image from develop can't be re-tagged for production), but still
-    # pass --cache-from against the previous main image (built with
-    # BUILDKIT_INLINE_CACHE=1) — same VITE_APP_ENV value each time, so the
-    # npm ci layer is reusable even though the app-code layers aren't.
+    # VITE_APP_ENV is baked into the JS bundle at build time, so main/develop
+    # need separate builds (production vs staging) — can't share one dist/.
+    - export VITE_APP_ENV=$([ "$CI_COMMIT_BRANCH" = "main" ] && echo production || echo staging)
+    - npm run build
+  artifacts:
+    paths:
+      - apps/frontend/dist/
+    expire_in: 1 hour
+
+build:frontend:
+  extends: .build_base
+  needs:
+    - job: build:frontend:assets
+      artifacts: true
+    - job: test:backend
+      optional: true
+    - job: test:frontend
+      optional: true
+  script:
     - |
+      docker build --network=host \
+        -f ./apps/frontend/Dockerfile.ci \
+        --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
+      docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+      if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"
+        docker push "$FRONTEND_IMAGE:develop"
+      fi
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        echo "main: building production image with VITE_APP_ENV=production"
-        docker pull "$FRONTEND_IMAGE:main" 2>/dev/null || true
-        docker build --network=host \
-          --build-arg VITE_APP_ENV=production \
-          --build-arg BUILDKIT_INLINE_CACHE=1 \
-          --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
-          --cache-from "$FRONTEND_IMAGE:main" \
-          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         docker push "$FRONTEND_IMAGE:main"
-      else
-        docker pull "$FRONTEND_IMAGE:develop" 2>/dev/null || true
-        docker build --network=host \
-          --build-arg VITE_APP_ENV=staging \
-          --build-arg BUILDKIT_INLINE_CACHE=1 \
-          --build-arg APK_CACHE_BUST="$(date +%Y%m%d)" \
-          --cache-from "$FRONTEND_IMAGE:develop" \
-          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./apps/frontend
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-        if [ "$CI_COMMIT_BRANCH" = "develop" ]; then
-          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:develop"
-          docker push "$FRONTEND_IMAGE:develop"
-        fi
-        if [ -n "${CI_COMMIT_TAG:-}" ]; then
-          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-          docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-        fi
+      fi
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────

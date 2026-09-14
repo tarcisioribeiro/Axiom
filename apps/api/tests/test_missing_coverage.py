@@ -657,6 +657,7 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         )
         self.assertTrue(result["success"])
         self.assertEqual(result["created_count"], 1)
+        self.assertEqual(result["skipped_count"], 0)
 
     def test_bulk_generate_creates_revenue_with_float_value(self):
         """
@@ -707,6 +708,7 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
             user=self.user,
         )
         self.assertEqual(result["created_count"], 0)
+        self.assertEqual(result["skipped_count"], 1)
 
     def test_bulk_generate_updates_existing_log(self):
         from revenues.models import FixedRevenue
@@ -743,6 +745,37 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
             user=self.user,
         )
         self.assertTrue(result["success"])
+
+    def test_generation_log_endpoint_and_history_filter(self):
+        from revenues.services import bulk_generate_fixed_revenues
+
+        result = bulk_generate_fixed_revenues(
+            month="2026-10",
+            revenue_values=[
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": Decimal("5000.00"),
+                }
+            ],
+            user=self.user,
+        )
+        revenue_id = result["revenues"][0].id
+
+        log_response = self.client.get(reverse("fixed-revenue-generation-log"))
+        self.assertEqual(log_response.status_code, status.HTTP_200_OK)
+        log_data = log_response.data  # type: ignore
+        months = [entry["month"] for entry in log_data]
+        self.assertIn("2026-10", months)
+
+        history_response = self.client.get(
+            reverse("revenue-create-list"),
+            {"fixed_revenue_template": self.fixed_rev.id},
+        )
+        self.assertEqual(history_response.status_code, status.HTTP_200_OK)
+        history_ids = [
+            r["id"] for r in history_response.data["results"]  # type: ignore
+        ]
+        self.assertIn(revenue_id, history_ids)
 
     def test_bulk_generate_raises_for_invalid_id(self):
         from revenues.models import FixedRevenue

@@ -69,6 +69,12 @@ class RevenueFilter(filters.FilterSet):
         field_name="date__month", help_text="Filter by month (1-12)"
     )
 
+    # Filter by source fixed revenue template
+    fixed_revenue_template = filters.NumberFilter(
+        field_name="fixed_revenue_template__id",
+        help_text="Filter revenues by source fixed revenue template ID",
+    )
+
     class Meta:
         model = Revenue
         fields = {

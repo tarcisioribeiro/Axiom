@@ -22,11 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { booksService } from '@/services/books-service';
 import { coursesService, courseSessionsService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
 import { readingsService } from '@/services/readings-service';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { Book } from '@/types';
 import type { Course } from '@/types/intellect';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -78,6 +79,8 @@ function formatElapsed(seconds: number) {
 export function StudyTimer() {
   const { t } = useTranslation();
   const { toast } = useToast();
+
+  const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
 
   const [isOpen, setIsOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
@@ -227,7 +230,15 @@ export function StudyTimer() {
   return (
     <>
       {/* Floating trigger */}
-      <div className="gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end">
+      <div
+        className={cn(
+          'gap-sm fixed right-6 bottom-6 z-40 flex flex-col items-end transition-all',
+          // Fica fora do caminho quando o mouse está perto da paginação de
+          // uma lista (ver stores/agent-widget-store.ts), exceto com o
+          // painel aberto.
+          hiddenByNav && !isOpen && 'pointer-events-none scale-75 opacity-0'
+        )}
+      >
         {isOpen && (
           <div className="mb-sm bg-card w-72 rounded-lg border shadow-lg">
             {/* Header */}

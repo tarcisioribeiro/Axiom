@@ -1,9 +1,11 @@
 /* eslint-disable react-hooks/incompatible-library */
-import { Check, FileText, Mail, Phone, Shield, User } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { Cake, Check, FileText, Mail, Phone, Shield, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +37,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
           sex: member.sex,
           is_creditor: member.is_creditor,
           is_benefited: member.is_benefited,
+          birth_date: member.birth_date || undefined,
           notes: member.notes || '',
         }
       : {
@@ -45,6 +48,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
   });
 
   const watchedSex = watch('sex');
+  const watchedBirthDate = watch('birth_date');
   const watchedIsCreditor = watch('is_creditor');
   const watchedIsBenefited = watch('is_benefited');
 
@@ -130,6 +134,23 @@ export const MemberForm: React.FC<MemberFormProps> = ({
               type="email"
               placeholder={t('pages.members.form.emailPlaceholder')}
               disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="gap-xs flex items-center">
+              <Cake className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.members.form.birthDateLabel')}
+            </Label>
+            <DatePicker
+              value={
+                watchedBirthDate ? parseISO(watchedBirthDate + 'T00:00:00') : undefined
+              }
+              onChange={(d) =>
+                setValue('birth_date', d ? format(d, 'yyyy-MM-dd') : undefined)
+              }
+              disabled={isLoading}
+              maxDate={new Date()}
             />
           </div>
         </div>

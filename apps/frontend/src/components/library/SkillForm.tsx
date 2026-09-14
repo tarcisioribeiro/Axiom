@@ -1,21 +1,25 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import {
   Atom,
   Brain,
   Briefcase,
   Code2,
+  GraduationCap,
   Globe,
   Layers,
   MoreHorizontal,
   Paintbrush,
   Palette,
+  X,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
@@ -28,7 +32,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
+import { coursesService } from '@/services/courses-service';
 import type {
   IntellectCategory,
   Skill,
@@ -157,6 +163,16 @@ export function SkillForm({
 }: SkillFormProps) {
   const { t } = useTranslation();
 
+  const [selectedCourses, setSelectedCourses] = useState<number[]>(
+    skill?.courses.map((c) => c.id) ?? []
+  );
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => coursesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
   const { register, handleSubmit, setValue, watch, reset } = useForm<SkillFormValues>({
     resolver: zodResolver(skillSchema),
     defaultValues: {
@@ -179,6 +195,7 @@ export function SkillForm({
         notes: skill.notes ?? null,
         owner: skill.owner,
       });
+      setSelectedCourses(skill.courses.map((c) => c.id));
     } else {
       reset({
         name: '',
@@ -188,14 +205,28 @@ export function SkillForm({
         notes: null,
         owner: ownerId,
       });
+      setSelectedCourses([]);
     }
   }, [skill, ownerId, reset]);
+
+  const handleCourseToggle = (courseId: number) => {
+    setSelectedCourses((prev) =>
+      prev.includes(courseId)
+        ? prev.filter((id) => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
+  const handleRemoveCourse = (courseId: number) => {
+    setSelectedCourses((prev) => prev.filter((id) => id !== courseId));
+  };
 
   const handleFormSubmit = async (values: SkillFormValues) => {
     await onSubmit({
       name: values.name,
       category: values.category as IntellectCategory,
       proficiency: values.proficiency as SkillProficiency,
+      course_ids: selectedCourses,
       status: values.status as SkillStatus,
       notes: values.notes || null,
       owner: values.owner,
@@ -280,6 +311,46 @@ export function SkillForm({
             placeholder={t('pages.skills.form.notesPlaceholder')}
             {...register('notes')}
           />
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.skills.form.sectionCourses')} icon={GraduationCap}>
+        <div className="space-y-sm">
+          <Label>{t('pages.skills.form.coursesLabel')}</Label>
+          <Select onValueChange={(v) => handleCourseToggle(parseInt(v, 10))}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('pages.skills.form.coursesPlaceholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map((course) => (
+                <SelectItem key={course.id} value={course.id.toString()}>
+                  {course.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedCourses.length > 0 && (
+            <div className="mt-sm gap-sm flex flex-wrap">
+              {selectedCourses.map((courseId) => {
+                const course = courses.find((c) => c.id === courseId);
+                return course ? (
+                  <Badge key={courseId} variant="secondary">
+                    {course.title}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCourse(courseId)}
+                      aria-label={t('pages.skills.form.removeCourse', {
+                        name: course.title,
+                      })}
+                      className="ml-xs hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" aria-hidden="true" />
+                    </button>
+                  </Badge>
+                ) : null;
+              })}
+            </div>
+          )}
         </div>
       </FormSection>
 
