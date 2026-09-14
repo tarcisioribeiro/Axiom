@@ -211,7 +211,9 @@ export function SkillForm({
 
   const handleCourseToggle = (courseId: number) => {
     setSelectedCourses((prev) =>
-      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+      prev.includes(courseId)
+        ? prev.filter((id) => id !== courseId)
+        : [...prev, courseId]
     );
   };
 

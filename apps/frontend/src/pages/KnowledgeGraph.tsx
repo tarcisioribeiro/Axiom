@@ -701,9 +701,7 @@ export default function KnowledgeGraph() {
       )
       .map((n) => {
         const saved = savedPositions[n.id];
-        return saved
-          ? { ...n, x: saved.x, y: saved.y, fx: saved.x, fy: saved.y }
-          : n;
+        return saved ? { ...n, x: saved.x, y: saved.y, fx: saved.x, fy: saved.y } : n;
       });
     const visibleIds = new Set(visibleNodes.map((n) => n.id));
 

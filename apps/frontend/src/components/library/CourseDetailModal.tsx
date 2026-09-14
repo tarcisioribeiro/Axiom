@@ -630,9 +630,9 @@ export function CourseDetailModal({
 
   const canAttachCertificate = Boolean(
     displayCourse?.estimated_hours &&
-      displayCourse.total_lessons > 0 &&
-      displayCourse.progress_percentage === 100 &&
-      displayCourse.invested_hours >= displayCourse.estimated_hours
+    displayCourse.total_lessons > 0 &&
+    displayCourse.progress_percentage === 100 &&
+    displayCourse.invested_hours >= displayCourse.estimated_hours
   );
 
   const isCertificateImage = useMemo(() => {
