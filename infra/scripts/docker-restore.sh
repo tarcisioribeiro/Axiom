@@ -44,6 +44,7 @@ MC_CONFIG_DIR=""  # inicializado antes do uso para o cleanup
 mc_cmd() {
     docker run --rm \
         --network host \
+        --user "$(id -u):$(id -g)" \
         -v "${MC_CONFIG_DIR}:/root/.mc" \
         quay.io/minio/mc "$@"
 }
@@ -52,6 +53,7 @@ mc_mirror() {
     local src_dir="$1"; shift
     docker run --rm \
         --network host \
+        --user "$(id -u):$(id -g)" \
         -v "${MC_CONFIG_DIR}:/root/.mc" \
         -v "${src_dir}:/mnt/backup:ro" \
         quay.io/minio/mc "$@"

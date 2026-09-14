@@ -37,7 +37,10 @@ interface StatCardProps {
 const extractNumber = (val: string | number): number => {
   if (typeof val === 'number') return val;
   const s = String(val);
-  if (s.includes('%')) return parseFloat(s.replace('%', '').trim());
+  // No early-return for '%': plain parseFloat on a pt-BR string like
+  // "18,8 %" stops at the comma and silently truncates to 18. Falling
+  // through to the locale-aware cleanup below (it already strips '%')
+  // parses the decimal correctly regardless of separator style.
   const cleaned = s.replace(/[^\d.,-]/g, '');
   const lastDot = cleaned.lastIndexOf('.');
   const lastComma = cleaned.lastIndexOf(',');

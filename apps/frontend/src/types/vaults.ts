@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export interface GoalComputedProgress {
   current_value: string;
   target_value: string;
@@ -37,6 +38,9 @@ export interface Vault {
   annual_yield_rate_percentage: number;
   daily_yield_rate: number;
   daily_yield_rate_percentage: number;
+  yield_index_type: VaultYieldIndexType;
+  yield_index_type_display: string;
+  yield_index_percentage: string | null;
   last_yield_date?: string;
   pending_yield: number;
   is_active: boolean;
@@ -50,11 +54,15 @@ export interface Vault {
   updated_by?: number;
 }
 
+export type VaultYieldIndexType = 'none' | 'cdi' | 'selic';
+
 export interface VaultFormData {
   description: string;
   account: number;
   yield_rate?: number;
   annual_yield_rate: number;
+  yield_index_type?: VaultYieldIndexType;
+  yield_index_percentage?: number | null;
   is_active: boolean;
   notes?: string;
 }
@@ -143,8 +151,29 @@ export interface VaultWithdrawData {
 export interface VaultYieldUpdateData {
   yield_rate?: number;
   accumulated_yield?: number;
+  yield_index_type?: VaultYieldIndexType;
+  yield_index_percentage?: number | null;
   recalculate?: boolean;
   from_date?: string;
+}
+
+export interface VaultYieldPreviewRequest {
+  yield_index_type?: VaultYieldIndexType;
+  yield_index_percentage?: number | null;
+}
+
+export interface VaultYieldPreviewResponse {
+  index_type: VaultYieldIndexType;
+  index_type_display: string;
+  percentage: number | null;
+  annual_rate: number;
+  annual_rate_percentage: number;
+  daily_rate: number;
+  business_days: number;
+  principal: number;
+  next_yield_value: number;
+  index_reference_date: string | null;
+  as_of_date: string;
 }
 
 export interface VaultOperationResponse {
@@ -165,6 +194,10 @@ export interface VaultYieldUpdateResponse {
     old: number;
     new: number;
   };
+  annual_yield_rate_changed?: {
+    old: number;
+    new: number;
+  };
   accumulated_yield_changed?: {
     old: number;
     new: number;
@@ -175,6 +208,7 @@ export interface VaultYieldUpdateResponse {
     new_yield_amount: number;
     difference: number;
   };
+  index_warning?: string;
   vault: Vault;
 }
 

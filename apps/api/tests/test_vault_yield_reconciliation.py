@@ -13,12 +13,17 @@ from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.db.models import Sum
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
+
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import Account
 from members.models import Member
 from revenues.models import Revenue
-from vaults.models import Vault
+from vaults.models import Vault, VaultTransaction
 
 
 class VaultYieldInvariantTest(TestCase):
@@ -258,3 +263,100 @@ class VaultYieldExternalEditSyncTest(TestCase):
         self.account.refresh_from_db()
         self.assertEqual(total_income, self.vault.accumulated_yield)
         self.assertEqual(self.account.available_balance, Decimal("0.00"))
+
+
+class VaultTransactionUpdateViewLeakTest(APITestCase):
+    """
+    Regression test for the reported leak: editing (or deleting) a yield
+    VaultTransaction via the transaction-history screen must never change
+    Account.available_balance — the edited difference has to stay reserved
+    in the vault (Σ Revenue income == accumulated_yield), not spill into
+    the account's available-to-spend balance.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_superuser(
+            username="yieldleak",
+            email="yieldleak@test.com",
+            password="testpass123",
+        )
+        self.client = APIClient()
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+        self.member = Member.objects.create(
+            name="Yield Leak User",
+            document_hash="l" * 64,
+            phone="11988880126",
+            sex="M",
+            user=self.user,
+        )
+        self.account = Account.objects.create(
+            account_name="Yield Leak Account",
+            institution_name="MPG",
+            account_type="CC",
+            is_active=True,
+            current_balance=Decimal("1000.00"),
+            created_by=self.user,
+        )
+        self.vault = Vault.objects.create(
+            description="Yield Leak Vault",
+            account=self.account,
+            annual_yield_rate=Decimal("0.1500"),
+            is_active=True,
+            created_by=self.user,
+        )
+        self.vault.deposit(Decimal("1000.00"), user=self.user)
+        self.vault.last_yield_date = timezone.now().date() - timedelta(days=10)
+        self.vault.save()
+        applied = self.vault.apply_yield(user=self.user)
+        self.assertGreater(applied, Decimal("0.00"))
+        self.yield_tx = VaultTransaction.objects.get(
+            vault=self.vault, transaction_type="yield"
+        )
+
+    def _assert_invariant_and_zero_available(self):
+        total_income = Revenue.objects.filter(
+            related_vault=self.vault, category="income", is_deleted=False
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+        self.vault.refresh_from_db()
+        self.account.refresh_from_db()
+        self.assertEqual(total_income, self.vault.accumulated_yield)
+        self.assertEqual(self.account.available_balance, Decimal("0.00"))
+
+    def test_editing_yield_transaction_amount_does_not_leak_to_available(
+        self,
+    ):
+        url = reverse("vault-transaction-update", args=[self.yield_tx.pk])
+        new_amount = self.yield_tx.amount - Decimal("0.60")
+
+        response = self.client.patch(url, {"amount": str(new_amount)})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._assert_invariant_and_zero_available()
+        self.vault.refresh_from_db()
+        self.assertEqual(self.vault.accumulated_yield, new_amount)
+
+    def test_editing_yield_transaction_amount_up_does_not_leak_to_available(
+        self,
+    ):
+        url = reverse("vault-transaction-update", args=[self.yield_tx.pk])
+        new_amount = self.yield_tx.amount + Decimal("0.60")
+
+        response = self.client.patch(url, {"amount": str(new_amount)})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._assert_invariant_and_zero_available()
+        self.vault.refresh_from_db()
+        self.assertEqual(self.vault.accumulated_yield, new_amount)
+
+    def test_deleting_yield_transaction_does_not_leak_to_available(self):
+        url = reverse("vault-transaction-update", args=[self.yield_tx.pk])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._assert_invariant_and_zero_available()
+        self.vault.refresh_from_db()
+        self.assertEqual(self.vault.accumulated_yield, Decimal("0.00"))
