@@ -182,7 +182,7 @@ export function VaultTransactionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.vaults.transactionsTitle')}</DialogTitle>
           <DialogDescription>
@@ -286,7 +286,7 @@ export function VaultTransactionsDialog({
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {editingTx?.id === tx.id ? (
                           <Input
                             value={editDesc}
