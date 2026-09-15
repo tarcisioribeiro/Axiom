@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { differenceInYears, format, parseISO, subDays } from 'date-fns';
+import {
+  differenceInYears,
+  format,
+  isToday,
+  isYesterday,
+  parseISO,
+  subDays,
+} from 'date-fns';
+import type { Locale } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Activity,
@@ -12,9 +20,12 @@ import {
   PieChart,
   Plus,
   Ratio,
+  RefreshCw,
   Ruler,
   Scale,
   Trash2,
+  TrendingDown,
+  TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +94,37 @@ const METRIC_META = [
 ] as const;
 
 type MetricKey = (typeof METRIC_META)[number]['key'];
+
+type NumericFieldKey = Exclude<keyof MetricFormState, 'measured_at' | 'notes'>;
+
+// Campos exibidos como chips secundários no histórico (fora do resumo
+// principal de peso/IMC/gordura).
+const HISTORY_SECONDARY_FIELDS: Array<[keyof BodyMetric, string]> = [
+  ['height_cm', 'height'],
+  ['waist_cm', 'waist'],
+  ['neck_cm', 'neck'],
+  ['hip_cm', 'hip'],
+  ['arm_cm', 'arm'],
+  ['shoulders_cm', 'shoulders'],
+  ['chest_cm', 'chest'],
+  ['abdomen_cm', 'abdomen'],
+  ['arm_left_cm', 'armLeft'],
+  ['arm_right_cm', 'armRight'],
+  ['thigh_left_cm', 'thighLeft'],
+  ['thigh_right_cm', 'thighRight'],
+  ['calf_left_cm', 'calfLeft'],
+  ['calf_right_cm', 'calfRight'],
+];
+
+function historyDayLabel(
+  date: Date,
+  t: (k: string) => string,
+  locale: Locale | undefined
+): string {
+  if (isToday(date)) return t('pages.bodyMetrics.today');
+  if (isYesterday(date)) return t('pages.bodyMetrics.yesterday');
+  return format(date, "dd 'de' MMMM 'de' yyyy", { locale });
+}
 
 // ── Cálculos ──────────────────────────────────────────────────────────────────
 
@@ -372,6 +414,11 @@ export default function BodyMetrics() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BodyMetric | null>(null);
+  const [recalcMode, setRecalcMode] = useState(false);
+  // Registro cujos valores preenchem os campos em branco no modo recálculo —
+  // o último registro geral (botão da barra de ferramentas) ou um registro
+  // específico do histórico (botão "Recalcular" por linha).
+  const [recalcSource, setRecalcSource] = useState<BodyMetric | null>(null);
   const [form, setForm] = useState<MetricFormState>(emptyForm);
   const [period, setPeriod] = useState<PeriodKey>('90');
   const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(
@@ -454,24 +501,33 @@ export default function BodyMetrics() {
     : null;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  // Ordenado por -measured_at no backend (Meta.ordering do BodyMetric).
+  const lastMetric = metrics[0] ?? null;
+
+  function effectiveValue(key: NumericFieldKey): string {
+    if (form[key]) return form[key];
+    if (recalcMode && recalcSource?.[key]) return recalcSource[key];
+    return '';
+  }
+
   // ── Cálculo em tempo real no formulário ────────────────────────────────────
 
-  const liveWeight = parseFloat(form.weight_kg) || 0;
-  const liveHeight = parseFloat(form.height_cm) || 0;
-  const liveWaist = parseFloat(form.waist_cm) || 0;
-  const liveNeck = parseFloat(form.neck_cm) || 0;
-  const liveHip = parseFloat(form.hip_cm) || 0;
+  const liveWeight = parseFloat(effectiveValue('weight_kg')) || 0;
+  const liveHeight = parseFloat(effectiveValue('height_cm')) || 0;
+  const liveWaist = parseFloat(effectiveValue('waist_cm')) || 0;
+  const liveNeck = parseFloat(effectiveValue('neck_cm')) || 0;
+  const liveHip = parseFloat(effectiveValue('hip_cm')) || 0;
 
   const liveBmi = calcBmi(liveWeight, liveHeight);
 
   const skinfoldValues = [
-    form.skinfold_triceps_mm,
-    form.skinfold_subscapular_mm,
-    form.skinfold_suprailiac_mm,
-    form.skinfold_chest_mm,
-    form.skinfold_midaxillary_mm,
-    form.skinfold_abdominal_mm,
-    form.skinfold_thigh_mm,
+    effectiveValue('skinfold_triceps_mm'),
+    effectiveValue('skinfold_subscapular_mm'),
+    effectiveValue('skinfold_suprailiac_mm'),
+    effectiveValue('skinfold_chest_mm'),
+    effectiveValue('skinfold_midaxillary_mm'),
+    effectiveValue('skinfold_abdominal_mm'),
+    effectiveValue('skinfold_thigh_mm'),
   ].map((v) => parseFloat(v) || 0);
   const hasAllSkinfolds = skinfoldValues.every((v) => v > 0);
   const liveSum7 = skinfoldValues.reduce((sum, v) => sum + v, 0);
@@ -494,12 +550,38 @@ export default function BodyMetrics() {
 
   function openCreate() {
     setEditing(null);
+    setRecalcMode(false);
+    setRecalcSource(null);
     setForm(emptyForm);
+    setDialogOpen(true);
+  }
+
+  function openRecalculate() {
+    setEditing(null);
+    setRecalcMode(true);
+    setRecalcSource(lastMetric);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  }
+
+  // Recalcula um registro específico do histórico: mantém os campos já
+  // preenchidos como fallback (placeholder "Último: X") e atualiza o próprio
+  // registro em vez de criar um novo — para completar medidas que faltaram
+  // no dia sem duplicar a entrada.
+  function openRecalculateRecord(metric: BodyMetric) {
+    setEditing(metric);
+    setRecalcMode(true);
+    setRecalcSource(metric);
+    // emptyForm.measured_at é a data de hoje — sobrescreve com a data do
+    // próprio registro, senão o submit moveria essa medição para hoje.
+    setForm({ ...emptyForm, measured_at: parseISO(metric.measured_at + 'T00:00:00') });
     setDialogOpen(true);
   }
 
   function openEdit(metric: BodyMetric) {
     setEditing(metric);
+    setRecalcMode(false);
+    setRecalcSource(null);
     setForm(toFormState(metric));
     setDialogOpen(true);
   }
@@ -522,27 +604,27 @@ export default function BodyMetrics() {
 
     const payload: BodyMetricFormData = {
       measured_at: format(form.measured_at, 'yyyy-MM-dd'),
-      weight_kg: form.weight_kg || null,
-      height_cm: form.height_cm || null,
-      waist_cm: form.waist_cm || null,
-      neck_cm: form.neck_cm || null,
-      hip_cm: form.hip_cm || null,
-      shoulders_cm: form.shoulders_cm || null,
-      chest_cm: form.chest_cm || null,
-      abdomen_cm: form.abdomen_cm || null,
-      arm_left_cm: form.arm_left_cm || null,
-      arm_right_cm: form.arm_right_cm || null,
-      thigh_left_cm: form.thigh_left_cm || null,
-      thigh_right_cm: form.thigh_right_cm || null,
-      calf_left_cm: form.calf_left_cm || null,
-      calf_right_cm: form.calf_right_cm || null,
-      skinfold_triceps_mm: form.skinfold_triceps_mm || null,
-      skinfold_subscapular_mm: form.skinfold_subscapular_mm || null,
-      skinfold_suprailiac_mm: form.skinfold_suprailiac_mm || null,
-      skinfold_chest_mm: form.skinfold_chest_mm || null,
-      skinfold_midaxillary_mm: form.skinfold_midaxillary_mm || null,
-      skinfold_abdominal_mm: form.skinfold_abdominal_mm || null,
-      skinfold_thigh_mm: form.skinfold_thigh_mm || null,
+      weight_kg: effectiveValue('weight_kg') || null,
+      height_cm: effectiveValue('height_cm') || null,
+      waist_cm: effectiveValue('waist_cm') || null,
+      neck_cm: effectiveValue('neck_cm') || null,
+      hip_cm: effectiveValue('hip_cm') || null,
+      shoulders_cm: effectiveValue('shoulders_cm') || null,
+      chest_cm: effectiveValue('chest_cm') || null,
+      abdomen_cm: effectiveValue('abdomen_cm') || null,
+      arm_left_cm: effectiveValue('arm_left_cm') || null,
+      arm_right_cm: effectiveValue('arm_right_cm') || null,
+      thigh_left_cm: effectiveValue('thigh_left_cm') || null,
+      thigh_right_cm: effectiveValue('thigh_right_cm') || null,
+      calf_left_cm: effectiveValue('calf_left_cm') || null,
+      calf_right_cm: effectiveValue('calf_right_cm') || null,
+      skinfold_triceps_mm: effectiveValue('skinfold_triceps_mm') || null,
+      skinfold_subscapular_mm: effectiveValue('skinfold_subscapular_mm') || null,
+      skinfold_suprailiac_mm: effectiveValue('skinfold_suprailiac_mm') || null,
+      skinfold_chest_mm: effectiveValue('skinfold_chest_mm') || null,
+      skinfold_midaxillary_mm: effectiveValue('skinfold_midaxillary_mm') || null,
+      skinfold_abdominal_mm: effectiveValue('skinfold_abdominal_mm') || null,
+      skinfold_thigh_mm: effectiveValue('skinfold_thigh_mm') || null,
       body_fat_method: liveBodyFatMethod,
       body_fat_pct: bfPct,
       notes: form.notes,
@@ -643,6 +725,13 @@ export default function BodyMetrics() {
       setForm((f) => ({ ...f, [field]: e.target.value }));
   }
 
+  function placeholderFor(key: NumericFieldKey, fallback?: string): string | undefined {
+    if (recalcMode && recalcSource?.[key]) {
+      return t('pages.bodyMetrics.recalcPlaceholder', { value: recalcSource[key] });
+    }
+    return fallback;
+  }
+
   if (isLoading) return <LoadingState />;
 
   // ── JSX ───────────────────────────────────────────────────────────────────
@@ -653,11 +742,20 @@ export default function BodyMetrics() {
         <PageHeader
           title={t('pages.bodyMetrics.title')}
           description={t('pages.bodyMetrics.subtitle')}
-          action={{
-            label: t('pages.bodyMetrics.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: openCreate,
-          }}
+          actions={
+            <div className="gap-sm flex">
+              {metrics.length > 0 && (
+                <Button variant="outline" className="gap-sm" onClick={openRecalculate}>
+                  <RefreshCw className="h-4 w-4" />
+                  {t('pages.bodyMetrics.recalcBtn')}
+                </Button>
+              )}
+              <Button className="gap-sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t('pages.bodyMetrics.newBtn')}
+              </Button>
+            </div>
+          }
         />
 
         {metrics.length === 0 ? (
@@ -1175,149 +1273,226 @@ export default function BodyMetrics() {
               {/* ── Histórico ── */}
               <TabsContent value="history">
                 <div className="space-y-sm">
-                  {metrics.map((metric) => {
-                    const date = parseISO(metric.measured_at + 'T00:00:00');
-                    const bmi =
-                      metric.weight_kg && metric.height_cm
-                        ? calcBmi(
-                            parseFloat(metric.weight_kg),
-                            parseFloat(metric.height_cm)
-                          )
-                        : null;
-                    return (
-                      <Card key={metric.id}>
-                        <CardContent className="gap-md p-md flex items-start justify-between">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-sm gap-sm flex flex-wrap items-center">
-                              <span className="font-medium">
-                                {format(date, "dd 'de' MMMM 'de' yyyy", { locale })}
+                  {(() => {
+                    // Ordenação defensiva: measured_at é uma data (sem hora), então
+                    // dois registros no mesmo dia empatam nela — created_at desempata
+                    // para o mais recente aparecer primeiro mesmo nesse caso.
+                    const sorted = [...metrics].sort((a, b) => {
+                      if (a.measured_at !== b.measured_at) {
+                        return a.measured_at < b.measured_at ? 1 : -1;
+                      }
+                      return a.created_at < b.created_at ? 1 : -1;
+                    });
+                    const sameDayCount = sorted.reduce<Record<string, number>>(
+                      (acc, m) => {
+                        acc[m.measured_at] = (acc[m.measured_at] ?? 0) + 1;
+                        return acc;
+                      },
+                      {}
+                    );
+
+                    return sorted.map((metric, index) => {
+                      const date = parseISO(metric.measured_at + 'T00:00:00');
+                      const isNewDay =
+                        index === 0 ||
+                        sorted[index - 1].measured_at !== metric.measured_at;
+                      const isLatest = index === 0;
+                      const olderMetric = sorted[index + 1] ?? null;
+                      const bmi =
+                        metric.weight_kg && metric.height_cm
+                          ? calcBmi(
+                              parseFloat(metric.weight_kg),
+                              parseFloat(metric.height_cm)
+                            )
+                          : null;
+                      const weightTrend = trendData(
+                        metric.weight_kg,
+                        olderMetric?.weight_kg ?? null,
+                        ''
+                      );
+                      const fatTrend = trendData(
+                        metric.body_fat_pct,
+                        olderMetric?.body_fat_pct ?? null,
+                        ''
+                      );
+                      const secondaryFields = HISTORY_SECONDARY_FIELDS.filter(
+                        ([field]) => metric[field]
+                      );
+
+                      return (
+                        <div key={metric.id}>
+                          {isNewDay && (
+                            <div
+                              className={cn(
+                                'gap-sm mb-sm flex items-center',
+                                index > 0 && 'mt-lg'
+                              )}
+                            >
+                              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                                {historyDayLabel(date, t, locale)}
                               </span>
-                              {bmi !== null && (
-                                <Badge
-                                  variant={bmiCategory(bmi, t).variant}
-                                  className="text-xs"
-                                >
-                                  IMC {bmi.toFixed(1)} · {bmiCategory(bmi, t).label}
-                                </Badge>
-                              )}
+                              <div className="bg-border h-px flex-1" />
                             </div>
-                            <div className="gap-x-md gap-y-xs text-muted-foreground flex flex-wrap text-sm">
-                              {metric.weight_kg && (
-                                <span>
-                                  {t('pages.bodyMetrics.weight')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.weight_kg, 'kg')}
-                                  </strong>
-                                </span>
-                              )}
-                              {metric.height_cm && (
-                                <span>
-                                  {t('pages.bodyMetrics.height')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.height_cm, 'cm')}
-                                  </strong>
-                                </span>
-                              )}
-                              {metric.waist_cm && (
-                                <span>
-                                  {t('pages.bodyMetrics.waist')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.waist_cm, 'cm')}
-                                  </strong>
-                                </span>
-                              )}
-                              {metric.neck_cm && (
-                                <span>
-                                  {t('pages.bodyMetrics.neck')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.neck_cm, 'cm')}
-                                  </strong>
-                                </span>
-                              )}
-                              {metric.arm_cm && (
-                                <span>
-                                  {t('pages.bodyMetrics.arm')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.arm_cm, 'cm')}
-                                  </strong>
-                                </span>
-                              )}
-                              {metric.hip_cm && (
-                                <span>
-                                  {t('pages.bodyMetrics.hip')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.hip_cm, 'cm')}
-                                  </strong>
-                                </span>
-                              )}
-                              {[
-                                ['shoulders_cm', 'shoulders'],
-                                ['chest_cm', 'chest'],
-                                ['abdomen_cm', 'abdomen'],
-                                ['arm_left_cm', 'armLeft'],
-                                ['arm_right_cm', 'armRight'],
-                                ['thigh_left_cm', 'thighLeft'],
-                                ['thigh_right_cm', 'thighRight'],
-                                ['calf_left_cm', 'calfLeft'],
-                                ['calf_right_cm', 'calfRight'],
-                              ].map(([field, labelKey]) => {
-                                const val = metric[field as keyof BodyMetric] as
-                                  string | null;
-                                if (!val) return null;
-                                return (
-                                  <span key={field}>
-                                    {t(`pages.bodyMetrics.${labelKey}`)}:{' '}
-                                    <strong className="text-foreground">
-                                      {fmt(val, 'cm')}
-                                    </strong>
-                                  </span>
-                                );
-                              })}
-                              {metric.body_fat_pct && (
-                                <span>
-                                  {t('pages.bodyMetrics.bodyFat')}:{' '}
-                                  <strong className="text-foreground">
-                                    {fmt(metric.body_fat_pct, '%')}
-                                  </strong>
-                                  {metric.body_fat_method && (
-                                    <Badge variant="outline" className="ml-xs text-xs">
-                                      {metric.body_fat_method === 'pollock'
-                                        ? t('pages.bodyMetrics.pollockMethod')
-                                        : t('pages.bodyMetrics.navyMethod')}
+                          )}
+                          <Card
+                            className={cn(
+                              isLatest && 'border-primary/40 bg-primary/[0.03]'
+                            )}
+                          >
+                            {/* CardContent teria pt-0 (feito para vir depois de um
+                            CardHeader) — sem header aqui, isso zerava o espaçamento
+                            do topo e colava o conteúdo na borda do card. */}
+                            <div className="gap-md p-lg flex items-start justify-between">
+                              <div className="space-y-sm min-w-0 flex-1">
+                                {(isLatest || sameDayCount[metric.measured_at] > 1) && (
+                                  <div className="gap-sm flex flex-wrap items-center">
+                                    {isLatest && (
+                                      <Badge className="bg-primary/15 text-primary text-2xs">
+                                        {t('pages.bodyMetrics.latestRecord')}
+                                      </Badge>
+                                    )}
+                                    {sameDayCount[metric.measured_at] > 1 && (
+                                      <span className="text-muted-foreground text-2xs">
+                                        {format(parseISO(metric.created_at), 'HH:mm')}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="gap-x-lg gap-y-xs flex flex-wrap items-baseline">
+                                  {metric.weight_kg && (
+                                    <div className="gap-xs flex items-baseline">
+                                      <span className="text-2xl font-bold">
+                                        {fmt(metric.weight_kg, 'kg')}
+                                      </span>
+                                      {weightTrend && (
+                                        <span
+                                          className={cn(
+                                            'gap-xs flex items-center text-xs font-medium',
+                                            weightTrend.isPositive
+                                              ? 'text-success'
+                                              : 'text-destructive'
+                                          )}
+                                        >
+                                          {weightTrend.isPositive ? (
+                                            <TrendingUp className="h-3 w-3" />
+                                          ) : (
+                                            <TrendingDown className="h-3 w-3" />
+                                          )}
+                                          {weightTrend.value > 0 ? '+' : ''}
+                                          {weightTrend.value}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {bmi !== null && (
+                                    <Badge
+                                      variant={bmiCategory(bmi, t).variant}
+                                      className="text-xs"
+                                    >
+                                      IMC {bmi.toFixed(1)} · {bmiCategory(bmi, t).label}
                                     </Badge>
                                   )}
-                                </span>
-                              )}
+                                  {metric.body_fat_pct && (
+                                    <div className="gap-xs flex items-center text-sm">
+                                      <span className="text-muted-foreground">
+                                        {t('pages.bodyMetrics.bodyFat')}
+                                      </span>
+                                      <strong className="text-foreground">
+                                        {fmt(metric.body_fat_pct, '%')}
+                                      </strong>
+                                      {fatTrend && (
+                                        <span
+                                          className={cn(
+                                            'gap-xs flex items-center text-xs font-medium',
+                                            fatTrend.isPositive
+                                              ? 'text-destructive'
+                                              : 'text-success'
+                                          )}
+                                        >
+                                          {fatTrend.isPositive ? (
+                                            <TrendingUp className="h-3 w-3" />
+                                          ) : (
+                                            <TrendingDown className="h-3 w-3" />
+                                          )}
+                                          {fatTrend.value > 0 ? '+' : ''}
+                                          {fatTrend.value}%
+                                        </span>
+                                      )}
+                                      {metric.body_fat_method && (
+                                        <Badge variant="outline" className="text-2xs">
+                                          {metric.body_fat_method === 'pollock'
+                                            ? t('pages.bodyMetrics.pollockMethod')
+                                            : t('pages.bodyMetrics.navyMethod')}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {secondaryFields.length > 0 && (
+                                  <details className="group">
+                                    <summary className="text-muted-foreground hover:text-foreground w-fit cursor-pointer text-xs">
+                                      {t('pages.bodyMetrics.showDetails')}
+                                    </summary>
+                                    <div className="gap-xs mt-xs flex flex-wrap">
+                                      {secondaryFields.map(([field, labelKey]) => (
+                                        <span
+                                          key={field}
+                                          className="bg-muted text-muted-foreground px-sm text-2xs rounded-full py-0.5"
+                                        >
+                                          {t(`pages.bodyMetrics.${labelKey}`)}:{' '}
+                                          <strong className="text-foreground">
+                                            {fmt(metric[field], 'cm')}
+                                          </strong>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </details>
+                                )}
+
+                                {metric.notes && (
+                                  <p className="text-muted-foreground text-xs italic">
+                                    “{metric.notes}”
+                                  </p>
+                                )}
+                              </div>
+                              <div className="gap-xs flex shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  title={t('pages.bodyMetrics.recalcBtn')}
+                                  onClick={() => openRecalculateRecord(metric)}
+                                >
+                                  <RefreshCw className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  title={t('common.actions.edit')}
+                                  onClick={() => openEdit(metric)}
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive h-7 w-7"
+                                  title={t('common.actions.delete')}
+                                  onClick={() => void handleDelete(metric)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
                             </div>
-                            {metric.notes && (
-                              <p className="mt-xs text-muted-foreground text-xs">
-                                {metric.notes}
-                              </p>
-                            )}
-                          </div>
-                          <div className="gap-xs flex shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => openEdit(metric)}
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive h-7 w-7"
-                              onClick={() => void handleDelete(metric)}
-                              disabled={deleteMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          </Card>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </TabsContent>
             </Tabs>
@@ -1329,18 +1504,33 @@ export default function BodyMetrics() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {editing
-                  ? t('pages.bodyMetrics.editTitle')
-                  : t('pages.bodyMetrics.newTitle')}
+                {recalcMode
+                  ? t('pages.bodyMetrics.recalcTitle')
+                  : editing
+                    ? t('pages.bodyMetrics.editTitle')
+                    : t('pages.bodyMetrics.newTitle')}
               </DialogTitle>
               <DialogDescription>
-                {editing
-                  ? t('pages.bodyMetrics.editDesc')
-                  : t('pages.bodyMetrics.newDesc')}
+                {recalcMode
+                  ? t('pages.bodyMetrics.recalcDesc')
+                  : editing
+                    ? t('pages.bodyMetrics.editDesc')
+                    : t('pages.bodyMetrics.newDesc')}
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-md">
+              {recalcMode &&
+                (age !== null ? (
+                  <p className="text-success bg-success/10 px-md py-sm rounded-md text-xs font-medium">
+                    {t('pages.bodyMetrics.recalcAgeInfo', { age })}
+                  </p>
+                ) : (
+                  <p className="text-warning bg-warning/10 px-md py-sm rounded-md text-xs font-medium">
+                    {t('pages.bodyMetrics.pollockMissingBirthDate')}
+                  </p>
+                ))}
+
               <div className="space-y-xs">
                 <Label>{t('pages.bodyMetrics.measuredAt')}</Label>
                 <DatePicker
@@ -1358,7 +1548,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 75.5"
+                      placeholder={placeholderFor('weight_kg', 'Ex: 75.5')}
                       value={form.weight_kg}
                       onChange={setField('weight_kg')}
                     />
@@ -1369,7 +1559,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 175"
+                      placeholder={placeholderFor('height_cm', 'Ex: 175')}
                       value={form.height_cm}
                       onChange={setField('height_cm')}
                     />
@@ -1403,7 +1593,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 38"
+                      placeholder={placeholderFor('neck_cm', 'Ex: 38')}
                       value={form.neck_cm}
                       onChange={setField('neck_cm')}
                     />
@@ -1414,6 +1604,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('shoulders_cm')}
                       value={form.shoulders_cm}
                       onChange={setField('shoulders_cm')}
                     />
@@ -1424,6 +1615,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('chest_cm')}
                       value={form.chest_cm}
                       onChange={setField('chest_cm')}
                     />
@@ -1434,6 +1626,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('abdomen_cm')}
                       value={form.abdomen_cm}
                       onChange={setField('abdomen_cm')}
                     />
@@ -1444,7 +1637,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 80"
+                      placeholder={placeholderFor('waist_cm', 'Ex: 80')}
                       value={form.waist_cm}
                       onChange={setField('waist_cm')}
                     />
@@ -1460,7 +1653,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="Ex: 95"
+                      placeholder={placeholderFor('hip_cm', 'Ex: 95')}
                       value={form.hip_cm}
                       onChange={setField('hip_cm')}
                     />
@@ -1471,6 +1664,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('arm_left_cm')}
                       value={form.arm_left_cm}
                       onChange={setField('arm_left_cm')}
                     />
@@ -1481,6 +1675,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('arm_right_cm')}
                       value={form.arm_right_cm}
                       onChange={setField('arm_right_cm')}
                     />
@@ -1491,6 +1686,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('thigh_left_cm')}
                       value={form.thigh_left_cm}
                       onChange={setField('thigh_left_cm')}
                     />
@@ -1501,6 +1697,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('thigh_right_cm')}
                       value={form.thigh_right_cm}
                       onChange={setField('thigh_right_cm')}
                     />
@@ -1511,6 +1708,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('calf_left_cm')}
                       value={form.calf_left_cm}
                       onChange={setField('calf_left_cm')}
                     />
@@ -1521,6 +1719,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('calf_right_cm')}
                       value={form.calf_right_cm}
                       onChange={setField('calf_right_cm')}
                     />
@@ -1543,6 +1742,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_triceps_mm')}
                       value={form.skinfold_triceps_mm}
                       onChange={setField('skinfold_triceps_mm')}
                     />
@@ -1553,6 +1753,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_subscapular_mm')}
                       value={form.skinfold_subscapular_mm}
                       onChange={setField('skinfold_subscapular_mm')}
                     />
@@ -1563,6 +1764,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_suprailiac_mm')}
                       value={form.skinfold_suprailiac_mm}
                       onChange={setField('skinfold_suprailiac_mm')}
                     />
@@ -1573,6 +1775,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_chest_mm')}
                       value={form.skinfold_chest_mm}
                       onChange={setField('skinfold_chest_mm')}
                     />
@@ -1583,6 +1786,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_midaxillary_mm')}
                       value={form.skinfold_midaxillary_mm}
                       onChange={setField('skinfold_midaxillary_mm')}
                     />
@@ -1593,6 +1797,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_abdominal_mm')}
                       value={form.skinfold_abdominal_mm}
                       onChange={setField('skinfold_abdominal_mm')}
                     />
@@ -1603,6 +1808,7 @@ export default function BodyMetrics() {
                       type="number"
                       step="0.1"
                       min="0"
+                      placeholder={placeholderFor('skinfold_thigh_mm')}
                       value={form.skinfold_thigh_mm}
                       onChange={setField('skinfold_thigh_mm')}
                     />

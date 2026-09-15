@@ -18,6 +18,8 @@ def calculate_daily_yields(self) -> dict:
         errors = 0
         for vault in vaults:
             try:
+                if vault.yield_index_type in ("cdi", "selic"):
+                    vault.refresh_annual_rate_from_index()
                 vault.apply_yield(as_of_date=today)
                 updated += 1
             except Exception:

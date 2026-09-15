@@ -75,6 +75,9 @@ class VaultSerializer(serializers.ModelSerializer):
     annual_yield_rate_percentage = serializers.SerializerMethodField()
     daily_yield_rate = serializers.SerializerMethodField()
     daily_yield_rate_percentage = serializers.SerializerMethodField()
+    yield_index_type_display = serializers.CharField(
+        source="get_yield_index_type_display", read_only=True
+    )
 
     class Meta:
         model = Vault
@@ -95,6 +98,9 @@ class VaultSerializer(serializers.ModelSerializer):
             "annual_yield_rate_percentage",
             "daily_yield_rate",
             "daily_yield_rate_percentage",
+            "yield_index_type",
+            "yield_index_type_display",
+            "yield_index_percentage",
             "last_yield_date",
             "pending_yield",
             "is_active",
@@ -203,6 +209,19 @@ class VaultYieldUpdateSerializer(serializers.Serializer):
     accumulated_yield = serializers.DecimalField(
         max_digits=15, decimal_places=2, min_value=Decimal("0"), required=False
     )
+    yield_index_type = serializers.ChoiceField(
+        choices=["none", "cdi", "selic"],
+        required=False,
+        help_text="Índice real (CDI/SELIC) usado para recalcular a taxa anual",
+    )
+    yield_index_percentage = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        required=False,
+        allow_null=True,
+        help_text="Percentual do índice (ex: 120.00 = 120% do CDI)",
+    )
     recalculate = serializers.BooleanField(
         default=False,
         help_text="Se verdadeiro, recalcula os rendimentos com a nova taxa",
@@ -211,6 +230,21 @@ class VaultYieldUpdateSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
         help_text="Data a partir da qual recalcular os rendimentos",
+    )
+
+
+class VaultYieldPreviewSerializer(serializers.Serializer):
+    """Serializer para simular o próximo rendimento (sem persistência)."""
+
+    yield_index_type = serializers.ChoiceField(
+        choices=["none", "cdi", "selic"], required=False
+    )
+    yield_index_percentage = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        required=False,
+        allow_null=True,
     )
 
 

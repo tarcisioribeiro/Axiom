@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
-import { FileText, Landmark, Percent, Power, TrendingUp, Wallet } from 'lucide-react';
-import { useState } from 'react';
+import {
+  FileText,
+  Landmark,
+  Percent,
+  Power,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -26,7 +34,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { vaultsService } from '@/services/vaults-service';
-import type { Account, Vault, VaultFormData } from '@/types';
+import type {
+  Account,
+  Vault,
+  VaultFormData,
+  VaultYieldIndexType,
+  VaultYieldPreviewResponse,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 interface VaultFormDialogProps {
@@ -41,6 +55,8 @@ const makeDefaultForm = (accounts: Account[]): VaultFormData => ({
   description: '',
   account: accounts[0]?.id || 0,
   annual_yield_rate: 0,
+  yield_index_type: 'none',
+  yield_index_percentage: null,
   is_active: true,
   notes: '',
 });
@@ -71,6 +87,10 @@ export function VaultFormDialog({
         description: selectedVault.description,
         account: selectedVault.account,
         annual_yield_rate: selectedVault.annual_yield_rate_percentage,
+        yield_index_type: selectedVault.yield_index_type,
+        yield_index_percentage: selectedVault.yield_index_percentage
+          ? parseFloat(selectedVault.yield_index_percentage)
+          : null,
         is_active: selectedVault.is_active,
         notes: selectedVault.notes || '',
       });
@@ -78,6 +98,41 @@ export function VaultFormDialog({
       setFormData(makeDefaultForm(accounts));
     }
   }
+
+  const [preview, setPreview] = useState<VaultYieldPreviewResponse | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+
+  const usesRealIndex = formData.yield_index_type !== 'none';
+
+  useEffect(() => {
+    if (!selectedVault || !usesRealIndex) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets stale preview when switching away from a real index, not a derived-state update
+      setPreview(null);
+      setPreviewError(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setPreviewLoading(true);
+      setPreviewError(false);
+      vaultsService
+        .previewYield(selectedVault.id, {
+          yield_index_type: formData.yield_index_type,
+          yield_index_percentage: formData.yield_index_percentage,
+        })
+        .then(setPreview)
+        .catch(() => setPreviewError(true))
+        .finally(() => setPreviewLoading(false));
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedVault,
+    usesRealIndex,
+    formData.yield_index_type,
+    formData.yield_index_percentage,
+  ]);
 
   const handleSubmit = async () => {
     try {
@@ -176,62 +231,170 @@ export function VaultFormDialog({
           <FormSection title={t('common.form.sections.configuration')} icon={Percent}>
             <div className="space-y-md">
               <div className="space-y-sm">
-                <Label htmlFor="annual_yield_rate" className="gap-xs flex items-center">
-                  <Percent className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.vaults.yieldRateLabel')}
+                <Label htmlFor="yield_index_type" className="gap-xs flex items-center">
+                  <Sparkles className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.vaults.yieldIndexTypeLabel')}
                 </Label>
-                <div className="relative">
-                  <Input
-                    id="annual_yield_rate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.annual_yield_rate}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        annual_yield_rate: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="Ex: 12.00"
-                    className="pr-8"
-                  />
-                  <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
-                    %
-                  </span>
-                </div>
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.vaults.yieldRateHint')}
-                </p>
+                <Select
+                  value={formData.yield_index_type ?? 'none'}
+                  onValueChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      yield_index_type: v as VaultYieldIndexType,
+                      yield_index_percentage:
+                        v === 'none' ? null : (formData.yield_index_percentage ?? 100),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t('pages.vaults.yieldIndexTypeNone')}
+                    </SelectItem>
+                    <SelectItem value="cdi">
+                      {t('pages.vaults.yieldIndexTypeCdi')}
+                    </SelectItem>
+                    <SelectItem value="selic">
+                      {t('pages.vaults.yieldIndexTypeSelic')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Calculadora de rendimento estimado */}
-              {formData.annual_yield_rate > 0 && accountBalance > 0 && (
-                <div className="border-success/30 bg-success/5 p-sm rounded-lg border">
-                  <div className="mb-xs gap-xs text-success flex items-center text-xs font-semibold">
-                    <TrendingUp className="h-3.5 w-3.5" />
-                    {t('pages.vaults.estimatedYield')}
+              {usesRealIndex ? (
+                <div className="space-y-sm">
+                  <Label
+                    htmlFor="yield_index_percentage"
+                    className="gap-xs flex items-center"
+                  >
+                    <Percent className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.vaults.yieldIndexPercentageLabel')}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="yield_index_percentage"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.yield_index_percentage ?? ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          yield_index_percentage: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="Ex: 120"
+                      className="pr-8"
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
+                      %
+                    </span>
                   </div>
-                  <div className="gap-sm grid grid-cols-2 text-xs">
-                    <div>
-                      <p className="text-muted-foreground">
-                        {t('pages.vaults.monthlyYield')}
-                      </p>
-                      <p className="text-success font-semibold">
-                        {formatCurrency(estimatedMonthlyYield)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">
-                        {t('pages.vaults.annualYield')}
-                      </p>
-                      <p className="text-success font-semibold">
-                        {formatCurrency(estimatedAnnualYield)}
-                      </p>
-                    </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.vaults.yieldIndexPercentageHint')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-sm">
+                  <Label
+                    htmlFor="annual_yield_rate"
+                    className="gap-xs flex items-center"
+                  >
+                    <Percent className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.vaults.yieldRateLabel')}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="annual_yield_rate"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.annual_yield_rate}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          annual_yield_rate: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="Ex: 12.00"
+                      className="pr-8"
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-sm">
+                      %
+                    </span>
                   </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.vaults.yieldRateHint')}
+                  </p>
                 </div>
               )}
+
+              {/* Prévia do rendimento via índice real (CDI/SELIC) */}
+              {usesRealIndex && (
+                <div className="border-success/30 bg-success/5 p-sm rounded-lg border">
+                  {!selectedVault ? (
+                    <p className="text-muted-foreground text-xs">
+                      {t('pages.vaults.yieldIndexPreviewUnavailable')}
+                    </p>
+                  ) : previewLoading ? (
+                    <p className="text-muted-foreground text-xs">
+                      {t('pages.vaults.yieldIndexPreviewLoading')}
+                    </p>
+                  ) : previewError ? (
+                    <p className="text-destructive text-xs">
+                      {t('pages.vaults.yieldIndexPreviewError')}
+                    </p>
+                  ) : preview ? (
+                    <>
+                      <div className="mb-xs gap-xs text-success flex items-center text-xs font-semibold">
+                        <TrendingUp className="h-3.5 w-3.5" />
+                        {t('pages.vaults.yieldIndexPreviewLabel')}
+                      </div>
+                      <p className="text-success font-semibold">
+                        {formatCurrency(preview.next_yield_value)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.vaults.yieldIndexPreviewDesc', {
+                          index: preview.index_type_display,
+                          percentage: preview.percentage ?? 100,
+                        })}
+                      </p>
+                    </>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Calculadora de rendimento estimado (taxa manual) */}
+              {!usesRealIndex &&
+                formData.annual_yield_rate > 0 &&
+                accountBalance > 0 && (
+                  <div className="border-success/30 bg-success/5 p-sm rounded-lg border">
+                    <div className="mb-xs gap-xs text-success flex items-center text-xs font-semibold">
+                      <TrendingUp className="h-3.5 w-3.5" />
+                      {t('pages.vaults.estimatedYield')}
+                    </div>
+                    <div className="gap-sm grid grid-cols-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">
+                          {t('pages.vaults.monthlyYield')}
+                        </p>
+                        <p className="text-success font-semibold">
+                          {formatCurrency(estimatedMonthlyYield)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">
+                          {t('pages.vaults.annualYield')}
+                        </p>
+                        <p className="text-success font-semibold">
+                          {formatCurrency(estimatedAnnualYield)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Toggle is_active */}
               <button

@@ -28,6 +28,12 @@ VAULT_TRANSACTION_TYPES = (
     ("yield", "Rendimento"),
 )
 
+YIELD_INDEX_CHOICES = (
+    ("none", "Nenhum (taxa manual)"),
+    ("cdi", "CDI"),
+    ("selic", "SELIC"),
+)
+
 
 class Vault(BaseModel):
     """
@@ -82,6 +88,25 @@ class Vault(BaseModel):
         null=True,
         blank=True,
         help_text="Data em que o último rendimento foi calculado",
+    )
+    yield_index_type = models.CharField(
+        max_length=10,
+        choices=YIELD_INDEX_CHOICES,
+        default="none",
+        verbose_name="Índice de Rendimento",
+        help_text=(
+            "Índice de referência real (CDI/SELIC) usado para recalcular"
+            " annual_yield_rate automaticamente. 'Nenhum' mantém a taxa"
+            " manual."
+        ),
+    )
+    yield_index_percentage = models.DecimalField(
+        verbose_name="Percentual do Índice",
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Percentual do índice aplicado (ex: 120.00 = 120% do CDI)",
     )
     is_active = models.BooleanField(
         verbose_name="Ativo",
@@ -150,6 +175,96 @@ class Vault(BaseModel):
 
         return compound_yield(principal, self.daily_yield_rate, days)
 
+    def refresh_annual_rate_from_index(self, user=None):
+        """
+        Recalcula ``annual_yield_rate`` a partir do índice real (CDI/SELIC)
+        e do percentual configurado, consultando a API do BCB.
+
+        No-op se ``yield_index_type`` for "none" ou se a consulta à API
+        falhar (mantém a última taxa conhecida ao invés de zerar o
+        rendimento por uma falha transitória).
+        """
+        if self.yield_index_type not in ("cdi", "selic"):
+            return None
+
+        from vaults.services.index_rates import compute_index_annual_rate
+
+        annual_rate, _ref_date = compute_index_annual_rate(
+            self.yield_index_type,
+            self.yield_index_percentage or Decimal("100"),
+        )
+        if annual_rate is None:
+            return None
+
+        self.annual_yield_rate = annual_rate
+        self.updated_by = user or self.updated_by
+        self.save(update_fields=["annual_yield_rate", "updated_by"])
+        return annual_rate
+
+    def simulate_yield_preview(
+        self, index_type=None, percentage=None, as_of_date=None
+    ):
+        """
+        Simula o próximo rendimento sem persistir nada, usando o índice
+        real (CDI/SELIC) e o percentual informados — ou os já configurados
+        no cofre, se omitidos.
+
+        Retorna ``None`` se um índice tiver sido pedido mas a API do BCB
+        estiver indisponível.
+        """
+        if as_of_date is None:
+            as_of_date = timezone.now().date()
+
+        index_type = index_type or self.yield_index_type
+        percentage = (
+            percentage
+            if percentage is not None
+            else self.yield_index_percentage
+        )
+
+        ref_date = None
+        if index_type in ("cdi", "selic"):
+            from vaults.services.index_rates import (
+                compute_index_annual_rate,
+            )
+
+            annual_rate, ref_date = compute_index_annual_rate(
+                index_type, percentage or Decimal("100")
+            )
+            if annual_rate is None:
+                return None
+        else:
+            annual_rate = self.annual_yield_rate
+
+        daily_rate = daily_rate_from(annual_rate, Decimal("0"))
+
+        principal = self.current_balance - self.accumulated_yield
+        if principal <= 0:
+            principal = self.current_balance
+
+        # "Próximo" rendimento: dias úteis pendentes desde o último
+        # rendimento, ou 1 dia útil hipotético se ainda não há histórico
+        # ou o rendimento de hoje já foi aplicado (não faria sentido
+        # mostrar uma prévia de R$ 0,00).
+        business_days = 1
+        if self.last_yield_date:
+            pending = count_business_days(self.last_yield_date, as_of_date)
+            business_days = pending if pending > 0 else 1
+
+        value = compound_yield(principal, daily_rate, business_days)
+
+        return {
+            "index_type": index_type,
+            "percentage": percentage,
+            "annual_rate": annual_rate,
+            "daily_rate": daily_rate,
+            "business_days": business_days,
+            "principal": principal,
+            "value": value,
+            "index_reference_date": ref_date,
+            "as_of_date": as_of_date,
+        }
+
     def apply_yield(self, as_of_date=None, user=None):
         """
         Aplica o rendimento calculado ao saldo do cofre.
@@ -185,7 +300,10 @@ class Vault(BaseModel):
                     transaction_type="yield",
                     amount=yield_value,
                     balance_after=self.current_balance,
-                    description=f"Rendimento automático até {as_of_date}",
+                    description=(
+                        "Rendimento automático registrado em "
+                        f"{as_of_date.strftime('%d/%m/%Y')}"
+                    ),
                     created_by=user or self.created_by,
                 )
 
@@ -270,6 +388,78 @@ class Vault(BaseModel):
             revenue.save()
 
         return revenue
+
+    def _adjust_yield_revenue(self, delta, as_of_date, user=None):
+        """
+        Soma (ou subtrai) ``delta`` na receita de rendimento consolidada do
+        mês de ``as_of_date``, sem tocar accumulated_yield/current_balance
+        diretamente.
+
+        Usado quando uma ``VaultTransaction`` de rendimento é editada ou
+        excluída manualmente (fora de apply_yield/withdraw). Como não marca
+        ``_skip_vault_yield_sync``, o ``post_save``/``post_delete`` de
+        ``vaults/signals.py`` dispara e chama
+        ``resync_accumulated_yield_from_ledger``, que recalcula
+        accumulated_yield/current_balance a partir do ledger e o saldo da
+        conta — a mesma sincronização já usada para edições externas de
+        Revenue (API, admin, shell).
+        """
+        if delta == 0:
+            return
+
+        from revenues.models import Revenue
+
+        month_start = as_of_date.replace(day=1)
+        if as_of_date.month == 12:
+            next_month = datetime.date(as_of_date.year + 1, 1, 1)
+        else:
+            next_month = datetime.date(
+                as_of_date.year, as_of_date.month + 1, 1
+            )
+
+        revenue = (
+            Revenue.objects.filter(
+                related_vault=self,
+                account=self.account,
+                category="income",
+                is_deleted=False,
+                date__gte=month_start,
+                date__lt=next_month,
+            )
+            .order_by("created_at")
+            .first()
+        )
+
+        if revenue is None:
+            if delta <= 0:
+                return
+            revenue = Revenue(
+                description=(
+                    f"Rendimento — {self.description} "
+                    f"({month_start.strftime('%m/%Y')})"
+                ),
+                value=Decimal("0.00"),
+                date=as_of_date,
+                horary=timezone.now().time(),
+                category="income",
+                account=self.account,
+                received=True,
+                related_vault=self,
+                member=self.account.owner,
+                created_by=user or self.created_by,
+                notes=(
+                    "Receita gerada automaticamente pelo rendimento do cofre."
+                ),
+            )
+
+        revenue.value = max(revenue.value + delta, Decimal("0.00"))
+        revenue.net_amount = None
+        revenue.updated_by = user or self.created_by
+        if revenue.value <= 0:
+            revenue.is_deleted = True
+            revenue.deleted_at = timezone.now()
+            revenue.deleted_by = user or self.created_by
+        revenue.save()
 
     def deposit(self, amount, description=None, user=None):
         """

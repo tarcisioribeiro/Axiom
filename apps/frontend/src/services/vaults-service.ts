@@ -6,6 +6,8 @@ import type {
   VaultDepositData,
   VaultWithdrawData,
   VaultYieldUpdateData,
+  VaultYieldPreviewRequest,
+  VaultYieldPreviewResponse,
   VaultOperationResponse,
   VaultYieldResponse,
   VaultYieldUpdateResponse,
@@ -57,6 +59,16 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
   ): Promise<VaultYieldUpdateResponse> {
     return apiClient.post<VaultYieldUpdateResponse>(
       `${this.endpoint}${id}/update-yield/`,
+      data
+    );
+  }
+
+  async previewYield(
+    id: number,
+    data: VaultYieldPreviewRequest
+  ): Promise<VaultYieldPreviewResponse> {
+    return apiClient.post<VaultYieldPreviewResponse>(
+      `${this.endpoint}${id}/yield-preview/`,
       data
     );
   }

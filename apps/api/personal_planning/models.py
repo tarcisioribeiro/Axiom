@@ -2455,7 +2455,12 @@ class BodyMetric(BaseModel):
     class Meta:
         verbose_name = "Métrica Corporal"
         verbose_name_plural = "Métricas Corporais"
-        ordering = ["-measured_at"]
+        # measured_at is a plain date (no time) — two entries logged the same
+        # day tie on it, so -created_at breaks the tie deterministically.
+        # Without it, Postgres returns same-date rows in an unspecified order
+        # and the frontend's "latest metric" (metrics[0]) can silently pick a
+        # stale entry instead of the one the user just saved.
+        ordering = ["-measured_at", "-created_at"]
         indexes = [
             models.Index(fields=["owner", "-measured_at"]),
         ]

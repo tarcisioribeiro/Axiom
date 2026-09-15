@@ -30,6 +30,7 @@ from .serializers import (
     VaultTransactionSerializer,
     VaultTransactionUpdateSerializer,
     VaultWithdrawSerializer,
+    VaultYieldPreviewSerializer,
     VaultYieldUpdateSerializer,
 )
 
@@ -60,7 +61,9 @@ class VaultListCreateView(BaseListCreateView):
         return queryset.select_related("account")
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        vault = serializer.save(created_by=self.request.user)
+        if vault.yield_index_type in ("cdi", "selic"):
+            vault.refresh_annual_rate_from_index(user=self.request.user)
 
 
 class VaultDetailView(BaseRetrieveUpdateDestroyView):
@@ -81,7 +84,9 @@ class VaultDetailView(BaseRetrieveUpdateDestroyView):
         ).select_related("account")
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        vault = serializer.save(updated_by=self.request.user)
+        if vault.yield_index_type in ("cdi", "selic"):
+            vault.refresh_annual_rate_from_index(user=self.request.user)
 
 
 class VaultDepositView(APIView):
@@ -317,6 +322,15 @@ class VaultUpdateYieldView(APIView):
                 "new": float(data["yield_rate"]),
             }
 
+        # Atualizar índice de rendimento (CDI/SELIC) e/ou percentual
+        index_changed = False
+        if "yield_index_type" in data:
+            vault.yield_index_type = data["yield_index_type"]
+            index_changed = True
+        if "yield_index_percentage" in data:
+            vault.yield_index_percentage = data["yield_index_percentage"]
+            index_changed = True
+
         # Atualizar rendimentos acumulados manualmente
         if "accumulated_yield" in data:
             old_yield = vault.accumulated_yield
@@ -331,6 +345,29 @@ class VaultUpdateYieldView(APIView):
                 "balance_adjustment": float(difference),
             }
 
+        vault.updated_by = request.user
+        vault.save()
+
+        # Se um índice real (CDI/SELIC) foi definido/alterado, a taxa anual
+        # manual é substituída pela taxa recalculada a partir do índice.
+        if index_changed and vault.yield_index_type in ("cdi", "selic"):
+            old_annual_rate_before_index = vault.annual_yield_rate
+            new_annual_rate = vault.refresh_annual_rate_from_index(
+                user=request.user
+            )
+            if new_annual_rate is None:
+                response_data["index_warning"] = (
+                    "Não foi possível consultar o índice em tempo real;"
+                    " a taxa anual anterior foi mantida."
+                )
+            else:
+                response_data["annual_yield_rate_changed"] = {
+                    "old": response_data.get(
+                        "annual_yield_rate_changed", {}
+                    ).get("old", float(old_annual_rate_before_index)),
+                    "new": float(new_annual_rate),
+                }
+
         # Recalcular rendimentos se solicitado
         if data.get("recalculate", False):
             recalc_result = vault.recalculate_yields(
@@ -344,11 +381,85 @@ class VaultUpdateYieldView(APIView):
                 "difference": float(recalc_result["difference"]),
             }
 
-        vault.updated_by = request.user
-        vault.save()
-
         response_data["vault"] = VaultSerializer(vault).data
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class VaultYieldPreviewView(APIView):
+    """
+    Endpoint para simular o próximo rendimento de um cofre (sem persistir
+    nada), com base num índice real (CDI/SELIC) e percentual — informados
+    no corpo da requisição ou já configurados no cofre.
+
+    POST: consulta a API do BCB em tempo real e retorna a prévia.
+    """
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
+    queryset = Vault.objects.all()  # Required for GlobalDefaultPermission
+
+    def post(self, request, pk):
+        try:
+            vault = Vault.objects.get(pk=pk)
+        except Vault.DoesNotExist:
+            return Response(
+                {"error": "Cofre não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = VaultYieldPreviewSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data = serializer.validated_data
+        preview = vault.simulate_yield_preview(
+            index_type=data.get("yield_index_type"),
+            percentage=data.get("yield_index_percentage"),
+        )
+
+        if preview is None:
+            return Response(
+                {
+                    "error": (
+                        "Não foi possível consultar o índice em tempo"
+                        " real. Tente novamente em alguns instantes."
+                    )
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        index_display = dict(
+            Vault._meta.get_field("yield_index_type").choices
+        ).get(preview["index_type"], preview["index_type"])
+
+        return Response(
+            {
+                "index_type": preview["index_type"],
+                "index_type_display": index_display,
+                "percentage": (
+                    float(preview["percentage"])
+                    if preview["percentage"] is not None
+                    else None
+                ),
+                "annual_rate": float(preview["annual_rate"]),
+                "annual_rate_percentage": float(preview["annual_rate"] * 100),
+                "daily_rate": float(preview["daily_rate"]),
+                "business_days": preview["business_days"],
+                "principal": float(preview["principal"]),
+                "next_yield_value": float(preview["value"]),
+                "index_reference_date": (
+                    preview["index_reference_date"].isoformat()
+                    if preview["index_reference_date"]
+                    else None
+                ),
+                "as_of_date": preview["as_of_date"].isoformat(),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class VaultTransactionListView(generics.ListAPIView):
@@ -450,6 +561,7 @@ class VaultTransactionUpdateView(APIView):
             pk=vault_transaction.vault_id
         )
         old_amount = vault_transaction.amount
+        old_transaction_date = vault_transaction.transaction_date
 
         serializer = VaultTransactionUpdateSerializer(
             vault_transaction, data=request.data, partial=True
@@ -462,11 +574,16 @@ class VaultTransactionUpdateView(APIView):
         new_amount = serializer.validated_data.get("amount", old_amount)
         amount_difference = new_amount - old_amount
 
-        # Atualiza os saldos do cofre
-        vault.current_balance += amount_difference
-        vault.accumulated_yield += amount_difference
-        vault.save()
+        # Ajusta a receita de rendimento do mês (não o cofre diretamente); o
+        # signal de vaults/signals.py resincroniza accumulated_yield,
+        # current_balance e o saldo da conta a partir do ledger, garantindo
+        # que a diferença nunca vaze para o saldo disponível da conta.
+        vault._adjust_yield_revenue(
+            amount_difference, old_transaction_date, request.user
+        )
+        vault.refresh_from_db()
 
+        vault_transaction.balance_after = vault.current_balance
         serializer.save()
 
         return Response(
@@ -512,10 +629,13 @@ class VaultTransactionUpdateView(APIView):
         )
         amount = vault_transaction.amount
 
-        # Reverte os saldos do cofre
-        vault.current_balance -= amount
-        vault.accumulated_yield -= amount
-        vault.save()
+        # Reverte a receita de rendimento do mês (não o cofre diretamente);
+        # o signal de vaults/signals.py resincroniza accumulated_yield,
+        # current_balance e o saldo da conta a partir do ledger.
+        vault._adjust_yield_revenue(
+            -amount, vault_transaction.transaction_date, request.user
+        )
+        vault.refresh_from_db()
 
         # Soft delete
         vault_transaction.is_deleted = True
