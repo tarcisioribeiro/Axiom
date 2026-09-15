@@ -739,14 +739,14 @@ export default function Goals({ embedded = false }: GoalsProps) {
           }
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('pages.goals.registerFailureTitle')}</DialogTitle>
             <DialogDescription>
               {t('pages.goals.registerFailureDesc', { name: failureGoal?.title })}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-sm">
+          <div className="py-sm min-h-[340px]">
             <Label>{t('pages.goals.failureDateLabel')}</Label>
             <DatePicker
               value={failureDate}

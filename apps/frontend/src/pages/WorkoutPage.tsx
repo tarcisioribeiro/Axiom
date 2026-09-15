@@ -36,14 +36,16 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import React, { type ReactNode, useState, useCallback } from 'react';
+import React, { type ReactNode, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,6 +58,13 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { ExerciseDatasetPicker } from '@/components/workout/ExerciseDatasetPicker';
@@ -188,6 +197,9 @@ export default function WorkoutPage() {
   );
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [imagePickerExercise, setImagePickerExercise] = useState<Exercise | null>(null);
+  const [exerciseSearch, setExerciseSearch] = useState('');
+  const [exerciseTypeFilter, setExerciseTypeFilter] = useState('all');
+  const [exerciseMuscleFilter, setExerciseMuscleFilter] = useState('all');
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -224,6 +236,25 @@ export default function WorkoutPage() {
   const plans = plansData ?? [];
   const sessions = sessionsData ?? [];
   const allDaysList = allDays ?? [];
+
+  const filteredCatalogExercises = useMemo(() => {
+    const term = exerciseSearch.trim().toLowerCase();
+    const typeLabel =
+      exerciseTypeFilter !== 'all'
+        ? t(`pages.workoutPlans.muscleChips.${exerciseTypeFilter}`).toLowerCase()
+        : null;
+    const muscleLabel =
+      exerciseMuscleFilter !== 'all'
+        ? t(`pages.workoutPlans.muscleChips.${exerciseMuscleFilter}`).toLowerCase()
+        : null;
+    return catalogExercises.filter((exercise) => {
+      if (term && !exercise.name.toLowerCase().includes(term)) return false;
+      const tags = (exercise.muscle_groups ?? '').toLowerCase();
+      if (typeLabel && !tags.includes(typeLabel)) return false;
+      if (muscleLabel && !tags.includes(muscleLabel)) return false;
+      return true;
+    });
+  }, [catalogExercises, exerciseSearch, exerciseTypeFilter, exerciseMuscleFilter, t]);
 
   const activePlans = plans.filter((p) => p.is_active);
   const inactivePlans = plans.filter((p) => !p.is_active);
@@ -1187,19 +1218,114 @@ export default function WorkoutPage() {
                 }}
               />
             ) : (
-              <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {catalogExercises.map((exercise) => (
-                  <ExerciseCatalogCard
-                    key={exercise.id}
-                    exercise={exercise}
-                    onEdit={() =>
-                      setDialog({ type: 'edit-catalog-exercise', exercise })
-                    }
-                    onDelete={() => handleDeleteCatalogExercise(exercise)}
-                    onChangeImage={() => setImagePickerExercise(exercise)}
+              <>
+                <FilterBar
+                  className="mb-md"
+                  hasActiveFilters={
+                    !!exerciseSearch ||
+                    exerciseTypeFilter !== 'all' ||
+                    exerciseMuscleFilter !== 'all'
+                  }
+                  onClear={() => {
+                    setExerciseSearch('');
+                    setExerciseTypeFilter('all');
+                    setExerciseMuscleFilter('all');
+                  }}
+                  activeFilters={[
+                    ...(exerciseTypeFilter !== 'all'
+                      ? [
+                          {
+                            key: 'type',
+                            label: `${t('pages.exercises.allTypes')}: ${t(`pages.workoutPlans.muscleChips.${exerciseTypeFilter}`)}`,
+                            onRemove: () => setExerciseTypeFilter('all'),
+                          },
+                        ]
+                      : []),
+                    ...(exerciseMuscleFilter !== 'all'
+                      ? [
+                          {
+                            key: 'muscle',
+                            label: `${t('pages.exercises.allMuscles')}: ${t(`pages.workoutPlans.muscleChips.${exerciseMuscleFilter}`)}`,
+                            onRemove: () => setExerciseMuscleFilter('all'),
+                          },
+                        ]
+                      : []),
+                  ]}
+                >
+                  <SearchInput
+                    placeholder={t('pages.exercises.searchPlaceholder')}
+                    value={exerciseSearch}
+                    onValueChange={setExerciseSearch}
+                    className="w-44"
                   />
-                ))}
-              </div>
+                  <Select
+                    value={exerciseTypeFilter}
+                    onValueChange={setExerciseTypeFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allTypes')}
+                      startIcon={<Dumbbell className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allTypes')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allTypes')}
+                      </SelectItem>
+                      {EXERCISE_TYPE_FILTER_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={exerciseMuscleFilter}
+                    onValueChange={setExerciseMuscleFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allMuscles')}
+                      startIcon={<Layers className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allMuscles')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allMuscles')}
+                      </SelectItem>
+                      {EXERCISE_MUSCLE_FILTER_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`pages.workoutPlans.muscleChips.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FilterBar>
+
+                {filteredCatalogExercises.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.exercises.noResults')}
+                    description={t('pages.exercises.noResultsDesc')}
+                    icon={<Dumbbell className="h-8 w-8" />}
+                  />
+                ) : (
+                  <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredCatalogExercises.map((exercise) => (
+                      <ExerciseCatalogCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        onEdit={() =>
+                          setDialog({ type: 'edit-catalog-exercise', exercise })
+                        }
+                        onDelete={() => handleDeleteCatalogExercise(exercise)}
+                        onChangeImage={() => setImagePickerExercise(exercise)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>
@@ -1751,6 +1877,39 @@ const CATALOG_MUSCLE_CHIP_KEYS = [
   'cycling',
   'swimming',
   'fullBody',
+] as const;
+
+// Subconjuntos de CATALOG_MUSCLE_CHIP_KEYS usados nos filtros da aba de
+// exercícios: categoria de treino (tipo de estímulo) vs. categoria muscular
+// (grupo muscular alvo).
+const EXERCISE_TYPE_FILTER_KEYS = [
+  'push',
+  'pull',
+  'cardio',
+  'hiit',
+  'running',
+  'cycling',
+  'swimming',
+  'fullBody',
+] as const;
+
+const EXERCISE_MUSCLE_FILTER_KEYS = [
+  'chest',
+  'back',
+  'shoulders',
+  'biceps',
+  'triceps',
+  'abs',
+  'core',
+  'quads',
+  'hamstrings',
+  'glutes',
+  'calves',
+  'forearms',
+  'lowerBack',
+  'traps',
+  'adductors',
+  'abductors',
 ] as const;
 
 function ExerciseCatalogForm({
