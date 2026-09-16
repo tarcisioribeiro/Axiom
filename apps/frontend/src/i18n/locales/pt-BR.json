@@ -1490,9 +1490,14 @@
       "allCategories": "Todas as Categorias",
       "allStatus": "Todos os Status",
       "viewMode": "Visualização:",
-      "byBill": "Por Fatura",
-      "list": "Lista",
+      "byBill": "Faturas",
+      "list": "Compras",
       "foundInstallments": "{{count}} parcela(s) encontrada(s)",
+      "foundPurchases": "{{count}} compra(s) encontrada(s)",
+      "emptyPurchasesState": "Nenhuma compra encontrada.",
+      "dateFrom": "Desde:",
+      "dateTo": "Até:",
+      "dateRangeWarning": "A data \"Desde\" não pode ser posterior à data \"Até\".",
       "totalPaid": "Pago:",
       "totalPending": "Restante:",
       "totalAmount": "Total:",
@@ -1510,11 +1515,13 @@
       "columns": {
         "description": "Descrição",
         "card": "Cartão",
+        "bill": "Fatura",
         "amount": "Valor",
         "category": "Categoria",
         "installment": "Parcela",
         "status": "Status",
-        "dueDate": "Vencimento"
+        "dueDate": "Vencimento",
+        "purchaseDate": "Data da Compra"
       },
       "form": {
         "descriptionLabel": "Descrição *",
@@ -3972,6 +3979,7 @@
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
+      "tasksTab": "Tarefas",
       "newBtn": "Nova Tarefa",
       "editTitle": "Editar Tarefa",
       "newTitle": "Nova Tarefa",
@@ -4163,6 +4171,43 @@
           "monthly": "Todo dia {{day}} do mês",
           "custom": "Dias personalizados"
         }
+      },
+      "focusBlocks": {
+        "title": "Blocos de Foco",
+        "newBlock": "Novo Bloco",
+        "editBlock": "Editar Bloco",
+        "newBlockTitle": "Novo Bloco de Foco",
+        "editBlockTitle": "Editar Bloco de Foco",
+        "newBlockDesc": "Crie um bloco permanente para agrupar tarefas rotineiras (ex: \"Manhã Produtiva\").",
+        "editBlockDesc": "Atualize as informações do bloco de foco.",
+        "nameLabel": "Nome",
+        "namePlaceholder": "Ex: Manhã Produtiva",
+        "descriptionLabel": "Descrição",
+        "colorLabel": "Cor",
+        "iconLabel": "Ícone",
+        "activeLabel": "Bloco ativo",
+        "emptyState": "Nenhum bloco de foco criado",
+        "emptyStateDesc": "Agrupe tarefas rotineiras em blocos permanentes, como \"Manhã Produtiva\" ou \"Noite\".",
+        "deleteTitle": "Excluir bloco de foco",
+        "deleteDesc": "Tem certeza que deseja excluir este bloco? As tarefas associadas não serão excluídas.",
+        "created": "Bloco criado",
+        "createdDesc": "O bloco de foco foi criado com sucesso.",
+        "updated": "Bloco atualizado",
+        "updatedDesc": "O bloco de foco foi atualizado com sucesso.",
+        "deleted": "Bloco excluído",
+        "deletedDesc": "O bloco de foco foi excluído com sucesso.",
+        "saveError": "Erro ao salvar bloco",
+        "deleteError": "Erro ao excluir bloco",
+        "addTask": "Adicionar tarefa",
+        "removeTask": "Remover tarefa",
+        "addTaskError": "Erro ao adicionar tarefa",
+        "removeTaskError": "Erro ao remover tarefa",
+        "noTasks": "Nenhuma tarefa neste bloco",
+        "wholeTask": "Tarefa inteira",
+        "occurrenceLabel": "Ocorrência {{index}}",
+        "noTasksAvailable": "Todas as tarefas já foram adicionadas",
+        "weekdaysLabel": "Dias da semana",
+        "weekdaysRequired": "Selecione ao menos um dia da semana."
       }
     },
     "routineTemplates": {
@@ -4447,6 +4492,8 @@
       "closingTimeLabel": "até {{time}}",
       "listMode": "Modo lista",
       "kanbanMode": "Modo kanban",
+      "focusBlocksMode": "Modo bloco de foco",
+      "focusBlocksNoneTodayDesc": "Nenhum bloco de foco agendado para este dia.",
       "greetingMorning": "Bom dia!",
       "greetingAfternoon": "Boa tarde!",
       "greetingEvening": "Boa noite!",
@@ -6245,17 +6292,6 @@
         "medium": "Média",
         "low": "Baixa"
       }
-    },
-    "focusBlocks": {
-      "title": "Blocos de Foco",
-      "addBlock": "Novo Bloco",
-      "blockPlaceholder": "Nome do bloco (ex: Manhã, Trabalho, Estudos...)",
-      "addTask": "Adicionar tarefa",
-      "noTasks": "Nenhuma tarefa neste bloco. Adicione tarefas abaixo.",
-      "deleteBlock": "Excluir bloco",
-      "removeTask": "Remover tarefa do bloco",
-      "emptyState": "Nenhum bloco criado. Crie blocos para organizar suas tarefas por tema ou período.",
-      "progress": "{{done}}/{{total}} concluídas"
     }
   },
   "userProfile": {

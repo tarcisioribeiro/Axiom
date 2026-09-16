@@ -76,6 +76,51 @@ export interface RoutineTaskFormData {
   owner: number;
 }
 
+export interface FocusBlockTask {
+  id: number;
+  focus_block: number;
+  routine_task: number;
+  routine_task_name: string;
+  routine_task_icon?: string | null;
+  occurrence_index?: number | null;
+  order: number;
+}
+
+export interface FocusBlockTaskFormData {
+  focus_block: number;
+  routine_task: number;
+  occurrence_index?: number | null;
+  order?: number;
+}
+
+export interface FocusBlock {
+  id: number;
+  uuid: string;
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  order: number;
+  is_active: boolean;
+  weekdays: number[];
+  owner: number;
+  owner_name: string;
+  block_tasks: FocusBlockTask[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FocusBlockFormData {
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  order?: number;
+  is_active?: boolean;
+  weekdays: number[];
+  owner: number;
+}
+
 export interface RoutineTemplateTask {
   name: string;
   description?: string;

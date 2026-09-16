@@ -567,6 +567,130 @@ class UserRoutineTemplate(BaseModel):
 
 
 # ============================================================================
+# FOCUS BLOCK MODELS
+# ============================================================================
+
+
+class FocusBlock(BaseModel):
+    """
+    Agrupamento permanente e reutilizável de RoutineTasks (ex: "Manhã
+    Produtiva", "Noite"). Cadastrado na tela de Tarefas Rotineiras.
+    """
+
+    name = models.CharField(max_length=200, verbose_name="Nome do Bloco")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
+    icon = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Ícone",
+        help_text="Nome do ícone do Lucide (ex: Sun, Moon, Briefcase)",
+    )
+    color = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="Cor",
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    is_active = models.BooleanField(default=True, verbose_name="Bloco Ativo")
+    weekdays = models.JSONField(
+        default=list,
+        verbose_name="Dias da Semana",
+        help_text=(
+            "Dias em que o bloco aparece no Checklist Diário [0-6,"
+            " 0=Segunda] (mesma convenção de RoutineTask.custom_weekdays)"
+        ),
+    )
+    tasks: "models.ManyToManyField[RoutineTask, FocusBlockTask]" = (
+        models.ManyToManyField(
+            RoutineTask,
+            through="FocusBlockTask",
+            related_name="focus_blocks",
+            verbose_name="Tarefas",
+        )
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="focus_blocks",
+        verbose_name="Dono",
+    )
+
+    class Meta:
+        ordering = ["order", "name"]
+        verbose_name = "Bloco de Foco"
+        verbose_name_plural = "Blocos de Foco"
+        indexes = [models.Index(fields=["owner", "is_active"])]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.owner})"
+
+
+class FocusBlockTask(BaseModel):
+    """
+    Associação entre um FocusBlock e uma RoutineTask.
+
+    occurrence_index=None associa a tarefa inteira (todas as ocorrências
+    diárias) ao bloco; um valor específico associa apenas aquela ocorrência
+    (bate com TaskInstance.occurrence_index), permitindo que uma tarefa com
+    múltiplas ocorrências por dia (ex: "Água", 6x/dia) tenha ocorrências
+    diferentes em blocos diferentes.
+    """
+
+    focus_block = models.ForeignKey(
+        FocusBlock,
+        on_delete=models.CASCADE,
+        related_name="block_tasks",
+        verbose_name="Bloco de Foco",
+    )
+    routine_task = models.ForeignKey(
+        RoutineTask,
+        on_delete=models.CASCADE,
+        related_name="focus_block_links",
+        verbose_name="Tarefa Rotineira",
+    )
+    occurrence_index = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Índice da Ocorrência",
+        help_text=(
+            "Vazio associa a tarefa inteira ao bloco; um número associa"
+            " apenas aquela ocorrência do dia"
+        ),
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Tarefa do Bloco de Foco"
+        verbose_name_plural = "Tarefas do Bloco de Foco"
+        constraints = [
+            # `condition` scopes both constraints to non-deleted rows only —
+            # otherwise re-adding a previously removed (soft-deleted) task
+            # would collide with its own soft-deleted row and raise an
+            # IntegrityError instead of just creating a new one.
+            models.UniqueConstraint(
+                fields=["focus_block", "routine_task", "occurrence_index"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_focus_block_task_occurrence",
+            ),
+            models.UniqueConstraint(
+                fields=["focus_block", "routine_task"],
+                condition=models.Q(
+                    occurrence_index__isnull=True, deleted_at__isnull=True
+                ),
+                name="unique_focus_block_task_whole",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.routine_task.name} → {self.focus_block.name}"
+
+
+# ============================================================================
 # GOAL MODEL
 # ============================================================================
 

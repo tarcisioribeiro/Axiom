@@ -23,6 +23,8 @@ from personal_planning.models import (
     DailyReflection,
     Exercise,
     ExerciseDatasetEntry,
+    FocusBlock,
+    FocusBlockTask,
     Food,
     GamificationProfile,
     Goal,
@@ -52,6 +54,10 @@ from personal_planning.serializers import (
     ExerciseCreateUpdateSerializer,
     ExerciseDatasetEntrySerializer,
     ExerciseSerializer,
+    FocusBlockCreateUpdateSerializer,
+    FocusBlockSerializer,
+    FocusBlockTaskCreateUpdateSerializer,
+    FocusBlockTaskSerializer,
     FoodCreateUpdateSerializer,
     FoodSerializer,
     GoalCreateUpdateSerializer,
@@ -207,6 +213,148 @@ class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
             description_key="routine_task.delete",
             description_params={"name": instance.name},
         )
+
+
+# ============================================================================
+# FOCUS BLOCK VIEWS
+# ============================================================================
+
+
+class FocusBlockListCreateView(BaseListCreateView):
+    """Lista todos os blocos de foco ou cria um novo."""
+
+    def get_queryset(self):
+        return (
+            FocusBlock.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
+            .select_related("owner")
+            .prefetch_related(
+                Prefetch(
+                    "block_tasks",
+                    queryset=FocusBlockTask.objects.filter(
+                        deleted_at__isnull=True
+                    ).select_related("routine_task"),
+                )
+            )
+        )
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return FocusBlockCreateUpdateSerializer
+        return FocusBlockSerializer
+
+    def perform_create(self, serializer):
+        block = serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+        log_activity(
+            self.request,
+            "create",
+            "FocusBlock",
+            block.id,
+            f"Criou bloco de foco: {block.name}",
+            description_key="focus_block.create",
+            description_params={"name": block.name},
+        )
+
+
+class FocusBlockDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um bloco de foco."""
+
+    def get_queryset(self):
+        return (
+            FocusBlock.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
+            .select_related("owner")
+            .prefetch_related(
+                Prefetch(
+                    "block_tasks",
+                    queryset=FocusBlockTask.objects.filter(
+                        deleted_at__isnull=True
+                    ).select_related("routine_task"),
+                )
+            )
+        )
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return FocusBlockCreateUpdateSerializer
+        return FocusBlockSerializer
+
+    def perform_update(self, serializer):
+        block = serializer.save(updated_by=self.request.user)
+        log_activity(
+            self.request,
+            "update",
+            "FocusBlock",
+            block.id,
+            f"Atualizou bloco de foco: {block.name}",
+            description_key="focus_block.update",
+            description_params={"name": block.name},
+        )
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.save()
+        log_activity(
+            self.request,
+            "delete",
+            "FocusBlock",
+            instance.id,
+            f"Deletou bloco de foco: {instance.name}",
+            description_key="focus_block.delete",
+            description_params={"name": instance.name},
+        )
+
+
+class FocusBlockTaskListCreateView(BaseListCreateView):
+    """Lista ou associa tarefas a um bloco de foco."""
+
+    serializer_class = FocusBlockTaskSerializer
+
+    def get_queryset(self):
+        qs = FocusBlockTask.objects.filter(
+            focus_block__owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("routine_task")
+        focus_block_id = self.request.query_params.get("focus_block")
+        if focus_block_id:
+            qs = qs.filter(focus_block_id=focus_block_id)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return FocusBlockTaskCreateUpdateSerializer
+        return FocusBlockTaskSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+
+
+class FocusBlockTaskDetailView(BaseRetrieveUpdateDestroyView):
+    """Atualiza ou remove a associação de uma tarefa a um bloco de foco."""
+
+    def get_queryset(self):
+        return FocusBlockTask.objects.filter(
+            focus_block__owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("routine_task")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return FocusBlockTaskCreateUpdateSerializer
+        return FocusBlockTaskSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.save()
 
 
 # ============================================================================

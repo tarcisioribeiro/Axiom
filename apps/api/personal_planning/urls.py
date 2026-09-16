@@ -27,6 +27,10 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     ExportMealLogsView,
     ExportReflectionsView,
     ExportWorkoutSessionsView,
+    FocusBlockDetailView,
+    FocusBlockListCreateView,
+    FocusBlockTaskDetailView,
+    FocusBlockTaskListCreateView,
     FoodListCreateView,
     FoodRetrieveUpdateDestroyView,
     GamificationProfileView,
@@ -108,6 +112,27 @@ urlpatterns = [
         "routine-tasks/<int:pk>/",
         RoutineTaskDetailView.as_view(),
         name="routine-task-detail",
+    ),
+    # Focus Blocks
+    path(
+        "focus-blocks/",
+        FocusBlockListCreateView.as_view(),
+        name="focus-block-list-create",
+    ),
+    path(
+        "focus-blocks/<int:pk>/",
+        FocusBlockDetailView.as_view(),
+        name="focus-block-detail",
+    ),
+    path(
+        "focus-block-tasks/",
+        FocusBlockTaskListCreateView.as_view(),
+        name="focus-block-task-list-create",
+    ),
+    path(
+        "focus-block-tasks/<int:pk>/",
+        FocusBlockTaskDetailView.as_view(),
+        name="focus-block-task-detail",
     ),
     # Routine Templates (read-only seed data)
     path(

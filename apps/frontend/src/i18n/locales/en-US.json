@@ -1490,9 +1490,14 @@
       "allCategories": "All Categories",
       "allStatus": "All Status",
       "viewMode": "View:",
-      "byBill": "By Bill",
-      "list": "List",
+      "byBill": "Bills",
+      "list": "Purchases",
       "foundInstallments": "{{count}} installment(s) found",
+      "foundPurchases": "{{count}} purchase(s) found",
+      "emptyPurchasesState": "No purchases found.",
+      "dateFrom": "From:",
+      "dateTo": "To:",
+      "dateRangeWarning": "The \"From\" date cannot be later than the \"To\" date.",
       "totalPaid": "Paid:",
       "totalPending": "Remaining:",
       "totalAmount": "Total:",
@@ -1510,11 +1515,13 @@
       "columns": {
         "description": "Description",
         "card": "Card",
+        "bill": "Bill",
         "amount": "Amount",
         "category": "Category",
         "installment": "Installment",
         "status": "Status",
-        "dueDate": "Due Date"
+        "dueDate": "Due Date",
+        "purchaseDate": "Purchase Date"
       },
       "form": {
         "descriptionLabel": "Description *",
@@ -3906,6 +3913,7 @@
     },
     "routineTasks": {
       "title": "Routine Tasks",
+      "tasksTab": "Tasks",
       "newBtn": "New Task",
       "editTitle": "Edit Task",
       "newTitle": "New Task",
@@ -4097,6 +4105,43 @@
           "monthly": "Every {{day}}th of the month",
           "custom": "Custom days"
         }
+      },
+      "focusBlocks": {
+        "title": "Focus Blocks",
+        "newBlock": "New Block",
+        "editBlock": "Edit Block",
+        "newBlockTitle": "New Focus Block",
+        "editBlockTitle": "Edit Focus Block",
+        "newBlockDesc": "Create a permanent block to group routine tasks (e.g. \"Productive Morning\").",
+        "editBlockDesc": "Update the focus block's information.",
+        "nameLabel": "Name",
+        "namePlaceholder": "E.g. Productive Morning",
+        "descriptionLabel": "Description",
+        "colorLabel": "Color",
+        "iconLabel": "Icon",
+        "activeLabel": "Active block",
+        "emptyState": "No focus blocks yet",
+        "emptyStateDesc": "Group routine tasks into permanent blocks, like \"Productive Morning\" or \"Evening\".",
+        "deleteTitle": "Delete focus block",
+        "deleteDesc": "Are you sure you want to delete this block? Associated tasks will not be deleted.",
+        "created": "Block created",
+        "createdDesc": "The focus block was created successfully.",
+        "updated": "Block updated",
+        "updatedDesc": "The focus block was updated successfully.",
+        "deleted": "Block deleted",
+        "deletedDesc": "The focus block was deleted successfully.",
+        "saveError": "Error saving block",
+        "deleteError": "Error deleting block",
+        "addTask": "Add task",
+        "removeTask": "Remove task",
+        "addTaskError": "Error adding task",
+        "removeTaskError": "Error removing task",
+        "noTasks": "No tasks in this block",
+        "wholeTask": "Whole task",
+        "occurrenceLabel": "Occurrence {{index}}",
+        "noTasksAvailable": "All tasks have already been added",
+        "weekdaysLabel": "Days of the week",
+        "weekdaysRequired": "Select at least one day of the week."
       }
     },
     "routineTemplates": {
@@ -4381,6 +4426,8 @@
       "closingTimeLabel": "until {{time}}",
       "listMode": "List mode",
       "kanbanMode": "Kanban mode",
+      "focusBlocksMode": "Focus block mode",
+      "focusBlocksNoneTodayDesc": "No focus blocks scheduled for this day.",
       "greetingMorning": "Good morning!",
       "greetingAfternoon": "Good afternoon!",
       "greetingEvening": "Good evening!",
@@ -6200,17 +6247,6 @@
         "medium": "Medium",
         "low": "Low"
       }
-    },
-    "focusBlocks": {
-      "title": "Focus Blocks",
-      "addBlock": "New Block",
-      "blockPlaceholder": "Block name (e.g. Morning, Work, Study...)",
-      "addTask": "Add task",
-      "noTasks": "No tasks in this block. Add tasks below.",
-      "deleteBlock": "Delete block",
-      "removeTask": "Remove task from block",
-      "emptyState": "No blocks created. Create blocks to organize your tasks by theme or period.",
-      "progress": "{{done}}/{{total}} done"
     }
   },
   "userProfile": {
