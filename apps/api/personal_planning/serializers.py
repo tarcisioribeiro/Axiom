@@ -6,6 +6,8 @@ from personal_planning.models import (
     DailyReflection,
     Exercise,
     ExerciseDatasetEntry,
+    FocusBlock,
+    FocusBlockTask,
     Food,
     Goal,
     GoalFailure,
@@ -173,6 +175,105 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
         instance = RoutineTask(**data)
         instance.clean()
         return data
+
+
+# ============================================================================
+# FOCUS BLOCK SERIALIZERS
+# ============================================================================
+
+
+class FocusBlockTaskSerializer(serializers.ModelSerializer):
+    """Serializer para visualizacao de uma tarefa dentro de um bloco."""
+
+    routine_task_name = serializers.CharField(
+        source="routine_task.name", read_only=True
+    )
+    routine_task_icon = serializers.CharField(
+        source="routine_task.icon", read_only=True
+    )
+
+    class Meta:
+        model = FocusBlockTask
+        fields = [
+            "id",
+            "focus_block",
+            "routine_task",
+            "routine_task_name",
+            "routine_task_icon",
+            "occurrence_index",
+            "order",
+        ]
+
+
+class FocusBlockTaskCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para associar/reordenar uma tarefa num bloco."""
+
+    class Meta:
+        model = FocusBlockTask
+        fields = [
+            "id",
+            "focus_block",
+            "routine_task",
+            "occurrence_index",
+            "order",
+        ]
+
+
+class FocusBlockSerializer(serializers.ModelSerializer):
+    """Serializer para visualizacao de um bloco de foco."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    block_tasks = FocusBlockTaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FocusBlock
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "description",
+            "icon",
+            "color",
+            "order",
+            "is_active",
+            "weekdays",
+            "owner",
+            "owner_name",
+            "block_tasks",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class FocusBlockCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criacao/atualizacao de um bloco de foco."""
+
+    class Meta:
+        model = FocusBlock
+        fields = [
+            "id",
+            "name",
+            "description",
+            "icon",
+            "color",
+            "order",
+            "is_active",
+            "weekdays",
+            "owner",
+        ]
+
+    def validate_weekdays(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "Selecione ao menos um dia da semana."
+            )
+        if any(not isinstance(d, int) or d < 0 or d > 6 for d in value):
+            raise serializers.ValidationError(
+                "Dias da semana devem ser inteiros entre 0 (segunda) e 6"
+                " (domingo)."
+            )
+        return value
 
 
 # ============================================================================

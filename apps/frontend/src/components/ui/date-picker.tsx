@@ -130,6 +130,13 @@ export function DatePicker({
       },
       onReady: (_selectedDates, _dateStr, instance) => {
         instance.calendarContainer.classList.add('flatpickr-calendar-custom');
+        // Impede que o mousedown num dia do calendário dispare blur no input
+        // antes do click de seleção ser processado — sem isso, o blur nativo
+        // aciona commitTypedDate com o texto antigo (ainda não alterado) e
+        // sobrescreve a data que o usuário acabou de clicar.
+        instance.calendarContainer.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+        });
       },
       // Feedback visual quando o texto digitado não fecha como data válida
       // (o commit em si, quando válido, já aconteceu no blur nativo do input

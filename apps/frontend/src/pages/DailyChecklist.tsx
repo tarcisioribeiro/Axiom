@@ -23,6 +23,7 @@ import {
   ExternalLink,
   AlertCircle,
   Flame,
+  LayoutList,
   Zap,
   Moon,
   Sun,
@@ -47,7 +48,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { FocusBlocksSection } from '@/components/personal-planning/FocusBlocksSection';
+import { DailyFocusBlocks } from '@/components/personal-planning/DailyFocusBlocks';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { XPFloating, useXPTrigger } from '@/components/personal-planning/XPFloating';
@@ -94,7 +95,7 @@ import {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-type ViewMode = 'list' | 'kanban';
+type ViewMode = 'list' | 'kanban' | 'focusBlocks';
 const VIEW_MODE_KEY = 'dailyChecklist.viewMode';
 const POMODORO_CYCLES_KEY = 'dailyChecklist.pomodoroCycles';
 
@@ -266,7 +267,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   const { t, i18n } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [instances, setInstances] = useState<TaskInstance[]>([]);
-  const [blockedTaskIds, setBlockedTaskIds] = useState<Set<number>>(new Set());
   const [cards, setCards] = useState<TaskCard[]>([]);
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null);
   const [reflection, setReflection] = useState('');
@@ -328,22 +328,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       done: cards.filter((c) => c.status === 'done'),
     }),
     [cards]
-  );
-
-  const looseCardsByStatus = useMemo(
-    () => ({
-      todo: cards.filter((c) => c.status === 'todo' && !blockedTaskIds.has(c.task_id)),
-      doing: cards.filter(
-        (c) => c.status === 'doing' && !blockedTaskIds.has(c.task_id)
-      ),
-      done: cards.filter((c) => c.status === 'done' && !blockedTaskIds.has(c.task_id)),
-    }),
-    [cards, blockedTaskIds]
-  );
-
-  const looseInstances = useMemo(
-    () => instances.filter((i) => !blockedTaskIds.has(i.id)),
-    [instances, blockedTaskIds]
   );
 
   // Tarefas opcionais não contam para a conclusão do dia nem para o streak.
@@ -440,9 +424,17 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const loadedDateRef = useRef<string | null>(null);
+
   const loadData = async (sync: boolean = false) => {
+    // A resposta de qualquer mutação no app invalida todas as queries
+    // (api-client.ts), incluindo esta. Só mostramos o loading de página
+    // inteira quando a data mudou de fato — do contrário, uma tarefa
+    // marcada como concluída dispara um refetch em segundo plano que
+    // piscaria a tela inteira sem necessidade.
+    const isFreshDate = loadedDateRef.current !== selectedDate;
     try {
-      setIsLoading(true);
+      if (isFreshDate) setIsLoading(true);
       const [instancesResponse, reflections] = await Promise.all([
         taskInstancesService.getForDate(selectedDate, sync),
         dailyReflectionsService.getAll(),
@@ -459,6 +451,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         setMood('');
         setReflectionId(undefined);
       }
+      loadedDateRef.current = selectedDate;
     } catch (error: unknown) {
       toast({
         title: t('pages.dailyChecklist.loadError'),
@@ -466,7 +459,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      if (isFreshDate) setIsLoading(false);
     }
   };
 
@@ -657,7 +650,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
 
   const viewToggle = (
     <div className="flex items-center rounded-md border p-0.5">
-      {(['list', 'kanban'] as ViewMode[]).map((mode) => (
+      {(['list', 'kanban', 'focusBlocks'] as ViewMode[]).map((mode) => (
         <button
           key={mode}
           type="button"
@@ -685,7 +678,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               <line x1="3" y1="12" x2="3.01" y2="12" />
               <line x1="3" y1="18" x2="3.01" y2="18" />
             </svg>
-          ) : (
+          ) : mode === 'kanban' ? (
             <svg
               className="h-4 w-4"
               viewBox="0 0 24 24"
@@ -698,6 +691,8 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               <rect x="14" y="14" width="7" height="7" />
               <rect x="3" y="14" width="7" height="7" />
             </svg>
+          ) : (
+            <LayoutList className="h-4 w-4" />
           )}
         </button>
       ))}
@@ -933,20 +928,20 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         </div>
       </div>
 
-      {/* Blocos de Foco */}
-      {selectedDate && (
-        <FocusBlocksSection
+      {/* Vista Bloco de Foco */}
+      {viewMode === 'focusBlocks' && selectedDate && (
+        <DailyFocusBlocks
           date={selectedDate}
+          ownerId={ownerId}
           instances={instances}
           onToggleTaskComplete={(task) => void handleToggleTaskComplete(task)}
-          onBlockedTaskIdsChange={setBlockedTaskIds}
         />
       )}
 
       {/* Vista Lista */}
       {viewMode === 'list' && (
         <>
-          {looseInstances.length === 0 ? (
+          {instances.length === 0 ? (
             <EmptyState
               icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
               title={t('pages.dailyChecklist.noTasks')}
@@ -954,7 +949,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
             />
           ) : (
             <div className="space-y-sm">
-              {looseInstances.map((task) => {
+              {instances.map((task) => {
                 const isCompleted = task.status === 'completed';
                 const isUpdating = updatingTaskId === task.id;
                 return (
@@ -1026,7 +1021,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               title={t('pages.dailyChecklist.noTasks')}
               message={t('pages.dailyChecklist.noTasksDesc')}
             />
-          ) : looseInstances.length > 0 ? (
+          ) : (
             <DndContext
               sensors={sensors}
               collisionDetection={rectIntersection}
@@ -1039,24 +1034,24 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 <KanbanColumn
                   status="todo"
                   title={t('pages.dailyChecklist.todo')}
-                  cards={looseCardsByStatus.todo}
+                  cards={cardsByStatus.todo}
                 />
                 <KanbanColumn
                   status="doing"
                   title={t('pages.dailyChecklist.inProgress')}
-                  cards={looseCardsByStatus.doing}
+                  cards={cardsByStatus.doing}
                 />
                 <KanbanColumn
                   status="done"
                   title={t('pages.dailyChecklist.done')}
-                  cards={looseCardsByStatus.done}
+                  cards={cardsByStatus.done}
                 />
               </div>
               <DragOverlay>
                 {activeCard ? <KanbanCard card={activeCard} /> : null}
               </DragOverlay>
             </DndContext>
-          ) : null}
+          )}
 
           {requiredCards.length > 0 &&
             requiredCards.every((c) => c.status === 'done') &&

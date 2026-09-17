@@ -185,6 +185,10 @@ export type { TaskPriority, InstanceStatus, KanbanStatus } from './planning-cons
 export type {
   RoutineTask,
   RoutineTaskFormData,
+  FocusBlock,
+  FocusBlockFormData,
+  FocusBlockTask,
+  FocusBlockTaskFormData,
   RoutineTemplateTask,
   RoutineTemplate,
   RoutineTemplateImportResult,

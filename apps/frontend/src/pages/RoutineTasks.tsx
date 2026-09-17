@@ -12,6 +12,7 @@ import {
   Sheet,
   Save,
   Bookmark,
+  LayoutList,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -23,6 +24,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
+import { RoutineFocusBlocksSection } from '@/components/personal-planning/RoutineFocusBlocksSection';
 import { RoutineTaskForm } from '@/components/personal-planning/RoutineTaskForm';
 import { RoutineTemplateModal } from '@/components/personal-planning/RoutineTemplateModal';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +46,7 @@ import {
 import { getIconByName } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
@@ -84,6 +87,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const [templateName, setTemplateName] = useState('');
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
+  const [activeTab, setActiveTab] = useState<'tasks' | 'focusBlocks'>('tasks');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { isExporting, exportPDF, exportExcel } = useRoutineExport();
@@ -527,26 +531,48 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         </div>
       </PageHeader>
 
-      <DataTable
-        data={tasks}
-        columns={columns}
-        keyExtractor={(task) => task.id}
-        isLoading={isLoading}
-        emptyState={{
-          icon: <CheckSquare className="h-12 w-12" />,
-          title: t('pages.routineTasks.emptyState'),
-          message: t('pages.routineTasks.emptyStateDesc'),
-          action: {
-            label: t('pages.routineTasks.emptyStateAction'),
-            onClick: handleCreate,
-          },
-        }}
-        rowClassName={(task) =>
-          highlightedIds.has(task.id)
-            ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
-            : ''
-        }
-      />
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as 'tasks' | 'focusBlocks')}
+      >
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="tasks" className="gap-xs flex-1">
+            <CheckSquare className="h-4 w-4" />
+            {t('pages.routineTasks.tasksTab')}
+          </TabsTrigger>
+          <TabsTrigger value="focusBlocks" className="gap-xs flex-1">
+            <LayoutList className="h-4 w-4" />
+            {t('pages.routineTasks.focusBlocks.title')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tasks" className="mt-0">
+          <DataTable
+            data={tasks}
+            columns={columns}
+            keyExtractor={(task) => task.id}
+            isLoading={isLoading}
+            emptyState={{
+              icon: <CheckSquare className="h-12 w-12" />,
+              title: t('pages.routineTasks.emptyState'),
+              message: t('pages.routineTasks.emptyStateDesc'),
+              action: {
+                label: t('pages.routineTasks.emptyStateAction'),
+                onClick: handleCreate,
+              },
+            }}
+            rowClassName={(task) =>
+              highlightedIds.has(task.id)
+                ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
+                : ''
+            }
+          />
+        </TabsContent>
+
+        <TabsContent value="focusBlocks" className="mt-0">
+          <RoutineFocusBlocksSection routineTasks={tasks} ownerId={ownerId} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-w-2xl">
