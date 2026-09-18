@@ -31,11 +31,15 @@
   margin-top: 4px;
 }
 
-/* Modo static - calendário posicionado inline abaixo do input */
-.flatpickr-calendar.static {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
+/* Modo static - calendário no fluxo normal do documento, logo abaixo do
+   input. Fica com "position: relative" (não "static") para continuar sendo
+   o contexto de posicionamento das setas (::before/::after); em fluxo
+   normal ele empurra o restante do formulário para baixo em vez de flutuar
+   por cima, permitindo que o Dialog (overflow-y-auto) cresça para caber o
+   calendário inteiro em vez de cortá-lo. */
+.flatpickr-calendar.static.open {
+  position: relative !important;
+  margin-bottom: 4px;
 }
 
 .flatpickr-calendar.open {

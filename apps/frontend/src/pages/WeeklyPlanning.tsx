@@ -27,7 +27,7 @@ import { cn, formatLocalDate } from '@/lib/utils';
 import { taskInstancesService } from '@/services/task-instances-service';
 import type { TaskInstance } from '@/types';
 
-const OVERLOAD_MINUTES = 240;
+const OVERLOAD_MINUTES = 480;
 
 const CATEGORY_COLORS: Record<string, string> = {
   health: 'bg-category-health/10 border-category-health/30 text-category-health',
@@ -62,8 +62,14 @@ function getWeekDays(weekStart: Date): Date[] {
   });
 }
 
-function estimateTaskMinutes(_task: TaskInstance): number {
-  return 30;
+function estimateTaskMinutes(task: TaskInstance): number {
+  if (!task.scheduled_time || !task.closing_time) return 30;
+  const toMinutes = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const diff = toMinutes(task.closing_time) - toMinutes(task.scheduled_time);
+  return diff > 0 ? diff : diff + 24 * 60;
 }
 
 function formatMinutes(minutes: number): string {

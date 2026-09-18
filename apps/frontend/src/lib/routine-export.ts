@@ -75,7 +75,7 @@ const WEEK_ORDER = [
   { dayName: 'Sábado', pythonWeekday: 5 },
 ];
 
-function appearsOnDay(task: RoutineTask, pythonWeekday: number): boolean {
+export function appearsOnDay(task: RoutineTask, pythonWeekday: number): boolean {
   if (!task.is_active) return false;
 
   switch (task.periodicity) {
@@ -96,7 +96,12 @@ function appearsOnDay(task: RoutineTask, pythonWeekday: number): boolean {
   }
 }
 
-function getTimesForTask(task: RoutineTask): (string | null)[] {
+// JS Date.getDay(): 0=Sun..6=Sat → Python date.weekday(): 0=Mon..6=Sun
+export function getPythonWeekday(date: Date): number {
+  return (date.getDay() + 6) % 7;
+}
+
+export function getTimesForTask(task: RoutineTask): (string | null)[] {
   if (task.scheduled_times && task.scheduled_times.length > 0) {
     return task.scheduled_times;
   }

@@ -143,6 +143,8 @@ export const API_CONFIG = {
     GOALS: '/api/v1/personal-planning/goals/',
     ROUTINE_TASKS: '/api/v1/personal-planning/routine-tasks/',
     ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
+    FOCUS_BLOCKS: '/api/v1/personal-planning/focus-blocks/',
+    FOCUS_BLOCK_TASKS: '/api/v1/personal-planning/focus-block-tasks/',
     ROUTINE_TEMPLATES: '/api/v1/personal-planning/routine-templates/',
     ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
     USER_ROUTINE_TEMPLATES: '/api/v1/personal-planning/user-routine-templates/',
