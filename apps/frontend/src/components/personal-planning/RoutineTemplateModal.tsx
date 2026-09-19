@@ -4,6 +4,7 @@ import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -186,15 +187,11 @@ function UserTemplateList({
 
   if (templates.length === 0) {
     return (
-      <div className="gap-sm flex flex-col items-center justify-center py-12 text-center">
-        <User className="text-muted-foreground h-10 w-10 opacity-40" />
-        <p className="text-muted-foreground text-sm">
-          {t('pages.routineTasks.templates.noUserTemplates')}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {t('pages.routineTasks.templates.noUserTemplatesHint')}
-        </p>
-      </div>
+      <EmptyState
+        icon={<User className="text-muted-foreground h-12 w-12" />}
+        title={t('pages.routineTasks.templates.noUserTemplates')}
+        message={t('pages.routineTasks.templates.noUserTemplatesHint')}
+      />
     );
   }
 

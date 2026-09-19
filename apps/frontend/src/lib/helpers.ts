@@ -19,7 +19,7 @@ export const getAccountBalanceInfo = (
   account: Account,
   amount: number
 ): AccountBalanceInfo => {
-  const balance = parseFloat(account.balance);
+  const balance = parseFloat(account.available_balance);
   const overdraft = parseFloat(account.overdraft_limit ?? '0');
   const available = balance + overdraft;
   return {

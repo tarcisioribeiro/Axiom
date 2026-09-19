@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
+  Compass,
   Flame,
   X,
   PanelLeftClose,
@@ -21,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import {
   navItems,
@@ -30,6 +32,7 @@ import {
   type NavModule,
   type NavSubItem,
 } from '@/config/nav-config';
+import { getTourKey, OPEN_TOUR_EVENT } from '@/config/page-tour';
 import { prefetchRoute } from '@/config/route-prefetch';
 import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
@@ -255,7 +258,7 @@ export const Sidebar = () => {
             }
             side="right"
           >
-            <button
+            <PlainButton
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
@@ -271,10 +274,10 @@ export const Sidebar = () => {
                   {streak}
                 </span>
               )}
-            </button>
+            </PlainButton>
           </Tooltip>
         ) : (
-          <button
+          <PlainButton
             onClick={() => handleModuleClick(module.id)}
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
@@ -300,7 +303,7 @@ export const Sidebar = () => {
               )}
               aria-hidden="true"
             />
-          </button>
+          </PlainButton>
         )}
 
         {/* Collapsible content (desktop expanded mode only) */}
@@ -332,7 +335,7 @@ export const Sidebar = () => {
 
                   return (
                     <div key={subModule.id} className="space-y-xs">
-                      <button
+                      <PlainButton
                         onClick={() =>
                           dispatch({ type: 'TOGGLE_SUBMODULE', id: subModule.id })
                         }
@@ -364,7 +367,7 @@ export const Sidebar = () => {
                           )}
                           aria-hidden="true"
                         />
-                      </button>
+                      </PlainButton>
 
                       <div
                         id={`submodule-${subModule.id}`}
@@ -455,13 +458,13 @@ export const Sidebar = () => {
 
         {/* Mobile close button */}
         {isMobile && (
-          <button
+          <PlainButton
             onClick={close}
             className="p-sm hover:bg-accent rounded-lg transition-colors"
             aria-label={t('layout.closeMenu')}
           >
             <X className="h-5 w-5" aria-hidden="true" />
-          </button>
+          </PlainButton>
         )}
       </div>
 
@@ -507,7 +510,7 @@ export const Sidebar = () => {
                   }
                   side="right"
                 >
-                  <button
+                  <PlainButton
                     className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
                     aria-label={t('layout.userMenu')}
                   >
@@ -527,10 +530,10 @@ export const Sidebar = () => {
                         ).toUpperCase()}
                       </span>
                     )}
-                  </button>
+                  </PlainButton>
                 </Tooltip>
               ) : (
-                <button
+                <PlainButton
                   className="gap-sm px-sm py-xs hover:bg-muted/60 flex w-full items-center rounded-lg transition-colors"
                   aria-label={t('layout.userMenu')}
                 >
@@ -560,7 +563,7 @@ export const Sidebar = () => {
                       {user.username}
                     </p>
                   </div>
-                </button>
+                </PlainButton>
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-52">
@@ -581,6 +584,35 @@ export const Sidebar = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+      )}
+
+      {/* Tour guiado da página atual */}
+      {getTourKey(location.pathname) && (
+        <div
+          className={cn(
+            'mt-sm border-border/40 pt-sm border-t',
+            isCollapsed && !isMobile ? 'flex justify-center' : ''
+          )}
+        >
+          <Tooltip content={t('pageTour.button')} side="right">
+            <PlainButton
+              onClick={() => {
+                if (isMobile) close();
+                window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
+              }}
+              aria-label={t('pageTour.button')}
+              className={cn(
+                'text-muted-foreground hover:bg-accent hover:text-accent-foreground gap-sm flex items-center rounded-lg text-sm transition-colors',
+                isCollapsed && !isMobile
+                  ? 'h-9 w-9 justify-center'
+                  : 'px-sm py-xs w-full'
+              )}
+            >
+              <Compass className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {(!isCollapsed || isMobile) && t('pageTour.button')}
+            </PlainButton>
+          </Tooltip>
         </div>
       )}
 
@@ -619,7 +651,7 @@ export const Sidebar = () => {
             }
             side="right"
           >
-            <button
+            <PlainButton
               onClick={toggleCollapsed}
               aria-label={
                 isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
@@ -631,7 +663,7 @@ export const Sidebar = () => {
               ) : (
                 <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
               )}
-            </button>
+            </PlainButton>
           </Tooltip>
           {!isCollapsed && (
             <p className="mt-xs text-muted-foreground/60 text-center text-xs">⌘B</p>

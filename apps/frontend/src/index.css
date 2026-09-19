@@ -910,6 +910,88 @@
     --shadow-opacity-strong: 0.7;
   }
 
+  /* ── Linux Mint Dark (Dark Variant) — Mint-Y-Dark-Aqua ── */
+  .dark[data-dark-theme='mint-dark'] {
+    color-scheme: dark;
+
+    /* Background — #2E2E33 */
+    --background: 240 5% 19%;
+    /* Foreground — #DADADA */
+    --foreground: 0 0% 85%;
+
+    --card: 240 5% 22%;
+    --card-foreground: 0 0% 85%;
+
+    --popover: 240 5% 22%;
+    --popover-foreground: 0 0% 85%;
+
+    /* Primary — Mint blue (#1F9EDE) */
+    --primary: 200 75% 50%;
+    --primary-foreground: 240 5% 12%;
+
+    /* Secondary — Selection (#373737) */
+    --secondary: 0 0% 22%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 240 5% 16%;
+    --muted-foreground: 240 2% 66%; /* Comment #A7A7AB */
+
+    /* Accent — Purple (#9B59B6) */
+    --accent: 283 39% 53%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive — Red (#FC4138) */
+    --destructive: 3 97% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success — Green (#73D216) */
+    --success: 90 81% 45%;
+    --success-foreground: 240 5% 12%;
+
+    /* Warning — Orange (#F27835) */
+    --warning: 21 88% 58%;
+    --warning-foreground: 240 5% 12%;
+
+    /* Info — Cyan (#5CB9E8) */
+    --info: 200 75% 64%;
+    --info-foreground: 240 5% 12%;
+
+    --border: 240 5% 28%;
+    --input: 240 5% 28%;
+    --ring: 200 75% 50%;
+
+    --category-finance: 90 81% 45%;
+    --category-health: 200 75% 64%;
+    --category-studies: 200 75% 50%;
+    --category-spiritual: 283 39% 53%;
+    --category-exercise: 21 88% 58%;
+    --category-nutrition: 36 100% 68%; /* #FFAB5E */
+    --category-work: 240 2% 66%;
+    --category-leisure: 3 97% 60%;
+    --category-intellect: 283 50% 71%; /* #C895DD */
+
+    --on-primary: 240 5% 12%;
+    --on-secondary: 0 0% 85%;
+    --on-accent: 0 0% 100%;
+    --on-success: 240 5% 12%;
+    --on-warning: 240 5% 12%;
+    --on-destructive: 0 0% 100%;
+    --on-info: 240 5% 12%;
+
+    --border-subtle: 240 5% 16%;
+    --star: 36 100% 68%;
+
+    --heatmap-missed: hsl(var(--destructive) / 0.28);
+    --heatmap-low: hsl(var(--success) / 0.15);
+    --heatmap-medium-low: hsl(var(--success) / 0.3);
+    --heatmap-medium: hsl(var(--success) / 0.55);
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
+    --shadow-opacity-soft: 0.35;
+    --shadow-opacity-medium: 0.45;
+    --shadow-opacity-strong: 0.6;
+  }
+
   /* ── Ubuntu Light (Light Variant) ── */
   :root[data-light-theme='ubuntu-light'] {
     color-scheme: light;
@@ -981,6 +1063,83 @@
 
     --border-subtle: 307 11% 90%;
     --star: 49 100% 38%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.09;
+    --shadow-opacity-strong: 0.14;
+  }
+
+  /* ── Linux Mint Light (Light Variant) — Mint-Y-Aqua ── */
+  :root[data-light-theme='mint-light'] {
+    color-scheme: light;
+
+    /* Background — #F8F8F9 */
+    --background: 240 8% 97%;
+    /* Foreground — #303030 */
+    --foreground: 0 0% 19%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 19%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 19%;
+
+    /* Primary — Mint blue (#1F9EDE, escurecido p/ contraste com texto branco) */
+    --primary: 200 75% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary — Selection (#EBEBED) */
+    --secondary: 240 5% 93%;
+    --secondary-foreground: 0 0% 19%;
+
+    --muted: 240 5% 93%;
+    --muted-foreground: 240 2% 40%;
+
+    /* Accent — Purple (#9B59B6) */
+    --accent: 283 39% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive — Red (#FC4138) */
+    --destructive: 3 90% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success — Green (#73D216) */
+    --success: 90 81% 30%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning — Orange (#F27835) */
+    --warning: 21 88% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Info — Deep cyan (#135E84) */
+    --info: 200 75% 30%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 5% 84%;
+    --input: 240 3% 60%;
+    --ring: 200 75% 50%;
+
+    --category-finance: 90 81% 30%;
+    --category-health: 200 75% 30%;
+    --category-studies: 200 75% 42%;
+    --category-spiritual: 283 39% 45%;
+    --category-exercise: 21 88% 45%;
+    --category-nutrition: 30 90% 40%;
+    --category-work: 240 2% 40%;
+    --category-leisure: 3 90% 48%;
+    --category-intellect: 283 39% 36%;
+
+    --on-primary: 0 0% 100%;
+    --on-secondary: 0 0% 19%;
+    --on-accent: 0 0% 100%;
+    --on-success: 0 0% 100%;
+    --on-warning: 0 0% 100%;
+    --on-destructive: 0 0% 100%;
+    --on-info: 0 0% 100%;
+
+    --border-subtle: 240 5% 90%;
+    --star: 36 100% 45%;
 
     --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;

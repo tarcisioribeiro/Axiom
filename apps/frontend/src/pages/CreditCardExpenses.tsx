@@ -17,6 +17,7 @@ import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
@@ -1074,11 +1075,7 @@ export default function CreditCardExpenses({
             className="space-y-lg"
           >
             {installmentsByBill.length === 0 ? (
-              <Card>
-                <CardContent className="py-xl text-center">
-                  {t('pages.creditCardExpenses.emptyState')}
-                </CardContent>
-              </Card>
+              <EmptyState message={t('pages.creditCardExpenses.emptyState')} />
             ) : (
               installmentsByBill.map(
                 ({

@@ -3,6 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
 export interface ActiveFilterChip {
@@ -75,14 +76,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               className="gap-xs border-primary/30 bg-primary/10 px-sm text-primary inline-flex items-center rounded-full border py-0.5 text-xs"
             >
               {chip.label}
-              <button
+              <PlainButton
                 type="button"
                 onClick={chip.onRemove}
                 className="hover:text-primary/60 ml-0.5 rounded-full"
                 aria-label={t('common.actions.remove')}
               >
                 <X className="h-2.5 w-2.5" />
-              </button>
+              </PlainButton>
             </span>
           ))}
         </div>

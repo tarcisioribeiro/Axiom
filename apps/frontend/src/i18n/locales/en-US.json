@@ -1204,7 +1204,8 @@
         "paidPending": "Paid / Pending",
         "vsLastMonth": "Vs. Last Month",
         "loading": "Loading statistics...",
-        "activeCountDesc": "{{count}} active recurring expenses every month"
+        "activeCountDesc_one": "{{count}} active recurring expense every month",
+        "activeCountDesc_other": "{{count}} active recurring expenses every month"
       },
       "dueDayBadge": "Day {{day}}",
       "dueDayDesc": "Day {{day}} of each month",
@@ -1222,8 +1223,10 @@
         "generateBtn_one": "Generate {{count}} Expense",
         "generateBtn_other": "Generate {{count}} Expenses",
         "success": "Expenses launched successfully!",
-        "successDesc": "{{count}} expenses were created for {{month}}",
-        "successDescWithSkipped": "{{count}} expenses were created for {{month}}. {{skipped}} had already been launched this month and were skipped.",
+        "successDesc_one": "{{count}} expense was created for {{month}}.",
+        "successDesc_other": "{{count}} expenses were created for {{month}}.",
+        "skippedNotice_one": "{{count}} had already been launched this month and was skipped.",
+        "skippedNotice_other": "{{count}} had already been launched this month and were skipped.",
         "error": "Error launching expenses",
         "allGenerated": "All entries for this period have already been created."
       },
@@ -1833,7 +1836,8 @@
         "receivedPending": "Received / Pending",
         "vsPreviousMonth": "Vs. Previous Month",
         "monthlyDesc": "Expected monthly fixed revenue",
-        "activeCount": "active recurring revenues every month",
+        "activeCountDesc_one": "{{count}} active recurring revenue every month",
+        "activeCountDesc_other": "{{count}} active recurring revenues every month",
         "scheduleTitle": "Receipt schedule"
       },
       "launchDialog": {
@@ -1849,8 +1853,10 @@
         "generateBtn_one": "Generate {{count}} Revenue",
         "generateBtn_other": "Generate {{count}} Revenues",
         "success": "Revenues launched successfully!",
-        "successDesc": "{{count}} revenues were created for {{month}}",
-        "successDescWithSkipped": "{{count}} revenues were created for {{month}}. {{skipped}} had already been launched this month and were skipped.",
+        "successDesc_one": "{{count}} revenue was created for {{month}}.",
+        "successDesc_other": "{{count}} revenues were created for {{month}}.",
+        "skippedNotice_one": "{{count}} had already been launched this month and was skipped.",
+        "skippedNotice_other": "{{count}} had already been launched this month and were skipped.",
         "error": "Error launching revenues",
         "allGenerated": "All entries for this period have already been created."
       }
@@ -6566,6 +6572,360 @@
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",
     "weekDays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  },
+  "pageTour": {
+    "dialogTitle": "Guided tour",
+    "tipTitle": "What you can do here",
+    "navTitle": "Navigation and help",
+    "navDesc": "Use the side menu to switch modules and Ctrl+K to search any screen. To see this tour again, click \"Page tour\" in the side menu.",
+    "dontShowAgain": "Don't show this page's tour again",
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Finish",
+    "button": "Page tour",
+    "pages": {
+      "home": {
+        "title": "Welcome to Axiom",
+        "desc": "This is the home page: an overview of your finance, planning, learning and security modules.",
+        "tip": "Use the card shortcuts to jump straight to the module you need."
+      },
+      "dashboard": {
+        "title": "Financial dashboard",
+        "desc": "An overview of your finances: balances, revenues, expenses, card bills and forecasts.",
+        "tip": "Hover the charts for details and use the period filters to compare months."
+      },
+      "accounts": {
+        "title": "Accounts",
+        "desc": "Register and track your bank accounts, wallets and investments with up-to-date balances.",
+        "tip": "Click \"New account\" to add one. Balances are recalculated with every transaction."
+      },
+      "transactions": {
+        "title": "Transactions",
+        "desc": "All your revenues and expenses in one place, with search, filters and export.",
+        "tip": "Use the filters to find entries and the new-entry button to record revenues or expenses."
+      },
+      "recurring": {
+        "title": "Recurring items",
+        "desc": "Manage fixed expenses and revenues (rent, salary, subscriptions) that repeat every month.",
+        "tip": "Register once and track what was already paid or received each month."
+      },
+      "rulesTags": {
+        "title": "Rules and tags",
+        "desc": "Organize your entries with tags and rules that categorize or automate actions.",
+        "tip": "Create rules to automatically categorize entries based on their description."
+      },
+      "creditCards": {
+        "title": "Credit cards",
+        "desc": "Register your cards and track available limit, bills and closing dates.",
+        "tip": "Open a card to see its bills and add purchases."
+      },
+      "creditCardBills": {
+        "title": "Card bills",
+        "desc": "Review open, closed and paid bills for each card.",
+        "tip": "Record a bill payment to update the account and the card limit."
+      },
+      "creditCardExpenses": {
+        "title": "Card purchases",
+        "desc": "Purchases made on your cards, including installments.",
+        "tip": "Filter by card, category or bill to see where your limit is going."
+      },
+      "transfers": {
+        "title": "Transfers",
+        "desc": "Record movements between your accounts without affecting revenues and expenses.",
+        "tip": "Pick source, destination and amount; both balances are adjusted automatically."
+      },
+      "loans": {
+        "title": "Loans",
+        "desc": "Track loans you took or granted, with installments and outstanding balance.",
+        "tip": "Record receipts and payments to keep installments up to date."
+      },
+      "bills": {
+        "title": "Payables and receivables",
+        "desc": "Track amounts you owe and amounts owed to you, with due dates and status.",
+        "tip": "Recording a payment or receipt automatically creates the matching entry."
+      },
+      "members": {
+        "title": "Members",
+        "desc": "Register people (family, dependents, others) to link to entries and reports.",
+        "tip": "Open a member to see their financial report."
+      },
+      "memberReport": {
+        "title": "Member report",
+        "desc": "A financial summary for one member: what was spent, received and owed.",
+        "tip": "Use the period filters to analyze different ranges."
+      },
+      "budgets": {
+        "title": "Budgets",
+        "desc": "Set spending limits per category and track usage through the month.",
+        "tip": "You get alerts when a budget is exceeded."
+      },
+      "webhooks": {
+        "title": "Webhooks",
+        "desc": "Send Axiom events (new expenses, budget exceeded, etc.) to other systems.",
+        "tip": "Each delivery is HMAC-signed; check the delivery history to debug."
+      },
+      "bankReconciliation": {
+        "title": "Bank reconciliation",
+        "desc": "Compare imported statements with Axiom entries to find differences.",
+        "tip": "Import a statement to start a new reconciliation."
+      },
+      "bankImport": {
+        "title": "Import statement",
+        "desc": "Upload your bank file to reconcile it with your entries.",
+        "tip": "Check the column mapping before confirming the import."
+      },
+      "bankReconciliationDetail": {
+        "title": "Reconciliation detail",
+        "desc": "See line by line what is reconciled and what is still pending.",
+        "tip": "Link each statement line to an entry or create a new one from it."
+      },
+      "vaults": {
+        "title": "Vaults",
+        "desc": "Set money aside for goals and investments, with deposits, withdrawals and yields.",
+        "tip": "Applied yields are recorded as revenue; see each vault's statement."
+      },
+      "vaultSimulator": {
+        "title": "Vault simulator",
+        "desc": "Project how much your money can earn with different contributions and rates.",
+        "tip": "Adjust amount, term and rate to compare scenarios."
+      },
+      "financialGoals": {
+        "title": "Financial goals",
+        "desc": "Set savings goals and track the progress of each one.",
+        "tip": "Link a goal to a vault to track the amount saved."
+      },
+      "agenda": {
+        "title": "Finance agenda",
+        "desc": "Due dates and financial commitments organized by date.",
+        "tip": "Use it to avoid missing bills due in the coming days."
+      },
+      "financeAnalytics": {
+        "title": "Financial analytics",
+        "desc": "Charts and indicators to understand your financial evolution.",
+        "tip": "Switch between periods to see trends."
+      },
+      "financialHealth": {
+        "title": "Financial health",
+        "desc": "A score summarizing how healthy your finances are and what to improve.",
+        "tip": "Follow the recommendations to raise your score."
+      },
+      "calendar": {
+        "title": "Financial calendar",
+        "desc": "See revenues, expenses and due dates laid out on a calendar.",
+        "tip": "Click a day to see that date's entries."
+      },
+      "monthlyPlanner": {
+        "title": "Monthly planner",
+        "desc": "Plan the month with extra revenues and expenses and budget overrides.",
+        "tip": "Apply the plan once you are happy with the numbers."
+      },
+      "spendingInsights": {
+        "title": "Spending insights",
+        "desc": "Patterns and highlights in your spending, such as fastest-growing categories.",
+        "tip": "Use the insights to decide where to save."
+      },
+      "monthComparison": {
+        "title": "Month comparison",
+        "desc": "Compare revenues and expenses between two months.",
+        "tip": "Pick the months and see differences per category."
+      },
+      "netWorth": {
+        "title": "Net worth",
+        "desc": "Assets minus liabilities: your real wealth over time.",
+        "tip": "See the breakdown to understand what makes up each side."
+      },
+      "debtPayoff": {
+        "title": "Debt payoff",
+        "desc": "Simulate strategies to pay off your debts faster.",
+        "tip": "Compare methods and see how much interest you save."
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "desc": "Gather all your subscriptions and see what they cost per month.",
+        "tip": "Spot subscriptions you no longer use."
+      },
+      "securityDashboard": {
+        "title": "Security dashboard",
+        "desc": "An overview of your vault of protected passwords, cards, accounts and files.",
+        "tip": "Watch for alerts about weak or reused passwords."
+      },
+      "passwords": {
+        "title": "Passwords",
+        "desc": "Store your passwords encrypted and access them when needed.",
+        "tip": "Reveal or copy a password; it is hidden again after a few seconds."
+      },
+      "storedCards": {
+        "title": "Stored cards",
+        "desc": "Securely store your card details.",
+        "tip": "Mark favorites for quicker access."
+      },
+      "storedAccounts": {
+        "title": "Stored accounts",
+        "desc": "Store bank account details and logins in a protected way.",
+        "tip": "Reveal data only when needed; access is logged."
+      },
+      "archives": {
+        "title": "Archives",
+        "desc": "Keep confidential documents encrypted.",
+        "tip": "Upload a file and download it anywhere while the vault is unlocked."
+      },
+      "activityLogs": {
+        "title": "Activity logs",
+        "desc": "History of accesses and actions performed in your vault.",
+        "tip": "Use it to audit who accessed what and when."
+      },
+      "passwordImport": {
+        "title": "Import passwords",
+        "desc": "Bring passwords from another manager into Axiom.",
+        "tip": "Review the preview before confirming the import."
+      },
+      "vaultHealth": {
+        "title": "Vault health",
+        "desc": "A report of weak, reused or old passwords.",
+        "tip": "Fix items marked as critical first."
+      },
+      "twoFactor": {
+        "title": "Two-factor authentication",
+        "desc": "Add an extra layer of security to your account with an authenticator app.",
+        "tip": "Store the backup codes somewhere safe."
+      },
+      "libraryDashboard": {
+        "title": "Intellect dashboard",
+        "desc": "A summary of your reading, courses, skills and study goals.",
+        "tip": "Track your study streak and reading goals."
+      },
+      "books": {
+        "title": "Books",
+        "desc": "Your book catalog with reading status, ratings and highlights.",
+        "tip": "Open a book to read, create highlights and log progress."
+      },
+      "authors": {
+        "title": "Authors",
+        "desc": "A registry of your books' authors.",
+        "tip": "Open an author to see all of their books."
+      },
+      "publishers": {
+        "title": "Publishers",
+        "desc": "A registry of your books' publishers.",
+        "tip": "Use it to filter your catalog by publisher."
+      },
+      "courses": {
+        "title": "Courses",
+        "desc": "Organize courses into modules and lessons and track your progress.",
+        "tip": "Log study sessions to keep your pace."
+      },
+      "skills": {
+        "title": "Skills",
+        "desc": "Track the evolution of the skills you are developing.",
+        "tip": "Link courses and books to skills to see progress."
+      },
+      "knowledgeGraph": {
+        "title": "Knowledge graph",
+        "desc": "A visual map of connections between books, authors, courses and skills.",
+        "tip": "Drag and click nodes to explore relationships."
+      },
+      "intellectToday": {
+        "title": "Intellect today",
+        "desc": "What to study today: flashcard reviews and planned sessions.",
+        "tip": "Start with pending flashcards to reinforce learning."
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "desc": "Spaced-repetition review generated from your highlights.",
+        "tip": "Rate each card honestly: the next interval depends on it."
+      },
+      "planningDashboard": {
+        "title": "Planning dashboard",
+        "desc": "Your gamification: XP, streaks and achievements for personal planning.",
+        "tip": "Complete tasks daily to keep your streak."
+      },
+      "tasksGoals": {
+        "title": "Tasks and goals",
+        "desc": "The hub for your daily tasks, routines and goals.",
+        "tip": "Switch tabs to manage each part of your planning."
+      },
+      "routineTasks": {
+        "title": "Routines",
+        "desc": "Recurring task templates that automatically generate your daily tasks.",
+        "tip": "The yearly heatmap shows how consistent your habits are."
+      },
+      "planningGoals": {
+        "title": "Goals",
+        "desc": "Set personal objectives and track each one's progress.",
+        "tip": "Break big goals into smaller steps."
+      },
+      "dailyChecklist": {
+        "title": "Daily checklist",
+        "desc": "Today's tasks, as a list or a board by status.",
+        "tip": "Long-press a task to change its status."
+      },
+      "reflections": {
+        "title": "Daily reflections",
+        "desc": "Record how your day went and what you learned.",
+        "tip": "Writing every day helps you notice patterns over time."
+      },
+      "workout": {
+        "title": "Workout",
+        "desc": "Build workout plans, log sessions and track progress.",
+        "tip": "Pick exercises from the catalog to see the execution GIF."
+      },
+      "nutrition": {
+        "title": "Nutrition",
+        "desc": "Plan meals, log what you ate and track your diet.",
+        "tip": "Create meal types with options to speed up daily logging."
+      },
+      "journey": {
+        "title": "Journey",
+        "desc": "Your personal planning path: milestones and achievements.",
+        "tip": "See which achievements are within reach."
+      },
+      "week": {
+        "title": "Week",
+        "desc": "A weekly view with your tasks spread across days.",
+        "tip": "Use it to balance the load across days."
+      },
+      "planningAnalytics": {
+        "title": "Personal analytics",
+        "desc": "Charts about habits, tasks and personal performance.",
+        "tip": "Compare periods to see if you are improving."
+      },
+      "bodyMetrics": {
+        "title": "Body metrics",
+        "desc": "Log weight and measurements and track evolution.",
+        "tip": "Update regularly for more accurate charts."
+      },
+      "weeklyPlanning": {
+        "title": "Weekly planning",
+        "desc": "Plan your week and review what worked.",
+        "tip": "Set a few priorities and review at the end of the week."
+      },
+      "emotionalWellness": {
+        "title": "Emotional wellness",
+        "desc": "Emotional check-ins, crisis mode, interventions and a weekly report.",
+        "tip": "Do a check-in each day; crisis mode gives you immediate support."
+      },
+      "agents": {
+        "title": "AI assistants",
+        "desc": "Chat with finance, budget, forecast, insight, library and planning assistants.",
+        "tip": "The right assistant is picked automatically based on your question."
+      },
+      "profile": {
+        "title": "Profile",
+        "desc": "Your personal data, photo, password and account preferences.",
+        "tip": "Keep your email verified so you can recover your account."
+      },
+      "permissions": {
+        "title": "Permissions",
+        "desc": "See which system features you can access.",
+        "tip": "If something is blocked, ask an administrator."
+      },
+      "notifications": {
+        "title": "Notification preferences",
+        "desc": "Choose which alerts you want and through which channel.",
+        "tip": "Enable only what is useful to avoid noise."
+      }
+    }
   },
   "vaultOnboarding": {
     "dialogTitle": "Set Up Security Vault",

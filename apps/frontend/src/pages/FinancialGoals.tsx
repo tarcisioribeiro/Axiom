@@ -19,6 +19,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -39,6 +40,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -163,7 +165,7 @@ function GoalCard({
         goal.is_completed ? 'border-success/50 bg-success/[0.03]' : ''
       }`}
     >
-      <CardContent className="p-md">
+      <CardContent className="p-md pt-md">
         <div className="flex items-start justify-between">
           <div className="gap-sm flex items-center">
             {config.icon}
@@ -617,10 +619,10 @@ export default function FinancialGoals() {
       {isLoading ? (
         <LoadingState />
       ) : goals.length === 0 ? (
-        <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
-          <Target className="mb-md h-12 w-12" />
-          <p>{t('pages.financialGoals.emptyState')}</p>
-        </div>
+        <EmptyState
+          icon={<Target className="text-muted-foreground h-12 w-12" />}
+          message={t('pages.financialGoals.emptyState')}
+        />
       ) : (
         <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => (
@@ -680,7 +682,7 @@ export default function FinancialGoals() {
                   </Label>
                   <div className="gap-xs grid grid-cols-3">
                     {CATEGORIES.map((cat) => (
-                      <button
+                      <PlainButton
                         key={cat.value}
                         type="button"
                         onClick={() =>
@@ -703,7 +705,7 @@ export default function FinancialGoals() {
                         <span className="truncate">
                           {t(`pages.financialGoals.categories.${cat.value}`)}
                         </span>
-                      </button>
+                      </PlainButton>
                     ))}
                   </div>
                 </div>
@@ -838,7 +840,7 @@ export default function FinancialGoals() {
                       vaults.map((vault) => {
                         const isSelected = formData.vaults.includes(vault.id);
                         return (
-                          <button
+                          <PlainButton
                             key={vault.id}
                             type="button"
                             onClick={() => {
@@ -866,7 +868,7 @@ export default function FinancialGoals() {
                             <span className="text-muted-foreground text-xs">
                               {formatCurrency(parseFloat(vault.current_balance))}
                             </span>
-                          </button>
+                          </PlainButton>
                         );
                       })
                     )}
@@ -889,7 +891,7 @@ export default function FinancialGoals() {
                   />
                 </div>
 
-                <button
+                <PlainButton
                   type="button"
                   onClick={() =>
                     setFormData({ ...formData, is_active: !formData.is_active })
@@ -919,7 +921,7 @@ export default function FinancialGoals() {
                         : t('pages.financialGoals.inactiveGoalDesc')}
                     </p>
                   </div>
-                </button>
+                </PlainButton>
               </div>
             </FormSection>
           </div>

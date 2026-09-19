@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { PlainButton } from '@/components/ui/plain-button';
 import { API_CONFIG } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
@@ -133,7 +134,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                 <Badge variant="secondary" className="text-xs">
                   {file?.name}
                 </Badge>
-                <button
+                <PlainButton
                   type="button"
                   className="bg-background absolute top-2 right-2 rounded-full p-0.5 shadow"
                   onClick={(e) => {
@@ -142,7 +143,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                   }}
                 >
                   <X className="h-3.5 w-3.5" />
-                </button>
+                </PlainButton>
               </>
             ) : (
               <>

@@ -49,6 +49,7 @@ const DARK_VARIANTS: DarkVariantOption[] = [
   },
   { id: 'everforest', label: 'Everforest', primary: '#7FBBB3', bg: '#2D353B' },
   { id: 'ubuntu', label: 'Ubuntu Dark', primary: '#E95420', bg: '#300A24' },
+  { id: 'mint-dark', label: 'Linux Mint Dark', primary: '#1F9EDE', bg: '#2E2E33' },
 ];
 
 const LIGHT_VARIANTS: LightVariantOption[] = [
@@ -75,6 +76,7 @@ const LIGHT_VARIANTS: LightVariantOption[] = [
   },
   { id: 'nord-light', label: 'Nord Light', primary: '#5E81AC', bg: '#ECEFF4' },
   { id: 'ubuntu-light', label: 'Ubuntu Light', primary: '#E95420', bg: '#FFFFFF' },
+  { id: 'mint-light', label: 'Linux Mint Light', primary: '#1F9EDE', bg: '#F8F8F9' },
 ];
 
 export function ThemeToggle({ className }: ThemeToggleProps) {

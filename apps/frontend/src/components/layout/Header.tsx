@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { VaultExpiryBadge } from '@/components/security/VaultGuard';
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';
@@ -39,7 +40,7 @@ export const Header = () => {
         {/* Right-side actions */}
         <div className="gap-xs flex shrink-0 items-center">
           {/* Command palette trigger — styled as a search bar on desktop */}
-          <button
+          <PlainButton
             onClick={openCommandPalette}
             className="gap-sm border-border/60 bg-background/60 py-sm text-muted-foreground hover:border-border hover:text-foreground hidden items-center rounded-md border px-3 text-sm transition-colors md:flex"
             aria-label={t('layout.openCommandPalette')}
@@ -49,7 +50,7 @@ export const Header = () => {
             <kbd className="ml-xs bg-muted px-sm text-muted-foreground hidden items-center gap-0.5 rounded py-0.5 font-mono text-xs lg:flex">
               <span className="text-sm">⌘</span>K
             </kbd>
-          </button>
+          </PlainButton>
 
           {/* Command palette icon — mobile only */}
           <Button

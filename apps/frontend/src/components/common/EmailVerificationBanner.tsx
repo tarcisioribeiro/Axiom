@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
 import { authService } from '@/services/auth-service';
@@ -81,14 +82,14 @@ export function EmailVerificationBanner() {
           ? t('common.emailVerificationBanner.sending')
           : t('common.emailVerificationBanner.resend')}
       </Button>
-      <button
+      <PlainButton
         type="button"
         onClick={() => setDismissed(true)}
         className="text-muted-foreground hover:text-foreground shrink-0"
         aria-label={t('common.emailVerificationBanner.dismiss')}
       >
         <X className="h-4 w-4" />
-      </button>
+      </PlainButton>
     </div>
   );
 }

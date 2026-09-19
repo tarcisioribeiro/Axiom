@@ -19,6 +19,7 @@ import { FileInput } from '@/components/ui/file-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -227,7 +228,7 @@ export function ArchiveForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
-                <button
+                <PlainButton
                   key={value}
                   type="button"
                   onClick={() => setValue('archive_type', value)}
@@ -242,7 +243,7 @@ export function ArchiveForm({
                   <span className="hidden sm:inline">
                     {t(`pages.archives.types.${translationKey}`)}
                   </span>
-                </button>
+                </PlainButton>
               ))}
             </div>
             {errors.archive_type && (

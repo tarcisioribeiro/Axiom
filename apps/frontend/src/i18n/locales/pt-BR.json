@@ -1204,7 +1204,8 @@
         "paidPending": "Pagas / Pendentes",
         "vsLastMonth": "Vs. Mês Anterior",
         "loading": "Carregando estatísticas...",
-        "activeCountDesc": "{{count}} despesas ativas recorrentes todo mês"
+        "activeCountDesc_one": "{{count}} despesa ativa recorrente todo mês",
+        "activeCountDesc_other": "{{count}} despesas ativas recorrentes todo mês"
       },
       "dueDayBadge": "Dia {{day}}",
       "dueDayDesc": "Dia {{day}} de cada mês",
@@ -1222,8 +1223,10 @@
         "generateBtn_one": "Gerar {{count}} Despesa",
         "generateBtn_other": "Gerar {{count}} Despesas",
         "success": "Despesas lançadas com sucesso!",
-        "successDesc": "{{count}} despesas foram criadas para {{month}}",
-        "successDescWithSkipped": "{{count}} despesas foram criadas para {{month}}. {{skipped}} já haviam sido lançadas neste mês e foram ignoradas.",
+        "successDesc_one": "{{count}} despesa foi criada para {{month}}.",
+        "successDesc_other": "{{count}} despesas foram criadas para {{month}}.",
+        "skippedNotice_one": "{{count}} já havia sido lançada neste mês e foi ignorada.",
+        "skippedNotice_other": "{{count}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Erro ao lançar despesas",
         "allGenerated": "Todos os lançamentos deste período já foram feitos."
       },
@@ -1833,7 +1836,8 @@
         "receivedPending": "Recebidas / Pendentes",
         "vsPreviousMonth": "Vs. Mês Anterior",
         "monthlyDesc": "Receita mensal fixa prevista",
-        "activeCount": "receitas ativas recorrentes todo mês",
+        "activeCountDesc_one": "{{count}} receita ativa recorrente todo mês",
+        "activeCountDesc_other": "{{count}} receitas ativas recorrentes todo mês",
         "scheduleTitle": "Calendário de recebimentos"
       },
       "launchDialog": {
@@ -1849,8 +1853,10 @@
         "generateBtn_one": "Gerar {{count}} Receita",
         "generateBtn_other": "Gerar {{count}} Receitas",
         "success": "Receitas lançadas com sucesso!",
-        "successDesc": "{{count}} receitas foram criadas para {{month}}",
-        "successDescWithSkipped": "{{count}} receitas foram criadas para {{month}}. {{skipped}} já haviam sido lançadas neste mês e foram ignoradas.",
+        "successDesc_one": "{{count}} receita foi criada para {{month}}.",
+        "successDesc_other": "{{count}} receitas foram criadas para {{month}}.",
+        "skippedNotice_one": "{{count}} já havia sido lançada neste mês e foi ignorada.",
+        "skippedNotice_other": "{{count}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Erro ao lançar receitas",
         "allGenerated": "Todos os lançamentos deste período já foram feitos."
       }
@@ -6611,6 +6617,360 @@
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",
     "weekDays": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+  },
+  "pageTour": {
+    "dialogTitle": "Tour guiado",
+    "tipTitle": "O que você pode fazer aqui",
+    "navTitle": "Navegação e ajuda",
+    "navDesc": "Use o menu lateral para trocar de módulo e Ctrl+K para buscar qualquer tela. Para rever este tour, clique em \"Tour da página\" no menu lateral.",
+    "dontShowAgain": "Não mostrar mais o tour desta página",
+    "back": "Voltar",
+    "skip": "Pular",
+    "next": "Próximo",
+    "finish": "Concluir",
+    "button": "Tour da página",
+    "pages": {
+      "home": {
+        "title": "Bem-vindo ao Axiom",
+        "desc": "Esta é a página inicial: um resumo dos seus módulos de finanças, planejamento, intelecto e segurança.",
+        "tip": "Use os atalhos dos cartões para ir direto ao módulo que você quer usar."
+      },
+      "dashboard": {
+        "title": "Painel financeiro",
+        "desc": "Visão geral das suas finanças: saldos, receitas, despesas, fatura dos cartões e previsões.",
+        "tip": "Passe o mouse nos gráficos para ver detalhes e use os filtros de período para comparar meses."
+      },
+      "accounts": {
+        "title": "Contas",
+        "desc": "Cadastre e acompanhe suas contas bancárias, carteiras e investimentos com saldo atualizado.",
+        "tip": "Clique em \"Nova conta\" para adicionar. O saldo é recalculado a cada transação lançada."
+      },
+      "transactions": {
+        "title": "Transações",
+        "desc": "Todas as suas receitas e despesas em um só lugar, com busca, filtros e exportação.",
+        "tip": "Use os filtros para achar lançamentos e o botão de novo lançamento para registrar receitas ou despesas."
+      },
+      "recurring": {
+        "title": "Recorrentes",
+        "desc": "Gerencie despesas e receitas fixas (aluguel, salário, assinaturas) que se repetem todo mês.",
+        "tip": "Cadastre uma vez e acompanhe o que já foi pago ou recebido em cada mês."
+      },
+      "rulesTags": {
+        "title": "Regras e tags",
+        "desc": "Organize seus lançamentos com tags e regras que categorizam ou automatizam ações.",
+        "tip": "Crie regras para categorizar automaticamente lançamentos com base na descrição."
+      },
+      "creditCards": {
+        "title": "Cartões de crédito",
+        "desc": "Cadastre seus cartões, acompanhe limite disponível, faturas e datas de fechamento.",
+        "tip": "Abra um cartão para ver suas faturas e lançar compras."
+      },
+      "creditCardBills": {
+        "title": "Faturas do cartão",
+        "desc": "Consulte faturas abertas, fechadas e pagas de cada cartão.",
+        "tip": "Registre o pagamento de uma fatura para atualizar a conta e o limite do cartão."
+      },
+      "creditCardExpenses": {
+        "title": "Compras no cartão",
+        "desc": "Lançamentos feitos nos cartões, incluindo compras parceladas.",
+        "tip": "Filtre por cartão, categoria ou fatura para entender onde o limite está sendo usado."
+      },
+      "transfers": {
+        "title": "Transferências",
+        "desc": "Registre movimentações entre suas contas sem afetar receitas e despesas.",
+        "tip": "Escolha origem, destino e valor; os saldos das duas contas são ajustados automaticamente."
+      },
+      "loans": {
+        "title": "Empréstimos",
+        "desc": "Controle empréstimos que você tomou ou concedeu, com parcelas e saldo devedor.",
+        "tip": "Registre recebimentos e pagamentos para manter as parcelas sempre atualizadas."
+      },
+      "bills": {
+        "title": "Contas a pagar e receber",
+        "desc": "Acompanhe valores que você deve pagar e valores que tem a receber, com vencimentos e status.",
+        "tip": "Ao registrar o pagamento ou recebimento, o lançamento correspondente é criado automaticamente."
+      },
+      "members": {
+        "title": "Membros",
+        "desc": "Cadastre pessoas (família, dependentes, terceiros) para associar a lançamentos e relatórios.",
+        "tip": "Abra um membro para ver o relatório financeiro dele."
+      },
+      "memberReport": {
+        "title": "Relatório do membro",
+        "desc": "Resumo financeiro de um membro: o que foi gasto, recebido e devido.",
+        "tip": "Use os filtros de período para analisar diferentes intervalos."
+      },
+      "budgets": {
+        "title": "Orçamentos",
+        "desc": "Defina limites de gasto por categoria e acompanhe o consumo ao longo do mês.",
+        "tip": "Você recebe alertas quando um orçamento é ultrapassado."
+      },
+      "webhooks": {
+        "title": "Webhooks",
+        "desc": "Envie eventos do Axiom (novas despesas, orçamento estourado etc.) para outros sistemas.",
+        "tip": "Cada envio é assinado com HMAC; consulte o histórico de entregas para depurar."
+      },
+      "bankReconciliation": {
+        "title": "Conciliação bancária",
+        "desc": "Compare extratos importados com os lançamentos do Axiom para achar diferenças.",
+        "tip": "Importe um extrato para iniciar uma nova conciliação."
+      },
+      "bankImport": {
+        "title": "Importar extrato",
+        "desc": "Envie o arquivo do seu banco para conciliar com seus lançamentos.",
+        "tip": "Confira o mapeamento das colunas antes de confirmar a importação."
+      },
+      "bankReconciliationDetail": {
+        "title": "Detalhe da conciliação",
+        "desc": "Veja linha a linha o que já foi conciliado e o que ainda está pendente.",
+        "tip": "Vincule cada linha do extrato a um lançamento ou crie um novo a partir dela."
+      },
+      "vaults": {
+        "title": "Cofres",
+        "desc": "Reserve dinheiro para objetivos e investimentos, com depósitos, saques e rendimentos.",
+        "tip": "Os rendimentos aplicados entram como receita; veja o extrato de cada cofre."
+      },
+      "vaultSimulator": {
+        "title": "Simulador de cofres",
+        "desc": "Projete quanto seu dinheiro pode render com aportes e taxas diferentes.",
+        "tip": "Ajuste valor, prazo e taxa para comparar cenários."
+      },
+      "financialGoals": {
+        "title": "Metas financeiras",
+        "desc": "Defina metas de economia e acompanhe o progresso de cada uma.",
+        "tip": "Vincule uma meta a um cofre para acompanhar o valor guardado."
+      },
+      "agenda": {
+        "title": "Agenda financeira",
+        "desc": "Vencimentos e compromissos financeiros organizados por data.",
+        "tip": "Use-a para não perder contas a vencer nos próximos dias."
+      },
+      "financeAnalytics": {
+        "title": "Análises financeiras",
+        "desc": "Gráficos e indicadores para entender sua evolução financeira.",
+        "tip": "Alterne entre os períodos para ver tendências."
+      },
+      "financialHealth": {
+        "title": "Saúde financeira",
+        "desc": "Uma pontuação que resume o quão saudáveis estão suas finanças e o que melhorar.",
+        "tip": "Siga as recomendações para aumentar a pontuação."
+      },
+      "calendar": {
+        "title": "Calendário financeiro",
+        "desc": "Veja receitas, despesas e vencimentos distribuídos no calendário.",
+        "tip": "Clique em um dia para ver os lançamentos daquela data."
+      },
+      "monthlyPlanner": {
+        "title": "Planejador mensal",
+        "desc": "Planeje o mês com receitas e despesas extras e ajustes nos orçamentos.",
+        "tip": "Aplique o plano quando estiver satisfeito com os números."
+      },
+      "spendingInsights": {
+        "title": "Insights de gastos",
+        "desc": "Padrões e destaques nos seus gastos, como categorias que mais crescem.",
+        "tip": "Use os insights para decidir onde economizar."
+      },
+      "monthComparison": {
+        "title": "Comparação de meses",
+        "desc": "Compare receitas e despesas entre dois meses.",
+        "tip": "Escolha os meses e veja as diferenças por categoria."
+      },
+      "netWorth": {
+        "title": "Patrimônio líquido",
+        "desc": "Ativos menos passivos: sua riqueza real ao longo do tempo.",
+        "tip": "Veja o detalhamento para entender o que compõe cada lado."
+      },
+      "debtPayoff": {
+        "title": "Quitação de dívidas",
+        "desc": "Simule estratégias para quitar suas dívidas mais rápido.",
+        "tip": "Compare os métodos e veja quanto de juros você economiza."
+      },
+      "subscriptions": {
+        "title": "Assinaturas",
+        "desc": "Reúna todas as suas assinaturas e veja quanto elas custam por mês.",
+        "tip": "Identifique assinaturas que você não usa mais."
+      },
+      "securityDashboard": {
+        "title": "Painel de segurança",
+        "desc": "Visão geral do seu cofre de senhas, cartões, contas e arquivos protegidos.",
+        "tip": "Acompanhe alertas de senhas fracas ou repetidas."
+      },
+      "passwords": {
+        "title": "Senhas",
+        "desc": "Guarde suas senhas com criptografia e acesse-as quando precisar.",
+        "tip": "Revele ou copie uma senha; ela é ocultada automaticamente após alguns segundos."
+      },
+      "storedCards": {
+        "title": "Cartões guardados",
+        "desc": "Armazene com segurança os dados dos seus cartões.",
+        "tip": "Marque favoritos para acessá-los mais rápido."
+      },
+      "storedAccounts": {
+        "title": "Contas guardadas",
+        "desc": "Armazene dados de contas bancárias e acessos de forma protegida.",
+        "tip": "Revele os dados só quando precisar; o acesso fica registrado."
+      },
+      "archives": {
+        "title": "Arquivos",
+        "desc": "Guarde documentos confidenciais criptografados.",
+        "tip": "Envie um arquivo e baixe-o de qualquer lugar quando o cofre estiver desbloqueado."
+      },
+      "activityLogs": {
+        "title": "Registro de atividades",
+        "desc": "Histórico de acessos e ações realizadas no seu cofre.",
+        "tip": "Use-o para auditar quem acessou o quê e quando."
+      },
+      "passwordImport": {
+        "title": "Importar senhas",
+        "desc": "Traga senhas de outro gerenciador para o Axiom.",
+        "tip": "Revise a prévia antes de confirmar a importação."
+      },
+      "vaultHealth": {
+        "title": "Saúde do cofre",
+        "desc": "Relatório de senhas fracas, repetidas ou antigas.",
+        "tip": "Corrija primeiro os itens marcados como críticos."
+      },
+      "twoFactor": {
+        "title": "Autenticação em dois fatores",
+        "desc": "Adicione uma camada extra de segurança à sua conta com um app autenticador.",
+        "tip": "Guarde os códigos de backup em local seguro."
+      },
+      "libraryDashboard": {
+        "title": "Painel do Intelecto",
+        "desc": "Resumo das suas leituras, cursos, habilidades e metas de estudo.",
+        "tip": "Acompanhe sua sequência de estudos e metas de leitura."
+      },
+      "books": {
+        "title": "Livros",
+        "desc": "Seu catálogo de livros com status de leitura, avaliações e destaques.",
+        "tip": "Abra um livro para ler, criar destaques e registrar o progresso."
+      },
+      "authors": {
+        "title": "Autores",
+        "desc": "Cadastro dos autores dos seus livros.",
+        "tip": "Abra um autor para ver todos os livros dele."
+      },
+      "publishers": {
+        "title": "Editoras",
+        "desc": "Cadastro das editoras dos seus livros.",
+        "tip": "Use para filtrar seu catálogo por editora."
+      },
+      "courses": {
+        "title": "Cursos",
+        "desc": "Organize cursos em módulos e aulas e acompanhe seu progresso.",
+        "tip": "Registre sessões de estudo para manter o ritmo."
+      },
+      "skills": {
+        "title": "Habilidades",
+        "desc": "Acompanhe a evolução das habilidades que você está desenvolvendo.",
+        "tip": "Vincule cursos e livros às habilidades para ver o progresso."
+      },
+      "knowledgeGraph": {
+        "title": "Grafo de conhecimento",
+        "desc": "Mapa visual das conexões entre livros, autores, cursos e habilidades.",
+        "tip": "Arraste e clique nos nós para explorar as relações."
+      },
+      "intellectToday": {
+        "title": "Intelecto hoje",
+        "desc": "O que estudar hoje: revisões de flashcards e sessões planejadas.",
+        "tip": "Comece pelos flashcards pendentes para fixar o conteúdo."
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "desc": "Revisão com repetição espaçada gerada a partir dos seus destaques.",
+        "tip": "Avalie cada cartão com honestidade: o próximo intervalo depende disso."
+      },
+      "planningDashboard": {
+        "title": "Painel de planejamento",
+        "desc": "Sua gamificação: XP, sequências e conquistas do planejamento pessoal.",
+        "tip": "Complete tarefas diariamente para manter sua sequência."
+      },
+      "tasksGoals": {
+        "title": "Tarefas e metas",
+        "desc": "Central das suas tarefas do dia, rotinas e metas.",
+        "tip": "Alterne entre as abas para gerenciar cada parte do planejamento."
+      },
+      "routineTasks": {
+        "title": "Rotinas",
+        "desc": "Modelos de tarefas recorrentes que geram suas tarefas diárias automaticamente.",
+        "tip": "O mapa de calor anual mostra a consistência dos seus hábitos."
+      },
+      "planningGoals": {
+        "title": "Metas",
+        "desc": "Defina objetivos pessoais e acompanhe o andamento de cada um.",
+        "tip": "Quebre metas grandes em etapas menores."
+      },
+      "dailyChecklist": {
+        "title": "Checklist diário",
+        "desc": "Suas tarefas de hoje, em lista ou quadro por status.",
+        "tip": "Toque e segure em uma tarefa para trocar seu status."
+      },
+      "reflections": {
+        "title": "Reflexões diárias",
+        "desc": "Registre como foi seu dia e o que aprendeu.",
+        "tip": "Escrever todo dia ajuda a perceber padrões ao longo do tempo."
+      },
+      "workout": {
+        "title": "Treino",
+        "desc": "Monte planos de treino, registre sessões e acompanhe a evolução.",
+        "tip": "Escolha exercícios do catálogo para ver o GIF de execução."
+      },
+      "nutrition": {
+        "title": "Nutrição",
+        "desc": "Planeje refeições, registre o que comeu e acompanhe sua alimentação.",
+        "tip": "Crie tipos de refeição com opções para agilizar o registro diário."
+      },
+      "journey": {
+        "title": "Jornada",
+        "desc": "Sua trajetória no planejamento pessoal: marcos e conquistas.",
+        "tip": "Veja quais conquistas estão próximas."
+      },
+      "week": {
+        "title": "Semana",
+        "desc": "Visão da semana com suas tarefas distribuídas por dia.",
+        "tip": "Use para equilibrar a carga entre os dias."
+      },
+      "planningAnalytics": {
+        "title": "Análises pessoais",
+        "desc": "Gráficos sobre hábitos, tarefas e desempenho pessoal.",
+        "tip": "Compare períodos para ver se está evoluindo."
+      },
+      "bodyMetrics": {
+        "title": "Medidas corporais",
+        "desc": "Registre peso e medidas e acompanhe a evolução.",
+        "tip": "Atualize com regularidade para gráficos mais precisos."
+      },
+      "weeklyPlanning": {
+        "title": "Planejamento semanal",
+        "desc": "Planeje sua semana e revise o que deu certo.",
+        "tip": "Defina poucas prioridades e revise no fim da semana."
+      },
+      "emotionalWellness": {
+        "title": "Bem-estar emocional",
+        "desc": "Check-ins emocionais, modo crise, intervenções e relatório semanal.",
+        "tip": "Faça um check-in por dia; no modo crise você recebe apoio imediato."
+      },
+      "agents": {
+        "title": "Assistentes de IA",
+        "desc": "Converse com assistentes de finanças, orçamento, previsões, insights, biblioteca e planejamento.",
+        "tip": "O assistente certo é escolhido automaticamente conforme sua pergunta."
+      },
+      "profile": {
+        "title": "Perfil",
+        "desc": "Seus dados pessoais, foto, senha e preferências da conta.",
+        "tip": "Mantenha o e-mail verificado para recuperar a conta."
+      },
+      "permissions": {
+        "title": "Permissões",
+        "desc": "Veja quais recursos do sistema você pode acessar.",
+        "tip": "Se algo estiver bloqueado, fale com um administrador."
+      },
+      "notifications": {
+        "title": "Preferências de notificação",
+        "desc": "Escolha quais alertas você quer receber e por qual canal.",
+        "tip": "Ative apenas o que for útil para evitar excesso de avisos."
+      }
+    }
   },
   "vaultOnboarding": {
     "dialogTitle": "Configurar Cofre de Segurança",

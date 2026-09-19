@@ -23,6 +23,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -397,7 +398,7 @@ export function VaultFormDialog({
                 )}
 
               {/* Toggle is_active */}
-              <button
+              <PlainButton
                 type="button"
                 onClick={() =>
                   setFormData({ ...formData, is_active: !formData.is_active })
@@ -425,7 +426,7 @@ export function VaultFormDialog({
                       : t('pages.vaults.inactiveVaultDesc')}
                   </p>
                 </div>
-              </button>
+              </PlainButton>
 
               <div className="space-y-sm">
                 <Label htmlFor="notes" className="gap-xs flex items-center">

@@ -46,6 +46,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import { PLATFORM_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -457,7 +458,7 @@ export default function Courses() {
           </div>
           <div className="gap-xs flex">
             {STATUS_FILTER_KEYS.map((s) => (
-              <button
+              <PlainButton
                 key={s}
                 type="button"
                 onClick={() => setStatusFilter(s)}
@@ -471,7 +472,7 @@ export default function Courses() {
                 {s === 'all'
                   ? t('pages.courses.filters.all')
                   : t(`pages.courses.filters.${s}`)}
-              </button>
+              </PlainButton>
             ))}
           </div>
         </div>

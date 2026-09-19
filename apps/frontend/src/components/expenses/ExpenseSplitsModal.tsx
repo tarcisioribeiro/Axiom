@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -157,12 +158,12 @@ export function ExpenseSplitsModal({
                     ) : (
                       <XCircle className="text-muted-foreground h-4 w-4" />
                     )}
-                    <button
+                    <PlainButton
                       onClick={() => void handleDelete(split.id)}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    </PlainButton>
                   </div>
                 </div>
               ))}

@@ -43,6 +43,7 @@ import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboa
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
@@ -376,7 +377,7 @@ export default function PersonalPlanningDashboard() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {MODULE_CARDS.map((card) => (
-          <button
+          <PlainButton
             key={card.route + card.titleKey}
             onClick={() => void navigate(card.route)}
             className={cn(
@@ -389,7 +390,7 @@ export default function PersonalPlanningDashboard() {
               <p className="text-sm font-semibold">{t(card.titleKey)}</p>
               <p className="text-muted-foreground text-xs">{t(card.subtitleKey)}</p>
             </div>
-          </button>
+          </PlainButton>
         ))}
       </div>
 
@@ -618,7 +619,7 @@ export default function PersonalPlanningDashboard() {
       </Card>
 
       {/* ── Seção Treinos & Nutrição (colapsável) ─────────────────────────── */}
-      <button
+      <PlainButton
         type="button"
         onClick={() => setWorkoutNutritionOpen((v) => !v)}
         className="py-sm flex w-full items-center gap-3 text-left"
@@ -635,7 +636,7 @@ export default function PersonalPlanningDashboard() {
           />
         </span>
         <div className="bg-border h-px flex-1" />
-      </button>
+      </PlainButton>
 
       <AnimatePresence initial={false}>
         {workoutNutritionOpen && (
@@ -841,7 +842,7 @@ export default function PersonalPlanningDashboard() {
       </AnimatePresence>
 
       {/* ── Seção Análise Detalhada (colapsável, lazy) ──────────────────────── */}
-      <button
+      <PlainButton
         type="button"
         onClick={() => setDetailedAnalysisOpen((v) => !v)}
         className="py-sm flex w-full items-center gap-3 text-left"
@@ -858,7 +859,7 @@ export default function PersonalPlanningDashboard() {
           />
         </span>
         <div className="bg-border h-px flex-1" />
-      </button>
+      </PlainButton>
 
       <AnimatePresence initial={false}>
         {detailedAnalysisOpen && (

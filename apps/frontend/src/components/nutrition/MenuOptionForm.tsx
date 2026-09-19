@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -331,14 +332,14 @@ export function MenuOptionForm({
                           'Grupo de alternativas'
                         )}
                       </span>
-                      <button
+                      <PlainButton
                         type="button"
                         onClick={() => addVariantToGroup(group.groupId!)}
                         className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
-                      </button>
+                      </PlainButton>
                     </div>
                     <div className="p-sm space-y-0">
                       {group.indices.map((idx, position) => (
@@ -369,22 +370,22 @@ export function MenuOptionForm({
 
           {/* Botões de adição */}
           <div className="gap-sm flex">
-            <button
+            <PlainButton
               type="button"
               onClick={addStandalone}
               className="gap-sm border-category-nutrition/30 py-sm text-category-nutrition hover:border-category-nutrition/60 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addIngredient')}
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               onClick={addNewGroup}
               className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
-            </button>
+            </PlainButton>
           </div>
         </div>
       </FormSection>
@@ -437,13 +438,13 @@ function IngredientRow({
         <span className="text-muted-foreground flex-1 text-xs font-semibold tracking-wider uppercase">
           {label}
         </span>
-        <button
+        <PlainButton
           type="button"
           onClick={onRemove}
           className="text-muted-foreground hover:text-destructive rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        </PlainButton>
       </div>
 
       {/* Food + Quantity + Unit */}

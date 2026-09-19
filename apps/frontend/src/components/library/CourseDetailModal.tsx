@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -262,7 +263,7 @@ function ModuleItem({
       {/* Bulk action bar */}
       {lessons.length > 0 && (
         <div className="mt-sm gap-sm flex items-center justify-between">
-          <button
+          <PlainButton
             type="button"
             className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs"
             onClick={toggleSelectAll}
@@ -273,7 +274,7 @@ function ModuleItem({
               <Square className="h-3.5 w-3.5" />
             )}
             {t('pages.courses.lessons.selectAll')}
-          </button>
+          </PlainButton>
           {selectedIds.size > 0 && (
             <div className="gap-xs flex items-center">
               <span className="text-muted-foreground text-xs">
@@ -314,7 +315,7 @@ function ModuleItem({
             key={lesson.id}
             className="gap-sm px-sm py-xs hover:bg-muted/40 flex items-center justify-between rounded transition-colors"
           >
-            <button
+            <PlainButton
               type="button"
               className="flex shrink-0"
               onClick={() => toggleSelect(lesson.id)}
@@ -324,8 +325,8 @@ function ModuleItem({
               ) : (
                 <Square className="text-muted-foreground/40 hover:text-muted-foreground h-4 w-4" />
               )}
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               className="gap-sm flex min-w-0 flex-1 items-center"
               onClick={() => toggleLesson.mutate(lesson.id)}
@@ -344,7 +345,7 @@ function ModuleItem({
               >
                 {lesson.title}
               </span>
-            </button>
+            </PlainButton>
             <Button
               size="icon"
               variant="ghost"
@@ -406,14 +407,14 @@ function ModuleItem({
             </Button>
           </div>
         ) : (
-          <button
+          <PlainButton
             type="button"
             className="gap-xs px-sm py-xs text-muted-foreground hover:bg-category-intellect/5 hover:text-category-intellect flex w-full items-center rounded text-xs transition-colors"
             onClick={() => setShowAddLesson(true)}
           >
             <Plus className="h-3 w-3" />
             {t('pages.courses.lessons.newBtn')}
-          </button>
+          </PlainButton>
         )}
       </div>
     </div>
@@ -1088,17 +1089,17 @@ export function CourseDetailModal({
                       <p className="text-sm font-medium">
                         {t('pages.courses.certificate.fileLabel')}
                       </p>
-                      <button
+                      <PlainButton
                         type="button"
                         onClick={() => setShowCertPreview(true)}
                         className="gap-xs text-primary inline-flex items-center text-xs underline-offset-2 hover:underline"
                       >
                         <ExternalLink className="h-3 w-3" />
                         {t('pages.courses.certificate.viewLink')}
-                      </button>
+                      </PlainButton>
                     </div>
                     <div className="gap-xs flex shrink-0">
-                      <button
+                      <PlainButton
                         type="button"
                         disabled={uploadingCert}
                         onClick={() => void handleCertificateRemove()}
@@ -1109,7 +1110,7 @@ export function CourseDetailModal({
                         ) : (
                           <X className="h-4 w-4" />
                         )}
-                      </button>
+                      </PlainButton>
                     </div>
                   </div>
                   {canAttachCertificate ? (

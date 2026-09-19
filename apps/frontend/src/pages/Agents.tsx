@@ -26,6 +26,7 @@ import { useSearchParams } from 'react-router';
 import remarkGfm from 'remark-gfm';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -662,15 +663,15 @@ export default function Agents() {
 
           <div className="gap-sm flex flex-shrink-0 items-center">
             {conversationStarted && (
-              <button
+              <PlainButton
                 onClick={handleChangeAgent}
                 title={t('pages.agents.changeAgent')}
                 className="border-border bg-background px-sm py-xs text-muted-foreground hover:bg-muted rounded-lg border text-xs"
               >
                 {t('pages.agents.changeAgent')}
-              </button>
+              </PlainButton>
             )}
-            <button
+            <PlainButton
               onClick={() => setShowHistory((v) => !v)}
               title={t('pages.agents.sessions')}
               className={cn(
@@ -679,15 +680,15 @@ export default function Agents() {
               )}
             >
               <History className="h-3.5 w-3.5" />
-            </button>
+            </PlainButton>
             {messages.length > 0 && (
-              <button
+              <PlainButton
                 onClick={() => void handleClearHistory()}
                 title={t('pages.agents.clearHistory')}
                 className="border-border bg-background p-sm text-muted-foreground rounded-lg border hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              </PlainButton>
             )}
           </div>
         </div>
@@ -758,14 +759,14 @@ export default function Agents() {
                       returnObjects: true,
                     }) as string[]) ?? []
                   ).map((q) => (
-                    <button
+                    <PlainButton
                       key={q}
                       type="button"
                       onClick={() => setQuery(q)}
                       className="border-border bg-muted px-sm py-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full border text-xs transition-colors"
                     >
                       {q}
-                    </button>
+                    </PlainButton>
                   ))}
                 </div>
               )}
@@ -782,23 +783,23 @@ export default function Agents() {
                 className="text-foreground placeholder:text-muted-foreground max-h-40 flex-1 resize-none bg-transparent text-sm focus:outline-none disabled:opacity-50"
               />
               {isStreaming ? (
-                <button
+                <PlainButton
                   onClick={cancelStream}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity"
                   aria-label={t('pages.agents.stop')}
                   title={t('pages.agents.stop')}
                 >
                   <Square className="h-4 w-4 fill-current" />
-                </button>
+                </PlainButton>
               ) : (
-                <button
+                <PlainButton
                   onClick={() => void handleSend()}
                   disabled={!query.trim() || inputDisabled}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
                   aria-label={t('pages.agents.send')}
                 >
                   <Send className="h-4 w-4" />
-                </button>
+                </PlainButton>
               )}
             </div>
             <p className="mt-sm text-muted-foreground/60 text-2xs text-center">
