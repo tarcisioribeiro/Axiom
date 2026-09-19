@@ -32,6 +32,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -44,7 +45,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
@@ -627,7 +628,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
                 <span className="text-muted-foreground">
                   {t('pages.expenses.form.aiSuggested')}:{' '}
-                  <button
+                  <PlainButton
                     type="button"
                     className="text-primary font-medium underline-offset-2 hover:underline"
                     onClick={() => {
@@ -636,16 +637,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     }}
                   >
                     {translate('expenseCategories', aiSuggestion.category)}
-                  </button>
+                  </PlainButton>
                 </span>
-                <button
+                <PlainButton
                   type="button"
                   aria-label={t('common.actions.close')}
                   className="text-muted-foreground hover:text-foreground ml-auto transition-colors"
                   onClick={() => setAiSuggestion(null)}
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </PlainButton>
               </div>
             )}
             {errors.category && (
@@ -670,7 +671,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.balance).toLocaleString('pt-BR', {
+                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
@@ -682,9 +683,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             {selectedAccount && (
               <p className="text-muted-foreground text-xs">
                 {t('pages.expenses.form.balanceInfo', {
-                  value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  }),
+                  value: parseFloat(selectedAccount.available_balance).toLocaleString(
+                    'pt-BR',
+                    { minimumFractionDigits: 2 }
+                  ),
                 })}
               </p>
             )}
@@ -698,7 +700,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {/* Seção: Vínculos (colapsável) */}
       {hasEligibleLinks && (
         <div className="space-y-md">
-          <button
+          <PlainButton
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
             className="gap-xs flex w-full items-center text-left"
@@ -713,7 +715,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             ) : (
               <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
-          </button>
+          </PlainButton>
 
           {linksOpen && (
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
@@ -859,7 +861,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     })
                   : projectedBalance !== null
                     ? t('common.balance.projectedOn', {
-                        date: watchedDate,
+                        date: formatDate(watchedDate),
                         balance: formatCurrency(projectedBalance),
                       })
                     : t('common.balance.projectedUnavailable')}
@@ -901,7 +903,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               {t('pages.expenses.form.splitToggleHint')}
             </span>
           </div>
-          <button
+          <PlainButton
             type="button"
             role="switch"
             aria-checked={splitOnCreate}
@@ -915,7 +917,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 splitOnCreate ? 'translate-x-[18px]' : 'translate-x-[3px]'
               }`}
             />
-          </button>
+          </PlainButton>
         </div>
       )}
 

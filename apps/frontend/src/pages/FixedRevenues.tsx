@@ -419,7 +419,9 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                 {formatCurrency(totalMonthlyFixed)}
               </p>
               <p className="mt-sm text-muted-foreground text-xs">
-                {activeRevenues.length} {t('pages.fixedRevenues.stats.activeCount')}
+                {t('pages.fixedRevenues.stats.activeCountDesc', {
+                  count: activeRevenues.length,
+                })}
               </p>
             </div>
 

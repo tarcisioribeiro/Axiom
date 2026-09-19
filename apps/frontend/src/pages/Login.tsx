@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -113,7 +114,7 @@ export default function Login() {
               </Button>
             </form>
             <div className="mt-md text-center">
-              <button
+              <PlainButton
                 type="button"
                 onClick={() => {
                   useAuthStore.setState({
@@ -126,7 +127,7 @@ export default function Login() {
                 className="text-muted-foreground hover:text-primary text-sm hover:underline"
               >
                 {t('auth.twoFactor.back', { defaultValue: '← Voltar ao login' })}
-              </button>
+              </PlainButton>
             </div>
           </CardContent>
         </Card>
@@ -179,7 +180,7 @@ export default function Login() {
                   disabled={isLoading}
                   className="pr-10"
                 />
-                <button
+                <PlainButton
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
@@ -195,7 +196,7 @@ export default function Login() {
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </PlainButton>
               </div>
             </div>
 

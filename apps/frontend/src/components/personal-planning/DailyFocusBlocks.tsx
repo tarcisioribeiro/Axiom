@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getPythonWeekday } from '@/lib/routine-export';
@@ -124,7 +125,7 @@ function DailyFocusBlockCard({
               task.status === 'completed' ? 'bg-success/5' : 'hover:bg-muted/40'
             )}
           >
-            <button
+            <PlainButton
               type="button"
               onClick={() => onToggleTaskComplete(task)}
               className="text-muted-foreground hover:text-primary shrink-0 transition-colors"
@@ -134,7 +135,7 @@ function DailyFocusBlockCard({
               ) : (
                 <Circle className="h-4 w-4" />
               )}
-            </button>
+            </PlainButton>
             <span
               className={cn(
                 'flex-1 text-sm',

@@ -29,6 +29,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -216,12 +217,12 @@ function NodeDetailPanel({
             </p>
           </div>
         </div>
-        <button
+        <PlainButton
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-4 w-4" />
-        </button>
+        </PlainButton>
       </div>
 
       {/* Metadata */}
@@ -381,12 +382,12 @@ function NodeDetailPanel({
                       </span>
                     </div>
                     {link.link_id && (
-                      <button
+                      <PlainButton
                         onClick={() => onDeleteLink(link.link_id!)}
                         className="ml-xs text-destructive/60 hover:text-destructive shrink-0 transition-colors"
                       >
                         <Trash2 className="h-3 w-3" />
-                      </button>
+                      </PlainButton>
                     )}
                   </div>
                 );
@@ -492,7 +493,7 @@ function CreateLinkModal({
 
         <div className="mb-lg gap-sm grid grid-cols-3">
           {ALL_RELATIONS.map((key) => (
-            <button
+            <PlainButton
               key={key}
               onClick={() => setRelation(key)}
               className={cn(
@@ -510,7 +511,7 @@ function CreateLinkModal({
               }
             >
               {t(`pages.knowledgeGraph.relations.${key}`)}
-            </button>
+            </PlainButton>
           ))}
         </div>
 
@@ -933,7 +934,7 @@ export default function KnowledgeGraph() {
           <div className="gap-md border-border bg-card p-md z-10 flex w-52 shrink-0 flex-col border-r">
             {/* Suggest links button */}
             <Tooltip content={t('pages.knowledgeGraph.suggestLinks')} side="right">
-              <button
+              <PlainButton
                 onClick={() => setShowSuggestions((v) => !v)}
                 className={cn(
                   'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs font-medium transition-colors',
@@ -944,7 +945,7 @@ export default function KnowledgeGraph() {
               >
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
                 {t('pages.knowledgeGraph.suggestLinks')}
-              </button>
+              </PlainButton>
             </Tooltip>
 
             {/* Search */}
@@ -957,12 +958,12 @@ export default function KnowledgeGraph() {
                 className="pl-xl h-8 text-xs"
               />
               {search && (
-                <button
+                <PlainButton
                   onClick={() => setSearch('')}
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </PlainButton>
               )}
             </div>
 
@@ -975,7 +976,7 @@ export default function KnowledgeGraph() {
                 {ALL_NODE_TYPES.filter(
                   (tp) => tp !== 'highlight' || includeHighlights
                 ).map((type) => (
-                  <button
+                  <PlainButton
                     key={type}
                     onClick={() => toggleType(type)}
                     className={cn(
@@ -995,14 +996,14 @@ export default function KnowledgeGraph() {
                     <span className="text-muted-foreground ml-auto">
                       {filteredGraphData.nodes.filter((n) => n.type === type).length}
                     </span>
-                  </button>
+                  </PlainButton>
                 ))}
               </div>
             </div>
 
             {/* Highlights toggle */}
             <div className="border-border pt-md border-t">
-              <button
+              <PlainButton
                 onClick={() => {
                   setIncludeHighlights((v) => !v);
                   if (!includeHighlights) {
@@ -1031,7 +1032,7 @@ export default function KnowledgeGraph() {
                     )}
                   />
                 </div>
-              </button>
+              </PlainButton>
             </div>
 
             {/* Stats */}
@@ -1133,12 +1134,12 @@ export default function KnowledgeGraph() {
                   <p className="text-sm font-semibold">
                     {t('pages.knowledgeGraph.suggestionsPanel')}
                   </p>
-                  <button
+                  <PlainButton
                     onClick={() => setShowSuggestions(false)}
                     className="hover:bg-muted rounded p-0.5"
                   >
                     <X className="h-3.5 w-3.5" />
-                  </button>
+                  </PlainButton>
                 </div>
                 <div className="custom-scrollbar p-sm flex-1 overflow-y-auto">
                   {suggestLoading ? (
@@ -1164,7 +1165,7 @@ export default function KnowledgeGraph() {
                               {t('pages.knowledgeGraph.similarity')}:{' '}
                               {Math.round(s.similarity * 100)}%
                             </span>
-                            <button
+                            <PlainButton
                               onClick={() => {
                                 if (!memberData?.id) return;
                                 createLinkMutation.mutate({
@@ -1179,7 +1180,7 @@ export default function KnowledgeGraph() {
                               className="px-xs text-primary hover:bg-primary/10 rounded py-0.5 text-xs"
                             >
                               {t('pages.knowledgeGraph.addLink')}
-                            </button>
+                            </PlainButton>
                           </div>
                         </div>
                       ))}
@@ -1196,14 +1197,14 @@ export default function KnowledgeGraph() {
               onMouseLeave={() => setHiddenByNav(false)}
             >
               <Tooltip content={t('pages.knowledgeGraph.exportPNG')} side="left">
-                <button
+                <PlainButton
                   onClick={handleExportPNG}
                   className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
                 >
                   <Download className="h-3.5 w-3.5" />
-                </button>
+                </PlainButton>
               </Tooltip>
-              <button
+              <PlainButton
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1212,8 +1213,8 @@ export default function KnowledgeGraph() {
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <ZoomIn className="h-3.5 w-3.5" />
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1222,13 +1223,13 @@ export default function KnowledgeGraph() {
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <ZoomOut className="h-3.5 w-3.5" />
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 onClick={() => graphRef.current?.zoomToFit(400)}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
-              </button>
+              </PlainButton>
             </div>
 
             {/* Linking mode indicator */}
@@ -1253,7 +1254,7 @@ export default function KnowledgeGraph() {
                   <kbd className="border-accent/30 bg-accent/10 px-xs text-2xs rounded border py-0.5 font-mono">
                     Esc
                   </kbd>
-                  <button
+                  <PlainButton
                     onClick={() => {
                       setLinkingFrom(null);
                       setLinkTarget(null);
@@ -1262,7 +1263,7 @@ export default function KnowledgeGraph() {
                     aria-label={t('pages.knowledgeGraph.cancelLink')}
                   >
                     <X className="h-3 w-3" />
-                  </button>
+                  </PlainButton>
                 </motion.div>
               )}
             </AnimatePresence>

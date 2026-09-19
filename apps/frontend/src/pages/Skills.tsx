@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -348,7 +349,7 @@ export default function Skills() {
             />
           </div>
           <div className="border-border flex rounded-lg border">
-            <button
+            <PlainButton
               type="button"
               onClick={() => setViewMode('list')}
               className={cn(
@@ -359,8 +360,8 @@ export default function Skills() {
               )}
             >
               <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               onClick={() => setViewMode('radar')}
               className={cn(
@@ -371,7 +372,7 @@ export default function Skills() {
               )}
             >
               <Radar className="h-4 w-4" />
-            </button>
+            </PlainButton>
           </div>
         </div>
 

@@ -52,6 +52,7 @@ import { StreakBadge } from '@/components/common/StreakBadge';
 import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { coursesService } from '@/services/courses-service';
@@ -437,7 +438,7 @@ export default function LibraryDashboard() {
           )}
 
           {/* Study Timer */}
-          <button
+          <PlainButton
             onClick={() => setTimerOpen((v) => !v)}
             className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
           >
@@ -447,16 +448,16 @@ export default function LibraryDashboard() {
             ) : (
               t('pages.libraryDashboard.studyTimer')
             )}
-          </button>
+          </PlainButton>
 
-          <button
+          <PlainButton
             onClick={exportCSV}
             className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
             title={t('pages.libraryDashboard.exportCSVTitle')}
           >
             <Download className="h-4 w-4" />
             {t('pages.libraryDashboard.exportCSV')}
-          </button>
+          </PlainButton>
         </div>
       </div>
 
@@ -475,7 +476,7 @@ export default function LibraryDashboard() {
               </p>
             </div>
             <div className="gap-sm flex">
-              <button
+              <PlainButton
                 onClick={() => setTimerRunning((v) => !v)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full"
               >
@@ -484,8 +485,8 @@ export default function LibraryDashboard() {
                 ) : (
                   <Play className="h-4 w-4" />
                 )}
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 onClick={() => {
                   setTimerRunning(false);
                   setTimerSeconds(timerMode === 'study' ? 25 * 60 : 5 * 60);
@@ -493,11 +494,11 @@ export default function LibraryDashboard() {
                 className="border-border bg-background text-muted-foreground hover:bg-muted flex h-9 w-9 items-center justify-center rounded-full border"
               >
                 <RotateCcw className="h-4 w-4" />
-              </button>
+              </PlainButton>
             </div>
           </div>
           <div className="gap-sm flex">
-            <button
+            <PlainButton
               onClick={() => {
                 setTimerMode('study');
                 setTimerRunning(false);
@@ -506,8 +507,8 @@ export default function LibraryDashboard() {
               className={`px-sm py-xs rounded-md text-xs ${timerMode === 'study' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               25 min
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               onClick={() => {
                 setTimerMode('break');
                 setTimerRunning(false);
@@ -516,7 +517,7 @@ export default function LibraryDashboard() {
               className={`px-sm py-xs rounded-md text-xs ${timerMode === 'break' ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               5 min
-            </button>
+            </PlainButton>
           </div>
         </div>
       )}

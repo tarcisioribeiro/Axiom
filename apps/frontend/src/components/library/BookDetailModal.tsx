@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -784,7 +785,7 @@ export function BookDetailModal({
               },
             ] as const
           ).map((tab) => (
-            <button
+            <PlainButton
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
@@ -796,7 +797,7 @@ export function BookDetailModal({
             >
               {tab.icon}
               {tab.label}
-            </button>
+            </PlainButton>
           ))}
         </div>
 

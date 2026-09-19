@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -124,7 +125,7 @@ export function WorkoutPlanForm({
           {t('pages.workoutPlans.planActive')}
         </Label>
         <div className="gap-sm grid grid-cols-2">
-          <button
+          <PlainButton
             type="button"
             onClick={() => setValue('is_active', true)}
             className={cn(
@@ -136,8 +137,8 @@ export function WorkoutPlanForm({
           >
             <CheckCircle2 className="h-4 w-4" />
             {t('pages.workoutPlans.active')}
-          </button>
-          <button
+          </PlainButton>
+          <PlainButton
             type="button"
             onClick={() => setValue('is_active', false)}
             className={cn(
@@ -149,7 +150,7 @@ export function WorkoutPlanForm({
           >
             <XCircle className="h-4 w-4" />
             {t('pages.workoutPlans.inactive')}
-          </button>
+          </PlainButton>
         </div>
         {isActive && (
           <p className="text-muted-foreground text-xs">

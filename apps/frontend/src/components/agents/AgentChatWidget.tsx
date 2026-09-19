@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agent-service';
@@ -191,13 +192,13 @@ export function AgentChatWidget() {
                   </p>
                   <div className="space-y-xs">
                     {suggestedQuestions.map((q) => (
-                      <button
+                      <PlainButton
                         key={q}
                         onClick={() => void handleSend(q)}
                         className="bg-muted/40 px-md py-sm text-muted-foreground hover:bg-muted/70 hover:text-foreground w-full rounded-lg border text-left text-xs transition-colors"
                       >
                         {q}
-                      </button>
+                      </PlainButton>
                     ))}
                   </div>
                 </div>
@@ -247,22 +248,22 @@ export function AgentChatWidget() {
                   className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none disabled:opacity-60"
                 />
                 {isStreaming ? (
-                  <button
+                  <PlainButton
                     onClick={cancel}
                     aria-label={t('agentWidget.cancelLabel')}
                     className="p-xs text-muted-foreground hover:text-destructive shrink-0 rounded-lg transition-colors"
                   >
                     <Square className="h-4 w-4 fill-current" />
-                  </button>
+                  </PlainButton>
                 ) : (
-                  <button
+                  <PlainButton
                     onClick={() => void handleSend(input)}
                     disabled={!input.trim()}
                     aria-label={t('agentWidget.sendLabel')}
                     className="p-xs text-category-finance hover:text-category-finance/80 shrink-0 rounded-lg transition-colors disabled:opacity-40"
                   >
                     <Send className="h-4 w-4" />
-                  </button>
+                  </PlainButton>
                 )}
               </div>
             </div>

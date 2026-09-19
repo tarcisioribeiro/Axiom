@@ -24,6 +24,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -187,7 +188,7 @@ export default function DebtPayoffPlanner({
                     {t('pages.debtPayoff.strategy')}
                   </p>
                   <div className="gap-sm grid grid-cols-2">
-                    <button
+                    <PlainButton
                       onClick={() => setStrategy('snowball')}
                       className={cn(
                         'gap-xs p-md flex flex-col items-center rounded-lg border transition-colors',
@@ -210,8 +211,8 @@ export default function DebtPayoffPlanner({
                       <p className="text-muted-foreground text-center text-xs">
                         {t('pages.debtPayoff.snowballDesc')}
                       </p>
-                    </button>
-                    <button
+                    </PlainButton>
+                    <PlainButton
                       onClick={() => setStrategy('avalanche')}
                       className={cn(
                         'gap-xs p-md flex flex-col items-center rounded-lg border transition-colors',
@@ -234,7 +235,7 @@ export default function DebtPayoffPlanner({
                       <p className="text-muted-foreground text-center text-xs">
                         {t('pages.debtPayoff.avalancheDesc')}
                       </p>
-                    </button>
+                    </PlainButton>
                   </div>
                 </div>
 

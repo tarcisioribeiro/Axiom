@@ -5,6 +5,7 @@ import { Clock, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
 import '@/styles/flatpickr-custom.css';
@@ -19,7 +20,7 @@ interface TimePickerProps {
 }
 
 function parseTimeStr(timeStr: string): Date | undefined {
-  const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (!match) return undefined;
   const h = parseInt(match[1], 10);
   const m = parseInt(match[2], 10);
@@ -126,7 +127,7 @@ export function TimePicker({
       />
 
       {clearable && value && !disabled && (
-        <button
+        <PlainButton
           type="button"
           onClick={handleClear}
           aria-label={t('common.actions.clearTime')}
@@ -140,7 +141,7 @@ export function TimePicker({
           )}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
+        </PlainButton>
       )}
     </div>
   );

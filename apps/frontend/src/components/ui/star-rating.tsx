@@ -1,6 +1,7 @@
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
@@ -46,7 +47,7 @@ export function StarRating({
       onMouseLeave={() => !disabled && setHoverValue(null)}
     >
       {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (
-        <button
+        <PlainButton
           key={rating}
           type="button"
           disabled={disabled}
@@ -70,16 +71,16 @@ export function StarRating({
             )}
             aria-hidden="true"
           />
-        </button>
+        </PlainButton>
       ))}
       {value !== null && !disabled && (
-        <button
+        <PlainButton
           type="button"
           onClick={() => onChange?.(null)}
           className="ml-sm hover:text-destructive text-xs transition-colors"
         >
           Limpar
-        </button>
+        </PlainButton>
       )}
     </div>
   );

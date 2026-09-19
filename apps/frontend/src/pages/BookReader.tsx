@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -443,7 +444,7 @@ function EpubReader({
         className="mx-auto flex-1 overflow-hidden"
         style={{ width: `${width}px`, maxWidth: '100%' }}
       />
-      <button
+      <PlainButton
         onClick={prev}
         className="p-sm absolute top-1/2 left-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
@@ -454,8 +455,8 @@ function EpubReader({
         aria-label={t('pages.bookReader.prevPage')}
       >
         <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
+      </PlainButton>
+      <PlainButton
         onClick={next}
         className="p-sm absolute top-1/2 right-2 -translate-y-1/2 rounded-full border shadow backdrop-blur-sm"
         style={{
@@ -466,7 +467,7 @@ function EpubReader({
         aria-label={t('pages.bookReader.nextPage')}
       >
         <ChevronRight className="h-5 w-5" />
-      </button>
+      </PlainButton>
     </div>
   );
 }
@@ -1075,13 +1076,13 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                         </Badge>
                       )}
                     </div>
-                    <button
+                    <PlainButton
                       onClick={() => void handleDeleteAnnotation(a.id)}
                       className="text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5"
                       aria-label={t('pages.bookReader.removeAnnotation')}
                     >
                       <X className="h-3 w-3" />
-                    </button>
+                    </PlainButton>
                   </div>
                   <p className="leading-snug">{a.text}</p>
                   {a.chapter && <p className="mt-xs text-xs opacity-60">{a.chapter}</p>}

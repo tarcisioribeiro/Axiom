@@ -58,6 +58,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -991,7 +992,7 @@ export default function WorkoutPage() {
                               </div>
                             </div>
                             <div className="ml-md gap-xs flex shrink-0">
-                              <button
+                              <PlainButton
                                 type="button"
                                 onClick={() =>
                                   setDialog({ type: 'edit-plan', plan: activePlan })
@@ -999,14 +1000,14 @@ export default function WorkoutPage() {
                                 className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                               >
                                 <Edit className="h-4 w-4" />
-                              </button>
-                              <button
+                              </PlainButton>
+                              <PlainButton
                                 type="button"
                                 onClick={() => handleDeletePlan(activePlan)}
                                 className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                               >
                                 <Trash2 className="h-4 w-4" />
-                              </button>
+                              </PlainButton>
                             </div>
                           </div>
                         </div>
@@ -1018,7 +1019,7 @@ export default function WorkoutPage() {
                           </p>
                           <div className="gap-sm pb-xs flex overflow-x-auto">
                             {activePlan.days?.map((day) => (
-                              <button
+                              <PlainButton
                                 key={day.id}
                                 type="button"
                                 onClick={() =>
@@ -1062,9 +1063,9 @@ export default function WorkoutPage() {
                                   {day.exercise_count}{' '}
                                   {t('pages.workoutPlans.exercises')}
                                 </span>
-                              </button>
+                              </PlainButton>
                             ))}
-                            <button
+                            <PlainButton
                               type="button"
                               onClick={() =>
                                 setDialog({ type: 'new-day', planId: activePlan.id })
@@ -1077,7 +1078,7 @@ export default function WorkoutPage() {
                               <span className="text-muted-foreground text-xs">
                                 {t('pages.workoutPlans.newDayBtn')}
                               </span>
-                            </button>
+                            </PlainButton>
                           </div>
 
                           {/* Exercícios da divisão selecionada */}
@@ -1138,7 +1139,7 @@ export default function WorkoutPage() {
                                       {t('pages.workoutPlans.noExercises')}
                                     </p>
                                   )}
-                                  <button
+                                  <PlainButton
                                     type="button"
                                     onClick={() =>
                                       setDialog({ type: 'add-exercise', day })
@@ -1147,7 +1148,7 @@ export default function WorkoutPage() {
                                   >
                                     <Plus className="h-3.5 w-3.5" />
                                     {t('pages.workoutPlans.addExerciseBtn')}
-                                  </button>
+                                  </PlainButton>
                                 </div>
                               );
                             })()}
@@ -1483,7 +1484,7 @@ export default function WorkoutPage() {
                   <div className="gap-sm flex">
                     {(['iniciante', 'intermediário', 'avançado'] as const).map(
                       (lvl) => (
-                        <button
+                        <PlainButton
                           key={lvl}
                           type="button"
                           onClick={() => setAiForm((f) => ({ ...f, level: lvl }))}
@@ -1496,7 +1497,7 @@ export default function WorkoutPage() {
                           )}
                         >
                           {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                        </button>
+                        </PlainButton>
                       )
                     )}
                   </div>
@@ -1518,7 +1519,7 @@ export default function WorkoutPage() {
                   <Label>Dias por semana: {aiForm.days_per_week}</Label>
                   <div className="gap-xs flex">
                     {[2, 3, 4, 5, 6].map((d) => (
-                      <button
+                      <PlainButton
                         key={d}
                         type="button"
                         onClick={() => setAiForm((f) => ({ ...f, days_per_week: d }))}
@@ -1530,7 +1531,7 @@ export default function WorkoutPage() {
                         )}
                       >
                         {d}
-                      </button>
+                      </PlainButton>
                     ))}
                   </div>
                 </div>
@@ -1991,7 +1992,7 @@ function ExerciseCatalogForm({
             {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
               const label = t(`pages.workoutPlans.muscleChips.${key}`);
               return (
-                <button
+                <PlainButton
                   key={key}
                   type="button"
                   onClick={() => toggleChip(label)}
@@ -2003,7 +2004,7 @@ function ExerciseCatalogForm({
                   )}
                 >
                   {label}
-                </button>
+                </PlainButton>
               );
             })}
           </div>
@@ -2080,7 +2081,7 @@ function SortableExerciseItem({
       style={style}
       className="group gap-sm bg-background px-sm py-xs flex items-center rounded-lg"
     >
-      <button
+      <PlainButton
         type="button"
         {...attributes}
         {...listeners}
@@ -2088,7 +2089,7 @@ function SortableExerciseItem({
         aria-label="Reordenar"
       >
         <GripVertical className="h-3.5 w-3.5" />
-      </button>
+      </PlainButton>
       <span className="bg-category-exercise/20 text-category-exercise flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {idx + 1}
       </span>
@@ -2123,22 +2124,22 @@ function SortableExerciseItem({
         {(onEdit || onDelete) && (
           <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
             {onEdit && (
-              <button
+              <PlainButton
                 type="button"
                 onClick={() => onEdit(ex)}
                 className="p-xs text-muted-foreground hover:text-foreground rounded"
               >
                 <Edit className="h-3 w-3" />
-              </button>
+              </PlainButton>
             )}
             {onDelete && (
-              <button
+              <PlainButton
                 type="button"
                 onClick={() => onDelete(ex)}
                 className="p-xs text-muted-foreground hover:text-destructive rounded"
               >
                 <Trash2 className="h-3 w-3" />
-              </button>
+              </PlainButton>
             )}
           </div>
         )}
@@ -2259,7 +2260,7 @@ function InactivePlanRow({
   return (
     <div className="border-border overflow-hidden rounded-lg border">
       <div className="gap-sm bg-card px-md py-sm flex items-center">
-        <button
+        <PlainButton
           type="button"
           className="gap-sm flex min-w-0 flex-1 items-center text-left"
           onClick={onToggle}
@@ -2295,7 +2296,7 @@ function InactivePlanRow({
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </div>
-        </button>
+        </PlainButton>
         <div className="ml-sm gap-xs flex shrink-0 items-center">
           <Badge variant="secondary" className="text-xs">
             {t('pages.workoutPlans.inactive')}
@@ -2337,7 +2338,7 @@ function InactivePlanRow({
                   className="border-border overflow-hidden rounded-lg border"
                 >
                   <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
-                    <button
+                    <PlainButton
                       type="button"
                       className="gap-xs flex min-w-0 flex-1 items-center text-left"
                       onClick={() => onToggleDay(day.id)}
@@ -2351,7 +2352,7 @@ function InactivePlanRow({
                           — {day.muscle_groups}
                         </span>
                       )}
-                    </button>
+                    </PlainButton>
                     <div className="gap-xs flex shrink-0 items-center">
                       <span className="text-muted-foreground text-xs">
                         {day.exercise_count} {t('pages.workoutPlans.exercises')}
@@ -2383,14 +2384,14 @@ function InactivePlanRow({
                           onDelete={onDeleteExercise}
                         />
                       )}
-                      <button
+                      <PlainButton
                         type="button"
                         onClick={() => onAddExercise(day)}
                         className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.workoutPlans.addExerciseBtn')}
-                      </button>
+                      </PlainButton>
                     </div>
                   )}
                 </div>

@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -175,7 +176,7 @@ function ReflectionCard({
             </div>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
             {isLong && (
-              <button
+              <PlainButton
                 type="button"
                 onClick={() => setExpanded(!expanded)}
                 className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
@@ -189,7 +190,7 @@ function ReflectionCard({
                     <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
                   </>
                 )}
-              </button>
+              </PlainButton>
             )}
           </div>
 

@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { ONBOARDING_KEY } from '@/hooks/use-planning-onboarding';
 import { routineTemplatesService } from '@/services/routine-templates-service';
 import type { RoutineTemplate } from '@/types';
@@ -93,13 +94,13 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         transition={{ duration: 0.2 }}
         className="mx-md border-border bg-card p-xl relative w-full max-w-lg rounded-2xl border shadow-2xl"
       >
-        <button
+        <PlainButton
           onClick={handleSkip}
           className="right-md top-md text-muted-foreground hover:text-foreground absolute"
           aria-label={t('common.actions.close')}
         >
           <X className="h-4 w-4" />
-        </button>
+        </PlainButton>
 
         {/* Step 0: Welcome */}
         {step === 0 && (
@@ -145,7 +146,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   const Icon = TEMPLATE_ICONS[template.id] ?? CheckCircle2;
                   const isSelected = selectedTemplateId === template.id;
                   return (
-                    <button
+                    <PlainButton
                       key={template.id}
                       onClick={() =>
                         setSelectedTemplateId(isSelected ? null : template.id)
@@ -182,10 +183,10 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                           <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
                         )}
                       </div>
-                    </button>
+                    </PlainButton>
                   );
                 })}
-                <button
+                <PlainButton
                   onClick={() => setSelectedTemplateId(null)}
                   className={`p-md text-muted-foreground w-full rounded-xl border-2 text-left text-sm transition-colors ${
                     selectedTemplateId === null
@@ -196,7 +197,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   {t('pages.planningOnboarding.skipTemplate', {
                     defaultValue: 'Começar sem template — criar manualmente',
                   })}
-                </button>
+                </PlainButton>
               </div>
             )}
           </div>

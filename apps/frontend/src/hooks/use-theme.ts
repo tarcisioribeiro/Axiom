@@ -10,7 +10,8 @@ export type DarkVariant =
   | 'cyberpunk'
   | 'flat-remix-blue-darkest'
   | 'everforest'
-  | 'ubuntu';
+  | 'ubuntu'
+  | 'mint-dark';
 
 export type LightVariant =
   | 'alucard'
@@ -20,7 +21,8 @@ export type LightVariant =
   | 'gruvbox-light'
   | 'solarized-light'
   | 'nord-light'
-  | 'ubuntu-light';
+  | 'ubuntu-light'
+  | 'mint-light';
 
 interface UseThemeReturn {
   /** Whether dark mode is currently active */
@@ -71,6 +73,7 @@ function isValidDarkVariant(value: string): value is DarkVariant {
     'flat-remix-blue-darkest',
     'everforest',
     'ubuntu',
+    'mint-dark',
   ].includes(value);
 }
 
@@ -84,6 +87,7 @@ function isValidLightVariant(value: string): value is LightVariant {
     'solarized-light',
     'nord-light',
     'ubuntu-light',
+    'mint-light',
   ].includes(value);
 }
 
@@ -113,8 +117,8 @@ function applyLightVariantAttr(variant: LightVariant) {
  * - Falling back to system preference
  * - Smooth transitions when changing themes
  * - Persisting preference to localStorage
- * - Dark mode variant selection (Dracula, Catppuccin Mocha, Tokyo Night, Gruvbox Dark, Cyberpunk, Flat Remix Blue Darkest, Everforest, Ubuntu)
- * - Light mode variant selection (Alucard, Catppuccin Latte, Rosé Pine Dawn, Everforest Light, Gruvbox Light, Solarized Light, Nord Light, Ubuntu Light)
+ * - Dark mode variant selection (Dracula, Catppuccin Mocha, Tokyo Night, Gruvbox Dark, Cyberpunk, Flat Remix Blue Darkest, Everforest, Ubuntu, Linux Mint)
+ * - Light mode variant selection (Alucard, Catppuccin Latte, Rosé Pine Dawn, Everforest Light, Gruvbox Light, Solarized Light, Nord Light, Ubuntu Light, Linux Mint Light)
  *
  * @example
  * const { isDark, toggle, darkVariant, setDarkVariant, lightVariant, setLightVariant } = useTheme();

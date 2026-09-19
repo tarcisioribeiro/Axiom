@@ -138,19 +138,19 @@ export function LaunchRevenuesDialog({
       });
       const monthLabel =
         monthOptions.find((m) => m.value === validMonth)?.label || validMonth;
+      const createdDesc = t('pages.fixedRevenues.launchDialog.successDesc', {
+        count: response.created_count,
+        month: monthLabel,
+      });
+      const skippedNotice =
+        response.skipped_count > 0
+          ? ` ${t('pages.fixedRevenues.launchDialog.skippedNotice', {
+              count: response.skipped_count,
+            })}`
+          : '';
       toast({
         title: t('pages.fixedRevenues.launchDialog.success'),
-        description:
-          response.skipped_count > 0
-            ? t('pages.fixedRevenues.launchDialog.successDescWithSkipped', {
-                count: response.created_count,
-                month: monthLabel,
-                skipped: response.skipped_count,
-              })
-            : t('pages.fixedRevenues.launchDialog.successDesc', {
-                count: response.created_count,
-                month: monthLabel,
-              }),
+        description: `${createdDesc}${skippedNotice}`,
       });
       onSuccess();
       onClose();

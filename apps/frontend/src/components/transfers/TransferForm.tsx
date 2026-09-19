@@ -22,6 +22,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -32,7 +33,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import { TRANSLATIONS } from '@/config/constants';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
@@ -210,7 +211,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
             const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
             return (
-              <button
+              <PlainButton
                 key={k}
                 type="button"
                 onClick={() => setValue('category', k)}
@@ -222,7 +223,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               >
                 <Icon className="h-5 w-5" />
                 <span>{v}</span>
-              </button>
+              </PlainButton>
             );
           })}
         </div>
@@ -274,14 +275,14 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </div>
 
           <div className="gap-xs flex flex-col items-center">
-            <button
+            <PlainButton
               type="button"
               title={t('pages.transfers.form.swapAccounts')}
               onClick={handleSwapAccounts}
               className="border-border/70 bg-background text-muted-foreground hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors"
             >
               <ArrowLeftRight className="h-4 w-4" />
-            </button>
+            </PlainButton>
             {formattedValue && (
               <span className="text-primary text-xs font-semibold">
                 {formattedValue}
@@ -416,7 +417,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                     })
                   : projectedBalance !== null
                     ? t('common.balance.projectedOn', {
-                        date: watchedDate,
+                        date: formatDate(watchedDate),
                         balance: formatCurrency(projectedBalance),
                       })
                     : t('common.balance.projectedUnavailable')}

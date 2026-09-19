@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -114,7 +115,7 @@ function ProficiencySelector({
   return (
     <div className="gap-sm grid grid-cols-5">
       {PROFICIENCY_LEVELS.map(({ value: lvl, dots }) => (
-        <button
+        <PlainButton
           key={lvl}
           type="button"
           onClick={() => onChange(lvl)}
@@ -148,7 +149,7 @@ function ProficiencySelector({
           >
             {t(`pages.skills.proficiency.${lvl}`)}
           </span>
-        </button>
+        </PlainButton>
       ))}
     </div>
   );
@@ -286,7 +287,7 @@ export function SkillForm({
           <Label>{t('pages.skills.form.statusLabel')}</Label>
           <div className="gap-sm flex">
             {STATUSES.map((s) => (
-              <button
+              <PlainButton
                 key={s}
                 type="button"
                 onClick={() => setValue('status', s)}
@@ -298,7 +299,7 @@ export function SkillForm({
                 )}
               >
                 {t(`pages.skills.status.${s}`)}
-              </button>
+              </PlainButton>
             ))}
           </div>
         </div>
@@ -336,7 +337,7 @@ export function SkillForm({
                 return course ? (
                   <Badge key={courseId} variant="secondary">
                     {course.title}
-                    <button
+                    <PlainButton
                       type="button"
                       onClick={() => handleRemoveCourse(courseId)}
                       aria-label={t('pages.skills.form.removeCourse', {
@@ -345,7 +346,7 @@ export function SkillForm({
                       className="ml-xs hover:text-destructive"
                     >
                       <X className="h-3 w-3" aria-hidden="true" />
-                    </button>
+                    </PlainButton>
                   </Badge>
                 ) : null;
               })}

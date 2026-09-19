@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/auth-service';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -52,7 +53,7 @@ export function PasswordSection() {
               onChange={(e) => setCurrent(e.target.value)}
               className="pr-9"
             />
-            <button
+            <PlainButton
               type="button"
               onClick={() => setShowCurrent((v) => !v)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
@@ -62,7 +63,7 @@ export function PasswordSection() {
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-            </button>
+            </PlainButton>
           </div>
         </div>
         <div>
@@ -75,13 +76,13 @@ export function PasswordSection() {
               onChange={(e) => setNext(e.target.value)}
               className="pr-9"
             />
-            <button
+            <PlainButton
               type="button"
               onClick={() => setShowNext((v) => !v)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
             >
               {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </PlainButton>
           </div>
         </div>
         <div>

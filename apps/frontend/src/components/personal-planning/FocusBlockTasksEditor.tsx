@@ -11,6 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PlainButton } from '@/components/ui/plain-button';
 import { appearsOnDay, getTimesForTask } from '@/lib/routine-export';
 import { cn } from '@/lib/utils';
 import type { FocusBlock, RoutineTask } from '@/types';
@@ -76,7 +77,7 @@ export function FocusBlockTasksEditor({
                   })}
                 </span>
               )}
-              <button
+              <PlainButton
                 type="button"
                 onClick={() => onRemoveTask(bt.id)}
                 title={t('pages.routineTasks.focusBlocks.removeTask')}
@@ -86,7 +87,7 @@ export function FocusBlockTasksEditor({
                 )}
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              </PlainButton>
             </div>
           ))}
         </div>

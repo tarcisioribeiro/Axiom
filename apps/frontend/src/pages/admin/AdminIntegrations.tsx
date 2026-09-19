@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 
@@ -36,7 +37,7 @@ export default function AdminIntegrations() {
         subtitle={t('pages.adminIntegrations.subtitle')}
         icon={<Link2 />}
         actions={
-          <button
+          <PlainButton
             onClick={() => {
               void refetch();
               void queryClient.invalidateQueries({
@@ -48,7 +49,7 @@ export default function AdminIntegrations() {
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
             {t('pages.adminIntegrations.testAll')}
-          </button>
+          </PlainButton>
         }
       />
 

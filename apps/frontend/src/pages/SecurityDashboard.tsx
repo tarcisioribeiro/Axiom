@@ -32,6 +32,7 @@ import { VaultRecoveryKeyModal } from '@/components/security/VaultRecoveryKeyMod
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { securityDashboardService } from '@/services/security-dashboard-service';
@@ -240,7 +241,7 @@ function VaultSearch() {
                       </span>
                     </div>
                     {items.map((item) => (
-                      <button
+                      <PlainButton
                         key={`${item.type}-${item.id}`}
                         className="gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors"
                         onClick={() => handleSelect(item)}
@@ -252,7 +253,7 @@ function VaultSearch() {
                             {item.sublabel}
                           </p>
                         </div>
-                      </button>
+                      </PlainButton>
                     ))}
                   </div>
                 );
@@ -368,7 +369,7 @@ function VaultAlertConfigPanel() {
               <p className="text-sm font-medium">{label}</p>
               <p className="text-muted-foreground text-xs">{desc}</p>
             </div>
-            <button
+            <PlainButton
               type="button"
               role="switch"
               aria-checked={value}
@@ -383,7 +384,7 @@ function VaultAlertConfigPanel() {
                   value ? 'translate-x-4' : 'translate-x-0.5'
                 }`}
               />
-            </button>
+            </PlainButton>
           </div>
         ))}
       </CardContent>
@@ -591,7 +592,7 @@ export default function SecurityDashboard() {
                     },
                   ] as const
                 ).map(({ label, count, icon: Icon, route, colorClass }) => (
-                  <button
+                  <PlainButton
                     key={route}
                     type="button"
                     onClick={() => void navigate(route)}
@@ -601,7 +602,7 @@ export default function SecurityDashboard() {
                     <span className="flex-1 text-sm">{label}</span>
                     <span className={`text-sm font-bold ${colorClass}`}>{count}</span>
                     <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
-                  </button>
+                  </PlainButton>
                 ))}
               </div>
             </CardContent>

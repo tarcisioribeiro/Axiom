@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlainButton } from '@/components/ui/plain-button';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -331,7 +332,7 @@ export default function FinancialCalendar({
               const isToday = isSameDay(day, new Date());
 
               return (
-                <button
+                <PlainButton
                   key={key}
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
@@ -370,7 +371,7 @@ export default function FinancialCalendar({
                       )}
                     </div>
                   )}
-                </button>
+                </PlainButton>
               );
             })}
           </div>

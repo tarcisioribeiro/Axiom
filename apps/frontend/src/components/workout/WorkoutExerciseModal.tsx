@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Exercise, WorkoutExercise } from '@/types/workout';
@@ -76,23 +77,23 @@ function CounterInput({
         {label}
       </span>
       <div className="border-border bg-background flex flex-col items-center rounded-lg border shadow-sm">
-        <button
+        <PlainButton
           type="button"
           onClick={() => onChange(value + 1)}
           className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-t-lg border-b transition-colors"
         >
           <ChevronUp className="h-3.5 w-3.5" />
-        </button>
+        </PlainButton>
         <span className="text-foreground flex h-10 w-10 items-center justify-center text-lg font-bold tabular-nums">
           {value}
         </span>
-        <button
+        <PlainButton
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-b-lg border-t transition-colors"
         >
           <ChevronDown className="h-3.5 w-3.5" />
-        </button>
+        </PlainButton>
       </div>
     </div>
   );
@@ -211,7 +212,7 @@ export function WorkoutExerciseModal({
               filtered.map((ex) => {
                 const isSelected = selectedExercise?.id === ex.id;
                 return (
-                  <button
+                  <PlainButton
                     key={ex.id}
                     type="button"
                     onClick={() => setSelectedExercise(ex)}
@@ -247,7 +248,7 @@ export function WorkoutExerciseModal({
                         </span>
                       )}
                     </div>
-                  </button>
+                  </PlainButton>
                 );
               })
             )}
@@ -313,7 +314,7 @@ export function WorkoutExerciseModal({
         <div className="space-y-sm">
           <div className="gap-xs flex flex-wrap">
             {REST_PRESETS.map((preset) => (
-              <button
+              <PlainButton
                 key={preset}
                 type="button"
                 onClick={() => setValue('rest_seconds', preset)}
@@ -325,7 +326,7 @@ export function WorkoutExerciseModal({
                 )}
               >
                 {preset === 0 ? t('pages.workoutPlans.noRest') : `${preset}s`}
-              </button>
+              </PlainButton>
             ))}
           </div>
           <div className="gap-sm flex items-center">
@@ -356,7 +357,7 @@ export function WorkoutExerciseModal({
           />
           <div className="gap-xs flex">
             {LOAD_UNITS.map((unit) => (
-              <button
+              <PlainButton
                 key={unit.value}
                 type="button"
                 onClick={() => setValue('load_unit', unit.value)}
@@ -368,7 +369,7 @@ export function WorkoutExerciseModal({
                 )}
               >
                 {unit.label}
-              </button>
+              </PlainButton>
             ))}
           </div>
         </div>
@@ -376,7 +377,7 @@ export function WorkoutExerciseModal({
 
       {/* Observações */}
       <div>
-        <button
+        <PlainButton
           type="button"
           onClick={() => setShowNotes((v) => !v)}
           className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
@@ -386,7 +387,7 @@ export function WorkoutExerciseModal({
             ? t('pages.workoutPlans.hideNotes', 'Ocultar observações')
             : t('pages.workoutPlans.showNotes', 'Adicionar observações')}
           {showNotes ? <ChevronUp className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-        </button>
+        </PlainButton>
         {showNotes && (
           <Textarea
             placeholder={t('pages.workoutPlans.notesPlaceholder')}

@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -131,14 +132,14 @@ export function AuthorForm({
             </div>
           )}
           {photoPreview && (
-            <button
+            <PlainButton
               type="button"
               onClick={handleRemovePhoto}
               className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full"
               aria-label={t('pages.authors.form.removePhoto')}
             >
               <X className="h-3 w-3" />
-            </button>
+            </PlainButton>
           )}
         </div>
         <div>

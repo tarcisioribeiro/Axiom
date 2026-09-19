@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import type { HTMLMotionProps } from 'framer-motion';
 import * as React from 'react';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
 interface TabsContextValue {
@@ -73,7 +74,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
     const ctx = React.useContext(TabsContext);
     const isActive = ctx.value === value;
     return (
-      <button
+      <PlainButton
         ref={ref}
         type="button"
         role="tab"
@@ -88,7 +89,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         {...props}
       >
         {children}
-      </button>
+      </PlainButton>
     );
   }
 );

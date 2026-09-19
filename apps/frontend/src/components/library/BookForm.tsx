@@ -23,6 +23,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -227,14 +228,14 @@ export function BookForm({
                   alt={t('pages.books.form.coverAlt')}
                   className="h-full w-full object-cover"
                 />
-                <button
+                <PlainButton
                   type="button"
                   onClick={handleRemoveCover}
                   className="bg-background/80 hover:bg-background absolute top-1 right-1 rounded-full p-0.5"
                   aria-label={t('pages.books.form.removeCover')}
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </PlainButton>
               </>
             ) : (
               <ImagePlus className="text-muted-foreground h-8 w-8" />
@@ -356,7 +357,7 @@ export function BookForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
-                <button
+                <PlainButton
                   key={value}
                   type="button"
                   onClick={() => setValue('media_type', value)}
@@ -369,7 +370,7 @@ export function BookForm({
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {t(`pages.books.mediaTypes.${translationKey}`)}
-                </button>
+                </PlainButton>
               ))}
             </div>
             {errors.media_type && (
@@ -507,7 +508,7 @@ export function BookForm({
                   return author ? (
                     <Badge key={authorId} variant="secondary">
                       {author.name}
-                      <button
+                      <PlainButton
                         type="button"
                         onClick={() => handleRemoveAuthor(authorId)}
                         aria-label={t('pages.books.form.removeAuthor', {
@@ -516,7 +517,7 @@ export function BookForm({
                         className="ml-xs hover:text-destructive"
                       >
                         <X className="h-3 w-3" aria-hidden="true" />
-                      </button>
+                      </PlainButton>
                     </Badge>
                   ) : null;
                 })}
@@ -626,14 +627,14 @@ export function BookForm({
                 {bookFileName ?? t('pages.books.form.bookFileNone')}
               </span>
               {bookFileName && (
-                <button
+                <PlainButton
                   type="button"
                   onClick={handleRemoveBookFile}
                   className="hover:bg-background ml-auto shrink-0 rounded-full p-0.5"
                   aria-label={t('pages.books.form.removeBookFile')}
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </PlainButton>
               )}
             </div>
             <input
@@ -672,7 +673,7 @@ export function BookForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {READ_STATUS_VALUES.map((value) => (
-                <button
+                <PlainButton
                   key={value}
                   type="button"
                   onClick={() => setValue('read_status', value)}
@@ -690,7 +691,7 @@ export function BookForm({
                   <span className="hidden sm:inline">
                     {t(`pages.books.readStatus.${value}`)}
                   </span>
-                </button>
+                </PlainButton>
               ))}
             </div>
           </div>

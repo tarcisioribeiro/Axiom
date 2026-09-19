@@ -169,19 +169,20 @@ export const LaunchExpensesDialog = ({
       const monthLabel =
         monthOptions.find((m) => m.value === validMonth)?.label || validMonth;
 
+      const createdDesc = t('pages.fixedExpenses.launchDialog.successDesc', {
+        count: response.created_count,
+        month: monthLabel,
+      });
+      const skippedNotice =
+        response.skipped_count > 0
+          ? ` ${t('pages.fixedExpenses.launchDialog.skippedNotice', {
+              count: response.skipped_count,
+            })}`
+          : '';
+
       toast({
         title: t('pages.fixedExpenses.launchDialog.success'),
-        description:
-          response.skipped_count > 0
-            ? t('pages.fixedExpenses.launchDialog.successDescWithSkipped', {
-                count: response.created_count,
-                month: monthLabel,
-                skipped: response.skipped_count,
-              })
-            : t('pages.fixedExpenses.launchDialog.successDesc', {
-                count: response.created_count,
-                month: monthLabel,
-              }),
+        description: `${createdDesc}${skippedNotice}`,
       });
 
       onSuccess();
