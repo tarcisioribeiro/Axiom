@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -24,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { useNow } from '@/hooks/use-now';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { receivablesService } from '@/services/receivables-service';
@@ -136,7 +137,7 @@ export function ReceivableReceiptDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="flex overflow-hidden rounded-lg border">
-            <button
+            <PlainButton
               type="button"
               onClick={() => {
                 setScheduled(false);
@@ -150,8 +151,8 @@ export function ReceivableReceiptDialog({
             >
               <Wallet className="h-3.5 w-3.5" />
               {t('pages.receivables.receipt.receiveNow')}
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               onClick={() => setScheduled(true)}
               className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
@@ -162,7 +163,7 @@ export function ReceivableReceiptDialog({
             >
               <CalendarClock className="h-3.5 w-3.5" />
               {t('pages.receivables.receipt.schedule')}
-            </button>
+            </PlainButton>
           </div>
 
           <div className="space-y-xs">
@@ -225,7 +226,7 @@ export function ReceivableReceiptDialog({
                   ? t('common.balance.loadingProjected')
                   : projectedBalance !== null
                     ? t('common.balance.projectedOn', {
-                        date: form.date,
+                        date: formatDate(form.date),
                         balance: formatCurrency(projectedBalance),
                       })
                     : t('common.balance.projectedUnavailable')}

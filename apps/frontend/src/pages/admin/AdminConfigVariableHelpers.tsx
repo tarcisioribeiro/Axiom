@@ -1,6 +1,7 @@
 import { AlertTriangle, HelpCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { VARIABLE_HELPERS } from './adminConfigVariableHelpersData';
@@ -22,13 +23,13 @@ export function VariableHelperPopover({ configKey }: { configKey: string }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
+        <PlainButton
           type="button"
           className="text-muted-foreground/60 hover:text-muted-foreground flex-shrink-0 rounded p-0.5 transition-colors"
           aria-label={t('pages.adminConfig.helpAriaLabel')}
         >
           <HelpCircle className="h-3.5 w-3.5" />
-        </button>
+        </PlainButton>
       </PopoverTrigger>
       <PopoverContent align="start" side="bottom" className="space-y-sm w-80 text-sm">
         <p className="text-foreground leading-snug">{hint}</p>

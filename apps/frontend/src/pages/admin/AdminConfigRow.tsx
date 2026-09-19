@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
 import type { ConfigCategory, SystemConfig } from '@/types';
@@ -130,7 +131,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                   }}
                 />
                 {config.is_secret && (
-                  <button
+                  <PlainButton
                     type="button"
                     onClick={() => setShowValue((v) => !v)}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
@@ -140,10 +141,10 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
-                  </button>
+                  </PlainButton>
                 )}
               </div>
-              <button
+              <PlainButton
                 onClick={handleSave}
                 disabled={mutation.isPending}
                 className="gap-xs bg-primary py-sm text-primary-foreground hover:bg-primary/90 flex items-center rounded-lg px-3 text-sm font-medium disabled:opacity-50"
@@ -154,13 +155,13 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                   <Check className="h-3.5 w-3.5" />
                 )}
                 {t('pages.adminConfig.save')}
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 onClick={() => setEditing(false)}
                 className="border-border p-sm text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg border"
               >
                 <X className="h-3.5 w-3.5" />
-              </button>
+              </PlainButton>
             </div>
           ) : (
             <div className="mt-sm gap-sm flex items-center">
@@ -178,13 +179,13 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
 
         {/* Edit button */}
         {!editing && config.is_editable && (
-          <button
+          <PlainButton
             onClick={handleEdit}
             className="p-sm text-muted-foreground hover:bg-accent hover:text-foreground mt-0.5 flex-shrink-0 rounded-lg transition-colors"
             title={t('pages.adminConfig.editTitle')}
           >
             <Pencil className="h-4 w-4" />
-          </button>
+          </PlainButton>
         )}
       </div>
 
@@ -213,7 +214,7 @@ export function CategorySection({
 
   return (
     <div className="mb-md border-border bg-card overflow-hidden rounded-lg border">
-      <button
+      <PlainButton
         onClick={() => setOpen((o) => !o)}
         className="px-md hover:bg-accent/50 flex w-full items-center justify-between py-3"
       >
@@ -230,7 +231,7 @@ export function CategorySection({
         ) : (
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         )}
-      </button>
+      </PlainButton>
       {open && (
         <div className="border-border border-t">
           {configs.map((cfg) => (

@@ -4,6 +4,7 @@ import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react'
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -215,10 +216,10 @@ export default function Vaults() {
       {isLoading ? (
         <LoadingState />
       ) : vaults.length === 0 ? (
-        <div className="text-muted-foreground flex flex-col items-center justify-center py-16">
-          <Vault className="mb-md h-12 w-12" />
-          <p>{t('pages.vaults.emptyState')}</p>
-        </div>
+        <EmptyState
+          icon={<Vault className="text-muted-foreground h-12 w-12" />}
+          message={t('pages.vaults.emptyState')}
+        />
       ) : (
         <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
           {vaults.map((vault, index) => (

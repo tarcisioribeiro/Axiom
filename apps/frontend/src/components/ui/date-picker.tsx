@@ -5,6 +5,7 @@ import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
 // Importa estilos customizados (sem usar os padrões do Flatpickr)
@@ -196,6 +197,7 @@ export function DatePicker({
       {/* Input do Flatpickr */}
       <input
         ref={inputRef}
+        onFocus={(e) => e.currentTarget.select()}
         onBlur={() => {
           if (flatpickrRef.current) commitTypedDate(flatpickrRef.current);
         }}
@@ -216,7 +218,7 @@ export function DatePicker({
 
       {/* Botão para limpar */}
       {clearable && dateValue && !disabled && (
-        <button
+        <PlainButton
           type="button"
           onClick={handleClear}
           aria-label="Limpar data"
@@ -230,7 +232,7 @@ export function DatePicker({
           )}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
+        </PlainButton>
       )}
     </div>
   );

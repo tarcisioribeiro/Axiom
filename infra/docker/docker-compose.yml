@@ -127,7 +127,7 @@ services:
 
   # MinIO Bucket Initialization (one-shot)
   minio-init:
-    image: quay.io/minio/mc:RELEASE.2025-02-15T10-36-16Z@sha256:9ae9ed28d04f7c36ee6b84c36b2c0168f1be28350d54344c3e5088a631f4c603
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
     container_name: axiom-storage-init
     depends_on:
       minio:

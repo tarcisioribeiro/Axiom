@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { booksService } from '@/services/books-service';
 import type { Book } from '@/types';
@@ -61,14 +62,14 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
       style={style}
       className="gap-md bg-card p-md flex items-center rounded-lg border shadow-sm"
     >
-      <button
+      <PlainButton
         {...attributes}
         {...listeners}
         className="text-muted-foreground hover:text-foreground cursor-grab touch-none active:cursor-grabbing"
         aria-label="Arrastar para reordenar"
       >
         <GripVertical className="h-5 w-5" />
-      </button>
+      </PlainButton>
 
       <span className="text-muted-foreground w-6 text-center text-sm font-semibold">
         {rank}

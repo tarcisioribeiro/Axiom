@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
+import { textOf, useButtonTooltip } from '@/components/ui/button-tooltip';
 import { DURATION } from '@/lib/animations/transitions';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +53,9 @@ export interface ButtonProps
   asChild?: boolean;
   /** Shows a spinner and disables the button automatically while loading. */
   loading?: boolean;
+  /** Texto do tooltip. Padrão: aria-label, title ou texto do botão. `false` desliga. */
+  tooltip?: string | false;
+  tooltipSide?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -64,19 +68,41 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       loading,
       asChild = false,
       children,
+      tooltip,
+      tooltipSide = 'top',
+      title,
+      onMouseEnter,
+      onMouseLeave,
       ...props
     },
     ref
   ) => {
-    const classes = cn(buttonVariants({ variant, size, className }));
+    const classes = cn('relative', buttonVariants({ variant, size, className }));
     const isDisabled = disabled || loading;
+    const label =
+      tooltip === false
+        ? undefined
+        : (tooltip ?? (props['aria-label'] || title || textOf(children).trim()));
+    const { tip, tipProps } = useButtonTooltip(label || undefined, tooltipSide, {
+      onMouseEnter,
+      onMouseLeave,
+    });
+    // title nativo duplicaria o tooltip; sem tooltip próprio, mantém o title.
+    const nativeTitle = label ? undefined : title;
 
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
-      return React.cloneElement(child, {
-        ...props,
-        className: cn(classes, child.props.className),
-      } as React.HTMLAttributes<HTMLElement>);
+      return React.cloneElement(
+        child,
+        {
+          ...props,
+          ...tipProps,
+          title: nativeTitle,
+          className: cn(classes, child.props.className),
+        } as React.HTMLAttributes<HTMLElement>,
+        child.props.children,
+        tip
+      );
     }
 
     return (
@@ -86,10 +112,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         whileTap={isDisabled ? undefined : { scale: 0.95 }}
         transition={{ duration: DURATION.fast }}
+        title={nativeTitle}
         {...(props as React.ComponentProps<typeof motion.button>)}
+        {...tipProps}
       >
         {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
         {children}
+        {tip}
       </motion.button>
     );
   }

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
 import { useVaultKeyboardShortcuts } from '@/hooks/use-vault-keyboard-shortcuts';
@@ -239,7 +240,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
         )}
         {label}
         {isWarning && onRenew && (
-          <button
+          <PlainButton
             type="button"
             onClick={() => setIsRenewOpen(true)}
             className="ml-xs flex items-center gap-0.5 font-medium underline underline-offset-2 hover:opacity-80"
@@ -247,7 +248,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
           >
             <RefreshCw className="h-2.5 w-2.5" />
             {t('pages.vaultGuard.expiry.renewBtn')}
-          </button>
+          </PlainButton>
         )}
       </div>
 
@@ -273,7 +274,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                   placeholder={t('pages.vaultGuard.locked.passwordPlaceholder')}
                   className="pr-10"
                 />
-                <button
+                <PlainButton
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
@@ -284,7 +285,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </PlainButton>
               </div>
             </div>
             <div className="gap-sm flex justify-end">
@@ -409,7 +410,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   minLength={8}
                   className="pr-10"
                 />
-                <button
+                <PlainButton
                   type="button"
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
@@ -419,7 +420,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </PlainButton>
               </div>
               {masterPassword && (
                 <PasswordStrengthIndicator password={masterPassword} />
@@ -543,7 +544,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                   required
                   className="pr-10"
                 />
-                <button
+                <PlainButton
                   type="button"
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
@@ -553,7 +554,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </PlainButton>
               </div>
             </div>
 
@@ -580,14 +581,14 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                 : t('pages.vaultGuard.locked.unlockBtn')}
             </Button>
 
-            <button
+            <PlainButton
               type="button"
               onClick={() => setShowRecovery(true)}
               className="gap-xs text-muted-foreground hover:text-primary flex w-full items-center justify-center text-xs transition-colors"
             >
               <Key className="h-3 w-3" />
               {t('pages.vaultGuard.locked.useRecoveryKey')}
-            </button>
+            </PlainButton>
           </form>
         </CardContent>
       </Card>

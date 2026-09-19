@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DatePicker } from '@/components/ui/date-picker';
+import { PlainButton } from '@/components/ui/plain-button';
 import i18n from '@/i18n';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -81,14 +82,14 @@ export default function AdminLogs() {
         }
         icon={<ScrollText />}
         actions={
-          <button
+          <PlainButton
             onClick={() => void refetch()}
             disabled={isLoading}
             className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
             {t('pages.adminLogs.refresh')}
-          </button>
+          </PlainButton>
         }
       />
 
@@ -100,12 +101,12 @@ export default function AdminLogs() {
             {t('pages.adminLogs.filters')}
           </span>
           {hasFilters && (
-            <button
+            <PlainButton
               onClick={clearFilters}
               className="gap-xs text-muted-foreground hover:text-foreground ml-auto flex items-center text-xs"
             >
               <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
-            </button>
+            </PlainButton>
           )}
         </div>
         <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-4">
@@ -142,12 +143,12 @@ export default function AdminLogs() {
             clearable
           />
         </div>
-        <button
+        <PlainButton
           onClick={applyFilters}
           className="bg-primary px-md py-sm text-primary-foreground hover:bg-primary/90 mt-3 rounded-lg text-sm font-medium"
         >
           {t('pages.adminLogs.applyFilters')}
-        </button>
+        </PlainButton>
       </div>
 
       {/* Table */}
@@ -208,20 +209,20 @@ export default function AdminLogs() {
               })}
             </p>
             <div className="gap-sm flex items-center">
-              <button
+              <PlainButton
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
-              </button>
+              </PlainButton>
             </div>
           </div>
         )}

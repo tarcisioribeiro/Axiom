@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 import type { ServiceCheck, ServiceStatus } from '@/types';
@@ -132,14 +133,14 @@ export default function AdminOverview() {
                 {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
               </span>
             )}
-            <button
+            <PlainButton
               onClick={() => void refetch()}
               disabled={isLoading}
               className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50"
             >
               <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
               {t('pages.adminOverview.refresh')}
-            </button>
+            </PlainButton>
           </div>
         }
       />

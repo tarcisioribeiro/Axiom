@@ -22,6 +22,7 @@ import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { cn } from '@/lib/utils';
@@ -322,7 +323,7 @@ function StepGoals({
           const Icon = area.icon;
           const isSelected = focusAreas.includes(area.id);
           return (
-            <button
+            <PlainButton
               key={area.id}
               type="button"
               onClick={() => onToggle(area.id)}
@@ -348,7 +349,7 @@ function StepGoals({
                 {area.label}
               </span>
               {isSelected && <CheckCircle2 className="text-primary h-4 w-4" />}
-            </button>
+            </PlainButton>
           );
         })}
       </div>
@@ -373,7 +374,7 @@ function StepTime({
       </div>
       <div className="gap-md grid grid-cols-2">
         {DAILY_TIME_OPTIONS.map((opt) => (
-          <button
+          <PlainButton
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
@@ -404,7 +405,7 @@ function StepTime({
               {opt.label}
             </p>
             <p className="text-muted-foreground text-sm">{opt.description}</p>
-          </button>
+          </PlainButton>
         ))}
       </div>
     </div>
@@ -430,7 +431,7 @@ function StepDays({
         {WEEKDAY_LABELS.map((label, idx) => {
           const isActive = activeDays.includes(idx);
           return (
-            <button
+            <PlainButton
               key={idx}
               type="button"
               onClick={() => onToggle(idx)}
@@ -443,7 +444,7 @@ function StepDays({
             >
               <span className="text-xs font-semibold">{label}</span>
               {isActive && <CheckCircle2 className="h-3 w-3" />}
-            </button>
+            </PlainButton>
           );
         })}
       </div>
@@ -519,7 +520,7 @@ function StepRoutine({
           {suggestedTemplates.map((template) => {
             const isSelected = selectedTemplates.includes(template.id);
             return (
-              <button
+              <PlainButton
                 key={template.id}
                 type="button"
                 onClick={() => onToggle(template.id)}
@@ -541,7 +542,7 @@ function StepRoutine({
                   <Badge variant="secondary">{template.task_count} tarefas</Badge>
                   {isSelected && <CheckCircle2 className="text-primary h-5 w-5" />}
                 </div>
-              </button>
+              </PlainButton>
             );
           })}
         </div>

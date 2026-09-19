@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -304,7 +305,7 @@ export function SharePasswordModal({
                         </p>
                       ) : (
                         filteredMembers.map((member) => (
-                          <button
+                          <PlainButton
                             key={member.id}
                             type="button"
                             className={cn(
@@ -329,7 +330,7 @@ export function SharePasswordModal({
                             {selectedMember?.id === member.id && (
                               <Check className="text-primary h-4 w-4 shrink-0" />
                             )}
-                          </button>
+                          </PlainButton>
                         ))
                       )}
                     </div>
@@ -346,7 +347,7 @@ export function SharePasswordModal({
                       <Label>{t('pages.sharePassword.expiryLabel')}</Label>
                       <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
                         {TTL_OPTIONS.map((opt) => (
-                          <button
+                          <PlainButton
                             key={opt.value}
                             type="button"
                             className={cn(
@@ -357,7 +358,7 @@ export function SharePasswordModal({
                             onClick={() => setTtlHours(opt.value)}
                           >
                             {t(`pages.sharePassword.${opt.labelKey}`)}
-                          </button>
+                          </PlainButton>
                         ))}
                       </div>
                     </div>

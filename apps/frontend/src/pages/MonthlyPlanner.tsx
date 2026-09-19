@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { PlainButton } from '@/components/ui/plain-button';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -461,7 +462,7 @@ function ActualItemsSection({
 
   return (
     <div className={cn('space-y-sm pl-sm border-l-2', accent)}>
-      <button
+      <PlainButton
         className="gap-xs flex w-full items-center"
         onClick={() => setExpanded((v) => !v)}
       >
@@ -478,7 +479,7 @@ function ActualItemsSection({
         ) : (
           <ChevronDown className="text-muted-foreground h-4 w-4" />
         )}
-      </button>
+      </PlainButton>
       {expanded && (
         <div className="space-y-xs">
           {items.length === 0 ? (

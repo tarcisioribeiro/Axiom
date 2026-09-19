@@ -4,6 +4,7 @@ import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -291,10 +292,10 @@ export default function Permissions() {
                 </div>
               )
             ) : (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Shield className="mb-md h-16 w-16 opacity-20" />
-                <p className="text-lg">{t('pages.permissions.selectMemberStart')}</p>
-              </div>
+              <EmptyState
+                icon={<Shield className="text-muted-foreground h-12 w-12" />}
+                message={t('pages.permissions.selectMemberStart')}
+              />
             )}
           </CardContent>
         </Card>

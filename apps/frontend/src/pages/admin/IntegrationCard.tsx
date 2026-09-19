@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -171,7 +172,7 @@ export function OllamaRestartPanel() {
 
   return (
     <div className="border-border mt-3 border-t pt-3">
-      <button
+      <PlainButton
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending || redirecting}
         className="gap-xs border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
@@ -184,7 +185,7 @@ export function OllamaRestartPanel() {
         {redirecting
           ? t('pages.adminIntegrations.disconnecting')
           : t('pages.adminIntegrations.restartAllBtn')}
-      </button>
+      </PlainButton>
     </div>
   );
 }
@@ -226,7 +227,7 @@ export function EmailTestPanel() {
           className="border-border bg-background py-sm text-foreground focus:ring-primary flex-1 rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
           onKeyDown={(e) => e.key === 'Enter' && email && mutation.mutate(email)}
         />
-        <button
+        <PlainButton
           onClick={() => email && mutation.mutate(email)}
           disabled={!email || mutation.isPending}
           className="gap-xs bg-primary py-sm text-primary-foreground hover:bg-primary/90 flex items-center rounded-lg px-3 text-sm font-medium disabled:opacity-50"
@@ -237,7 +238,7 @@ export function EmailTestPanel() {
             <Send className="h-3.5 w-3.5" />
           )}
           {t('pages.adminIntegrations.sendBtn')}
-        </button>
+        </PlainButton>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useLocation, useOutlet } from 'react-router';
 
 import { AgentChatWidget } from '@/components/agents/AgentChatWidget';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { PageTour } from '@/components/common/PageTour';
 
 import { CommandPalette } from './CommandPalette';
 import { Header } from './Header';
@@ -50,6 +51,9 @@ export const Layout = () => {
 
       {/* Command Palette (Ctrl+K / Cmd+K) */}
       <CommandPalette />
+
+      {/* Tour guiado da página atual */}
+      <PageTour />
 
       {/* Floating study timer — Intelecto module only */}
       {INTELLECT_MODULE_PATTERN.test(pathname) && <StudyTimer />}

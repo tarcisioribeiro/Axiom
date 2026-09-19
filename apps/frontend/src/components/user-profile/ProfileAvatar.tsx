@@ -3,6 +3,7 @@ import { Camera, Loader2, Trash2, UserCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { membersService } from '@/services/members-service';
 
@@ -106,7 +107,7 @@ export function ProfileAvatar({ name, photoUrl }: ProfileAvatarProps) {
       </div>
 
       {photoUrl && !isLoading && (
-        <button
+        <PlainButton
           type="button"
           className="bg-destructive text-destructive-foreground absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full shadow-md transition-opacity hover:opacity-90"
           onClick={(e) => {
@@ -116,7 +117,7 @@ export function ProfileAvatar({ name, photoUrl }: ProfileAvatarProps) {
           title={t('userProfile.avatar.remove')}
         >
           <Trash2 className="h-3 w-3" />
-        </button>
+        </PlainButton>
       )}
 
       <input

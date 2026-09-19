@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -184,7 +185,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
       {/* Tabs */}
       <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
         {tabs.map(({ id, label, icon: Icon }) => (
-          <button
+          <PlainButton
             key={id}
             type="button"
             onClick={() => setActiveTab(id)}
@@ -196,7 +197,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           >
             <Icon className="h-3.5 w-3.5" />
             {label}
-          </button>
+          </PlainButton>
         ))}
       </div>
 
@@ -235,7 +236,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
               </Label>
               <div className="gap-xs grid grid-cols-3">
                 {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
-                  <button
+                  <PlainButton
                     key={k}
                     type="button"
                     onClick={() => setValue('flag', k)}
@@ -246,7 +247,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                     }`}
                   >
                     {v}
-                  </button>
+                  </PlainButton>
                 ))}
               </div>
             </div>

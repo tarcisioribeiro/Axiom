@@ -67,6 +67,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -177,7 +178,7 @@ function PomodoroBar() {
       </div>
       <div className="gap-xs flex items-center rounded-md border p-0.5">
         {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
-          <button
+          <PlainButton
             key={m}
             type="button"
             onClick={() => switchMode(m)}
@@ -189,7 +190,7 @@ function PomodoroBar() {
             )}
           >
             {t(`pages.todayTasks.pomodoroMode.${m}`)}
-          </button>
+          </PlainButton>
         ))}
       </div>
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
@@ -651,7 +652,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   const viewToggle = (
     <div className="flex items-center rounded-md border p-0.5">
       {(['list', 'kanban', 'focusBlocks'] as ViewMode[]).map((mode) => (
-        <button
+        <PlainButton
           key={mode}
           type="button"
           onClick={() => changeViewMode(mode)}
@@ -694,7 +695,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
           ) : (
             <LayoutList className="h-4 w-4" />
           )}
-        </button>
+        </PlainButton>
       ))}
     </div>
   );
@@ -960,7 +961,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                       isCompleted && 'opacity-60'
                     )}
                   >
-                    <button
+                    <PlainButton
                       type="button"
                       disabled={isUpdating}
                       onClick={() => void handleToggleTaskComplete(task)}
@@ -976,7 +977,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                       ) : (
                         <Circle className="h-6 w-6" />
                       )}
-                    </button>
+                    </PlainButton>
                     <div className="flex-1">
                       <h3
                         className={cn(

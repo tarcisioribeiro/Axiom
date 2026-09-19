@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import type { Tag, TagFormData } from '@/types';
 
 const DEFAULT_COLORS = [
@@ -74,7 +75,7 @@ export function TagFormDialog({
             <Label>{t('pages.tags.color')}</Label>
             <div className="gap-sm flex flex-wrap">
               {DEFAULT_COLORS.map((c) => (
-                <button
+                <PlainButton
                   key={c}
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, color: c }))}

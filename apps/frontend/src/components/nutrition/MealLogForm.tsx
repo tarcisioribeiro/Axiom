@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -249,7 +250,7 @@ export function MealLogForm({
             {selectedMealType.options.map((opt) => {
               const isSelected = selectedMenuOption === opt.id;
               return (
-                <button
+                <PlainButton
                   key={opt.id}
                   type="button"
                   onClick={() =>
@@ -313,7 +314,7 @@ export function MealLogForm({
                       ))}
                     </ul>
                   )}
-                </button>
+                </PlainButton>
               );
             })}
           </div>

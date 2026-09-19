@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import { TimePicker } from '@/components/ui/time-picker';
 import { cn } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
@@ -223,7 +224,7 @@ export function WorkoutDayForm({
           {WEEKDAYS.map((wd, i) => {
             const selected = watch('day_of_week') === i;
             return (
-              <button
+              <PlainButton
                 key={wd}
                 type="button"
                 onClick={() => setValue('day_of_week', selected ? '' : i)}
@@ -235,7 +236,7 @@ export function WorkoutDayForm({
                 )}
               >
                 {t(`pages.workoutPlans.weekdays.${wd}`)}
-              </button>
+              </PlainButton>
             );
           })}
         </div>
@@ -251,7 +252,7 @@ export function WorkoutDayForm({
             {MUSCLE_CHIP_KEYS.map(({ key }) => {
               const label = t(`pages.workoutPlans.muscleChips.${key}`);
               return (
-                <button
+                <PlainButton
                   key={key}
                   type="button"
                   onClick={() => toggleChip(label)}
@@ -263,7 +264,7 @@ export function WorkoutDayForm({
                   )}
                 >
                   {label}
-                </button>
+                </PlainButton>
               );
             })}
           </div>

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -249,20 +250,20 @@ export function StudyTimer() {
                   {t('pages.libraryDashboard.studyTimerTitle')}
                 </span>
               </div>
-              <button
+              <PlainButton
                 onClick={() => setIsOpen(false)}
                 className="p-xs text-muted-foreground hover:text-foreground rounded"
                 aria-label={t('common.actions.close')}
               >
                 <X className="h-4 w-4" />
-              </button>
+              </PlainButton>
             </div>
 
             <div className="space-y-sm p-md">
               {/* Mode selector */}
               <div className="gap-xs flex rounded-md border p-0.5">
                 {(['reading', 'course'] as TimerMode[]).map((m) => (
-                  <button
+                  <PlainButton
                     key={m}
                     type="button"
                     disabled={isActive}
@@ -280,7 +281,7 @@ export function StudyTimer() {
                         ? 'pages.libraryDashboard.studyTimerReading'
                         : 'pages.libraryDashboard.studyTimerCourse'
                     )}
-                  </button>
+                  </PlainButton>
                 ))}
               </div>
 
@@ -377,7 +378,7 @@ export function StudyTimer() {
         )}
 
         {/* FAB button */}
-        <button
+        <PlainButton
           onClick={() => setIsOpen((o) => !o)}
           className="bg-category-intellect hoverable:hover:scale-105 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95 dark:text-black"
           aria-label={t('pages.libraryDashboard.studyTimerTitle')}
@@ -389,7 +390,7 @@ export function StudyTimer() {
           ) : (
             <BookOpen className="h-5 w-5" />
           )}
-        </button>
+        </PlainButton>
       </div>
 
       {/* Confirmation dialog */}

@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { TagFormDialog } from '@/components/tags/TagFormDialog';
 import { Button } from '@/components/ui/button';
+import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -204,18 +205,18 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
                 </span>
               </div>
               <div className="gap-xs flex shrink-0">
-                <button
+                <PlainButton
                   onClick={() => handleEdit(tag)}
                   className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </PlainButton>
+                <PlainButton
                   onClick={() => void handleDelete(tag)}
                   className="p-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                </PlainButton>
               </div>
             </div>
           ))}
