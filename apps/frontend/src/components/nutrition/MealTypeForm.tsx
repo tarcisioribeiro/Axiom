@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
-import { PlainButton } from '@/components/ui/plain-button';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -187,7 +186,7 @@ export function MealTypeForm({
             {t('pages.nutritionMealTypes.mealTypeActive')}
           </span>
           <div className="gap-sm grid grid-cols-2">
-            <PlainButton
+            <button
               type="button"
               onClick={() => setValue('is_active', true)}
               className={cn(
@@ -199,8 +198,8 @@ export function MealTypeForm({
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
               {t('pages.nutritionMealTypes.active')}
-            </PlainButton>
-            <PlainButton
+            </button>
+            <button
               type="button"
               onClick={() => setValue('is_active', false)}
               className={cn(
@@ -212,7 +211,7 @@ export function MealTypeForm({
             >
               <XCircle className="h-3.5 w-3.5" />
               {t('pages.nutritionMealTypes.inactive')}
-            </PlainButton>
+            </button>
           </div>
         </div>
         <div className="space-y-sm">

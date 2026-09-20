@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
-import { textOf, useButtonTooltip } from '@/components/ui/button-tooltip';
+import { buttonTooltipText, useButtonTooltip } from '@/components/ui/button-tooltip';
 import { DURATION } from '@/lib/animations/transitions';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +53,7 @@ export interface ButtonProps
   asChild?: boolean;
   /** Shows a spinner and disables the button automatically while loading. */
   loading?: boolean;
-  /** Texto do tooltip. Padrão: aria-label, title ou texto do botão. `false` desliga. */
+  /** Texto do tooltip. Padrão: aria-label/title, só em botões sem texto. `false` desliga. */
   tooltip?: string | false;
   tooltipSide?: 'top' | 'bottom' | 'left' | 'right';
 }
@@ -77,16 +77,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const classes = cn('relative', buttonVariants({ variant, size, className }));
     const isDisabled = disabled || loading;
-    const label =
-      tooltip === false
-        ? undefined
-        : (tooltip ?? (props['aria-label'] || title || textOf(children).trim()));
+    const label = buttonTooltipText(tooltip, props['aria-label'] || title, children);
     const { tip, tipProps } = useButtonTooltip(label || undefined, tooltipSide, {
       onMouseEnter,
       onMouseLeave,
     });
+    const classes = cn(
+      label && 'relative',
+      buttonVariants({ variant, size, className })
+    );
     // title nativo duplicaria o tooltip; sem tooltip próprio, mantém o title.
     const nativeTitle = label ? undefined : title;
 

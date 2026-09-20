@@ -258,7 +258,7 @@ export const Sidebar = () => {
             }
             side="right"
           >
-            <PlainButton
+            <button
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
@@ -274,10 +274,10 @@ export const Sidebar = () => {
                   {streak}
                 </span>
               )}
-            </PlainButton>
+            </button>
           </Tooltip>
         ) : (
-          <PlainButton
+          <button
             onClick={() => handleModuleClick(module.id)}
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
@@ -303,7 +303,7 @@ export const Sidebar = () => {
               )}
               aria-hidden="true"
             />
-          </PlainButton>
+          </button>
         )}
 
         {/* Collapsible content (desktop expanded mode only) */}
@@ -335,7 +335,7 @@ export const Sidebar = () => {
 
                   return (
                     <div key={subModule.id} className="space-y-xs">
-                      <PlainButton
+                      <button
                         onClick={() =>
                           dispatch({ type: 'TOGGLE_SUBMODULE', id: subModule.id })
                         }
@@ -367,7 +367,7 @@ export const Sidebar = () => {
                           )}
                           aria-hidden="true"
                         />
-                      </PlainButton>
+                      </button>
 
                       <div
                         id={`submodule-${subModule.id}`}
@@ -510,7 +510,7 @@ export const Sidebar = () => {
                   }
                   side="right"
                 >
-                  <PlainButton
+                  <button
                     className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
                     aria-label={t('layout.userMenu')}
                   >
@@ -530,10 +530,10 @@ export const Sidebar = () => {
                         ).toUpperCase()}
                       </span>
                     )}
-                  </PlainButton>
+                  </button>
                 </Tooltip>
               ) : (
-                <PlainButton
+                <button
                   className="gap-sm px-sm py-xs hover:bg-muted/60 flex w-full items-center rounded-lg transition-colors"
                   aria-label={t('layout.userMenu')}
                 >
@@ -563,7 +563,7 @@ export const Sidebar = () => {
                       {user.username}
                     </p>
                   </div>
-                </PlainButton>
+                </button>
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-52">
@@ -596,7 +596,7 @@ export const Sidebar = () => {
           )}
         >
           <Tooltip content={t('pageTour.button')} side="right">
-            <PlainButton
+            <button
               onClick={() => {
                 if (isMobile) close();
                 window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
@@ -611,7 +611,7 @@ export const Sidebar = () => {
             >
               <Compass className="h-4 w-4 shrink-0" aria-hidden="true" />
               {(!isCollapsed || isMobile) && t('pageTour.button')}
-            </PlainButton>
+            </button>
           </Tooltip>
         </div>
       )}

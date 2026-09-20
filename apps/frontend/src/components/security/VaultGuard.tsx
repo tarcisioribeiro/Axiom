@@ -240,7 +240,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
         )}
         {label}
         {isWarning && onRenew && (
-          <PlainButton
+          <button
             type="button"
             onClick={() => setIsRenewOpen(true)}
             className="ml-xs flex items-center gap-0.5 font-medium underline underline-offset-2 hover:opacity-80"
@@ -248,7 +248,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
           >
             <RefreshCw className="h-2.5 w-2.5" />
             {t('pages.vaultGuard.expiry.renewBtn')}
-          </PlainButton>
+          </button>
         )}
       </div>
 
@@ -581,14 +581,14 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                 : t('pages.vaultGuard.locked.unlockBtn')}
             </Button>
 
-            <PlainButton
+            <button
               type="button"
               onClick={() => setShowRecovery(true)}
               className="gap-xs text-muted-foreground hover:text-primary flex w-full items-center justify-center text-xs transition-colors"
             >
               <Key className="h-3 w-3" />
               {t('pages.vaultGuard.locked.useRecoveryKey')}
-            </PlainButton>
+            </button>
           </form>
         </CardContent>
       </Card>

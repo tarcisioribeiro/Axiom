@@ -46,7 +46,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
@@ -289,14 +288,14 @@ function GoalCard({
               </span>
             )}
             {goal.failures.length > 0 && (
-              <PlainButton
+              <button
                 type="button"
                 onClick={() => onViewFailures(goal)}
                 className="gap-xs px-sm bg-muted/60 text-muted-foreground hover:bg-muted flex items-center rounded py-0.5 font-medium transition-colors"
               >
                 <History className="h-3 w-3" />
                 {t('pages.goals.failuresCount', { count: goal.failures.length })}
-              </PlainButton>
+              </button>
             )}
           </div>
         )}
@@ -641,14 +640,14 @@ export default function Goals({ embedded = false }: GoalsProps) {
         }}
       >
         {goals.length > 0 && (
-          <PlainButton
+          <button
             onClick={exportGoalsCSV}
             className="gap-xs border-border px-sm py-xs text-muted-foreground hover:bg-muted flex items-center rounded-md border text-xs transition-colors"
             title={t('common.actions.exportCSV')}
           >
             <Download className="h-3.5 w-3.5" />
             {t('common.actions.exportCSV')}
-          </PlainButton>
+          </button>
         )}
       </PageHeader>
 

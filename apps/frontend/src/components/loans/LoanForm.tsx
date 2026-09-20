@@ -25,7 +25,6 @@ import { FileInput } from '@/components/ui/file-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -243,7 +242,7 @@ export function LoanForm({
                 </Label>
                 <div className="mt-sm gap-sm grid grid-cols-2">
                   {(['borrowed', 'lent'] as const).map((type) => (
-                    <PlainButton
+                    <button
                       key={type}
                       type="button"
                       onClick={() => {
@@ -279,7 +278,7 @@ export function LoanForm({
                       <span className="text-sm font-medium">
                         {t(`pages.loans.form.${type}`)}
                       </span>
-                    </PlainButton>
+                    </button>
                   ))}
                 </div>
               </div>

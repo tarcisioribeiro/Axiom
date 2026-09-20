@@ -493,7 +493,7 @@ function CreateLinkModal({
 
         <div className="mb-lg gap-sm grid grid-cols-3">
           {ALL_RELATIONS.map((key) => (
-            <PlainButton
+            <button
               key={key}
               onClick={() => setRelation(key)}
               className={cn(
@@ -511,7 +511,7 @@ function CreateLinkModal({
               }
             >
               {t(`pages.knowledgeGraph.relations.${key}`)}
-            </PlainButton>
+            </button>
           ))}
         </div>
 
@@ -934,7 +934,7 @@ export default function KnowledgeGraph() {
           <div className="gap-md border-border bg-card p-md z-10 flex w-52 shrink-0 flex-col border-r">
             {/* Suggest links button */}
             <Tooltip content={t('pages.knowledgeGraph.suggestLinks')} side="right">
-              <PlainButton
+              <button
                 onClick={() => setShowSuggestions((v) => !v)}
                 className={cn(
                   'gap-sm px-sm py-xs flex w-full items-center rounded-md text-xs font-medium transition-colors',
@@ -945,7 +945,7 @@ export default function KnowledgeGraph() {
               >
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
                 {t('pages.knowledgeGraph.suggestLinks')}
-              </PlainButton>
+              </button>
             </Tooltip>
 
             {/* Search */}
@@ -976,7 +976,7 @@ export default function KnowledgeGraph() {
                 {ALL_NODE_TYPES.filter(
                   (tp) => tp !== 'highlight' || includeHighlights
                 ).map((type) => (
-                  <PlainButton
+                  <button
                     key={type}
                     onClick={() => toggleType(type)}
                     className={cn(
@@ -996,14 +996,14 @@ export default function KnowledgeGraph() {
                     <span className="text-muted-foreground ml-auto">
                       {filteredGraphData.nodes.filter((n) => n.type === type).length}
                     </span>
-                  </PlainButton>
+                  </button>
                 ))}
               </div>
             </div>
 
             {/* Highlights toggle */}
             <div className="border-border pt-md border-t">
-              <PlainButton
+              <button
                 onClick={() => {
                   setIncludeHighlights((v) => !v);
                   if (!includeHighlights) {
@@ -1032,7 +1032,7 @@ export default function KnowledgeGraph() {
                     )}
                   />
                 </div>
-              </PlainButton>
+              </button>
             </div>
 
             {/* Stats */}
@@ -1165,7 +1165,7 @@ export default function KnowledgeGraph() {
                               {t('pages.knowledgeGraph.similarity')}:{' '}
                               {Math.round(s.similarity * 100)}%
                             </span>
-                            <PlainButton
+                            <button
                               onClick={() => {
                                 if (!memberData?.id) return;
                                 createLinkMutation.mutate({
@@ -1180,7 +1180,7 @@ export default function KnowledgeGraph() {
                               className="px-xs text-primary hover:bg-primary/10 rounded py-0.5 text-xs"
                             >
                               {t('pages.knowledgeGraph.addLink')}
-                            </PlainButton>
+                            </button>
                           </div>
                         </div>
                       ))}

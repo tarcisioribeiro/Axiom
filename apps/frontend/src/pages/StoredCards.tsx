@@ -33,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -428,7 +427,7 @@ export default function StoredCards() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{card.name}</p>
                       {card.finance_card_name && (
-                        <PlainButton
+                        <button
                           className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -437,7 +436,7 @@ export default function StoredCards() {
                         >
                           <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                           {card.finance_card_name}
-                        </PlainButton>
+                        </button>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">

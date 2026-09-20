@@ -17,7 +17,6 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -151,7 +150,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             </Label>
             <div className="gap-xs grid grid-cols-3">
               {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
-                <PlainButton
+                <button
                   key={key}
                   type="button"
                   onClick={() =>
@@ -169,7 +168,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     return <TypeIcon className="h-4 w-4 shrink-0" />;
                   })()}
                   <span className="truncate">{translate('accountTypes', key)}</span>
-                </PlainButton>
+                </button>
               ))}
             </div>
             {errors.account_type && (

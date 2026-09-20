@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 
 interface CollapsibleSectionProps {
@@ -25,7 +24,7 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps) {
   return (
     <div className={cn('border-border bg-card rounded-lg border', className)}>
-      <PlainButton
+      <button
         type="button"
         onClick={onToggle}
         className="gap-sm px-md py-sm hover:bg-muted/40 flex w-full items-center justify-between text-left transition-colors"
@@ -45,7 +44,7 @@ export function CollapsibleSection({
             open && 'rotate-180'
           )}
         />
-      </PlainButton>
+      </button>
 
       <AnimatePresence initial={false}>
         {open && (

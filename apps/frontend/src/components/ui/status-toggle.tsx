@@ -1,4 +1,3 @@
-import { PlainButton } from '@/components/ui/plain-button';
 import { SEMANTIC_ACCENT_ACTIVE_CLASS } from '@/lib/semantic-accent';
 import type { SemanticAccent } from '@/lib/semantic-accent';
 import { cn } from '@/lib/utils';
@@ -29,7 +28,7 @@ export function StatusToggle({
       {[optionA, optionB].map((opt) => {
         const isActive = value === opt.value;
         return (
-          <PlainButton
+          <button
             key={opt.value}
             type="button"
             disabled={disabled}
@@ -43,7 +42,7 @@ export function StatusToggle({
             )}
           >
             {opt.label}
-          </PlainButton>
+          </button>
         );
       })}
     </div>

@@ -47,7 +47,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -1108,7 +1107,7 @@ export default function NutritionPage() {
                   <Label>Refeições por dia: {aiMenuForm.meals_per_day}</Label>
                   <div className="gap-xs flex">
                     {[2, 3, 4, 5, 6].map((n) => (
-                      <PlainButton
+                      <button
                         key={n}
                         type="button"
                         onClick={() =>
@@ -1122,7 +1121,7 @@ export default function NutritionPage() {
                         )}
                       >
                         {n}
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1204,7 +1203,7 @@ function MealTypeCard({
           mealType.is_active ? theme.cardBg : 'bg-card'
         )}
       >
-        <PlainButton
+        <button
           type="button"
           className="gap-sm flex min-w-0 flex-1 items-center text-left"
           onClick={onToggle}
@@ -1244,7 +1243,7 @@ function MealTypeCard({
           ) : (
             <ChevronRight className="text-muted-foreground ml-auto h-4 w-4 shrink-0" />
           )}
-        </PlainButton>
+        </button>
         <div className="ml-sm gap-xs flex shrink-0 items-center">
           <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
             {mealType.is_active

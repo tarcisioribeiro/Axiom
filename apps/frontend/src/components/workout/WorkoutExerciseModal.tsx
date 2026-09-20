@@ -212,7 +212,7 @@ export function WorkoutExerciseModal({
               filtered.map((ex) => {
                 const isSelected = selectedExercise?.id === ex.id;
                 return (
-                  <PlainButton
+                  <button
                     key={ex.id}
                     type="button"
                     onClick={() => setSelectedExercise(ex)}
@@ -248,7 +248,7 @@ export function WorkoutExerciseModal({
                         </span>
                       )}
                     </div>
-                  </PlainButton>
+                  </button>
                 );
               })
             )}
@@ -314,7 +314,7 @@ export function WorkoutExerciseModal({
         <div className="space-y-sm">
           <div className="gap-xs flex flex-wrap">
             {REST_PRESETS.map((preset) => (
-              <PlainButton
+              <button
                 key={preset}
                 type="button"
                 onClick={() => setValue('rest_seconds', preset)}
@@ -326,7 +326,7 @@ export function WorkoutExerciseModal({
                 )}
               >
                 {preset === 0 ? t('pages.workoutPlans.noRest') : `${preset}s`}
-              </PlainButton>
+              </button>
             ))}
           </div>
           <div className="gap-sm flex items-center">
@@ -357,7 +357,7 @@ export function WorkoutExerciseModal({
           />
           <div className="gap-xs flex">
             {LOAD_UNITS.map((unit) => (
-              <PlainButton
+              <button
                 key={unit.value}
                 type="button"
                 onClick={() => setValue('load_unit', unit.value)}
@@ -369,7 +369,7 @@ export function WorkoutExerciseModal({
                 )}
               >
                 {unit.label}
-              </PlainButton>
+              </button>
             ))}
           </div>
         </div>
@@ -377,7 +377,7 @@ export function WorkoutExerciseModal({
 
       {/* Observações */}
       <div>
-        <PlainButton
+        <button
           type="button"
           onClick={() => setShowNotes((v) => !v)}
           className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
@@ -387,7 +387,7 @@ export function WorkoutExerciseModal({
             ? t('pages.workoutPlans.hideNotes', 'Ocultar observações')
             : t('pages.workoutPlans.showNotes', 'Adicionar observações')}
           {showNotes ? <ChevronUp className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-        </PlainButton>
+        </button>
         {showNotes && (
           <Textarea
             placeholder={t('pages.workoutPlans.notesPlaceholder')}

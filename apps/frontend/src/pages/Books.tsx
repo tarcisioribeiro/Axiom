@@ -55,7 +55,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -1070,7 +1069,7 @@ export default function Books() {
           (right-24 instead of right-6) so it doesn't sit under the global
           StudyTimer trigger, which anchors at bottom-6 right-6. */}
       {activeTab === 'books' && (
-        <PlainButton
+        <button
           onClick={() => setIsQuickCaptureOpen(true)}
           className={cn(
             'gap-sm bg-primary px-md text-primary-foreground fixed right-24 bottom-6 z-40 flex items-center rounded-full py-3 text-sm font-semibold shadow-lg transition-all hover:shadow-xl',
@@ -1082,7 +1081,7 @@ export default function Books() {
         >
           <CheckCircle className="h-4 w-4" />
           {t('pages.books.quickCapture.title')}
-        </PlainButton>
+        </button>
       )}
 
       {/* Quick Capture Dialog */}

@@ -9,7 +9,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Member, MemberFormData } from '@/types';
@@ -91,7 +90,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {(['M', 'F'] as const).map((sex) => (
-                <PlainButton
+                <button
                   key={sex}
                   type="button"
                   onClick={() => setValue('sex', sex)}
@@ -106,7 +105,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                   {sex === 'M'
                     ? t('pages.members.form.sexMale')
                     : t('pages.members.form.sexFemale')}
-                </PlainButton>
+                </button>
               ))}
             </div>
           </div>

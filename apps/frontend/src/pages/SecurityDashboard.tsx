@@ -241,7 +241,7 @@ function VaultSearch() {
                       </span>
                     </div>
                     {items.map((item) => (
-                      <PlainButton
+                      <button
                         key={`${item.type}-${item.id}`}
                         className="gap-sm px-md py-sm hover:bg-accent/50 flex w-full items-center text-left transition-colors"
                         onClick={() => handleSelect(item)}
@@ -253,7 +253,7 @@ function VaultSearch() {
                             {item.sublabel}
                           </p>
                         </div>
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 );
@@ -592,7 +592,7 @@ export default function SecurityDashboard() {
                     },
                   ] as const
                 ).map(({ label, count, icon: Icon, route, colorClass }) => (
-                  <PlainButton
+                  <button
                     key={route}
                     type="button"
                     onClick={() => void navigate(route)}
@@ -602,7 +602,7 @@ export default function SecurityDashboard() {
                     <span className="flex-1 text-sm">{label}</span>
                     <span className={`text-sm font-bold ${colorClass}`}>{count}</span>
                     <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
-                  </PlainButton>
+                  </button>
                 ))}
               </div>
             </CardContent>
