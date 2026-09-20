@@ -26,6 +26,20 @@ export function textOf(node: React.ReactNode): string {
   return '';
 }
 
+/**
+ * Texto do tooltip de um botão: só botões sem texto visível (ícone) têm tooltip,
+ * usando aria-label/title. `tooltip` explícito sempre vale; `false` desliga.
+ */
+export function buttonTooltipText(
+  tooltip: string | false | undefined,
+  fallback: string | undefined,
+  children: React.ReactNode
+): string | undefined {
+  if (tooltip === false) return undefined;
+  if (tooltip) return tooltip;
+  return textOf(children).trim() ? undefined : fallback || undefined;
+}
+
 interface HoverHandlers {
   onMouseEnter?: React.MouseEventHandler<never>;
   onMouseLeave?: React.MouseEventHandler<never>;

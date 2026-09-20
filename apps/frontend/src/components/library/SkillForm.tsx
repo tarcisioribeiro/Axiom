@@ -115,7 +115,7 @@ function ProficiencySelector({
   return (
     <div className="gap-sm grid grid-cols-5">
       {PROFICIENCY_LEVELS.map(({ value: lvl, dots }) => (
-        <PlainButton
+        <button
           key={lvl}
           type="button"
           onClick={() => onChange(lvl)}
@@ -149,7 +149,7 @@ function ProficiencySelector({
           >
             {t(`pages.skills.proficiency.${lvl}`)}
           </span>
-        </PlainButton>
+        </button>
       ))}
     </div>
   );
@@ -287,7 +287,7 @@ export function SkillForm({
           <Label>{t('pages.skills.form.statusLabel')}</Label>
           <div className="gap-sm flex">
             {STATUSES.map((s) => (
-              <PlainButton
+              <button
                 key={s}
                 type="button"
                 onClick={() => setValue('status', s)}
@@ -299,7 +299,7 @@ export function SkillForm({
                 )}
               >
                 {t(`pages.skills.status.${s}`)}
-              </PlainButton>
+              </button>
             ))}
           </div>
         </div>

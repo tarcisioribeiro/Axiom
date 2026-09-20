@@ -39,7 +39,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
@@ -147,7 +146,7 @@ function AuthorCard({
               {author.biography}
             </p>
             {hasBioOverflow && (
-              <PlainButton
+              <button
                 className="mt-xs gap-xs text-primary flex items-center text-xs hover:underline"
                 onClick={() => setBioExpanded((v) => !v)}
               >
@@ -160,7 +159,7 @@ function AuthorCard({
                     <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
                   </>
                 )}
-              </PlainButton>
+              </button>
             )}
           </div>
         )}

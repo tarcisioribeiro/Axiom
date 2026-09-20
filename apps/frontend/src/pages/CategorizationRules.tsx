@@ -21,7 +21,6 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -183,7 +182,7 @@ function RuleForm({
             </p>
           </div>
 
-          <PlainButton
+          <button
             type="button"
             onClick={() => setIsActive(!isActive)}
             className={`gap-sm p-sm flex w-full items-start rounded-lg border text-left transition ${
@@ -211,7 +210,7 @@ function RuleForm({
                   : t('pages.categorizationRules.form.statusInactive')}
               </p>
             </div>
-          </PlainButton>
+          </button>
         </div>
       </FormSection>
 

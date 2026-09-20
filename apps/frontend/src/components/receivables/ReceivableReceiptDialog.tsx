@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -137,7 +136,7 @@ export function ReceivableReceiptDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div className="flex overflow-hidden rounded-lg border">
-            <PlainButton
+            <button
               type="button"
               onClick={() => {
                 setScheduled(false);
@@ -151,8 +150,8 @@ export function ReceivableReceiptDialog({
             >
               <Wallet className="h-3.5 w-3.5" />
               {t('pages.receivables.receipt.receiveNow')}
-            </PlainButton>
-            <PlainButton
+            </button>
+            <button
               type="button"
               onClick={() => setScheduled(true)}
               className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
@@ -163,7 +162,7 @@ export function ReceivableReceiptDialog({
             >
               <CalendarClock className="h-3.5 w-3.5" />
               {t('pages.receivables.receipt.schedule')}
-            </PlainButton>
+            </button>
           </div>
 
           <div className="space-y-xs">

@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -241,7 +240,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {/* Modo: Pagar agora / Agendar */}
       {remaining > 0 && (
         <div className="flex overflow-hidden rounded-lg border">
-          <PlainButton
+          <button
             type="button"
             onClick={() => handleScheduledToggle(false)}
             className={`gap-xs py-sm flex flex-1 items-center justify-center text-sm transition-colors ${
@@ -252,8 +251,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           >
             <Wallet className="h-3.5 w-3.5" />
             {t('pages.payables.payment.payNow')}
-          </PlainButton>
-          <PlainButton
+          </button>
+          <button
             type="button"
             onClick={() => handleScheduledToggle(true)}
             className={`gap-xs py-sm flex flex-1 items-center justify-center border-l text-sm transition-colors ${
@@ -264,7 +263,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           >
             <CalendarClock className="h-3.5 w-3.5" />
             {t('pages.payables.payment.schedule')}
-          </PlainButton>
+          </button>
         </div>
       )}
 

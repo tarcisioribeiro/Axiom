@@ -438,7 +438,7 @@ export default function LibraryDashboard() {
           )}
 
           {/* Study Timer */}
-          <PlainButton
+          <button
             onClick={() => setTimerOpen((v) => !v)}
             className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
           >
@@ -448,16 +448,16 @@ export default function LibraryDashboard() {
             ) : (
               t('pages.libraryDashboard.studyTimer')
             )}
-          </PlainButton>
+          </button>
 
-          <PlainButton
+          <button
             onClick={exportCSV}
             className="gap-sm py-sm text-muted-foreground hover:bg-muted flex items-center rounded-md border px-3 text-sm"
             title={t('pages.libraryDashboard.exportCSVTitle')}
           >
             <Download className="h-4 w-4" />
             {t('pages.libraryDashboard.exportCSV')}
-          </PlainButton>
+          </button>
         </div>
       </div>
 
@@ -498,7 +498,7 @@ export default function LibraryDashboard() {
             </div>
           </div>
           <div className="gap-sm flex">
-            <PlainButton
+            <button
               onClick={() => {
                 setTimerMode('study');
                 setTimerRunning(false);
@@ -507,8 +507,8 @@ export default function LibraryDashboard() {
               className={`px-sm py-xs rounded-md text-xs ${timerMode === 'study' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               25 min
-            </PlainButton>
-            <PlainButton
+            </button>
+            <button
               onClick={() => {
                 setTimerMode('break');
                 setTimerRunning(false);
@@ -517,7 +517,7 @@ export default function LibraryDashboard() {
               className={`px-sm py-xs rounded-md text-xs ${timerMode === 'break' ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}`}
             >
               5 min
-            </PlainButton>
+            </button>
           </div>
         </div>
       )}

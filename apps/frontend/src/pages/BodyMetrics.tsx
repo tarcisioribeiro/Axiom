@@ -62,7 +62,6 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -906,7 +905,7 @@ export default function BodyMetrics() {
                       {chartMetrics.map(({ key, labelKey, color, unit }) => {
                         const isActive = activeMetrics.has(key);
                         return (
-                          <PlainButton
+                          <button
                             key={key}
                             onClick={() => toggleMetric(key)}
                             className={cn(
@@ -930,7 +929,7 @@ export default function BodyMetrics() {
                             />
                             {t(`pages.bodyMetrics.${labelKey}`)}
                             {unit ? ` (${unit})` : ''}
-                          </PlainButton>
+                          </button>
                         );
                       })}
                     </div>

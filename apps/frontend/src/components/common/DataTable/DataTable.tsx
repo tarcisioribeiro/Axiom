@@ -42,7 +42,6 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 import { EmptyState } from '../EmptyState';
@@ -237,14 +236,14 @@ export function DataTable<T>({
                     }`}
                   >
                     {column.sortable && sorting ? (
-                      <PlainButton
+                      <button
                         type="button"
                         className="gap-xs hover:text-foreground/70 focus:ring-ring inline-flex items-center rounded focus:ring-2 focus:outline-none"
                         onClick={() => sorting.onSort(column.key)}
                       >
                         {column.label}
                         <span aria-hidden="true">{renderSortIcon(column.key)}</span>
-                      </PlainButton>
+                      </button>
                     ) : (
                       column.label
                     )}

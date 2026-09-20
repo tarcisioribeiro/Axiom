@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
 import { useAuthStore } from '@/stores/auth-store';
@@ -85,7 +84,7 @@ export function RestartModal({
           </div>
         ) : (
           <div className="py-sm grid grid-cols-2 gap-3">
-            <PlainButton
+            <button
               type="button"
               onClick={() => setMode('docker')}
               className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
@@ -99,8 +98,8 @@ export function RestartModal({
               <span className="text-xs font-normal opacity-70">
                 {t('pages.adminConfig.restartModal.dockerDesc')}
               </span>
-            </PlainButton>
-            <PlainButton
+            </button>
+            <button
               type="button"
               onClick={() => setMode('kubernetes')}
               className={`gap-sm p-md flex flex-col items-center rounded-lg border-2 text-sm font-medium transition-colors ${
@@ -114,7 +113,7 @@ export function RestartModal({
               <span className="text-xs font-normal opacity-70">
                 {t('pages.adminConfig.restartModal.kubernetesDesc')}
               </span>
-            </PlainButton>
+            </button>
           </div>
         )}
 

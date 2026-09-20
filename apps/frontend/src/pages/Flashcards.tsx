@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -291,7 +290,7 @@ export default function Flashcards() {
                       </p>
                       <div className="gap-sm grid grid-cols-3 sm:grid-cols-6">
                         {([0, 1, 2, 3, 4, 5] as const).map((r) => (
-                          <PlainButton
+                          <button
                             key={r}
                             type="button"
                             onClick={() => handleRating(r)}
@@ -302,7 +301,7 @@ export default function Flashcards() {
                             )}
                           >
                             {t(`pages.flashcards.rating.${r}`)}
-                          </PlainButton>
+                          </button>
                         ))}
                       </div>
                     </div>

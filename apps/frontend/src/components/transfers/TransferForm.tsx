@@ -211,7 +211,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
             const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
             return (
-              <PlainButton
+              <button
                 key={k}
                 type="button"
                 onClick={() => setValue('category', k)}
@@ -223,7 +223,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               >
                 <Icon className="h-5 w-5" />
                 <span>{v}</span>
-              </PlainButton>
+              </button>
             );
           })}
         </div>

@@ -61,7 +61,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -946,7 +945,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Nível 3: Análise Avançada (colapsável, lazy) ────────────────── */}
-      <PlainButton
+      <button
         type="button"
         onClick={() => setAdvancedAnalysisOpen((v) => !v)}
         className="py-sm flex w-full items-center gap-3 text-left"
@@ -963,7 +962,7 @@ export default function Dashboard() {
           />
         </span>
         <div className="bg-border h-px flex-1" />
-      </PlainButton>
+      </button>
 
       <AnimatePresence initial={false}>
         {advancedAnalysisOpen && (
@@ -1578,7 +1577,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* ── Nível 2: Análise Mensal (colapsável) ─────────────────────────── */}
-      <PlainButton
+      <button
         type="button"
         onClick={() => setMonthlyAnalysisOpen((v) => !v)}
         className="py-sm flex w-full items-center gap-3 text-left"
@@ -1595,7 +1594,7 @@ export default function Dashboard() {
           />
         </span>
         <div className="bg-border h-px flex-1" />
-      </PlainButton>
+      </button>
 
       <AnimatePresence initial={false}>
         {monthlyAnalysisOpen && (

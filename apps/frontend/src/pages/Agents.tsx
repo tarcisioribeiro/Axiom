@@ -663,13 +663,13 @@ export default function Agents() {
 
           <div className="gap-sm flex flex-shrink-0 items-center">
             {conversationStarted && (
-              <PlainButton
+              <button
                 onClick={handleChangeAgent}
                 title={t('pages.agents.changeAgent')}
                 className="border-border bg-background px-sm py-xs text-muted-foreground hover:bg-muted rounded-lg border text-xs"
               >
                 {t('pages.agents.changeAgent')}
-              </PlainButton>
+              </button>
             )}
             <PlainButton
               onClick={() => setShowHistory((v) => !v)}
@@ -759,14 +759,14 @@ export default function Agents() {
                       returnObjects: true,
                     }) as string[]) ?? []
                   ).map((q) => (
-                    <PlainButton
+                    <button
                       key={q}
                       type="button"
                       onClick={() => setQuery(q)}
                       className="border-border bg-muted px-sm py-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full border text-xs transition-colors"
                     >
                       {q}
-                    </PlainButton>
+                    </button>
                   ))}
                 </div>
               )}

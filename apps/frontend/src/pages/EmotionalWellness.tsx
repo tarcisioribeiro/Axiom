@@ -31,7 +31,6 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -464,7 +463,7 @@ function SelfEsteemTab() {
                   </p>
                   <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
                     {ROSENBERG_OPTIONS.map((opt) => (
-                      <PlainButton
+                      <button
                         key={opt.value}
                         onClick={() =>
                           setAnswers((prev) => ({ ...prev, [`q${i + 1}`]: opt.value }))
@@ -477,7 +476,7 @@ function SelfEsteemTab() {
                         )}
                       >
                         {opt.label}
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 </CardContent>
@@ -952,7 +951,7 @@ function CrisisTab() {
           </p>
           <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
             {EMOTIONAL_STATES.map((e) => (
-              <PlainButton
+              <button
                 key={e.value}
                 onClick={() => setEmotionalState(e.value)}
                 className={cn(
@@ -963,7 +962,7 @@ function CrisisTab() {
                 )}
               >
                 {e.label}
-              </PlainButton>
+              </button>
             ))}
           </div>
           {emotionalState === 'other' && (
@@ -982,7 +981,7 @@ function CrisisTab() {
           </p>
           <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
             {IMPULSE_TYPES.map((t) => (
-              <PlainButton
+              <button
                 key={t.value}
                 onClick={() => setImpulseType(t.value)}
                 className={cn(
@@ -993,7 +992,7 @@ function CrisisTab() {
                 )}
               >
                 {t.label}
-              </PlainButton>
+              </button>
             ))}
           </div>
           {impulseType === 'other' && (
@@ -1168,7 +1167,7 @@ function LibraryTab() {
     <div className="space-y-md">
       <div className="-mx-xs gap-sm px-xs pb-xs flex overflow-x-auto">
         {categories.map((c) => (
-          <PlainButton
+          <button
             key={c.value}
             onClick={() => setSelectedCategory(c.value)}
             className={cn(
@@ -1179,7 +1178,7 @@ function LibraryTab() {
             )}
           >
             {c.label}
-          </PlainButton>
+          </button>
         ))}
       </div>
 

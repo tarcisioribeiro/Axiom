@@ -178,7 +178,7 @@ function PomodoroBar() {
       </div>
       <div className="gap-xs flex items-center rounded-md border p-0.5">
         {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
-          <PlainButton
+          <button
             key={m}
             type="button"
             onClick={() => switchMode(m)}
@@ -190,7 +190,7 @@ function PomodoroBar() {
             )}
           >
             {t(`pages.todayTasks.pomodoroMode.${m}`)}
-          </PlainButton>
+          </button>
         ))}
       </div>
       <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>

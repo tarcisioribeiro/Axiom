@@ -263,7 +263,7 @@ export function StudyTimer() {
               {/* Mode selector */}
               <div className="gap-xs flex rounded-md border p-0.5">
                 {(['reading', 'course'] as TimerMode[]).map((m) => (
-                  <PlainButton
+                  <button
                     key={m}
                     type="button"
                     disabled={isActive}
@@ -281,7 +281,7 @@ export function StudyTimer() {
                         ? 'pages.libraryDashboard.studyTimerReading'
                         : 'pages.libraryDashboard.studyTimerCourse'
                     )}
-                  </PlainButton>
+                  </button>
                 ))}
               </div>
 
@@ -378,7 +378,7 @@ export function StudyTimer() {
         )}
 
         {/* FAB button */}
-        <PlainButton
+        <button
           onClick={() => setIsOpen((o) => !o)}
           className="bg-category-intellect hoverable:hover:scale-105 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95 dark:text-black"
           aria-label={t('pages.libraryDashboard.studyTimerTitle')}
@@ -390,7 +390,7 @@ export function StudyTimer() {
           ) : (
             <BookOpen className="h-5 w-5" />
           )}
-        </PlainButton>
+        </button>
       </div>
 
       {/* Confirmation dialog */}
