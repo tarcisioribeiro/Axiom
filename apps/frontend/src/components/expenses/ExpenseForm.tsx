@@ -628,7 +628,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <Sparkles className="text-primary h-3.5 w-3.5 shrink-0" />
                 <span className="text-muted-foreground">
                   {t('pages.expenses.form.aiSuggested')}:{' '}
-                  <PlainButton
+                  <button
                     type="button"
                     className="text-primary font-medium underline-offset-2 hover:underline"
                     onClick={() => {
@@ -637,7 +637,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     }}
                   >
                     {translate('expenseCategories', aiSuggestion.category)}
-                  </PlainButton>
+                  </button>
                 </span>
                 <PlainButton
                   type="button"
@@ -700,7 +700,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {/* Seção: Vínculos (colapsável) */}
       {hasEligibleLinks && (
         <div className="space-y-md">
-          <PlainButton
+          <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
             className="gap-xs flex w-full items-center text-left"
@@ -715,7 +715,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             ) : (
               <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
-          </PlainButton>
+          </button>
 
           {linksOpen && (
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">

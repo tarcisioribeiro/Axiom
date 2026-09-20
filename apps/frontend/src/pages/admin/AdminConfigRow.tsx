@@ -144,7 +144,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                   </PlainButton>
                 )}
               </div>
-              <PlainButton
+              <button
                 onClick={handleSave}
                 disabled={mutation.isPending}
                 className="gap-xs bg-primary py-sm text-primary-foreground hover:bg-primary/90 flex items-center rounded-lg px-3 text-sm font-medium disabled:opacity-50"
@@ -155,7 +155,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                   <Check className="h-3.5 w-3.5" />
                 )}
                 {t('pages.adminConfig.save')}
-              </PlainButton>
+              </button>
               <PlainButton
                 onClick={() => setEditing(false)}
                 className="border-border p-sm text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg border"
@@ -214,7 +214,7 @@ export function CategorySection({
 
   return (
     <div className="mb-md border-border bg-card overflow-hidden rounded-lg border">
-      <PlainButton
+      <button
         onClick={() => setOpen((o) => !o)}
         className="px-md hover:bg-accent/50 flex w-full items-center justify-between py-3"
       >
@@ -231,7 +231,7 @@ export function CategorySection({
         ) : (
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         )}
-      </PlainButton>
+      </button>
       {open && (
         <div className="border-border border-t">
           {configs.map((cfg) => (

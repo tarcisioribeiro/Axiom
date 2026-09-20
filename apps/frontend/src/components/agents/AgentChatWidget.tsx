@@ -192,13 +192,13 @@ export function AgentChatWidget() {
                   </p>
                   <div className="space-y-xs">
                     {suggestedQuestions.map((q) => (
-                      <PlainButton
+                      <button
                         key={q}
                         onClick={() => void handleSend(q)}
                         className="bg-muted/40 px-md py-sm text-muted-foreground hover:bg-muted/70 hover:text-foreground w-full rounded-lg border text-left text-xs transition-colors"
                       >
                         {q}
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 </div>

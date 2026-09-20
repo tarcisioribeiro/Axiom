@@ -36,7 +36,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -694,12 +693,12 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                   <CardContent className="space-y-sm pt-md">
                     <div className="flex items-center justify-between">
                       <div>
-                        <PlainButton
+                        <button
                           className="cursor-pointer text-left font-semibold hover:underline"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {card.name}
-                        </PlainButton>
+                        </button>
                         {cardNumber && (
                           <p className="text-muted-foreground font-mono text-xs">
                             {cardNumber}

@@ -74,13 +74,13 @@ export function StarRating({
         </PlainButton>
       ))}
       {value !== null && !disabled && (
-        <PlainButton
+        <button
           type="button"
           onClick={() => onChange?.(null)}
           className="ml-sm hover:text-destructive text-xs transition-colors"
         >
           Limpar
-        </PlainButton>
+        </button>
       )}
     </div>
   );

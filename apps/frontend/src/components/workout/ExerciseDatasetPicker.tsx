@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiClient } from '@/services/api-client';
 import { exerciseService } from '@/services/workout-service';
@@ -161,7 +160,7 @@ function ExerciseDatasetPickerItem({
   const src = (hovered && entry.gif_url) || entry.thumbnail_url;
 
   return (
-    <PlainButton
+    <button
       type="button"
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
@@ -185,6 +184,6 @@ function ExerciseDatasetPickerItem({
       <span className="text-foreground line-clamp-2 text-center text-xs capitalize">
         {entry.name}
       </span>
-    </PlainButton>
+    </button>
   );
 }

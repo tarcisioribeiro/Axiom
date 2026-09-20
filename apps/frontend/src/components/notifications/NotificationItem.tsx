@@ -8,7 +8,6 @@ import {
   Target,
 } from 'lucide-react';
 
-import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/types';
 
@@ -55,7 +54,7 @@ export function NotificationItem({
   const iconColor = colorMap[notification.notification_type] || 'text-muted-foreground';
 
   return (
-    <PlainButton
+    <button
       className={cn(
         'px-md hover:bg-accent flex w-full items-start gap-3 rounded-md py-3 text-left transition-colors',
         !notification.is_read && 'bg-accent/50'
@@ -86,6 +85,6 @@ export function NotificationItem({
           </p>
         )}
       </div>
-    </PlainButton>
+    </button>
   );
 }

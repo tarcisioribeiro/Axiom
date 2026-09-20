@@ -357,7 +357,7 @@ export function BookForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
-                <PlainButton
+                <button
                   key={value}
                   type="button"
                   onClick={() => setValue('media_type', value)}
@@ -370,7 +370,7 @@ export function BookForm({
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {t(`pages.books.mediaTypes.${translationKey}`)}
-                </PlainButton>
+                </button>
               ))}
             </div>
             {errors.media_type && (
@@ -673,7 +673,7 @@ export function BookForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {READ_STATUS_VALUES.map((value) => (
-                <PlainButton
+                <button
                   key={value}
                   type="button"
                   onClick={() => setValue('read_status', value)}
@@ -691,7 +691,7 @@ export function BookForm({
                   <span className="hidden sm:inline">
                     {t(`pages.books.readStatus.${value}`)}
                   </span>
-                </PlainButton>
+                </button>
               ))}
             </div>
           </div>

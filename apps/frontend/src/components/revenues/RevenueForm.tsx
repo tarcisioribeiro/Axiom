@@ -20,7 +20,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -331,7 +330,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
       {/* Seção: Vínculos (colapsável) */}
       {hasEligibleLinks && (
         <div className="space-y-md">
-          <PlainButton
+          <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
             className="gap-xs flex w-full items-center text-left"
@@ -346,7 +345,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             ) : (
               <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
-          </PlainButton>
+          </button>
 
           {linksOpen && (
             <div className="space-y-sm">

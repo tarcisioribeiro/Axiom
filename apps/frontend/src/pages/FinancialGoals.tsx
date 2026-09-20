@@ -40,7 +40,6 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -682,7 +681,7 @@ export default function FinancialGoals() {
                   </Label>
                   <div className="gap-xs grid grid-cols-3">
                     {CATEGORIES.map((cat) => (
-                      <PlainButton
+                      <button
                         key={cat.value}
                         type="button"
                         onClick={() =>
@@ -705,7 +704,7 @@ export default function FinancialGoals() {
                         <span className="truncate">
                           {t(`pages.financialGoals.categories.${cat.value}`)}
                         </span>
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -840,7 +839,7 @@ export default function FinancialGoals() {
                       vaults.map((vault) => {
                         const isSelected = formData.vaults.includes(vault.id);
                         return (
-                          <PlainButton
+                          <button
                             key={vault.id}
                             type="button"
                             onClick={() => {
@@ -868,7 +867,7 @@ export default function FinancialGoals() {
                             <span className="text-muted-foreground text-xs">
                               {formatCurrency(parseFloat(vault.current_balance))}
                             </span>
-                          </PlainButton>
+                          </button>
                         );
                       })
                     )}
@@ -891,7 +890,7 @@ export default function FinancialGoals() {
                   />
                 </div>
 
-                <PlainButton
+                <button
                   type="button"
                   onClick={() =>
                     setFormData({ ...formData, is_active: !formData.is_active })
@@ -921,7 +920,7 @@ export default function FinancialGoals() {
                         : t('pages.financialGoals.inactiveGoalDesc')}
                     </p>
                   </div>
-                </PlainButton>
+                </button>
               </div>
             </FormSection>
           </div>

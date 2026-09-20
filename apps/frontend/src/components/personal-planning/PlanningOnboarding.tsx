@@ -146,7 +146,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   const Icon = TEMPLATE_ICONS[template.id] ?? CheckCircle2;
                   const isSelected = selectedTemplateId === template.id;
                   return (
-                    <PlainButton
+                    <button
                       key={template.id}
                       onClick={() =>
                         setSelectedTemplateId(isSelected ? null : template.id)
@@ -183,10 +183,10 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                           <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />
                         )}
                       </div>
-                    </PlainButton>
+                    </button>
                   );
                 })}
-                <PlainButton
+                <button
                   onClick={() => setSelectedTemplateId(null)}
                   className={`p-md text-muted-foreground w-full rounded-xl border-2 text-left text-sm transition-colors ${
                     selectedTemplateId === null
@@ -197,7 +197,7 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
                   {t('pages.planningOnboarding.skipTemplate', {
                     defaultValue: 'Começar sem template — criar manualmente',
                   })}
-                </PlainButton>
+                </button>
               </div>
             )}
           </div>

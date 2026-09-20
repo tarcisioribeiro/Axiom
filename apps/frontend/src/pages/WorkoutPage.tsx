@@ -14,12 +14,19 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   Clock,
   Dumbbell,
@@ -129,6 +136,8 @@ interface ExerciseCatalogFormValues {
   description: string;
 }
 
+const SESSIONS_PAGE_SIZE = 50;
+
 function groupSessionsByWeek(sessions: WorkoutSession[]) {
   const now = new Date();
   const day = now.getDay();
@@ -216,9 +225,18 @@ export default function WorkoutPage() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const [sessionsPage, setSessionsPage] = useState(1);
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
-    queryKey: ['workout-sessions'],
-    queryFn: () => workoutSessionService.getAll(),
+    queryKey: ['workout-sessions', 'page', sessionsPage],
+    queryFn: () => workoutSessionService.getAllPaginated({ page: sessionsPage }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: keepPreviousData,
+  });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const { data: todaySessionsData, isLoading: todaySessionsLoading } = useQuery({
+    queryKey: ['workout-sessions', 'today', todayStr],
+    queryFn: () => workoutSessionService.getByDateRange(todayStr, todayStr),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -235,7 +253,13 @@ export default function WorkoutPage() {
   });
 
   const plans = plansData ?? [];
-  const sessions = sessionsData ?? [];
+  const sessions = sessionsData?.results ?? [];
+  const sessionsTotal = sessionsData?.count ?? 0;
+  const sessionsTotalPages = Math.max(1, Math.ceil(sessionsTotal / SESSIONS_PAGE_SIZE));
+  // Página ficou vazia (ex.: última sessão excluída) → volta para a última existente
+  if (sessionsData && sessionsPage > sessionsTotalPages) {
+    setSessionsPage(sessionsTotalPages);
+  }
   const allDaysList = allDays ?? [];
 
   const filteredCatalogExercises = useMemo(() => {
@@ -870,9 +894,9 @@ export default function WorkoutPage() {
           <TabsContent value="today" className="mt-0 flex-1">
             <TodayPlanTab
               activePlans={activePlans}
-              sessions={sessions}
+              sessions={todaySessionsData ?? []}
               plansLoading={plansLoading}
-              sessionsLoading={sessionsLoading}
+              sessionsLoading={todaySessionsLoading}
               onStartSession={() => setDialog({ type: 'new-session' })}
               onEditSession={(s) => setDialog({ type: 'edit-session', session: s })}
               onDeleteSession={handleDeleteSession}
@@ -910,12 +934,48 @@ export default function WorkoutPage() {
                 }}
               />
             ) : (
-              <SessionsGrouped
-                sessions={sessions}
-                onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
-                onDelete={handleDeleteSession}
-                t={t}
-              />
+              <>
+                <SessionsGrouped
+                  sessions={sessions}
+                  onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
+                  onDelete={handleDeleteSession}
+                  t={t}
+                />
+                <div className="mt-md flex items-center justify-between">
+                  <p className="text-muted-foreground text-sm">
+                    {t('common.table.showing', {
+                      count: sessions.length,
+                      total: sessionsTotal,
+                    })}
+                  </p>
+                  <div className="gap-sm flex items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label={t('common.table.previousPage')}
+                      disabled={sessionsPage <= 1}
+                      onClick={() => setSessionsPage((p) => p - 1)}
+                    >
+                      <ChevronLeft />
+                    </Button>
+                    <span className="text-muted-foreground text-sm" aria-live="polite">
+                      {t('common.table.pageOf', {
+                        page: sessionsPage,
+                        totalPages: sessionsTotalPages,
+                      })}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label={t('common.table.nextPage')}
+                      disabled={sessionsPage >= sessionsTotalPages}
+                      onClick={() => setSessionsPage((p) => p + 1)}
+                    >
+                      <ChevronRight />
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </TabsContent>
 
@@ -1019,7 +1079,7 @@ export default function WorkoutPage() {
                           </p>
                           <div className="gap-sm pb-xs flex overflow-x-auto">
                             {activePlan.days?.map((day) => (
-                              <PlainButton
+                              <button
                                 key={day.id}
                                 type="button"
                                 onClick={() =>
@@ -1063,9 +1123,9 @@ export default function WorkoutPage() {
                                   {day.exercise_count}{' '}
                                   {t('pages.workoutPlans.exercises')}
                                 </span>
-                              </PlainButton>
+                              </button>
                             ))}
-                            <PlainButton
+                            <button
                               type="button"
                               onClick={() =>
                                 setDialog({ type: 'new-day', planId: activePlan.id })
@@ -1078,7 +1138,7 @@ export default function WorkoutPage() {
                               <span className="text-muted-foreground text-xs">
                                 {t('pages.workoutPlans.newDayBtn')}
                               </span>
-                            </PlainButton>
+                            </button>
                           </div>
 
                           {/* Exercícios da divisão selecionada */}
@@ -1139,7 +1199,7 @@ export default function WorkoutPage() {
                                       {t('pages.workoutPlans.noExercises')}
                                     </p>
                                   )}
-                                  <PlainButton
+                                  <button
                                     type="button"
                                     onClick={() =>
                                       setDialog({ type: 'add-exercise', day })
@@ -1148,7 +1208,7 @@ export default function WorkoutPage() {
                                   >
                                     <Plus className="h-3.5 w-3.5" />
                                     {t('pages.workoutPlans.addExerciseBtn')}
-                                  </PlainButton>
+                                  </button>
                                 </div>
                               );
                             })()}
@@ -1484,7 +1544,7 @@ export default function WorkoutPage() {
                   <div className="gap-sm flex">
                     {(['iniciante', 'intermediário', 'avançado'] as const).map(
                       (lvl) => (
-                        <PlainButton
+                        <button
                           key={lvl}
                           type="button"
                           onClick={() => setAiForm((f) => ({ ...f, level: lvl }))}
@@ -1497,7 +1557,7 @@ export default function WorkoutPage() {
                           )}
                         >
                           {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                        </PlainButton>
+                        </button>
                       )
                     )}
                   </div>
@@ -1519,7 +1579,7 @@ export default function WorkoutPage() {
                   <Label>Dias por semana: {aiForm.days_per_week}</Label>
                   <div className="gap-xs flex">
                     {[2, 3, 4, 5, 6].map((d) => (
-                      <PlainButton
+                      <button
                         key={d}
                         type="button"
                         onClick={() => setAiForm((f) => ({ ...f, days_per_week: d }))}
@@ -1531,7 +1591,7 @@ export default function WorkoutPage() {
                         )}
                       >
                         {d}
-                      </PlainButton>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1992,7 +2052,7 @@ function ExerciseCatalogForm({
             {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
               const label = t(`pages.workoutPlans.muscleChips.${key}`);
               return (
-                <PlainButton
+                <button
                   key={key}
                   type="button"
                   onClick={() => toggleChip(label)}
@@ -2004,7 +2064,7 @@ function ExerciseCatalogForm({
                   )}
                 >
                   {label}
-                </PlainButton>
+                </button>
               );
             })}
           </div>
@@ -2260,7 +2320,7 @@ function InactivePlanRow({
   return (
     <div className="border-border overflow-hidden rounded-lg border">
       <div className="gap-sm bg-card px-md py-sm flex items-center">
-        <PlainButton
+        <button
           type="button"
           className="gap-sm flex min-w-0 flex-1 items-center text-left"
           onClick={onToggle}
@@ -2296,7 +2356,7 @@ function InactivePlanRow({
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </div>
-        </PlainButton>
+        </button>
         <div className="ml-sm gap-xs flex shrink-0 items-center">
           <Badge variant="secondary" className="text-xs">
             {t('pages.workoutPlans.inactive')}
@@ -2338,7 +2398,7 @@ function InactivePlanRow({
                   className="border-border overflow-hidden rounded-lg border"
                 >
                   <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
-                    <PlainButton
+                    <button
                       type="button"
                       className="gap-xs flex min-w-0 flex-1 items-center text-left"
                       onClick={() => onToggleDay(day.id)}
@@ -2352,7 +2412,7 @@ function InactivePlanRow({
                           — {day.muscle_groups}
                         </span>
                       )}
-                    </PlainButton>
+                    </button>
                     <div className="gap-xs flex shrink-0 items-center">
                       <span className="text-muted-foreground text-xs">
                         {day.exercise_count} {t('pages.workoutPlans.exercises')}
@@ -2384,14 +2444,14 @@ function InactivePlanRow({
                           onDelete={onDeleteExercise}
                         />
                       )}
-                      <PlainButton
+                      <button
                         type="button"
                         onClick={() => onAddExercise(day)}
                         className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.workoutPlans.addExerciseBtn')}
-                      </PlainButton>
+                      </button>
                     </div>
                   )}
                 </div>

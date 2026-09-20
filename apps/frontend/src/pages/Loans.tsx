@@ -43,7 +43,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { getLoanStatusLabel, translate } from '@/config/constants';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -255,7 +254,7 @@ export default function Loans() {
                 { key: 'creditor', icon: Building2 },
               ] as { key: LoanRole; icon: IconComponent }[]
             ).map(({ key, icon: Icon }) => (
-              <PlainButton
+              <button
                 key={key}
                 type="button"
                 onClick={() => setRoleFilter(key)}
@@ -268,7 +267,7 @@ export default function Loans() {
               >
                 <Icon className="h-4 w-4" />
                 {t(`pages.loans.filter.${key}`)}
-              </PlainButton>
+              </button>
             ))}
           </div>
         )}

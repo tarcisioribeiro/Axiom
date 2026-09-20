@@ -10,7 +10,6 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -231,7 +230,7 @@ export const FixedExpenseForm = ({
                     ? t('pages.fixedExpenses.form.paymentTypeAccount')
                     : t('pages.fixedExpenses.form.paymentTypeCreditCard');
                 return (
-                  <PlainButton
+                  <button
                     key={type}
                     type="button"
                     onClick={() => setPaymentType(type)}
@@ -244,7 +243,7 @@ export const FixedExpenseForm = ({
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {label}
-                  </PlainButton>
+                  </button>
                 );
               })}
             </div>

@@ -114,7 +114,7 @@ export default function Login() {
               </Button>
             </form>
             <div className="mt-md text-center">
-              <PlainButton
+              <button
                 type="button"
                 onClick={() => {
                   useAuthStore.setState({
@@ -127,7 +127,7 @@ export default function Login() {
                 className="text-muted-foreground hover:text-primary text-sm hover:underline"
               >
                 {t('auth.twoFactor.back', { defaultValue: '← Voltar ao login' })}
-              </PlainButton>
+              </button>
             </div>
           </CardContent>
         </Card>

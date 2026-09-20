@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -165,7 +164,7 @@ export function StoredAccountForm({
               {t('pages.storedAccounts.form.institutionLabel')}
             </Label>
             <div className="relative">
-              <PlainButton
+              <button
                 type="button"
                 className="border-input bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2"
                 onClick={() => setShowBankDropdown((v) => !v)}
@@ -189,7 +188,7 @@ export function StoredAccountForm({
                     </span>
                   );
                 })()}
-              </PlainButton>
+              </button>
 
               {showBankDropdown && (
                 <div className="border-border bg-popover absolute z-50 mt-1 w-full rounded-md border shadow-md">
@@ -206,7 +205,7 @@ export function StoredAccountForm({
                     {filteredInstitutions.map((inst) => {
                       const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
                       return (
-                        <PlainButton
+                        <button
                           key={inst.value}
                           type="button"
                           className="px-md py-sm hover:bg-muted flex w-full items-center gap-2 text-sm"
@@ -224,7 +223,7 @@ export function StoredAccountForm({
                               {inst.ispb}
                             </span>
                           )}
-                        </PlainButton>
+                        </button>
                       );
                     })}
                     {filteredInstitutions.length === 0 && (

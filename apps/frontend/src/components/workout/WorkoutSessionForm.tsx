@@ -180,7 +180,7 @@ export function WorkoutSessionForm({
       const day = workoutDays.find((d) => String(d.id) === selectedDayId);
       if (day?.exercises && day.exercises.length > 0) {
         const preloaded: SessionExerciseValues[] = day.exercises.map((ex, idx) => ({
-          exercise: ex.exercise,
+          exercise: ex.id,
           exercise_name: ex.name,
           gif_url: ex.gif_url,
           thumbnail_url: ex.thumbnail_url,

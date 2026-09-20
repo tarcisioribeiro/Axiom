@@ -82,14 +82,14 @@ export default function AdminLogs() {
         }
         icon={<ScrollText />}
         actions={
-          <PlainButton
+          <button
             onClick={() => void refetch()}
             disabled={isLoading}
             className="gap-sm border-border bg-card py-sm text-foreground hover:bg-accent flex items-center rounded-lg border px-3 text-sm font-medium disabled:opacity-50"
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
             {t('pages.adminLogs.refresh')}
-          </PlainButton>
+          </button>
         }
       />
 
@@ -101,12 +101,12 @@ export default function AdminLogs() {
             {t('pages.adminLogs.filters')}
           </span>
           {hasFilters && (
-            <PlainButton
+            <button
               onClick={clearFilters}
               className="gap-xs text-muted-foreground hover:text-foreground ml-auto flex items-center text-xs"
             >
               <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
-            </PlainButton>
+            </button>
           )}
         </div>
         <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-4">
@@ -143,12 +143,12 @@ export default function AdminLogs() {
             clearable
           />
         </div>
-        <PlainButton
+        <button
           onClick={applyFilters}
           className="bg-primary px-md py-sm text-primary-foreground hover:bg-primary/90 mt-3 rounded-lg text-sm font-medium"
         >
           {t('pages.adminLogs.applyFilters')}
-        </PlainButton>
+        </button>
       </div>
 
       {/* Table */}

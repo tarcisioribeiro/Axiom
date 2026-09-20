@@ -263,7 +263,7 @@ function ModuleItem({
       {/* Bulk action bar */}
       {lessons.length > 0 && (
         <div className="mt-sm gap-sm flex items-center justify-between">
-          <PlainButton
+          <button
             type="button"
             className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs"
             onClick={toggleSelectAll}
@@ -274,7 +274,7 @@ function ModuleItem({
               <Square className="h-3.5 w-3.5" />
             )}
             {t('pages.courses.lessons.selectAll')}
-          </PlainButton>
+          </button>
           {selectedIds.size > 0 && (
             <div className="gap-xs flex items-center">
               <span className="text-muted-foreground text-xs">
@@ -326,7 +326,7 @@ function ModuleItem({
                 <Square className="text-muted-foreground/40 hover:text-muted-foreground h-4 w-4" />
               )}
             </PlainButton>
-            <PlainButton
+            <button
               type="button"
               className="gap-sm flex min-w-0 flex-1 items-center"
               onClick={() => toggleLesson.mutate(lesson.id)}
@@ -345,7 +345,7 @@ function ModuleItem({
               >
                 {lesson.title}
               </span>
-            </PlainButton>
+            </button>
             <Button
               size="icon"
               variant="ghost"
@@ -407,14 +407,14 @@ function ModuleItem({
             </Button>
           </div>
         ) : (
-          <PlainButton
+          <button
             type="button"
             className="gap-xs px-sm py-xs text-muted-foreground hover:bg-category-intellect/5 hover:text-category-intellect flex w-full items-center rounded text-xs transition-colors"
             onClick={() => setShowAddLesson(true)}
           >
             <Plus className="h-3 w-3" />
             {t('pages.courses.lessons.newBtn')}
-          </PlainButton>
+          </button>
         )}
       </div>
     </div>
@@ -1089,14 +1089,14 @@ export function CourseDetailModal({
                       <p className="text-sm font-medium">
                         {t('pages.courses.certificate.fileLabel')}
                       </p>
-                      <PlainButton
+                      <button
                         type="button"
                         onClick={() => setShowCertPreview(true)}
                         className="gap-xs text-primary inline-flex items-center text-xs underline-offset-2 hover:underline"
                       >
                         <ExternalLink className="h-3 w-3" />
                         {t('pages.courses.certificate.viewLink')}
-                      </PlainButton>
+                      </button>
                     </div>
                     <div className="gap-xs flex shrink-0">
                       <PlainButton

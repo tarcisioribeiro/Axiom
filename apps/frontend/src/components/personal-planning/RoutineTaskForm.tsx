@@ -26,7 +26,6 @@ import { FormSection } from '@/components/ui/form-section';
 import { IconPicker } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -363,7 +362,7 @@ export function RoutineTaskForm({
             </Label>
             <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
               {PERIODICITY_CHOICES.map((period) => (
-                <PlainButton
+                <button
                   key={period.value}
                   type="button"
                   onClick={() => setValue('periodicity', period.value)}
@@ -381,7 +380,7 @@ export function RoutineTaskForm({
                   <span className="hidden sm:inline">
                     {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
                   </span>
-                </PlainButton>
+                </button>
               ))}
             </div>
             {frequencyPreview() && (
@@ -404,7 +403,7 @@ export function RoutineTaskForm({
                 {WEEKDAY_CHOICES.map((day) => {
                   const isSelected = watch('weekday') === day.value;
                   return (
-                    <PlainButton
+                    <button
                       key={day.value}
                       type="button"
                       disabled={isLoading}
@@ -419,7 +418,7 @@ export function RoutineTaskForm({
                       {t(
                         `pages.routineTasks.form.weekdayOptions.${day.value}`
                       ).substring(0, 3)}
-                    </PlainButton>
+                    </button>
                   );
                 })}
               </div>
@@ -784,7 +783,7 @@ export function RoutineTaskForm({
           </div>
 
           {/* Advanced settings toggle */}
-          <PlainButton
+          <button
             type="button"
             onClick={() => setAdvancedOpen((o) => !o)}
             className="gap-xs flex w-full items-center text-left"
@@ -799,7 +798,7 @@ export function RoutineTaskForm({
             ) : (
               <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
-          </PlainButton>
+          </button>
 
           {advancedOpen && (
             <div className="gap-md bg-muted/20 p-md grid grid-cols-1 rounded-lg border md:grid-cols-2">
@@ -953,7 +952,7 @@ export function RoutineTaskForm({
 
       {hasLinks && (
         <div className="space-y-md">
-          <PlainButton
+          <button
             type="button"
             onClick={() => setLinksOpen((o) => !o)}
             className="gap-xs flex w-full items-center text-left"
@@ -968,7 +967,7 @@ export function RoutineTaskForm({
             ) : (
               <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
             )}
-          </PlainButton>
+          </button>
 
           {linksOpen && (
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">

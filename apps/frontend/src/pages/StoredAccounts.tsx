@@ -35,7 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlainButton } from '@/components/ui/plain-button';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -491,7 +490,7 @@ export default function StoredAccounts() {
                     <div className="gap-sm pt-xs flex items-center justify-between">
                       <div className="min-w-0">
                         {acc.finance_account_name && (
-                          <PlainButton
+                          <button
                             className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -500,7 +499,7 @@ export default function StoredAccounts() {
                           >
                             <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                             {acc.finance_account_name}
-                          </PlainButton>
+                          </button>
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-0.5">

@@ -332,14 +332,14 @@ export function MenuOptionForm({
                           'Grupo de alternativas'
                         )}
                       </span>
-                      <PlainButton
+                      <button
                         type="button"
                         onClick={() => addVariantToGroup(group.groupId!)}
                         className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
                       >
                         <Plus className="h-3 w-3" />
                         {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
-                      </PlainButton>
+                      </button>
                     </div>
                     <div className="p-sm space-y-0">
                       {group.indices.map((idx, position) => (
@@ -370,22 +370,22 @@ export function MenuOptionForm({
 
           {/* Botões de adição */}
           <div className="gap-sm flex">
-            <PlainButton
+            <button
               type="button"
               onClick={addStandalone}
               className="gap-sm border-category-nutrition/30 py-sm text-category-nutrition hover:border-category-nutrition/60 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addIngredient')}
-            </PlainButton>
-            <PlainButton
+            </button>
+            <button
               type="button"
               onClick={addNewGroup}
               className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
               {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
-            </PlainButton>
+            </button>
           </div>
         </div>
       </FormSection>

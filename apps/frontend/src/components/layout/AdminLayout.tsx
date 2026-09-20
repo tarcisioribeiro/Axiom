@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
-import { PlainButton } from '@/components/ui/plain-button';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -106,13 +105,13 @@ export const AdminLayout = () => {
               <p className="text-muted-foreground text-xs">{t('layout.superuser')}</p>
             </div>
           </div>
-          <PlainButton
+          <button
             onClick={logout}
             className="py-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
           >
             <LogOut className="h-4 w-4" />
             {t('layout.logout')}
-          </PlainButton>
+          </button>
         </div>
       </aside>
 
