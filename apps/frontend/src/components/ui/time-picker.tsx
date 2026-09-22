@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainButton } from '@/components/ui/plain-button';
+import { floatingOptions } from '@/lib/flatpickr-floating';
 import { cn } from '@/lib/utils';
 
 import '@/styles/flatpickr-custom.css';
@@ -65,7 +66,7 @@ export function TimePicker({
       allowInput: true,
       clickOpens: !disabled,
       disableMobile: true,
-      static: true,
+      ...floatingOptions(inputRef.current),
       onChange: (selectedDates) => {
         if (selectedDates.length > 0) {
           onChangeRef.current?.(dateToTimeStr(selectedDates[0]));

@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainButton } from '@/components/ui/plain-button';
+import { floatingOptions } from '@/lib/flatpickr-floating';
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
 // Importa estilos customizados (sem usar os padrões do Flatpickr)
@@ -26,31 +27,6 @@ interface DatePickerProps {
    * o que quebra cards dentro de listas com scroll).
    */
   floating?: boolean;
-}
-
-/** Opções do flatpickr para o calendário flutuante dentro de um dialog. */
-function floatingOptions(input: HTMLInputElement): Partial<FlatpickrOptions> {
-  const dialog = input.closest<HTMLElement>('[role="dialog"]');
-  const host = dialog ?? document.body;
-  return {
-    static: false,
-    appendTo: host,
-    // O dialog tem `transform`, então é ele (e não a página) o referencial
-    // das coordenadas absolutas do calendário.
-    position: (self, node) => {
-      const cal = self.calendarContainer;
-      const el = node ?? input;
-      const hostRect = host.getBoundingClientRect();
-      const inRect = el.getBoundingClientRect();
-      const fitsBelow = window.innerHeight - inRect.bottom >= cal.offsetHeight + 8;
-      const top = fitsBelow ? inRect.bottom + 4 : inRect.top - cal.offsetHeight - 4;
-      const maxLeft = host.clientWidth - cal.offsetWidth - 8;
-      const left = Math.max(8, Math.min(inRect.left - hostRect.left, maxLeft));
-      cal.style.top = `${top - hostRect.top + host.scrollTop}px`;
-      cal.style.left = `${left}px`;
-      cal.style.right = 'auto';
-    },
-  };
 }
 
 // Parser customizado para formato DD/MM/YYYY

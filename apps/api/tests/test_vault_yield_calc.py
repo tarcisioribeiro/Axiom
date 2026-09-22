@@ -35,10 +35,10 @@ class CountBusinessDaysTest(SimpleTestCase):
 class DailyRateFromTest(SimpleTestCase):
     def test_prefers_annual_rate(self):
         rate = daily_rate_from(Decimal("0.1500"), Decimal("0.001"))
-        self.assertEqual(
-            rate,
-            (Decimal("0.15") / Decimal("252")).quantize(Decimal("0.000001")),
-        )
+        expected = (
+            (1 + Decimal("0.15")) ** (Decimal("1") / Decimal("252")) - 1
+        ).quantize(Decimal("0.000001"))
+        self.assertEqual(rate, expected)
 
     def test_falls_back_to_legacy_rate(self):
         self.assertEqual(
