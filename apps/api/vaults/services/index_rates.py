@@ -82,15 +82,18 @@ def compute_index_annual_rate(
     """
     Retorna ``(taxa_anual, data_referencia)`` para ``index_type``
     (``cdi``/``selic``) aplicando ``percentage`` (ex.: ``120`` = 120% do
-    índice). Retorna ``(None, None)`` se a API estiver indisponível.
+    índice) sobre a taxa DIÁRIA do índice, antes de anualizar — convenção de
+    mercado para "X% do CDI" (escala o fator diário e compõe o ano a partir
+    dele; escalar a taxa já anualizada no final produziria um resultado
+    diferente por causa dos juros compostos). Retorna ``(None, None)`` se a
+    API estiver indisponível.
     """
     daily_rate, ref_date = fetch_latest_daily_rate(index_type)
     if daily_rate is None:
         return None, None
 
-    annual_index_rate = annualize_daily_rate(daily_rate)
     pct = (percentage if percentage is not None else Decimal("100")) / Decimal(
         "100"
     )
-    annual_rate = (annual_index_rate * pct).quantize(Decimal("0.0001"))
+    annual_rate = annualize_daily_rate(daily_rate * pct)
     return annual_rate, ref_date
