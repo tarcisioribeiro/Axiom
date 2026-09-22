@@ -20,6 +20,7 @@ import '../../widgets/pomodoro_sheet.dart';
 import '../../widgets/row_actions.dart';
 import 'goal_form_sheet.dart';
 import 'routine_task_form_sheet.dart';
+import '../../utils/formatters.dart';
 
 DateTime _today() {
   final now = DateTime.now();
@@ -563,7 +564,7 @@ class _GoalTile extends StatelessWidget {
           ),
           SizedBox(height: AppSpacing.xs),
           Text(
-            '${goal.currentValue.toStringAsFixed(0)} / ${goal.targetValue.toStringAsFixed(0)}',
+            '${AppFormatters.number(goal.currentValue)} / ${AppFormatters.number(goal.targetValue)}',
             style: theme.textTheme.bodySmall,
           ),
         ],

@@ -114,6 +114,12 @@ class PlanningDashboardScreen extends ConsumerWidget {
                     color: context.semanticColors.info,
                     onTap: () => context.go('/planning/wellness'),
                   ),
+                  ModuleTile(
+                    label: 'Biblioteca',
+                    icon: Icons.menu_book_rounded,
+                    color: context.semanticColors.success,
+                    onTap: () => context.go('/planning/library'),
+                  ),
                 ],
               ),
             ],

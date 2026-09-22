@@ -172,6 +172,24 @@ class _FinanceModuleGrid extends StatelessWidget {
           color: colors.info,
           onTap: () => context.go('/finance/members'),
         ),
+        ModuleTile(
+          label: 'Planejamento mensal',
+          icon: Icons.event_available_outlined,
+          color: colors.success,
+          onTap: () => context.go('/finance/monthly-plan'),
+        ),
+        ModuleTile(
+          label: 'Fixas',
+          icon: Icons.event_repeat_outlined,
+          color: colors.warning,
+          onTap: () => context.go('/finance/fixed'),
+        ),
+        ModuleTile(
+          label: 'Orçamentos',
+          icon: Icons.pie_chart_outline_rounded,
+          color: colors.info,
+          onTap: () => context.go('/finance/budgets'),
+        ),
       ],
     );
   }

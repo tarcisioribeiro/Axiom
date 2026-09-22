@@ -71,6 +71,18 @@ def _is_fixed_revenue_already_posted(
     ).exists()
 
 
+def _is_fixed_revenue_already_received(
+    fr: FixedRevenue, date_from: str, date_to: str
+) -> bool:
+    return Revenue.objects.filter(
+        fixed_revenue_template=fr,
+        date__gte=date_from,
+        date__lt=date_to,
+        received=True,
+        is_deleted=False,
+    ).exists()
+
+
 def _fixed_revenues_data(user: User, date_from: str, date_to: str) -> list:
     return [
         {
@@ -82,6 +94,9 @@ def _fixed_revenues_data(user: User, date_from: str, date_to: str) -> list:
             "account_name": r.account.account_name if r.account else "",
             "allow_value_edit": r.allow_value_edit,
             "already_posted": _is_fixed_revenue_already_posted(
+                r, date_from, date_to
+            ),
+            "already_received": _is_fixed_revenue_already_received(
                 r, date_from, date_to
             ),
         }
@@ -119,6 +134,27 @@ def _is_fixed_expense_already_posted(
     ).exists()
 
 
+def _is_fixed_expense_already_paid(
+    fe: FixedExpense, month: int, year: int, date_from: str, date_to: str
+) -> bool:
+    """
+    Checking-account expenses: paid. Card-linked ones are only really paid
+    when the bill is, so for them this means "registered" (installment exists).
+    """
+    if fe.credit_card:
+        return _is_fixed_expense_already_posted(
+            fe, month, year, date_from, date_to
+        )
+
+    return Expense.objects.filter(
+        fixed_expense_template=fe,
+        date__gte=date_from,
+        date__lt=date_to,
+        payed=True,
+        is_deleted=False,
+    ).exists()
+
+
 def _fixed_expenses_data(
     user: User, month: int, year: int, date_from: str, date_to: str
 ) -> list:
@@ -134,6 +170,9 @@ def _fixed_expenses_data(
             "payment_method": e.payment_method or "",
             "allow_value_edit": e.allow_value_edit,
             "already_posted": _is_fixed_expense_already_posted(
+                e, month, year, date_from, date_to
+            ),
+            "already_paid": _is_fixed_expense_already_paid(
                 e, month, year, date_from, date_to
             ),
             "related_loan_name": (

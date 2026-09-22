@@ -1,3 +1,5 @@
+import '../utils/formatters.dart';
+
 /// Mirrors `personal-planning/gamification/` — level/XP/streak summary
 /// shown on the planning dashboard.
 class GamificationProfile {
@@ -21,7 +23,7 @@ class GamificationProfile {
         currentLevel: json['current_level'] as int? ?? 1,
         currentStreak: json['current_streak'] as int? ?? 0,
         longestStreak: json['longest_streak'] as int? ?? 0,
-        levelProgressPct: (json['level_progress_pct'] as num?)?.toDouble() ?? 0,
+        levelProgressPct: AppFormatters.toDouble(json['level_progress_pct']),
       );
 }
 
@@ -50,6 +52,6 @@ class PlanningStats {
         totalGoals: json['total_goals'] as int? ?? 0,
         activeGoals: json['active_goals'] as int? ?? 0,
         completedGoals: json['completed_goals'] as int? ?? 0,
-        completionRate7d: (json['completion_rate_7d'] as num?)?.toDouble() ?? 0,
+        completionRate7d: AppFormatters.toDouble(json['completion_rate_7d']),
       );
 }

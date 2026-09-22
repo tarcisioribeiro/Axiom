@@ -119,13 +119,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           )}
         </div>
       </div>
-      {children}
-      {!children && actions}
-      {!children && !actions && action && (
-        <Button onClick={action.onClick} className="gap-sm">
-          {action.icon}
-          {action.label}
-        </Button>
+      {(children || actions || action) && (
+        <div className="flex items-center gap-3">
+          {children}
+          {actions}
+          {action && (
+            <Button onClick={action.onClick} className="gap-sm">
+              {action.icon}
+              {action.label}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

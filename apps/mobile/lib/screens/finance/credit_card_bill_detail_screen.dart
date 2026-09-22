@@ -68,7 +68,8 @@ class CreditCardBillDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: billAsync.whenOrNull(
-          data: (bill) => Text('Fatura ${bill.month}/${bill.year}'),
+          data: (bill) => Text(
+              'Fatura ${ChoiceLabels.of(ChoiceLabels.billMonths, bill.month)}/${bill.year}'),
         ),
       ),
       body: SafeArea(

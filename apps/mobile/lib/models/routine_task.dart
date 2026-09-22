@@ -1,3 +1,5 @@
+import '../utils/formatters.dart';
+
 /// Mirrors the subset of `RoutineTaskSerializer`
 /// (`apps/api/personal_planning/serializers.py`) the mobile quick-entry
 /// form needs. Advanced scheduling fields (custom weekdays/month-days,
@@ -44,7 +46,7 @@ class RoutineTask {
         priority: json['priority'] as String? ?? 'medium',
         isActive: json['is_active'] as bool? ?? true,
         isOptional: json['is_optional'] as bool? ?? false,
-        completionRate: (json['completion_rate'] as num?)?.toDouble() ?? 0,
+        completionRate: AppFormatters.toDouble(json['completion_rate']),
       );
 
   Map<String, dynamic> toJson() => {

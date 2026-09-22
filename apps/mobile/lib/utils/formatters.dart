@@ -25,6 +25,11 @@ class AppFormatters {
     return double.tryParse(value.toString()) ?? 0;
   }
 
+  static final NumberFormat _number = NumberFormat('#,##0.##', 'pt_BR');
+
+  /// pt-BR decimal without trailing zeros (`"150.00"` → `150`, `"2.5"` → `2,5`).
+  static String number(dynamic value) => _number.format(toDouble(value));
+
   static String currency(dynamic value) => _currency.format(toDouble(value));
 
   static String percent(double fraction) => _percent.format(fraction);

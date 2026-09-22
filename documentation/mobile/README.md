@@ -66,6 +66,28 @@ exclusivos do web.
   profissão, renda, flags credor/devedor). `loans`/`payables`/`receivables`
   parcelados mostram a **tabela de parcelas** (read-only) num sheet
   (`widgets/installments_sheet.dart`).
+- **Planejamento financeiro** (`screens/finance/`): **planejamento mensal**
+  (`monthly_planner_screen.dart` — projeta o mês com fixas, faturas,
+  orçamentos e extras sobre `monthly-plan/summary/`; edições salvam com
+  debounce e "Aplicar" chama `monthly-plan/<id>/apply/`; itens já
+  recebidos/pagos/lançados — `already_received`/`already_paid` — ficam
+  travados e fora dos overrides, igual ao web), **fixas**
+  (`fixed_items_screen.dart` — despesas/receitas fixas: CRUD, ativar/
+  desativar e "Lançar" em lote via `fixed-*/generate/`) e **orçamentos**
+  (`budgets_screen.dart` — limite vs gasto por categoria via
+  `budgets/status/`).
+- **Biblioteca** (`screens/library/`, acessível pelo dashboard de
+  Planejamento): livros (CRUD + registrar leitura), cursos, revisão de
+  flashcards (SM-2, `flashcards/<id>/review/`, criação manual e geração a
+  partir dos destaques), habilidades, **destaques** por livro, **módulos/
+  aulas** dos cursos (`CourseDetailScreen`, marcar concluída) e **vínculos
+  do grafo de conhecimento** (lista/CRUD + **mapa** com layout de forças,
+  toque no nó mostra o nome), **capa** e **arquivo EPUB/PDF** do livro
+  (`file_picker`, no formulário de edição), **leitor EPUB em texto**
+  (`EpubReaderScreen` — segue o spine, sem imagens/estilos; PDF não abre no
+  app) e **importação** Goodreads (CSV) / Kindle (My Clippings.txt) pelo
+  ícone de upload do cabeçalho. `file_picker` está fixado em 10.3.10: a 11.x
+  e a 13.x quebram o build Android com o AGP/Flutter atuais.
 - **Planejamento** (`screens/planning/`): dashboard (gamificação, tarefas e
   metas do dia), checklist diário + rotinas + metas (abas), treino (sessões,
   planos, catálogo de exercícios), nutrição (refeições do dia, tipos de

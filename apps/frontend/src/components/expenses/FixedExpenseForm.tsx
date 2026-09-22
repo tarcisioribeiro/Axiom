@@ -1,5 +1,14 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
+import {
+  CalendarDays,
+  CreditCard,
+  Landmark,
+  Package,
+  Store,
+  Tag,
+  Wallet,
+  Zap,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -323,16 +332,21 @@ export const FixedExpenseForm = ({
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pix">⚡ PIX</SelectItem>
-                <SelectItem value="debit_card">
-                  💳 {t('common.paymentMethods.debit_card')}
-                </SelectItem>
-                <SelectItem value="transfer">
-                  🏦 {t('common.paymentMethods.transfer')}
-                </SelectItem>
-                <SelectItem value="other">
-                  📦 {t('common.paymentMethods.other')}
-                </SelectItem>
+                {(
+                  [
+                    ['pix', Zap, 'PIX'],
+                    ['debit_card', CreditCard, t('common.paymentMethods.debit_card')],
+                    ['transfer', Landmark, t('common.paymentMethods.transfer')],
+                    ['other', Package, t('common.paymentMethods.other')],
+                  ] as const
+                ).map(([value, Icon, label]) => (
+                  <SelectItem key={value} value={value}>
+                    <span className="gap-xs flex items-center">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      {label}
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

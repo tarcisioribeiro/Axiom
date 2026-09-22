@@ -12,6 +12,7 @@ import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/row_actions.dart';
+import '../../utils/formatters.dart';
 
 /// Nested editing of a workout plan: its days, and the exercises inside each
 /// day. Reached from the "Planos" tab of the Treino screen.
@@ -177,7 +178,7 @@ class _DayCard extends ConsumerWidget {
                         child: Text(
                           '${ex.name} · ${ex.sets}x'
                           '${ex.repsLabel.isEmpty ? '' : ' ${ex.repsLabel}'}'
-                          '${ex.load == null ? '' : ' · ${ex.load}kg'}',
+                          '${ex.load == null ? '' : ' · ${AppFormatters.number(ex.load)} kg'}',
                           style: theme.textTheme.bodySmall,
                         ),
                       ),
@@ -463,7 +464,8 @@ class _ExerciseFormSheetState extends ConsumerState<_ExerciseFormSheet> {
         TextEditingController(text: e?.repsMax?.toString() ?? '');
     _restController =
         TextEditingController(text: e?.restSeconds?.toString() ?? '');
-    _loadController = TextEditingController(text: e?.load?.toString() ?? '');
+    _loadController = TextEditingController(
+        text: e?.load == null ? '' : AppFormatters.number(e!.load));
     _notesController = TextEditingController(text: e?.notes ?? '');
   }
 
