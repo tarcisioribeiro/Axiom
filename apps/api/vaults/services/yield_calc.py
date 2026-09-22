@@ -44,15 +44,15 @@ def daily_rate_from(
     annual_yield_rate: Decimal, legacy_yield_rate: Decimal
 ) -> Decimal:
     """
-    Calcula a taxa diária a partir da taxa anual (base 252 dias úteis).
+    Calcula a taxa diária equivalente à taxa anual (base 252 dias úteis),
+    por decomposição geométrica: ``(1 + taxa_anual)^(1/252) - 1``.
 
     Se ``annual_yield_rate`` > 0, usa ela; caso contrário usa a taxa diária
     legada ``legacy_yield_rate``.
     """
     if annual_yield_rate and annual_yield_rate > 0:
-        return (annual_yield_rate / Decimal("252")).quantize(
-            Decimal("0.000001")
-        )
+        daily = (1 + annual_yield_rate) ** (Decimal("1") / Decimal("252")) - 1
+        return daily.quantize(Decimal("0.000001"))
     return legacy_yield_rate or Decimal("0.000000")
 
 

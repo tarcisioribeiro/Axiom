@@ -44,7 +44,9 @@ class AnnualizeDailyRateTest(SimpleTestCase):
 
 class ComputeIndexAnnualRateTest(SimpleTestCase):
     @patch("vaults.services.index_rates.fetch_latest_daily_rate")
-    def test_applies_percentage_over_annualized_index(self, mock_fetch):
+    def test_applies_percentage_over_daily_index_before_annualizing(
+        self, mock_fetch
+    ):
         mock_fetch.return_value = (
             Decimal("0.0005"),
             datetime.date(2026, 9, 11),
@@ -52,11 +54,8 @@ class ComputeIndexAnnualRateTest(SimpleTestCase):
         annual_rate, ref_date = compute_index_annual_rate(
             "cdi", Decimal("120")
         )
-        base_annual = annualize_daily_rate(Decimal("0.0005"))
-        self.assertEqual(
-            annual_rate,
-            (base_annual * Decimal("1.20")).quantize(Decimal("0.0001")),
-        )
+        expected = annualize_daily_rate(Decimal("0.0005") * Decimal("1.20"))
+        self.assertEqual(annual_rate, expected)
         self.assertEqual(ref_date, datetime.date(2026, 9, 11))
 
     @patch("vaults.services.index_rates.fetch_latest_daily_rate")
