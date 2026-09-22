@@ -317,7 +317,7 @@ class _VaultTile extends StatelessWidget {
                     Text(vault.description, style: theme.textTheme.titleSmall),
                     Text(
                       '${vault.accountName ?? '—'} · '
-                      '${vault.annualYieldRatePercentage.toStringAsFixed(2)}% a.a.',
+                      '${AppFormatters.number(vault.annualYieldRatePercentage)}% a.a.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

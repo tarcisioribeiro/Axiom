@@ -80,6 +80,7 @@ interface FixedRevenueItem {
   account_name: string;
   allow_value_edit: boolean;
   already_posted: boolean;
+  already_received: boolean;
 }
 
 interface FixedExpenseItem {
@@ -92,6 +93,7 @@ interface FixedExpenseItem {
   credit_card_name: string;
   allow_value_edit: boolean;
   already_posted: boolean;
+  already_paid: boolean;
   related_loan_name: string | null;
   related_payable_name: string | null;
 }
@@ -250,6 +252,7 @@ function EditableFixedItem({
   sub,
   override,
   alreadyPosted,
+  settledLabel,
   forceDisabled,
   debtName,
   onToggle,
@@ -262,6 +265,8 @@ function EditableFixedItem({
   override?: FixedItemOverride;
   /** Shows the informational "already posted" badge. Does not affect the total. */
   alreadyPosted?: boolean;
+  /** When set, the item is settled (received/paid): shows this badge and locks the row. */
+  settledLabel?: string;
   /** Forces the checkbox off — used when the value is already counted
    * elsewhere (e.g. a card-linked fixed expense already inside a bill
    * total), so including it here would double-count it. */
@@ -273,8 +278,9 @@ function EditableFixedItem({
   onValueChange: (id: number, value: string) => void;
 }) {
   const { t } = useTranslation();
-  const enabled = !forceDisabled && override?.enabled !== false;
-  const displayValue = override?.value ?? defaultValue;
+  const locked = Boolean(settledLabel);
+  const enabled = locked || (!forceDisabled && override?.enabled !== false);
+  const displayValue = locked ? defaultValue : (override?.value ?? defaultValue);
 
   return (
     <div
@@ -286,7 +292,7 @@ function EditableFixedItem({
       <Checkbox
         checked={enabled}
         onCheckedChange={(checked) => onToggle(id, !!checked)}
-        disabled={forceDisabled}
+        disabled={forceDisabled || locked}
         className="shrink-0"
       />
       <div className="min-w-0 flex-1">
@@ -307,13 +313,21 @@ function EditableFixedItem({
           {t('monthlyPlanner.alreadyPosted')}
         </Badge>
       )}
+      {settledLabel && (
+        <Badge
+          variant="outline"
+          className="border-success text-success shrink-0 text-xs"
+        >
+          {settledLabel}
+        </Badge>
+      )}
       <Input
         type="number"
         min="0"
         step="0.01"
         value={displayValue}
         onChange={(e) => onValueChange(id, e.target.value)}
-        disabled={!enabled}
+        disabled={!enabled || locked}
         className="h-7 w-28 shrink-0 text-right text-sm"
       />
     </div>
@@ -789,7 +803,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const isApplied = Boolean(data?.plan.applied_at);
 
   const totalFixed = (data?.fixed_revenues ?? []).reduce((acc, r) => {
-    const ov = fixedRevenueOverrides[String(r.id)];
+    const ov = r.already_received ? undefined : fixedRevenueOverrides[String(r.id)];
     if (ov?.enabled === false) return acc;
     const v = parseFloat(ov?.value ?? r.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
@@ -820,7 +834,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     // excluded from registeredExpensesNet instead, so the value is still
     // counted exactly once.
     if (e.already_posted && e.credit_card_name) return acc;
-    const ov = fixedExpenseOverrides[String(e.id)];
+    const ov = e.already_paid ? undefined : fixedExpenseOverrides[String(e.id)];
     if (ov?.enabled === false) return acc;
     const v = parseFloat(ov?.value ?? e.default_value ?? '0');
     return acc + (isNaN(v) ? 0 : v);
@@ -1063,6 +1077,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     }
                     override={fixedRevenueOverrides[String(r.id)]}
                     alreadyPosted={r.already_posted}
+                    settledLabel={
+                      r.already_received
+                        ? t('monthlyPlanner.alreadyReceived')
+                        : undefined
+                    }
                     onToggle={toggleFixedRevenue}
                     onValueChange={updateFixedRevenueValue}
                   />
@@ -1281,7 +1300,16 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                     defaultValue={e.default_value}
                     sub={e.credit_card_name || e.account_name}
                     override={fixedExpenseOverrides[String(e.id)]}
-                    alreadyPosted={e.already_posted}
+                    alreadyPosted={e.already_posted && !e.credit_card_name}
+                    settledLabel={
+                      e.already_paid
+                        ? t(
+                            e.credit_card_name
+                              ? 'monthlyPlanner.alreadyRegistered'
+                              : 'monthlyPlanner.alreadyPaid'
+                          )
+                        : undefined
+                    }
                     forceDisabled={e.already_posted && Boolean(e.credit_card_name)}
                     debtName={e.related_loan_name ?? e.related_payable_name}
                     onToggle={toggleFixedExpense}

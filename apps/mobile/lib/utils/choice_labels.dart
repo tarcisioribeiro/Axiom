@@ -200,6 +200,7 @@ class ChoiceLabels {
     'ml': 'ml',
     'l': 'l',
     'unit': 'unidade',
+    'scoop': 'scoop',
     'slice': 'fatia',
     'portion': 'porção',
     'cup': 'xícara',
@@ -208,6 +209,20 @@ class ChoiceLabels {
     'teaspoon': 'colher de chá',
     'to_taste': 'a gosto',
   };
+
+  /// Units offered for a food's reference serving (same list as the web
+  /// `FoodForm`), labels resolved through [measurementUnits].
+  static const foodServingUnits = [
+    'g',
+    'ml',
+    'unit',
+    'scoop',
+    'tablespoon',
+    'teaspoon',
+    'cup',
+    'slice',
+    'portion',
+  ];
 
   static const memberSex = {
     'M': 'Masculino',
@@ -291,6 +306,115 @@ class ChoiceLabels {
     'gaming': 'Jogos',
     'other': 'Outro',
   };
+
+  static const budgetStatuses = {
+    'ok': 'Dentro do limite',
+    'warning': 'Atenção',
+    'exceeded': 'Estourado',
+  };
+
+  static const readStatuses = {
+    'to_read': 'Para ler',
+    'reading': 'Lendo',
+    'read': 'Lido',
+    'paused': 'Pausado',
+  };
+
+  static const bookLanguages = {
+    'Por': 'Português',
+    'Ing': 'Inglês',
+    'Esp': 'Espanhol',
+  };
+
+  static const bookGenres = {
+    'Philosophy': 'Filosofia',
+    'History': 'História',
+    'Psychology': 'Psicologia',
+    'Fiction': 'Ficção',
+    'Policy': 'Política',
+    'Technology': 'Tecnologia',
+    'Theology': 'Teologia',
+  };
+
+  static const literaryTypes = {
+    'book': 'Livro',
+    'collection': 'Coletânea',
+    'magazine': 'Revista',
+    'article': 'Artigo',
+    'essay': 'Ensaio',
+  };
+
+  static const courseStatuses = {
+    'not_started': 'Não iniciado',
+    'in_progress': 'Em andamento',
+    'completed': 'Concluído',
+    'paused': 'Pausado',
+  };
+
+  static const coursePlatforms = {
+    'udemy': 'Udemy',
+    'coursera': 'Coursera',
+    'youtube': 'YouTube',
+    'linkedin': 'LinkedIn Learning',
+    'alura': 'Alura',
+    'pluralsight': 'Pluralsight',
+    'other': 'Outro',
+  };
+
+  static const intellectCategories = {
+    'technology': 'Tecnologia',
+    'languages': 'Idiomas',
+    'design': 'Design',
+    'business': 'Negócios',
+    'science': 'Ciências',
+    'arts': 'Artes',
+    'other': 'Outro',
+  };
+
+  static const skillProficiencies = {
+    'beginner': 'Iniciante',
+    'basic': 'Básico',
+    'intermediate': 'Intermediário',
+    'advanced': 'Avançado',
+    'expert': 'Especialista',
+  };
+
+  static const skillStatuses = {
+    'learning': 'Aprendendo',
+    'evolving': 'Evoluindo',
+    'mastered': 'Dominando',
+  };
+
+  /// Credit-card bill `month` codes (backend `MONTHS`) → pt-BR names.
+  static const billMonths = {
+    'Jan': 'Janeiro',
+    'Feb': 'Fevereiro',
+    'Mar': 'Março',
+    'Apr': 'Abril',
+    'May': 'Maio',
+    'Jun': 'Junho',
+    'Jul': 'Julho',
+    'Aug': 'Agosto',
+    'Sep': 'Setembro',
+    'Oct': 'Outubro',
+    'Nov': 'Novembro',
+    'Dec': 'Dezembro',
+  };
+
+  static const monthNames = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+  ];
 
   static String of(Map<String, String> table, String? key) =>
       table[key] ?? key ?? '';

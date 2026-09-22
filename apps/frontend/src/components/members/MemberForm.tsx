@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { format, parseISO } from 'date-fns';
-import { Cake, Check, FileText, Mail, Phone, Shield, User } from 'lucide-react';
+import { Cake, FileText, Mail, Phone, Shield, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -10,8 +10,9 @@ import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import type { Member, MemberFormData } from '@/types';
+
+import { RoleToggle } from './RoleToggle';
 
 interface MemberFormProps {
   member?: Member;
@@ -159,89 +160,24 @@ export const MemberForm: React.FC<MemberFormProps> = ({
       {/* Seção: Permissões & Papel */}
       <FormSection title={t('common.form.sections.paymentConfig')} icon={Shield}>
         <div className="gap-sm grid grid-cols-1 md:grid-cols-2">
-          <div
-            role="button"
-            tabIndex={isLoading ? -1 : 0}
-            onClick={() => !isLoading && setValue('is_creditor', !watchedIsCreditor)}
-            onKeyDown={(e) => {
-              if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
-                setValue('is_creditor', !watchedIsCreditor);
-            }}
-            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition ${
-              watchedIsCreditor
-                ? 'border-primary/50 bg-primary/5 ring-primary/20 ring-1'
-                : 'border-border/60 bg-muted/20 opacity-70'
-            } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
-          >
-            <div
-              className={`mt-0.5 rounded-full p-1 ${watchedIsCreditor ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
-            >
-              <Shield className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {t('pages.members.form.isCreditor')}
-                </span>
-                <div
-                  className={cn(
-                    'border-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border shadow',
-                    watchedIsCreditor
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background',
-                    isLoading && 'opacity-50'
-                  )}
-                >
-                  {watchedIsCreditor && <Check className="h-3 w-3" />}
-                </div>
-              </div>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                {t('pages.members.stats.creditorsSubtitle')}
-              </p>
-            </div>
-          </div>
-
-          <div
-            role="button"
-            tabIndex={isLoading ? -1 : 0}
-            onClick={() => !isLoading && setValue('is_benefited', !watchedIsBenefited)}
-            onKeyDown={(e) => {
-              if ((e.key === 'Enter' || e.key === ' ') && !isLoading)
-                setValue('is_benefited', !watchedIsBenefited);
-            }}
-            className={`gap-sm p-sm flex cursor-pointer items-start rounded-lg border text-left transition ${
-              watchedIsBenefited
-                ? 'border-success/50 bg-success/5 ring-success/20 ring-1'
-                : 'border-border/60 bg-muted/20 opacity-70'
-            } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
-          >
-            <div
-              className={`mt-0.5 rounded-full p-1 ${watchedIsBenefited ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}
-            >
-              <User className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  {t('pages.members.form.isBenefited')}
-                </span>
-                <div
-                  className={cn(
-                    'border-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border shadow',
-                    watchedIsBenefited
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-background',
-                    isLoading && 'opacity-50'
-                  )}
-                >
-                  {watchedIsBenefited && <Check className="h-3 w-3" />}
-                </div>
-              </div>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                {t('pages.members.stats.beneficiariesSubtitle')}
-              </p>
-            </div>
-          </div>
+          <RoleToggle
+            checked={!!watchedIsCreditor}
+            disabled={isLoading}
+            onToggle={() => setValue('is_creditor', !watchedIsCreditor)}
+            tone="primary"
+            icon={Shield}
+            title={t('pages.members.form.isCreditor')}
+            subtitle={t('pages.members.stats.creditorsSubtitle')}
+          />
+          <RoleToggle
+            checked={!!watchedIsBenefited}
+            disabled={isLoading}
+            onToggle={() => setValue('is_benefited', !watchedIsBenefited)}
+            tone="success"
+            icon={User}
+            title={t('pages.members.form.isBenefited')}
+            subtitle={t('pages.members.stats.beneficiariesSubtitle')}
+          />
         </div>
 
         <div className="space-y-sm">

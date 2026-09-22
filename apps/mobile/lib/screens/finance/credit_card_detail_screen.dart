@@ -160,7 +160,8 @@ class _BillTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${bill.month}/${bill.year}',
+                  Text(
+                      '${ChoiceLabels.of(ChoiceLabels.billMonths, bill.month)}/${bill.year}',
                       style: theme.textTheme.titleSmall),
                   Text(
                     ChoiceLabels.of(ChoiceLabels.billStatuses, bill.status),

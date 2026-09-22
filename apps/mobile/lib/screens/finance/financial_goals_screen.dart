@@ -183,7 +183,7 @@ class _GoalTile extends StatelessWidget {
               Text(
                 '${AppFormatters.currency(goal.currentValue)} de '
                 '${AppFormatters.currency(goal.targetValue)}'
-                ' (${goal.progressPercentage.toStringAsFixed(0)}%)',
+                ' (${AppFormatters.number(goal.progressPercentage.round())}%)',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

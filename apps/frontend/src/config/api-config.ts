@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- flat endpoint registry */
 // API Configuration
 // Calcula a URL da API dinamicamente baseada no hostname atual
 // Isso permite que o app funcione tanto em localhost quanto em IPs de rede

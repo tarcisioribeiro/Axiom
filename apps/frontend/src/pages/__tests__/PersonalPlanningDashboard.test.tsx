@@ -149,8 +149,8 @@ describe('PersonalPlanningDashboard', () => {
   it('renders best streak value', async () => {
     renderPage();
     await waitFor(() => {
-      // best_streak = 12
-      expect(screen.getByText('12')).toBeInTheDocument();
+      // best_streak = 12, renderizado como "12 dias"
+      expect(screen.getByText('12 dias')).toBeInTheDocument();
     });
   });
 });

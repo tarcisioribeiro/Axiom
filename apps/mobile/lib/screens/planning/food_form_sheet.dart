@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/food.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
+import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../theme/app_spacing.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
@@ -30,7 +32,7 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _caloriesController;
   late final TextEditingController _servingSizeController;
-  late final TextEditingController _servingUnitController;
+  String _servingUnit = 'g';
   bool _isSaving = false;
   String? _error;
 
@@ -44,10 +46,13 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
           ? ''
           : existing.caloriesPerServing.toStringAsFixed(0),
     );
-    _servingSizeController =
-        TextEditingController(text: existing?.servingSize ?? '');
-    _servingUnitController =
-        TextEditingController(text: existing?.servingUnit ?? '');
+    _servingSizeController = TextEditingController(
+      text: existing?.servingSize == null
+          ? ''
+          : AppFormatters.number(existing!.servingSize),
+    );
+    final unit = existing?.servingUnit;
+    if (unit != null && unit.isNotEmpty) _servingUnit = unit;
   }
 
   @override
@@ -55,9 +60,11 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
     _nameController.dispose();
     _caloriesController.dispose();
     _servingSizeController.dispose();
-    _servingUnitController.dispose();
     super.dispose();
   }
+
+  /// Accepts pt-BR input (`2,5`).
+  double? _parse(String v) => double.tryParse(v.trim().replaceAll(',', '.'));
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -70,13 +77,9 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
       id: widget.existing?.id ?? 0,
       uuid: widget.existing?.uuid ?? '',
       name: _nameController.text.trim(),
-      caloriesPerServing: double.tryParse(_caloriesController.text) ?? 0,
-      servingSize: _servingSizeController.text.trim().isEmpty
-          ? null
-          : _servingSizeController.text.trim(),
-      servingUnit: _servingUnitController.text.trim().isEmpty
-          ? null
-          : _servingUnitController.text.trim(),
+      caloriesPerServing: _parse(_caloriesController.text) ?? 0,
+      servingSize: _parse(_servingSizeController.text)?.toString(),
+      servingUnit: _servingUnit,
     );
 
     final service = ref.read(foodsServiceProvider);
@@ -125,9 +128,10 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
               SizedBox(height: AppSpacing.sm),
               TextFormField(
                 controller: _caloriesController,
-                keyboardType: TextInputType.number,
-                decoration:
-                    const InputDecoration(labelText: 'Calorias por porção'),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                    labelText: 'Calorias (kcal) por porção'),
                 validator: (v) =>
                     (v == null || v.isEmpty) ? 'Informe as calorias' : null,
               ),
@@ -137,15 +141,30 @@ class _FoodFormSheetState extends ConsumerState<_FoodFormSheet> {
                   Expanded(
                     child: TextFormField(
                       controller: _servingSizeController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       decoration:
                           const InputDecoration(labelText: 'Tamanho da porção'),
                     ),
                   ),
                   SizedBox(width: AppSpacing.sm),
                   Expanded(
-                    child: TextFormField(
-                      controller: _servingUnitController,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _servingUnit,
+                      isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Unidade'),
+                      items: [
+                        for (final u in {
+                          ...ChoiceLabels.foodServingUnits,
+                          _servingUnit,
+                        })
+                          DropdownMenuItem(
+                            value: u,
+                            child: Text(ChoiceLabels.of(
+                                ChoiceLabels.measurementUnits, u)),
+                          ),
+                      ],
+                      onChanged: (v) => setState(() => _servingUnit = v!),
                     ),
                   ),
                 ],

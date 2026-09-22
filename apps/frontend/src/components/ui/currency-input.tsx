@@ -40,4 +40,27 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
 );
 CurrencyInput.displayName = 'CurrencyInput';
 
-export { CurrencyInput };
+interface MaskedCurrencyInputProps extends Omit<
+  CurrencyInputProps,
+  'value' | 'onChange' | 'type'
+> {
+  value: number;
+  onValueChange: (value: number) => void;
+}
+
+/** Campo de moeda por centavos: digitar "890" exibe "8,90" (prefixo R$). */
+const MaskedCurrencyInput = ({
+  value,
+  onValueChange,
+  ...props
+}: MaskedCurrencyInputProps) => (
+  <CurrencyInput
+    {...props}
+    type="text"
+    inputMode="numeric"
+    value={value.toFixed(2).replace('.', ',')}
+    onChange={(e) => onValueChange(Number(e.target.value.replace(/\D/g, '')) / 100)}
+  />
+);
+
+export { CurrencyInput, MaskedCurrencyInput };

@@ -7,13 +7,19 @@ import '../screens/finance/credit_card_detail_screen.dart';
 import '../screens/finance/credit_cards_screen.dart';
 import '../screens/finance/dashboard_screen.dart';
 import '../screens/finance/financial_calendar_screen.dart';
+import '../screens/finance/budgets_screen.dart';
 import '../screens/finance/financial_goals_screen.dart';
+import '../screens/finance/fixed_items_screen.dart';
+import '../screens/finance/monthly_planner_screen.dart';
 import '../screens/finance/loans_screen.dart';
 import '../screens/finance/members_screen.dart';
 import '../screens/finance/payables_receivables_screen.dart';
 import '../screens/finance/transactions_screen.dart';
 import '../screens/finance/transfers_screen.dart';
 import '../screens/finance/vaults_screen.dart';
+import '../screens/library/course_detail_screen.dart';
+import '../screens/library/epub_reader_screen.dart';
+import '../screens/library/library_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/planning/nutrition_screen.dart';
 import '../screens/planning/planning_dashboard_screen.dart';
@@ -117,6 +123,18 @@ GoRouter buildAppRouter(SessionController sessionController) {
                     path: 'members',
                     builder: (context, state) => const MembersScreen(),
                   ),
+                  GoRoute(
+                    path: 'fixed',
+                    builder: (context, state) => const FixedItemsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'budgets',
+                    builder: (context, state) => const BudgetsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'monthly-plan',
+                    builder: (context, state) => const MonthlyPlannerScreen(),
+                  ),
                 ],
               ),
             ],
@@ -142,6 +160,25 @@ GoRouter buildAppRouter(SessionController sessionController) {
                   GoRoute(
                     path: 'wellness',
                     builder: (context, state) => const WellnessScreen(),
+                  ),
+                  GoRoute(
+                    path: 'library',
+                    builder: (context, state) => const LibraryScreen(),
+                    routes: [
+                      GoRoute(
+                        path: 'read/:bookId',
+                        builder: (context, state) => EpubReaderScreen(
+                          bookId: int.parse(state.pathParameters['bookId']!),
+                        ),
+                      ),
+                      GoRoute(
+                        path: 'courses/:courseId',
+                        builder: (context, state) => CourseDetailScreen(
+                          courseId:
+                              int.parse(state.pathParameters['courseId']!),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
