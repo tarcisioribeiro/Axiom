@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/food.dart';
+import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../models/meal_log.dart';
 import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
@@ -184,7 +186,7 @@ class _CaloricSummaryCard extends StatelessWidget {
 
   final Map<String, dynamic> summary;
 
-  int? _kcal(dynamic v) => v == null ? null : (v as num).round();
+  int? _kcal(dynamic v) => v == null ? null : AppFormatters.toDouble(v).round();
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +312,7 @@ class _MealTypesTab extends ConsumerWidget {
                           title: Text(mealType.name),
                           subtitle: mealType.suggestedTime == null
                               ? null
-                              : Text(mealType.suggestedTime!),
+                              : Text(mealType.suggestedTime!.substring(0, 5)),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => MealTypeDetailScreen(
@@ -382,8 +384,8 @@ class _FoodsTab extends ConsumerWidget {
                         (food) => ListTile(
                           title: Text(food.name),
                           subtitle: Text(
-                            '${food.caloriesPerServing.toStringAsFixed(0)} kcal'
-                            '${food.servingSize != null ? ' · ${food.servingSize}${food.servingUnit ?? ''}' : ''}',
+                            '${AppFormatters.number(food.caloriesPerServing)} kcal'
+                            '${food.servingSize != null ? ' · ${AppFormatters.number(food.servingSize)} ${ChoiceLabels.of(ChoiceLabels.measurementUnits, food.servingUnit)}' : ''}',
                           ),
                           trailing: RowActionsMenu(
                             onEdit: () =>

@@ -155,7 +155,7 @@ class _DashboardTab extends ConsumerWidget {
             ),
           ),
           SizedBox(width: AppSpacing.sm),
-          Text(value?.toStringAsFixed(1) ?? '—',
+          Text(value == null ? '—' : AppFormatters.number(value),
               style: theme.textTheme.bodySmall),
         ],
       ),

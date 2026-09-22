@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -14,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -171,7 +171,7 @@ export function LaunchRevenuesDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-2xl">
+      <DialogContent className="max-h-[90vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle>{t('pages.fixedRevenues.launchDialog.title')}</DialogTitle>
           <DialogDescription>
@@ -243,12 +243,13 @@ export function LaunchRevenuesDialog({
                           })}
                         </p>
                       </div>
-                      <div className="w-36">
+                      <div className="w-48 shrink-0">
                         <DatePicker
                           value={dateFor(r)}
                           minDate={bounds?.min}
                           maxDate={bounds?.max}
                           clearable={false}
+                          floating
                           disabled={isSubmitting || !selectedIds.has(r.id)}
                           onChange={(date) =>
                             setRevenueDates((prev) => ({
@@ -258,17 +259,13 @@ export function LaunchRevenuesDialog({
                           }
                         />
                       </div>
-                      <div className="w-28">
+                      <div className="w-40 shrink-0">
                         {r.allow_value_edit ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={revenueValues[r.id] ?? ''}
-                            onChange={(e) =>
-                              setRevenueValues((p) => ({
-                                ...p,
-                                [r.id]: parseFloat(e.target.value) || 0,
-                              }))
+                          <MaskedCurrencyInput
+                            accentColor="success"
+                            value={revenueValues[r.id] ?? parseFloat(r.default_value)}
+                            onValueChange={(v) =>
+                              setRevenueValues((p) => ({ ...p, [r.id]: v }))
                             }
                             disabled={isSubmitting || !selectedIds.has(r.id)}
                           />

@@ -1,3 +1,5 @@
+import '../utils/formatters.dart';
+
 /// Mirrors `FoodSerializer` (`apps/api/personal_planning/serializers.py`).
 class Food {
   final int id;
@@ -21,7 +23,7 @@ class Food {
         uuid: json['uuid'] as String? ?? '',
         name: json['name'] as String? ?? '',
         caloriesPerServing:
-            (json['calories_per_serving'] as num?)?.toDouble() ?? 0,
+            AppFormatters.toDouble(json['calories_per_serving']),
         servingSize: json['serving_size']?.toString(),
         servingUnit: json['serving_unit'] as String?,
       );

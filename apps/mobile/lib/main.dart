@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -161,6 +162,9 @@ class _AxiomMobileAppState extends ConsumerState<AxiomMobileApp> {
     return MaterialApp.router(
       title: 'Axiom',
       debugShowCheckedModeBanner: false,
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [Locale('pt', 'BR')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: themeController.activeVariant.toThemeData(),
       routerConfig: _router,
     );

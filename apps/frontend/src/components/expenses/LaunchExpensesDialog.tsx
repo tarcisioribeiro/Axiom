@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -140,10 +140,10 @@ export const LaunchExpensesDialog = ({
     selectedExpenseIds.has(exp.id)
   );
 
-  const handleValueChange = (expenseId: number, value: string) => {
+  const handleValueChange = (expenseId: number, value: number) => {
     setExpenseValues((prev) => ({
       ...prev,
-      [expenseId]: parseFloat(value) || 0,
+      [expenseId]: value,
     }));
   };
 
@@ -208,7 +208,7 @@ export const LaunchExpensesDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-3xl">
+      <DialogContent className="max-h-[90vh] max-w-4xl">
         <DialogHeader>
           <DialogTitle>{t('pages.fixedExpenses.launchDialog.title')}</DialogTitle>
           <DialogDescription>
@@ -291,12 +291,13 @@ export const LaunchExpensesDialog = ({
                           })}
                         </p>
                       </div>
-                      <div className="w-36">
+                      <div className="w-48 shrink-0">
                         <DatePicker
                           value={dateFor(exp)}
                           minDate={bounds?.min}
                           maxDate={bounds?.max}
                           clearable={false}
+                          floating
                           disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
                           onChange={(date) =>
                             setExpenseDates((prev) => ({
@@ -306,15 +307,13 @@ export const LaunchExpensesDialog = ({
                           }
                         />
                       </div>
-                      <div className="w-32">
+                      <div className="w-40 shrink-0">
                         {exp.allow_value_edit ? (
-                          <Input
-                            type="number"
-                            step="0.01"
+                          <MaskedCurrencyInput
                             value={
                               expenseValues[exp.id] ?? parseFloat(exp.default_value)
                             }
-                            onChange={(e) => handleValueChange(exp.id, e.target.value)}
+                            onValueChange={(v) => handleValueChange(exp.id, v)}
                             disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
                           />
                         ) : (

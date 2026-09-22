@@ -55,14 +55,14 @@ describe('PageHeader', () => {
     expect(container.querySelector('.rounded-lg')).not.toBeInTheDocument();
   });
 
-  it('renders children instead of the action button when children are provided', () => {
+  it('renders children alongside the action button when both are provided', () => {
     renderWithRouter(
-      <PageHeader title="Despesas" action={{ label: 'Hidden', onClick: vi.fn() }}>
+      <PageHeader title="Despesas" action={{ label: 'Nova Despesa', onClick: vi.fn() }}>
         <span data-testid="custom-child">custom</span>
       </PageHeader>
     );
     expect(screen.getByTestId('custom-child')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Hidden' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nova Despesa' })).toBeInTheDocument();
   });
 
   it('renders an action icon inside the button when action.icon is provided', () => {

@@ -4,25 +4,31 @@ import '../models/account.dart';
 import '../models/credit_card.dart';
 import '../models/credit_card_bill.dart';
 import '../models/credit_card_installment.dart';
+import '../models/budget.dart';
 import '../models/dashboard_stats.dart';
 import '../models/expense.dart';
 import '../models/financial_goal.dart';
+import '../models/fixed_item.dart';
 import '../models/loan.dart';
 import '../models/member.dart';
+import '../models/monthly_plan.dart';
 import '../models/payable.dart';
 import '../models/receivable.dart';
 import '../models/revenue.dart';
 import '../models/transfer.dart';
 import '../models/vault.dart';
 import '../services/accounts_service.dart';
+import '../services/budgets_service.dart';
 import '../services/credit_card_bills_service.dart';
 import '../services/credit_card_purchases_service.dart';
 import '../services/credit_cards_service.dart';
 import '../services/dashboard_service.dart';
 import '../services/expenses_service.dart';
 import '../services/financial_goals_service.dart';
+import '../services/fixed_items_service.dart';
 import '../services/loans_service.dart';
 import '../services/members_service.dart';
+import '../services/monthly_plan_service.dart';
 import '../services/payables_service.dart';
 import '../services/receivables_service.dart';
 import '../services/revenues_service.dart';
@@ -162,4 +168,56 @@ final healthScoreProvider = FutureProvider.autoDispose<HealthScore>(
 
 final cashFlowForecastProvider = FutureProvider.autoDispose<CashFlowForecast>(
   (ref) => ref.watch(dashboardServiceProvider).cashFlowForecast(),
+);
+
+// ---- Fixas, orçamentos e planejamento mensal ------------------------------
+
+final fixedExpensesServiceProvider = Provider(
+  (ref) => FixedItemsService(
+    ref.watch(apiClientProvider),
+    resourcePath: '/api/v1/fixed-expenses/',
+    valuesKey: 'expense_values',
+    idKey: 'fixed_expense_id',
+  ),
+);
+final fixedRevenuesServiceProvider = Provider(
+  (ref) => FixedItemsService(
+    ref.watch(apiClientProvider),
+    resourcePath: '/api/v1/fixed-revenues/',
+    valuesKey: 'revenue_values',
+    idKey: 'fixed_revenue_id',
+  ),
+);
+final budgetsServiceProvider =
+    Provider((ref) => BudgetsService(ref.watch(apiClientProvider)));
+final monthlyPlanServiceProvider =
+    Provider((ref) => MonthlyPlanService(ref.watch(apiClientProvider)));
+
+final fixedExpensesProvider = FutureProvider.autoDispose<List<FixedItem>>(
+  (ref) => ref.watch(fixedExpensesServiceProvider).getAll(),
+);
+final fixedRevenuesProvider = FutureProvider.autoDispose<List<FixedItem>>(
+  (ref) => ref.watch(fixedRevenuesServiceProvider).getAll(),
+);
+
+/// Chave `(mês, ano)` — record com igualdade estrutural, ideal para `family`.
+typedef MonthYear = ({int month, int year});
+
+final budgetStatusProvider =
+    FutureProvider.autoDispose.family<List<BudgetStatus>, MonthYear>(
+  (ref, my) => ref.watch(budgetsServiceProvider).status(my.month, my.year),
+);
+final monthlyPlanSummaryProvider =
+    FutureProvider.autoDispose.family<MonthlyPlanSummary, MonthYear>(
+  (ref, my) => ref.watch(monthlyPlanServiceProvider).summary(my.month, my.year),
+);
+
+/// Meses já totalmente lançados; a chave é `isExpense`.
+final fixedGeneratedMonthsProvider =
+    FutureProvider.autoDispose.family<List<String>, bool>(
+  (ref, isExpense) => ref
+      .watch(isExpense
+          ? fixedExpensesServiceProvider
+          : fixedRevenuesServiceProvider)
+      .fullyGeneratedMonths(),
 );
