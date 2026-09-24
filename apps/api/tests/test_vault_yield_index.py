@@ -59,6 +59,22 @@ class ComputeIndexAnnualRateTest(SimpleTestCase):
         self.assertEqual(ref_date, datetime.date(2026, 9, 11))
 
     @patch("vaults.services.index_rates.fetch_latest_daily_rate")
+    def test_tax_rate_discounts_daily_rate_before_annualizing(
+        self, mock_fetch
+    ):
+        mock_fetch.return_value = (
+            Decimal("0.0005"),
+            datetime.date(2026, 9, 11),
+        )
+        annual_rate, _ = compute_index_annual_rate(
+            "cdi", Decimal("120"), tax_rate=Decimal("0.225")
+        )
+        expected = annualize_daily_rate(
+            Decimal("0.0005") * Decimal("1.20") * Decimal("0.775")
+        )
+        self.assertEqual(annual_rate, expected)
+
+    @patch("vaults.services.index_rates.fetch_latest_daily_rate")
     def test_none_when_api_unavailable(self, mock_fetch):
         mock_fetch.return_value = (None, None)
         annual_rate, ref_date = compute_index_annual_rate(

@@ -77,7 +77,9 @@ def annualize_daily_rate(daily_rate: Decimal | None) -> Decimal:
 
 
 def compute_index_annual_rate(
-    index_type: str, percentage: Decimal
+    index_type: str,
+    percentage: Decimal,
+    tax_rate: Decimal | None = None,
 ) -> tuple[Decimal | None, date | None]:
     """
     Retorna ``(taxa_anual, data_referencia)`` para ``index_type``
@@ -85,8 +87,9 @@ def compute_index_annual_rate(
     índice) sobre a taxa DIÁRIA do índice, antes de anualizar — convenção de
     mercado para "X% do CDI" (escala o fator diário e compõe o ano a partir
     dele; escalar a taxa já anualizada no final produziria um resultado
-    diferente por causa dos juros compostos). Retorna ``(None, None)`` se a
-    API estiver indisponível.
+    diferente por causa dos juros compostos). ``tax_rate`` (ex.: ``0.225``)
+    desconta o IR da taxa diária já escalada, resultando numa taxa líquida.
+    Retorna ``(None, None)`` se a API estiver indisponível.
     """
     daily_rate, ref_date = fetch_latest_daily_rate(index_type)
     if daily_rate is None:
@@ -95,5 +98,6 @@ def compute_index_annual_rate(
     pct = (percentage if percentage is not None else Decimal("100")) / Decimal(
         "100"
     )
-    annual_rate = annualize_daily_rate(daily_rate * pct)
+    net_factor = Decimal("1") - (tax_rate or Decimal("0"))
+    annual_rate = annualize_daily_rate(daily_rate * pct * net_factor)
     return annual_rate, ref_date

@@ -101,6 +101,7 @@ class VaultSerializer(serializers.ModelSerializer):
             "yield_index_type",
             "yield_index_type_display",
             "yield_index_percentage",
+            "yield_tax_rate",
             "last_yield_date",
             "pending_yield",
             "is_active",

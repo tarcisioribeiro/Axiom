@@ -108,6 +108,17 @@ class Vault(BaseModel):
         blank=True,
         help_text="Percentual do índice aplicado (ex: 120.00 = 120% do CDI)",
     )
+    yield_tax_rate = models.DecimalField(
+        verbose_name="Alíquota de IR sobre o rendimento",
+        max_digits=5,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        help_text=(
+            "Alíquota de IR descontada do rendimento do índice (ex: 0.2250 ="
+            " 22,5%). Aplicada sobre a taxa diária do índice, para que o"
+            " rendimento creditado seja líquido, como na instituição."
+        ),
+    )
     is_active = models.BooleanField(
         verbose_name="Ativo",
         default=True,
@@ -192,6 +203,7 @@ class Vault(BaseModel):
         annual_rate, _ref_date = compute_index_annual_rate(
             self.yield_index_type,
             self.yield_index_percentage or Decimal("100"),
+            tax_rate=self.yield_tax_rate,
         )
         if annual_rate is None:
             return None
@@ -229,7 +241,9 @@ class Vault(BaseModel):
             )
 
             annual_rate, ref_date = compute_index_annual_rate(
-                index_type, percentage or Decimal("100")
+                index_type,
+                percentage or Decimal("100"),
+                tax_rate=self.yield_tax_rate,
             )
             if annual_rate is None:
                 return None
