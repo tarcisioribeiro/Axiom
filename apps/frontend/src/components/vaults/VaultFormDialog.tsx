@@ -165,7 +165,9 @@ export function VaultFormDialog({
   };
 
   const selectedAccount = accounts.find((a) => a.id === formData.account);
-  const accountBalance = selectedAccount ? parseFloat(selectedAccount.available_balance) : 0;
+  const accountBalance = selectedAccount
+    ? parseFloat(selectedAccount.available_balance)
+    : 0;
   const estimatedAnnualYield = accountBalance * (formData.annual_yield_rate / 100);
   const estimatedMonthlyYield = estimatedAnnualYield / 12;
 

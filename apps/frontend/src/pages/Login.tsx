@@ -1,4 +1,4 @@
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router';
@@ -17,6 +17,7 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const { login, verify2FA, isLoading, error, requires2FA } = useAuthStore();
   const { logo } = useThemeAssets();
@@ -175,6 +176,10 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => setCapsLockOn(e.getModifierState('CapsLock'))}
+                  onKeyUp={(e) => setCapsLockOn(e.getModifierState('CapsLock'))}
+                  onBlur={() => setCapsLockOn(false)}
+                  aria-describedby={capsLockOn ? 'caps-lock-warning' : undefined}
                   placeholder={t('auth.login.passwordPlaceholder')}
                   required
                   disabled={isLoading}
@@ -198,6 +203,16 @@ export default function Login() {
                   )}
                 </PlainButton>
               </div>
+              {capsLockOn && (
+                <p
+                  id="caps-lock-warning"
+                  role="status"
+                  className="text-warning gap-xs flex items-center text-sm"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  {t('auth.login.capsLockOn')}
+                </p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" loading={isLoading}>

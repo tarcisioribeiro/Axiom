@@ -317,9 +317,12 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             {selectedAccount && (
               <p className="text-muted-foreground text-xs">
                 {t('common.fields.balance_info', {
-                  value: parseFloat(selectedAccount.available_balance).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  }),
+                  value: parseFloat(selectedAccount.available_balance).toLocaleString(
+                    'pt-BR',
+                    {
+                      minimumFractionDigits: 2,
+                    }
+                  ),
                 })}
               </p>
             )}

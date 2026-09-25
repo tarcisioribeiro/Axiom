@@ -417,6 +417,7 @@
       "passwordPlaceholder": "Digite sua senha",
       "showPassword": "Mostrar senha",
       "hidePassword": "Ocultar senha",
+      "capsLockOn": "Caps Lock está ativado",
       "submit": "Entrar",
       "loading": "Entrando...",
       "noAccount": "Não tem uma conta?",
