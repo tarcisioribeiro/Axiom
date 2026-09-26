@@ -27,19 +27,28 @@ class ModuleTile extends StatelessWidget {
       borderRadius: AppRadius.lgRadius,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.smd,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: AppRadius.lgRadius,
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color),
-            SizedBox(height: AppSpacing.xs),
-            Text(label, style: theme.textTheme.titleSmall),
+            SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                label,
+                style: theme.textTheme.titleSmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

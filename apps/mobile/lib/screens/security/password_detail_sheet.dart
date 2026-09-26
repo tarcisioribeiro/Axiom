@@ -8,9 +8,11 @@ import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/confirm.dart';
+import '../../widgets/feedback.dart';
 import 'password_form_sheet.dart';
 
 const _autoHideSeconds = 30;
@@ -83,14 +85,12 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
           await ref.read(passwordsServiceProvider).copy(widget.entry.id);
       await copyToClipboardWithAutoClear(revealed.password);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Senha copiada. Será apagada da área de transferência em 30s.')));
+        showAppToast(context,
+            'Senha copiada. Será apagada da área de transferência em 30s.');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -102,8 +102,7 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -118,12 +117,12 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
     if (!confirmed) return;
     try {
       await ref.read(passwordsServiceProvider).delete(widget.entry.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(passwordsProvider);
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -156,7 +155,7 @@ class _PasswordDetailSheetState extends ConsumerState<_PasswordDetailSheet> {
                     entry.isFavorite
                         ? Icons.star_rounded
                         : Icons.star_outline_rounded,
-                    color: entry.isFavorite ? Colors.amber : null,
+                    color: entry.isFavorite ? context.palette.star : null,
                   ),
                   onPressed: _toggleFavorite,
                 ),

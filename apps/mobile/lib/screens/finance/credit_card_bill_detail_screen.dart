@@ -10,7 +10,10 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
+import '../../widgets/page_header.dart';
 import '../../widgets/stat_card.dart';
 
 class CreditCardBillDetailScreen extends ConsumerWidget {
@@ -67,15 +70,24 @@ class CreditCardBillDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: billAsync.whenOrNull(
-          data: (bill) => Text(
-              'Fatura ${ChoiceLabels.of(ChoiceLabels.billMonths, bill.month)}/${bill.year}'),
+        title: ModuleAppBarTitle(
+          icon: Icons.receipt_long_outlined,
+          color: context.palette.finance,
+          title: billAsync.whenOrNull(
+                data: (bill) => Text(
+                    'Fatura ${ChoiceLabels.of(ChoiceLabels.billMonths, bill.month)}/${bill.year}'),
+              ) ??
+              const SizedBox.shrink(),
         ),
       ),
       body: SafeArea(
-        child: billAsync.when(
+        child: AsyncSwitcher(
+            child: billAsync.when(
           loading: () => const LoadingState(),
-          error: (error, _) => Center(child: Text('Erro: $error')),
+          error: (error, _) => ErrorState(
+              error: error,
+              onRetry: () =>
+                  ref.invalidate(creditCardBillByIdProvider(billId))),
           data: (bill) => ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
@@ -126,7 +138,10 @@ class CreditCardBillDetailScreen extends ConsumerWidget {
               itemsAsync.when(
                 loading: () => const LoadingState(
                     variant: LoadingVariant.list, itemCount: 3),
-                error: (error, _) => Text('Erro: $error'),
+                error: (error, _) => ErrorState(
+                    error: error,
+                    onRetry: () =>
+                        ref.invalidate(creditCardBillItemsProvider(billId))),
                 data: (items) => items.isEmpty
                     ? const EmptyState(
                         icon: Icons.list_alt_outlined,
@@ -137,7 +152,7 @@ class CreditCardBillDetailScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }

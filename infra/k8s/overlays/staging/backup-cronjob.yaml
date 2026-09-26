@@ -526,7 +526,7 @@ spec:
 
           initContainers:
             - name: install-mc
-              image: quay.io/minio/mc:RELEASE.2024-11-21T17-21-54Z
+              image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
               command: ["cp", "/usr/bin/mc", "/tools/mc"]
               resources:
                 requests:

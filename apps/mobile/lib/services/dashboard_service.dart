@@ -36,4 +36,12 @@ class DashboardService {
     );
     return CashFlowForecast.fromJson(response.data!);
   }
+
+  Future<List<AnomalyAlert>> anomalies() async {
+    final response =
+        await client.dio.get<List<dynamic>>('/api/v1/dashboard/anomalies/');
+    return (response.data ?? const [])
+        .map((e) => AnomalyAlert.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 }

@@ -11,7 +11,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -25,11 +27,11 @@ class VaultsScreen extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Vault v) async {
     try {
       await ref.read(vaultsServiceProvider).delete(v.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(vaultsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -58,8 +60,7 @@ class VaultsScreen extends ConsumerWidget {
       ref.invalidate(accountsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -72,14 +73,11 @@ class VaultsScreen extends ConsumerWidget {
       ref.invalidate(accountsProvider);
       ref.invalidate(revenuesProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rendimento aplicado.')),
-        );
+        showAppToast(context, 'Rendimento aplicado.');
       }
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -102,9 +100,11 @@ class VaultsScreen extends ConsumerWidget {
             ref.invalidate(vaultsProvider);
             await ref.read(vaultsProvider.future);
           },
-          child: vaultsAsync.when(
+          child: AsyncSwitcher(
+              child: vaultsAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => ErrorState(
+                error: e, onRetry: () => ref.invalidate(vaultsProvider)),
             data: (vaults) {
               final reserved =
                   vaults.fold<double>(0, (s, v) => s + v.currentBalance);
@@ -117,7 +117,7 @@ class VaultsScreen extends ConsumerWidget {
                   AppPageHeader(
                     title: 'Cofres',
                     icon: Icons.savings_outlined,
-                    color: context.semanticColors.success,
+                    color: context.palette.finance,
                   ),
                   SizedBox(height: AppSpacing.md),
                   Row(
@@ -168,7 +168,7 @@ class VaultsScreen extends ConsumerWidget {
                 ],
               );
             },
-          ),
+          )),
         ),
       ),
     );
@@ -197,7 +197,10 @@ class VaultsScreen extends ConsumerWidget {
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (e, _) => Text('Erro: $e'),
+                    error: (e, _) => ErrorState(
+                        error: e,
+                        onRetry: () =>
+                            ref.invalidate(vaultTransactionsProvider(v.id))),
                     data: (txs) => txs.isEmpty
                         ? const Padding(
                             padding: EdgeInsets.all(AppSpacing.sm),
@@ -477,7 +480,10 @@ class _VaultFormSheetState extends ConsumerState<_VaultFormSheet> {
         await service.update(widget.existing!.id, vault.toJson());
       }
       ref.invalidate(vaultsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

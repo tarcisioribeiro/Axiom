@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import 'motion.dart';
 
 /// Skeleton/spinner shapes for "data is loading" — mirrors
 /// `components/common/LoadingState` on the web app. Skeletons are preferred
@@ -62,14 +63,53 @@ class LoadingState extends StatelessWidget {
   }
 }
 
-class _SkeletonBlock extends StatelessWidget {
+/// Pulsing placeholder (web `animate-pulse`); static under reduced motion.
+class _SkeletonBlock extends StatefulWidget {
   final double height;
 
   const _SkeletonBlock({required this.height});
 
   @override
+  State<_SkeletonBlock> createState() => _SkeletonBlockState();
+}
+
+class _SkeletonBlockState extends State<_SkeletonBlock>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1000),
+    lowerBound: 0.5,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduced(context)) {
+      _pulse
+        ..stop()
+        ..value = 1;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final base = Theme.of(context).colorScheme.onSurfaceVariant;
+    return FadeTransition(
+      opacity: _pulse,
+      child: _block(base),
+    );
+  }
+
+  Widget _block(Color base) {
+    final height = widget.height;
     return Container(
       height: height,
       decoration: BoxDecoration(

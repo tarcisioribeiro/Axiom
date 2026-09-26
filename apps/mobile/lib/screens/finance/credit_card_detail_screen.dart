@@ -10,8 +10,12 @@ import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/accent_card.dart';
+import '../../widgets/app_badge.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
+import '../../widgets/page_header.dart';
 import 'credit_card_purchase_form_sheet.dart';
 
 class CreditCardDetailScreen extends ConsumerWidget {
@@ -25,7 +29,14 @@ class CreditCardDetailScreen extends ConsumerWidget {
     final billsAsync = ref.watch(creditCardBillsProvider(cardId));
 
     return Scaffold(
-      appBar: AppBar(title: cardAsync.whenOrNull(data: (c) => Text(c.name))),
+      appBar: AppBar(
+        title: ModuleAppBarTitle(
+          icon: Icons.credit_card_outlined,
+          color: context.palette.finance,
+          title: cardAsync.whenOrNull(data: (c) => Text(c.name)) ??
+              const SizedBox.shrink(),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () =>
             showCreditCardPurchaseFormSheet(context, cardId: cardId),
@@ -38,9 +49,12 @@ class CreditCardDetailScreen extends ConsumerWidget {
             ref.invalidate(creditCardBillsProvider(cardId));
             await ref.read(creditCardByIdProvider(cardId).future);
           },
-          child: cardAsync.when(
+          child: AsyncSwitcher(
+              child: cardAsync.when(
             loading: () => const LoadingState(),
-            error: (error, _) => Center(child: Text('Erro: $error')),
+            error: (error, _) => ErrorState(
+                error: error,
+                onRetry: () => ref.invalidate(creditCardByIdProvider(cardId))),
             data: (card) => ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
@@ -100,7 +114,10 @@ class CreditCardDetailScreen extends ConsumerWidget {
                 billsAsync.when(
                   loading: () => const LoadingState(
                       variant: LoadingVariant.list, itemCount: 3),
-                  error: (error, _) => Text('Erro: $error'),
+                  error: (error, _) => ErrorState(
+                      error: error,
+                      onRetry: () =>
+                          ref.invalidate(creditCardBillsProvider(cardId))),
                   data: (bills) => bills.isEmpty
                       ? const EmptyState(
                           icon: Icons.receipt_outlined,
@@ -121,7 +138,7 @@ class CreditCardDetailScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
+          )),
         ),
       ),
     );
@@ -163,9 +180,11 @@ class _BillTile extends StatelessWidget {
                   Text(
                       '${ChoiceLabels.of(ChoiceLabels.billMonths, bill.month)}/${bill.year}',
                       style: theme.textTheme.titleSmall),
-                  Text(
-                    ChoiceLabels.of(ChoiceLabels.billStatuses, bill.status),
-                    style: theme.textTheme.bodySmall?.copyWith(color: color),
+                  SizedBox(height: AppSpacing.xs),
+                  AppBadge(
+                    label:
+                        ChoiceLabels.of(ChoiceLabels.billStatuses, bill.status),
+                    color: color,
                   ),
                 ],
               ),

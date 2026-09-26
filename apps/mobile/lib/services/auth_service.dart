@@ -89,6 +89,15 @@ class AuthService {
     }
   }
 
+  /// Display name for greetings — `first_name`, falling back to `username`
+  /// (same rule as the web dashboard).
+  Future<String?> displayName() async {
+    final response = await _client.dio.get<Map<String, dynamic>>('/api/v1/me/');
+    final data = response.data ?? const {};
+    final first = (data['first_name'] as String?)?.trim() ?? '';
+    return first.isNotEmpty ? first : data['username'] as String?;
+  }
+
   Future<void> logout() async {
     try {
       await _client.dio.post('/api/v1/authentication/logout/');

@@ -11,7 +11,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 
@@ -25,11 +27,11 @@ class FinancialGoalsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, FinancialGoal g) async {
     try {
       await ref.read(financialGoalsServiceProvider).delete(g.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(financialGoalsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -51,9 +53,12 @@ class FinancialGoalsScreen extends ConsumerWidget {
             ref.invalidate(financialGoalsProvider);
             await ref.read(financialGoalsProvider.future);
           },
-          child: goalsAsync.when(
+          child: AsyncSwitcher(
+              child: goalsAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => ErrorState(
+                error: e,
+                onRetry: () => ref.invalidate(financialGoalsProvider)),
             data: (goals) => CustomScrollView(
               slivers: [
                 SliverPadding(
@@ -62,7 +67,7 @@ class FinancialGoalsScreen extends ConsumerWidget {
                     child: AppPageHeader(
                       title: 'Metas financeiras',
                       icon: Icons.flag_outlined,
-                      color: context.semanticColors.success,
+                      color: context.palette.finance,
                     ),
                   ),
                 ),
@@ -95,7 +100,7 @@ class FinancialGoalsScreen extends ConsumerWidget {
                     padding: EdgeInsets.only(bottom: AppSpacing.md)),
               ],
             ),
-          ),
+          )),
         ),
       ),
     );
@@ -423,7 +428,10 @@ class _GoalFormSheetState extends ConsumerState<_GoalFormSheet> {
         await service.update(widget.existing!.id, goal.toJson());
       }
       ref.invalidate(financialGoalsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

@@ -6,6 +6,7 @@ import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showWorkoutSessionFormSheet(BuildContext context) {
@@ -66,7 +67,10 @@ class _WorkoutSessionFormSheetState
     try {
       await ref.read(workoutSessionsServiceProvider).create(session.toJson());
       ref.invalidate(workoutSessionsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

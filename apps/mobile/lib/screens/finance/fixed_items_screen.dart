@@ -13,8 +13,10 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 
@@ -38,7 +40,7 @@ class FixedItemsScreen extends StatelessWidget {
                   title: 'Fixas',
                   subtitle: 'Despesas e receitas recorrentes',
                   icon: Icons.event_repeat_outlined,
-                  color: context.semanticColors.success,
+                  color: context.palette.finance,
                 ),
               ),
               const TabBar(
@@ -75,8 +77,7 @@ class _FixedTab extends ConsumerWidget {
       await fn();
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -102,9 +103,11 @@ class _FixedTab extends ConsumerWidget {
           ref.invalidate(_provider);
           await ref.read(_provider.future);
         },
-        child: async.when(
+        child: AsyncSwitcher(
+            child: async.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) =>
+              ErrorState(error: e, onRetry: () => ref.invalidate(_provider)),
           data: (items) {
             final active = items.where((i) => i.isActive).toList();
             final total = active.fold<double>(0, (s, i) => s + i.defaultValue);
@@ -179,7 +182,7 @@ class _FixedTab extends ConsumerWidget {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -290,7 +293,10 @@ class _FixedFormState extends ConsumerState<_FixedForm> {
       }
       ref.invalidate(
           widget.isExpense ? fixedExpensesProvider : fixedRevenuesProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {
@@ -490,8 +496,7 @@ class _LaunchSheetState extends ConsumerState<_LaunchSheet> {
             widget.isExpense ? fixedExpensesProvider : fixedRevenuesProvider);
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$created lançamento(s) criado(s).')));
+        showAppToast(context, '$created lançamento(s) criado(s).');
       }
     } on ApiException catch (e) {
       setState(() => _error = e.message);

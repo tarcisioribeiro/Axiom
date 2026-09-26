@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/food.dart';
-import '../../utils/choice_labels.dart';
-import '../../utils/formatters.dart';
 import '../../models/meal_log.dart';
 import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
+import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import 'ai_generate_sheets.dart';
@@ -47,7 +49,7 @@ class NutritionScreen extends StatelessWidget {
                 child: AppPageHeader(
                   title: 'Nutrição',
                   icon: Icons.restaurant_rounded,
-                  color: context.semanticColors.success,
+                  color: context.palette.nutrition,
                 ),
               ),
               TabBar(
@@ -76,11 +78,11 @@ class _TodayTab extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, MealLog log) async {
     try {
       await ref.read(mealLogsServiceProvider).delete(log.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(mealLogsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -107,9 +109,11 @@ class _TodayTab extends ConsumerWidget {
           ref.invalidate(dailyCaloricSummaryProvider(today));
           await ref.read(mealLogsProvider.future);
         },
-        child: logsAsync.when(
+        child: AsyncSwitcher(
+            child: logsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(mealLogsProvider)),
           data: (logs) {
             final todayLogs =
                 logs.where((l) => _isSameDay(l.date, today)).toList();
@@ -169,7 +173,7 @@ class _TodayTab extends ConsumerWidget {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -260,11 +264,11 @@ class _MealTypesTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, MealType mealType) async {
     try {
       await ref.read(mealTypesServiceProvider).delete(mealType.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(mealTypesProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -296,9 +300,11 @@ class _MealTypesTab extends ConsumerWidget {
           ref.invalidate(mealTypesProvider);
           await ref.read(mealTypesProvider.future);
         },
-        child: mealTypesAsync.when(
+        child: AsyncSwitcher(
+            child: mealTypesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(mealTypesProvider)),
           data: (mealTypes) => mealTypes.isEmpty
               ? const EmptyState(
                   icon: Icons.schedule_outlined,
@@ -334,7 +340,7 @@ class _MealTypesTab extends ConsumerWidget {
                       )
                       .toList(),
                 ),
-        ),
+        )),
       ),
     );
   }
@@ -346,11 +352,11 @@ class _FoodsTab extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Food food) async {
     try {
       await ref.read(foodsServiceProvider).delete(food.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(foodsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -369,9 +375,11 @@ class _FoodsTab extends ConsumerWidget {
           ref.invalidate(foodsProvider);
           await ref.read(foodsProvider.future);
         },
-        child: foodsAsync.when(
+        child: AsyncSwitcher(
+            child: foodsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(foodsProvider)),
           data: (foods) => foods.isEmpty
               ? const EmptyState(
                   icon: Icons.set_meal_outlined,
@@ -399,7 +407,7 @@ class _FoodsTab extends ConsumerWidget {
                       )
                       .toList(),
                 ),
-        ),
+        )),
       ),
     );
   }

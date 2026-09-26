@@ -8,12 +8,15 @@ import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 
 const _autoHideSeconds = 30;
 
@@ -48,9 +51,11 @@ class _StoredAccountListState extends ConsumerState<StoredAccountList> {
           ref.invalidate(storedAccountsProvider);
           await ref.read(storedAccountsProvider.future);
         },
-        child: accountsAsync.when(
+        child: AsyncSwitcher(
+            child: accountsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e, onRetry: () => ref.invalidate(storedAccountsProvider)),
           data: (all) {
             final query = _searchController.text.trim().toLowerCase();
             final accounts = all
@@ -112,8 +117,8 @@ class _StoredAccountListState extends ConsumerState<StoredAccountList> {
                             ),
                           ),
                           if (account.isFavorite)
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 18),
+                            Icon(Icons.star_rounded,
+                                color: context.palette.star, size: 18),
                         ],
                       ),
                     ),
@@ -121,7 +126,7 @@ class _StoredAccountListState extends ConsumerState<StoredAccountList> {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -196,16 +201,12 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
           await ref.read(storedAccountsServiceProvider).copy(widget.account.id);
       await copyToClipboardWithAutoClear(r.accountNumber);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Número da conta copiado. Será apagado da área de transferência em 30s.')),
-        );
+        showAppToast(context,
+            'Número da conta copiado. Será apagado da área de transferência em 30s.');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -219,8 +220,7 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -235,12 +235,12 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
     if (!ok) return;
     try {
       await ref.read(storedAccountsServiceProvider).delete(widget.account.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(storedAccountsProvider);
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -275,7 +275,7 @@ class _AccountDetailSheetState extends ConsumerState<_AccountDetailSheet> {
                       account.isFavorite
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded,
-                      color: account.isFavorite ? Colors.amber : null,
+                      color: account.isFavorite ? context.palette.star : null,
                     ),
                     onPressed: _toggleFavorite,
                   ),
@@ -484,7 +484,10 @@ class _AccountFormSheetState extends ConsumerState<_AccountFormSheet> {
         await service.update(widget.existing!.id, payload);
       }
       ref.invalidate(storedAccountsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

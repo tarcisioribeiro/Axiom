@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/habit_heatmap.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_theme_variant.dart';
 import '../utils/formatters.dart';
 import 'app_card.dart';
 
@@ -94,16 +95,23 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final d = day;
-    Color color;
-    if (d == null || d.expected == 0) {
-      color = theme.colorScheme.surfaceContainerHighest;
+    // Web `--heatmap-*` scale: success-based, missed = destructive tint,
+    // with stronger alphas on dark backgrounds (index.css `.dark`).
+    final dark = theme.brightness == Brightness.dark;
+    final success = context.semanticColors.success;
+    final Color color;
+    if (d == null || !d.isScheduled || d.expected == 0) {
+      color = context.palette.muted;
+    } else if (d.completed == 0) {
+      color = theme.colorScheme.error.withValues(alpha: dark ? 0.28 : 0.15);
+    } else if (d.ratio <= 0.25) {
+      color = success.withValues(alpha: dark ? 0.15 : 0.22);
+    } else if (d.ratio <= 0.5) {
+      color = success.withValues(alpha: dark ? 0.3 : 0.44);
+    } else if (d.ratio <= 0.75) {
+      color = success.withValues(alpha: dark ? 0.55 : 0.66);
     } else {
-      final base = theme.colorScheme.primary;
-      color = Color.lerp(
-        base.withValues(alpha: 0.15),
-        base,
-        d.ratio,
-      )!;
+      color = success;
     }
     return Tooltip(
       message: d == null

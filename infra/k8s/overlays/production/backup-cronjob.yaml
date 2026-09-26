@@ -515,7 +515,7 @@ data:
 ---
 # ── 3. CronJob — daily at 02:00 BRT ───────────────────────────────────────────
 #
-# initContainer  quay.io/minio/mc:latest  copies the mc binary into the shared
+# initContainer  pgsty/mc  copies the mc binary into the shared
 #                                 emptyDir volume /tools so the main
 #                                 container (postgres:16) can use it.
 #
@@ -561,7 +561,7 @@ spec:
           # ── initContainer: supply the mc binary ─────────────────────────────
           initContainers:
             - name: install-mc
-              image: quay.io/minio/mc:RELEASE.2024-11-21T17-21-54Z
+              image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
               command: ["cp", "/usr/bin/mc", "/tools/mc"]
               resources:
                 requests:

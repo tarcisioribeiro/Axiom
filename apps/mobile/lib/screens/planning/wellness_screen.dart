@@ -12,7 +12,10 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
+import '../../widgets/page_header.dart';
 import '../../widgets/stat_card.dart';
 
 /// "Wellness Center" — check-ins emocionais, modo crise, biblioteca de
@@ -25,28 +28,43 @@ class WellnessScreen extends StatelessWidget {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bem-estar'),
-          bottom: const TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [
-              Tab(text: 'Painel'),
-              Tab(text: 'Check-in'),
-              Tab(text: 'Crise'),
-              Tab(text: 'Biblioteca'),
-              Tab(text: 'Relatório'),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+                child: AppPageHeader(
+                  title: 'Bem-estar',
+                  subtitle: 'Check-ins, crise e intervenções',
+                  icon: Icons.spa_rounded,
+                  color: context.palette.health,
+                ),
+              ),
+              const TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                tabs: [
+                  Tab(text: 'Painel'),
+                  Tab(text: 'Check-in'),
+                  Tab(text: 'Crise'),
+                  Tab(text: 'Biblioteca'),
+                  Tab(text: 'Relatório'),
+                ],
+              ),
+              const Expanded(
+                child: TabBarView(
+                  children: [
+                    _DashboardTab(),
+                    _CheckinTab(),
+                    _CrisisTab(),
+                    _LibraryTab(),
+                    _ReportTab(),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _DashboardTab(),
-            _CheckinTab(),
-            _CrisisTab(),
-            _LibraryTab(),
-            _ReportTab(),
-          ],
         ),
       ),
     );
@@ -69,9 +87,11 @@ class _DashboardTab extends ConsumerWidget {
         ref.invalidate(wellnessDashboardProvider);
         await ref.read(wellnessDashboardProvider.future);
       },
-      child: async.when(
+      child: AsyncSwitcher(
+          child: async.when(
         loading: () => const LoadingState(variant: LoadingVariant.stats),
-        error: (e, _) => Center(child: Text('Erro: $e')),
+        error: (e, _) => ErrorState(
+            error: e, onRetry: () => ref.invalidate(wellnessDashboardProvider)),
         data: (d) => ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
@@ -132,7 +152,7 @@ class _DashboardTab extends ConsumerWidget {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -184,9 +204,12 @@ class _CheckinTab extends ConsumerWidget {
           ref.invalidate(emotionalCheckinsProvider);
           await ref.read(emotionalCheckinsProvider.future);
         },
-        child: async.when(
+        child: AsyncSwitcher(
+            child: async.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(emotionalCheckinsProvider)),
           data: (list) => list.isEmpty
               ? const EmptyState(
                   icon: Icons.mood_rounded, title: 'Nenhum check-in ainda')
@@ -223,7 +246,7 @@ class _CheckinTab extends ConsumerWidget {
                     );
                   },
                 ),
-        ),
+        )),
       ),
     );
   }
@@ -426,7 +449,10 @@ class _CrisisTab extends ConsumerWidget {
             ),
             error: (e, _) => SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              sliver: SliverToBoxAdapter(child: Text('Erro: $e')),
+              sliver: SliverToBoxAdapter(
+                  child: ErrorState(
+                      error: e,
+                      onRetry: () => ref.invalidate(crisisLogsProvider))),
             ),
             data: (logs) => logs.isEmpty
                 ? const SliverToBoxAdapter(child: SizedBox.shrink())
@@ -727,9 +753,12 @@ class _LibraryTab extends ConsumerWidget {
         ref.invalidate(wellnessInterventionsProvider);
         await ref.read(wellnessInterventionsProvider.future);
       },
-      child: async.when(
+      child: AsyncSwitcher(
+          child: async.when(
         loading: () => const LoadingState(variant: LoadingVariant.list),
-        error: (e, _) => Center(child: Text('Erro: $e')),
+        error: (e, _) => ErrorState(
+            error: e,
+            onRetry: () => ref.invalidate(wellnessInterventionsProvider)),
         data: (list) => list.isEmpty
             ? const EmptyState(
                 icon: Icons.spa_outlined,
@@ -775,17 +804,13 @@ class _LibraryTab extends ConsumerWidget {
                                           .completeIntervention(i.id);
                                       ref.invalidate(wellnessDashboardProvider);
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(const SnackBar(
-                                          content: Text('Marcada como feita.'),
-                                        ));
+                                        showAppToast(
+                                            context, 'Marcada como feita.');
                                       }
                                     } on ApiException catch (e) {
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                          content: Text(e.message),
-                                        ));
+                                        showAppToast(context, e.message,
+                                            kind: ToastKind.error);
                                       }
                                     }
                                   },
@@ -797,7 +822,7 @@ class _LibraryTab extends ConsumerWidget {
                         ))
                     .toList(),
               ),
-      ),
+      )),
     );
   }
 }
@@ -823,8 +848,7 @@ class _ReportTabState extends ConsumerState<_ReportTab> {
       ref.invalidate(wellnessWeeklyReportsProvider);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     } finally {
       if (mounted) setState(() => _generating = false);
@@ -850,9 +874,12 @@ class _ReportTabState extends ConsumerState<_ReportTab> {
           ref.invalidate(wellnessWeeklyReportsProvider);
           await ref.read(wellnessWeeklyReportsProvider.future);
         },
-        child: async.when(
+        child: AsyncSwitcher(
+            child: async.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(wellnessWeeklyReportsProvider)),
           data: (list) => list.isEmpty
               ? const EmptyState(
                   icon: Icons.summarize_outlined,
@@ -899,7 +926,7 @@ class _ReportTabState extends ConsumerState<_ReportTab> {
                     );
                   },
                 ),
-        ),
+        )),
       ),
     );
   }

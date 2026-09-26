@@ -6,11 +6,15 @@ import '../../models/menu_option.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
+import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 
 /// Nested editing of a meal type: its menu options, and the ingredients
@@ -29,11 +33,11 @@ class MealTypeDetailScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, MenuOption option) async {
     try {
       await ref.read(menuOptionsServiceProvider).delete(option.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(menuOptionsProvider(mealTypeId));
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -44,7 +48,13 @@ class MealTypeDetailScreen extends ConsumerWidget {
     ref.watch(foodsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(mealTypeName)),
+      appBar: AppBar(
+        title: ModuleAppBarTitle(
+          icon: Icons.restaurant_rounded,
+          color: context.palette.nutrition,
+          title: Text(mealTypeName),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showOptionForm(context, ref, mealTypeId),
         icon: const Icon(Icons.add),
@@ -55,9 +65,12 @@ class MealTypeDetailScreen extends ConsumerWidget {
           ref.invalidate(menuOptionsProvider(mealTypeId));
           await ref.read(menuOptionsProvider(mealTypeId).future);
         },
-        child: optionsAsync.when(
+        child: AsyncSwitcher(
+            child: optionsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(menuOptionsProvider(mealTypeId))),
           data: (options) {
             if (options.isEmpty) {
               return const EmptyState(
@@ -80,7 +93,7 @@ class MealTypeDetailScreen extends ConsumerWidget {
                   .toList(),
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -103,11 +116,11 @@ class _OptionCard extends ConsumerWidget {
       BuildContext context, WidgetRef ref, MenuOptionIngredient ing) async {
     try {
       await ref.read(menuOptionIngredientsServiceProvider).delete(ing.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(menuOptionsProvider(mealTypeId));
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }

@@ -4,6 +4,7 @@ import '../models/installment.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_theme_variant.dart';
 import '../utils/formatters.dart';
+import '../widgets/feedback.dart';
 import 'loading_state.dart';
 
 /// Read-only installment table for a loan / payable / receivable. The
@@ -60,8 +61,7 @@ class _InstallmentsSheetState extends State<_InstallmentsSheet> {
                       variant: LoadingVariant.list, itemCount: 3);
                 }
                 if (snap.hasError) {
-                  return Text('Erro: ${snap.error}',
-                      style: TextStyle(color: theme.colorScheme.error));
+                  return ErrorState(error: snap.error!);
                 }
                 final items = snap.data ?? const <Installment>[];
                 if (items.isEmpty) {
