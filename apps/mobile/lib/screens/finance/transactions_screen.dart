@@ -6,14 +6,16 @@ import '../../models/expense.dart';
 import '../../models/revenue.dart';
 import '../../providers/finance_providers.dart';
 import '../../services/base_service.dart';
-import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/app_badge.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -41,7 +43,7 @@ class TransactionsScreen extends StatelessWidget {
                 child: AppPageHeader(
                   title: 'Transações',
                   icon: Icons.receipt_long_outlined,
-                  color: context.semanticColors.success,
+                  color: context.palette.finance,
                 ),
               ),
               TabBar(
@@ -69,6 +71,7 @@ class _ExpensesTab extends ConsumerStatefulWidget {
 
 class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
   final _searchController = TextEditingController();
+  _Filters _filters = const _Filters();
 
   @override
   void dispose() {
@@ -79,11 +82,11 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
   Future<void> _delete(Expense expense) async {
     try {
       await ref.read(expensesServiceProvider).delete(expense.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(expensesProvider);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -94,8 +97,8 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
           .read(expensesServiceProvider)
           .patch(expense.id, {'payed': !expense.payed});
       ref.invalidate(expensesProvider);
-    } on ApiException catch (_) {
-      // Best-effort toggle; provider refresh will reflect the true state.
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, e.message, kind: ToastKind.error);
     }
   }
 
@@ -117,18 +120,21 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
           ref.invalidate(expensesProvider);
           await ref.read(expensesProvider.future);
         },
-        child: expensesAsync.when(
+        child: AsyncSwitcher(
+            child: expensesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, _) => Center(child: Text('Erro: $error')),
+          error: (error, _) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(expensesProvider)),
           data: (allExpenses) {
             final query = _searchController.text.trim().toLowerCase();
-            final expenses = query.isEmpty
-                ? allExpenses
-                : allExpenses
-                    .where((e) => e.description.toLowerCase().contains(query))
-                    .toList();
-            final total = allExpenses.fold<double>(0, (s, e) => s + e.value);
-            final paid = allExpenses
+            final expenses = allExpenses
+                .where((x) =>
+                    (query.isEmpty ||
+                        x.description.toLowerCase().contains(query)) &&
+                    _filters.matches(x.category, x.payed, x.date))
+                .toList();
+            final total = expenses.fold<double>(0, (s, e) => s + e.value);
+            final paid = expenses
                 .where((e) => e.payed)
                 .fold<double>(0, (s, e) => s + e.value);
 
@@ -147,6 +153,12 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
                             hintText: 'Buscar despesas...',
                             prefixIcon: Icon(Icons.search_rounded, size: 20),
                           ),
+                        ),
+                        _FilterBar(
+                          filters: _filters,
+                          categories: ChoiceLabels.expenseCategories,
+                          doneLabel: 'Pago',
+                          onChanged: (f) => setState(() => _filters = f),
                         ),
                         SizedBox(height: AppSpacing.sm),
                         Row(
@@ -226,7 +238,7 @@ class _ExpensesTabState extends ConsumerState<_ExpensesTab> {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -241,6 +253,7 @@ class _RevenuesTab extends ConsumerStatefulWidget {
 
 class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
   final _searchController = TextEditingController();
+  _Filters _filters = const _Filters();
 
   @override
   void dispose() {
@@ -251,11 +264,11 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
   Future<void> _delete(Revenue revenue) async {
     try {
       await ref.read(revenuesServiceProvider).delete(revenue.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(revenuesProvider);
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -266,8 +279,8 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
           .read(revenuesServiceProvider)
           .patch(revenue.id, {'received': !revenue.received});
       ref.invalidate(revenuesProvider);
-    } on ApiException catch (_) {
-      // Best-effort toggle; provider refresh will reflect the true state.
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, e.message, kind: ToastKind.error);
     }
   }
 
@@ -289,18 +302,21 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
           ref.invalidate(revenuesProvider);
           await ref.read(revenuesProvider.future);
         },
-        child: revenuesAsync.when(
+        child: AsyncSwitcher(
+            child: revenuesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, _) => Center(child: Text('Erro: $error')),
+          error: (error, _) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(revenuesProvider)),
           data: (allRevenues) {
             final query = _searchController.text.trim().toLowerCase();
-            final revenues = query.isEmpty
-                ? allRevenues
-                : allRevenues
-                    .where((r) => r.description.toLowerCase().contains(query))
-                    .toList();
-            final total = allRevenues.fold<double>(0, (s, r) => s + r.value);
-            final received = allRevenues
+            final revenues = allRevenues
+                .where((x) =>
+                    (query.isEmpty ||
+                        x.description.toLowerCase().contains(query)) &&
+                    _filters.matches(x.category, x.received, x.date))
+                .toList();
+            final total = revenues.fold<double>(0, (s, r) => s + r.value);
+            final received = revenues
                 .where((r) => r.received)
                 .fold<double>(0, (s, r) => s + r.value);
 
@@ -319,6 +335,12 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
                             hintText: 'Buscar receitas...',
                             prefixIcon: Icon(Icons.search_rounded, size: 20),
                           ),
+                        ),
+                        _FilterBar(
+                          filters: _filters,
+                          categories: ChoiceLabels.revenueCategories,
+                          doneLabel: 'Recebido',
+                          onChanged: (f) => setState(() => _filters = f),
                         ),
                         SizedBox(height: AppSpacing.sm),
                         Row(
@@ -398,7 +420,7 @@ class _RevenuesTabState extends ConsumerState<_RevenuesTab> {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -503,8 +525,8 @@ class _TransactionTile extends StatelessWidget {
   }
 }
 
-/// Tappable pill that toggles a transaction's paid/received state. Sized to
-/// a real 32px-min touch target — the old inline pill was ~18px tall.
+/// Tappable status badge that toggles a transaction's paid/received state,
+/// padded to a 32px-min touch target.
 class _StatusToggle extends StatelessWidget {
   final bool done;
   final String label;
@@ -518,31 +540,153 @@ class _StatusToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final color =
         done ? context.semanticColors.success : context.semanticColors.warning;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.smRadius,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 32),
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: AppRadius.smRadius,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              done ? Icons.check_circle_rounded : Icons.schedule_rounded,
-              size: 13,
+    return Semantics(
+      button: true,
+      label: '$label, toque para alternar',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 32),
+          child: Center(
+            widthFactor: 1,
+            child: AppBadge(
+              label: label,
               color: color,
+              icon: done ? Icons.check_circle_rounded : Icons.schedule_rounded,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Active transaction filters (web `FilterBar`): category, status, period.
+class _Filters {
+  final String? category;
+  final bool? done;
+  final DateTimeRange? range;
+
+  const _Filters({this.category, this.done, this.range});
+
+  bool matches(String category, bool done, DateTime date) =>
+      (this.category == null || this.category == category) &&
+      (this.done == null || this.done == done) &&
+      (range == null ||
+          (!date.isBefore(range!.start) &&
+              date.isBefore(range!.end.add(const Duration(days: 1)))));
+}
+
+class _FilterBar extends StatelessWidget {
+  final _Filters filters;
+  final Map<String, String> categories;
+  final String doneLabel;
+  final ValueChanged<_Filters> onChanged;
+
+  const _FilterBar({
+    required this.filters,
+    required this.categories,
+    required this.doneLabel,
+    required this.onChanged,
+  });
+
+  Future<void> _pickCategory(BuildContext context) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              for (final e in categories.entries)
+                ListTile(
+                  title: Text(e.value),
+                  selected: e.key == filters.category,
+                  onTap: () => Navigator.of(context).pop(e.key),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked != null) {
+      onChanged(
+          _Filters(category: picked, done: filters.done, range: filters.range));
+    }
+  }
+
+  Future<void> _pickRange(BuildContext context) async {
+    final now = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 5),
+      initialDateRange: filters.range ??
+          DateTimeRange(
+            start: DateTime(now.year, now.month),
+            end: DateTime(now.year, now.month + 1, 0),
+          ),
+    );
+    if (range != null) {
+      onChanged(_Filters(
+          category: filters.category, done: filters.done, range: range));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final f = filters;
+    final range = f.range;
+    return Padding(
+      padding: EdgeInsets.only(top: AppSpacing.sm),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            FilterChip(
+              label: Text(f.category == null
+                  ? 'Categoria'
+                  : ChoiceLabels.of(categories, f.category!)),
+              selected: f.category != null,
+              onSelected: (_) => _pickCategory(context),
+              onDeleted: f.category == null
+                  ? null
+                  : () => onChanged(_Filters(done: f.done, range: f.range)),
             ),
             SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(color: color),
+            FilterChip(
+              label: Text(doneLabel),
+              selected: f.done == true,
+              onSelected: (on) => onChanged(_Filters(
+                  category: f.category, done: on ? true : null, range: range)),
+            ),
+            SizedBox(width: AppSpacing.xs),
+            FilterChip(
+              label: const Text('Pendente'),
+              selected: f.done == false,
+              onSelected: (on) => onChanged(_Filters(
+                  category: f.category, done: on ? false : null, range: range)),
+            ),
+            SizedBox(width: AppSpacing.xs),
+            FilterChip(
+              label: Text(range == null
+                  ? 'Período'
+                  : '${AppFormatters.date(range.start)} – '
+                      '${AppFormatters.date(range.end)}'),
+              selected: range != null,
+              onSelected: (_) => _pickRange(context),
+              onDeleted: range == null
+                  ? null
+                  : () =>
+                      onChanged(_Filters(category: f.category, done: f.done)),
             ),
           ],
         ),

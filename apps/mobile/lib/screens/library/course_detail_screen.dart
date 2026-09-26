@@ -5,8 +5,11 @@ import '../../providers/finance_providers.dart';
 import '../../providers/library_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/page_header.dart';
 
 /// Módulos e aulas de um curso: marcar aula como concluída (recalcula o
 /// progresso e as horas no backend), adicionar e remover.
@@ -23,8 +26,7 @@ class CourseDetailScreen extends ConsumerWidget {
         ..invalidate(coursesProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -70,7 +72,13 @@ class CourseDetailScreen extends ConsumerWidget {
             ?.title ??
         'Curso';
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: ModuleAppBarTitle(
+          icon: Icons.school_outlined,
+          color: context.palette.intellect,
+          title: Text(title),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Módulo'),
@@ -90,7 +98,9 @@ class CourseDetailScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const LoadingState(variant: LoadingVariant.list),
-        error: (e, _) => Center(child: Text('Erro: $e')),
+        error: (e, _) => ErrorState(
+            error: e,
+            onRetry: () => ref.invalidate(courseModulesProvider(courseId))),
         data: (modules) => modules.isEmpty
             ? const EmptyState(
                 icon: Icons.view_module_outlined, title: 'Nenhum módulo')

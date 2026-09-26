@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/account.dart';
+import '../models/budget.dart';
 import '../models/credit_card.dart';
 import '../models/credit_card_bill.dart';
 import '../models/credit_card_installment.dart';
-import '../models/budget.dart';
 import '../models/dashboard_stats.dart';
 import '../models/expense.dart';
 import '../models/financial_goal.dart';
@@ -168,6 +168,10 @@ final healthScoreProvider = FutureProvider.autoDispose<HealthScore>(
 
 final cashFlowForecastProvider = FutureProvider.autoDispose<CashFlowForecast>(
   (ref) => ref.watch(dashboardServiceProvider).cashFlowForecast(),
+);
+
+final anomaliesProvider = FutureProvider.autoDispose<List<AnomalyAlert>>(
+  (ref) => ref.watch(dashboardServiceProvider).anomalies(),
 );
 
 // ---- Fixas, orçamentos e planejamento mensal ------------------------------

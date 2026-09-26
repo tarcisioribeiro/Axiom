@@ -32,10 +32,15 @@ exclusivos do web.
 - **Seleção de tema**: `theme/app_themes.dart` replica as 16 variantes do
   frontend web (Dracula + 7 variantes escuras, Alucard + 7 variantes claras),
   com os mesmos tokens HSL de `apps/frontend/src/index.css`. O seletor fica
-  no ícone de tema da tela de login (`theme/theme_picker_sheet.dart`).
+  no ícone de tema da tela de login e no header de cada aba
+  (`widgets/header_actions.dart` → `theme/theme_picker_sheet.dart`).
   `theme/app_theme_variant.dart` também expõe `AppSemanticColors` (uma
-  `ThemeExtension`) para as cores success/warning/info que não têm um slot
-  correspondente no `ColorScheme` do Flutter.
+  `ThemeExtension`) para as cores success/warning/info e `AppPaletteTokens`
+  (`context.palette`) com a camada semântica do web: `--muted*`,
+  `--border-subtle`, `--input`, `--star` e as cores de módulo
+  `--category-*`. Esses valores ficam em `theme/app_palette_tokens.dart`,
+  **gerado** por `tool/gen_palette_tokens.py` a partir do `index.css` —
+  rode o script sempre que o web mudar uma paleta.
 - **Navegação + estado**: `go_router` com um `StatefulShellRoute.indexedStack`
   de 4 abas (Finanças/Planejamento/Agente IA/Segurança — ver
   `router/app_router.dart`), cada uma com sua própria pilha de navegação.
@@ -196,6 +201,22 @@ Simplificações ainda assumidas em relação ao web:
 - **Tokens**: `app_spacing.dart` ganhou `smd` (12); `app_radius.dart` foi
   arredondado um passo (`sm 6 / md 10 / lg 14 / xl 20`) para um acabamento
   mais tátil que o `--radius` de 8 px do web.
+- **Cor por módulo**: header, `ModuleTile`, agentes e títulos de detalhe
+  (`ModuleAppBarTitle`) usam `context.palette.<categoria>` — finance →
+  Finanças, health → Planejamento/Bem-estar, exercise → Treino, nutrition →
+  Nutrição, intellect → Biblioteca, studies → Segurança (igual a
+  `PageHeader.tsx`).
+- **Números**: todo o `TextTheme` usa algarismos tabulares (`tnum`), o
+  equivalente global da classe `.numeric` do web.
+- **Estados e feedback**: `widgets/feedback.dart` — `ErrorState` (mensagem
+  amigável + "Tentar novamente") em todo `.when(error:)`, e `showAppToast`
+  (sucesso/erro/info com cor semântica) em toda mutação. `AppBadge`
+  (`widgets/app_badge.dart`) é a pílula de status do web.
+- **Movimento**: `widgets/motion.dart` (`FadeIn`, `AsyncSwitcher`,
+  `AnimatedProgressBar`, contador no `StatCard`, skeleton pulsante), com
+  duração zero quando o sistema pede *reduced motion*.
+- **Divergências conscientes** (ver `ui-parity-audit.md` §4): Inter em vez
+  das fontes do sistema, raio maior, botões de 48 px e cards sem sombra.
 
 Lint/test estão validados localmente (`flutter analyze`, `flutter test`) —
 não há job de CI para mobile hoje (veja seção CI/CD abaixo).
@@ -321,7 +342,10 @@ flutter build apk --debug  # verificação de build Android (iOS exige macOS/Xco
   atacado por decisão de escopo.
 - Itens deixados como *web-only* de propósito (ver "Simplificações"): upload de
   foto de membro, permissões de membro, ferramentas de renegociação/
-  amortização de dívidas, questionário Rosenberg, arrastar-e-soltar do kanban.
+  amortização de dívidas, questionário Rosenberg, arrastar-e-soltar do kanban,
+  recuperação de senha e cadastro de conta (a tela de login orienta usar o
+  web). Histórico com várias sessões por agente também não existe no web —
+  ambos guardam uma sessão por agente.
 - Migração `DropdownButtonFormField.value` → `initialValue` em massa.
 
 ---

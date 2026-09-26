@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import 'feedback.dart';
 
 /// Local-only Pomodoro timer (foco 25' / pausa 5'). Nothing is persisted —
 /// it's a focus aid, not tracked work. Lives in a bottom sheet launched from
@@ -70,10 +71,13 @@ class _PomodoroSheetState extends State<_PomodoroSheet> {
     if (!_isBreak) _completedFocus++;
     _isBreak = !_isBreak;
     _remaining = _isBreak ? _shortBreak : _focus;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger?.showSnackBar(SnackBar(
-      content: Text(_isBreak ? 'Hora da pausa ☕' : 'De volta ao foco 🍅'),
-    ));
+    if (mounted) {
+      showAppToast(
+        context,
+        _isBreak ? 'Hora da pausa ☕' : 'De volta ao foco 🍅',
+        kind: ToastKind.info,
+      );
+    }
   }
 
   void _reset() {

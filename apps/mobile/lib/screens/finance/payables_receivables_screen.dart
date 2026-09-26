@@ -12,8 +12,10 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/installments_sheet.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -44,7 +46,7 @@ class PayablesReceivablesScreen extends StatelessWidget {
                 child: AppPageHeader(
                   title: 'A pagar / A receber',
                   icon: Icons.receipt_long_rounded,
-                  color: context.semanticColors.success,
+                  color: context.palette.finance,
                 ),
               ),
               const TabBar(
@@ -69,11 +71,11 @@ class _PayablesTab extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Payable p) async {
     try {
       await ref.read(payablesServiceProvider).delete(p.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(payablesProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -122,9 +124,11 @@ class _PayablesTab extends ConsumerWidget {
           ref.invalidate(payablesProvider);
           await ref.read(payablesProvider.future);
         },
-        child: payablesAsync.when(
+        child: AsyncSwitcher(
+            child: payablesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e, onRetry: () => ref.invalidate(payablesProvider)),
           data: (items) {
             final outstanding =
                 items.fold<double>(0, (s, p) => s + p.remainingValue);
@@ -211,7 +215,7 @@ class _PayablesTab extends ConsumerWidget {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -224,11 +228,11 @@ class _ReceivablesTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, Receivable r) async {
     try {
       await ref.read(receivablesServiceProvider).delete(r.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(receivablesProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -277,9 +281,11 @@ class _ReceivablesTab extends ConsumerWidget {
           ref.invalidate(receivablesProvider);
           await ref.read(receivablesProvider.future);
         },
-        child: receivablesAsync.when(
+        child: AsyncSwitcher(
+            child: receivablesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e, onRetry: () => ref.invalidate(receivablesProvider)),
           data: (items) {
             final outstanding =
                 items.fold<double>(0, (s, r) => s + r.remainingValue);
@@ -366,7 +372,7 @@ class _ReceivablesTab extends ConsumerWidget {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }

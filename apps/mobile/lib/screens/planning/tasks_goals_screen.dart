@@ -10,17 +10,19 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/accent_card.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/habit_heatmap.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/pomodoro_sheet.dart';
 import '../../widgets/row_actions.dart';
 import 'goal_form_sheet.dart';
 import 'routine_task_form_sheet.dart';
-import '../../utils/formatters.dart';
 
 DateTime _today() {
   final now = DateTime.now();
@@ -48,7 +50,7 @@ class TasksGoalsScreen extends StatelessWidget {
                 child: AppPageHeader(
                   title: 'Tarefas & Metas',
                   icon: Icons.checklist_rounded,
-                  color: context.semanticColors.info,
+                  color: context.palette.health,
                   trailing: IconButton(
                     tooltip: 'Pomodoro',
                     icon: const Icon(Icons.timer_outlined),
@@ -138,9 +140,12 @@ class _ChecklistTabState extends ConsumerState<_ChecklistTab> {
         ref.invalidate(taskInstancesForDateProvider(today));
         await ref.read(taskInstancesForDateProvider(today).future);
       },
-      child: instancesAsync.when(
+      child: AsyncSwitcher(
+          child: instancesAsync.when(
         loading: () => const LoadingState(variant: LoadingVariant.list),
-        error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+        error: (error, stackTrace) => ErrorState(
+            error: error,
+            onRetry: () => ref.invalidate(taskInstancesForDateProvider(today))),
         data: (data) => ListView(
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
@@ -186,7 +191,7 @@ class _ChecklistTabState extends ConsumerState<_ChecklistTab> {
               ),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -327,11 +332,11 @@ class _RoutinesTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, RoutineTask task) async {
     try {
       await ref.read(routineTasksServiceProvider).delete(task.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(routineTasksProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -352,9 +357,12 @@ class _RoutinesTab extends ConsumerWidget {
           ref.invalidate(habitHeatmapProvider(DateTime.now().year));
           await ref.read(routineTasksProvider.future);
         },
-        child: tasksAsync.when(
+        child: AsyncSwitcher(
+            child: tasksAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(routineTasksProvider)),
           data: (tasks) => ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
@@ -384,7 +392,7 @@ class _RoutinesTab extends ConsumerWidget {
                 ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }
@@ -454,11 +462,11 @@ class _GoalsTab extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Goal goal) async {
     try {
       await ref.read(goalsServiceProvider).delete(goal.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(goalsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -477,9 +485,11 @@ class _GoalsTab extends ConsumerWidget {
           ref.invalidate(goalsProvider);
           await ref.read(goalsProvider.future);
         },
-        child: goalsAsync.when(
+        child: AsyncSwitcher(
+            child: goalsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(goalsProvider)),
           data: (goals) => goals.isEmpty
               ? const EmptyState(
                   icon: Icons.flag_outlined,
@@ -501,7 +511,7 @@ class _GoalsTab extends ConsumerWidget {
                       )
                       .toList(),
                 ),
-        ),
+        )),
       ),
     );
   }

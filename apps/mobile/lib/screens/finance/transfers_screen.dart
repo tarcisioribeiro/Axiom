@@ -11,7 +11,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -24,12 +26,12 @@ class TransfersScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, Transfer transfer) async {
     try {
       await ref.read(transfersServiceProvider).delete(transfer.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(transfersProvider);
       ref.invalidate(accountsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -53,9 +55,11 @@ class TransfersScreen extends ConsumerWidget {
             ref.invalidate(transfersProvider);
             await ref.read(transfersProvider.future);
           },
-          child: transfersAsync.when(
+          child: AsyncSwitcher(
+              child: transfersAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (error, _) => Center(child: Text('Erro: $error')),
+            error: (error, _) => ErrorState(
+                error: error, onRetry: () => ref.invalidate(transfersProvider)),
             data: (transfers) {
               final volume = transfers.fold<double>(0, (s, t) => s + t.value);
               final completed =
@@ -73,7 +77,7 @@ class TransfersScreen extends ConsumerWidget {
                           AppPageHeader(
                             title: 'Transferências',
                             icon: Icons.swap_horiz_rounded,
-                            color: context.semanticColors.success,
+                            color: context.palette.finance,
                           ),
                           SizedBox(height: AppSpacing.md),
                           Row(
@@ -145,7 +149,7 @@ class TransfersScreen extends ConsumerWidget {
                 ],
               );
             },
-          ),
+          )),
         ),
       ),
     );

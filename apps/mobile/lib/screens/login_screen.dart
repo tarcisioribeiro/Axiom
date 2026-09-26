@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _isSubmitting = false;
   bool _obscurePassword = true;
+  bool _capsLockOn = false;
   String? _errorMessage;
   String? _pendingTempToken;
 
@@ -30,10 +32,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _devUrlController.text = ref.read(environmentControllerProvider).devBaseUrl;
+    _capsLockOn = _isCapsLockEnabled();
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
+  }
+
+  // Only physical keyboards report lock modes; soft keyboards never do.
+  bool _isCapsLockEnabled() => HardwareKeyboard.instance.lockModesEnabled
+      .contains(KeyboardLockMode.capsLock);
+
+  bool _onHardwareKey(KeyEvent event) {
+    final capsLockOn = _isCapsLockEnabled();
+    if (capsLockOn != _capsLockOn && mounted) {
+      setState(() => _capsLockOn = capsLockOn);
+    }
+    return false;
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
     _usernameController.dispose();
     _passwordController.dispose();
     _twoFactorCodeController.dispose();
@@ -207,6 +224,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _usernameController,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Usuário ou e-mail',
                         ),
@@ -219,8 +237,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.go,
+                        onFieldSubmitted: (_) => _handleSubmit(),
                         decoration: InputDecoration(
                           labelText: 'Senha',
+                          helperText:
+                              _capsLockOn ? 'Caps Lock está ativado' : null,
+                          helperStyle: TextStyle(
+                            color: themeController.activeVariant.warning,
+                            fontWeight: FontWeight.w600,
+                          ),
                           suffixIcon: IconButton(
                             tooltip: _obscurePassword
                                 ? 'Mostrar senha'
@@ -253,6 +279,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _twoFactorCodeController,
                         keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.go,
+                        onFieldSubmitted: (_) => _handleSubmit(),
                         decoration:
                             const InputDecoration(labelText: 'Código 2FA'),
                         enabled: !_isSubmitting,
@@ -299,6 +327,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 }),
                         child: const Text('Voltar'),
                       ),
+                    if (_pendingTempToken == null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      // Password reset and sign-up stay web-only
+                      // (documentation/mobile/README.md).
+                      Text(
+                        'Esqueceu a senha ou ainda não tem conta? '
+                        'Use a versão web do Axiom.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
                   ],
                 ),
               ),

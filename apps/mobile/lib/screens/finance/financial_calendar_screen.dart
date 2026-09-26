@@ -165,7 +165,7 @@ class _FinancialCalendarScreenState
               AppPageHeader(
                 title: 'Calendário financeiro',
                 icon: Icons.event_note_rounded,
-                color: context.semanticColors.info,
+                color: context.palette.finance,
               ),
               SizedBox(height: AppSpacing.md),
               Row(

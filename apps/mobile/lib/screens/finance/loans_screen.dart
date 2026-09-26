@@ -12,8 +12,10 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/installments_sheet.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -29,11 +31,11 @@ class LoansScreen extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Loan loan) async {
     try {
       await ref.read(loansServiceProvider).delete(loan.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(loansProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -81,9 +83,8 @@ class LoansScreen extends ConsumerWidget {
     final members = ref.read(membersProvider).valueOrNull ?? const <Member>[];
     final currentMember = ref.read(currentMemberProvider).valueOrNull;
     if (accounts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cadastre uma conta primeiro.')),
-      );
+      showAppToast(context, 'Cadastre uma conta primeiro.',
+          kind: ToastKind.info);
       return;
     }
     await showLoanFormSheet(
@@ -114,9 +115,11 @@ class LoansScreen extends ConsumerWidget {
             ref.invalidate(loansProvider);
             await ref.read(loansProvider.future);
           },
-          child: loansAsync.when(
+          child: AsyncSwitcher(
+              child: loansAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => ErrorState(
+                error: e, onRetry: () => ref.invalidate(loansProvider)),
             data: (loans) {
               final lentOut = loans
                   .where((l) => l.loanType == 'lent')
@@ -135,7 +138,7 @@ class LoansScreen extends ConsumerWidget {
                           AppPageHeader(
                             title: 'Empréstimos',
                             icon: Icons.handshake_outlined,
-                            color: context.semanticColors.success,
+                            color: context.palette.finance,
                           ),
                           SizedBox(height: AppSpacing.md),
                           Row(
@@ -204,7 +207,7 @@ class LoansScreen extends ConsumerWidget {
                 ],
               );
             },
-          ),
+          )),
         ),
       ),
     );

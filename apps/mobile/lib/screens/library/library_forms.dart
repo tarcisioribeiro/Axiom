@@ -7,8 +7,10 @@ import '../../providers/finance_providers.dart';
 import '../../providers/library_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<T?> _sheet<T>(BuildContext context, WidgetBuilder builder) =>
@@ -234,7 +236,7 @@ class _BookFormState extends ConsumerState<_BookForm> with _SaveMixin {
                   setState(() => _rating = _rating == i ? null : i),
               icon: Icon(
                 (_rating ?? 0) >= i ? Icons.star : Icons.star_border,
-                color: Colors.amber,
+                color: context.palette.star,
               ),
             ),
         ]),
@@ -591,8 +593,7 @@ class _HighlightsSheetState extends ConsumerState<_HighlightsSheet> {
           ..invalidate(dueFlashCardsProvider)
           ..invalidate(allFlashCardsProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$n flashcard(s) criado(s).')));
+          showAppToast(context, '$n flashcard(s) criado(s).');
         }
       });
 

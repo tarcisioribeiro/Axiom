@@ -305,7 +305,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.balance).toLocaleString('pt-BR', {
+                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
@@ -317,9 +317,12 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             {selectedAccount && (
               <p className="text-muted-foreground text-xs">
                 {t('common.fields.balance_info', {
-                  value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  }),
+                  value: parseFloat(selectedAccount.available_balance).toLocaleString(
+                    'pt-BR',
+                    {
+                      minimumFractionDigits: 2,
+                    }
+                  ),
                 })}
               </p>
             )}

@@ -10,7 +10,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/accent_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -23,11 +25,11 @@ class AccountsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, Account account) async {
     try {
       await ref.read(accountsServiceProvider).delete(account.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(accountsProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -47,16 +49,18 @@ class AccountsScreen extends ConsumerWidget {
             ref.invalidate(accountsProvider);
             await ref.read(accountsProvider.future);
           },
-          child: accountsAsync.when(
+          child: AsyncSwitcher(
+              child: accountsAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (error, _) => Center(child: Text('Erro: $error')),
+            error: (error, _) => ErrorState(
+                error: error, onRetry: () => ref.invalidate(accountsProvider)),
             data: (accounts) => ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
                 AppPageHeader(
                   title: 'Contas',
                   icon: Icons.account_balance_wallet_outlined,
-                  color: context.semanticColors.success,
+                  color: context.palette.finance,
                 ),
                 SizedBox(height: AppSpacing.md),
                 if (accounts.isNotEmpty) ...[
@@ -105,7 +109,7 @@ class AccountsScreen extends ConsumerWidget {
                   ),
               ],
             ),
-          ),
+          )),
         ),
       ),
     );

@@ -11,7 +11,9 @@ import '../../theme/app_theme_variant.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import 'ai_generate_sheets.dart';
@@ -41,7 +43,7 @@ class WorkoutScreen extends StatelessWidget {
                 child: AppPageHeader(
                   title: 'Treino',
                   icon: Icons.fitness_center_rounded,
-                  color: context.semanticColors.warning,
+                  color: context.palette.exercise,
                 ),
               ),
               TabBar(
@@ -85,9 +87,12 @@ class _SessionsTab extends ConsumerWidget {
           ref.invalidate(workoutSessionsProvider);
           await ref.read(workoutSessionsProvider.future);
         },
-        child: sessionsAsync.when(
+        child: AsyncSwitcher(
+            child: sessionsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(workoutSessionsProvider)),
           data: (sessions) {
             final sorted = [...sessions]
               ..sort((a, b) => b.date.compareTo(a.date));
@@ -102,7 +107,7 @@ class _SessionsTab extends ConsumerWidget {
                     children: sorted.map(_SessionTile.new).toList(),
                   );
           },
-        ),
+        )),
       ),
     );
   }
@@ -155,11 +160,11 @@ class _PlansTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, WorkoutPlan plan) async {
     try {
       await ref.read(workoutPlansServiceProvider).delete(plan.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(workoutPlansProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -191,9 +196,12 @@ class _PlansTab extends ConsumerWidget {
           ref.invalidate(workoutPlansProvider);
           await ref.read(workoutPlansProvider.future);
         },
-        child: plansAsync.when(
+        child: AsyncSwitcher(
+            child: plansAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(workoutPlansProvider)),
           data: (plans) => plans.isEmpty
               ? const EmptyState(
                   icon: Icons.event_note_outlined,
@@ -223,7 +231,7 @@ class _PlansTab extends ConsumerWidget {
                       )
                       .toList(),
                 ),
-        ),
+        )),
       ),
     );
   }
@@ -305,11 +313,11 @@ class _ExercisesTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, ExerciseCatalog exercise) async {
     try {
       await ref.read(exerciseCatalogServiceProvider).delete(exercise.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(exerciseCatalogProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -328,9 +336,12 @@ class _ExercisesTab extends ConsumerWidget {
           ref.invalidate(exerciseCatalogProvider);
           await ref.read(exerciseCatalogProvider.future);
         },
-        child: exercisesAsync.when(
+        child: AsyncSwitcher(
+            child: exercisesAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error,
+              onRetry: () => ref.invalidate(exerciseCatalogProvider)),
           data: (exercises) => exercises.isEmpty
               ? const EmptyState(
                   icon: Icons.sports_gymnastics_rounded,
@@ -359,7 +370,7 @@ class _ExercisesTab extends ConsumerWidget {
                       )
                       .toList(),
                 ),
-        ),
+        )),
       ),
     );
   }

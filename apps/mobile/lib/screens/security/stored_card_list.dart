@@ -8,12 +8,15 @@ import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/clipboard_auto_clear.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 
 const _autoHideSeconds = 30;
 
@@ -49,9 +52,11 @@ class _StoredCardListState extends ConsumerState<StoredCardList> {
           ref.invalidate(storedCardsProvider);
           await ref.read(storedCardsProvider.future);
         },
-        child: cardsAsync.when(
+        child: AsyncSwitcher(
+            child: cardsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e, onRetry: () => ref.invalidate(storedCardsProvider)),
           data: (all) {
             final query = _searchController.text.trim().toLowerCase();
             final cards = all
@@ -112,8 +117,8 @@ class _StoredCardListState extends ConsumerState<StoredCardList> {
                             ),
                           ),
                           if (card.isFavorite)
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 18),
+                            Icon(Icons.star_rounded,
+                                color: context.palette.star, size: 18),
                         ],
                       ),
                     ),
@@ -121,7 +126,7 @@ class _StoredCardListState extends ConsumerState<StoredCardList> {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -197,16 +202,12 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
       final r = await ref.read(storedCardsServiceProvider).copy(widget.card.id);
       await copyToClipboardWithAutoClear(r.cardNumber);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Número copiado. Será apagado da área de transferência em 30s.')),
-        );
+        showAppToast(context,
+            'Número copiado. Será apagado da área de transferência em 30s.');
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -218,8 +219,7 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -234,12 +234,12 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
     if (!ok) return;
     try {
       await ref.read(storedCardsServiceProvider).delete(widget.card.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(storedCardsProvider);
       if (mounted) Navigator.of(context).pop();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -272,7 +272,7 @@ class _CardDetailSheetState extends ConsumerState<_CardDetailSheet> {
                     card.isFavorite
                         ? Icons.star_rounded
                         : Icons.star_outline_rounded,
-                    color: card.isFavorite ? Colors.amber : null,
+                    color: card.isFavorite ? context.palette.star : null,
                   ),
                   onPressed: _toggleFavorite,
                 ),
@@ -470,7 +470,10 @@ class _CardFormSheetState extends ConsumerState<_CardFormSheet> {
         await service.update(widget.existing!.id, payload);
       }
       ref.invalidate(storedCardsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

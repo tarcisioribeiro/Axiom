@@ -417,6 +417,7 @@
       "passwordPlaceholder": "Enter your password",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
+      "capsLockOn": "Caps Lock is on",
       "submit": "Sign in",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",

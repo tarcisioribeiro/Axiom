@@ -37,3 +37,7 @@ final sessionControllerProvider =
 final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(ref.watch(apiClientProvider)),
 );
+
+final displayNameProvider = FutureProvider.autoDispose<String?>(
+  (ref) => ref.watch(authServiceProvider).displayName(),
+);

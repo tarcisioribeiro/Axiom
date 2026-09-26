@@ -5,6 +5,7 @@ import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showMealTypeFormSheet(BuildContext context,
@@ -88,7 +89,10 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
         await service.update(widget.existing!.id, mealType.toJson());
       }
       ref.invalidate(mealTypesProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

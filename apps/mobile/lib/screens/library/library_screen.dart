@@ -9,14 +9,16 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import 'knowledge_map.dart';
 import 'library_forms.dart';
-import '../../utils/formatters.dart';
 
 /// Biblioteca / Intelecto: livros, cursos, flashcards (revisão SM-2) e
 /// habilidades. Capa, leitor EPUB, destaques, grafo e importações
@@ -38,7 +40,7 @@ class LibraryScreen extends StatelessWidget {
                 title: 'Biblioteca',
                 subtitle: 'Livros, cursos e habilidades',
                 icon: Icons.menu_book_rounded,
-                color: context.semanticColors.info,
+                color: context.palette.intellect,
                 trailing: const _ImportMenu(),
               ),
             ),
@@ -70,8 +72,7 @@ Future<void> _guard(BuildContext context, Future<void> Function() fn) async {
     await fn();
   } on ApiException catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.message)));
+      showAppToast(context, e.message, kind: ToastKind.error);
     }
   }
 }
@@ -105,9 +106,11 @@ class _ListTab<T> extends ConsumerWidget {
           ref.invalidate(provider);
           await ref.read(provider.future);
         },
-        child: async.when(
+        child: AsyncSwitcher(
+            child: async.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) =>
+              ErrorState(error: e, onRetry: () => ref.invalidate(provider)),
           data: (items) => items.isEmpty
               ? ListView(children: [
                   EmptyState(icon: emptyIcon, title: emptyTitle),
@@ -117,7 +120,7 @@ class _ListTab<T> extends ConsumerWidget {
                   itemCount: items.length,
                   itemBuilder: (c, i) => itemBuilder(c, ref, items[i]),
                 ),
-        ),
+        )),
       ),
     );
   }
@@ -168,6 +171,9 @@ class _BooksTab extends StatelessWidget {
                       onEdit: () => showBookFormSheet(context, existing: b),
                       onDelete: () => _guard(context, () async {
                         await ref.read(booksServiceProvider).delete(b.id);
+                        if (context.mounted) {
+                          showAppToast(context, 'Excluído com sucesso.');
+                        }
                         ref.invalidate(booksProvider);
                       }),
                       deleteConfirmTitle: 'Excluir livro',
@@ -260,6 +266,9 @@ class _CoursesTab extends StatelessWidget {
                       onEdit: () => showCourseFormSheet(context, existing: c),
                       onDelete: () => _guard(context, () async {
                         await ref.read(coursesServiceProvider).delete(c.id);
+                        if (context.mounted) {
+                          showAppToast(context, 'Excluído com sucesso.');
+                        }
                         ref.invalidate(coursesProvider);
                       }),
                       deleteConfirmTitle: 'Excluir curso',
@@ -330,7 +339,8 @@ class _ReviewTabState extends ConsumerState<_ReviewTab> {
       ),
       body: async.when(
         loading: () => const LoadingState(variant: LoadingVariant.list),
-        error: (e, _) => Center(child: Text('Erro: $e')),
+        error: (e, _) => ErrorState(
+            error: e, onRetry: () => ref.invalidate(dueFlashCardsProvider)),
         data: (cards) {
           if (cards.isEmpty) {
             return const EmptyState(
@@ -427,6 +437,9 @@ class _SkillsTab extends StatelessWidget {
                 onEdit: () => showSkillFormSheet(context, existing: s),
                 onDelete: () => _guard(context, () async {
                   await ref.read(skillsServiceProvider).delete(s.id);
+                  if (context.mounted) {
+                    showAppToast(context, 'Excluído com sucesso.');
+                  }
                   ref.invalidate(skillsProvider);
                 }),
                 deleteConfirmTitle: 'Excluir habilidade',
@@ -467,6 +480,9 @@ class _GraphList extends StatelessWidget {
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => _guard(context, () async {
                   await ref.read(knowledgeLinksServiceProvider).delete(l.id);
+                  if (context.mounted) {
+                    showAppToast(context, 'Excluído com sucesso.');
+                  }
                   ref.invalidate(knowledgeLinksProvider);
                 }),
               ),
@@ -511,7 +527,6 @@ class _ImportMenu extends ConsumerWidget {
     final file = picked?.files.single;
     final bytes = file?.bytes;
     if (file == null || bytes == null || !context.mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
     try {
       final service = ref.read(libraryImportServiceProvider);
       final msg = kindle
@@ -520,9 +535,11 @@ class _ImportMenu extends ConsumerWidget {
       ref
         ..invalidate(booksProvider)
         ..invalidate(authorsProvider);
-      messenger.showSnackBar(SnackBar(content: Text(msg)));
+      if (context.mounted) showAppToast(context, msg);
     } on ApiException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      if (context.mounted) {
+        showAppToast(context, e.message, kind: ToastKind.error);
+      }
     }
   }
 
