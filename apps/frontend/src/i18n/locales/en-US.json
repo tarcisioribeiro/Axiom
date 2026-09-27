@@ -1714,6 +1714,18 @@
       }
     },
     "budgets": {
+      "purchases": {
+        "button": "Purchases",
+        "title": "Month purchases",
+        "empty": "No purchases in this category this month",
+        "date": "Date",
+        "description": "Description",
+        "source": "Source",
+        "value": "Value",
+        "total": "Total",
+        "account": "Account",
+        "card": "Card"
+      },
       "title": "Budgets",
       "newBtn": "New Budget",
       "editTitle": "Edit Budget",

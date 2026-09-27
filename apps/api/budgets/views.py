@@ -20,10 +20,9 @@ from budgets.serializers import (
     BudgetSerializer,
     BudgetStatusSerializer,
 )
-from credit_cards.models import CreditCardBill
+from credit_cards.models import MONTHS as BILL_MONTHS
+from credit_cards.models import CreditCardInstallment
 from expenses.models import Expense
-
-BILLS_AND_SERVICES_CATEGORY = "bills and services"
 
 
 class BudgetListCreateView(BaseListCreateView):
@@ -87,41 +86,42 @@ class BudgetStatusView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        budgets = Budget.objects.filter(month=month, year=year).select_related(
-            "member"
-        )
+        user = cast(User, request.user)
+        budgets = Budget.objects.filter(
+            created_by=user, month=month, year=year
+        ).select_related("member")
 
-        # Aggregate actual expenses by category for the given month/year
+        # Same rule as the "Compras" modal on the budgets page: account
+        # expenses dated in the month (bill payments excluded, their
+        # purchases are counted below) + card installments whose bill falls
+        # in the month, paid or not.
         expense_totals = (
             Expense.objects.filter(
+                created_by=user,
                 date__month=month,
                 date__year=year,
-                payed=True,
+                related_bill_payment__isnull=True,
             )
             .values("category")
             .annotate(total=Sum("value"))
         )
         expense_map: dict = {e["category"]: e["total"] for e in expense_totals}
 
-        # Include credit card bill interest/fees in "bills and services"
-        # category
-        bill_charges = CreditCardBill.objects.filter(
-            payment_date__month=month,
-            payment_date__year=year,
-            status="paid",
-            is_deleted=False,
-        ).aggregate(
-            total_interest=Sum("interest_charged"),
-            total_late_fee=Sum("late_fee"),
-        )
-        extra_charges = (bill_charges["total_interest"] or Decimal("0")) + (
-            bill_charges["total_late_fee"] or Decimal("0")
-        )
-        if extra_charges > 0:
-            existing = expense_map.get(
-                BILLS_AND_SERVICES_CATEGORY, Decimal("0")
+        installment_totals = (
+            CreditCardInstallment.objects.filter(
+                purchase__created_by=user,
+                purchase__is_deleted=False,
+                bill__month=BILL_MONTHS[month - 1][0],
+                bill__year=str(year),
             )
-            expense_map[BILLS_AND_SERVICES_CATEGORY] = existing + extra_charges
+            .values("purchase__category")
+            .annotate(total=Sum("value"))
+        )
+        for row in installment_totals:
+            category = row["purchase__category"]
+            expense_map[category] = (
+                expense_map.get(category, Decimal("0")) + row["total"]
+            )
 
         result = []
         for budget in budgets:
@@ -225,6 +225,7 @@ class BudgetHistoryView(APIView):
         expense_totals = (
             Expense.objects.filter(
                 period_q,
+                created_by=user,
                 category=category,
                 payed=True,
             )

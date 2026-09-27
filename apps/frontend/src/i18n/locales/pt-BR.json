@@ -1714,6 +1714,18 @@
       }
     },
     "budgets": {
+      "purchases": {
+        "button": "Compras",
+        "title": "Compras do mês",
+        "empty": "Nenhuma compra nesta categoria no mês",
+        "date": "Data",
+        "description": "Descrição",
+        "source": "Origem",
+        "value": "Valor",
+        "total": "Total",
+        "account": "Conta",
+        "card": "Cartão"
+      },
       "title": "Orçamentos",
       "newBtn": "Novo Orçamento",
       "editTitle": "Editar Orçamento",

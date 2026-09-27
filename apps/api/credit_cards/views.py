@@ -270,11 +270,15 @@ class CreditCardInstallmentListView(generics.ListAPIView):
         "bill": ["exact", "isnull"],
         "purchase__category": ["exact"],
         "payed": ["exact"],
+        "bill__month": ["exact"],
+        "bill__year": ["exact"],
     }
     ordering = ["due_date", "purchase__description"]
 
     def get_queryset(self):
-        return CreditCardInstallment.objects.select_related(
+        return CreditCardInstallment.objects.filter(
+            purchase__created_by=self.request.user
+        ).select_related(
             "purchase", "purchase__card", "purchase__member", "bill"
         )
 
@@ -296,7 +300,9 @@ class CreditCardInstallmentUpdateView(generics.UpdateAPIView):
     serializer_class = CreditCardInstallmentUpdateSerializer
 
     def get_queryset(self):
-        return CreditCardInstallment.objects.select_related("purchase", "bill")
+        return CreditCardInstallment.objects.filter(
+            purchase__created_by=self.request.user
+        ).select_related("purchase", "bill")
 
 
 class PayCreditCardBillView(APIView):
