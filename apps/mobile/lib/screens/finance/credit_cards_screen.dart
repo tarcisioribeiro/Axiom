@@ -12,7 +12,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/accent_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 import '../../widgets/stat_card.dart';
@@ -40,9 +42,12 @@ class CreditCardsScreen extends ConsumerWidget {
             ref.invalidate(creditCardsProvider);
             await ref.read(creditCardsProvider.future);
           },
-          child: cardsAsync.when(
+          child: AsyncSwitcher(
+              child: cardsAsync.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (error, _) => Center(child: Text('Erro: $error')),
+            error: (error, _) => ErrorState(
+                error: error,
+                onRetry: () => ref.invalidate(creditCardsProvider)),
             data: (cards) {
               final totalLimit =
                   cards.fold<double>(0, (s, c) => s + c.creditLimit);
@@ -55,7 +60,7 @@ class CreditCardsScreen extends ConsumerWidget {
                   AppPageHeader(
                     title: 'Cartões de Crédito',
                     icon: Icons.credit_card_outlined,
-                    color: context.semanticColors.success,
+                    color: context.palette.finance,
                   ),
                   SizedBox(height: AppSpacing.md),
                   if (cards.isNotEmpty) ...[
@@ -107,6 +112,9 @@ class CreditCardsScreen extends ConsumerWidget {
                           await ref
                               .read(creditCardsServiceProvider)
                               .delete(card.id);
+                          if (context.mounted) {
+                            showAppToast(context, 'Excluído com sucesso.');
+                          }
                           ref.invalidate(creditCardsProvider);
                         },
                       ),
@@ -114,7 +122,7 @@ class CreditCardsScreen extends ConsumerWidget {
                 ],
               );
             },
-          ),
+          )),
         ),
       ),
     );

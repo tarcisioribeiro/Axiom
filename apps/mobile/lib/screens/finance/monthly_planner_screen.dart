@@ -11,6 +11,7 @@ import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/month_nav.dart';
@@ -54,13 +55,13 @@ class _MonthlyPlannerScreenState extends ConsumerState<MonthlyPlannerScreen> {
     try {
       await ref.read(monthlyPlanServiceProvider).save(plan.id, plan);
     } on ApiException catch (e) {
-      _snack(e.message);
+      _snack(e.message, kind: ToastKind.error);
     }
   }
 
-  void _snack(String msg) {
+  void _snack(String msg, {ToastKind kind = ToastKind.success}) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      showAppToast(context, msg, kind: kind);
     }
   }
 
@@ -82,7 +83,7 @@ class _MonthlyPlannerScreenState extends ConsumerState<MonthlyPlannerScreen> {
           '${r['expenses_created'] ?? 0} despesa(s), '
           '${r['budgets_created'] ?? 0} orçamento(s).');
     } on ApiException catch (e) {
-      _snack(e.message);
+      _snack(e.message, kind: ToastKind.error);
     } finally {
       if (mounted) setState(() => _applying = false);
     }
@@ -115,7 +116,7 @@ class _MonthlyPlannerScreenState extends ConsumerState<MonthlyPlannerScreen> {
               AppPageHeader(
                 title: 'Planejamento mensal',
                 icon: Icons.event_available_outlined,
-                color: context.semanticColors.info,
+                color: context.palette.finance,
               ),
               MonthNav(
                 month: _my.month,
@@ -131,7 +132,11 @@ class _MonthlyPlannerScreenState extends ConsumerState<MonthlyPlannerScreen> {
                 },
               ),
               if (summaryAsync.hasError && summary == null)
-                Center(child: Text('Erro: ${summaryAsync.error}'))
+                ErrorState(
+                  error: summaryAsync.error!,
+                  onRetry: () =>
+                      ref.invalidate(monthlyPlanSummaryProvider(_my)),
+                )
               else if (summary == null || _plan == null)
                 const LoadingState(variant: LoadingVariant.list)
               else

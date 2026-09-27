@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_palette_tokens.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
 
@@ -44,14 +45,16 @@ class AppThemeVariant {
     required this.border,
   });
 
-  /// Muted foreground for secondary text / icons — derived from the palette
-  /// (`foreground` pulled toward `card`) instead of the seed-generated
-  /// `onSurfaceVariant`, which drifts off-palette on the community variants.
-  Color get _muted => Color.lerp(foreground, card, 0.42)!;
+  /// Semantic tokens the web layers on top of the palette (`--muted-*`,
+  /// `--border-subtle`, `--input`, `--star`, `--category-*`).
+  AppPaletteTokens get tokens => kPaletteTokens[id]!;
 
-  /// Softer than [border] — used for hairline card outlines / dividers so
-  /// they read as a whisper, not a box.
-  Color get _hairline => Color.lerp(border, background, 0.4)!;
+  /// `--muted-foreground`: secondary text / icons.
+  Color get _muted => tokens.mutedForeground;
+
+  /// Web cards/inputs use `border-border/70`; flattened onto the background
+  /// so it can also serve as an opaque divider color.
+  Color get _hairline => Color.lerp(background, border, 0.7)!;
 
   /// Subtle fill for inputs / chips: `card` nudged toward `foreground`.
   Color get _faintFill => Color.lerp(card, foreground, isDark ? 0.06 : 0.035)!;
@@ -139,6 +142,7 @@ class AppThemeVariant {
       visualDensity: VisualDensity.standard,
       extensions: [
         AppSemanticColors(success: success, warning: warning, info: info),
+        tokens,
       ],
       appBarTheme: AppBarTheme(
         backgroundColor: background,
@@ -185,7 +189,11 @@ class AppThemeVariant {
           side: BorderSide(color: hairline),
         ),
       ),
-      dividerTheme: DividerThemeData(color: hairline, thickness: 1, space: 1),
+      dividerTheme: DividerThemeData(
+        color: tokens.borderSubtle,
+        thickness: 1,
+        space: 1,
+      ),
       tabBarTheme: TabBarThemeData(
         labelColor: primary,
         unselectedLabelColor: muted,
@@ -209,8 +217,8 @@ class AppThemeVariant {
         floatingLabelStyle: textTheme.bodySmall?.copyWith(color: primary),
         prefixIconColor: muted,
         suffixIconColor: muted,
-        border: inputBorder(hairline, 0),
-        enabledBorder: inputBorder(hairline, 0),
+        border: inputBorder(hairline),
+        enabledBorder: inputBorder(hairline),
         focusedBorder: inputBorder(primary, 1.5),
         errorBorder: inputBorder(destructive, 1),
         focusedErrorBorder: inputBorder(destructive, 1.5),
@@ -348,66 +356,171 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   }
 }
 
+/// Web tokens that sit on top of each palette, transcribed per theme into
+/// `app_palette_tokens.dart` (generated). The `category-*` colors identify
+/// modules: finance → Finanças, health → Planejamento, exercise → Treino,
+/// nutrition → Nutrição, intellect → Biblioteca, studies → Segurança.
+/// Look up via `context.palette`.
+class AppPaletteTokens extends ThemeExtension<AppPaletteTokens> {
+  final Color muted;
+  final Color mutedForeground;
+  final Color borderSubtle;
+  final Color input;
+  final Color star;
+  final Color finance;
+  final Color health;
+  final Color studies;
+  final Color spiritual;
+  final Color exercise;
+  final Color nutrition;
+  final Color work;
+  final Color leisure;
+  final Color intellect;
+
+  const AppPaletteTokens({
+    required this.muted,
+    required this.mutedForeground,
+    required this.borderSubtle,
+    required this.input,
+    required this.star,
+    required this.finance,
+    required this.health,
+    required this.studies,
+    required this.spiritual,
+    required this.exercise,
+    required this.nutrition,
+    required this.work,
+    required this.leisure,
+    required this.intellect,
+  });
+
+  List<Color> get _all => [
+        muted,
+        mutedForeground,
+        borderSubtle,
+        input,
+        star,
+        finance,
+        health,
+        studies,
+        spiritual,
+        exercise,
+        nutrition,
+        work,
+        leisure,
+        intellect,
+      ];
+
+  static AppPaletteTokens _fromList(List<Color> c) => AppPaletteTokens(
+        muted: c[0],
+        mutedForeground: c[1],
+        borderSubtle: c[2],
+        input: c[3],
+        star: c[4],
+        finance: c[5],
+        health: c[6],
+        studies: c[7],
+        spiritual: c[8],
+        exercise: c[9],
+        nutrition: c[10],
+        work: c[11],
+        leisure: c[12],
+        intellect: c[13],
+      );
+
+  @override
+  AppPaletteTokens copyWith() => this;
+
+  @override
+  AppPaletteTokens lerp(ThemeExtension<AppPaletteTokens>? other, double t) {
+    if (other is! AppPaletteTokens) return this;
+    final a = _all, b = other._all;
+    return _fromList([
+      for (var i = 0; i < a.length; i++) Color.lerp(a[i], b[i], t)!,
+    ]);
+  }
+}
+
+extension AppPaletteTokensContext on BuildContext {
+  AppPaletteTokens get palette => Theme.of(this).extension<AppPaletteTokens>()!;
+}
+
 const String _interFontFamily = 'Inter';
 
 /// Tuned sizes/weights/tracking for the Inter family — Material's stock
 /// `Typography.material2021` metrics are built for the default Roboto
 /// metrics and read slightly loose with Inter, so weights and letter
 /// spacing are adjusted per role for a crisper hierarchy.
+///
+/// Every role uses tabular figures (`tnum`) so money and metrics line up and
+/// counters don't jitter — the web applies `.numeric` (`tabular-nums`) to
+/// values; doing it globally covers every amount on screen.
+const _tnum = [FontFeature.tabularFigures()];
+
 const TextTheme _interTextTheme = TextTheme(
   displayLarge: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 57,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.25,
   ),
   displayMedium: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 45,
     fontWeight: FontWeight.w700,
   ),
   displaySmall: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 36,
     fontWeight: FontWeight.w600,
   ),
   headlineLarge: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 32,
     fontWeight: FontWeight.w700,
   ),
   headlineMedium: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 28,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.1,
   ),
   headlineSmall: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 24,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.2,
   ),
   titleLarge: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 22,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
   ),
   titleMedium: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 16,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
   ),
   titleSmall: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
   ),
   bodyLarge: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 16,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.15,
@@ -415,6 +528,7 @@ const TextTheme _interTextTheme = TextTheme(
   ),
   bodyMedium: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 14,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.15,
@@ -422,6 +536,7 @@ const TextTheme _interTextTheme = TextTheme(
   ),
   bodySmall: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 12,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.2,
@@ -429,18 +544,21 @@ const TextTheme _interTextTheme = TextTheme(
   ),
   labelLarge: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
   ),
   labelMedium: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.3,
   ),
   labelSmall: TextStyle(
     fontFamily: _interFontFamily,
+    fontFeatures: _tnum,
     fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.3,

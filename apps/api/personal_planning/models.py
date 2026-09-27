@@ -790,6 +790,7 @@ class Goal(BaseModel):
         Para os tipos de contagem automatica (dias consecutivos, total de
         dias, evitar habito), `end_date` nao e um campo que o usuario
         preenche: e sempre derivado de `start_date + target_value` dias
+        (no modo manual, `start_date + target_value - current_value`)
         enquanto o objetivo estiver ativo. Isso mantem a data de termino
         sempre coerente com a meta e a data de inicio informadas, sem
         exigir nenhuma acao manual.
@@ -804,7 +805,12 @@ class Goal(BaseModel):
             and self.start_date
             and self.target_value
         ):
-            self.end_date = self.start_date + timedelta(days=self.target_value)
+            # No modo manual o usuario informa o progresso ja cumprido, entao
+            # so os dias restantes (meta - progresso) sao somados ao inicio.
+            days = self.target_value
+            if self.goal_source == "custom":
+                days = max(0, days - (self.current_value or 0))
+            self.end_date = self.start_date + timedelta(days=days)
             update_fields = kwargs.get("update_fields")
             if update_fields is not None and "end_date" not in update_fields:
                 kwargs["update_fields"] = list(update_fields) + ["end_date"]
@@ -2315,6 +2321,32 @@ class MealLog(BaseModel):
             models.Index(fields=["owner", "-date"]),
             models.Index(fields=["meal_type", "-date"]),
         ]
+
+    @property
+    def calories(self) -> float:
+        """Kcal da opção seguida (ingredientes não opcionais); 0 se livre."""
+        if not self.menu_option or self.is_free_meal:
+            return 0.0
+        total = 0.0
+        # .all() + filtro em Python para aproveitar prefetch_related
+        for ingredient in self.menu_option.ingredients.all():
+            food = ingredient.food
+            if (
+                ingredient.is_deleted
+                or ingredient.is_optional
+                or not ingredient.quantity
+                or not food
+                or not food.calories_per_serving
+            ):
+                continue
+            cal_per_serving = float(food.calories_per_serving)
+            if food.serving_size and float(food.serving_size) > 0:
+                total += (
+                    float(ingredient.quantity) / float(food.serving_size)
+                ) * cal_per_serving
+            else:
+                total += cal_per_serving
+        return round(total, 1)
 
     def __str__(self):
         option_str = self.menu_option.name if self.menu_option else "Livre"

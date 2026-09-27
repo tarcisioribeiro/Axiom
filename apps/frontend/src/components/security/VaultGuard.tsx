@@ -42,6 +42,33 @@ import { vaultConfigService } from '@/services/security-vault-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
 // ============================================================================
+// Caps Lock Warning
+// ============================================================================
+
+function CapsLockWarning() {
+  const { t } = useTranslation();
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  useEffect(() => {
+    const update = (e: KeyboardEvent) => setCapsLockOn(e.getModifierState('CapsLock'));
+    document.addEventListener('keydown', update);
+    document.addEventListener('keyup', update);
+    return () => {
+      document.removeEventListener('keydown', update);
+      document.removeEventListener('keyup', update);
+    };
+  }, []);
+
+  if (!capsLockOn) return null;
+  return (
+    <p role="status" className="text-warning gap-xs flex items-center text-sm">
+      <AlertTriangle className="h-4 w-4" />
+      {t('auth.login.capsLockOn')}
+    </p>
+  );
+}
+
+// ============================================================================
 // Password Strength Indicator
 // ============================================================================
 
@@ -287,6 +314,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                   )}
                 </PlainButton>
               </div>
+              <CapsLockWarning />
             </div>
             <div className="gap-sm flex justify-end">
               <Button
@@ -450,6 +478,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   {t('pages.vaultGuard.setup.passwordsMismatchShort')}
                 </p>
               )}
+              <CapsLockWarning />
             </div>
 
             <Button
@@ -556,6 +585,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                   )}
                 </PlainButton>
               </div>
+              <CapsLockWarning />
             </div>
 
             {failedAttempts > 0 && !isLocked && (

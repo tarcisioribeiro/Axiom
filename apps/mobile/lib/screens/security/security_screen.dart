@@ -5,11 +5,17 @@ import '../../models/password_entry.dart';
 import '../../providers/security_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
+import '../../widgets/app_badge.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/caps_lock_warning.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
+import '../../widgets/header_actions.dart';
 import '../../widgets/loading_state.dart';
-import '../../widgets/logout_button.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import 'password_detail_sheet.dart';
 import 'password_form_sheet.dart';
@@ -33,21 +39,23 @@ class SecurityScreen extends ConsumerWidget {
               AppPageHeader(
                 title: 'Segurança',
                 icon: Icons.shield_outlined,
-                color: Theme.of(context).colorScheme.primary,
-                trailing: const LogoutButton(),
+                color: context.palette.studies,
+                trailing: const TabHeaderActions(),
               ),
               SizedBox(height: AppSpacing.md),
               Expanded(
-                child: statusAsync.when(
+                child: AsyncSwitcher(
+                    child: statusAsync.when(
                   loading: () => const LoadingState(),
-                  error: (error, stackTrace) =>
-                      Center(child: Text('Erro: $error')),
+                  error: (error, stackTrace) => ErrorState(
+                      error: error,
+                      onRetry: () => ref.invalidate(vaultStatusProvider)),
                   data: (status) {
                     if (!status.isConfigured) return const _VaultSetupForm();
                     if (!status.isUnlocked) return const _VaultUnlockForm();
                     return const _VaultTabs();
                   },
-                ),
+                )),
               ),
             ],
           ),
@@ -141,6 +149,7 @@ class _VaultSetupFormState extends ConsumerState<_VaultSetupForm> {
                   validator: (v) =>
                       (v == null || v.isEmpty) ? 'Confirme a senha' : null,
                 ),
+                const CapsLockWarning(),
                 if (_error != null) ...[
                   SizedBox(height: AppSpacing.sm),
                   Text(
@@ -228,6 +237,7 @@ class _VaultUnlockFormState extends ConsumerState<_VaultUnlockForm> {
               decoration: const InputDecoration(labelText: 'Senha mestra'),
               onSubmitted: (_) => _submit(),
             ),
+            const CapsLockWarning(),
             if (_error != null) ...[
               SizedBox(height: AppSpacing.sm),
               Text(
@@ -267,11 +277,29 @@ class _VaultTabs extends StatelessWidget {
       length: 3,
       child: Column(
         children: [
-          const TabBar(
-            tabs: [
-              Tab(text: 'Senhas'),
-              Tab(text: 'Cartões'),
-              Tab(text: 'Contas'),
+          Row(
+            children: [
+              const Expanded(
+                child: TabBar(
+                  tabs: [
+                    Tab(text: 'Senhas'),
+                    Tab(text: 'Cartões'),
+                    Tab(text: 'Contas'),
+                  ],
+                ),
+              ),
+              Builder(
+                builder: (context) => IconButton(
+                  tooltip: 'Buscar no cofre',
+                  icon: const Icon(Icons.manage_search_rounded),
+                  onPressed: () => _showVaultSearch(context),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Atividade recente',
+                icon: const Icon(Icons.history_rounded),
+                onPressed: () => _showActivity(context),
+              ),
             ],
           ),
           const Expanded(
@@ -320,9 +348,11 @@ class _PasswordsListState extends ConsumerState<_PasswordsList> {
           ref.invalidate(passwordsProvider);
           await ref.read(passwordsProvider.future);
         },
-        child: passwordsAsync.when(
+        child: AsyncSwitcher(
+            child: passwordsAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (error, stackTrace) => Center(child: Text('Erro: $error')),
+          error: (error, stackTrace) => ErrorState(
+              error: error, onRetry: () => ref.invalidate(passwordsProvider)),
           data: (all) {
             final query = _searchController.text.trim().toLowerCase();
             final entries = all.where((e) {
@@ -356,7 +386,7 @@ class _PasswordsListState extends ConsumerState<_PasswordsList> {
                         _favoritesOnly
                             ? Icons.star_rounded
                             : Icons.star_outline_rounded,
-                        color: _favoritesOnly ? Colors.amber : null,
+                        color: _favoritesOnly ? context.palette.star : null,
                       ),
                       onPressed: () =>
                           setState(() => _favoritesOnly = !_favoritesOnly),
@@ -379,7 +409,7 @@ class _PasswordsListState extends ConsumerState<_PasswordsList> {
               ],
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -423,10 +453,204 @@ class _PasswordTile extends StatelessWidget {
               ],
             ),
           ),
-          if (entry.isFavorite)
-            const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+          _StrengthBadge(score: entry.strengthScore),
+          if (entry.isFavorite) ...[
+            SizedBox(width: AppSpacing.xs),
+            Icon(Icons.star_rounded, color: context.palette.star, size: 18),
+          ],
         ],
       ),
     );
   }
+}
+
+/// Web password-strength label/colour for `strength_score` (0–4).
+class _StrengthBadge extends StatelessWidget {
+  final int score;
+
+  const _StrengthBadge({required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final semantic = context.semanticColors;
+    final (label, color) = switch (score) {
+      >= 4 => ('Forte', semantic.success),
+      3 => ('Boa', scheme.primary),
+      2 => ('Razoável', semantic.warning),
+      1 => ('Fraca', scheme.error),
+      _ => ('Muito fraca', scheme.error),
+    };
+    return AppBadge(label: label, color: color, icon: Icons.shield_outlined);
+  }
+}
+
+/// Global vault search over senhas, cartões e contas (web security hub).
+void _showVaultSearch(BuildContext context) {
+  final tabs = DefaultTabController.of(context);
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => _VaultSearchSheet(
+      onOpenTab: (i) => tabs.animateTo(i),
+      onOpenPassword: (p) => showPasswordDetailSheet(context, p),
+    ),
+  );
+}
+
+class _VaultSearchSheet extends ConsumerStatefulWidget {
+  final ValueChanged<int> onOpenTab;
+  final ValueChanged<PasswordEntry> onOpenPassword;
+
+  const _VaultSearchSheet({
+    required this.onOpenTab,
+    required this.onOpenPassword,
+  });
+
+  @override
+  ConsumerState<_VaultSearchSheet> createState() => _VaultSearchSheetState();
+}
+
+class _VaultSearchSheetState extends ConsumerState<_VaultSearchSheet> {
+  String _query = '';
+
+  bool _hit(String? v) => v?.toLowerCase().contains(_query) ?? false;
+
+  @override
+  Widget build(BuildContext context) {
+    final passwords = ref.watch(passwordsProvider).valueOrNull ?? const [];
+    final cards = ref.watch(storedCardsProvider).valueOrNull ?? const [];
+    final accounts = ref.watch(storedAccountsProvider).valueOrNull ?? const [];
+    final q = _query;
+    final results = q.isEmpty
+        ? const <Widget>[]
+        : [
+            for (final p in passwords)
+              if (_hit(p.title) || _hit(p.site) || _hit(p.username))
+                ListTile(
+                  leading: const Icon(Icons.key_outlined),
+                  title: Text(p.title),
+                  subtitle: Text(p.username ?? p.site ?? 'Senha'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    widget.onOpenPassword(p);
+                  },
+                ),
+            for (final c in cards)
+              if (_hit(c.name) || _hit(c.cardholderName))
+                ListTile(
+                  leading: const Icon(Icons.credit_card_outlined),
+                  title: Text(c.name),
+                  subtitle: Text(c.cardNumberMasked ?? 'Cartão'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    widget.onOpenTab(1);
+                  },
+                ),
+            for (final a in accounts)
+              if (_hit(a.name) || _hit(a.institutionName))
+                ListTile(
+                  leading: const Icon(Icons.account_balance_outlined),
+                  title: Text(a.name),
+                  subtitle: Text(a.institutionName),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    widget.onOpenTab(2);
+                  },
+                ),
+          ];
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.md,
+          right: AppSpacing.md,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.md,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                autofocus: true,
+                onChanged: (v) =>
+                    setState(() => _query = v.trim().toLowerCase()),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar senhas, cartões e contas...',
+                  prefixIcon: Icon(Icons.search_rounded, size: 20),
+                ),
+              ),
+              SizedBox(height: AppSpacing.sm),
+              Flexible(
+                child: q.isNotEmpty && results.isEmpty
+                    ? const EmptyState(
+                        icon: Icons.search_off_rounded,
+                        title: 'Nada encontrado',
+                      )
+                    : ListView(shrinkWrap: true, children: results),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Web security hub "Atividade recente".
+void _showActivity(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => Consumer(
+      builder: (context, ref, _) {
+        final async = ref.watch(activityLogsProvider);
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
+            child: AsyncSwitcher(
+                child: async.when(
+              loading: () => const LoadingState(variant: LoadingVariant.list),
+              error: (e, _) => ErrorState(
+                error: e,
+                onRetry: () => ref.invalidate(activityLogsProvider),
+              ),
+              data: (logs) => logs.isEmpty
+                  ? const EmptyState(
+                      icon: Icons.history_rounded,
+                      title: 'Nenhuma atividade registrada',
+                    )
+                  : ListView(
+                      shrinkWrap: true,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md),
+                          child: Text('Atividade recente',
+                              style: Theme.of(context).textTheme.titleMedium),
+                        ),
+                        for (final l in logs)
+                          ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.history_rounded),
+                            title: Text(l.description.isEmpty
+                                ? l.action
+                                : l.description),
+                            subtitle: Text([
+                              l.action,
+                              if (l.at != null) AppFormatters.dateTime(l.at!),
+                            ].join(' · ')),
+                          ),
+                      ],
+                    ),
+            )),
+          ),
+        );
+      },
+    ),
+  );
 }

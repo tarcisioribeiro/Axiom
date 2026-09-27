@@ -967,6 +967,52 @@ class MonthlyPlanSummaryFixedRevenueBadgeTest(BaseMissingCoverageTestCase):
         )
         self.assertTrue(item["already_posted"])
 
+    def test_registered_revenues_net_excludes_fixed_revenue_linked(self):
+        from revenues.models import Revenue
+        from revenues.services import bulk_generate_fixed_revenues
+
+        bulk_generate_fixed_revenues(
+            month="2026-07",
+            revenue_values=[
+                {"fixed_revenue_id": self.fixed_rev.id, "value": 5000.0}
+            ],
+            user=self.user,
+        )
+        Revenue.objects.create(
+            description="Freelance",
+            value=Decimal("60.02"),
+            category="income",
+            date="2026-07-10",
+            horary="10:00",
+            account=self.account,
+            received=True,
+            created_by=self.user,
+        )
+        url = reverse("monthly-plan-summary")
+        response = self.client.get(url, {"month": 7, "year": 2026})
+        self.assertEqual(
+            Decimal(response.data["registered_revenues_net"]), Decimal("60.02")
+        )
+
+    def test_total_vault_balance_counts_active_vaults_only(self):
+        from vaults.models import Vault
+
+        for desc, active in (("Active", True), ("Inactive", False)):
+            vault = Vault.objects.create(
+                description=desc,
+                account=self.account,
+                is_active=active,
+                created_by=self.user,
+            )
+            Vault.objects.filter(pk=vault.pk).update(
+                current_balance=Decimal("300.00")
+            )
+        url = reverse("monthly-plan-summary")
+        response = self.client.get(url, {"month": 7, "year": 2026})
+        self.assertEqual(
+            Decimal(response.data["total_vault_balance"]), Decimal("300.00")
+        )
+
 
 # ===========================================================================
 # transfers/services.py — bulk_generate_fixed_transfers

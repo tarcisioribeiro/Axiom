@@ -12,7 +12,10 @@ import '../../services/agents_service.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
-import '../../widgets/logout_button.dart';
+import '../../theme/app_theme_variant.dart';
+import '../../widgets/feedback.dart';
+import '../../widgets/header_actions.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 
 const _sessionsPrefsKey = 'axiom_agent_sessions_by_agent';
@@ -22,7 +25,8 @@ class _AgentOption {
   final String label;
   final String description;
   final IconData icon;
-  final Color Function(ColorScheme) color;
+  final Color Function(AppPaletteTokens) color;
+  final List<String> suggestions;
 
   const _AgentOption({
     required this.key,
@@ -30,6 +34,7 @@ class _AgentOption {
     required this.description,
     required this.icon,
     required this.color,
+    required this.suggestions,
   });
 }
 
@@ -39,35 +44,60 @@ const _agentOptions = [
     label: 'Pessoal',
     description: 'Rotinas, metas, treino e nutrição',
     icon: Icons.self_improvement_rounded,
-    color: _colorInfo,
+    color: _colorHealth,
+    suggestions: [
+      'Como estão minhas rotinas?',
+      'Treinei esta semana?',
+      'Qual meu progresso nas metas?',
+      'Como está minha alimentação?',
+    ],
   ),
   _AgentOption(
     key: 'financial',
     label: 'Financeiro',
     description: 'Gastos, orçamento e previsões',
     icon: Icons.account_balance_wallet_outlined,
-    color: _colorSuccess,
+    color: _colorFinance,
+    suggestions: [
+      'Quanto gastei este mês?',
+      'Vou estourar o orçamento?',
+      'Qual minha previsão de saldo?',
+      'Quais foram minhas maiores despesas?',
+    ],
   ),
   _AgentOption(
     key: 'security',
     label: 'Segurança',
     description: 'Senhas e boas práticas de segurança',
     icon: Icons.shield_outlined,
-    color: _colorPrimary,
+    color: _colorStudies,
+    suggestions: [
+      'Tenho senhas desatualizadas?',
+      'Qual foi minha atividade recente no cofre?',
+      'Existe algum risco de segurança?',
+      'Quantas senhas estão armazenadas?',
+    ],
   ),
   _AgentOption(
     key: 'intellect',
     label: 'Intelecto',
     description: 'Leituras, cursos e conhecimento',
     icon: Icons.lightbulb_outline_rounded,
-    color: _colorTertiary,
+    color: _colorIntellect,
+    suggestions: [
+      'O que aprendi no último livro?',
+      'Qual meu progresso nos cursos?',
+      'Quais são minhas habilidades dominadas?',
+      'Quanto li este mês?',
+    ],
   ),
 ];
 
-Color _colorInfo(ColorScheme s) => s.secondary;
-Color _colorSuccess(ColorScheme s) => s.primary;
-Color _colorPrimary(ColorScheme s) => s.primary;
-Color _colorTertiary(ColorScheme s) => s.tertiary;
+// Same `--category-*` per agent as the web `.agent-card-*` classes.
+Color _colorHealth(AppPaletteTokens p) => p.health;
+Color _colorFinance(AppPaletteTokens p) => p.finance;
+Color _colorStudies(AppPaletteTokens p) => p.studies;
+Color _colorIntellect(AppPaletteTokens p) => p.intellect;
 
 class AgentsScreen extends ConsumerStatefulWidget {
   const AgentsScreen({super.key});
@@ -93,8 +123,8 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
                 AppPageHeader(
                   title: 'Agente IA',
                   icon: Icons.smart_toy_outlined,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  trailing: const LogoutButton(),
+                  color: Theme.of(context).colorScheme.primary,
+                  trailing: const TabHeaderActions(),
                 ),
                 SizedBox(height: AppSpacing.md),
                 Text(
@@ -107,7 +137,7 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
                     crossAxisCount: 2,
                     mainAxisSpacing: AppSpacing.sm,
                     crossAxisSpacing: AppSpacing.sm,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.6,
                     children: _agentOptions
                         .map((option) => _AgentCard(
                               option: option,
@@ -138,28 +168,40 @@ class _AgentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = option.color(Theme.of(context).colorScheme);
+    final color = option.color(context.palette);
     return InkWell(
       borderRadius: AppRadius.lgRadius,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.smd),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.08),
           borderRadius: AppRadius.lgRadius,
-          border: Border.all(color: color.withValues(alpha: 0.25)),
+          border: Border.all(color: color, width: 2),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(option.icon, color: color, size: 28),
-            SizedBox(height: AppSpacing.sm),
-            Text(option.label, style: Theme.of(context).textTheme.titleSmall),
-            SizedBox(height: AppSpacing.xs),
-            Text(
-              option.description,
-              style: Theme.of(context).textTheme.bodySmall,
+            SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    option.label,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  SizedBox(height: AppSpacing.xs),
+                  Text(
+                    option.description,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -204,6 +246,16 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
   }
 
   Future<void> _bootstrapSession() async {
+    try {
+      await _loadSession();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingHistory = false);
+      showErrorToast(context, e);
+    }
+  }
+
+  Future<void> _loadSession() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_sessionsPrefsKey);
     final map = raw == null
@@ -230,8 +282,14 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
   Future<void> _clearHistory() async {
     final sessionId = _sessionId;
     if (sessionId == null) return;
-    await ref.read(agentsServiceProvider).clearHistory(sessionId);
-    setState(() => _messages.clear());
+    try {
+      await ref.read(agentsServiceProvider).clearHistory(sessionId);
+      if (!mounted) return;
+      setState(() => _messages.clear());
+      showAppToast(context, 'Conversa limpa.');
+    } catch (e) {
+      if (mounted) showErrorToast(context, e);
+    }
   }
 
   void _scrollToBottom() {
@@ -245,8 +303,8 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
     });
   }
 
-  Future<void> _send() async {
-    final query = _inputController.text.trim();
+  Future<void> _send([String? text]) async {
+    final query = (text ?? _inputController.text).trim();
     final sessionId = _sessionId;
     if (query.isEmpty || sessionId == null || _isStreaming) return;
 
@@ -327,13 +385,22 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = widget.option.color(context.palette);
+    final unavailable =
+        ref.watch(agentStatusProvider).valueOrNull?['available'] == false;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: widget.onBack,
         ),
-        title: Text(widget.option.label),
+        title: Row(
+          children: [
+            Icon(widget.option.icon, color: color, size: 22),
+            SizedBox(width: AppSpacing.sm),
+            Text(widget.option.label),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Limpar conversa',
@@ -345,27 +412,46 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            if (unavailable)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                color: context.semanticColors.warning.withValues(alpha: 0.1),
+                child: Text(
+                  'O assistente está indisponível no momento.',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: context.semanticColors.warning),
+                ),
+              ),
             Expanded(
               child: _isLoadingHistory
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      itemCount: _messages.length + (_isStreaming ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < _messages.length) {
-                          return _MessageBubble(message: _messages[index]);
-                        }
-                        return _MessageBubble(
-                          message: ChatMessage(
-                            role: 'assistant',
-                            content:
-                                _streamingText.isEmpty ? '…' : _streamingText,
-                            agentName: widget.option.key,
-                          ),
-                        );
-                      },
-                    ),
+                  : _messages.isEmpty && !_isStreaming
+                      ? _Suggestions(
+                          option: widget.option,
+                          color: color,
+                          onPick: _send,
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          itemCount: _messages.length + (_isStreaming ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index < _messages.length) {
+                              return _MessageBubble(message: _messages[index]);
+                            }
+                            if (_streamingText.isEmpty) {
+                              return const _TypingIndicator();
+                            }
+                            return _MessageBubble(
+                              message: ChatMessage(
+                                role: 'assistant',
+                                content: _streamingText,
+                                agentName: widget.option.key,
+                              ),
+                            );
+                          },
+                        ),
             ),
             SafeArea(
               top: false,
@@ -394,7 +480,8 @@ class _ChatScreenState extends ConsumerState<_ChatScreen> {
                           ? IconButton.styleFrom(
                               backgroundColor: theme.colorScheme.error)
                           : null,
-                      onPressed: _isStreaming ? _cancelStreaming : _send,
+                      onPressed:
+                          _isStreaming ? _cancelStreaming : () => _send(),
                     ),
                   ],
                 ),
@@ -447,6 +534,127 @@ class _MessageBubble extends StatelessWidget {
                 data: message.content,
                 selectable: true,
               ),
+      ),
+    );
+  }
+}
+
+/// Empty-chat state with the web's per-agent suggested questions.
+class _Suggestions extends StatelessWidget {
+  final _AgentOption option;
+  final Color color;
+  final ValueChanged<String> onPick;
+
+  const _Suggestions({
+    required this.option,
+    required this.color,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        Icon(option.icon, size: 40, color: color),
+        SizedBox(height: AppSpacing.sm),
+        Text(
+          'Como posso ajudar?',
+          style: theme.textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: AppSpacing.md),
+        for (final q in option.suggestions)
+          Padding(
+            padding: EdgeInsets.only(bottom: AppSpacing.sm),
+            child: OutlinedButton(
+              onPressed: () => onPick(q),
+              style: OutlinedButton.styleFrom(
+                alignment: Alignment.centerLeft,
+                foregroundColor: theme.colorScheme.onSurface,
+                side: BorderSide(color: color.withValues(alpha: 0.4)),
+              ),
+              child: Text(q),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Three pulsing dots while the agent hasn't streamed its first token.
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dot = theme.colorScheme.onSurfaceVariant;
+    return Semantics(
+      label: 'Assistente digitando',
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.smd,
+          ),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(AppRadius.lg),
+              topRight: Radius.circular(AppRadius.lg),
+              bottomRight: Radius.circular(AppRadius.lg),
+              bottomLeft: Radius.circular(2),
+            ),
+          ),
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < 3; i++)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: dot.withValues(
+                        alpha: AppMotion.reduced(context)
+                            ? 0.6
+                            : 0.3 +
+                                0.7 *
+                                    (1 -
+                                        ((_controller.value * 3 - i) % 3)
+                                            .clamp(0, 1)
+                                            .toDouble()),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

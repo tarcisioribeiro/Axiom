@@ -37,3 +37,21 @@ final storedCardsProvider = FutureProvider.autoDispose<List<StoredCard>>(
 final storedAccountsProvider = FutureProvider.autoDispose<List<StoredAccount>>(
   (ref) => ref.watch(storedAccountsServiceProvider).getAll(),
 );
+
+/// Latest vault activity (first page of `security/activity-logs/`).
+final activityLogsProvider = FutureProvider.autoDispose<
+    List<({String action, String description, DateTime? at})>>((ref) async {
+  final response = await ref
+      .watch(apiClientProvider)
+      .dio
+      .get<Map<String, dynamic>>('/api/v1/security/activity-logs/');
+  final results = response.data?['results'] as List<dynamic>? ?? const [];
+  return [
+    for (final e in results.cast<Map<String, dynamic>>().take(30))
+      (
+        action: e['action_display'] as String? ?? e['action'] as String? ?? '',
+        description: e['description'] as String? ?? '',
+        at: DateTime.tryParse(e['created_at'] as String? ?? '')?.toLocal(),
+      ),
+  ];
+});

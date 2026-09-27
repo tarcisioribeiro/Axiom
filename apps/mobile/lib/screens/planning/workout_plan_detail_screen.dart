@@ -6,13 +6,17 @@ import '../../models/workout_exercise.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../utils/choice_labels.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/confirm.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
+import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
-import '../../utils/formatters.dart';
 
 /// Nested editing of a workout plan: its days, and the exercises inside each
 /// day. Reached from the "Planos" tab of the Treino screen.
@@ -30,12 +34,12 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, WorkoutDay day) async {
     try {
       await ref.read(workoutDaysServiceProvider).delete(day.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(workoutDaysProvider(planId));
       ref.invalidate(workoutPlansProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -45,7 +49,13 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
     final daysAsync = ref.watch(workoutDaysProvider(planId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(planName)),
+      appBar: AppBar(
+        title: ModuleAppBarTitle(
+          icon: Icons.fitness_center_rounded,
+          color: context.palette.exercise,
+          title: Text(planName),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showDayForm(context, ref, planId),
         icon: const Icon(Icons.add),
@@ -56,9 +66,12 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
           ref.invalidate(workoutDaysProvider(planId));
           await ref.read(workoutDaysProvider(planId).future);
         },
-        child: daysAsync.when(
+        child: AsyncSwitcher(
+            child: daysAsync.when(
           loading: () => const LoadingState(variant: LoadingVariant.list),
-          error: (e, _) => Center(child: Text('Erro: $e')),
+          error: (e, _) => ErrorState(
+              error: e,
+              onRetry: () => ref.invalidate(workoutDaysProvider(planId))),
           data: (days) {
             if (days.isEmpty) {
               return const EmptyState(
@@ -81,7 +94,7 @@ class WorkoutPlanDetailScreen extends ConsumerWidget {
                   .toList(),
             );
           },
-        ),
+        )),
       ),
     );
   }
@@ -104,11 +117,11 @@ class _DayCard extends ConsumerWidget {
       BuildContext context, WidgetRef ref, WorkoutExercise ex) async {
     try {
       await ref.read(workoutExercisesServiceProvider).delete(ex.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(workoutDaysProvider(planId));
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }

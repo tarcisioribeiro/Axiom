@@ -4,17 +4,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/library_providers.dart';
+import '../../theme/app_theme_variant.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
 
-const _typeColors = {
-  'book': Colors.blue,
-  'author': Colors.orange,
-  'course': Colors.green,
-  'skill': Colors.purple,
-  'summary': Colors.teal,
-  'highlight': Colors.amber,
+const _typeLabels = {
+  'book': 'Livro',
+  'author': 'Autor',
+  'course': 'Curso',
+  'skill': 'Habilidade',
+  'summary': 'Resumo',
+  'highlight': 'Destaque',
 };
+
+/// Same token per node type as the web `NODE_COLOR_VARS` (KnowledgeGraph.tsx).
+Map<String, Color> _typeColors(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  final semantic = context.semanticColors;
+  return {
+    'book': scheme.primary,
+    'author': scheme.tertiary,
+    'course': semantic.success,
+    'skill': semantic.warning,
+    'summary': semantic.info,
+    'highlight': context.palette.exercise,
+  };
+}
 
 class _Node {
   final String id;
@@ -104,7 +120,8 @@ class _KnowledgeMapState extends ConsumerState<KnowledgeMap> {
     final async = ref.watch(knowledgeGraphProvider);
     return async.when(
       loading: () => const LoadingState(variant: LoadingVariant.list),
-      error: (e, _) => Center(child: Text('Erro: $e')),
+      error: (e, _) => ErrorState(
+          error: e, onRetry: () => ref.invalidate(knowledgeGraphProvider)),
       data: (data) {
         if (_laidOutFor != data) {
           _layout(data);
@@ -124,8 +141,8 @@ class _KnowledgeMapState extends ConsumerState<KnowledgeMap> {
               onTapUp: (d) => _tap(d.localPosition),
               child: CustomPaint(
                 size: const Size(_size, _size),
-                painter: _MapPainter(
-                    _nodes, _edges, _selected, Theme.of(context).colorScheme),
+                painter: _MapPainter(_nodes, _edges, _selected,
+                    Theme.of(context).colorScheme, _typeColors(context)),
               ),
             ),
           ),
@@ -134,11 +151,12 @@ class _KnowledgeMapState extends ConsumerState<KnowledgeMap> {
             right: 12,
             bottom: 12,
             child: Wrap(spacing: 8, children: [
-              for (final e in _typeColors.entries)
+              for (final e in _typeColors(context).entries)
                 Chip(
                   visualDensity: VisualDensity.compact,
                   avatar: CircleAvatar(backgroundColor: e.value, radius: 6),
-                  label: Text(e.key, style: const TextStyle(fontSize: 11)),
+                  label: Text(_typeLabels[e.key]!,
+                      style: const TextStyle(fontSize: 11)),
                 ),
               if (_selected != null)
                 Chip(
@@ -157,7 +175,8 @@ class _MapPainter extends CustomPainter {
   final List<(int, int)> edges;
   final _Node? selected;
   final ColorScheme scheme;
-  _MapPainter(this.nodes, this.edges, this.selected, this.scheme);
+  final Map<String, Color> colors;
+  _MapPainter(this.nodes, this.edges, this.selected, this.scheme, this.colors);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -168,7 +187,7 @@ class _MapPainter extends CustomPainter {
       canvas.drawLine(nodes[a].pos, nodes[b].pos, line);
     }
     for (final n in nodes) {
-      final c = _typeColors[n.type] ?? Colors.grey;
+      final c = colors[n.type] ?? scheme.outline;
       canvas.drawCircle(n.pos, n == selected ? 10 : 7, Paint()..color = c);
       final tp = TextPainter(
         text: TextSpan(
@@ -183,5 +202,5 @@ class _MapPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_MapPainter old) =>
-      old.selected != selected || old.nodes != nodes;
+      old.selected != selected || old.nodes != nodes || old.colors != colors;
 }

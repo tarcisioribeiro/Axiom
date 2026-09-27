@@ -181,6 +181,7 @@ function GoalCard({
             <Button
               variant="ghost"
               size="icon"
+              tooltipSide="bottom"
               onClick={() => onManageVaults(goal)}
               aria-label={t('pages.financialGoals.manageVaults')}
               title={t('pages.financialGoals.manageVaults')}
@@ -190,6 +191,7 @@ function GoalCard({
             <Button
               variant="ghost"
               size="icon"
+              tooltipSide="bottom"
               onClick={() => onCheckCompletion(goal)}
               aria-label={t('pages.financialGoals.checkCompletion')}
               title={t('pages.financialGoals.checkCompletion')}
@@ -200,6 +202,7 @@ function GoalCard({
             <Button
               variant="ghost"
               size="icon"
+              tooltipSide="bottom"
               onClick={() => onEdit(goal)}
               aria-label={t('common.actions.edit')}
               title={t('common.actions.edit')}
@@ -209,6 +212,7 @@ function GoalCard({
             <Button
               variant="ghost"
               size="icon"
+              tooltipSide="bottom"
               onClick={() => onDelete(goal.id)}
               aria-label={t('common.actions.delete')}
               title={t('common.actions.delete')}

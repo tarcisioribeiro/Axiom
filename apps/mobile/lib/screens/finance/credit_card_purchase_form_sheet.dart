@@ -7,6 +7,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 /// Logs a new purchase against [cardId] — the backend auto-generates the
@@ -92,7 +93,10 @@ class _PurchaseFormSheetState extends ConsumerState<_PurchaseFormSheet> {
           .create(purchase.toJson());
       ref.invalidate(creditCardBillsProvider(widget.cardId));
       ref.invalidate(creditCardsProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

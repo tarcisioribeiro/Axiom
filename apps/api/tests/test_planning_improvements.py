@@ -673,6 +673,23 @@ class GoalAutoEndDateTest(BasePlanningImprovementsTestCase):
         )
         self.assertEqual(goal.end_date, start + timedelta(days=21))
 
+    def test_end_date_subtracts_progress_in_manual_mode(self):
+        start = now().date()
+        goal = Goal.objects.create(
+            title="Avoid Habit Manual",
+            goal_type="avoid_habit",
+            goal_source="custom",
+            target_value=30,
+            current_value=5,
+            start_date=start,
+            end_date=start + timedelta(days=99),
+            owner=self.member,
+        )
+        self.assertEqual(goal.end_date, start + timedelta(days=25))
+        goal.current_value = 10
+        goal.save()
+        self.assertEqual(goal.end_date, start + timedelta(days=20))
+
     def test_end_date_recomputes_when_target_value_changes(self):
         goal = Goal.objects.create(
             title="Auto End Date Target Change",

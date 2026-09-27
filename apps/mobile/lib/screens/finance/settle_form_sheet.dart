@@ -4,6 +4,7 @@ import '../../models/account.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 /// Shared bottom sheet for "record a payment" (payables) and "record a
@@ -112,7 +113,10 @@ class _SettleFormSheetState extends State<_SettleFormSheet> {
         date: _date,
         notes: _notesController.text.trim(),
       );
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

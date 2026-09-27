@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from personal_planning.models import (
@@ -924,6 +925,13 @@ class WorkoutSessionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
+    def validate_date(self, value):
+        if value > timezone.localdate():
+            raise serializers.ValidationError(
+                "Não é possível registrar sessão com data futura."
+            )
+        return value
+
 
 class WorkoutSessionCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -1109,6 +1117,7 @@ class MealLogSerializer(serializers.ModelSerializer):
     menu_option_name = serializers.CharField(
         source="menu_option.name", read_only=True, default=None
     )
+    calories = serializers.FloatField(read_only=True)
 
     class Meta:
         model = MealLog
@@ -1121,6 +1130,7 @@ class MealLogSerializer(serializers.ModelSerializer):
             "menu_option",
             "menu_option_name",
             "is_free_meal",
+            "calories",
             "date",
             "time",
             "notes",

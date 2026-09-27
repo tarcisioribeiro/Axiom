@@ -281,6 +281,10 @@ function GoalCard({
               <Award className="h-3 w-3" />
               {t('pages.goals.bestStreakLabel')}: {goal.best_streak}
             </span>
+            <span className="text-muted-foreground gap-xs px-sm bg-muted/60 flex items-center rounded py-0.5 font-medium">
+              <Calendar className="h-3 w-3" />
+              {t('pages.goals.startDateLabelShort')}: {formatDate(goal.start_date)}
+            </span>
             {goal.end_date && (
               <span className="text-muted-foreground gap-xs px-sm bg-muted/60 flex items-center rounded py-0.5 font-medium">
                 <Calendar className="h-3 w-3" />

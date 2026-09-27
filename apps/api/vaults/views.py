@@ -256,6 +256,13 @@ class VaultApplyYieldView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        # Sem worker Celery em produção, este endpoint é o gatilho real do
+        # rendimento: recalcula a taxa a partir do CDI/SELIC do dia (líquida
+        # de IR) antes de calcular. Se a API do BCB falhar, mantém a última
+        # taxa conhecida.
+        if vault.yield_index_type in ("cdi", "selic"):
+            vault.refresh_annual_rate_from_index(user=request.user)
+
         yield_value = vault.apply_yield(user=request.user)
 
         return Response(

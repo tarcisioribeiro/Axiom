@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -110,6 +111,8 @@ interface CreditCardBillItem {
   due_date: string | null;
   status: string;
   paid_amount: string;
+  month: number | null;
+  year: string;
 }
 
 interface BudgetSuggestion {
@@ -153,7 +156,9 @@ interface MonthlyPlanSummary {
   actual_expense_items: ActualExpenseItem[];
   total_account_balance: string;
   total_overdraft_limit: string;
+  total_vault_balance: string;
   opening_balance: string;
+  registered_revenues_net: string;
   registered_expenses_net: string;
   actual_expenses_by_category: Record<string, string>;
 }
@@ -203,6 +208,38 @@ function formatDueDate(isoDate: string | null | undefined): string | undefined {
   if (!isoDate) return undefined;
   const [, month, day] = isoDate.split('-');
   return `Vence ${day}/${month}`;
+}
+
+/** Masked BRL input over the page's string-valued amounts. */
+function MoneyInput({
+  value,
+  onChange,
+  ...props
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <MaskedCurrencyInput
+      {...props}
+      value={parseFloat(value) || 0}
+      onValueChange={(v) => onChange(v.toFixed(2))}
+    />
+  );
+}
+
+/** "Em conta: X · Em cofres: Y" breakdown shown under vault-inclusive totals. */
+function VaultSplit({ total, inVaults }: { total: number; inVaults: number }) {
+  const { t } = useTranslation();
+  if (inVaults <= 0) return null;
+  return (
+    <p className="text-muted-foreground text-xs">
+      {t('monthlyPlanner.inAccount')}: {formatCurrency(total - inVaults)} ·{' '}
+      {t('monthlyPlanner.inVaults')}: {formatCurrency(inVaults)}
+    </p>
+  );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -321,14 +358,11 @@ function EditableFixedItem({
           {settledLabel}
         </Badge>
       )}
-      <Input
-        type="number"
-        min="0"
-        step="0.01"
+      <MoneyInput
         value={displayValue}
-        onChange={(e) => onValueChange(id, e.target.value)}
+        onChange={(v) => onValueChange(id, v)}
         disabled={!enabled || locked}
-        className="h-7 w-28 shrink-0 text-right text-sm"
+        className="h-7 w-32 shrink-0 text-right text-sm"
       />
     </div>
   );
@@ -345,6 +379,7 @@ function BillItem({
   onToggle: (id: number, enabled: boolean) => void;
   isInsufficient?: boolean;
 }) {
+  const { t } = useTranslation();
   const isPaid = bill.status === 'paid';
 
   return (
@@ -361,6 +396,14 @@ function BillItem({
       />
       <div className="min-w-0 flex-1">
         <span className="font-medium">{bill.credit_card_name}</span>
+        {bill.month && (
+          <span className="ml-xs text-muted-foreground text-xs">
+            {t('monthlyPlanner.billReference', {
+              month: String(bill.month).padStart(2, '0'),
+              year: bill.year,
+            })}
+          </span>
+        )}
         {bill.due_date && (
           <span className="ml-xs text-muted-foreground text-xs">
             {formatDueDate(bill.due_date)}
@@ -428,15 +471,11 @@ function ExtraItemRow({
         disabled={!enabled}
         className="h-8 flex-1 text-sm"
       />
-      <Input
+      <MoneyInput
         value={item.value}
-        onChange={(e) => onChange(index, 'value', e.target.value)}
-        placeholder="0,00"
-        type="number"
-        min="0"
-        step="0.01"
+        onChange={(v) => onChange(index, 'value', v)}
         disabled={!enabled}
-        className="h-8 w-28 text-sm"
+        className="h-8 w-32 text-right text-sm"
       />
       <Button
         variant="ghost"
@@ -461,6 +500,7 @@ function ActualItemsSection({
   items,
   emptyText,
   renderItem,
+  summary,
 }: {
   title: string;
   icon: React.ElementType;
@@ -468,6 +508,7 @@ function ActualItemsSection({
   items: unknown[];
   emptyText: string;
   renderItem: (item: unknown, idx: number) => ReactNode;
+  summary?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
   const accent =
@@ -493,6 +534,7 @@ function ActualItemsSection({
           <ChevronDown className="text-muted-foreground h-4 w-4" />
         )}
       </button>
+      {summary}
       {expanded && (
         <div className="space-y-xs">
           {items.length === 0 ? (
@@ -810,7 +852,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   }, 0);
   const totalExtra = sumValues(extraRevenues);
   const openingBalance = parseFloat(data?.opening_balance ?? '0');
-  const totalRevenues = totalFixed + totalExtra + openingBalance;
+  // Ad-hoc revenues already registered this month (vault yield, one-off
+  // income) — mirrors registeredExpensesNet on the expense side.
+  const registeredRevenuesNet = parseFloat(data?.registered_revenues_net ?? '0');
+  const monthRevenues = totalFixed + totalExtra + registeredRevenuesNet;
+  const totalRevenues = monthRevenues + openingBalance;
 
   const allCategories = [
     ...new Set([
@@ -866,7 +912,10 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
   const hasActualData = actualRevenues > 0 || actualExpenses > 0;
 
   const totalAccountBalance = parseFloat(data?.total_account_balance ?? '0');
-  const totalAvailable = totalAccountBalance + totalOverdraft;
+  // Vault money sits inside the account balance but is reserved, so it is
+  // shown apart and never counted as available (e.g. for bill sufficiency).
+  const totalVaults = parseFloat(data?.total_vault_balance ?? '0');
+  const totalAvailable = totalAccountBalance - totalVaults + totalOverdraft;
 
   const actualExpensesByCategory = data?.actual_expenses_by_category ?? {};
 
@@ -942,6 +991,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             <p className="mt-xs text-lg font-bold text-emerald-600">
               {formatCurrency(totalRevenues)}
             </p>
+            <p className="text-muted-foreground text-xs">
+              {t('monthlyPlanner.openingBalance')}: {formatCurrency(openingBalance)} ·{' '}
+              {t('monthlyPlanner.monthRevenues')}: {formatCurrency(monthRevenues)}
+            </p>
+            <VaultSplit total={totalRevenues} inVaults={totalVaults} />
             {hasActualData && (
               <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualRevenues)}
@@ -996,6 +1050,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             >
               {formatCurrency(projectedBalance)}
             </p>
+            <VaultSplit total={projectedBalance} inVaults={totalVaults} />
             {hasActualData && (
               <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.actual')}: {formatCurrency(actualBalance)}
@@ -1024,6 +1079,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             <p className="mt-xs text-primary text-lg font-bold">
               {formatCurrency(totalAccountBalance)}
             </p>
+            <VaultSplit total={totalAccountBalance} inVaults={totalVaults} />
             {totalOverdraft > 0 && (
               <p className="text-muted-foreground text-xs">
                 {t('monthlyPlanner.overdraftLimit')}: {formatCurrency(totalOverdraft)}
@@ -1122,6 +1178,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="revenue"
                 items={actualRevenueItems}
                 emptyText={t('monthlyPlanner.noRegisteredRevenues')}
+                summary={<VaultSplit total={actualRevenues} inVaults={totalVaults} />}
                 renderItem={(item, idx) => {
                   const r = item as ActualRevenueItem;
                   return (
@@ -1213,16 +1270,10 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                           </span>
                         )}
                       </div>
-                      <Input
-                        type="number"
-                        min={catActual}
-                        step="0.01"
+                      <MoneyInput
                         value={currentOverride}
-                        onChange={(e) =>
-                          updateBudgetOverride(cat, e.target.value, catActual)
-                        }
-                        placeholder={suggested ? suggested.toFixed(2) : '0.00'}
-                        className="h-7 text-sm"
+                        onChange={(v) => updateBudgetOverride(cat, v, catActual)}
+                        className="h-7 text-right text-sm"
                         disabled={isDisabled}
                       />
                       {currentOverride !== '' &&

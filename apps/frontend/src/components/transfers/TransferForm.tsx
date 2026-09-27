@@ -253,7 +253,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.balance).toLocaleString('pt-BR', {
+                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
                         style: 'currency',
                         currency: 'BRL',
                       })}
@@ -264,9 +264,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             </Select>
             {originAccount && (
               <p
-                className={`text-xs ${parseFloat(originAccount.balance) >= (watchedValue ?? 0) ? 'text-success' : 'text-destructive'}`}
+                className={`text-xs ${parseFloat(originAccount.available_balance) >= (watchedValue ?? 0) ? 'text-success' : 'text-destructive'}`}
               >
-                {parseFloat(originAccount.balance).toLocaleString('pt-BR', {
+                {parseFloat(originAccount.available_balance).toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}
@@ -315,7 +315,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             </Select>
             {destinyAccount && (
               <p className="text-muted-foreground text-xs">
-                {parseFloat(destinyAccount.balance).toLocaleString('pt-BR', {
+                {parseFloat(destinyAccount.available_balance).toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}

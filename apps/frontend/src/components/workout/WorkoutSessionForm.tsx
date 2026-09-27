@@ -107,7 +107,7 @@ export function WorkoutSessionForm({
   const { t } = useTranslation();
   const { toast } = useToast();
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatLocalDate(new Date());
   const defaultStart = nowTimeStr();
 
   const { register, handleSubmit, control, watch, setValue } =
@@ -230,6 +230,7 @@ export function WorkoutSessionForm({
             <DatePicker
               value={watch('date')}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              maxDate={new Date()}
               disabled={isLoading}
             />
           </div>

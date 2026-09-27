@@ -27,6 +27,8 @@ import type { Loan } from '@/types';
 
 interface LoanProgressDialogProps {
   loan: Loan | null;
+  /** Usuário é o credor (empréstimo concedido): exibe a visão de recebimentos. */
+  isCreditor?: boolean;
   onClose: () => void;
 }
 
@@ -53,8 +55,14 @@ function SummaryCard({ label, value, accent = 'default' }: SummaryCardProps) {
   );
 }
 
-export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
+export function LoanProgressDialog({
+  loan,
+  isCreditor = false,
+  onClose,
+}: LoanProgressDialogProps) {
   const { t } = useTranslation();
+  const p = (key: string, lentKey: string) =>
+    t(`pages.loans.progress.${isCreditor ? lentKey : key}`);
 
   const { data: installments = [], isLoading } = useQuery({
     queryKey: ['loanInstallments', loan?.id],
@@ -124,7 +132,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t('pages.loans.progress.title')}</DialogTitle>
+          <DialogTitle>{p('title', 'lentTitle')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
 
@@ -137,7 +145,11 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             {/* Progress bar */}
             <div className="space-y-xs">
               <div className="text-muted-foreground flex justify-between text-xs">
-                <span>{t('pages.loans.payoff')}</span>
+                <span>
+                  {isCreditor
+                    ? t('pages.loans.progress.receivedLabel')
+                    : t('pages.loans.payoff')}
+                </span>
                 <span className="text-foreground font-semibold">
                   {Math.round(stats.pct)}%
                 </span>
@@ -166,25 +178,27 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             {/* Summary cards */}
             <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
               <SummaryCard
-                label={t('pages.loans.progress.paidInstallments')}
+                label={p('paidInstallments', 'receivedInstallments')}
                 value={`${stats.paidInstallments}/${loan?.installments ?? 0}`}
                 accent="success"
               />
               <SummaryCard
-                label={t('pages.loans.progress.remainingInstallments')}
+                label={p('remainingInstallments', 'toReceiveInstallments')}
                 value={String(stats.remainingInstallments)}
                 accent={stats.remainingInstallments > 0 ? 'default' : 'success'}
               />
               <SummaryCard
-                label={t('pages.loans.progress.nextDueDate')}
+                label={p('nextDueDate', 'nextReceipt')}
                 value={
                   stats.nextInstallment
-                    ? formatDate(stats.nextInstallment.due_date, 'dd/MM/yyyy')
+                    ? isCreditor
+                      ? `${formatDate(stats.nextInstallment.due_date, 'dd/MM/yyyy')} · ${formatCurrency(stats.nextInstallment.value)}`
+                      : formatDate(stats.nextInstallment.due_date, 'dd/MM/yyyy')
                     : '—'
                 }
               />
               <SummaryCard
-                label={t('pages.loans.progress.outstandingBalance')}
+                label={p('outstandingBalance', 'creditBalance')}
                 value={formatCurrency(stats.total - stats.paid)}
                 accent={stats.total - stats.paid > 0 ? 'destructive' : 'success'}
               />
@@ -194,7 +208,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
             {chartData.length > 1 && (
               <div className="space-y-xs">
                 <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  {t('pages.loans.progress.balanceOverTime')}
+                  {p('balanceOverTime', 'creditBalanceOverTime')}
                 </p>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
@@ -240,7 +254,7 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
                       <Tooltip
                         formatter={(value) => [
                           formatCurrency(value as number),
-                          t('pages.loans.progress.outstandingBalance'),
+                          p('outstandingBalance', 'creditBalance'),
                         ]}
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
@@ -260,6 +274,45 @@ export function LoanProgressDialog({ loan, onClose }: LoanProgressDialogProps) {
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+              </div>
+            )}
+
+            {/* Receipt installments (lent loans) */}
+            {isCreditor && installments.length > 0 && (
+              <div className="space-y-xs">
+                <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                  {t('pages.loans.progress.receiptInstallments')}
+                </p>
+                <ul className="divide-y rounded-lg border">
+                  {installments.map((inst) => (
+                    <li
+                      key={inst.id}
+                      className="px-sm flex items-center justify-between py-1.5 text-sm"
+                    >
+                      <span className="text-muted-foreground">
+                        {inst.installment_number}ª ·{' '}
+                        {formatDate(inst.due_date, 'dd/MM/yyyy')}
+                      </span>
+                      <span className="gap-sm flex items-center">
+                        <span className="font-medium">
+                          {formatCurrency(inst.value)}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-xs',
+                            inst.payed ? 'text-success' : 'text-muted-foreground'
+                          )}
+                        >
+                          {t(
+                            inst.payed
+                              ? 'pages.loans.progress.received'
+                              : 'pages.loans.progress.pending'
+                          )}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 

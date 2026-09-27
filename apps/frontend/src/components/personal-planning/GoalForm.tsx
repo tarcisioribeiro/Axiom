@@ -110,18 +110,30 @@ export function GoalForm({
   const watchedGoalSource = watch('goal_source');
   const watchedStartDate = watch('start_date');
   const watchedTargetValue = watch('target_value');
-  const isAutoType =
-    AUTO_GOAL_TYPES.has(watchedGoalType) && watchedGoalSource !== 'custom';
+  const watchedCurrentValue = watch('current_value');
+  const isManualSource = watchedGoalSource === 'custom';
+  // Espelha Goal.save() no backend: tipos automáticos sempre têm término calculado.
+  const hasComputedEndDate = AUTO_GOAL_TYPES.has(watchedGoalType);
+  const isAutoType = hasComputedEndDate && !isManualSource;
   const isTaskSource = watchedGoalSource === 'task_instances';
 
   const computedEndDate = useMemo(() => {
-    if (!isAutoType || !watchedStartDate || !watchedTargetValue) return null;
+    if (!hasComputedEndDate || !watchedStartDate || !watchedTargetValue) return null;
+    const days = isManualSource
+      ? Math.max(0, Number(watchedTargetValue) - (Number(watchedCurrentValue) || 0))
+      : Number(watchedTargetValue);
     try {
-      return formatLocalDate(addDays(parseISO(watchedStartDate), watchedTargetValue));
+      return formatLocalDate(addDays(parseISO(watchedStartDate), days));
     } catch {
       return null;
     }
-  }, [isAutoType, watchedStartDate, watchedTargetValue]);
+  }, [
+    hasComputedEndDate,
+    isManualSource,
+    watchedStartDate,
+    watchedTargetValue,
+    watchedCurrentValue,
+  ]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
@@ -331,7 +343,7 @@ export function GoalForm({
             )}
           </div>
 
-          {isAutoType ? (
+          {hasComputedEndDate ? (
             <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
@@ -341,7 +353,11 @@ export function GoalForm({
                 {computedEndDate ? formatDate(computedEndDate) : '—'}
               </div>
               <p className="text-muted-foreground text-xs">
-                {t('pages.goals.form.endDateComputedHint')}
+                {t(
+                  isManualSource
+                    ? 'pages.goals.form.endDateComputedManualHint'
+                    : 'pages.goals.form.endDateComputedHint'
+                )}
               </p>
             </div>
           ) : (

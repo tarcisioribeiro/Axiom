@@ -10,6 +10,7 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/month_nav.dart';
@@ -39,11 +40,11 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
   Future<void> _delete(BudgetStatus b) async {
     try {
       await ref.read(budgetsServiceProvider).delete(b.id);
+      if (mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(budgetStatusProvider(_my));
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -69,7 +70,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
                 title: 'Orçamentos',
                 subtitle: 'Limite por categoria',
                 icon: Icons.pie_chart_outline_rounded,
-                color: context.semanticColors.warning,
+                color: context.palette.finance,
               ),
               MonthNav(
                 month: _my.month,
@@ -78,7 +79,9 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
               ),
               async.when(
                 loading: () => const LoadingState(variant: LoadingVariant.list),
-                error: (e, _) => Center(child: Text('Erro: $e')),
+                error: (e, _) => ErrorState(
+                    error: e,
+                    onRetry: () => ref.invalidate(budgetStatusProvider(_my))),
                 data: (items) => items.isEmpty
                     ? const EmptyState(
                         icon: Icons.pie_chart_outline_rounded,

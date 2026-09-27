@@ -126,3 +126,22 @@ class CashFlowForecast {
             .toList(),
       );
 }
+
+/// A `dashboard/anomalies/` entry — a category spending unusually high.
+class AnomalyAlert {
+  final String category;
+  final String message;
+  final String severity;
+
+  const AnomalyAlert({
+    required this.category,
+    required this.message,
+    required this.severity,
+  });
+
+  factory AnomalyAlert.fromJson(Map<String, dynamic> json) => AnomalyAlert(
+        category: json['category'] as String? ?? '',
+        message: json['message'] as String? ?? '',
+        severity: json['severity'] as String? ?? 'warning',
+      );
+}

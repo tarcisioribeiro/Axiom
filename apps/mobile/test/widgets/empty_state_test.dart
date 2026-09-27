@@ -36,7 +36,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Adicionar'));
     await tester.pump();
 
     expect(tapped, isTrue);
@@ -51,6 +51,6 @@ void main() {
       ),
     );
 
-    expect(find.byType(FilledButton), findsNothing);
+    expect(find.byType(OutlinedButton), findsNothing);
   });
 }

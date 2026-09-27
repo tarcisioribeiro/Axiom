@@ -12,7 +12,6 @@ import {
   Banknote,
   Clock,
   CalendarRange,
-  TrendingUp,
 } from 'lucide-react';
 import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -120,6 +119,11 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
       setIsLoadingInstallments(false);
     }
   };
+
+  // Versão atualizada do payable (valor muda após "Aumentar valor").
+  const managedPayable = installmentsPayable
+    ? (payables.find((p) => p.id === installmentsPayable.id) ?? installmentsPayable)
+    : null;
 
   const handleOpenInstallments = async (payable: Payable) => {
     setInstallmentsPayable(payable);
@@ -387,16 +391,16 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                       {t('pages.payables.payBtn')}
                     </Button>
                   )}
-                  {(payable.installments ?? 0) > 1 ? (
+                  {(payable.installments ?? 0) > 1 || payable.is_cumulative ? (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => void handleOpenInstallments(payable)}
-                      title={t('pages.payables.installments.title')}
+                      title={t('pages.payables.manageDebtBtn')}
                       className="gap-xs text-xs"
                     >
                       <List className="h-3 w-3" />
-                      {t('pages.payables.installmentsBtn')}
+                      {t('pages.payables.manageDebtBtn')}
                     </Button>
                   ) : (
                     payable.status !== 'paid' &&
@@ -412,18 +416,6 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                         {t('pages.payables.form.createPaymentPlanBtn')}
                       </Button>
                     )
-                  )}
-                  {payable.is_cumulative && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIncreaseValuePayable(payable)}
-                      title={t('pages.payables.form.increaseValueTitle')}
-                      className="gap-xs text-xs"
-                    >
-                      <TrendingUp className="h-3 w-3" />
-                      {t('pages.payables.form.increaseValueBtn')}
-                    </Button>
                   )}
                   <ReceiptButton
                     source={{ type: 'payable', data: payable }}
@@ -487,7 +479,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
       />
 
       <PayableInstallmentsDialog
-        payable={installmentsPayable}
+        payable={managedPayable}
         installments={installments}
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
@@ -495,6 +487,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
           invalidatePayables();
           if (installmentsPayable) void loadInstallments(installmentsPayable);
         }}
+        onIncreaseValue={() => setIncreaseValuePayable(managedPayable)}
       />
 
       <PaymentPlanDialog
@@ -507,7 +500,10 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
       <IncreaseValueDialog
         payable={increaseValuePayable}
         onClose={() => setIncreaseValuePayable(null)}
-        onSuccess={invalidatePayables}
+        onSuccess={() => {
+          invalidatePayables();
+          if (installmentsPayable) void loadInstallments(installmentsPayable);
+        }}
       />
     </Wrapper>
   );

@@ -64,7 +64,9 @@ export function TimePicker({
       time_24hr: true,
       minuteIncrement: 1,
       allowInput: true,
-      clickOpens: !disabled,
+      // Abre só no clique (ver onClick do input): com clickOpens o flatpickr
+      // abre também no focus, e o autofocus dos dialogs abria o calendário.
+      clickOpens: false,
       disableMobile: true,
       ...floatingOptions(inputRef.current),
       onChange: (selectedDates) => {
@@ -112,6 +114,7 @@ export function TimePicker({
 
       <input
         ref={inputRef}
+        onClick={() => !disabled && flatpickrRef.current?.open()}
         type="text"
         placeholder={resolvedPlaceholder}
         disabled={disabled}

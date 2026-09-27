@@ -26,6 +26,7 @@ export interface Expense {
   loan_description?: string;
   related_payable?: number | null;
   payable_description?: string;
+  related_bill_payment?: number | null;
   fixed_expense_template?: number | null;
   auto_categorized: boolean;
   is_initial_balance?: boolean;

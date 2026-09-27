@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 /// detail, the agent chat view, etc.) already have their own contextual
 /// `AppBar` with a back action, and stacking a shell-level one above those
 /// would double up the toolbar. The logout action instead lives on each
-/// tab-root screen's [AppPageHeader] via [LogoutButton].
+/// tab-root screen's [AppPageHeader] via [TabHeaderActions].
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 

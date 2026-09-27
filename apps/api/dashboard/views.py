@@ -33,6 +33,7 @@ from rest_framework.views import APIView
 
 from accounts.models import Account
 from budgets.models import Budget
+from credit_cards.models import MONTHS as BILL_MONTHS
 from credit_cards.models import (
     CreditCard,
     CreditCardBill,
@@ -518,6 +519,48 @@ class BalanceForecastView(APIView):
         )
 
 
+def _spending_by_category(
+    user: Any, year: int, month: int, **expense_filters: Any
+) -> dict:
+    """
+    Gastos do mes por categoria: {categoria: {"total", "count"}}.
+
+    Despesas de conta sem pagamentos de fatura (evita dupla contagem) +
+    parcelas de cartao da fatura do mes, na categoria real da compra
+    (mesma regra do BudgetStatusView).
+    """
+    result: dict = {}
+    expenses = (
+        Expense.objects.filter(
+            created_by=user,
+            date__year=year,
+            date__month=month,
+            related_transfer__isnull=True,
+            related_bill_payment__isnull=True,
+            **expense_filters,
+        )
+        .values("category")
+        .annotate(total=Sum("value"), count=Count("id"))
+    )
+    installments = (
+        CreditCardInstallment.objects.filter(
+            purchase__created_by=user,
+            purchase__is_deleted=False,
+            bill__month=BILL_MONTHS[month - 1][0],
+            bill__year=str(year),
+        )
+        .values(category=F("purchase__category"))
+        .annotate(total=Sum("value"), count=Count("id"))
+    )
+    for row in [*expenses, *installments]:
+        entry = result.setdefault(
+            row["category"], {"total": Decimal("0.00"), "count": 0}
+        )
+        entry["total"] += row["total"] or Decimal("0.00")
+        entry["count"] += row["count"]
+    return result
+
+
 class MonthlyStatementView(APIView):
     """
     GET /api/v1/dashboard/monthly-statement/
@@ -562,12 +605,7 @@ class MonthlyStatementView(APIView):
         # Clamp month to valid range
         month = max(1, min(12, month))
 
-        expenses_qs = Expense.objects.filter(
-            created_by=request.user,
-            date__year=year,
-            date__month=month,
-            related_transfer__isnull=True,
-        )
+        spending = _spending_by_category(request.user, year, month)
         revenues_qs = Revenue.objects.filter(
             created_by=request.user,
             date__year=year,
@@ -575,18 +613,18 @@ class MonthlyStatementView(APIView):
             related_transfer__isnull=True,
         )
 
-        total_expenses = expenses_qs.aggregate(total=Sum("value"))[
-            "total"
-        ] or Decimal("0.00")
+        total_expenses = sum(
+            (v["total"] for v in spending.values()), Decimal("0.00")
+        )
         total_revenues = revenues_qs.aggregate(total=Sum("net_amount"))[
             "total"
         ] or Decimal("0.00")
         balance = total_revenues - total_expenses
 
-        expenses_by_category = list(
-            expenses_qs.values("category")
-            .annotate(total=Sum("value"), count=Count("id"))
-            .order_by("-total")
+        expenses_by_category = sorted(
+            ({"category": k, **v} for k, v in spending.items()),
+            key=lambda item: item["total"],
+            reverse=True,
         )
         revenues_by_category = list(
             revenues_qs.values("category")
@@ -2182,9 +2220,9 @@ class SpendingInsightsView(APIView):
     """
     GET /api/v1/dashboard/spending-insights/
 
-    Analisa padrões de gastos dos últimos 6 meses e retorna insights
-    estruturados sobre tendências, categorias problemáticas e oportunidades
-    de economia.
+    Analisa padrões de gastos dos 6 meses até o mês informado
+    (``?year=&month=``, padrão: mês atual) e retorna insights estruturados
+    sobre tendências, categorias problemáticas e oportunidades de economia.
     """
 
     permission_classes = (IsAuthenticated,)
@@ -2192,10 +2230,23 @@ class SpendingInsightsView(APIView):
     def get(self, request):
         user = request.user
         today = timezone.now().date()
+        try:
+            base = date(
+                int(request.query_params.get("year", today.year)),
+                max(
+                    1,
+                    min(
+                        12, int(request.query_params.get("month", today.month))
+                    ),
+                ),
+                1,
+            )
+        except (ValueError, TypeError):
+            base = today.replace(day=1)
 
         months_data = []
         for offset in range(6):
-            d = today.replace(day=1)
+            d = base
             total_months = d.month - offset
             if total_months <= 0:
                 year = d.year - 1
@@ -2204,17 +2255,8 @@ class SpendingInsightsView(APIView):
                 year = d.year
                 month = total_months
 
-            month_expenses = (
-                Expense.objects.filter(
-                    created_by=user,
-                    date__month=month,
-                    date__year=year,
-                    payed=True,
-                    is_deleted=False,
-                    related_transfer__isnull=True,
-                )
-                .values("category")
-                .annotate(total=Sum("value"))
+            spending = _spending_by_category(
+                user, year, month, payed=True, is_deleted=False
             )
             months_data.append(
                 {
@@ -2222,8 +2264,7 @@ class SpendingInsightsView(APIView):
                     "year": year,
                     "period": f"{year:04d}-{month:02d}",
                     "categories": {
-                        row["category"]: float(row["total"])
-                        for row in month_expenses
+                        cat: float(v["total"]) for cat, v in spending.items()
                     },
                 }
             )

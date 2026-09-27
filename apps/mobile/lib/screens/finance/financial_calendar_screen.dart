@@ -5,13 +5,15 @@ import '../../providers/finance_providers.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_theme_variant.dart';
+import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/loading_state.dart';
 import '../../widgets/page_header.dart';
 
-/// Calendário financeiro — plots due dates (contas a pagar/receber,
-/// empréstimos, faturas de cartão) on a month grid. Pure client-side
+/// Calendário financeiro — plots contas a pagar/receber, empréstimos,
+/// faturas de cartão, receitas, despesas e transferências (pendentes ou já
+/// liquidadas; cancelados ficam de fora) on a month grid. Pure client-side
 /// aggregation, mirroring the web's `FinancialCalendar` page (which has no
 /// dedicated backend endpoint either).
 class FinancialCalendarScreen extends ConsumerStatefulWidget {
@@ -22,7 +24,11 @@ class FinancialCalendarScreen extends ConsumerStatefulWidget {
       _FinancialCalendarScreenState();
 }
 
-enum _EventKind { payable, receivable, loan, bill }
+enum _EventKind { payable, receivable, loan, bill, revenue, expense, transfer }
+
+/// Payable/receivable/loan use `active` for "not settled yet".
+String _pendingIfActive(Map<String, String> table, String status) =>
+    status == 'active' ? 'Pendente' : ChoiceLabels.of(table, status);
 
 class _CalendarEvent {
   final DateTime date;
@@ -30,12 +36,32 @@ class _CalendarEvent {
   final String label;
   final double amount;
 
+  /// Raw backend status, normalised to drive the chip colour.
+  final String status;
+  final String statusLabel;
+
   const _CalendarEvent({
     required this.date,
     required this.kind,
     required this.label,
     required this.amount,
+    required this.status,
+    required this.statusLabel,
   });
+
+  Color statusColor(BuildContext context) {
+    switch (status) {
+      case 'paid':
+      case 'received':
+      case 'completed':
+        return context.semanticColors.success;
+      case 'overdue':
+      case 'failed':
+        return Theme.of(context).colorScheme.error;
+      default:
+        return context.semanticColors.warning;
+    }
+  }
 
   Color color(BuildContext context) {
     final c = context.semanticColors;
@@ -48,6 +74,12 @@ class _CalendarEvent {
         return c.warning;
       case _EventKind.bill:
         return c.info;
+      case _EventKind.revenue:
+        return Colors.teal;
+      case _EventKind.expense:
+        return Colors.pink;
+      case _EventKind.transfer:
+        return Colors.lightBlue;
     }
   }
 
@@ -61,6 +93,12 @@ class _CalendarEvent {
         return 'Empréstimo';
       case _EventKind.bill:
         return 'Fatura';
+      case _EventKind.revenue:
+        return 'Receita';
+      case _EventKind.expense:
+        return 'Despesa';
+      case _EventKind.transfer:
+        return 'Transferência';
     }
   }
 }
@@ -85,45 +123,90 @@ class _FinancialCalendarScreenState
     final events = <_CalendarEvent>[];
 
     for (final p in ref.watch(payablesProvider).valueOrNull ?? const []) {
-      if (p.dueDate != null && p.remainingValue > 0) {
+      if (p.dueDate != null && p.status != 'cancelled') {
         events.add(_CalendarEvent(
           date: p.dueDate!,
           kind: _EventKind.payable,
           label: p.description,
-          amount: p.remainingValue,
+          amount: p.value,
+          status: p.status,
+          statusLabel: _pendingIfActive(ChoiceLabels.payableStatuses, p.status),
         ));
       }
     }
     for (final r in ref.watch(receivablesProvider).valueOrNull ?? const []) {
-      if (r.dueDate != null && r.remainingValue > 0) {
+      if (r.dueDate != null && r.status != 'cancelled') {
         events.add(_CalendarEvent(
           date: r.dueDate!,
           kind: _EventKind.receivable,
           label: r.description,
-          amount: r.remainingValue,
+          amount: r.value,
+          status: r.status,
+          statusLabel:
+              _pendingIfActive(ChoiceLabels.receivableStatuses, r.status),
         ));
       }
     }
     for (final l in ref.watch(loansProvider).valueOrNull ?? const []) {
-      if (l.dueDate != null && l.remainingBalance > 0) {
+      if (l.dueDate != null && l.status != 'cancelled') {
         events.add(_CalendarEvent(
           date: l.dueDate!,
           kind: _EventKind.loan,
           label: l.description,
-          amount: l.remainingBalance,
+          amount: l.value,
+          status: l.status,
+          statusLabel: _pendingIfActive(ChoiceLabels.loanStatuses, l.status),
         ));
       }
     }
     for (final b
         in ref.watch(allCreditCardBillsProvider).valueOrNull ?? const []) {
-      if (b.dueDate != null && b.status != 'paid' && b.totalAmount > 0) {
+      if (b.dueDate != null) {
+        final card = b.creditCardName ?? b.creditCardOnCardName ?? '';
+        final period =
+            '${ChoiceLabels.of(ChoiceLabels.billMonths, b.month)}/${b.year}';
         events.add(_CalendarEvent(
           date: b.dueDate!,
           kind: _EventKind.bill,
-          label: 'Fatura ${b.creditCardOnCardName ?? ''}'.trim(),
+          label: card.isEmpty ? period : '$card — $period',
           amount: b.totalAmount,
+          status: b.status,
+          statusLabel: ChoiceLabels.of(ChoiceLabels.billStatuses, b.status),
         ));
       }
+    }
+    for (final r in ref.watch(revenuesProvider).valueOrNull ?? const []) {
+      events.add(_CalendarEvent(
+        date: r.date,
+        kind: _EventKind.revenue,
+        label: r.description,
+        amount: r.value,
+        status: r.received ? 'received' : 'pending',
+        statusLabel: r.received ? 'Recebida' : 'Pendente',
+      ));
+    }
+    for (final e in ref.watch(expensesProvider).valueOrNull ?? const []) {
+      // Bill payments already show up as the bill itself.
+      if (e.relatedBillPayment != null) continue;
+      events.add(_CalendarEvent(
+        date: e.date,
+        kind: _EventKind.expense,
+        label: e.description,
+        amount: e.value,
+        status: e.payed ? 'paid' : 'pending',
+        statusLabel: e.payed ? 'Paga' : 'Pendente',
+      ));
+    }
+    for (final t in ref.watch(transfersProvider).valueOrNull ?? const []) {
+      if (t.status == 'cancelled') continue;
+      events.add(_CalendarEvent(
+        date: t.date,
+        kind: _EventKind.transfer,
+        label: t.description,
+        amount: t.value,
+        status: t.status,
+        statusLabel: ChoiceLabels.of(ChoiceLabels.transferStatuses, t.status),
+      ));
     }
     return events;
   }
@@ -134,11 +217,17 @@ class _FinancialCalendarScreenState
     final receivables = ref.watch(receivablesProvider);
     final loans = ref.watch(loansProvider);
     final bills = ref.watch(allCreditCardBillsProvider);
+    final revenues = ref.watch(revenuesProvider);
+    final expenses = ref.watch(expensesProvider);
+    final transfers = ref.watch(transfersProvider);
 
     final loading = payables.isLoading ||
         receivables.isLoading ||
         loans.isLoading ||
-        bills.isLoading;
+        bills.isLoading ||
+        revenues.isLoading ||
+        expenses.isLoading ||
+        transfers.isLoading;
 
     final events = _collectEvents();
     final byDay = <int, List<_CalendarEvent>>{};
@@ -157,6 +246,9 @@ class _FinancialCalendarScreenState
             ref.invalidate(receivablesProvider);
             ref.invalidate(loansProvider);
             ref.invalidate(allCreditCardBillsProvider);
+            ref.invalidate(revenuesProvider);
+            ref.invalidate(expensesProvider);
+            ref.invalidate(transfersProvider);
             await ref.read(payablesProvider.future);
           },
           child: ListView(
@@ -165,7 +257,7 @@ class _FinancialCalendarScreenState
               AppPageHeader(
                 title: 'Calendário financeiro',
                 icon: Icons.event_note_rounded,
-                color: context.semanticColors.info,
+                color: context.palette.finance,
               ),
               SizedBox(height: AppSpacing.md),
               Row(
@@ -383,6 +475,9 @@ class _Legend extends StatelessWidget {
         dot(c.success, 'A receber'),
         dot(c.warning, 'Empréstimo'),
         dot(c.info, 'Fatura'),
+        dot(Colors.teal, 'Receita'),
+        dot(Colors.pink, 'Despesa'),
+        dot(Colors.lightBlue, 'Transferência'),
       ],
     );
   }
@@ -413,6 +508,19 @@ class _EventRow extends StatelessWidget {
               style: theme.textTheme.bodySmall,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          SizedBox(width: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: event.statusColor(context).withValues(alpha: 0.15),
+              borderRadius: AppRadius.smRadius,
+            ),
+            child: Text(
+              event.statusLabel,
+              style: theme.textTheme.labelSmall
+                  ?.copyWith(color: event.statusColor(context)),
             ),
           ),
           SizedBox(width: AppSpacing.sm),

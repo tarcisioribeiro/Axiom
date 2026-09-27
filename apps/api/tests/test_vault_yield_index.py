@@ -349,3 +349,57 @@ class VaultUpdateYieldViewIndexTest(APITestCase):
         self.vault.refresh_from_db()
         # Last known rate is kept, not zeroed out.
         self.assertEqual(self.vault.annual_yield_rate, Decimal("0.1500"))
+
+
+class VaultApplyYieldViewIndexTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser(
+            username="idxapplyview",
+            email="idxapplyview@test.com",
+            password="testpass123",
+        )
+        self.client = APIClient()
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+        self.member = Member.objects.create(
+            name="Idx Apply View User",
+            document_hash="w" * 64,
+            phone="11988880133",
+            sex="M",
+            user=self.user,
+        )
+        self.account = Account.objects.create(
+            account_name="Idx Apply View Account",
+            institution_name="MPG",
+            account_type="CC",
+            is_active=True,
+            current_balance=Decimal("1000.00"),
+            created_by=self.user,
+        )
+        self.vault = Vault.objects.create(
+            description="Idx Apply View Vault",
+            account=self.account,
+            annual_yield_rate=Decimal("0.1668"),
+            yield_index_type="cdi",
+            yield_index_percentage=Decimal("120"),
+            yield_tax_rate=Decimal("0.2250"),
+            is_active=True,
+            created_by=self.user,
+        )
+
+    @patch("vaults.services.index_rates.fetch_latest_daily_rate")
+    def test_apply_yield_refreshes_stale_rate_from_index(self, mock_fetch):
+        mock_fetch.return_value = (
+            Decimal("0.0005"),
+            datetime.date(2026, 9, 11),
+        )
+        url = reverse("vault-apply-yield", args=[self.vault.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.vault.refresh_from_db()
+        expected = annualize_daily_rate(
+            Decimal("0.0005") * Decimal("1.20") * Decimal("0.775")
+        )
+        self.assertEqual(self.vault.annual_yield_rate, expected)

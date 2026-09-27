@@ -8,6 +8,7 @@ import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
 import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showRevenueFormSheet(
@@ -104,7 +105,10 @@ class _RevenueFormSheetState extends ConsumerState<_RevenueFormSheet> {
         await service.update(widget.existing!.id, revenue.toJson());
       }
       ref.invalidate(revenuesProvider);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

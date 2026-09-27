@@ -2499,9 +2499,11 @@ class MealLogListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = MealLog.objects.filter(
-            owner=member, deleted_at__isnull=True
-        ).select_related("meal_type", "menu_option")
+        qs = (
+            MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+            .select_related("meal_type", "menu_option")
+            .prefetch_related("menu_option__ingredients__food")
+        )
         date_param = self.request.query_params.get("date")
         if date_param:
             qs = qs.filter(date=date_param)
@@ -3395,28 +3397,7 @@ class DailyCaloricSummaryView(APIView):
         total_consumed = 0.0
 
         for log in meal_logs:
-            meal_kcal = 0.0
-            if log.menu_option and not log.is_free_meal:
-                for ingredient in log.menu_option.ingredients.filter(
-                    is_deleted=False, is_optional=False
-                ):
-                    food = ingredient.food
-                    if not food or not food.calories_per_serving:
-                        continue
-                    cal_per_serving = float(food.calories_per_serving)
-                    if (
-                        food.serving_size
-                        and float(food.serving_size) > 0
-                        and ingredient.quantity
-                    ):
-                        meal_kcal += (
-                            float(ingredient.quantity)
-                            / float(food.serving_size)
-                        ) * cal_per_serving
-                    elif ingredient.quantity:
-                        meal_kcal += cal_per_serving
-
-            meal_kcal = round(meal_kcal, 1)
+            meal_kcal = log.calories
             total_consumed += meal_kcal
             meals_summary.append(
                 {

@@ -6,6 +6,7 @@ import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
 import '../../services/base_service.dart';
 import '../../theme/app_spacing.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/form_sheet_submit_footer.dart';
 
 Future<bool?> showMealLogFormSheet(
@@ -71,7 +72,10 @@ class _MealLogFormSheetState extends ConsumerState<_MealLogFormSheet> {
       await ref.read(mealLogsServiceProvider).create(log.toJson());
       ref.invalidate(mealLogsProvider);
       ref.invalidate(dailyCaloricSummaryProvider(widget.date));
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        showAppToast(context, 'Salvo com sucesso.');
+        Navigator.of(context).pop(true);
+      }
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } finally {

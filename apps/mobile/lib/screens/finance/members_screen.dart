@@ -10,7 +10,9 @@ import '../../utils/choice_labels.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/feedback.dart';
 import '../../widgets/loading_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/page_header.dart';
 import '../../widgets/row_actions.dart';
 
@@ -23,11 +25,11 @@ class MembersScreen extends ConsumerWidget {
   Future<void> _delete(BuildContext context, WidgetRef ref, Member m) async {
     try {
       await ref.read(membersServiceProvider).delete(m.id);
+      if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(membersProvider);
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        showAppToast(context, e.message, kind: ToastKind.error);
       }
     }
   }
@@ -47,16 +49,18 @@ class MembersScreen extends ConsumerWidget {
             ref.invalidate(membersProvider);
             await ref.read(membersProvider.future);
           },
-          child: async.when(
+          child: AsyncSwitcher(
+              child: async.when(
             loading: () => const LoadingState(variant: LoadingVariant.list),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => ErrorState(
+                error: e, onRetry: () => ref.invalidate(membersProvider)),
             data: (members) => ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [
                 AppPageHeader(
                   title: 'Membros',
                   icon: Icons.groups_outlined,
-                  color: context.semanticColors.info,
+                  color: context.palette.finance,
                 ),
                 SizedBox(height: AppSpacing.md),
                 if (members.isEmpty)
@@ -123,7 +127,7 @@ class MembersScreen extends ConsumerWidget {
                   ),
               ],
             ),
-          ),
+          )),
         ),
       ),
     );

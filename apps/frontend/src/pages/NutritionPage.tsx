@@ -52,7 +52,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { membersService } from '@/services/members-service';
 import {
@@ -187,9 +187,8 @@ export default function NutritionPage() {
   });
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
   const [foodSearch, setFoodSearch] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().slice(0, 10)
-  );
+  const today = formatLocalDate(new Date());
+  const [selectedDate, setSelectedDate] = useState<string>(today);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -210,18 +209,25 @@ export default function NutritionPage() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['meal-logs'],
-    queryFn: () => mealLogService.getAll(),
+  // Busca filtrada no backend: a lista sem filtro só traz a 1ª página, e
+  // dias fora dela apareciam vazios no Diário.
+  const { data: selectedLogs = [], isLoading: logsLoading } = useQuery({
+    queryKey: ['meal-logs', 'date', selectedDate],
+    queryFn: () => mealLogService.getByDate(selectedDate),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: todayLogs = [], isLoading: todayLogsLoading } = useQuery({
+    queryKey: ['meal-logs', 'date', today],
+    queryFn: () => mealLogService.getByDate(today),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const foods = foodsData ?? [];
   const mealTypes = mealTypesData ?? [];
-  const logs = logsData ?? [];
-
-  const selectedLogs = logs.filter((l) => l.date === selectedDate);
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
+  const dayCalories = Math.round(
+    selectedLogs.reduce((acc, log) => acc + log.calories, 0)
+  );
   const adherencePct =
     activeMealTypes.length > 0
       ? Math.round((selectedLogs.length / activeMealTypes.length) * 100)
@@ -230,7 +236,7 @@ export default function NutritionPage() {
   const navigateDay = (delta: number) => {
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + delta);
-    setSelectedDate(d.toISOString().slice(0, 10));
+    setSelectedDate(formatLocalDate(d));
   };
 
   const filteredFoods = foods.filter((f) =>
@@ -637,9 +643,7 @@ export default function NutritionPage() {
                 </Button>
               </div>
               {(() => {
-                const today = new Date().toISOString().slice(0, 10);
-                const todayLogs = logs.filter((l) => l.date === today);
-                if (logsLoading) return <LoadingState />;
+                if (todayLogsLoading) return <LoadingState />;
                 if (todayLogs.length === 0)
                   return (
                     <EmptyState
@@ -655,21 +659,7 @@ export default function NutritionPage() {
                 return (
                   <div className="space-y-sm">
                     {todayLogs.map((log) => {
-                      const linkedOption = log.menu_option
-                        ? mealTypes
-                            .flatMap((mt) => mt.options)
-                            .find((o) => o.id === log.menu_option)
-                        : null;
-                      const totalCal = linkedOption
-                        ? linkedOption.ingredients.reduce((acc, ing) => {
-                            const c = calcCalories(ing);
-                            return c != null ? acc + c : acc;
-                          }, 0)
-                        : null;
-                      const hasCalData =
-                        linkedOption?.ingredients.some(
-                          (ing) => calcCalories(ing) != null
-                        ) ?? false;
+                      const totalCal = Math.round(log.calories);
                       return (
                         <div
                           key={log.id}
@@ -685,7 +675,7 @@ export default function NutritionPage() {
                                   {log.menu_option_name}
                                 </p>
                               )}
-                              {hasCalData && totalCal != null && totalCal > 0 && (
+                              {totalCal > 0 && (
                                 <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
                                   <Flame className="h-3 w-3" />
                                   {totalCal} kcal
@@ -730,22 +720,16 @@ export default function NutritionPage() {
               <div className="flex-1">
                 <DatePicker
                   value={selectedDate}
-                  onChange={(v) =>
-                    setSelectedDate(
-                      v
-                        ? v.toISOString().slice(0, 10)
-                        : new Date().toISOString().slice(0, 10)
-                    )
-                  }
+                  onChange={(v) => setSelectedDate(v ? formatLocalDate(v) : today)}
                   placeholder={t('pages.nutritionLog.selectDate')}
-                  maxDate={new Date().toISOString().slice(0, 10)}
+                  maxDate={today}
                 />
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigateDay(1)}
-                disabled={selectedDate >= new Date().toISOString().slice(0, 10)}
+                disabled={selectedDate >= today}
                 title={t('pages.nutritionLog.nextDay')}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -775,53 +759,52 @@ export default function NutritionPage() {
                   </p>
                 </div>
 
-                {/* Circular progress */}
-                {activeMealTypes.length > 0 && (
-                  <div className="relative shrink-0">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 80 80"
-                      className="-rotate-90"
-                    >
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r={RADIUS}
-                        fill="none"
-                        strokeWidth="7"
-                        className="stroke-muted"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r={RADIUS}
-                        fill="none"
-                        strokeWidth="7"
-                        strokeLinecap="round"
-                        className="stroke-category-nutrition transition duration-500"
-                        strokeDasharray={CIRC}
-                        strokeDashoffset={dashOffset}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-category-nutrition text-sm font-bold">
-                        {adherencePct}%
-                      </span>
-                    </div>
+                <div className="gap-md flex shrink-0 items-center">
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                      <Flame className="h-5 w-5" />
+                      {dayCalories}
+                    </span>
+                    <p className="text-muted-foreground text-xs">kcal</p>
                   </div>
-                )}
-              </div>
 
-              <div className="border-border px-lg py-sm border-t">
-                <Button
-                  size="sm"
-                  onClick={() => setDialog({ type: 'new-log' })}
-                  className="w-full sm:w-auto"
-                >
-                  <Plus className="mr-xs h-4 w-4" />
-                  {t('pages.nutritionLog.newLogBtn')}
-                </Button>
+                  {/* Circular progress */}
+                  {activeMealTypes.length > 0 && (
+                    <div className="relative shrink-0">
+                      <svg
+                        width="80"
+                        height="80"
+                        viewBox="0 0 80 80"
+                        className="-rotate-90"
+                      >
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          className="stroke-muted"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          className="stroke-category-nutrition transition duration-500"
+                          strokeDasharray={CIRC}
+                          strokeDashoffset={dashOffset}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-category-nutrition text-sm font-bold">
+                          {adherencePct}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1437,7 +1420,7 @@ function MealTimeline({
                 </div>
               )}
 
-              <div className="gap-sm p-sm flex items-start justify-between">
+              <div className="gap-sm p-sm flex items-center justify-between">
                 <div className="gap-sm flex min-w-0 items-start">
                   <div
                     className={cn(
@@ -1485,6 +1468,12 @@ function MealTimeline({
                 <div className="gap-xs flex shrink-0 items-center">
                   {log ? (
                     <>
+                      {log.calories > 0 && (
+                        <span className="mr-xs inline-flex items-center gap-0.5 text-sm font-semibold text-orange-500 tabular-nums">
+                          <Flame className="h-3.5 w-3.5" />
+                          {Math.round(log.calories)} kcal
+                        </span>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
