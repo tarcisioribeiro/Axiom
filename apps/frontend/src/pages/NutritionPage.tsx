@@ -52,7 +52,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { membersService } from '@/services/members-service';
 import {
@@ -187,9 +187,8 @@ export default function NutritionPage() {
   });
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
   const [foodSearch, setFoodSearch] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().slice(0, 10)
-  );
+  const today = formatLocalDate(new Date());
+  const [selectedDate, setSelectedDate] = useState<string>(today);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -210,17 +209,21 @@ export default function NutritionPage() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['meal-logs'],
-    queryFn: () => mealLogService.getAll(),
+  // Busca filtrada no backend: a lista sem filtro só traz a 1ª página, e
+  // dias fora dela apareciam vazios no Diário.
+  const { data: selectedLogs = [], isLoading: logsLoading } = useQuery({
+    queryKey: ['meal-logs', 'date', selectedDate],
+    queryFn: () => mealLogService.getByDate(selectedDate),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const { data: todayLogs = [], isLoading: todayLogsLoading } = useQuery({
+    queryKey: ['meal-logs', 'date', today],
+    queryFn: () => mealLogService.getByDate(today),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const foods = foodsData ?? [];
   const mealTypes = mealTypesData ?? [];
-  const logs = logsData ?? [];
-
-  const selectedLogs = logs.filter((l) => l.date === selectedDate);
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
   const adherencePct =
     activeMealTypes.length > 0
@@ -230,7 +233,7 @@ export default function NutritionPage() {
   const navigateDay = (delta: number) => {
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + delta);
-    setSelectedDate(d.toISOString().slice(0, 10));
+    setSelectedDate(formatLocalDate(d));
   };
 
   const filteredFoods = foods.filter((f) =>
@@ -637,9 +640,7 @@ export default function NutritionPage() {
                 </Button>
               </div>
               {(() => {
-                const today = new Date().toISOString().slice(0, 10);
-                const todayLogs = logs.filter((l) => l.date === today);
-                if (logsLoading) return <LoadingState />;
+                if (todayLogsLoading) return <LoadingState />;
                 if (todayLogs.length === 0)
                   return (
                     <EmptyState
@@ -730,22 +731,16 @@ export default function NutritionPage() {
               <div className="flex-1">
                 <DatePicker
                   value={selectedDate}
-                  onChange={(v) =>
-                    setSelectedDate(
-                      v
-                        ? v.toISOString().slice(0, 10)
-                        : new Date().toISOString().slice(0, 10)
-                    )
-                  }
+                  onChange={(v) => setSelectedDate(v ? formatLocalDate(v) : today)}
                   placeholder={t('pages.nutritionLog.selectDate')}
-                  maxDate={new Date().toISOString().slice(0, 10)}
+                  maxDate={today}
                 />
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigateDay(1)}
-                disabled={selectedDate >= new Date().toISOString().slice(0, 10)}
+                disabled={selectedDate >= today}
                 title={t('pages.nutritionLog.nextDay')}
               >
                 <ChevronRight className="h-4 w-4" />

@@ -119,8 +119,10 @@ export function DatePicker({
       clickOpens: !disabled,
       disableMobile: true,
       ...(floating ? floatingOptions(inputRef.current) : { static: true }),
-      minDate: minDate ?? undefined,
-      maxDate: maxDate ?? undefined,
+      // Strings ('YYYY-MM-DD') passariam pelo parseDate DD/MM/YYYY abaixo e
+      // virariam data inválida — o limite era ignorado silenciosamente.
+      minDate: toLocalDate(minDate),
+      maxDate: toLocalDate(maxDate),
       // Usa a ref para chamar o onChange atual
       // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
       // valor do formulário durante a inicialização ou transições internas.
@@ -170,6 +172,21 @@ export function DatePicker({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled]);
+
+  // Limites dinâmicos (ex.: filtro "de/até") — o flatpickr só lê as opções
+  // na criação.
+  const toKey = (d?: Date | string) => {
+    const date = toLocalDate(d);
+    return date ? formatLocalDate(date) : '';
+  };
+  const minKey = toKey(minDate);
+  const maxKey = toKey(maxDate);
+  useEffect(() => {
+    flatpickrRef.current?.set({
+      minDate: minKey ? toLocalDate(minKey) : undefined,
+      maxDate: maxKey ? toLocalDate(maxKey) : undefined,
+    });
+  }, [minKey, maxKey]);
 
   // Atualiza data quando value muda externamente
   useEffect(() => {

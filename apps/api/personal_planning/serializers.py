@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from personal_planning.models import (
@@ -923,6 +924,13 @@ class WorkoutSessionSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate_date(self, value):
+        if value > timezone.localdate():
+            raise serializers.ValidationError(
+                "Não é possível registrar sessão com data futura."
+            )
+        return value
 
 
 class WorkoutSessionCreateUpdateSerializer(serializers.ModelSerializer):

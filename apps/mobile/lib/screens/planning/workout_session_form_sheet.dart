@@ -44,7 +44,7 @@ class _WorkoutSessionFormSheetState
       context: context,
       initialDate: _date,
       firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      lastDate: DateTime.now(),
     );
     if (picked != null) setState(() => _date = picked);
   }
