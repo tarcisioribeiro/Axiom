@@ -4279,6 +4279,7 @@
         "endDateLabel": "Data de Término",
         "endDatePlaceholder": "Selecione a data de término",
         "endDateComputedHint": "Calculada automaticamente a partir da data de início e da meta.",
+        "endDateComputedManualHint": "Calculada automaticamente: data de início + (meta − progresso atual).",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Dias Consecutivos",
@@ -4315,6 +4316,7 @@
       "failureError": "Erro ao registrar falha",
       "currentStreakLabel": "Sequência atual",
       "bestStreakLabel": "Recorde",
+      "startDateLabelShort": "Início",
       "endDateLabelShort": "Término",
       "failuresCount_one": "{{count}} falha",
       "failuresCount_other": "{{count}} falhas",

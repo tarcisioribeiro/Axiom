@@ -4213,6 +4213,7 @@
         "endDateLabel": "End Date",
         "endDatePlaceholder": "Select end date",
         "endDateComputedHint": "Automatically calculated from the start date and the target.",
+        "endDateComputedManualHint": "Automatically calculated: start date + (target − current progress).",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Consecutive Days",
@@ -4249,6 +4250,7 @@
       "failureError": "Error registering failure",
       "currentStreakLabel": "Current streak",
       "bestStreakLabel": "Best streak",
+      "startDateLabelShort": "Starts",
       "endDateLabelShort": "Ends",
       "failuresCount_one": "{{count}} failure",
       "failuresCount_other": "{{count}} failures",

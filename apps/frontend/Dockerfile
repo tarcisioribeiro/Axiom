@@ -22,9 +22,12 @@ COPY package*.json ./
 # Install dependencies with BuildKit cache mount
 # npm ci is faster than npm install (skips dependency resolution)
 # Cache mount preserves npm cache between builds
-# --legacy-peer-deps: skip auto-install of optional peer deps (e.g. aframe,
-# three-bmfont-text) that have git+ssh resolved URLs incompatible with CI
-# runners that block port 22. Matches the .node_base CI template behaviour.
+# --legacy-peer-deps: skip auto-install of optional peer deps. Matches the
+# .node_base CI template behaviour.
+# Retry transient network failures (ECONNRESET) instead of failing the build.
+ENV npm_config_fetch_retries=5 \
+    npm_config_fetch_retry_mintimeout=20000 \
+    npm_config_fetch_retry_maxtimeout=120000
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --legacy-peer-deps
 
