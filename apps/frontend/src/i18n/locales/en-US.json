@@ -1368,6 +1368,17 @@
       "foundBills": "{{count}} bill(s) found",
       "payBillLabel": "Pay bill",
       "reopenBillLabel": "Reopen bill",
+      "viewPurchasesLabel": "View bill purchases",
+      "purchases": {
+        "title": "Bill purchases",
+        "empty": "No purchases in this bill",
+        "date": "Date",
+        "description": "Description",
+        "category": "Category",
+        "installment": "Installment",
+        "value": "Amount",
+        "total": "Total"
+      },
       "columns": {
         "card": "Card",
         "period": "Period",

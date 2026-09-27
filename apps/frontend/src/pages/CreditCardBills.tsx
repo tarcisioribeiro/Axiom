@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   CircleDot,
   RefreshCw,
+  Eye,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
+import { BillPurchasesDialog } from '@/components/credit-cards/BillPurchasesDialog';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
 import { RenegotiateBillDialog } from '@/components/credit-cards/RenegotiateBillDialog';
 import { ReceiptButton } from '@/components/receipts';
@@ -79,6 +81,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isRenegotiateDialogOpen, setIsRenegotiateDialogOpen] = useState(false);
+  const [isPurchasesDialogOpen, setIsPurchasesDialogOpen] = useState(false);
   const [selectedBill, setSelectedBill] = useState<CreditCardBill | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
@@ -588,6 +591,18 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
         }}
         actions={(bill) => (
           <div className="gap-sm flex items-center justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setSelectedBill(bill);
+                setIsPurchasesDialogOpen(true);
+              }}
+              aria-label={t('pages.creditCardBills.viewPurchasesLabel')}
+              title={t('pages.creditCardBills.viewPurchasesLabel')}
+            >
+              <Eye className="h-4 w-4" aria-hidden="true" />
+            </Button>
             {bill.status === 'paid' && (
               <ReceiptButton
                 source={{ type: 'credit_card_bill', data: bill }}
@@ -689,6 +704,12 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
           )}
         </DialogContent>
       </Dialog>
+
+      <BillPurchasesDialog
+        bill={selectedBill}
+        open={isPurchasesDialogOpen}
+        onOpenChange={setIsPurchasesDialogOpen}
+      />
 
       {selectedBill && (
         <RenegotiateBillDialog

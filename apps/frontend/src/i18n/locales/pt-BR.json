@@ -1368,6 +1368,17 @@
       "foundBills": "{{count}} fatura(s) encontrada(s)",
       "payBillLabel": "Pagar fatura",
       "reopenBillLabel": "Reabrir fatura",
+      "viewPurchasesLabel": "Ver compras da fatura",
+      "purchases": {
+        "title": "Compras da fatura",
+        "empty": "Nenhuma compra nesta fatura",
+        "date": "Data",
+        "description": "Descrição",
+        "category": "Categoria",
+        "installment": "Parcela",
+        "value": "Valor",
+        "total": "Total"
+      },
       "columns": {
         "card": "Cartão",
         "period": "Período",
