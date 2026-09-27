@@ -11,6 +11,9 @@ class MealLog {
   final int mealType;
   final String? mealTypeName;
   final bool isFreeMeal;
+
+  /// Kcal computed server-side from the followed menu option (read-only).
+  final double calories;
   final DateTime date;
   final String? notes;
 
@@ -20,6 +23,7 @@ class MealLog {
     required this.mealType,
     required this.isFreeMeal,
     required this.date,
+    this.calories = 0,
     this.mealTypeName,
     this.notes,
   });
@@ -30,6 +34,7 @@ class MealLog {
         mealType: json['meal_type'] as int,
         mealTypeName: json['meal_type_name'] as String?,
         isFreeMeal: json['is_free_meal'] as bool? ?? true,
+        calories: AppFormatters.toDouble(json['calories']),
         date: AppFormatters.parseApiDate(json['date'] as String?) ??
             DateTime.now(),
         notes: json['notes'] as String?,

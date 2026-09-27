@@ -2322,6 +2322,32 @@ class MealLog(BaseModel):
             models.Index(fields=["meal_type", "-date"]),
         ]
 
+    @property
+    def calories(self) -> float:
+        """Kcal da opção seguida (ingredientes não opcionais); 0 se livre."""
+        if not self.menu_option or self.is_free_meal:
+            return 0.0
+        total = 0.0
+        # .all() + filtro em Python para aproveitar prefetch_related
+        for ingredient in self.menu_option.ingredients.all():
+            food = ingredient.food
+            if (
+                ingredient.is_deleted
+                or ingredient.is_optional
+                or not ingredient.quantity
+                or not food
+                or not food.calories_per_serving
+            ):
+                continue
+            cal_per_serving = float(food.calories_per_serving)
+            if food.serving_size and float(food.serving_size) > 0:
+                total += (
+                    float(ingredient.quantity) / float(food.serving_size)
+                ) * cal_per_serving
+            else:
+                total += cal_per_serving
+        return round(total, 1)
+
     def __str__(self):
         option_str = self.menu_option.name if self.menu_option else "Livre"
         return f"{self.meal_type.name} ({option_str}) — {self.date}"

@@ -225,6 +225,9 @@ export default function NutritionPage() {
   const foods = foodsData ?? [];
   const mealTypes = mealTypesData ?? [];
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
+  const dayCalories = Math.round(
+    selectedLogs.reduce((acc, log) => acc + log.calories, 0)
+  );
   const adherencePct =
     activeMealTypes.length > 0
       ? Math.round((selectedLogs.length / activeMealTypes.length) * 100)
@@ -656,21 +659,7 @@ export default function NutritionPage() {
                 return (
                   <div className="space-y-sm">
                     {todayLogs.map((log) => {
-                      const linkedOption = log.menu_option
-                        ? mealTypes
-                            .flatMap((mt) => mt.options)
-                            .find((o) => o.id === log.menu_option)
-                        : null;
-                      const totalCal = linkedOption
-                        ? linkedOption.ingredients.reduce((acc, ing) => {
-                            const c = calcCalories(ing);
-                            return c != null ? acc + c : acc;
-                          }, 0)
-                        : null;
-                      const hasCalData =
-                        linkedOption?.ingredients.some(
-                          (ing) => calcCalories(ing) != null
-                        ) ?? false;
+                      const totalCal = Math.round(log.calories);
                       return (
                         <div
                           key={log.id}
@@ -686,7 +675,7 @@ export default function NutritionPage() {
                                   {log.menu_option_name}
                                 </p>
                               )}
-                              {hasCalData && totalCal != null && totalCal > 0 && (
+                              {totalCal > 0 && (
                                 <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
                                   <Flame className="h-3 w-3" />
                                   {totalCal} kcal
@@ -770,53 +759,52 @@ export default function NutritionPage() {
                   </p>
                 </div>
 
-                {/* Circular progress */}
-                {activeMealTypes.length > 0 && (
-                  <div className="relative shrink-0">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 80 80"
-                      className="-rotate-90"
-                    >
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r={RADIUS}
-                        fill="none"
-                        strokeWidth="7"
-                        className="stroke-muted"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r={RADIUS}
-                        fill="none"
-                        strokeWidth="7"
-                        strokeLinecap="round"
-                        className="stroke-category-nutrition transition duration-500"
-                        strokeDasharray={CIRC}
-                        strokeDashoffset={dashOffset}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-category-nutrition text-sm font-bold">
-                        {adherencePct}%
-                      </span>
-                    </div>
+                <div className="gap-md flex shrink-0 items-center">
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                      <Flame className="h-5 w-5" />
+                      {dayCalories}
+                    </span>
+                    <p className="text-muted-foreground text-xs">kcal</p>
                   </div>
-                )}
-              </div>
 
-              <div className="border-border px-lg py-sm border-t">
-                <Button
-                  size="sm"
-                  onClick={() => setDialog({ type: 'new-log' })}
-                  className="w-full sm:w-auto"
-                >
-                  <Plus className="mr-xs h-4 w-4" />
-                  {t('pages.nutritionLog.newLogBtn')}
-                </Button>
+                  {/* Circular progress */}
+                  {activeMealTypes.length > 0 && (
+                    <div className="relative shrink-0">
+                      <svg
+                        width="80"
+                        height="80"
+                        viewBox="0 0 80 80"
+                        className="-rotate-90"
+                      >
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          className="stroke-muted"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r={RADIUS}
+                          fill="none"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          className="stroke-category-nutrition transition duration-500"
+                          strokeDasharray={CIRC}
+                          strokeDashoffset={dashOffset}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-category-nutrition text-sm font-bold">
+                          {adherencePct}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1432,7 +1420,7 @@ function MealTimeline({
                 </div>
               )}
 
-              <div className="gap-sm p-sm flex items-start justify-between">
+              <div className="gap-sm p-sm flex items-center justify-between">
                 <div className="gap-sm flex min-w-0 items-start">
                   <div
                     className={cn(
@@ -1480,6 +1468,12 @@ function MealTimeline({
                 <div className="gap-xs flex shrink-0 items-center">
                   {log ? (
                     <>
+                      {log.calories > 0 && (
+                        <span className="mr-xs inline-flex items-center gap-0.5 text-sm font-semibold text-orange-500 tabular-nums">
+                          <Flame className="h-3.5 w-3.5" />
+                          {Math.round(log.calories)} kcal
+                        </span>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"

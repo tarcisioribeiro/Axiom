@@ -159,6 +159,15 @@ class _TodayTab extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          if (log.calories > 0)
+                            Text(
+                              '${log.calories.round()} kcal',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                      color: context.semanticColors.warning),
+                            ),
                           RowActionsMenu(
                             onDelete: () => _delete(context, ref, log),
                             deleteConfirmTitle: 'Excluir refeição',
@@ -209,27 +218,47 @@ class _CaloricSummaryCard extends StatelessWidget {
 
     return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text('Resumo calórico de hoje', style: theme.textTheme.titleSmall),
-          SizedBox(height: AppSpacing.sm),
-          _row(context, 'Consumido', '$consumed kcal'),
-          if (burned > 0) _row(context, 'Gasto no treino', '-$burned kcal'),
-          if (tdee != null) _row(context, 'Meta (TDEE)', '$tdee kcal'),
-          if (net != null)
-            _row(
-              context,
-              'Saldo',
-              '${net > 0 ? '+' : ''}$net kcal',
-              color: net > 0
-                  ? theme.colorScheme.error
-                  : context.semanticColors.success,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Resumo calórico de hoje',
+                    style: theme.textTheme.titleSmall),
+                SizedBox(height: AppSpacing.sm),
+                if (burned > 0)
+                  _row(context, 'Gasto no treino', '-$burned kcal'),
+                if (tdee != null) _row(context, 'Meta (TDEE)', '$tdee kcal'),
+                if (net != null)
+                  _row(
+                    context,
+                    'Saldo',
+                    '${net > 0 ? '+' : ''}$net kcal',
+                    color: net > 0
+                        ? theme.colorScheme.error
+                        : context.semanticColors.success,
+                  ),
+                if (hint != null) ...[
+                  SizedBox(height: AppSpacing.sm),
+                  Text(hint, style: theme.textTheme.bodySmall),
+                ],
+              ],
             ),
-          if (hint != null) ...[
-            SizedBox(height: AppSpacing.sm),
-            Text(hint, style: theme.textTheme.bodySmall),
-          ],
+          ),
+          SizedBox(width: AppSpacing.md),
+          Column(
+            children: [
+              Text(
+                '$consumed',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.semanticColors.warning,
+                ),
+              ),
+              Text('kcal', style: theme.textTheme.bodySmall),
+            ],
+          ),
         ],
       ),
     );

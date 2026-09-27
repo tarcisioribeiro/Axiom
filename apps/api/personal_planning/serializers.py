@@ -1117,6 +1117,7 @@ class MealLogSerializer(serializers.ModelSerializer):
     menu_option_name = serializers.CharField(
         source="menu_option.name", read_only=True, default=None
     )
+    calories = serializers.FloatField(read_only=True)
 
     class Meta:
         model = MealLog
@@ -1129,6 +1130,7 @@ class MealLogSerializer(serializers.ModelSerializer):
             "menu_option",
             "menu_option_name",
             "is_free_meal",
+            "calories",
             "date",
             "time",
             "notes",
