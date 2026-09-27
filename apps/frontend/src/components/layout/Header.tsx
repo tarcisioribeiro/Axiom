@@ -1,5 +1,6 @@
-import { Menu, Search } from 'lucide-react';
+import { Compass, Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router';
 
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
@@ -7,12 +8,14 @@ import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { VaultExpiryBadge } from '@/components/security/VaultGuard';
 import { Button } from '@/components/ui/button';
+import { getTourKey, OPEN_TOUR_EVENT } from '@/config/page-tour';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { useCommandPaletteStore } from '@/stores/command-palette-store';
 
 export const Header = () => {
   const { toggle: toggleSidebar } = useSidebar();
+  const { pathname } = useLocation();
   const { t } = useTranslation();
   const openCommandPalette = useCommandPaletteStore((s) => s.open);
   const { status: vaultStatus, refresh: refreshVaultStatus } = useVaultStatus();
@@ -55,6 +58,7 @@ export const Header = () => {
           <Button
             variant="ghost"
             size="icon"
+            tooltipSide="bottom"
             onClick={openCommandPalette}
             className="md:hidden"
             aria-label={t('layout.openCommandPalette')}
@@ -67,6 +71,19 @@ export const Header = () => {
               expiresAt={vaultStatus.expires_at}
               onRenew={refreshVaultStatus}
             />
+          )}
+
+          {/* Tour guiado da página atual */}
+          {getTourKey(pathname) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              tooltipSide="bottom"
+              onClick={() => window.dispatchEvent(new Event(OPEN_TOUR_EVENT))}
+              aria-label={t('pageTour.button')}
+            >
+              <Compass className="h-5 w-5" aria-hidden="true" />
+            </Button>
           )}
 
           <ThemeToggle />
