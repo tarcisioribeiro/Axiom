@@ -20,16 +20,17 @@ def get_projected_balance(
     """
     Returns the projected account balance on target_date.
 
-    Starts from current_balance (already confirmed revenues − expenses) and
-    adds pending revenues / subtracts pending expenses whose date falls up to
-    and including target_date.  Transfer-generated records are excluded because
-    the transfer itself is tracked separately.
+    Starts from available_balance (confirmed revenues − expenses, minus the
+    amount reserved in vaults) and adds pending revenues / subtracts pending
+    expenses whose date falls up to and including target_date.
+    Transfer-generated records are excluded because the transfer itself is
+    tracked separately.
     """
     from expenses.models import Expense
     from revenues.models import Revenue
 
     account = Account.objects.get(pk=account_id)
-    base = account.current_balance
+    base = account.available_balance
 
     pending_revenues = Revenue.objects.filter(
         account=account,
