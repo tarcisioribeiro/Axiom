@@ -491,13 +491,15 @@ export default function FinancialCalendar({
                       >
                         {t(`financialCalendar.eventTypes.${ev.type}`)}
                       </Badge>
-                      <span className="text-sm font-medium">{ev.description}</span>
+                      <span className="text-foreground text-sm font-medium">
+                        {ev.description}
+                      </span>
                     </div>
                     <div className="gap-sm flex items-center">
                       <Badge variant={STATUS_VARIANTS[ev.status]} className="text-xs">
                         {t(`financialCalendar.status.${ev.status}`)}
                       </Badge>
-                      <span className="text-sm font-bold">
+                      <span className="text-foreground text-sm font-bold">
                         {formatCurrency(ev.value)}
                       </span>
                     </div>
