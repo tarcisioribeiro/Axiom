@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { Pencil } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +54,8 @@ interface Props {
     dryRun: boolean
   ) => Promise<{ installments_preview: RecalcPreviewRow[] }>;
   onChanged: () => void;
+  /** Conteúdo extra exibido acima da tabela (ex.: ações da dívida). */
+  extra?: ReactNode;
 }
 
 type Draft = { value: string; due_date: string };
@@ -69,6 +71,7 @@ export function InstallmentsPlanDialog({
   saveInstallment,
   recalculate,
   onChanged,
+  extra,
 }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -189,6 +192,8 @@ export function InstallmentsPlanDialog({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
+
+        {extra}
 
         {isLoading ? (
           <div className="py-xl text-muted-foreground text-center text-sm">

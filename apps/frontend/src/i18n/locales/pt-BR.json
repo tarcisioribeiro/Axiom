@@ -1653,6 +1653,7 @@
       "responsible": "Responsável:",
       "payBtn": "Pagar",
       "installmentsBtn": "Parcelas",
+      "manageDebtBtn": "Gerenciar dívida",
       "payment": {
         "title": "Registrar Pagamento",
         "value": "Valor",
@@ -1711,8 +1712,8 @@
         "paymentPlanCreated": "Plano de pagamento criado",
         "paymentPlanCreatedDesc": "As parcelas foram geradas e a despesa fixa foi criada.",
         "increaseValueTitle": "Aumentar Valor",
-        "increaseValueDesc": "Informe o novo valor total da dívida. As parcelas em aberto serão recalculadas.",
-        "newValueLabel": "Novo Valor Total",
+        "increaseValueDesc": "Informe o valor a adicionar à dívida. As parcelas em aberto serão recalculadas.",
+        "newValueLabel": "Valor a Adicionar",
         "recalculationPreviewTitle": "Prévia do Recálculo",
         "keepCountOption": "Manter {{count}} parcelas",
         "changeCountOption": "Alterar quantidade de parcelas",

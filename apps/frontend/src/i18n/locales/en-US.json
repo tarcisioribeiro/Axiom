@@ -1637,6 +1637,7 @@
       "responsible": "Responsible:",
       "payBtn": "Pay",
       "installmentsBtn": "Installments",
+      "manageDebtBtn": "Manage debt",
       "installments": {
         "title": "Installments",
         "emptyState": "No installments generated.",
@@ -1711,8 +1712,8 @@
         "paymentPlanCreated": "Payment plan created",
         "paymentPlanCreatedDesc": "The installments were generated and the fixed expense was created.",
         "increaseValueTitle": "Increase Value",
-        "increaseValueDesc": "Enter the new total debt value. Open installments will be recalculated.",
-        "newValueLabel": "New Total Value",
+        "increaseValueDesc": "Enter the amount to add to the debt. Open installments will be recalculated.",
+        "newValueLabel": "Amount to Add",
         "recalculationPreviewTitle": "Recalculation Preview",
         "keepCountOption": "Keep {{count}} installments",
         "changeCountOption": "Change installment count",
