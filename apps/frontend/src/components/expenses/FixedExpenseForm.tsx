@@ -1,14 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import {
-  CalendarDays,
-  CreditCard,
-  Landmark,
-  Package,
-  Store,
-  Tag,
-  Wallet,
-  Zap,
-} from 'lucide-react';
+import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -55,71 +46,58 @@ export const FixedExpenseForm = ({
   onCancel,
   isLoading = false,
 }: Props) => {
-  const [paymentType, setPaymentType] = useState<'account' | 'credit_card'>('account');
+  const [paymentType, setPaymentType] = useState<'account' | 'credit_card'>(
+    fixedExpense?.credit_card ? 'credit_card' : 'account'
+  );
   const { t } = useTranslation();
 
+  // Valores iniciais direto no useForm: setValue em useEffect pós-montagem não
+  // refletia nos Selects (Categoria/Cartão ficavam vazios na edição).
   const { register, handleSubmit, setValue, watch } = useForm<FixedExpenseFormData>({
-    defaultValues: {
-      description: '',
-      default_value: 0,
-      due_day: 1,
-      category: '',
-      account: undefined,
-      credit_card: undefined,
-      is_active: true,
-      allow_value_edit: true,
-    },
+    defaultValues: fixedExpense
+      ? {
+          description: fixedExpense.description,
+          default_value: parseFloat(fixedExpense.default_value),
+          due_day: fixedExpense.due_day,
+          category: fixedExpense.category,
+          account: fixedExpense.credit_card ? undefined : fixedExpense.account,
+          credit_card: fixedExpense.credit_card,
+          merchant: fixedExpense.merchant,
+          notes: fixedExpense.notes,
+          member: fixedExpense.member,
+          is_active: fixedExpense.is_active,
+          allow_value_edit: fixedExpense.allow_value_edit,
+        }
+      : {
+          description: '',
+          default_value: 0,
+          due_day: 1,
+          category: '',
+          account: accounts[0]?.id,
+          credit_card: undefined,
+          is_active: true,
+          allow_value_edit: true,
+        },
   });
 
   useEffect(() => {
-    const loadMember = async () => {
-      try {
-        const member = await membersService.getCurrentUserMember();
-        if (!fixedExpense) setValue('member', member.id);
-      } catch (error) {
-        logger.error('Erro ao carregar membro:', error);
-      }
-    };
-    void loadMember();
+    if (fixedExpense) return;
+    membersService
+      .getCurrentUserMember()
+      .then((member) => setValue('member', member.id))
+      .catch((error) => logger.error('Erro ao carregar membro:', error));
   }, [fixedExpense, setValue]);
 
-  useEffect(() => {
-    if (fixedExpense) {
-      setValue('description', fixedExpense.description);
-      setValue('default_value', parseFloat(fixedExpense.default_value));
-      setValue('due_day', fixedExpense.due_day);
-      setValue('category', fixedExpense.category);
-      setValue('merchant', fixedExpense.merchant);
-      setValue('payment_method', fixedExpense.payment_method);
-      setValue('notes', fixedExpense.notes);
-      setValue('member', fixedExpense.member);
-      setValue('is_active', fixedExpense.is_active);
-      setValue('allow_value_edit', fixedExpense.allow_value_edit);
-      if (fixedExpense.credit_card) {
-        setPaymentType('credit_card');
-        setValue('credit_card', fixedExpense.credit_card);
-        setValue('account', undefined);
-      } else if (fixedExpense.account) {
-        setPaymentType('account');
-        setValue('account', fixedExpense.account);
-        setValue('credit_card', undefined);
-      }
-    } else if (accounts.length > 0) {
-      setValue('account', accounts[0].id);
+  const selectPaymentType = (type: 'account' | 'credit_card') => {
+    setPaymentType(type);
+    if (type === 'account') {
       setValue('credit_card', undefined);
-    }
-  }, [fixedExpense, accounts, setValue]);
-
-  useEffect(() => {
-    if (paymentType === 'account') {
-      setValue('credit_card', undefined);
-      if (accounts.length > 0 && !watch('account')) setValue('account', accounts[0].id);
+      if (!watch('account')) setValue('account', accounts[0]?.id);
     } else {
       setValue('account', undefined);
-      if (creditCards.length > 0 && !watch('credit_card'))
-        setValue('credit_card', creditCards[0].id);
+      if (!watch('credit_card')) setValue('credit_card', creditCards[0]?.id);
     }
-  }, [paymentType, accounts, creditCards, setValue, watch]);
+  };
 
   const watchedDefaultValue = watch('default_value') ?? 0;
   const watchedIsActive = watch('is_active');
@@ -242,7 +220,7 @@ export const FixedExpenseForm = ({
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setPaymentType(type)}
+                    onClick={() => selectPaymentType(type)}
                     disabled={isLoading}
                     className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
                       paymentType === type
@@ -315,41 +293,6 @@ export const FixedExpenseForm = ({
               </p>
             </div>
           )}
-
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Wallet className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.fixedExpenses.form.paymentMethodLabel')}
-            </Label>
-            <Select
-              value={watch('payment_method') || ''}
-              onValueChange={(v) => setValue('payment_method', v)}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.fixedExpenses.form.paymentMethodPlaceholder')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {(
-                  [
-                    ['pix', Zap, 'PIX'],
-                    ['debit_card', CreditCard, t('common.paymentMethods.debit_card')],
-                    ['transfer', Landmark, t('common.paymentMethods.transfer')],
-                    ['other', Package, t('common.paymentMethods.other')],
-                  ] as const
-                ).map(([value, Icon, label]) => (
-                  <SelectItem key={value} value={value}>
-                    <span className="gap-xs flex items-center">
-                      <Icon className="h-4 w-4" aria-hidden="true" />
-                      {label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </FormSection>
 

@@ -1189,8 +1189,6 @@
         "creditCardHint": "The expense will be automatically posted to the open invoice of the month",
         "merchantLabel": "Merchant",
         "merchantPlaceholder": "e.g. Real Estate Agency XYZ",
-        "paymentMethodLabel": "Payment Method",
-        "paymentMethodPlaceholder": "Select",
         "notesLabel": "Notes",
         "notesPlaceholder": "Additional information",
         "isActiveLabel": "Active Expense",

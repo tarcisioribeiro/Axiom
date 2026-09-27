@@ -167,7 +167,6 @@ def _fixed_expenses_data(
             "due_day": e.due_day,
             "account_name": e.account.account_name if e.account else "",
             "credit_card_name": (e.credit_card.name if e.credit_card else ""),
-            "payment_method": e.payment_method or "",
             "allow_value_edit": e.allow_value_edit,
             "already_posted": _is_fixed_expense_already_posted(
                 e, month, year, date_from, date_to

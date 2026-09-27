@@ -226,7 +226,6 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
                 account=fixed_exp.account,
                 payed=False,
                 merchant=fixed_exp.merchant,
-                payment_method=fixed_exp.payment_method,
                 notes=fixed_exp.notes,
                 member=fixed_exp.member,
                 fixed_expense_template=fixed_exp,

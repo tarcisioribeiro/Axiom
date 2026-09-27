@@ -1189,8 +1189,6 @@
         "creditCardHint": "A despesa será lançada automaticamente na fatura aberta do mês",
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Imobiliária XYZ",
-        "paymentMethodLabel": "Método de Pagamento",
-        "paymentMethodPlaceholder": "Selecione",
         "notesLabel": "Observações",
         "notesPlaceholder": "Informações adicionais",
         "isActiveLabel": "Despesa Ativa",
