@@ -440,7 +440,10 @@ export function LoanForm({
                   <SelectContent>
                     {(isEditing
                       ? members.filter(
-                          (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                          (m) =>
+                            !currentUserMemberId ||
+                            m.id !== currentUserMemberId ||
+                            m.id === formData.benefited
                         )
                       : eligibleBeneficiaries
                     ).map((m) => (
@@ -469,7 +472,10 @@ export function LoanForm({
                   <SelectContent>
                     {(isEditing
                       ? members.filter(
-                          (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                          (m) =>
+                            !currentUserMemberId ||
+                            m.id !== currentUserMemberId ||
+                            m.id === formData.creditor
                         )
                       : eligibleCreditors
                     ).map((m) => (

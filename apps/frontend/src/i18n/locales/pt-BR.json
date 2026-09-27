@@ -1080,7 +1080,17 @@
         "outstandingBalance": "Saldo Devedor",
         "balanceOverTime": "Evolução do Saldo Devedor",
         "noInstallments": "Este empréstimo não possui parcelas geradas.",
-        "progressBtn": "Progresso"
+        "progressBtn": "Progresso",
+        "lentTitle": "Progresso de Recebimento",
+        "receivedLabel": "Recebido",
+        "receivedInstallments": "Parcelas Recebidas",
+        "toReceiveInstallments": "Parcelas a Receber",
+        "nextReceipt": "Próximo Recebimento",
+        "creditBalance": "Saldo Credor",
+        "creditBalanceOverTime": "Evolução do Saldo Credor",
+        "receiptInstallments": "Parcelas de Recebimento",
+        "received": "Recebida",
+        "pending": "A receber"
       }
     },
     "members": {

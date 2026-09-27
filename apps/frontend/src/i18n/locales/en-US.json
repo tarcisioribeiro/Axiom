@@ -1080,7 +1080,17 @@
         "outstandingBalance": "Outstanding Balance",
         "balanceOverTime": "Outstanding Balance Over Time",
         "noInstallments": "This loan has no generated installments.",
-        "progressBtn": "Progress"
+        "progressBtn": "Progress",
+        "lentTitle": "Receipt Progress",
+        "receivedLabel": "Received",
+        "receivedInstallments": "Received Installments",
+        "toReceiveInstallments": "Installments to Receive",
+        "nextReceipt": "Next Receipt",
+        "creditBalance": "Credit Balance",
+        "creditBalanceOverTime": "Credit Balance Over Time",
+        "receiptInstallments": "Receipt Installments",
+        "received": "Received",
+        "pending": "Pending"
       }
     },
     "members": {
