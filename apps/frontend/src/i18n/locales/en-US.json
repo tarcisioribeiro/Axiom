@@ -7263,6 +7263,8 @@
   "spendingInsights": {
     "title": "Spending Insights",
     "description": "Spending analysis — {{month}}",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
     "unavailable": "Data Unavailable",
     "unavailableDesc": "Could not load spending insights. Please try again.",
     "totalMonth": "Total — {{month}}",

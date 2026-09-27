@@ -1,15 +1,17 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   ArrowDown,
   ArrowUp,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   Flame,
   Minus,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
@@ -29,6 +31,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChartColors, useSemanticColors } from '@/lib/chart-colors';
 import { axisFormatCurrency } from '@/lib/chart-formatters';
@@ -112,11 +115,46 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
   const chartColors = useChartColors();
   const semanticColors = useSemanticColors();
 
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const [selected, setSelected] = useState(currentMonthStart);
+  const year = selected.getFullYear();
+  const month = selected.getMonth() + 1;
+  const isCurrentMonth = selected >= currentMonthStart;
+  const navigateMonth = (delta: number) =>
+    setSelected(new Date(year, month - 1 + delta, 1));
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['dashboard', 'spendingInsights'],
-    queryFn: () => dashboardService.getSpendingInsights(),
+    queryKey: ['dashboard', 'spendingInsights', year, month],
+    queryFn: () => dashboardService.getSpendingInsights(year, month),
     staleTime: STALE_TIMES.DASHBOARD_STATS,
+    placeholderData: keepPreviousData,
   });
+
+  const monthNav = (
+    <div className="gap-sm flex items-center">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigateMonth(-1)}
+        aria-label={t('spendingInsights.prevMonth')}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <span className="min-w-36 text-center text-sm font-semibold capitalize">
+        {selected.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigateMonth(1)}
+        disabled={isCurrentMonth}
+        aria-label={t('spendingInsights.nextMonth')}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   if (isLoading) return <LoadingState />;
 
@@ -125,7 +163,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
   if (isError || !data) {
     return (
       <Wrapper>
-        <PageHeader title={t('spendingInsights.title')} />
+        <PageHeader title={t('spendingInsights.title')} actions={monthNav} />
         <EmptyState
           title={t('spendingInsights.unavailable')}
           description={t('spendingInsights.unavailableDesc')}
@@ -163,6 +201,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
       <PageHeader
         title={t('spendingInsights.title')}
         description={t('spendingInsights.description', { month: monthName })}
+        actions={monthNav}
       />
 
       {/* Trend summary row */}

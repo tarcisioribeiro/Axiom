@@ -7294,6 +7294,8 @@
   "spendingInsights": {
     "title": "Insights de Gastos",
     "description": "Análise de gastos — {{month}}",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
     "unavailable": "Dados indisponíveis",
     "unavailableDesc": "Não foi possível carregar os insights de gastos. Tente novamente.",
     "totalMonth": "Total — {{month}}",
