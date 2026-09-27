@@ -8,6 +8,7 @@ class CreditCardBill {
   final int id;
   final String uuid;
   final int creditCard;
+  final String? creditCardName;
   final String? creditCardOnCardName;
   final String? creditCardNumberMasked;
   final String? creditCardFlag;
@@ -34,6 +35,7 @@ class CreditCardBill {
     required this.minimumPayment,
     required this.paidAmount,
     required this.status,
+    this.creditCardName,
     this.creditCardOnCardName,
     this.creditCardNumberMasked,
     this.creditCardFlag,
@@ -49,6 +51,7 @@ class CreditCardBill {
         id: json['id'] as int,
         uuid: json['uuid'] as String? ?? '',
         creditCard: json['credit_card'] as int,
+        creditCardName: json['credit_card_name'] as String?,
         creditCardOnCardName: json['credit_card_on_card_name'] as String?,
         creditCardNumberMasked: json['credit_card_number_masked'] as String?,
         creditCardFlag: json['credit_card_flag'] as String?,

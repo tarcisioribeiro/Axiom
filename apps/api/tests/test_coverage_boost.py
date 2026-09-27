@@ -23,6 +23,7 @@ from cryptography.fernet import Fernet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import Account
+from expenses.models import Expense
 from members.models import Member
 
 # Stable test encryption key shared across all CC tests
@@ -209,6 +210,38 @@ class PayCreditCardBillViewTest(BaseTestCase):
         self.bill.refresh_from_db()
         self.assertEqual(self.bill.paid_amount, Decimal("100.00"))
         self.assertEqual(self.bill.status, "open")
+        expense = Expense.objects.get(related_bill_payment=self.bill)
+        self.assertEqual(
+            expense.description,
+            f"Pagamento fatura {self.card.name} - "
+            "Janeiro/2026 (Partial payment)",
+        )
+        detail = self.client.get(
+            reverse("credit-card-bill-detail-view", args=[self.bill.pk])
+        )
+        self.assertEqual(detail.data["credit_card_name"], self.card.name)
+
+    def test_translate_bill_period_migration(self):
+        import importlib
+
+        from django.apps import apps
+
+        mig = importlib.import_module(
+            "credit_cards.migrations."
+            "0009_translate_bill_period_in_descriptions"
+        )
+        self.client.post(
+            reverse("credit-card-bill-pay", args=[self.bill.pk]),
+            {"amount": "100.00", "payment_date": "2026-02-10"},
+            format="json",
+        )
+        expense = Expense.objects.get(related_bill_payment=self.bill)
+        mig.backwards(apps, None)
+        expense.refresh_from_db()
+        self.assertTrue(expense.description.endswith(" - Jan/2026"))
+        mig.forwards(apps, None)
+        expense.refresh_from_db()
+        self.assertTrue(expense.description.endswith(" - Janeiro/2026"))
 
     def test_pay_bill_not_found(self):
         url = reverse("credit-card-bill-pay", args=[99999])

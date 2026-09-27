@@ -26,6 +26,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { translate } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -35,11 +36,24 @@ import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import { receivablesService } from '@/services/receivables-service';
 import { revenuesService } from '@/services/revenues-service';
+import { transfersService } from '@/services/transfers-service';
 import type { Payable, Receivable, Loan, CreditCardBill, Revenue } from '@/types';
 import type { Expense } from '@/types/expenses';
+import type { Transfer } from '@/types/transfers';
 
 type EventType =
-  'payable' | 'receivable' | 'creditCard' | 'loan' | 'revenue' | 'expense';
+  'payable' | 'receivable' | 'creditCard' | 'loan' | 'revenue' | 'expense' | 'transfer';
+
+type EventStatus =
+  | 'pending'
+  | 'paid'
+  | 'received'
+  | 'overdue'
+  | 'open'
+  | 'closed'
+  | 'processing'
+  | 'transferred'
+  | 'failed';
 
 interface CalendarEvent {
   id: string;
@@ -47,7 +61,27 @@ interface CalendarEvent {
   description: string;
   value: number;
   date: string;
+  status: EventStatus;
 }
+
+const STATUS_VARIANTS: Record<
+  EventStatus,
+  'success' | 'destructive' | 'warning' | 'secondary' | 'info'
+> = {
+  pending: 'warning',
+  paid: 'success',
+  received: 'success',
+  transferred: 'success',
+  overdue: 'destructive',
+  failed: 'destructive',
+  open: 'info',
+  closed: 'secondary',
+  processing: 'info',
+};
+
+// 'active' nos modelos de payable/receivable/loan = ainda não quitado
+const fromActive = (status: string): EventStatus =>
+  status === 'active' ? 'pending' : (status as EventStatus);
 
 const EVENT_COLORS: Record<EventType, string> = {
   payable: 'bg-destructive/15 text-destructive border-destructive/30',
@@ -56,6 +90,7 @@ const EVENT_COLORS: Record<EventType, string> = {
   loan: 'bg-purple-500/15 text-purple-600 border-purple-500/30',
   revenue: 'bg-teal-500/15 text-teal-600 border-teal-500/30',
   expense: 'bg-rose-500/15 text-rose-600 border-rose-500/30',
+  transfer: 'bg-sky-500/15 text-sky-600 border-sky-500/30',
 };
 
 const EVENT_DOT_COLORS: Record<EventType, string> = {
@@ -65,6 +100,7 @@ const EVENT_DOT_COLORS: Record<EventType, string> = {
   loan: 'bg-purple-500',
   revenue: 'bg-teal-500',
   expense: 'bg-rose-500',
+  transfer: 'bg-sky-500',
 };
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
@@ -123,13 +159,20 @@ export default function FinancialCalendar({
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const transfersQuery = useQuery({
+    queryKey: ['transfers', 'calendar'],
+    queryFn: () => transfersService.getAllPages(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
   const isLoading =
     payablesQuery.isLoading ||
     receivablesQuery.isLoading ||
     loansQuery.isLoading ||
     billsQuery.isLoading ||
     revenuesQuery.isLoading ||
-    expensesQuery.isLoading;
+    expensesQuery.isLoading ||
+    transfersQuery.isLoading;
 
   const events = useMemo<CalendarEvent[]>(() => {
     const result: CalendarEvent[] = [];
@@ -137,7 +180,6 @@ export default function FinancialCalendar({
     (payablesQuery.data ?? []).forEach((p: Payable) => {
       if (
         p.due_date &&
-        p.status !== 'paid' &&
         p.status !== 'cancelled' &&
         p.due_date >= startStr &&
         p.due_date <= endStr
@@ -148,6 +190,7 @@ export default function FinancialCalendar({
           description: p.description,
           value: parseFloat(p.value),
           date: p.due_date,
+          status: fromActive(p.status),
         });
       }
     });
@@ -155,7 +198,6 @@ export default function FinancialCalendar({
     (receivablesQuery.data ?? []).forEach((r: Receivable) => {
       if (
         r.due_date &&
-        r.status !== 'received' &&
         r.status !== 'cancelled' &&
         r.due_date >= startStr &&
         r.due_date <= endStr
@@ -166,12 +208,13 @@ export default function FinancialCalendar({
           description: r.description,
           value: parseFloat(r.value),
           date: r.due_date,
+          status: fromActive(r.status),
         });
       }
     });
 
     (loansQuery.data ?? []).forEach((l: Loan) => {
-      if (l.due_date && l.status !== 'paid') {
+      if (l.due_date && l.status !== 'cancelled') {
         const due = l.due_date;
         if (due >= startStr && due <= endStr) {
           result.push({
@@ -180,46 +223,64 @@ export default function FinancialCalendar({
             description: l.description,
             value: parseFloat(l.value),
             date: due,
+            status: fromActive(l.status),
           });
         }
       }
     });
 
     (billsQuery.data ?? []).forEach((b: CreditCardBill) => {
-      if (b.due_date && b.status !== 'paid') {
+      if (b.due_date) {
         const due = b.due_date;
         if (due >= startStr && due <= endStr) {
           result.push({
             id: `bill-${b.id}`,
             type: 'creditCard',
-            description: `${b.credit_card_name ?? t('nav.items.creditCards')} — ${b.month}/${b.year}`,
+            description: `${b.credit_card_name ?? t('nav.items.creditCards')} — ${translate('months', b.month)}/${b.year}`,
             value: parseFloat(b.total_amount),
             date: due,
+            status: b.status,
           });
         }
       }
     });
 
     (revenuesQuery.data ?? []).forEach((r: Revenue) => {
-      if (!r.received && r.date >= startStr && r.date <= endStr) {
+      if (r.date >= startStr && r.date <= endStr) {
         result.push({
           id: `revenue-${r.id}`,
           type: 'revenue',
           description: r.description,
           value: parseFloat(String(r.value)),
           date: r.date,
+          status: r.received ? 'received' : 'pending',
         });
       }
     });
 
     (expensesQuery.data ?? []).forEach((e: Expense) => {
-      if (!e.payed && e.date >= startStr && e.date <= endStr) {
+      // Pagamento de fatura já aparece como a própria fatura
+      if (!e.related_bill_payment && e.date >= startStr && e.date <= endStr) {
         result.push({
           id: `expense-${e.id}`,
           type: 'expense',
           description: e.description,
           value: parseFloat(String(e.value)),
           date: e.date,
+          status: e.payed ? 'paid' : 'pending',
+        });
+      }
+    });
+
+    (transfersQuery.data ?? []).forEach((tr: Transfer) => {
+      if (tr.status !== 'cancelled' && tr.date >= startStr && tr.date <= endStr) {
+        result.push({
+          id: `transfer-${tr.id}`,
+          type: 'transfer',
+          description: tr.description,
+          value: parseFloat(tr.value),
+          date: tr.date,
+          status: tr.status === 'completed' ? 'transferred' : tr.status,
         });
       }
     });
@@ -232,6 +293,7 @@ export default function FinancialCalendar({
     billsQuery.data,
     revenuesQuery.data,
     expensesQuery.data,
+    transfersQuery.data,
     startStr,
     endStr,
     t,
@@ -431,9 +493,14 @@ export default function FinancialCalendar({
                       </Badge>
                       <span className="text-sm font-medium">{ev.description}</span>
                     </div>
-                    <span className="text-sm font-bold">
-                      {formatCurrency(ev.value)}
-                    </span>
+                    <div className="gap-sm flex items-center">
+                      <Badge variant={STATUS_VARIANTS[ev.status]} className="text-xs">
+                        {t(`financialCalendar.status.${ev.status}`)}
+                      </Badge>
+                      <span className="text-sm font-bold">
+                        {formatCurrency(ev.value)}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>

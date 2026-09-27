@@ -362,14 +362,14 @@ class PayCreditCardBillView(APIView):
         from accounts.services import recalculate_account_balance
 
         expense_description = (
-            f"Pagamento fatura {card.name} - {bill.month}/{bill.year}"
+            f"Pagamento fatura {card.name} - {bill.period_label}"
         )
         if notes:
             expense_description += f" ({notes})"
 
         payed = not scheduled
         expense = Expense.objects.create(
-            description=expense_description,
+            description=expense_description[:100],
             value=amount,
             date=payment_date,
             horary=timezone.now().time(),
@@ -514,7 +514,7 @@ class RenegotiateBillView(APIView):
         # Cria a compra representando a renegociação
         purchase = CreditCardPurchase.objects.create(
             description=(
-                f"Renegociação Fatura {card.name} {bill.month}/{bill.year}"
+                f"Renegociação Fatura {card.name} {bill.period_label}"
             ),
             total_value=total_with_interest,
             purchase_date=start_date,
@@ -523,7 +523,7 @@ class RenegotiateBillView(APIView):
             card=card,
             total_installments=n_installments,
             notes=(
-                f"Renegociação da fatura {bill.month}/{bill.year}. "
+                f"Renegociação da fatura {bill.period_label}. "
                 f"Saldo original: R$ {remaining:.2f}. "
                 f"Total com juros: R$ {total_with_interest:.2f}."
             ),

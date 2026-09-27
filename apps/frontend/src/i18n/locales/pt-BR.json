@@ -6612,8 +6612,20 @@
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
       "loan": "Parcela Empréstimo",
-      "revenue": "Receita Pendente",
-      "expense": "Despesa Pendente"
+      "revenue": "Receita",
+      "expense": "Despesa",
+      "transfer": "Transferência"
+    },
+    "status": {
+      "pending": "Pendente",
+      "paid": "Pago",
+      "received": "Recebido",
+      "overdue": "Em atraso",
+      "open": "Aberta",
+      "closed": "Fechada",
+      "processing": "Processando",
+      "transferred": "Transferido",
+      "failed": "Falhou"
     },
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",

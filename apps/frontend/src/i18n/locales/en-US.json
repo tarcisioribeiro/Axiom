@@ -6567,8 +6567,20 @@
       "receivable": "Receivable",
       "creditCard": "Credit Card Bill",
       "loan": "Loan Installment",
-      "revenue": "Pending Revenue",
-      "expense": "Pending Expense"
+      "revenue": "Revenue",
+      "expense": "Expense",
+      "transfer": "Transfer"
+    },
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "received": "Received",
+      "overdue": "Overdue",
+      "open": "Open",
+      "closed": "Closed",
+      "processing": "Processing",
+      "transferred": "Transferred",
+      "failed": "Failed"
     },
     "dayDetail": "Due dates on {{date}}",
     "loading": "Loading calendar...",
