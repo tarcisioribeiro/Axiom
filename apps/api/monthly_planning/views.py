@@ -19,6 +19,7 @@ from expenses.models import Expense, FixedExpense
 from monthly_planning.models import MonthlyPlan
 from monthly_planning.serializers import MonthlyPlanSerializer
 from revenues.models import FixedRevenue, Revenue
+from vaults.models import Vault
 
 logger = logging.getLogger("axiom")
 
@@ -245,6 +246,12 @@ def _credit_card_bills_data(user: User, month: int, year: int) -> list:
             "due_date": str(b.due_date) if b.due_date else None,
             "status": b.status,
             "paid_amount": str(b.paid_amount),
+            "month": (
+                _MONTH_ABBREVS.index(b.month) + 1
+                if b.month in _MONTH_ABBREVS
+                else None
+            ),
+            "year": b.year,
         }
         for b in CreditCardBill.objects.filter(
             credit_card__created_by=user,
@@ -331,6 +338,13 @@ class MonthlyPlanSummaryView(APIView):
                 }
             )
 
+        # Mirrors registered_expenses_net: fixed-revenue-linked revenues are
+        # already inside the (always-counted) fixed_revenues total, so only
+        # ad-hoc revenues (vault yield, one-off income) are added on top.
+        registered_revenues_net = revenue_qs.filter(
+            fixed_revenue_template__isnull=True,
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0")
+
         expense_qs = Expense.objects.filter(
             created_by=user,
             date__gte=date_from,
@@ -374,6 +388,17 @@ class MonthlyPlanSummaryView(APIView):
         )
         total_balance = account_aggregates["total_balance"] or Decimal("0")
         total_overdraft = account_aggregates["total_overdraft"] or Decimal("0")
+        # Vault money stays inside the linked account's current_balance
+        # (see Account.deposited_in_vaults), so it is a subset of
+        # total_balance, not an addition to it.
+        total_vault_balance = Vault.objects.filter(
+            account__created_by=user,
+            account__is_active=True,
+            account__is_deleted=False,
+            is_active=True,
+            is_deleted=False,
+            current_balance__gt=0,
+        ).aggregate(total=Sum("current_balance"))["total"] or Decimal("0")
 
         expense_cat_qs = (
             Expense.objects.filter(
@@ -414,7 +439,9 @@ class MonthlyPlanSummaryView(APIView):
                 "actual_expense_items": actual_expense_items,
                 "total_account_balance": str(total_balance),
                 "total_overdraft_limit": str(total_overdraft),
+                "total_vault_balance": str(total_vault_balance),
                 "opening_balance": str(opening_balance),
+                "registered_revenues_net": str(registered_revenues_net),
                 "registered_expenses_net": str(registered_expenses_net),
                 "actual_expenses_by_category": actual_expenses_by_category,
             }
