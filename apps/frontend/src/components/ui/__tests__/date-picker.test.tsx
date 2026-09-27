@@ -27,3 +27,17 @@ describe('DatePicker bounds', () => {
     expect(isDisabled('2026-06-21')).toBe(true);
   });
 });
+
+describe('DatePicker opening', () => {
+  it('opens on click but not on focus (dialog autofocus)', () => {
+    const { container } = render(<DatePicker placeholder="x" />);
+    const input = container.querySelector('input') as HTMLInputElement;
+    const calendar = () => document.querySelector('.flatpickr-calendar.open');
+
+    fireEvent.focus(input);
+    expect(calendar()).toBeNull();
+
+    fireEvent.click(input);
+    expect(calendar()).not.toBeNull();
+  });
+});

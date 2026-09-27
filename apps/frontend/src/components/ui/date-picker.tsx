@@ -116,7 +116,9 @@ export function DatePicker({
       locale: Portuguese,
       dateFormat: 'd/m/Y',
       allowInput: true,
-      clickOpens: !disabled,
+      // Abre só no clique (ver onClick do input): com clickOpens o flatpickr
+      // abre também no focus, e o autofocus dos dialogs abria o calendário.
+      clickOpens: false,
       disableMobile: true,
       ...(floating ? floatingOptions(inputRef.current) : { static: true }),
       // Strings ('YYYY-MM-DD') passariam pelo parseDate DD/MM/YYYY abaixo e
@@ -222,6 +224,7 @@ export function DatePicker({
       {/* Input do Flatpickr */}
       <input
         ref={inputRef}
+        onClick={() => !disabled && flatpickrRef.current?.open()}
         onFocus={(e) => e.currentTarget.select()}
         onBlur={() => {
           if (flatpickrRef.current) commitTypedDate(flatpickrRef.current);
