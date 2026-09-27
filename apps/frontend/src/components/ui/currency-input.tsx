@@ -48,7 +48,7 @@ interface MaskedCurrencyInputProps extends Omit<
   onValueChange: (value: number) => void;
 }
 
-/** Campo de moeda por centavos: digitar "890" exibe "8,90" (prefixo R$). */
+/** Campo de moeda por centavos: digitar "890" exibe "8,90", "150000" exibe "1.500,00" (prefixo R$). */
 const MaskedCurrencyInput = ({
   value,
   onValueChange,
@@ -58,7 +58,10 @@ const MaskedCurrencyInput = ({
     {...props}
     type="text"
     inputMode="numeric"
-    value={value.toFixed(2).replace('.', ',')}
+    value={value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}
     onChange={(e) => onValueChange(Number(e.target.value.replace(/\D/g, '')) / 100)}
   />
 );

@@ -530,7 +530,13 @@ export default function Loans() {
         onClose={() => setReceiptLoan(null)}
       />
 
-      <LoanProgressDialog loan={progressLoan} onClose={() => setProgressLoan(null)} />
+      <LoanProgressDialog
+        loan={progressLoan}
+        isCreditor={
+          progressLoan !== null && progressLoan.creditor === currentUserMemberId
+        }
+        onClose={() => setProgressLoan(null)}
+      />
 
       <LoanInstallmentsDialog
         loan={installmentsLoan}

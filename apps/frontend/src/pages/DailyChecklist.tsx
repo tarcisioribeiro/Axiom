@@ -816,6 +816,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               value={selectedDate ? parseLocalDate(selectedDate) : undefined}
               onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
               placeholder={t('pages.dailyChecklist.datePlaceholder')}
+              maxDate={new Date()}
               className="max-w-xs"
             />
           </div>

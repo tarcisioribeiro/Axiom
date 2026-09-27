@@ -1,10 +1,11 @@
 /* eslint-disable max-lines */
 import { Pencil } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -53,6 +54,8 @@ interface Props {
     dryRun: boolean
   ) => Promise<{ installments_preview: RecalcPreviewRow[] }>;
   onChanged: () => void;
+  /** Conteúdo extra exibido acima da tabela (ex.: ações da dívida). */
+  extra?: ReactNode;
 }
 
 type Draft = { value: string; due_date: string };
@@ -68,6 +71,7 @@ export function InstallmentsPlanDialog({
   saveInstallment,
   recalculate,
   onChanged,
+  extra,
 }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -183,11 +187,13 @@ export function InstallmentsPlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
+
+        {extra}
 
         {isLoading ? (
           <div className="py-xl text-muted-foreground text-center text-sm">
@@ -220,7 +226,7 @@ export function InstallmentsPlanDialog({
                         </td>
                         <td className="py-sm pr-md align-middle">
                           {editable ? (
-                            <div className="w-36">
+                            <div className="w-44">
                               <DatePicker
                                 value={d.due_date}
                                 clearable={false}
@@ -237,17 +243,17 @@ export function InstallmentsPlanDialog({
                         </td>
                         <td className="py-sm pr-md text-right align-middle">
                           {editable ? (
-                            <Input
-                              type="number"
-                              step="0.01"
-                              className="w-28"
-                              value={d.value}
-                              onChange={(e) =>
-                                setDraft(inst.installment_number, {
-                                  value: e.target.value,
-                                })
-                              }
-                            />
+                            <div className="ml-auto w-40">
+                              <MaskedCurrencyInput
+                                className="text-right"
+                                value={parseFloat(d.value) || 0}
+                                onValueChange={(value) =>
+                                  setDraft(inst.installment_number, {
+                                    value: value.toFixed(2),
+                                  })
+                                }
+                              />
+                            </div>
                           ) : (
                             formatCurrency(inst.value)
                           )}

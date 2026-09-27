@@ -25,6 +25,8 @@ class PayablesService extends BaseService<Payable, PayableFormData> {
       member: data.member || null,
       notes: data.notes || null,
       status: data.status || 'active',
+      is_cumulative: data.is_cumulative ?? false,
+      payment_frequency: data.payment_frequency || 'monthly',
     });
   }
 
@@ -40,6 +42,9 @@ class PayablesService extends BaseService<Payable, PayableFormData> {
     if (data.member !== undefined) payload.member = data.member;
     if (data.notes !== undefined) payload.notes = data.notes;
     if (data.status !== undefined) payload.status = data.status;
+    if (data.is_cumulative !== undefined) payload.is_cumulative = data.is_cumulative;
+    if (data.payment_frequency !== undefined)
+      payload.payment_frequency = data.payment_frequency;
 
     return apiClient.patch<Payable>(`${this.endpoint}${id}/`, payload);
   }

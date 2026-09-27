@@ -1080,7 +1080,17 @@
         "outstandingBalance": "Saldo Devedor",
         "balanceOverTime": "Evolução do Saldo Devedor",
         "noInstallments": "Este empréstimo não possui parcelas geradas.",
-        "progressBtn": "Progresso"
+        "progressBtn": "Progresso",
+        "lentTitle": "Progresso de Recebimento",
+        "receivedLabel": "Recebido",
+        "receivedInstallments": "Parcelas Recebidas",
+        "toReceiveInstallments": "Parcelas a Receber",
+        "nextReceipt": "Próximo Recebimento",
+        "creditBalance": "Saldo Credor",
+        "creditBalanceOverTime": "Evolução do Saldo Credor",
+        "receiptInstallments": "Parcelas de Recebimento",
+        "received": "Recebida",
+        "pending": "A receber"
       }
     },
     "members": {
@@ -1189,8 +1199,6 @@
         "creditCardHint": "A despesa será lançada automaticamente na fatura aberta do mês",
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Imobiliária XYZ",
-        "paymentMethodLabel": "Método de Pagamento",
-        "paymentMethodPlaceholder": "Selecione",
         "notesLabel": "Observações",
         "notesPlaceholder": "Informações adicionais",
         "isActiveLabel": "Despesa Ativa",
@@ -1370,6 +1378,17 @@
       "foundBills": "{{count}} fatura(s) encontrada(s)",
       "payBillLabel": "Pagar fatura",
       "reopenBillLabel": "Reabrir fatura",
+      "viewPurchasesLabel": "Ver compras da fatura",
+      "purchases": {
+        "title": "Compras da fatura",
+        "empty": "Nenhuma compra nesta fatura",
+        "date": "Data",
+        "description": "Descrição",
+        "category": "Categoria",
+        "installment": "Parcela",
+        "value": "Valor",
+        "total": "Total"
+      },
       "columns": {
         "card": "Cartão",
         "period": "Período",
@@ -1634,6 +1653,7 @@
       "responsible": "Responsável:",
       "payBtn": "Pagar",
       "installmentsBtn": "Parcelas",
+      "manageDebtBtn": "Gerenciar dívida",
       "payment": {
         "title": "Registrar Pagamento",
         "value": "Valor",
@@ -1692,8 +1712,8 @@
         "paymentPlanCreated": "Plano de pagamento criado",
         "paymentPlanCreatedDesc": "As parcelas foram geradas e a despesa fixa foi criada.",
         "increaseValueTitle": "Aumentar Valor",
-        "increaseValueDesc": "Informe o novo valor total da dívida. As parcelas em aberto serão recalculadas.",
-        "newValueLabel": "Novo Valor Total",
+        "increaseValueDesc": "Informe o valor a adicionar à dívida. As parcelas em aberto serão recalculadas.",
+        "newValueLabel": "Valor a Adicionar",
         "recalculationPreviewTitle": "Prévia do Recálculo",
         "keepCountOption": "Manter {{count}} parcelas",
         "changeCountOption": "Alterar quantidade de parcelas",
@@ -1705,6 +1725,18 @@
       }
     },
     "budgets": {
+      "purchases": {
+        "button": "Compras",
+        "title": "Compras do mês",
+        "empty": "Nenhuma compra nesta categoria no mês",
+        "date": "Data",
+        "description": "Descrição",
+        "source": "Origem",
+        "value": "Valor",
+        "total": "Total",
+        "account": "Conta",
+        "card": "Cartão"
+      },
       "title": "Orçamentos",
       "newBtn": "Novo Orçamento",
       "editTitle": "Editar Orçamento",
@@ -4279,6 +4311,7 @@
         "endDateLabel": "Data de Término",
         "endDatePlaceholder": "Selecione a data de término",
         "endDateComputedHint": "Calculada automaticamente a partir da data de início e da meta.",
+        "endDateComputedManualHint": "Calculada automaticamente: data de início + (meta − progresso atual).",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Dias Consecutivos",
@@ -4315,6 +4348,7 @@
       "failureError": "Erro ao registrar falha",
       "currentStreakLabel": "Sequência atual",
       "bestStreakLabel": "Recorde",
+      "startDateLabelShort": "Início",
       "endDateLabelShort": "Término",
       "failuresCount_one": "{{count}} falha",
       "failuresCount_other": "{{count}} falhas",
@@ -6612,8 +6646,20 @@
       "receivable": "A Receber",
       "creditCard": "Fatura Cartão",
       "loan": "Parcela Empréstimo",
-      "revenue": "Receita Pendente",
-      "expense": "Despesa Pendente"
+      "revenue": "Receita",
+      "expense": "Despesa",
+      "transfer": "Transferência"
+    },
+    "status": {
+      "pending": "Pendente",
+      "paid": "Pago",
+      "received": "Recebido",
+      "overdue": "Em atraso",
+      "open": "Aberta",
+      "closed": "Fechada",
+      "processing": "Processando",
+      "transferred": "Transferido",
+      "failed": "Falhou"
     },
     "dayDetail": "Vencimentos em {{date}}",
     "loading": "Carregando calendário...",
@@ -7236,6 +7282,11 @@
     "realizedMode": "Realizado",
     "executionPercent": "{{percent}}% executado",
     "withOverdraft": "Com cheque especial",
+    "openingBalance": "Saldo inicial",
+    "monthRevenues": "Receitas do mês",
+    "inAccount": "Em conta",
+    "inVaults": "Em cofres",
+    "billReference": "Fatura {{month}}/{{year}}",
     "registeredRevenues": "Receitas Registradas",
     "registeredExpenses": "Despesas Registradas",
     "noRegisteredRevenues": "Nenhuma receita registrada neste mês",
@@ -7254,6 +7305,8 @@
   "spendingInsights": {
     "title": "Insights de Gastos",
     "description": "Análise de gastos — {{month}}",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
     "unavailable": "Dados indisponíveis",
     "unavailableDesc": "Não foi possível carregar os insights de gastos. Tente novamente.",
     "totalMonth": "Total — {{month}}",

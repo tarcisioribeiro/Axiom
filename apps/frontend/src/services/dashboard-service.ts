@@ -94,9 +94,10 @@ class DashboardService {
     return apiClient.get<AnomalyAlert[]>('/api/v1/dashboard/anomalies/');
   }
 
-  async getSpendingInsights(): Promise<SpendingInsights> {
+  async getSpendingInsights(year?: number, month?: number): Promise<SpendingInsights> {
     return apiClient.get<SpendingInsights>(
-      API_CONFIG.ENDPOINTS.DASHBOARD_SPENDING_INSIGHTS
+      API_CONFIG.ENDPOINTS.DASHBOARD_SPENDING_INSIGHTS,
+      year && month ? { year, month } : undefined
     );
   }
 

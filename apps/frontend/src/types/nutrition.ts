@@ -102,6 +102,8 @@ export interface MealLog {
   menu_option?: number | null;
   menu_option_name?: string | null;
   is_free_meal: boolean;
+  /** Kcal computed server-side from the followed menu option (0 when free). */
+  calories: number;
   date: string;
   time?: string | null;
   notes?: string | null;

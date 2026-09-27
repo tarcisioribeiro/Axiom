@@ -96,6 +96,18 @@ class VaultBalanceSeparationTest(APITestCase):
         self.assertEqual(self.account.deposited_in_vaults, Decimal("250.00"))
         self.assertEqual(self.account.available_balance, Decimal("750.00"))
 
+    def test_projected_balance_excludes_vault_reserve(self):
+        self._deposit("400.00")
+        future = (timezone.now() + timedelta(days=30)).date().isoformat()
+        resp = self.client.get(
+            reverse("account-projected-balance", args=[self.account.pk]),
+            {"date": future},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Decimal(resp.data["projected_balance"]), Decimal("600.00")
+        )
+
     def test_deposit_rejected_when_exceeds_available_balance(self):
         self._deposit("900.00")
         resp = self._deposit("200.00")  # only 100 available

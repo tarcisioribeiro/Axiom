@@ -294,13 +294,6 @@ class FixedExpense(BaseModel):
     merchant = models.CharField(
         max_length=200, verbose_name="Estabelecimento", null=True, blank=True
     )
-    payment_method = models.CharField(
-        max_length=20,
-        choices=PAYMENT_METHOD_CHOICES,
-        verbose_name="Método de Pagamento",
-        null=True,
-        blank=True,
-    )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
     member = models.ForeignKey(
         "members.Member",

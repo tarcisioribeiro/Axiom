@@ -246,6 +246,11 @@ class CreditCardBill(BaseModel):
     def __str__(self):
         return f"{self.credit_card} - {self.year}/{self.month}"
 
+    @property
+    def period_label(self):
+        """Mês/ano em pt-BR, ex.: "Setembro/2026"."""
+        return f"{self.get_month_display()}/{self.year}"
+
 
 class CreditCardPurchase(BaseModel):
     """

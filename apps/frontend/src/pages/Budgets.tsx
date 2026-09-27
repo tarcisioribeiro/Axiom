@@ -11,10 +11,12 @@ import {
   Wallet,
   CalendarDays,
   RotateCcw,
+  ShoppingCart,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -103,6 +105,7 @@ export default function Budgets() {
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const [purchasesBudget, setPurchasesBudget] = useState<Budget | undefined>();
 
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets'],
@@ -481,6 +484,7 @@ export default function Budgets() {
                       status={status}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
+                      onViewPurchases={setPurchasesBudget}
                     />
                   ))}
                 </div>
@@ -489,6 +493,12 @@ export default function Budgets() {
           })()}
         </>
       )}
+
+      <BudgetPurchasesDialog
+        budget={purchasesBudget}
+        open={!!purchasesBudget}
+        onOpenChange={(open) => !open && setPurchasesBudget(undefined)}
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -685,11 +695,13 @@ function BudgetCard({
   status,
   onEdit,
   onDelete,
+  onViewPurchases,
 }: {
   budget: Budget;
   status?: BudgetStatus;
   onEdit: (b: Budget) => void;
   onDelete: (b: Budget) => Promise<void>;
+  onViewPurchases: (b: Budget) => void;
 }) {
   const { t } = useTranslation();
   const months = t('pages.budgets.months', { returnObjects: true }) as string[];
@@ -793,6 +805,15 @@ function BudgetCard({
         )}
 
         <div className="gap-sm mt-3 flex border-t pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onViewPurchases(budget)}
+          >
+            <ShoppingCart className="mr-xs h-3 w-3" />
+            {t('pages.budgets.purchases.button')}
+          </Button>
           <Button
             variant="outline"
             size="sm"

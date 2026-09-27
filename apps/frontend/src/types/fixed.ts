@@ -13,7 +13,6 @@ export interface FixedExpense {
   credit_card_name?: string;
   due_day: number;
   merchant?: string;
-  payment_method?: string;
   notes?: string;
   member?: number | null;
   member_name?: string;
@@ -38,7 +37,6 @@ export interface FixedExpenseFormData {
   credit_card?: number;
   due_day: number;
   merchant?: string;
-  payment_method?: string;
   notes?: string;
   member?: number | null;
   is_active: boolean;

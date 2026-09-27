@@ -1,9 +1,10 @@
 """Tests for workout and nutrition endpoints in personal_planning."""
 
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -221,7 +222,7 @@ class WorkoutSessionViewTest(BaseWorkoutNutritionTestCase):
     def _session_data(self):
         return {
             "workout_day": self.day.pk,
-            "date": str(date.today()),
+            "date": str(timezone.localdate()),
             "owner": self.member.pk,
         }
 
@@ -234,6 +235,24 @@ class WorkoutSessionViewTest(BaseWorkoutNutritionTestCase):
         url = reverse("workout-session-list-create")
         response = self.client.post(url, self._session_data())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_workout_session_retroactive_date(self):
+        url = reverse("workout-session-list-create")
+        past = timezone.localdate() - timedelta(days=10)
+        response = self.client.post(
+            url, {**self._session_data(), "date": str(past)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["date"], str(past))
+
+    def test_create_workout_session_future_date_rejected(self):
+        url = reverse("workout-session-list-create")
+        future = timezone.localdate() + timedelta(days=1)
+        response = self.client.post(
+            url, {**self._session_data(), "date": str(future)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("date", response.data)
 
     def test_retrieve_workout_session(self):
         session = WorkoutSession.objects.create(

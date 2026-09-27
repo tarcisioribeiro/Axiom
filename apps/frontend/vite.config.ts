@@ -62,12 +62,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // Replace react-force-graph's VR/AR sub-packages with no-op stubs.
-      // These packages depend on AFRAME and THREE as globals (A-Frame ecosystem)
-      // which are never loaded in this app. Since we only use ForceGraph2D,
-      // the VR/AR variants are never rendered and can safely be stubbed out.
-      '3d-force-graph-vr': path.resolve(__dirname, './src/stubs/kapsule-noop.ts'),
-      '3d-force-graph-ar': path.resolve(__dirname, './src/stubs/kapsule-noop.ts'),
     },
     // Force a single pdfjs-dist instance across the entire bundle.
     // react-pdf ships its own nested pdfjs-dist (5.4.296), while the project

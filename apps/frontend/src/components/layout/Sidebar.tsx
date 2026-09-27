@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
-  Compass,
   Flame,
   X,
   PanelLeftClose,
@@ -32,7 +31,6 @@ import {
   type NavModule,
   type NavSubItem,
 } from '@/config/nav-config';
-import { getTourKey, OPEN_TOUR_EVENT } from '@/config/page-tour';
 import { prefetchRoute } from '@/config/route-prefetch';
 import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
@@ -584,35 +582,6 @@ export const Sidebar = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      )}
-
-      {/* Tour guiado da página atual */}
-      {getTourKey(location.pathname) && (
-        <div
-          className={cn(
-            'mt-sm border-border/40 pt-sm border-t',
-            isCollapsed && !isMobile ? 'flex justify-center' : ''
-          )}
-        >
-          <Tooltip content={t('pageTour.button')} side="right">
-            <button
-              onClick={() => {
-                if (isMobile) close();
-                window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
-              }}
-              aria-label={t('pageTour.button')}
-              className={cn(
-                'text-muted-foreground hover:bg-accent hover:text-accent-foreground gap-sm flex items-center rounded-lg text-sm transition-colors',
-                isCollapsed && !isMobile
-                  ? 'h-9 w-9 justify-center'
-                  : 'px-sm py-xs w-full'
-              )}
-            >
-              <Compass className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {(!isCollapsed || isMobile) && t('pageTour.button')}
-            </button>
-          </Tooltip>
         </div>
       )}
 

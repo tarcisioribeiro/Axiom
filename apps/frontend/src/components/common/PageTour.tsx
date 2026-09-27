@@ -23,7 +23,7 @@ const VAULT_WIZARD_KEY = 'vault_onboarding_completed';
 const ICONS = [Compass, Lightbulb, Search];
 
 // Tour guiado por tela: aparece sempre ao entrar, exceto se o usuário marcou
-// "não mostrar mais". O botão da sidebar reabre via OPEN_TOUR_EVENT.
+// "não mostrar mais". O botão do header reabre via OPEN_TOUR_EVENT.
 export function PageTour() {
   const { t } = useTranslation();
   const { pathname } = useLocation();

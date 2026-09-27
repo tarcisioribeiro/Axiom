@@ -89,6 +89,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         <Button
           variant="ghost"
           size="icon"
+          tooltipSide="bottom"
           className={cn('hover:bg-secondary transition', className)}
           aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
         >

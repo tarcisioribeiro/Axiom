@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCcw, AlertTriangle, CalendarClock } from 'lucide-react';
+import { RefreshCcw, AlertTriangle, CalendarClock, CreditCard } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -181,6 +181,17 @@ export default function SubscriptionTracker({
                               <span>
                                 {t('subscriptions.renewalOn', { day: sub.due_day })}
                               </span>
+                              {sub.credit_card_name && (
+                                <>
+                                  <span>·</span>
+                                  <span className="gap-xs flex min-w-0 items-center">
+                                    <CreditCard className="h-3 w-3 shrink-0" />
+                                    <span className="truncate">
+                                      {sub.credit_card_name}
+                                    </span>
+                                  </span>
+                                </>
+                              )}
                             </div>
                           </div>
                           <span className="ml-md text-sm font-bold">

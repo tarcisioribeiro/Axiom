@@ -244,7 +244,6 @@ class FixedExpenseSerializer(serializers.ModelSerializer):
             "credit_card_name",
             "due_day",
             "merchant",
-            "payment_method",
             "notes",
             "member",
             "member_name",

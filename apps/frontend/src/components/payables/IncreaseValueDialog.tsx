@@ -32,12 +32,14 @@ export function IncreaseValueDialog({
 }: IncreaseValueDialogProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [newValue, setNewValue] = useState(0);
+  const [addValue, setAddValue] = useState(0);
   const [preview, setPreview] = useState<RecalculationPreview | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
   if (!payable) return null;
+
+  const newValue = Math.round((parseFloat(payable.value) + addValue) * 100) / 100;
 
   const handleRequestPreview = async () => {
     setIsLoadingPreview(true);
@@ -82,7 +84,7 @@ export function IncreaseValueDialog({
 
   const handleClose = () => {
     setPreview(null);
-    setNewValue(0);
+    setAddValue(0);
     onClose();
   };
 
@@ -114,8 +116,8 @@ export function IncreaseValueDialog({
             <Label>{t('pages.payables.form.newValueLabel')} *</Label>
             <CurrencyInput
               accentColor="destructive"
-              value={newValue}
-              onChange={(e) => setNewValue(parseFloat(e.target.value) || 0)}
+              value={addValue}
+              onChange={(e) => setAddValue(parseFloat(e.target.value) || 0)}
             />
           </div>
         </div>
@@ -125,7 +127,7 @@ export function IncreaseValueDialog({
           </Button>
           <Button
             onClick={() => void handleRequestPreview()}
-            disabled={isLoadingPreview || newValue <= parseFloat(payable.value)}
+            disabled={isLoadingPreview || addValue <= 0}
           >
             {isLoadingPreview ? t('common.actions.loading') : t('common.actions.next')}
           </Button>

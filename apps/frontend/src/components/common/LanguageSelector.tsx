@@ -23,6 +23,7 @@ export const LanguageSelector = () => {
         <Button
           variant="ghost"
           size="icon"
+          tooltipSide="bottom"
           className="hover-lift"
           aria-label={t('layout.language')}
           title={t('layout.language')}

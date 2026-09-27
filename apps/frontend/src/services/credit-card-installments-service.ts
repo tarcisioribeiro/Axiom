@@ -13,6 +13,8 @@ interface InstallmentFilters {
   bill?: number | null;
   purchase__category?: string;
   payed?: boolean;
+  bill__month?: string;
+  bill__year?: number;
 }
 
 class CreditCardInstallmentsService extends BaseService<

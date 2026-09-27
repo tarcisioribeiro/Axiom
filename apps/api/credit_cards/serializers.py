@@ -145,6 +145,11 @@ class CreditCardSerializer(serializers.ModelSerializer):
 
 
 class CreditCardBillsSerializer(serializers.ModelSerializer):
+    credit_card_name = serializers.CharField(
+        source="credit_card.name",
+        read_only=True,
+        help_text="Nome do cartão",
+    )
     credit_card_on_card_name = serializers.CharField(
         source="credit_card.on_card_name",
         read_only=True,
@@ -170,6 +175,7 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "credit_card",
+            "credit_card_name",
             "credit_card_on_card_name",
             "credit_card_number_masked",
             "credit_card_flag",

@@ -19,6 +19,9 @@ class Expense {
   final String? merchant;
   final String? notes;
 
+  /// Set when this expense is the payment of a credit-card bill.
+  final int? relatedBillPayment;
+
   const Expense({
     required this.id,
     required this.uuid,
@@ -32,6 +35,7 @@ class Expense {
     this.paymentMethod,
     this.merchant,
     this.notes,
+    this.relatedBillPayment,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) => Expense(
@@ -48,6 +52,7 @@ class Expense {
         paymentMethod: json['payment_method'] as String?,
         merchant: json['merchant'] as String?,
         notes: json['notes'] as String?,
+        relatedBillPayment: json['related_bill_payment'] as int?,
       );
 
   Map<String, dynamic> toJson() => {
