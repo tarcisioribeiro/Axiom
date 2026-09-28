@@ -141,7 +141,8 @@ describe('ExerciseDatasetPicker', () => {
   it('loads the next page via apiClient when "load more" is clicked', async () => {
     vi.mocked(exerciseService.searchDataset).mockResolvedValue({
       count: 2,
-      next: 'https://api.test/exercise-dataset/?page=2',
+      // Absoluto e com http://, como o DRF devolve atrás do proxy TLS.
+      next: 'http://api.test/api/v1/exercise-dataset/?page=2',
       previous: null,
       results: [ENTRY_SQUAT],
     });
@@ -163,8 +164,7 @@ describe('ExerciseDatasetPicker', () => {
     await waitFor(() => {
       expect(screen.getByText('bench press')).toBeInTheDocument();
     });
-    expect(apiClient.get).toHaveBeenCalledWith(
-      'https://api.test/exercise-dataset/?page=2'
-    );
+    // Só path+query: a origem vem do baseURL do apiClient.
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/exercise-dataset/?page=2');
   });
 });

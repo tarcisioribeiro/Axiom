@@ -1,12 +1,7 @@
 import * as React from 'react';
 
-import {
-  bubbleClasses,
-  InsideTooltipContext,
-  sideClasses,
-  type TooltipSide,
-} from '@/components/ui/button-tooltip';
-import { cn } from '@/lib/utils';
+import { InsideTooltipContext, type TooltipSide } from '@/components/ui/button-tooltip';
+import { TooltipBubble } from '@/components/ui/tooltip-bubble';
 
 interface TooltipProps {
   content: string;
@@ -25,21 +20,20 @@ interface TooltipProps {
  * </Tooltip>
  */
 export function Tooltip({ content, children, side = 'top', className }: TooltipProps) {
+  const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
   return (
     <InsideTooltipContext.Provider value={true}>
-      <div className="group relative inline-flex">
+      <div
+        className="inline-flex"
+        onMouseEnter={(e) => setAnchor(e.currentTarget)}
+        onMouseLeave={() => setAnchor(null)}
+      >
         {children}
-        <span
-          role="tooltip"
-          className={cn(
-            bubbleClasses,
-            'opacity-0 transition-opacity duration-150 group-hover:opacity-100',
-            sideClasses[side],
-            className
-          )}
-        >
-          {content}
-        </span>
+        {anchor && (
+          <TooltipBubble anchor={anchor} side={side} className={className}>
+            {content}
+          </TooltipBubble>
+        )}
       </div>
     </InsideTooltipContext.Provider>
   );

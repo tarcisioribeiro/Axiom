@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Droplets,
   Edit,
   Flame,
   Loader2,
@@ -632,10 +631,6 @@ export default function NutritionPage() {
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
             </TabsTrigger>
-            <TabsTrigger value="hydration" className="gap-xs flex-1">
-              <Droplets className="h-4 w-4" />
-              {t('pages.nutritionHydration.tab')}
-            </TabsTrigger>
             <TabsTrigger value="meal-types" className="gap-xs flex-1">
               <UtensilsCrossed className="h-4 w-4" />
               {t('pages.nutritionFoods.tabMealTypes')}
@@ -827,98 +822,104 @@ export default function NutritionPage() {
               </div>
             </div>
 
-            <WaterLogPanel date={selectedDate} />
+            <div className="gap-lg grid items-start lg:grid-cols-2">
+              <WaterLogPanel date={selectedDate} />
 
-            {logsLoading ? (
-              <LoadingState />
-            ) : (
-              <MealTimeline
-                mealTypes={activeMealTypes}
-                logs={selectedLogs}
-                onEdit={(log) => setDialog({ type: 'edit-log', log })}
-                onDelete={async (log) => {
-                  const ok = await showConfirm({
-                    title: t('pages.nutritionLog.deleteLogTitle'),
-                    description: t('pages.nutritionLog.deleteLogDesc'),
-                  });
-                  if (ok) deleteLogMutation.mutate(log.id);
-                }}
-                onRegister={(mealTypeId) =>
-                  setDialog({ type: 'new-log', prefillMealType: mealTypeId })
-                }
-                t={t}
-              />
-            )}
-          </TabsContent>
-
-          {/* ── Hidratação ───────────────────────────────────────────────── */}
-          <TabsContent value="hydration" className="mt-0 flex-1">
-            <HydrationGoalCard />
+              {logsLoading ? (
+                <LoadingState />
+              ) : (
+                <MealTimeline
+                  mealTypes={activeMealTypes}
+                  logs={selectedLogs}
+                  onEdit={(log) => setDialog({ type: 'edit-log', log })}
+                  onDelete={async (log) => {
+                    const ok = await showConfirm({
+                      title: t('pages.nutritionLog.deleteLogTitle'),
+                      description: t('pages.nutritionLog.deleteLogDesc'),
+                    });
+                    if (ok) deleteLogMutation.mutate(log.id);
+                  }}
+                  onRegister={(mealTypeId) =>
+                    setDialog({ type: 'new-log', prefillMealType: mealTypeId })
+                  }
+                  t={t}
+                />
+              )}
+            </div>
           </TabsContent>
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDialog({ type: 'ai-generate-menu' })}
-              >
-                <Sparkles className="mr-sm text-primary h-4 w-4" />
-                Gerar com IA
-              </Button>
-              <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.nutritionMealTypes.newMealTypeBtn')}
-              </Button>
-            </div>
+            <div className="gap-lg grid items-start lg:grid-cols-2">
+              <HydrationGoalCard />
+              <div>
+                <div className="mb-md gap-sm flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDialog({ type: 'ai-generate-menu' })}
+                  >
+                    <Sparkles className="mr-sm text-primary h-4 w-4" />
+                    Gerar com IA
+                  </Button>
+                  <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
+                    <Plus className="mr-sm h-4 w-4" />
+                    {t('pages.nutritionMealTypes.newMealTypeBtn')}
+                  </Button>
+                </div>
 
-            {mealTypesLoading ? (
-              <LoadingState />
-            ) : mealTypes.length === 0 ? (
-              <EmptyState
-                title={t('pages.nutritionMealTypes.emptyMealTypes')}
-                description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
-                icon={<UtensilsCrossed className="h-8 w-8" />}
-                action={{
-                  label: t('pages.nutritionMealTypes.newMealTypeBtn'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-meal-type' }),
-                }}
-              />
-            ) : (
-              <div className="space-y-sm">
-                {mealTypes.map((mt) => (
-                  <MealTypeCard
-                    key={mt.id}
-                    mealType={mt}
-                    expanded={expandedMealTypes.has(mt.id)}
-                    onToggle={() => toggleMealType(mt.id)}
-                    onEdit={() => setDialog({ type: 'edit-meal-type', mealType: mt })}
-                    onDelete={async () => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
-                        description: t('pages.nutritionMealTypes.deleteMealTypeDesc'),
-                      });
-                      if (ok) deleteMealTypeMutation.mutate(mt.id);
+                {mealTypesLoading ? (
+                  <LoadingState />
+                ) : mealTypes.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.nutritionMealTypes.emptyMealTypes')}
+                    description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
+                    icon={<UtensilsCrossed className="h-8 w-8" />}
+                    action={{
+                      label: t('pages.nutritionMealTypes.newMealTypeBtn'),
+                      icon: <Plus className="h-4 w-4" />,
+                      onClick: () => setDialog({ type: 'new-meal-type' }),
                     }}
-                    onNewOption={() =>
-                      setDialog({ type: 'new-option', mealTypeId: mt.id })
-                    }
-                    onEditOption={(opt) =>
-                      setDialog({ type: 'edit-option', option: opt })
-                    }
-                    onDeleteOption={async (opt) => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionMealTypes.deleteOptionTitle'),
-                        description: t('pages.nutritionMealTypes.deleteOptionDesc'),
-                      });
-                      if (ok) deleteOptionMutation.mutate(opt.id);
-                    }}
-                    t={t}
                   />
-                ))}
+                ) : (
+                  <div className="space-y-sm">
+                    {mealTypes.map((mt) => (
+                      <MealTypeCard
+                        key={mt.id}
+                        mealType={mt}
+                        expanded={expandedMealTypes.has(mt.id)}
+                        onToggle={() => toggleMealType(mt.id)}
+                        onEdit={() =>
+                          setDialog({ type: 'edit-meal-type', mealType: mt })
+                        }
+                        onDelete={async () => {
+                          const ok = await showConfirm({
+                            title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
+                            description: t(
+                              'pages.nutritionMealTypes.deleteMealTypeDesc'
+                            ),
+                          });
+                          if (ok) deleteMealTypeMutation.mutate(mt.id);
+                        }}
+                        onNewOption={() =>
+                          setDialog({ type: 'new-option', mealTypeId: mt.id })
+                        }
+                        onEditOption={(opt) =>
+                          setDialog({ type: 'edit-option', option: opt })
+                        }
+                        onDeleteOption={async (opt) => {
+                          const ok = await showConfirm({
+                            title: t('pages.nutritionMealTypes.deleteOptionTitle'),
+                            description: t('pages.nutritionMealTypes.deleteOptionDesc'),
+                          });
+                          if (ok) deleteOptionMutation.mutate(opt.id);
+                        }}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </TabsContent>
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}

@@ -1983,3 +1983,15 @@
     animation: none !important;
   }
 }
+
+/* Tooltips do Recharts: o Recharts já mantém o balão dentro da área do gráfico,
+   mas só se ele couber — em gráficos estreitos, limita a largura e quebra linha
+   para não vazar do card nem da tela. */
+.recharts-tooltip-wrapper {
+  max-width: 100%;
+}
+.recharts-tooltip-wrapper > * {
+  max-width: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}

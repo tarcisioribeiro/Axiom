@@ -96,7 +96,7 @@ export function WaterLogPanel({ date }: { date: string }) {
   const custom = parseInt(customMl, 10);
 
   return (
-    <div className="mb-lg border-border bg-card p-md space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-md space-y-md rounded-lg border shadow-sm">
       <div className="gap-sm flex items-center justify-between">
         <div className="gap-xs flex items-center">
           <Droplets className="h-5 w-5 text-sky-500" />

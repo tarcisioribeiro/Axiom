@@ -1,18 +1,11 @@
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import { TooltipBubble } from '@/components/ui/tooltip-bubble';
 
 export type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
 
-export const sideClasses: Record<TooltipSide, string> = {
-  top: 'bottom-full left-1/2 -translate-x-1/2 mb-sm',
-  bottom: 'top-full left-1/2 -translate-x-1/2 mt-sm',
-  left: 'right-full top-1/2 -translate-y-1/2 mr-sm',
-  right: 'left-full top-1/2 -translate-y-1/2 ml-sm',
-};
-
 export const bubbleClasses =
-  'border-border/60 bg-popover px-sm py-xs text-popover-foreground pointer-events-none absolute z-50 rounded-md border text-xs font-medium whitespace-nowrap shadow-md';
+  'border-border/60 bg-popover px-sm py-xs text-popover-foreground pointer-events-none fixed z-[9999] max-w-[calc(100vw-1rem)] rounded-md border text-xs font-medium shadow-md';
 
 // Botões dentro de um <Tooltip> já têm tooltip próprio — evita duplicar.
 export const InsideTooltipContext = React.createContext(false);
@@ -46,8 +39,8 @@ interface HoverHandlers {
 }
 
 /**
- * Tooltip de hover para botões: mesmo visual do <Tooltip>, mas renderizado só
- * enquanto o mouse está sobre o botão (o botão precisa ser `relative`).
+ * Tooltip de hover para botões: mesmo visual do <Tooltip>, renderizado só
+ * enquanto o mouse está sobre o botão.
  * Conteúdo vazio, ou botão já dentro de um <Tooltip>, não mostra nada.
  */
 export function useButtonTooltip(
@@ -55,7 +48,7 @@ export function useButtonTooltip(
   side: TooltipSide,
   handlers: HoverHandlers
 ) {
-  const [show, setShow] = React.useState(false);
+  const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
   const inside = React.useContext(InsideTooltipContext);
   if (!content || inside) return { tip: null, tipProps: handlers };
 
@@ -63,21 +56,17 @@ export function useButtonTooltip(
     tipProps: {
       onMouseEnter: (e: React.MouseEvent<never>) => {
         handlers.onMouseEnter?.(e);
-        setShow(true);
+        setAnchor(e.currentTarget);
       },
       onMouseLeave: (e: React.MouseEvent<never>) => {
         handlers.onMouseLeave?.(e);
-        setShow(false);
+        setAnchor(null);
       },
     },
-    tip: show ? (
-      <span
-        role="tooltip"
-        aria-hidden="true"
-        className={cn(bubbleClasses, 'font-normal', sideClasses[side])}
-      >
+    tip: anchor ? (
+      <TooltipBubble anchor={anchor} side={side} className="font-normal">
         {content}
-      </span>
+      </TooltipBubble>
     ) : null,
   };
 }

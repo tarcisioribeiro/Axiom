@@ -146,10 +146,10 @@ export function KanbanCard({ card }: KanbanCardProps) {
         </div>
 
         {/* Card Content */}
-        <div className="space-y-sm flex-1">
-          {/* Title and Category */}
-          <div className="gap-sm flex items-start justify-between">
-            <div className="flex-1">
+        <div className="space-y-sm min-w-0 flex-1">
+          {/* Title and Category — badges descem de linha quando falta espaço */}
+          <div className="gap-sm flex flex-wrap items-start justify-between">
+            <div className="min-w-0 flex-[1_1_8rem]">
               <h4
                 className={cn(
                   'gap-sm flex items-center text-sm leading-tight font-semibold',
@@ -183,7 +183,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
               )}
             </div>
             <div
-              className="gap-xs flex shrink-0 items-center"
+              className="gap-xs flex flex-wrap items-center"
               onPointerDown={(e) => e.stopPropagation()}
             >
               {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
