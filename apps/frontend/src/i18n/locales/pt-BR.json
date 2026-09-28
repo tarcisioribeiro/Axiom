@@ -4230,7 +4230,6 @@
         "nameLabel": "Nome",
         "namePlaceholder": "Ex: Manhã Produtiva",
         "descriptionLabel": "Descrição",
-        "colorLabel": "Cor",
         "iconLabel": "Ícone",
         "activeLabel": "Bloco ativo",
         "emptyState": "Nenhum bloco de foco criado",
@@ -4251,7 +4250,7 @@
         "removeTaskError": "Erro ao remover tarefa",
         "noTasks": "Nenhuma tarefa neste bloco",
         "wholeTask": "Tarefa inteira",
-        "occurrenceLabel": "Ocorrência {{index}}",
+        "occurrenceLabel": "{{index}}ª ocorrência",
         "noTasksAvailable": "Todas as tarefas já foram adicionadas",
         "weekdaysLabel": "Dias da semana",
         "weekdaysRequired": "Selecione ao menos um dia da semana."

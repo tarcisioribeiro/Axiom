@@ -289,7 +289,7 @@ class FocusBlockSerializer(serializers.ModelSerializer):
     """Serializer para visualizacao de um bloco de foco."""
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
-    block_tasks = FocusBlockTaskSerializer(many=True, read_only=True)
+    block_tasks = serializers.SerializerMethodField()
 
     class Meta:
         model = FocusBlock
@@ -299,7 +299,6 @@ class FocusBlockSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "icon",
-            "color",
             "order",
             "is_active",
             "weekdays",
@@ -310,6 +309,15 @@ class FocusBlockSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_block_tasks(self, obj):
+        # Filtra em Python para aproveitar o Prefetch das views (já filtrado)
+        # e ainda excluir soft-deletados quando não há prefetch (ex.: após
+        # um update, o DRF limpa o cache de prefetch).
+        tasks = [bt for bt in obj.block_tasks.all() if bt.deleted_at is None]
+        return FocusBlockTaskSerializer(
+            tasks, many=True, context=self.context
+        ).data
 
 
 class FocusBlockCreateUpdateSerializer(serializers.ModelSerializer):
@@ -322,12 +330,17 @@ class FocusBlockCreateUpdateSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "icon",
-            "color",
             "order",
             "is_active",
             "weekdays",
             "owner",
         ]
+
+    def to_representation(self, instance):
+        # O frontend usa a resposta do create/update como o bloco completo
+        # (com block_tasks); devolver a representação de leitura evita que a
+        # UI quebre após salvar.
+        return FocusBlockSerializer(instance, context=self.context).data
 
     def validate_weekdays(self, value):
         if not value:

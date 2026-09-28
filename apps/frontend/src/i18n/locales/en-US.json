@@ -4164,7 +4164,6 @@
         "nameLabel": "Name",
         "namePlaceholder": "E.g. Productive Morning",
         "descriptionLabel": "Description",
-        "colorLabel": "Color",
         "iconLabel": "Icon",
         "activeLabel": "Active block",
         "emptyState": "No focus blocks yet",

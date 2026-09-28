@@ -638,12 +638,6 @@ class FocusBlock(BaseModel):
         verbose_name="Ícone",
         help_text="Nome do ícone do Lucide (ex: Sun, Moon, Briefcase)",
     )
-    color = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name="Cor",
-    )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     is_active = models.BooleanField(default=True, verbose_name="Bloco Ativo")
     weekdays = models.JSONField(

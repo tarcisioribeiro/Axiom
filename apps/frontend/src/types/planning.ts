@@ -106,7 +106,6 @@ export interface FocusBlock {
   name: string;
   description?: string | null;
   icon?: string | null;
-  color?: string | null;
   order: number;
   is_active: boolean;
   weekdays: number[];
@@ -121,7 +120,6 @@ export interface FocusBlockFormData {
   name: string;
   description?: string | null;
   icon?: string | null;
-  color?: string | null;
   order?: number;
   is_active?: boolean;
   weekdays: number[];
