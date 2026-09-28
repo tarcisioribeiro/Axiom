@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TooltipBubble } from '@/components/ui/tooltip-bubble';
 import { habitHeatmapService } from '@/services/habit-heatmap-service';
 import type { HeatmapDay } from '@/types';
 
@@ -96,8 +97,7 @@ interface HabitHeatmapProps {
 
 interface TooltipState {
   text: string;
-  x: number;
-  y: number;
+  anchor: HTMLElement;
 }
 
 const EMPTY_DAYS: HeatmapDay[] = [];
@@ -314,13 +314,9 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
                         }}
                         onMouseEnter={(e) => {
                           if (!day) return;
-                          const rect = (
-                            e.target as HTMLElement
-                          ).getBoundingClientRect();
                           setTooltip({
                             text: getCellLabel(day),
-                            x: rect.left + rect.width / 2,
-                            y: rect.top,
+                            anchor: e.currentTarget,
                           });
                         }}
                         onMouseLeave={() => setTooltip(null)}
@@ -334,25 +330,11 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
         </div>
       )}
 
-      {/* Tooltip — portaled to body so position:fixed resolves against the
-          viewport instead of a transformed ancestor (e.g. Radix DialogContent) */}
-      {tooltip &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              left: tooltip.x,
-              top: tooltip.y - 8,
-              transform: 'translate(-50%, -100%)',
-              pointerEvents: 'none',
-              zIndex: 9999,
-            }}
-            className="bg-popover px-sm py-xs text-popover-foreground rounded-md border text-xs shadow-md"
-          >
-            {tooltip.text}
-          </div>,
-          document.body
-        )}
+      {tooltip && (
+        <TooltipBubble anchor={tooltip.anchor} className="font-normal">
+          {tooltip.text}
+        </TooltipBubble>
+      )}
 
       {/* Legend */}
       <div className="gap-xs text-muted-foreground flex items-center text-xs">

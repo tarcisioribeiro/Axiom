@@ -32,6 +32,11 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { FoodForm } from '@/components/nutrition/FoodForm';
+import {
+  HydrationGoalCard,
+  WaterLogPanel,
+  WaterTotal,
+} from '@/components/nutrition/Hydration';
 import { MealLogForm } from '@/components/nutrition/MealLogForm';
 import { MealTypeForm } from '@/components/nutrition/MealTypeForm';
 import { MenuOptionForm } from '@/components/nutrition/MenuOptionForm';
@@ -228,6 +233,9 @@ export default function NutritionPage() {
   const dayCalories = Math.round(
     selectedLogs.reduce((acc, log) => acc + log.calories, 0)
   );
+  const todayCalories = Math.round(
+    todayLogs.reduce((acc, log) => acc + log.calories, 0)
+  );
   const adherencePct =
     activeMealTypes.length > 0
       ? Math.round((selectedLogs.length / activeMealTypes.length) * 100)
@@ -248,8 +256,11 @@ export default function NutritionPage() {
   const invalidateFoods = () => queryClient.invalidateQueries({ queryKey: ['foods'] });
   const invalidateMealTypes = () =>
     queryClient.invalidateQueries({ queryKey: ['meal-types'] });
-  const invalidateLogs = () =>
-    queryClient.invalidateQueries({ queryKey: ['meal-logs'] });
+  const invalidateLogs = () => {
+    void queryClient.invalidateQueries({ queryKey: ['meal-logs'] });
+    // tarefas vinculadas à refeição são concluídas/reabertas pelo backend
+    return queryClient.invalidateQueries({ queryKey: ['task-instances'] });
+  };
 
   const aiGenerateMenuMutation = useMutation({
     mutationFn: (data: AIMenuFormValues) =>
@@ -637,10 +648,16 @@ export default function NutritionPage() {
                 <p className="text-muted-foreground text-sm font-medium">
                   {t('pages.nutritionHub.subtitle')}
                 </p>
-                <Button onClick={() => setDialog({ type: 'new-log' })}>
-                  <Plus className="mr-sm h-4 w-4" />
-                  {t('pages.nutritionHub.addMeal')}
-                </Button>
+                <div className="gap-md flex items-center">
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                      <Flame className="h-5 w-5" />
+                      {todayCalories}
+                    </span>
+                    <p className="text-muted-foreground text-xs">kcal</p>
+                  </div>
+                  <WaterTotal date={today} />
+                </div>
               </div>
               {(() => {
                 if (todayLogsLoading) return <LoadingState />;
@@ -648,12 +665,8 @@ export default function NutritionPage() {
                   return (
                     <EmptyState
                       title={t('pages.nutritionHub.noMealsToday')}
+                      description={t('pages.nutritionHub.registerInLog')}
                       icon={<UtensilsCrossed className="h-8 w-8" />}
-                      action={{
-                        label: t('pages.nutritionHub.addMeal'),
-                        icon: <Plus className="mr-xs h-4 w-4" />,
-                        onClick: () => setDialog({ type: 'new-log' }),
-                      }}
                     />
                   );
                 return (
@@ -767,6 +780,7 @@ export default function NutritionPage() {
                     </span>
                     <p className="text-muted-foreground text-xs">kcal</p>
                   </div>
+                  <WaterTotal date={selectedDate} />
 
                   {/* Circular progress */}
                   {activeMealTypes.length > 0 && (
@@ -808,91 +822,104 @@ export default function NutritionPage() {
               </div>
             </div>
 
-            {logsLoading ? (
-              <LoadingState />
-            ) : (
-              <MealTimeline
-                mealTypes={activeMealTypes}
-                logs={selectedLogs}
-                onEdit={(log) => setDialog({ type: 'edit-log', log })}
-                onDelete={async (log) => {
-                  const ok = await showConfirm({
-                    title: t('pages.nutritionLog.deleteLogTitle'),
-                    description: t('pages.nutritionLog.deleteLogDesc'),
-                  });
-                  if (ok) deleteLogMutation.mutate(log.id);
-                }}
-                onRegister={(mealTypeId) =>
-                  setDialog({ type: 'new-log', prefillMealType: mealTypeId })
-                }
-                t={t}
-              />
-            )}
+            <div className="gap-lg grid items-start lg:grid-cols-2">
+              <WaterLogPanel date={selectedDate} />
+
+              {logsLoading ? (
+                <LoadingState />
+              ) : (
+                <MealTimeline
+                  mealTypes={activeMealTypes}
+                  logs={selectedLogs}
+                  onEdit={(log) => setDialog({ type: 'edit-log', log })}
+                  onDelete={async (log) => {
+                    const ok = await showConfirm({
+                      title: t('pages.nutritionLog.deleteLogTitle'),
+                      description: t('pages.nutritionLog.deleteLogDesc'),
+                    });
+                    if (ok) deleteLogMutation.mutate(log.id);
+                  }}
+                  onRegister={(mealTypeId) =>
+                    setDialog({ type: 'new-log', prefillMealType: mealTypeId })
+                  }
+                  t={t}
+                />
+              )}
+            </div>
           </TabsContent>
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setDialog({ type: 'ai-generate-menu' })}
-              >
-                <Sparkles className="mr-sm text-primary h-4 w-4" />
-                Gerar com IA
-              </Button>
-              <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                <Plus className="mr-sm h-4 w-4" />
-                {t('pages.nutritionMealTypes.newMealTypeBtn')}
-              </Button>
-            </div>
+            <div className="gap-lg grid items-start lg:grid-cols-2">
+              <HydrationGoalCard />
+              <div>
+                <div className="mb-md gap-sm flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDialog({ type: 'ai-generate-menu' })}
+                  >
+                    <Sparkles className="mr-sm text-primary h-4 w-4" />
+                    Gerar com IA
+                  </Button>
+                  <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
+                    <Plus className="mr-sm h-4 w-4" />
+                    {t('pages.nutritionMealTypes.newMealTypeBtn')}
+                  </Button>
+                </div>
 
-            {mealTypesLoading ? (
-              <LoadingState />
-            ) : mealTypes.length === 0 ? (
-              <EmptyState
-                title={t('pages.nutritionMealTypes.emptyMealTypes')}
-                description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
-                icon={<UtensilsCrossed className="h-8 w-8" />}
-                action={{
-                  label: t('pages.nutritionMealTypes.newMealTypeBtn'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-meal-type' }),
-                }}
-              />
-            ) : (
-              <div className="space-y-sm">
-                {mealTypes.map((mt) => (
-                  <MealTypeCard
-                    key={mt.id}
-                    mealType={mt}
-                    expanded={expandedMealTypes.has(mt.id)}
-                    onToggle={() => toggleMealType(mt.id)}
-                    onEdit={() => setDialog({ type: 'edit-meal-type', mealType: mt })}
-                    onDelete={async () => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
-                        description: t('pages.nutritionMealTypes.deleteMealTypeDesc'),
-                      });
-                      if (ok) deleteMealTypeMutation.mutate(mt.id);
+                {mealTypesLoading ? (
+                  <LoadingState />
+                ) : mealTypes.length === 0 ? (
+                  <EmptyState
+                    title={t('pages.nutritionMealTypes.emptyMealTypes')}
+                    description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
+                    icon={<UtensilsCrossed className="h-8 w-8" />}
+                    action={{
+                      label: t('pages.nutritionMealTypes.newMealTypeBtn'),
+                      icon: <Plus className="h-4 w-4" />,
+                      onClick: () => setDialog({ type: 'new-meal-type' }),
                     }}
-                    onNewOption={() =>
-                      setDialog({ type: 'new-option', mealTypeId: mt.id })
-                    }
-                    onEditOption={(opt) =>
-                      setDialog({ type: 'edit-option', option: opt })
-                    }
-                    onDeleteOption={async (opt) => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionMealTypes.deleteOptionTitle'),
-                        description: t('pages.nutritionMealTypes.deleteOptionDesc'),
-                      });
-                      if (ok) deleteOptionMutation.mutate(opt.id);
-                    }}
-                    t={t}
                   />
-                ))}
+                ) : (
+                  <div className="space-y-sm">
+                    {mealTypes.map((mt) => (
+                      <MealTypeCard
+                        key={mt.id}
+                        mealType={mt}
+                        expanded={expandedMealTypes.has(mt.id)}
+                        onToggle={() => toggleMealType(mt.id)}
+                        onEdit={() =>
+                          setDialog({ type: 'edit-meal-type', mealType: mt })
+                        }
+                        onDelete={async () => {
+                          const ok = await showConfirm({
+                            title: t('pages.nutritionMealTypes.deleteMealTypeTitle'),
+                            description: t(
+                              'pages.nutritionMealTypes.deleteMealTypeDesc'
+                            ),
+                          });
+                          if (ok) deleteMealTypeMutation.mutate(mt.id);
+                        }}
+                        onNewOption={() =>
+                          setDialog({ type: 'new-option', mealTypeId: mt.id })
+                        }
+                        onEditOption={(opt) =>
+                          setDialog({ type: 'edit-option', option: opt })
+                        }
+                        onDeleteOption={async (opt) => {
+                          const ok = await showConfirm({
+                            title: t('pages.nutritionMealTypes.deleteOptionTitle'),
+                            description: t('pages.nutritionMealTypes.deleteOptionDesc'),
+                          });
+                          if (ok) deleteOptionMutation.mutate(opt.id);
+                        }}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </TabsContent>
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}

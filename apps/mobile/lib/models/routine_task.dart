@@ -21,6 +21,11 @@ class RoutineTask {
   final bool isOptional;
   final double completionRate;
 
+  /// Vínculos com o módulo de Dieta — só categoria `nutrition` (validado no
+  /// backend). A sincronização tarefa ↔ diário acontece no servidor.
+  final int? linkedMealType;
+  final int? linkedHydrationGoal;
+
   const RoutineTask({
     required this.id,
     required this.uuid,
@@ -33,6 +38,8 @@ class RoutineTask {
     this.isOptional = false,
     this.description,
     this.weekday,
+    this.linkedMealType,
+    this.linkedHydrationGoal,
   });
 
   factory RoutineTask.fromJson(Map<String, dynamic> json) => RoutineTask(
@@ -47,6 +54,8 @@ class RoutineTask {
         isActive: json['is_active'] as bool? ?? true,
         isOptional: json['is_optional'] as bool? ?? false,
         completionRate: AppFormatters.toDouble(json['completion_rate']),
+        linkedMealType: json['linked_meal_type'] as int?,
+        linkedHydrationGoal: json['linked_hydration_goal'] as int?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -58,5 +67,7 @@ class RoutineTask {
         'priority': priority,
         'is_active': isActive,
         'is_optional': isOptional,
+        'linked_meal_type': linkedMealType,
+        'linked_hydration_goal': linkedHydrationGoal,
       };
 }

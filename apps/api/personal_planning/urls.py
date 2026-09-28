@@ -39,6 +39,8 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     GoalRecalculateView,
     GoalRegisterFailureView,
     GoalRestartView,
+    HydrationGoalView,
+    HydrationSuggestionView,
     InstancesForDateView,
     MealLogListCreateView,
     MealLogRetrieveUpdateDestroyView,
@@ -64,6 +66,8 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     UserRoutineTemplateDetailView,
     UserRoutineTemplateImportView,
     UserRoutineTemplateListCreateView,
+    WaterLogListCreateView,
+    WaterLogRetrieveUpdateDestroyView,
     WellnessDashboardView,
     WellnessInterventionCompletionDetailView,
     WellnessInterventionCompletionListCreateView,
@@ -374,6 +378,27 @@ urlpatterns = [
         "meal-logs/<int:pk>/",
         MealLogRetrieveUpdateDestroyView.as_view(),
         name="meal-log-detail",
+    ),
+    # Hydration
+    path(
+        "hydration-goal/",
+        HydrationGoalView.as_view(),
+        name="hydration-goal",
+    ),
+    path(
+        "hydration-goal/suggestion/",
+        HydrationSuggestionView.as_view(),
+        name="hydration-goal-suggestion",
+    ),
+    path(
+        "water-logs/",
+        WaterLogListCreateView.as_view(),
+        name="water-log-list-create",
+    ),
+    path(
+        "water-logs/<int:pk>/",
+        WaterLogRetrieveUpdateDestroyView.as_view(),
+        name="water-log-detail",
     ),
     # Export endpoints
     path(

@@ -454,7 +454,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
-              className="w-36"
+              className="w-auto whitespace-nowrap"
               startIcon={<CircleDot className="h-3.5 w-3.5" />}
             >
               <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
@@ -471,7 +471,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
             </SelectContent>
           </Select>
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-28">
+            <SelectTrigger className="w-auto whitespace-nowrap">
               <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
             </SelectTrigger>
             <SelectContent>

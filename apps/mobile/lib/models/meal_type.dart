@@ -10,6 +10,10 @@ class MealType {
   final int order;
   final bool isActive;
 
+  /// Opção usada ao registrar a refeição pela tarefa vinculada;
+  /// null = o backend usa a de maior caloria.
+  final int? defaultMenuOption;
+
   const MealType({
     required this.id,
     required this.uuid,
@@ -17,6 +21,7 @@ class MealType {
     required this.order,
     required this.isActive,
     this.suggestedTime,
+    this.defaultMenuOption,
   });
 
   factory MealType.fromJson(Map<String, dynamic> json) => MealType(
@@ -26,6 +31,7 @@ class MealType {
         suggestedTime: json['suggested_time'] as String?,
         order: json['order'] as int? ?? 0,
         isActive: json['is_active'] as bool? ?? true,
+        defaultMenuOption: json['default_menu_option'] as int?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -33,5 +39,6 @@ class MealType {
         if (suggestedTime != null) 'suggested_time': suggestedTime,
         'order': order,
         'is_active': isActive,
+        'default_menu_option': defaultMenuOption,
       };
 }

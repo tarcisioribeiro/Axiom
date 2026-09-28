@@ -70,6 +70,8 @@ class Command(BaseCommand):
                 "menuoption",
                 "menuoptioningredient",
                 "meallog",
+                "hydrationgoal",
+                "waterlog",
             ],
             "vaults": ["vault", "vaulttransaction", "financialgoal"],
             "notifications": ["notification"],

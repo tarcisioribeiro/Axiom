@@ -3,6 +3,7 @@ import { BarChart2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Tooltip } from '@/components/ui/tooltip';
 import { useChartType } from '@/hooks/use-chart-type';
 import type {
   ChartType,
@@ -119,27 +120,24 @@ export const ChartContainer = ({
     <div className="relative">
       {/* Botão de alternância - Oculto quando lockChartType está definido */}
       {!lockChartType && enabledTypes.length > 1 && (
-        <div className="group absolute top-0 right-0 z-10">
-          <motion.button
-            onClick={handleToggle}
-            disabled={isAnimating}
-            className="border-border bg-background/80 p-sm hover:bg-accent/10 rounded-lg border shadow-sm backdrop-blur-sm transition-colors disabled:opacity-50"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label={t('common.charts.toggleType')}
-          >
-            <RefreshCw
-              className={cn(
-                'h-4 w-4 transition-transform',
-                isAnimating && 'animate-spin'
-              )}
-            />
-          </motion.button>
-
-          {/* Tooltip no hover */}
-          <div className="mt-xs border-border bg-popover/95 px-sm py-xs pointer-events-none absolute top-full right-0 z-20 rounded-md border text-xs whitespace-nowrap opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
-            {t('common.charts.toggleView')}
-          </div>
+        <div className="absolute top-0 right-0 z-10">
+          <Tooltip content={t('common.charts.toggleView')} side="bottom">
+            <motion.button
+              onClick={handleToggle}
+              disabled={isAnimating}
+              className="border-border bg-background/80 p-sm hover:bg-accent/10 rounded-lg border shadow-sm backdrop-blur-sm transition-colors disabled:opacity-50"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label={t('common.charts.toggleType')}
+            >
+              <RefreshCw
+                className={cn(
+                  'h-4 w-4 transition-transform',
+                  isAnimating && 'animate-spin'
+                )}
+              />
+            </motion.button>
+          </Tooltip>
         </div>
       )}
 

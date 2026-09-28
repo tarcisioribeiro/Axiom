@@ -31,6 +31,13 @@
   margin-top: 4px;
 }
 
+/* Fechado, o calendário sai do layout. O CSS base do flatpickr (que faz
+   isso) não é importado; sem esta regra, o calendário flutuante anexado ao
+   body fica invisível depois do #root e estica o scroll da página. */
+.flatpickr-calendar:not(.open):not(.inline) {
+  display: none;
+}
+
 /* Modo static - calendário no fluxo normal do documento, logo abaixo do
    input. Fica com "position: relative" (não "static") para continuar sendo
    o contexto de posicionamento das setas (::before/::after); em fluxo

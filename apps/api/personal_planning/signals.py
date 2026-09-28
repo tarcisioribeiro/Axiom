@@ -3,8 +3,42 @@ Signals para atualizacao automatica de progresso de objetivos e notificações.
 """
 
 from django.db import transaction
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+
+
+@receiver(pre_save, sender="personal_planning.TaskInstance")
+def remember_prev_status(sender, instance, **kwargs):
+    """Guarda o status anterior (usado por XP e pela sync de nutrição)."""
+    if instance.pk:
+        instance._prev_status = (
+            sender.objects.filter(pk=instance.pk)
+            .values_list("status", flat=True)
+            .first()
+        )
+
+
+@receiver(post_save, sender="personal_planning.TaskInstance")
+def sync_nutrition_on_instance_change(sender, instance, **kwargs):
+    from personal_planning.services.nutrition_sync import (
+        on_task_instance_saved,
+    )
+
+    on_task_instance_saved(instance)
+
+
+@receiver(post_save, sender="personal_planning.MealLog")
+def sync_tasks_on_meal_log(sender, instance, created, **kwargs):
+    from personal_planning.services.nutrition_sync import on_meal_log_saved
+
+    on_meal_log_saved(instance, created)
+
+
+@receiver(post_save, sender="personal_planning.WaterLog")
+def sync_tasks_on_water_log(sender, instance, created, **kwargs):
+    from personal_planning.services.nutrition_sync import on_water_log_saved
+
+    on_water_log_saved(instance, created)
 
 
 @receiver(post_save, sender="personal_planning.TaskInstance")
@@ -159,6 +193,28 @@ def update_goal_progress_on_workout_session(sender, instance, **kwargs):
     )
     for goal in goals:
         goal.evaluate_completion()
+
+
+@receiver(pre_save, sender="personal_planning.WorkoutSession")
+def remember_prev_session_date(sender, instance, **kwargs):
+    if instance.pk:
+        instance._prev_date = (
+            sender.objects.filter(pk=instance.pk)
+            .values_list("date", flat=True)
+            .first()
+        )
+
+
+@receiver(post_save, sender="personal_planning.WorkoutSession")
+@receiver(post_delete, sender="personal_planning.WorkoutSession")
+def sync_workout_tasks_on_session(sender, instance, **kwargs):
+    """Conclui/reabre a tarefa de Exercício vinculada ao treino."""
+    from personal_planning.services.workout_sync import sync_day
+
+    prev_date = getattr(instance, "_prev_date", None)
+    if prev_date and prev_date != instance.date:
+        sync_day(instance.owner, prev_date)
+    sync_day(instance.owner, instance.date)
 
 
 @receiver(post_save, sender="personal_planning.MealLog")

@@ -82,7 +82,11 @@ export function ExerciseDatasetPicker({
     if (!url) return;
     setIsLoadingMore(true);
     try {
-      const page = await apiClient.get<PaginatedResponse<ExerciseDatasetEntry>>(url);
+      // Só path+query: o `next` absoluto pode vir com http:// atrás do proxy TLS.
+      const { pathname, search } = new URL(url);
+      const page = await apiClient.get<PaginatedResponse<ExerciseDatasetEntry>>(
+        pathname + search
+      );
       setExtraResults((prev) => [...prev, ...page.results]);
       setNextUrl(page.next);
     } finally {

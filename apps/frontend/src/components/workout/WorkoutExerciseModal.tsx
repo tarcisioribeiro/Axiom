@@ -19,7 +19,7 @@ import { FormSection } from '@/components/ui/form-section';
 import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { Exercise, WorkoutExercise } from '@/types/workout';
+import type { Exercise, SetTarget, WorkoutExercise } from '@/types/workout';
 
 interface FormValues {
   exercise_id: number;
@@ -45,6 +45,7 @@ interface WorkoutExerciseModalProps {
     rest_seconds: number | null;
     load: string | null;
     load_unit: string;
+    set_targets: SetTarget[];
     order: number;
     notes: string | null;
   }) => Promise<void>;
@@ -110,6 +111,16 @@ export function WorkoutExerciseModal({
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [showNotes, setShowNotes] = useState(!!existing?.notes);
+  const [setTargets, setSetTargets] = useState<SetTarget[]>(
+    existing?.set_targets ?? []
+  );
+  const updateSetTarget = (idx: number, patch: Partial<SetTarget>) =>
+    setSetTargets((prev) => {
+      const next = [...prev];
+      for (let i = next.length; i <= idx; i++) next.push({ reps: null, load: null });
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
     existing ? (exercises.find((e) => e.id === existing.exercise) ?? null) : null
   );
@@ -145,6 +156,10 @@ export function WorkoutExerciseModal({
 
   const handleFormSubmit = async (data: FormValues) => {
     if (!selectedExercise) return;
+    const targets = Array.from({ length: data.sets }, (_, i) => ({
+      reps: setTargets[i]?.reps ?? null,
+      load: data.load_unit === 'bw' ? null : (setTargets[i]?.load ?? null),
+    }));
     await onSubmit({
       exercise: selectedExercise.id,
       name: selectedExercise.name,
@@ -154,6 +169,9 @@ export function WorkoutExerciseModal({
       rest_seconds: data.rest_seconds > 0 ? data.rest_seconds : null,
       load: data.load || null,
       load_unit: data.load_unit,
+      set_targets: targets.some((st) => st.reps != null || st.load != null)
+        ? targets
+        : [],
       order: existing?.order ?? nextOrder,
       notes: data.notes || null,
     });
@@ -374,6 +392,63 @@ export function WorkoutExerciseModal({
           </div>
         </div>
       </FormSection>
+
+      {/* Carga e repetições por série */}
+      {sets > 0 && (
+        <FormSection title={t('pages.workoutPlans.perSetTitle')} icon={Dumbbell}>
+          <div className="space-y-xs">
+            <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[3.5rem_1fr_1fr] text-xs font-medium">
+              <span>{t('pages.workoutPlans.setLabel')}</span>
+              <span>{t('pages.workoutPlans.repsShort')}</span>
+              <span>{t('pages.workoutPlans.load')}</span>
+            </div>
+            {Array.from({ length: sets }, (_, i) => (
+              <div
+                key={i}
+                className="gap-xs grid grid-cols-[3.5rem_1fr_1fr] items-center"
+              >
+                <span className="text-muted-foreground text-center text-xs font-medium">
+                  {i + 1}
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.repsShort')}`}
+                  placeholder={String(repsMin)}
+                  value={setTargets[i]?.reps ?? ''}
+                  onChange={(e) =>
+                    updateSetTarget(i, {
+                      reps: e.target.value === '' ? null : Number(e.target.value),
+                    })
+                  }
+                  className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
+                />
+                {loadUnit === 'bw' ? (
+                  <span className="text-muted-foreground text-center text-xs">
+                    {t('pages.workoutPlans.bodyweight')}
+                  </span>
+                ) : (
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.5"
+                    aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.load')}`}
+                    placeholder={watch('load') || '0'}
+                    value={setTargets[i]?.load ?? ''}
+                    onChange={(e) =>
+                      updateSetTarget(i, { load: e.target.value || null })
+                    }
+                    className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
+                  />
+                )}
+              </div>
+            ))}
+            <p className="text-muted-foreground text-xs">
+              {t('pages.workoutPlans.perSetHint')}
+            </p>
+          </div>
+        </FormSection>
+      )}
 
       {/* Observações */}
       <div>

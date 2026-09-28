@@ -36,7 +36,7 @@ const WEEKDAYS = [
 interface WorkoutDayFormValues {
   name: string;
   muscle_groups: string;
-  day_of_week: number | '';
+  days_of_week: number[];
   order: number;
   default_start_time: string;
   default_duration_minutes: number | '';
@@ -49,9 +49,8 @@ interface WorkoutDayFormProps {
   onSubmit: (
     data: Omit<
       WorkoutDayFormValues,
-      'day_of_week' | 'default_start_time' | 'default_duration_minutes'
+      'default_start_time' | 'default_duration_minutes'
     > & {
-      day_of_week: number | null;
       default_start_time: string | null;
       default_duration_minutes: number | null;
       plan: number;
@@ -121,7 +120,7 @@ export function WorkoutDayForm({
     defaultValues: {
       name: day?.name ?? '',
       muscle_groups: day?.muscle_groups ?? '',
-      day_of_week: day?.day_of_week ?? '',
+      days_of_week: day?.days_of_week ?? [],
       order: day?.order ?? 0,
       default_start_time: toHHMM(day?.default_start_time),
       default_duration_minutes: day?.default_duration_minutes ?? '',
@@ -140,7 +139,7 @@ export function WorkoutDayForm({
       reset({
         name: day.name,
         muscle_groups: day.muscle_groups ?? '',
-        day_of_week: day.day_of_week ?? '',
+        days_of_week: day.days_of_week ?? [],
         order: day.order,
         default_start_time: toHHMM(day.default_start_time),
         default_duration_minutes: day.default_duration_minutes ?? '',
@@ -163,7 +162,6 @@ export function WorkoutDayForm({
   const handleFormSubmit = async (data: WorkoutDayFormValues) => {
     await onSubmit({
       ...data,
-      day_of_week: data.day_of_week === '' ? null : data.day_of_week,
       default_start_time: data.default_start_time || null,
       default_duration_minutes:
         data.default_duration_minutes === '' ? null : data.default_duration_minutes,
@@ -221,12 +219,19 @@ export function WorkoutDayForm({
       <FormSection title={t('pages.workoutPlans.dayOfWeek')} icon={Calendar}>
         <div className="gap-xs flex flex-wrap">
           {WEEKDAYS.map((wd, i) => {
-            const selected = watch('day_of_week') === i;
+            const days = watch('days_of_week');
+            const selected = days.includes(i);
             return (
               <button
                 key={wd}
                 type="button"
-                onClick={() => setValue('day_of_week', selected ? '' : i)}
+                aria-pressed={selected}
+                onClick={() =>
+                  setValue(
+                    'days_of_week',
+                    selected ? days.filter((d) => d !== i) : [...days, i].sort()
+                  )
+                }
                 className={cn(
                   'px-sm rounded-full border py-1 text-xs font-medium transition',
                   selected

@@ -4157,6 +4157,12 @@
         "linkedBookLabel": "Livro Vinculado",
         "linkedBookPlaceholder": "Selecione um livro em andamento (opcional)",
         "linkedBookHint": "Vincule esta rotina a um livro que você está lendo atualmente",
+        "linkedMealTypeLabel": "Refeição Vinculada",
+        "linkedMealTypeTaken": "vinculada a \"{{task}}\"",
+        "linkedMealTypePlaceholder": "Nenhuma refeição",
+        "linkedMealTypeHint": "Concluir a tarefa registra a refeição no Diário, e registrar a refeição conclui a tarefa",
+        "linkedHydrationLabel": "Vincular à meta de hidratação",
+        "linkedHydrationHint": "Cada ocorrência concluída registra meta ÷ ocorrências do dia; água registrada no Diário conclui as ocorrências",
         "periodicityOptions": {
           "daily": "Diária",
           "weekdays": "Dias Úteis",
@@ -4209,7 +4215,9 @@
           "weekly": "Toda {{day}}",
           "monthly": "Todo dia {{day}} do mês",
           "custom": "Dias personalizados"
-        }
+        },
+        "linkedWorkoutLabel": "Vincular ao treino",
+        "linkedWorkoutHint": "Aparece só nos dias com treino agendado e é concluída automaticamente quando as sessões de todos os planos do dia forem registradas. Não pode ser concluída manualmente."
       },
       "focusBlocks": {
         "title": "Blocos de Foco",
@@ -4222,7 +4230,6 @@
         "nameLabel": "Nome",
         "namePlaceholder": "Ex: Manhã Produtiva",
         "descriptionLabel": "Descrição",
-        "colorLabel": "Cor",
         "iconLabel": "Ícone",
         "activeLabel": "Bloco ativo",
         "emptyState": "Nenhum bloco de foco criado",
@@ -4243,7 +4250,7 @@
         "removeTaskError": "Erro ao remover tarefa",
         "noTasks": "Nenhuma tarefa neste bloco",
         "wholeTask": "Tarefa inteira",
-        "occurrenceLabel": "Ocorrência {{index}}",
+        "occurrenceLabel": "{{index}}ª ocorrência",
         "noTasksAvailable": "Todas as tarefas já foram adicionadas",
         "weekdaysLabel": "Dias da semana",
         "weekdaysRequired": "Selecione ao menos um dia da semana."
@@ -5554,8 +5561,8 @@
       "dayDeletedDesc": "A divisão foi excluída com sucesso.",
       "dayName": "Nome da Divisão",
       "dayNamePlaceholder": "Ex: Treino A",
-      "dayOfWeek": "Dia da Semana",
-      "dayOfWeekHint": "Selecione o dia em que esta divisão será executada. Vazio = aparece todos os dias.",
+      "dayOfWeek": "Dias da Semana",
+      "dayOfWeekHint": "Selecione um ou mais dias em que esta divisão será executada. Vazio = aparece todos os dias.",
       "defaultScheduleSection": "Horário Padrão",
       "defaultStartTime": "Horário de Início Padrão",
       "defaultDurationMinutes": "Duração Padrão (min)",
@@ -5640,7 +5647,19 @@
         "fullBody": "Full Body"
       },
       "hideNotes": "Ocultar observações",
-      "showNotes": "Adicionar observações"
+      "showNotes": "Adicionar observações",
+      "category": "Categoria",
+      "categories": {
+        "cardio": "Cardiovascular",
+        "resistance": "Resistência",
+        "mobility": "Mobilidade"
+      },
+      "bodyweight": "Peso corporal",
+      "perSetTitle": "Carga e repetições por série",
+      "perSetHint": "Campos vazios usam as repetições mínimas e a carga padrão.",
+      "setLabel": "Série",
+      "repsShort": "Reps",
+      "tabCalendar": "Calendário"
     },
     "exercises": {
       "title": "Exercícios",
@@ -5678,7 +5697,9 @@
         "empty": "Nenhum exercício encontrado",
         "emptyDesc": "Tente buscar por outro termo, em inglês.",
         "selectError": "Erro ao definir a imagem do exercício"
-      }
+      },
+      "allCategories": "Todas as categorias",
+      "fieldCategory": "Categoria"
     },
     "workoutSessions": {
       "sectionSession": "Dados da Sessão",
@@ -5721,6 +5742,8 @@
       "sessionNotes": "Observações da Sessão",
       "sessionNotesPlaceholder": "Como foi o treino?",
       "exercisesSection": "Exercícios Realizados",
+      "showDetails": "Ver detalhes",
+      "hideDetails": "Ocultar detalhes",
       "addExercise": "Adicionar Exercício",
       "exerciseName": "Exercício",
       "exerciseNamePlaceholder": "Nome do exercício",
@@ -5783,6 +5806,9 @@
       "servingUnitPorcao": "porção"
     },
     "nutritionMealTypes": {
+      "defaultOption": "Opção padrão",
+      "defaultOptionAuto": "Automática (maior caloria)",
+      "defaultOptionHint": "Usada quando a refeição é registrada ao concluir a tarefa vinculada. Sem opção padrão, vale a de maior caloria.",
       "newMealTypeBtn": "Nova Refeição",
       "newMealTypeTitle": "Nova Refeição",
       "editMealTypeTitle": "Editar Refeição",
@@ -6157,7 +6183,6 @@
       "managePlans": "Gerenciar Planos",
       "manageExercises": "Exercícios",
       "viewHistory": "Histórico",
-      "todaySessions": "Sessões registradas hoje",
       "emptyDays": "Nenhuma divisão cadastrada neste plano."
     },
     "nutritionHub": {
@@ -6169,7 +6194,31 @@
       "manageFoods": "Alimentos",
       "manageMeals": "Refeições",
       "noMealsToday": "Nenhuma refeição registrada hoje",
-      "addMeal": "Adicionar Refeição"
+      "addMeal": "Adicionar Refeição",
+      "registerInLog": "Registre refeições e água na aba Diário."
+    },
+    "nutritionHydration": {
+      "tab": "Hidratação",
+      "goalTitle": "Meta diária de hidratação",
+      "currentGoal": "Meta atual: {{liters}} L por dia",
+      "noGoal": "Nenhuma meta definida",
+      "litersLabel": "Meta (litros por dia)",
+      "saveGoal": "Salvar meta",
+      "goalSaved": "Meta de hidratação salva",
+      "suggestionTitle": "Sugestão com base no seu corpo e treinos",
+      "suggestionWeight": "{{weight}} kg × {{perKg}} ml = {{base}} ml",
+      "suggestionExercise": "+ {{exercise}} ml de treino ({{days}} dias, {{minutes}} min por semana nos planos ativos)",
+      "noWeight": "Cadastre seu peso em Medidas Corporais para receber uma sugestão.",
+      "useSuggestion": "Usar sugestão",
+      "tasksHint": "Tarefas da categoria Nutrição vinculadas à meta de hidratação são concluídas automaticamente conforme você registra água no Diário — e concluir a tarefa registra a água.",
+      "dayWater": "Água do dia",
+      "setGoalHint": "Defina sua meta na aba Plano.",
+      "add": "Adicionar",
+      "customAmount": "Quantidade em ml",
+      "noLogs": "Nenhum registro de água neste dia.",
+      "fromTask": "via tarefa",
+      "logAdded": "Água registrada",
+      "logDeleted": "Registro de água removido"
     },
     "planningToday": {
       "title": "Hoje",
@@ -7339,5 +7388,17 @@
   },
   "intellect": {
     "streakDays": "dias"
+  },
+  "workoutCalendar": {
+    "title": "Calendário de Treino",
+    "summary": "{{done}} concluídas · {{pending}} pendentes · {{missed}} perdidas neste mês",
+    "noEvents": "Nenhum treino neste dia",
+    "dayDetail": "Treinos de {{date}}",
+    "extraSession": "Sessão avulsa",
+    "status": {
+      "completed": "Concluída",
+      "pending": "Pendente",
+      "missed": "Perdida"
+    }
   }
 }

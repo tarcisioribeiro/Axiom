@@ -32,7 +32,6 @@ export function RoutineFocusBlockForm({
   const [name, setName] = useState(block?.name ?? '');
   const [description, setDescription] = useState(block?.description ?? '');
   const [icon, setIcon] = useState<string | null | undefined>(block?.icon);
-  const [color, setColor] = useState(block?.color ?? '#bd93f9');
   const [isActive, setIsActive] = useState(block?.is_active ?? true);
   const [weekdays, setWeekdays] = useState<number[]>(
     block?.weekdays && block.weekdays.length > 0 ? block.weekdays : ALL_WEEKDAYS
@@ -45,7 +44,6 @@ export function RoutineFocusBlockForm({
       name: name.trim(),
       description: description.trim() || undefined,
       icon,
-      color,
       is_active: isActive,
       weekdays,
       owner: ownerId,
@@ -79,23 +77,9 @@ export function RoutineFocusBlockForm({
         />
       </div>
 
-      <div className="gap-md grid grid-cols-2">
-        <div className="space-y-sm">
-          <Label>{t('pages.routineTasks.focusBlocks.iconLabel')}</Label>
-          <IconPicker value={icon} onChange={setIcon} />
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="focus-block-color">
-            {t('pages.routineTasks.focusBlocks.colorLabel')}
-          </Label>
-          <input
-            id="focus-block-color"
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="border-input h-10 w-full cursor-pointer rounded-md border"
-          />
-        </div>
+      <div className="space-y-sm">
+        <Label>{t('pages.routineTasks.focusBlocks.iconLabel')}</Label>
+        <IconPicker value={icon} onChange={setIcon} />
       </div>
 
       <div className="space-y-sm">

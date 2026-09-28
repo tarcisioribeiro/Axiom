@@ -1,3 +1,5 @@
+import '../utils/formatters.dart';
+
 /// Mirrors `MenuOptionSerializer` / `MenuOptionIngredientSerializer`
 /// (`apps/api/personal_planning/serializers.py`) — a meal option inside a
 /// `MealType`, with its ingredient list.
@@ -9,6 +11,9 @@ class MenuOption {
   final int order;
   final List<MenuOptionIngredient> ingredients;
 
+  /// Kcal dos ingredientes não opcionais (calculado no backend).
+  final double calories;
+
   const MenuOption({
     required this.id,
     required this.uuid,
@@ -16,6 +21,7 @@ class MenuOption {
     required this.name,
     required this.order,
     required this.ingredients,
+    this.calories = 0,
   });
 
   factory MenuOption.fromJson(Map<String, dynamic> json) => MenuOption(
@@ -24,6 +30,7 @@ class MenuOption {
         mealType: json['meal_type'] as int,
         name: json['name'] as String? ?? '',
         order: json['order'] as int? ?? 0,
+        calories: AppFormatters.toDouble(json['calories']),
         ingredients: ((json['ingredients'] as List?) ?? const [])
             .map(
                 (e) => MenuOptionIngredient.fromJson(e as Map<String, dynamic>))

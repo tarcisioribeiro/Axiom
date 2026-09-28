@@ -7,6 +7,7 @@ from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,6 +30,7 @@ from personal_planning.models import (
     GamificationProfile,
     Goal,
     GoalFailure,
+    HydrationGoal,
     MealLog,
     MealType,
     MenuOption,
@@ -37,6 +39,7 @@ from personal_planning.models import (
     TaskInstance,
     UserBadge,
     UserRoutineTemplate,
+    WaterLog,
     WorkoutDay,
     WorkoutExercise,
     WorkoutPlan,
@@ -62,6 +65,7 @@ from personal_planning.serializers import (
     FoodSerializer,
     GoalCreateUpdateSerializer,
     GoalSerializer,
+    HydrationGoalSerializer,
     MealLogCreateUpdateSerializer,
     MealLogSerializer,
     MealTypeCreateUpdateSerializer,
@@ -76,6 +80,7 @@ from personal_planning.serializers import (
     TaskInstanceSerializer,
     TaskInstanceStatusUpdateSerializer,
     TaskInstanceUpdateSerializer,
+    WaterLogSerializer,
     WorkoutDayCreateUpdateSerializer,
     WorkoutDaySerializer,
     WorkoutExerciseCreateUpdateSerializer,
@@ -88,6 +93,10 @@ from personal_planning.serializers import (
     WorkoutSessionSerializer,
     WorkoutSessionSetCreateUpdateSerializer,
     WorkoutSessionSetSerializer,
+)
+from personal_planning.services.workout_sync import (
+    MANUAL_CHANGE_BLOCKED_MSG,
+    manual_change_blocked,
 )
 
 logger = logging.getLogger(__name__)
@@ -1411,6 +1420,11 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
         return TaskInstanceSerializer
 
     def perform_update(self, serializer):
+        new_status = serializer.validated_data.get("status")
+        if new_status and manual_change_blocked(
+            serializer.instance, new_status
+        ):
+            raise ValidationError({"detail": MANUAL_CHANGE_BLOCKED_MSG})
         instance = serializer.save(updated_by=self.request.user)
         log_activity(
             self.request,
@@ -1546,6 +1560,11 @@ class TaskInstanceStatusUpdateView(APIView):
 
         new_status = serializer.validated_data["status"]
         notes = serializer.validated_data.get("notes")
+        if manual_change_blocked(instance, new_status):
+            return Response(
+                {"detail": MANUAL_CHANGE_BLOCKED_MSG},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Atualizar instancia
         instance.status = new_status
@@ -1890,11 +1909,16 @@ class TaskInstanceBulkUpdateView(APIView):
                 continue
 
             try:
-                instance = TaskInstance.objects.get(
+                instance = TaskInstance.objects.select_related("template").get(
                     pk=instance_id,
                     owner__user=request.user,
                     deleted_at__isnull=True,
                 )
+                if manual_change_blocked(instance, new_status):
+                    errors.append(
+                        {"id": instance_id, "error": MANUAL_CHANGE_BLOCKED_MSG}
+                    )
+                    continue
                 instance.status = new_status
                 if notes is not None:
                     instance.notes = notes
@@ -2534,6 +2558,148 @@ class MealLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         instance.save()
 
 
+class HydrationGoalView(APIView):
+    """
+    GET/PUT /api/v1/personal-planning/hydration-goal/
+
+    Meta atual de hidratação do membro (uma só; PUT cria ou substitui).
+    GET devolve {"daily_target_ml": null} quando ainda não há meta.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        goal = HydrationGoal.objects.filter(
+            owner=member, is_deleted=False
+        ).first()
+        if not goal:
+            return Response({"id": None, "daily_target_ml": None})
+        return Response(HydrationGoalSerializer(goal).data)
+
+    def put(self, request):
+        member = Member.objects.get(user=request.user)
+        goal = HydrationGoal.objects.filter(owner=member).first()
+        serializer = HydrationGoalSerializer(goal, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        goal = serializer.save(
+            owner=member,
+            is_deleted=False,
+            deleted_at=None,
+            updated_by=request.user,
+            **({} if goal else {"created_by": request.user}),
+        )
+        return Response(HydrationGoalSerializer(goal).data)
+
+
+ML_PER_KG = 35
+ML_PER_TRAINING_HOUR = 500
+DEFAULT_TRAINING_MINUTES = 60
+
+
+class HydrationSuggestionView(APIView):
+    """
+    GET /api/v1/personal-planning/hydration-goal/suggestion/
+
+    Sugestão de meta diária: 35 ml/kg (peso da medição corporal mais
+    recente) + 500 ml por hora de treino, com os minutos semanais dos dias
+    dos planos de treino ativos distribuídos pelos 7 dias da semana.
+    Dia sem duração padrão usa a média das sessões dos últimos 90 dias
+    (ou 60 min, sem histórico). Arredondado para múltiplos de 50 ml.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        member = Member.objects.get(user=request.user)
+        metric = BodyMetric.objects.filter(
+            owner=member, is_deleted=False, weight_kg__isnull=False
+        ).first()
+
+        sessions = WorkoutSession.objects.filter(
+            owner=member,
+            is_deleted=False,
+            date__gte=timezone.localdate() - timedelta(days=90),
+        )
+        durations = [
+            s.duration_minutes for s in sessions if s.duration_minutes
+        ]
+        avg_session = (
+            round(sum(durations) / len(durations))
+            if durations
+            else DEFAULT_TRAINING_MINUTES
+        )
+        days = WorkoutDay.objects.filter(
+            owner=member,
+            is_deleted=False,
+            plan__is_deleted=False,
+            plan__is_active=True,
+        )
+        weekly_minutes = sum(
+            (d.default_duration_minutes or avg_session) * len(d.days_of_week)
+            for d in days
+        )
+        exercise_ml = round(weekly_minutes / 7 / 60 * ML_PER_TRAINING_HOUR)
+
+        weight = float(metric.weight_kg) if metric else None
+        base_ml = round(weight * ML_PER_KG) if weight else None
+        suggested = (
+            round((base_ml + exercise_ml) / 50) * 50 if base_ml else None
+        )
+        return Response(
+            {
+                "suggested_ml": suggested,
+                "weight_kg": weight,
+                "measured_at": metric.measured_at if metric else None,
+                "base_ml": base_ml,
+                "ml_per_kg": ML_PER_KG,
+                "training_days_per_week": sum(
+                    len(d.days_of_week) for d in days
+                ),
+                "training_minutes_per_week": weekly_minutes,
+                "exercise_ml": exercise_ml,
+            }
+        )
+
+
+class WaterLogListCreateView(BaseListCreateView):
+    serializer_class = WaterLogSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WaterLog.objects.filter(owner=member, is_deleted=False)
+        date_param = self.request.query_params.get("date")
+        if date_param:
+            qs = qs.filter(date=date_param)
+        date_from = self.request.query_params.get("date_from")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        date_to = self.request.query_params.get("date_to")
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=Member.objects.get(user=self.request.user),
+            created_by=self.request.user,
+        )
+
+
+class WaterLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WaterLogSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WaterLog.objects.filter(owner=member, is_deleted=False)
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.is_deleted = True
+        instance.save()
+
+
 # ============================================================================
 # EXPORT VIEWS
 # ============================================================================
@@ -3018,7 +3184,7 @@ Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações
     {{
       "name": "Treino A",
       "muscle_groups": "Peito / Tríceps",
-      "day_of_week": 0,
+      "days_of_week": [0],
       "order": 0,
       "exercises": [
         {{
@@ -3035,7 +3201,7 @@ Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações
 }}
 
 Gere exatamente {days_per_week} dias de treino.
-Use day_of_week de 0 (Seg) a 6 (Dom).
+Use days_of_week com dias de 0 (Seg) a 6 (Dom).
 Seja específico e prático para o nível informado."""
 
     def post(self, request):
@@ -3111,7 +3277,11 @@ Seja específico e prático para o nível informado."""
                     plan=plan,
                     name=day_data.get("name", f"Treino {chr(65 + order)}"),
                     muscle_groups=day_data.get("muscle_groups", ""),
-                    day_of_week=day_data.get("day_of_week"),
+                    days_of_week=[
+                        d
+                        for d in (day_data.get("days_of_week") or [])
+                        if isinstance(d, int) and 0 <= d <= 6
+                    ],
                     order=day_data.get("order", order),
                     owner=member,
                     created_by=request.user,

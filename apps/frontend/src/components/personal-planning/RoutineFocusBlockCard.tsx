@@ -32,10 +32,7 @@ export function RoutineFocusBlockCard({
   onRemoveTask,
 }: RoutineFocusBlockCardProps) {
   return (
-    <div
-      className="overflow-hidden rounded-lg border border-l-4"
-      style={{ borderLeftColor: block.color || undefined }}
-    >
+    <div className="overflow-hidden rounded-lg border border-l-4">
       <div className="gap-sm px-md py-sm bg-muted/20 flex items-center">
         <BlockIcon
           name={block.icon}

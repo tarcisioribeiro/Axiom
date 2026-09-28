@@ -72,6 +72,7 @@ export function ReceiptButton({
   const [showPreview, setShowPreview] = useState(false);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const { isGenerating, generateReceipt } = useReceiptGenerator();
 
@@ -134,9 +135,14 @@ export function ReceiptButton({
 
   const handleExport = async (format: ExportFormat) => {
     setIsOpen(false);
-    // Wait for popover to close and hidden receipt to render
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await generateReceipt(receiptRef.current, receiptData, format);
+    setIsExporting(true);
+    try {
+      // Wait for popover to close and hidden receipt to render
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await generateReceipt(receiptRef.current, receiptData, format);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handlePreview = () => {
@@ -146,10 +152,14 @@ export function ReceiptButton({
 
   return (
     <>
-      {/* Hidden receipt template for direct export */}
-      <div className="pointer-events-none fixed top-0 -left-[9999px]">
-        <ReceiptTemplate ref={receiptRef} data={receiptData} forExport />
-      </div>
+      {/* Hidden receipt template, mounted only while exporting: rows are
+          transformed (motion.tr), so `fixed` resolves against the row and a
+          permanently mounted template stretches the page scroll height. */}
+      {isExporting && (
+        <div className="pointer-events-none fixed top-0 -left-[9999px]">
+          <ReceiptTemplate ref={receiptRef} data={receiptData} forExport />
+        </div>
+      )}
 
       <Popover
         open={isOpen}
