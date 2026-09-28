@@ -5742,6 +5742,8 @@
       "sessionNotes": "Observações da Sessão",
       "sessionNotesPlaceholder": "Como foi o treino?",
       "exercisesSection": "Exercícios Realizados",
+      "showDetails": "Ver detalhes",
+      "hideDetails": "Ocultar detalhes",
       "addExercise": "Adicionar Exercício",
       "exerciseName": "Exercício",
       "exerciseNamePlaceholder": "Nome do exercício",
@@ -6181,7 +6183,6 @@
       "managePlans": "Gerenciar Planos",
       "manageExercises": "Exercícios",
       "viewHistory": "Histórico",
-      "todaySessions": "Sessões registradas hoje",
       "emptyDays": "Nenhuma divisão cadastrada neste plano."
     },
     "nutritionHub": {

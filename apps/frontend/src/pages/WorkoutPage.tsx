@@ -26,6 +26,8 @@ import {
   Activity,
   CalendarDays,
   Calendar,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -259,13 +261,6 @@ export default function WorkoutPage() {
     queryFn: () => workoutSessionService.getAllPaginated({ page: sessionsPage }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
     placeholderData: keepPreviousData,
-  });
-
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const { data: todaySessionsData, isLoading: todaySessionsLoading } = useQuery({
-    queryKey: ['workout-sessions', 'today', todayStr],
-    queryFn: () => workoutSessionService.getByDateRange(todayStr, todayStr),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const { data: allDays } = useQuery({
@@ -967,12 +962,8 @@ export default function WorkoutPage() {
           <TabsContent value="today" className="mt-0 flex-1">
             <TodayPlanTab
               activePlans={activePlans}
-              sessions={todaySessionsData ?? []}
               plansLoading={plansLoading}
-              sessionsLoading={todaySessionsLoading}
               onStartSession={() => setDialog({ type: 'new-session' })}
-              onEditSession={(s) => setDialog({ type: 'edit-session', session: s })}
-              onDeleteSession={handleDeleteSession}
               t={t}
             />
           </TabsContent>
@@ -2718,6 +2709,7 @@ interface SessionCardProps {
 }
 
 function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const exerciseCount = session.session_exercises?.length ?? 0;
   const date = new Date(session.date + 'T12:00:00');
   const dayNum = date.getDate();
@@ -2812,6 +2804,85 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
             </span>
           )}
         </div>
+
+        {exerciseCount > 0 && (
+          <>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-sm gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
+            >
+              <ChevronDown
+                className={cn(
+                  'h-3.5 w-3.5 transition-transform',
+                  expanded && 'rotate-180'
+                )}
+              />
+              {expanded
+                ? t('pages.workoutSessions.hideDetails')
+                : t('pages.workoutSessions.showDetails')}
+            </button>
+
+            {expanded && (
+              <div className="mt-sm space-y-sm">
+                {[...session.session_exercises]
+                  .sort((a, b) => a.order - b.order)
+                  .map((se) => (
+                    <div key={se.id} className="border-border/60 rounded-md border">
+                      <p className="bg-muted/30 px-sm py-xs text-sm font-medium">
+                        {se.exercise_name}
+                      </p>
+                      {se.sets.length === 0 ? (
+                        <p className="px-sm py-xs text-muted-foreground text-xs">
+                          {t('pages.workoutPlans.noSets')}
+                        </p>
+                      ) : (
+                        <table className="w-full text-xs">
+                          <thead className="text-muted-foreground">
+                            <tr>
+                              <th className="px-sm py-xs text-left font-medium">
+                                {t('pages.workoutSessions.setNumber')}
+                              </th>
+                              <th className="px-sm py-xs text-left font-medium">
+                                {t('pages.workoutSessions.load')}
+                              </th>
+                              <th className="px-sm py-xs text-left font-medium">
+                                {t('pages.workoutSessions.repsDone')}
+                              </th>
+                              <th className="px-sm py-xs w-6" />
+                            </tr>
+                          </thead>
+                          <tbody className="divide-border/40 divide-y">
+                            {[...se.sets]
+                              .sort((a, b) => a.set_number - b.set_number)
+                              .map((set) => (
+                                <tr key={set.id}>
+                                  <td className="px-sm py-xs">{set.set_number}</td>
+                                  <td className="px-sm py-xs">
+                                    {set.load != null
+                                      ? `${Number(set.load)} ${set.load_unit_display}`
+                                      : '—'}
+                                  </td>
+                                  <td className="px-sm py-xs">
+                                    {set.reps_done ?? '—'}
+                                  </td>
+                                  <td className="px-sm py-xs">
+                                    {set.completed && (
+                                      <Check className="text-success h-3.5 w-3.5" />
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -2821,50 +2892,25 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
 
 interface TodayPlanTabProps {
   activePlans: WorkoutPlan[];
-  sessions: WorkoutSession[];
   plansLoading: boolean;
-  sessionsLoading: boolean;
   onStartSession: () => void;
-  onEditSession: (s: WorkoutSession) => void;
-  onDeleteSession: (s: WorkoutSession) => Promise<void>;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
 function TodayPlanTab({
   activePlans,
-  sessions,
   plansLoading,
-  sessionsLoading,
   onStartSession,
-  onEditSession,
-  onDeleteSession,
   t,
 }: TodayPlanTabProps) {
-  const today = new Date().toISOString().slice(0, 10);
-  const todaySessions = sessions.filter((s) => s.date === today);
   // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
   const jsDay = new Date().getDay();
   const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
 
-  if (plansLoading || sessionsLoading) return <LoadingState />;
+  if (plansLoading) return <LoadingState />;
 
   return (
     <div className="space-y-lg">
-      {/* Sessões de hoje */}
-      {todaySessions.length > 0 && (
-        <div>
-          <p className="mb-sm text-foreground text-sm font-semibold">
-            {t('pages.workoutHub.todaySessions')}
-          </p>
-          <SessionsGrouped
-            sessions={todaySessions}
-            onEdit={onEditSession}
-            onDelete={onDeleteSession}
-            t={t}
-          />
-        </div>
-      )}
-
       {/* Plano ativo */}
       {(() => {
         const plansForToday = activePlans.filter((plan) =>

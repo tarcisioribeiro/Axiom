@@ -5676,6 +5676,8 @@
       "sessionNotes": "Session Notes",
       "sessionNotesPlaceholder": "How was the workout?",
       "exercisesSection": "Exercises Performed",
+      "showDetails": "Show details",
+      "hideDetails": "Hide details",
       "addExercise": "Add Exercise",
       "exerciseName": "Exercise",
       "exerciseNamePlaceholder": "Exercise name",
@@ -6136,7 +6138,6 @@
       "managePlans": "Manage Plans",
       "manageExercises": "Exercises",
       "viewHistory": "History",
-      "todaySessions": "Sessions logged today",
       "emptyDays": "No splits registered in this plan."
     },
     "nutritionHub": {
