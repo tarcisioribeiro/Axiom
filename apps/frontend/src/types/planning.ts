@@ -43,6 +43,7 @@ export interface RoutineTask {
   linked_meal_type?: number | null;
   linked_meal_type_name?: string | null;
   linked_hydration_goal?: number | null;
+  linked_workout?: boolean;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -78,6 +79,7 @@ export interface RoutineTaskFormData {
   linked_book?: number | null;
   linked_meal_type?: number | null;
   linked_hydration_goal?: number | null;
+  linked_workout?: boolean;
   owner: number;
 }
 

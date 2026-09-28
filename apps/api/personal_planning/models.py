@@ -315,6 +315,14 @@ class RoutineTask(BaseModel):
             " (só categoria Nutrição)"
         ),
     )
+    linked_workout = models.BooleanField(
+        default=False,
+        verbose_name="Vinculada ao Treino",
+        help_text=(
+            "Aparece só em dias com treino agendado e é concluída apenas pelo"
+            " registro das sessões (só categoria Exercício)"
+        ),
+    )
     chained_task = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -504,6 +512,14 @@ class RoutineTask(BaseModel):
         """
         if not self.is_active:
             return False
+
+        if self.linked_workout:
+            from personal_planning.services.workout_sync import (
+                scheduled_division_ids,
+            )
+
+            if not scheduled_division_ids(self.owner, date):
+                return False
 
         if self.periodicity == "daily":
             return True
@@ -1623,11 +1639,24 @@ MEASUREMENT_UNIT_CHOICES = (
 # ============================================================================
 
 
+WORKOUT_CATEGORY_CHOICES = [
+    ("cardio", "Cardiovascular"),
+    ("resistance", "Resistência"),
+    ("mobility", "Mobilidade"),
+]
+
+
 class Exercise(BaseModel):
     """Catálogo de exercícios disponíveis para uso nos planos de treino."""
 
     name = models.CharField(
         max_length=200, null=False, blank=False, verbose_name="Nome"
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=WORKOUT_CATEGORY_CHOICES,
+        default="resistance",
+        verbose_name="Categoria",
     )
     muscle_groups = models.CharField(
         max_length=200,
@@ -1684,6 +1713,13 @@ class WorkoutPlan(BaseModel):
     description = models.TextField(
         null=True, blank=True, verbose_name="Descrição"
     )
+    category = models.CharField(
+        max_length=20,
+        choices=WORKOUT_CATEGORY_CHOICES,
+        default="resistance",
+        verbose_name="Categoria",
+        help_text="Exercícios do plano devem ser da mesma categoria",
+    )
     is_active = models.BooleanField(default=True, verbose_name="Plano Ativo")
     owner = models.ForeignKey(
         "members.Member",
@@ -1700,17 +1736,6 @@ class WorkoutPlan(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({'ativo' if self.is_active else 'inativo'})"
-
-
-WORKOUT_WEEKDAY_CHOICES = [
-    (0, "Segunda-feira"),
-    (1, "Terça-feira"),
-    (2, "Quarta-feira"),
-    (3, "Quinta-feira"),
-    (4, "Sexta-feira"),
-    (5, "Sábado"),
-    (6, "Domingo"),
-]
 
 
 class WorkoutDay(BaseModel):
@@ -1737,13 +1762,12 @@ class WorkoutDay(BaseModel):
         verbose_name="Grupos Musculares",
         help_text="Ex: Costas / Ombro / Bíceps",
     )
-    day_of_week = models.PositiveSmallIntegerField(
-        null=True,
+    days_of_week = models.JSONField(
+        default=list,
         blank=True,
-        choices=WORKOUT_WEEKDAY_CHOICES,
-        verbose_name="Dia da Semana",
+        verbose_name="Dias da Semana",
         help_text=(
-            "Dia da semana em que esta divisão é executada "
+            "Dias da semana em que esta divisão é executada "
             "(0=Seg, 6=Dom). Vazio = qualquer dia."
         ),
     )
@@ -1841,6 +1865,15 @@ class WorkoutExercise(BaseModel):
         choices=LOAD_UNIT_CHOICES,
         default="kg",
         verbose_name="Unidade de Carga",
+    )
+    set_targets = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Alvos por Série",
+        help_text=(
+            'Carga/repetições de cada série: [{"reps": 12, "load": "20"}].'
+            " Valores vazios usam reps_min/load."
+        ),
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")

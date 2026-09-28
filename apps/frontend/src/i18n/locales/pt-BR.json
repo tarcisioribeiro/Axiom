@@ -4215,7 +4215,9 @@
           "weekly": "Toda {{day}}",
           "monthly": "Todo dia {{day}} do mês",
           "custom": "Dias personalizados"
-        }
+        },
+        "linkedWorkoutLabel": "Vincular ao treino",
+        "linkedWorkoutHint": "Aparece só nos dias com treino agendado e é concluída automaticamente quando as sessões de todos os planos do dia forem registradas. Não pode ser concluída manualmente."
       },
       "focusBlocks": {
         "title": "Blocos de Foco",
@@ -5560,8 +5562,8 @@
       "dayDeletedDesc": "A divisão foi excluída com sucesso.",
       "dayName": "Nome da Divisão",
       "dayNamePlaceholder": "Ex: Treino A",
-      "dayOfWeek": "Dia da Semana",
-      "dayOfWeekHint": "Selecione o dia em que esta divisão será executada. Vazio = aparece todos os dias.",
+      "dayOfWeek": "Dias da Semana",
+      "dayOfWeekHint": "Selecione um ou mais dias em que esta divisão será executada. Vazio = aparece todos os dias.",
       "defaultScheduleSection": "Horário Padrão",
       "defaultStartTime": "Horário de Início Padrão",
       "defaultDurationMinutes": "Duração Padrão (min)",
@@ -5646,7 +5648,19 @@
         "fullBody": "Full Body"
       },
       "hideNotes": "Ocultar observações",
-      "showNotes": "Adicionar observações"
+      "showNotes": "Adicionar observações",
+      "category": "Categoria",
+      "categories": {
+        "cardio": "Cardiovascular",
+        "resistance": "Resistência",
+        "mobility": "Mobilidade"
+      },
+      "bodyweight": "Peso corporal",
+      "perSetTitle": "Carga e repetições por série",
+      "perSetHint": "Campos vazios usam as repetições mínimas e a carga padrão.",
+      "setLabel": "Série",
+      "repsShort": "Reps",
+      "tabCalendar": "Calendário"
     },
     "exercises": {
       "title": "Exercícios",
@@ -5684,7 +5698,9 @@
         "empty": "Nenhum exercício encontrado",
         "emptyDesc": "Tente buscar por outro termo, em inglês.",
         "selectError": "Erro ao definir a imagem do exercício"
-      }
+      },
+      "allCategories": "Todas as categorias",
+      "fieldCategory": "Categoria"
     },
     "workoutSessions": {
       "sectionSession": "Dados da Sessão",
@@ -7372,5 +7388,17 @@
   },
   "intellect": {
     "streakDays": "dias"
+  },
+  "workoutCalendar": {
+    "title": "Calendário de Treino",
+    "summary": "{{done}} concluídas · {{pending}} pendentes · {{missed}} perdidas neste mês",
+    "noEvents": "Nenhum treino neste dia",
+    "dayDetail": "Treinos de {{date}}",
+    "extraSession": "Sessão avulsa",
+    "status": {
+      "completed": "Concluída",
+      "pending": "Pendente",
+      "missed": "Perdida"
+    }
   }
 }

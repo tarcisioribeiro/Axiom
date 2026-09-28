@@ -1,8 +1,22 @@
 /* eslint-disable max-lines */
+export type WorkoutCategory = 'cardio' | 'resistance' | 'mobility';
+
+export const WORKOUT_CATEGORIES: WorkoutCategory[] = [
+  'cardio',
+  'resistance',
+  'mobility',
+];
+
+export interface SetTarget {
+  reps: number | null;
+  load: string | null;
+}
+
 export interface Exercise {
   id: number;
   uuid: string;
   name: string;
+  category: WorkoutCategory;
   muscle_groups?: string | null;
   description?: string | null;
   dataset_entry?: number | null;
@@ -16,6 +30,7 @@ export interface Exercise {
 
 export interface ExerciseFormData {
   name: string;
+  category: WorkoutCategory;
   muscle_groups?: string | null;
   description?: string | null;
   dataset_entry?: number | null;
@@ -40,6 +55,7 @@ export interface WorkoutPlan {
   uuid: string;
   name: string;
   description?: string | null;
+  category: WorkoutCategory;
   is_active: boolean;
   days: WorkoutDay[];
   day_count: number;
@@ -52,6 +68,7 @@ export interface WorkoutPlan {
 export interface WorkoutPlanFormData {
   name: string;
   description?: string | null;
+  category: WorkoutCategory;
   is_active: boolean;
   owner: number;
 }
@@ -62,7 +79,7 @@ export interface WorkoutDay {
   plan: number;
   name: string;
   muscle_groups?: string | null;
-  day_of_week?: number | null;
+  days_of_week: number[];
   order: number;
   default_start_time?: string | null;
   default_duration_minutes?: number | null;
@@ -77,7 +94,7 @@ export interface WorkoutDayFormData {
   plan: number;
   name: string;
   muscle_groups?: string | null;
-  day_of_week?: number | null;
+  days_of_week: number[];
   order: number;
   default_start_time?: string | null;
   default_duration_minutes?: number | null;
@@ -100,6 +117,7 @@ export interface WorkoutExercise {
   load?: string | null;
   load_unit: string;
   load_unit_display?: string | null;
+  set_targets: SetTarget[];
   order: number;
   notes?: string | null;
   owner: number;
@@ -117,6 +135,7 @@ export interface WorkoutExerciseFormData {
   rest_seconds?: number | null;
   load?: string | null;
   load_unit: string;
+  set_targets: SetTarget[];
   order: number;
   notes?: string | null;
   owner: number;

@@ -988,7 +988,7 @@ class AIWorkoutPlanGenerationTest(BasePlanningCoverageTestCase):
         mock_chat.return_value = (
             '{"name": "Plano Força", "description": "desc", "days": ['
             '{"name": "Treino A", "muscle_groups": "Peito", '
-            '"day_of_week": 0, "order": 0, "exercises": ['
+            '"days_of_week": [0], "order": 0, "exercises": ['
             '{"name": "Supino", "sets": 4, "reps_min": 8, "reps_max": 12, '
             '"rest_seconds": 90, "notes": "controlado"}]}]}'
         )

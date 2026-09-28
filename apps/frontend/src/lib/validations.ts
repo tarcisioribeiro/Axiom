@@ -815,6 +815,7 @@ export const routineTaskSchema = z
     linked_book: z.number().positive().optional().nullable(),
     linked_meal_type: z.number().positive().optional().nullable(),
     linked_hydration_goal: z.number().positive().optional().nullable(),
+    linked_workout: z.boolean().optional(),
   })
   .refine(
     (data) => {

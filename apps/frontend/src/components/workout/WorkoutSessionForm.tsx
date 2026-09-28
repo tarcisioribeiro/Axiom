@@ -75,10 +75,12 @@ function newSet(
   loadUnit = 'kg',
   repsDone = ''
 ): SessionSetValues {
+  // Série não aceita 'bw': peso corporal = carga em branco
+  const bodyweight = loadUnit === 'bw';
   return {
     set_number: setNumber,
-    load,
-    load_unit: loadUnit,
+    load: bodyweight ? '' : load,
+    load_unit: bodyweight ? 'kg' : loadUnit,
     reps_done: repsDone,
     completed: true,
     notes: '',
@@ -191,7 +193,12 @@ export function WorkoutSessionForm({
           load_target_unit: ex.load_unit || 'kg',
           order: idx,
           sets: Array.from({ length: ex.sets }, (_, i) =>
-            newSet(i + 1, ex.load ?? '', ex.load_unit || 'kg', String(ex.reps_min))
+            newSet(
+              i + 1,
+              ex.set_targets?.[i]?.load ?? ex.load ?? '',
+              ex.load_unit || 'kg',
+              String(ex.set_targets?.[i]?.reps ?? ex.reps_min)
+            )
           ),
         }));
         setValue('exercises', preloaded);

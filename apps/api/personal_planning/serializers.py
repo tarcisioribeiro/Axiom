@@ -110,6 +110,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "linked_meal_type",
             "linked_meal_type_name",
             "linked_hydration_goal",
+            "linked_workout",
             "chained_task",
             "owner",
             "owner_name",
@@ -178,6 +179,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "linked_book",
             "linked_meal_type",
             "linked_hydration_goal",
+            "linked_workout",
             "chained_task",
         ]
 
@@ -209,6 +211,16 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {field: "Registro vinculado pertence a outro membro"}
                 )
+
+        if current("linked_workout") and current("category") != "exercise":
+            raise serializers.ValidationError(
+                {
+                    "linked_workout": (
+                        "Só tarefas da categoria Exercício podem ser"
+                        " vinculadas ao treino"
+                    )
+                }
+            )
 
         # Refeição ↔ tarefa é 1:1 (constraint no banco; aqui a mensagem)
         meal_type = current("linked_meal_type")
@@ -634,6 +646,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "name",
+            "category",
             "muscle_groups",
             "description",
             "dataset_entry",
@@ -645,6 +658,55 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate(self, data):
+        def current(field):
+            if field in data:
+                return data[field]
+            return getattr(self.instance, field, None)
+
+        category = data.get("category")
+        if self.instance and category and category != self.instance.category:
+            in_other_plans = (
+                self.instance.workout_exercises.filter(
+                    deleted_at__isnull=True,
+                    workout_day__deleted_at__isnull=True,
+                )
+                .exclude(workout_day__plan__category=category)
+                .exists()
+            )
+            if in_other_plans:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "Este exercício está em planos de outra categoria."
+                            " Remova-o desses planos antes de mudar a"
+                            " categoria."
+                        )
+                    }
+                )
+
+        muscle_groups = (current("muscle_groups") or "").strip()
+        duplicates = Exercise.objects.filter(
+            owner=current("owner"),
+            name__iexact=(current("name") or "").strip(),
+            deleted_at__isnull=True,
+        )
+        if self.instance:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if any(
+            (other or "").strip().lower() == muscle_groups.lower()
+            for other in duplicates.values_list("muscle_groups", flat=True)
+        ):
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        "Já existe um exercício com este nome"
+                        " e grupo muscular."
+                    )
+                }
+            )
+        return data
 
     def get_gif_url(self, obj):
         if not obj.dataset_entry or not obj.dataset_entry.gif:
@@ -698,6 +760,7 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "load",
             "load_unit",
             "load_unit_display",
+            "set_targets",
             "order",
             "notes",
             "owner",
@@ -705,6 +768,44 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate(self, data):
+        def current(field):
+            if field in data:
+                return data[field]
+            return getattr(self.instance, field, None)
+
+        exercise, day = current("exercise"), current("workout_day")
+        unchanged = self.instance and (
+            self.instance.exercise_id == getattr(exercise, "id", None)
+            and self.instance.workout_day_id == getattr(day, "id", None)
+        )
+        # Vínculos antigos fora da regra continuam válidos até serem trocados
+        if exercise and day and not unchanged:
+            plan = day.plan
+            if exercise.category != plan.category:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            f"Exercícios de {exercise.get_category_display()}"
+                            " não podem ser incluídos em um plano de"
+                            f" {plan.get_category_display()}."
+                        )
+                    }
+                )
+        return data
+
+    def validate_set_targets(self, value):
+        if not isinstance(value, list) or not all(
+            isinstance(t, dict)
+            and (t.get("reps") is None or isinstance(t.get("reps"), int))
+            and (t.get("load") is None or isinstance(t.get("load"), str))
+            for t in value
+        ):
+            raise serializers.ValidationError(
+                'Use uma lista de {"reps": int|null, "load": str|null}.'
+            )
+        return [{"reps": t.get("reps"), "load": t.get("load")} for t in value]
 
     def get_gif_url(self, obj):
         catalog = obj.exercise
@@ -750,6 +851,14 @@ class WorkoutExerciseCreateUpdateSerializer(serializers.ModelSerializer):
 class WorkoutDaySerializer(serializers.ModelSerializer):
     exercises = WorkoutExerciseSerializer(many=True, read_only=True)
     exercise_count = serializers.SerializerMethodField()
+    # Compat com o app mobile, que ainda lê/grava um único dia
+    day_of_week = serializers.IntegerField(
+        min_value=0,
+        max_value=6,
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
 
     class Meta:
         model = WorkoutDay
@@ -759,6 +868,7 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
             "plan",
             "name",
             "muscle_groups",
+            "days_of_week",
             "day_of_week",
             "order",
             "default_start_time",
@@ -770,6 +880,26 @@ class WorkoutDaySerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate_days_of_week(self, value):
+        if not isinstance(value, list) or not all(
+            isinstance(d, int) and 0 <= d <= 6 for d in value
+        ):
+            raise serializers.ValidationError(
+                "Dias da semana devem estar entre 0 (Seg) e 6 (Dom)."
+            )
+        return sorted(set(value))
+
+    def validate(self, data):
+        if "day_of_week" in data:
+            legacy = data.pop("day_of_week")
+            data.setdefault("days_of_week", [] if legacy is None else [legacy])
+        return data
+
+    def to_representation(self, obj):
+        rep = super().to_representation(obj)
+        rep["day_of_week"] = (obj.days_of_week or [None])[0]
+        return rep
 
     def get_exercise_count(self, obj):
         # `exercises` já vem filtrado por soft-delete via Prefetch na view;
@@ -805,6 +935,7 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
             "uuid",
             "name",
             "description",
+            "category",
             "is_active",
             "days",
             "day_count",
@@ -814,6 +945,30 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate(self, data):
+        value = data.get("category")
+        if self.instance and value and value != self.instance.category:
+            conflict = (
+                WorkoutExercise.objects.filter(
+                    workout_day__plan=self.instance,
+                    workout_day__deleted_at__isnull=True,
+                    deleted_at__isnull=True,
+                    exercise__isnull=False,
+                )
+                .exclude(exercise__category=value)
+                .exists()
+            )
+            if conflict:
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "O plano tem exercícios de outra categoria."
+                            " Remova-os antes de mudar a categoria."
+                        )
+                    }
+                )
+        return data
 
     def get_day_count(self, obj):
         # `days` (e `days.exercises`) já vêm filtrados por soft-delete via
@@ -984,6 +1139,35 @@ class WorkoutSessionSerializer(serializers.ModelSerializer):
                 "Não é possível registrar sessão com data futura."
             )
         return value
+
+    def validate(self, data):
+        def current(field):
+            if field in data:
+                return data[field]
+            return getattr(self.instance, field, None)
+
+        workout_day = current("workout_day")
+        if not workout_day:
+            return data
+        plan = workout_day.plan
+        conflicts = WorkoutSession.objects.filter(
+            owner=current("owner"),
+            date=current("date"),
+            workout_day=workout_day,
+            deleted_at__isnull=True,
+        )
+        if self.instance:
+            conflicts = conflicts.exclude(pk=self.instance.pk)
+        if conflicts.exists():
+            raise serializers.ValidationError(
+                {
+                    "detail": (
+                        f"Já existe uma sessão da divisão '{workout_day.name}'"
+                        f" do plano '{plan.name}' registrada neste dia."
+                    )
+                }
+            )
+        return data
 
 
 class WorkoutSessionCreateUpdateSerializer(serializers.ModelSerializer):

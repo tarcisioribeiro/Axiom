@@ -4149,7 +4149,9 @@
           "weekly": "Every {{day}}",
           "monthly": "Every {{day}}th of the month",
           "custom": "Custom days"
-        }
+        },
+        "linkedWorkoutLabel": "Link to workouts",
+        "linkedWorkoutHint": "Shows only on days with a scheduled workout and is completed automatically once sessions for every plan of the day are logged. Cannot be completed manually."
       },
       "focusBlocks": {
         "title": "Focus Blocks",
@@ -5494,8 +5496,8 @@
       "dayDeletedDesc": "The split was deleted successfully.",
       "dayName": "Split Name",
       "dayNamePlaceholder": "e.g. Workout A",
-      "dayOfWeek": "Day of Week",
-      "dayOfWeekHint": "Select the day this split will be performed. Leave empty to show every day.",
+      "dayOfWeek": "Days of Week",
+      "dayOfWeekHint": "Select one or more days this split will be performed. Leave empty to show every day.",
       "defaultScheduleSection": "Default Schedule",
       "defaultStartTime": "Default Start Time",
       "defaultDurationMinutes": "Default Duration (min)",
@@ -5580,7 +5582,19 @@
         "fullBody": "Full Body"
       },
       "hideNotes": "Hide notes",
-      "showNotes": "Add notes"
+      "showNotes": "Add notes",
+      "category": "Category",
+      "categories": {
+        "cardio": "Cardiovascular",
+        "resistance": "Resistance",
+        "mobility": "Mobility"
+      },
+      "bodyweight": "Bodyweight",
+      "perSetTitle": "Load and reps per set",
+      "perSetHint": "Empty fields use the minimum reps and default load.",
+      "setLabel": "Set",
+      "repsShort": "Reps",
+      "tabCalendar": "Calendar"
     },
     "exercises": {
       "title": "Exercises",
@@ -5618,7 +5632,9 @@
         "empty": "No exercises found",
         "emptyDesc": "Try a different search term.",
         "selectError": "Error setting exercise image"
-      }
+      },
+      "allCategories": "All categories",
+      "fieldCategory": "Category"
     },
     "workoutSessions": {
       "sectionSession": "Session Details",
@@ -7341,5 +7357,17 @@
   },
   "intellect": {
     "streakDays": "days"
+  },
+  "workoutCalendar": {
+    "title": "Workout Calendar",
+    "summary": "{{done}} completed · {{pending}} pending · {{missed}} missed this month",
+    "noEvents": "No workouts on this day",
+    "dayDetail": "Workouts on {{date}}",
+    "extraSession": "Extra session",
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "missed": "Missed"
+    }
   }
 }

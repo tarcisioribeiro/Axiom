@@ -80,7 +80,7 @@ class HydrationGoalTest(BaseHydrationTestCase):
             WorkoutDay.objects.create(
                 plan=plan,
                 name=f"D{weekday}",
-                day_of_week=weekday,
+                days_of_week=[weekday],
                 default_duration_minutes=70,
                 owner=self.member,
             )

@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
+  CalendarDays,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -77,6 +78,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { ExerciseDatasetPicker } from '@/components/workout/ExerciseDatasetPicker';
 import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
+import { WorkoutCalendar } from '@/components/workout/WorkoutCalendar';
 import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
 import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
@@ -97,8 +99,11 @@ import {
   workoutSessionExerciseService,
   workoutSessionSetService,
 } from '@/services/workout-service';
+import { WORKOUT_CATEGORIES } from '@/types/workout';
 import type {
   Exercise,
+  SetTarget,
+  WorkoutCategory,
   WorkoutDay,
   WorkoutDayFormData,
   WorkoutExercise,
@@ -132,11 +137,32 @@ interface AIWorkoutFormValues {
 
 interface ExerciseCatalogFormValues {
   name: string;
+  category: WorkoutCategory;
   muscle_groups: string;
   description: string;
 }
 
 const SESSIONS_PAGE_SIZE = 50;
+const CATALOG_PAGE_SIZE = 48;
+
+/** "Peso corporal", "20 kg" ou null — carga padrão de um exercício do plano. */
+function formatExerciseLoad(
+  ex: Pick<WorkoutExercise, 'load' | 'load_unit'>,
+  t: (key: string) => string
+): string | null {
+  if (ex.load_unit === 'bw') return t('pages.workoutPlans.bodyweight');
+  return ex.load ? `${ex.load} ${ex.load_unit}` : null;
+}
+
+/** Resumo por série ("12/10/8 · 20/25/30 kg") quando o plano define alvos. */
+function formatSetTargets(ex: WorkoutExercise): string | null {
+  const targets = ex.set_targets ?? [];
+  if (targets.length === 0) return null;
+  const reps = targets.map((st) => st.reps ?? ex.reps_min).join('/');
+  if (ex.load_unit === 'bw') return reps;
+  const loads = targets.map((st) => st.load ?? ex.load ?? '–').join('/');
+  return `${reps} · ${loads} ${ex.load_unit}`;
+}
 
 function groupSessionsByWeek(sessions: WorkoutSession[]) {
   const now = new Date();
@@ -210,6 +236,8 @@ export default function WorkoutPage() {
   const [exerciseSearch, setExerciseSearch] = useState('');
   const [exerciseTypeFilter, setExerciseTypeFilter] = useState('all');
   const [exerciseMuscleFilter, setExerciseMuscleFilter] = useState('all');
+  const [exerciseCategoryFilter, setExerciseCategoryFilter] = useState('all');
+  const [catalogPage, setCatalogPage] = useState(1);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -221,7 +249,7 @@ export default function WorkoutPage() {
 
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['workout-plans'],
-    queryFn: () => workoutPlanService.getAll(),
+    queryFn: () => workoutPlanService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -242,13 +270,13 @@ export default function WorkoutPage() {
 
   const { data: allDays } = useQuery({
     queryKey: ['workout-days'],
-    queryFn: () => workoutDayService.getAll(),
+    queryFn: () => workoutDayService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const { data: catalogExercises = [] } = useQuery({
     queryKey: ['exercises'],
-    queryFn: () => exerciseService.getAll(),
+    queryFn: () => exerciseService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -274,12 +302,35 @@ export default function WorkoutPage() {
         : null;
     return catalogExercises.filter((exercise) => {
       if (term && !exercise.name.toLowerCase().includes(term)) return false;
+      if (
+        exerciseCategoryFilter !== 'all' &&
+        exercise.category !== exerciseCategoryFilter
+      )
+        return false;
       const tags = (exercise.muscle_groups ?? '').toLowerCase();
       if (typeLabel && !tags.includes(typeLabel)) return false;
       if (muscleLabel && !tags.includes(muscleLabel)) return false;
       return true;
     });
-  }, [catalogExercises, exerciseSearch, exerciseTypeFilter, exerciseMuscleFilter, t]);
+  }, [
+    catalogExercises,
+    exerciseSearch,
+    exerciseTypeFilter,
+    exerciseMuscleFilter,
+    exerciseCategoryFilter,
+    t,
+  ]);
+
+  const catalogTotalPages = Math.max(
+    1,
+    Math.ceil(filteredCatalogExercises.length / CATALOG_PAGE_SIZE)
+  );
+  // Filtro reduziu o total → volta para a última página existente
+  if (catalogPage > catalogTotalPages) setCatalogPage(catalogTotalPages);
+  const pagedCatalogExercises = filteredCatalogExercises.slice(
+    (catalogPage - 1) * CATALOG_PAGE_SIZE,
+    catalogPage * CATALOG_PAGE_SIZE
+  );
 
   const activePlans = plans.filter((p) => p.is_active);
   const inactivePlans = plans.filter((p) => !p.is_active);
@@ -397,6 +448,7 @@ export default function WorkoutPage() {
       rest_seconds: number | null;
       load: string | null;
       load_unit: string;
+      set_targets: SetTarget[];
       order: number;
       notes: string | null;
     }) =>
@@ -413,8 +465,12 @@ export default function WorkoutPage() {
       toast({ title: t('pages.workoutPlans.exerciseAdded') });
       setDialog(null);
     },
-    onError: () =>
-      toast({ title: t('pages.workoutPlans.saveError'), variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({
+        title: t('pages.workoutPlans.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      }),
   });
 
   const editExerciseMutation = useMutation({
@@ -433,6 +489,7 @@ export default function WorkoutPage() {
         rest_seconds: number | null;
         load: string | null;
         load_unit: string;
+        set_targets: SetTarget[];
         order: number;
         notes: string | null;
       };
@@ -450,8 +507,12 @@ export default function WorkoutPage() {
       toast({ title: t('pages.workoutPlans.exerciseUpdated') });
       setDialog(null);
     },
-    onError: () =>
-      toast({ title: t('pages.workoutPlans.saveError'), variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({
+        title: t('pages.workoutPlans.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      }),
   });
 
   const deleteExerciseMutation = useMutation({
@@ -700,8 +761,12 @@ export default function WorkoutPage() {
       toast({ title: t('pages.exercises.created') });
       setDialog(null);
     },
-    onError: () =>
-      toast({ title: t('pages.exercises.saveError'), variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({
+        title: t('pages.exercises.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      }),
   });
 
   const updateCatalogExerciseMutation = useMutation({
@@ -712,8 +777,12 @@ export default function WorkoutPage() {
       toast({ title: t('pages.exercises.updated') });
       setDialog(null);
     },
-    onError: () =>
-      toast({ title: t('pages.exercises.saveError'), variant: 'destructive' }),
+    onError: (err: unknown) =>
+      toast({
+        title: t('pages.exercises.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      }),
   });
 
   const deleteCatalogExerciseMutation = useMutation({
@@ -880,6 +949,10 @@ export default function WorkoutPage() {
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
             </TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-xs flex-1">
+              <CalendarDays className="h-4 w-4" />
+              {t('pages.workoutPlans.tabCalendar')}
+            </TabsTrigger>
             <TabsTrigger value="plans" className="gap-xs flex-1">
               <ClipboardList className="h-4 w-4" />
               {t('pages.workoutPlans.tabPlans')}
@@ -979,6 +1052,11 @@ export default function WorkoutPage() {
             )}
           </TabsContent>
 
+          {/* ── Calendário ──────────────────────────────────────────────── */}
+          <TabsContent value="calendar" className="mt-0 flex-1">
+            {plansLoading ? <LoadingState /> : <WorkoutCalendar plans={plans} />}
+          </TabsContent>
+
           {/* ── Planos ──────────────────────────────────────────────────── */}
           <TabsContent value="plans" className="mt-0 flex-1">
             <div className="mb-md gap-sm flex justify-end">
@@ -1034,6 +1112,11 @@ export default function WorkoutPage() {
                               <h2 className="text-2xl font-bold text-white">
                                 {activePlan.name}
                               </h2>
+                              <span className="mt-xs px-sm inline-block rounded-full bg-white/15 py-0.5 text-xs font-medium text-white/90">
+                                {t(
+                                  `pages.workoutPlans.categories.${activePlan.category}`
+                                )}
+                              </span>
                               {activePlan.description && (
                                 <p className="mt-xs text-sm text-white/70">
                                   {activePlan.description}
@@ -1285,14 +1368,25 @@ export default function WorkoutPage() {
                   hasActiveFilters={
                     !!exerciseSearch ||
                     exerciseTypeFilter !== 'all' ||
-                    exerciseMuscleFilter !== 'all'
+                    exerciseMuscleFilter !== 'all' ||
+                    exerciseCategoryFilter !== 'all'
                   }
                   onClear={() => {
                     setExerciseSearch('');
                     setExerciseTypeFilter('all');
                     setExerciseMuscleFilter('all');
+                    setExerciseCategoryFilter('all');
                   }}
                   activeFilters={[
+                    ...(exerciseCategoryFilter !== 'all'
+                      ? [
+                          {
+                            key: 'category',
+                            label: `${t('pages.exercises.fieldCategory')}: ${t(`pages.workoutPlans.categories.${exerciseCategoryFilter}`)}`,
+                            onRemove: () => setExerciseCategoryFilter('all'),
+                          },
+                        ]
+                      : []),
                     ...(exerciseTypeFilter !== 'all'
                       ? [
                           {
@@ -1319,6 +1413,28 @@ export default function WorkoutPage() {
                     onValueChange={setExerciseSearch}
                     className="w-44"
                   />
+                  <Select
+                    value={exerciseCategoryFilter}
+                    onValueChange={setExerciseCategoryFilter}
+                  >
+                    <SelectTrigger
+                      className="w-44"
+                      aria-label={t('pages.exercises.allCategories')}
+                      startIcon={<Activity className="h-3.5 w-3.5" />}
+                    >
+                      <SelectValue placeholder={t('pages.exercises.allCategories')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">
+                        {t('pages.exercises.allCategories')}
+                      </SelectItem>
+                      {WORKOUT_CATEGORIES.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {t(`pages.workoutPlans.categories.${key}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Select
                     value={exerciseTypeFilter}
                     onValueChange={setExerciseTypeFilter}
@@ -1373,7 +1489,7 @@ export default function WorkoutPage() {
                   />
                 ) : (
                   <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredCatalogExercises.map((exercise) => (
+                    {pagedCatalogExercises.map((exercise) => (
                       <ExerciseCatalogCard
                         key={exercise.id}
                         exercise={exercise}
@@ -1384,6 +1500,45 @@ export default function WorkoutPage() {
                         onChangeImage={() => setImagePickerExercise(exercise)}
                       />
                     ))}
+                  </div>
+                )}
+                {catalogTotalPages > 1 && (
+                  <div className="mt-md flex items-center justify-between">
+                    <p className="text-muted-foreground text-sm">
+                      {t('common.table.showing', {
+                        count: pagedCatalogExercises.length,
+                        total: filteredCatalogExercises.length,
+                      })}
+                    </p>
+                    <div className="gap-sm flex items-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={t('common.table.previousPage')}
+                        disabled={catalogPage <= 1}
+                        onClick={() => setCatalogPage((p) => p - 1)}
+                      >
+                        <ChevronLeft />
+                      </Button>
+                      <span
+                        className="text-muted-foreground text-sm"
+                        aria-live="polite"
+                      >
+                        {t('common.table.pageOf', {
+                          page: catalogPage,
+                          totalPages: catalogTotalPages,
+                        })}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={t('common.table.nextPage')}
+                        disabled={catalogPage >= catalogTotalPages}
+                        onClick={() => setCatalogPage((p) => p + 1)}
+                      >
+                        <ChevronRight />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </>
@@ -1397,7 +1552,9 @@ export default function WorkoutPage() {
             className={cn(
               dialog?.type === 'new-session' || dialog?.type === 'edit-session'
                 ? 'max-w-2xl'
-                : 'max-h-[85vh] max-w-xl overflow-y-auto'
+                : dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise'
+                  ? 'max-h-[85vh] max-w-3xl overflow-y-auto'
+                  : 'max-h-[85vh] max-w-xl overflow-y-auto'
             )}
           >
             <DialogHeader>
@@ -1443,7 +1600,13 @@ export default function WorkoutPage() {
 
             {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
               <WorkoutExerciseModal
-                exercises={catalogExercises}
+                exercises={catalogExercises.filter(
+                  (ex) =>
+                    ex.category ===
+                      plans.find((p) => p.id === dialog.day.plan)?.category ||
+                    (dialog.type === 'edit-exercise' &&
+                      ex.id === dialog.exercise.exercise)
+                )}
                 existing={dialog.type === 'edit-exercise' ? dialog.exercise : undefined}
                 nextOrder={dialog.day.exercises?.length ?? 0}
                 onSubmit={async (data) => {
@@ -1734,9 +1897,13 @@ function QuickLogForm({
                 workoutSessionSetService.create({
                   session_exercise: sessionEx.id,
                   set_number: setIdx + 1,
-                  load: ex.load || undefined,
-                  load_unit: ex.load_unit,
-                  reps_done: ex.reps_min,
+                  // Série não aceita 'bw': peso corporal = carga em branco
+                  load:
+                    ex.load_unit === 'bw'
+                      ? undefined
+                      : ex.set_targets?.[setIdx]?.load || ex.load || undefined,
+                  load_unit: ex.load_unit === 'bw' ? 'kg' : ex.load_unit,
+                  reps_done: ex.set_targets?.[setIdx]?.reps ?? ex.reps_min,
                   completed: true,
                   owner: ownerId,
                 })
@@ -1748,9 +1915,10 @@ function QuickLogForm({
 
       toast({ title: t('pages.workoutSessions.quickLogSuccess') });
       onSuccess();
-    } catch {
+    } catch (err: unknown) {
       toast({
         title: t('pages.workoutSessions.saveError'),
+        description: getErrorMessage(err),
         variant: 'destructive',
       });
     } finally {
@@ -1901,6 +2069,9 @@ function ExerciseCatalogCard({
         </div>
       </div>
       <p className="text-foreground leading-tight font-semibold">{exercise.name}</p>
+      <Badge variant="secondary" className="mt-xs w-fit text-xs">
+        {t(`pages.workoutPlans.categories.${exercise.category}`)}
+      </Badge>
       {exercise.muscle_groups && (
         <p className="mt-xs text-muted-foreground text-xs">{exercise.muscle_groups}</p>
       )}
@@ -1987,6 +2158,7 @@ function ExerciseCatalogForm({
   const { t } = useTranslation();
   const [values, setValues] = useState<ExerciseCatalogFormValues>({
     name: exercise?.name ?? '',
+    category: exercise?.category ?? 'resistance',
     muscle_groups: exercise?.muscle_groups ?? '',
     description: exercise?.description ?? '',
   });
@@ -2043,6 +2215,28 @@ function ExerciseCatalogForm({
           onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
           required
         />
+      </FormSection>
+
+      {/* Categoria */}
+      <FormSection title={t('pages.exercises.fieldCategory')} icon={Activity}>
+        <div className="gap-sm grid grid-cols-3">
+          {WORKOUT_CATEGORIES.map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={values.category === key}
+              onClick={() => setValues((v) => ({ ...v, category: key }))}
+              className={cn(
+                'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
+                values.category === key
+                  ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
+                  : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+              )}
+            >
+              {t(`pages.workoutPlans.categories.${key}`)}
+            </button>
+          ))}
+        </div>
       </FormSection>
 
       {/* Grupos musculares */}
@@ -2156,10 +2350,16 @@ function SortableExerciseItem({
       <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
       <span className="flex-1 text-sm font-medium">{ex.name}</span>
       <div className="gap-xs flex shrink-0 items-center">
-        {ex.load && (
+        {formatSetTargets(ex) ? (
           <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
-            {ex.load} {ex.load_unit}
+            {formatSetTargets(ex)}
           </span>
+        ) : (
+          formatExerciseLoad(ex, t) && (
+            <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
+              {formatExerciseLoad(ex, t)}
+            </span>
+          )
         )}
         {ex.sets > 0 ? (
           <>
@@ -2669,7 +2869,8 @@ function TodayPlanTab({
       {(() => {
         const plansForToday = activePlans.filter((plan) =>
           plan.days.some(
-            (day) => day.day_of_week == null || day.day_of_week === todayWeekday
+            (day) =>
+              day.days_of_week.length === 0 || day.days_of_week.includes(todayWeekday)
           )
         );
 
@@ -2720,7 +2921,9 @@ function TodayPlanTab({
               <div className="space-y-sm">
                 {plan.days
                   .filter(
-                    (day) => day.day_of_week == null || day.day_of_week === todayWeekday
+                    (day) =>
+                      day.days_of_week.length === 0 ||
+                      day.days_of_week.includes(todayWeekday)
                   )
                   .map((day) => (
                     <div
@@ -2768,9 +2971,10 @@ function TodayPlanTab({
                                 ) : (
                                   <span>{t('pages.workoutPlans.noSets')}</span>
                                 )}
-                                {ex.load && (
+                                {(formatSetTargets(ex) ??
+                                  formatExerciseLoad(ex, t)) && (
                                   <span className="text-foreground font-medium">
-                                    {ex.load} {ex.load_unit}
+                                    {formatSetTargets(ex) ?? formatExerciseLoad(ex, t)}
                                   </span>
                                 )}
                                 {ex.rest_seconds != null && ex.rest_seconds > 0 && (

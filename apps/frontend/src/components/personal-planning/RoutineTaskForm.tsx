@@ -109,6 +109,7 @@ export function RoutineTaskForm({
           linked_book: task.linked_book ?? null,
           linked_meal_type: task.linked_meal_type ?? null,
           linked_hydration_goal: task.linked_hydration_goal ?? null,
+          linked_workout: task.linked_workout ?? false,
         }
       : {
           name: '',
@@ -134,6 +135,7 @@ export function RoutineTaskForm({
           linked_book: null,
           linked_meal_type: null,
           linked_hydration_goal: null,
+          linked_workout: false,
         },
   });
 
@@ -168,6 +170,7 @@ export function RoutineTaskForm({
         linked_book: task.linked_book ?? null,
         linked_meal_type: task.linked_meal_type ?? null,
         linked_hydration_goal: task.linked_hydration_goal ?? null,
+        linked_workout: task.linked_workout ?? false,
       });
     }
   }, [task, reset]);
@@ -253,8 +256,16 @@ export function RoutineTaskForm({
     }
   }, [isNutrition, setValue]);
 
+  const isExercise = watch('category') === 'exercise';
+  useEffect(() => {
+    if (!isExercise) setValue('linked_workout', false);
+  }, [isExercise, setValue]);
+
   const hasLinks =
-    financialGoals.length > 0 || readingBooksList.length > 0 || hasNutritionLinks;
+    financialGoals.length > 0 ||
+    readingBooksList.length > 0 ||
+    hasNutritionLinks ||
+    isExercise;
 
   const frequencyPreview = (): string => {
     const weekdayNames = [
@@ -1139,6 +1150,31 @@ export function RoutineTaskForm({
                   </Select>
                   <p className="text-muted-foreground text-xs">
                     {t('pages.routineTasks.form.linkedMealTypeHint')}
+                  </p>
+                </div>
+              )}
+
+              {isExercise && (
+                <div className="space-y-sm">
+                  <div className="gap-sm flex items-center">
+                    <Checkbox
+                      id="linked-workout"
+                      checked={!!watch('linked_workout')}
+                      onCheckedChange={(checked) =>
+                        setValue('linked_workout', checked === true)
+                      }
+                      disabled={isLoading}
+                    />
+                    <Label
+                      htmlFor="linked-workout"
+                      className="gap-xs flex items-center"
+                    >
+                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.routineTasks.form.linkedWorkoutLabel')}
+                    </Label>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.routineTasks.form.linkedWorkoutHint')}
                   </p>
                 </div>
               )}

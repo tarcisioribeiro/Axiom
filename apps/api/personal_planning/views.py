@@ -7,6 +7,7 @@ from django.db.models import Count, Prefetch
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -92,6 +93,10 @@ from personal_planning.serializers import (
     WorkoutSessionSerializer,
     WorkoutSessionSetCreateUpdateSerializer,
     WorkoutSessionSetSerializer,
+)
+from personal_planning.services.workout_sync import (
+    MANUAL_CHANGE_BLOCKED_MSG,
+    manual_change_blocked,
 )
 
 logger = logging.getLogger(__name__)
@@ -1415,6 +1420,11 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
         return TaskInstanceSerializer
 
     def perform_update(self, serializer):
+        new_status = serializer.validated_data.get("status")
+        if new_status and manual_change_blocked(
+            serializer.instance, new_status
+        ):
+            raise ValidationError({"detail": MANUAL_CHANGE_BLOCKED_MSG})
         instance = serializer.save(updated_by=self.request.user)
         log_activity(
             self.request,
@@ -1550,6 +1560,11 @@ class TaskInstanceStatusUpdateView(APIView):
 
         new_status = serializer.validated_data["status"]
         notes = serializer.validated_data.get("notes")
+        if manual_change_blocked(instance, new_status):
+            return Response(
+                {"detail": MANUAL_CHANGE_BLOCKED_MSG},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Atualizar instancia
         instance.status = new_status
@@ -1894,11 +1909,16 @@ class TaskInstanceBulkUpdateView(APIView):
                 continue
 
             try:
-                instance = TaskInstance.objects.get(
+                instance = TaskInstance.objects.select_related("template").get(
                     pk=instance_id,
                     owner__user=request.user,
                     deleted_at__isnull=True,
                 )
+                if manual_change_blocked(instance, new_status):
+                    errors.append(
+                        {"id": instance_id, "error": MANUAL_CHANGE_BLOCKED_MSG}
+                    )
+                    continue
                 instance.status = new_status
                 if notes is not None:
                     instance.notes = notes
@@ -2614,10 +2634,10 @@ class HydrationSuggestionView(APIView):
             is_deleted=False,
             plan__is_deleted=False,
             plan__is_active=True,
-            day_of_week__isnull=False,
         )
         weekly_minutes = sum(
-            d.default_duration_minutes or avg_session for d in days
+            (d.default_duration_minutes or avg_session) * len(d.days_of_week)
+            for d in days
         )
         exercise_ml = round(weekly_minutes / 7 / 60 * ML_PER_TRAINING_HOUR)
 
@@ -2633,7 +2653,9 @@ class HydrationSuggestionView(APIView):
                 "measured_at": metric.measured_at if metric else None,
                 "base_ml": base_ml,
                 "ml_per_kg": ML_PER_KG,
-                "training_days_per_week": days.count(),
+                "training_days_per_week": sum(
+                    len(d.days_of_week) for d in days
+                ),
                 "training_minutes_per_week": weekly_minutes,
                 "exercise_ml": exercise_ml,
             }
@@ -3162,7 +3184,7 @@ Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações
     {{
       "name": "Treino A",
       "muscle_groups": "Peito / Tríceps",
-      "day_of_week": 0,
+      "days_of_week": [0],
       "order": 0,
       "exercises": [
         {{
@@ -3179,7 +3201,7 @@ Responda SOMENTE com JSON válido neste formato (sem markdown, sem explicações
 }}
 
 Gere exatamente {days_per_week} dias de treino.
-Use day_of_week de 0 (Seg) a 6 (Dom).
+Use days_of_week com dias de 0 (Seg) a 6 (Dom).
 Seja específico e prático para o nível informado."""
 
     def post(self, request):
@@ -3255,7 +3277,11 @@ Seja específico e prático para o nível informado."""
                     plan=plan,
                     name=day_data.get("name", f"Treino {chr(65 + order)}"),
                     muscle_groups=day_data.get("muscle_groups", ""),
-                    day_of_week=day_data.get("day_of_week"),
+                    days_of_week=[
+                        d
+                        for d in (day_data.get("days_of_week") or [])
+                        if isinstance(d, int) and 0 <= d <= 6
+                    ],
                     order=day_data.get("order", order),
                     owner=member,
                     created_by=request.user,
