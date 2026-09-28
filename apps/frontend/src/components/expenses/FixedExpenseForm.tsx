@@ -240,7 +240,7 @@ export const FixedExpenseForm = ({
           </div>
 
           {paymentType === 'account' ? (
-            <div className="space-y-sm">
+            <div className="space-y-sm md:col-span-2">
               <Label className="gap-xs flex items-center">
                 <Wallet className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedExpenses.form.accountLabel')}
@@ -265,7 +265,7 @@ export const FixedExpenseForm = ({
               </Select>
             </div>
           ) : (
-            <div className="space-y-sm">
+            <div className="space-y-sm md:col-span-2">
               <Label className="gap-xs flex items-center">
                 <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.fixedExpenses.form.creditCardLabel')}
