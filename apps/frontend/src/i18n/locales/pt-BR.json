@@ -4157,6 +4157,12 @@
         "linkedBookLabel": "Livro Vinculado",
         "linkedBookPlaceholder": "Selecione um livro em andamento (opcional)",
         "linkedBookHint": "Vincule esta rotina a um livro que você está lendo atualmente",
+        "linkedMealTypeLabel": "Refeição Vinculada",
+        "linkedMealTypeTaken": "vinculada a \"{{task}}\"",
+        "linkedMealTypePlaceholder": "Nenhuma refeição",
+        "linkedMealTypeHint": "Concluir a tarefa registra a refeição no Diário, e registrar a refeição conclui a tarefa",
+        "linkedHydrationLabel": "Vincular à meta de hidratação",
+        "linkedHydrationHint": "Cada ocorrência concluída registra meta ÷ ocorrências do dia; água registrada no Diário conclui as ocorrências",
         "periodicityOptions": {
           "daily": "Diária",
           "weekdays": "Dias Úteis",
@@ -5783,6 +5789,9 @@
       "servingUnitPorcao": "porção"
     },
     "nutritionMealTypes": {
+      "defaultOption": "Opção padrão",
+      "defaultOptionAuto": "Automática (maior caloria)",
+      "defaultOptionHint": "Usada quando a refeição é registrada ao concluir a tarefa vinculada. Sem opção padrão, vale a de maior caloria.",
       "newMealTypeBtn": "Nova Refeição",
       "newMealTypeTitle": "Nova Refeição",
       "editMealTypeTitle": "Editar Refeição",
@@ -6169,7 +6178,31 @@
       "manageFoods": "Alimentos",
       "manageMeals": "Refeições",
       "noMealsToday": "Nenhuma refeição registrada hoje",
-      "addMeal": "Adicionar Refeição"
+      "addMeal": "Adicionar Refeição",
+      "registerInLog": "Registre refeições e água na aba Diário."
+    },
+    "nutritionHydration": {
+      "tab": "Hidratação",
+      "goalTitle": "Meta diária de hidratação",
+      "currentGoal": "Meta atual: {{liters}} L por dia",
+      "noGoal": "Nenhuma meta definida",
+      "litersLabel": "Meta (litros por dia)",
+      "saveGoal": "Salvar meta",
+      "goalSaved": "Meta de hidratação salva",
+      "suggestionTitle": "Sugestão com base no seu corpo e treinos",
+      "suggestionWeight": "{{weight}} kg × {{perKg}} ml = {{base}} ml",
+      "suggestionExercise": "+ {{exercise}} ml de treino ({{days}} dias, {{minutes}} min por semana nos planos ativos)",
+      "noWeight": "Cadastre seu peso em Medidas Corporais para receber uma sugestão.",
+      "useSuggestion": "Usar sugestão",
+      "tasksHint": "Tarefas da categoria Nutrição vinculadas à meta de hidratação são concluídas automaticamente conforme você registra água no Diário — e concluir a tarefa registra a água.",
+      "dayWater": "Água do dia",
+      "setGoalHint": "Defina sua meta na aba Hidratação.",
+      "add": "Adicionar",
+      "customAmount": "Quantidade em ml",
+      "noLogs": "Nenhum registro de água neste dia.",
+      "fromTask": "via tarefa",
+      "logAdded": "Água registrada",
+      "logDeleted": "Registro de água removido"
     },
     "planningToday": {
       "title": "Hoje",

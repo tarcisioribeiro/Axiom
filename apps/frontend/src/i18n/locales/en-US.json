@@ -4091,6 +4091,12 @@
         "linkedBookLabel": "Linked Book",
         "linkedBookPlaceholder": "Select a book you are reading (optional)",
         "linkedBookHint": "Link this routine to a book you are currently reading",
+        "linkedMealTypeLabel": "Linked Meal",
+        "linkedMealTypeTaken": "linked to \"{{task}}\"",
+        "linkedMealTypePlaceholder": "No meal",
+        "linkedMealTypeHint": "Completing the task logs the meal, and logging the meal completes the task",
+        "linkedHydrationLabel": "Link to hydration goal",
+        "linkedHydrationHint": "Each completed occurrence logs goal ÷ daily occurrences; water logged in the Log tab completes occurrences",
         "periodicityOptions": {
           "daily": "Daily",
           "weekdays": "Weekdays",
@@ -5717,6 +5723,9 @@
       "servingUnitPorcao": "portion"
     },
     "nutritionMealTypes": {
+      "defaultOption": "Default option",
+      "defaultOptionAuto": "Automatic (highest calorie)",
+      "defaultOptionHint": "Used when the meal is logged by completing its linked task. Without a default, the highest-calorie option is used.",
       "newMealTypeBtn": "New Meal",
       "newMealTypeTitle": "New Meal Type",
       "editMealTypeTitle": "Edit Meal",
@@ -6124,7 +6133,31 @@
       "manageFoods": "Foods",
       "manageMeals": "Meals",
       "noMealsToday": "No meals logged today",
-      "addMeal": "Add Meal"
+      "addMeal": "Add Meal",
+      "registerInLog": "Log meals and water in the Log tab."
+    },
+    "nutritionHydration": {
+      "tab": "Hydration",
+      "goalTitle": "Daily hydration goal",
+      "currentGoal": "Current goal: {{liters}} L per day",
+      "noGoal": "No goal set",
+      "litersLabel": "Goal (liters per day)",
+      "saveGoal": "Save goal",
+      "goalSaved": "Hydration goal saved",
+      "suggestionTitle": "Suggestion based on your body and workouts",
+      "suggestionWeight": "{{weight}} kg × {{perKg}} ml = {{base}} ml",
+      "suggestionExercise": "+ {{exercise}} ml for training ({{days}} days, {{minutes}} min per week in active plans)",
+      "noWeight": "Add your weight in Body Metrics to get a suggestion.",
+      "useSuggestion": "Use suggestion",
+      "tasksHint": "Nutrition tasks linked to the hydration goal are completed automatically as you log water in the Log tab — and completing the task logs the water.",
+      "dayWater": "Water today",
+      "setGoalHint": "Set your goal in the Hydration tab.",
+      "add": "Add",
+      "customAmount": "Amount in ml",
+      "noLogs": "No water logged on this day.",
+      "fromTask": "via task",
+      "logAdded": "Water logged",
+      "logDeleted": "Water entry removed"
     },
     "planningToday": {
       "title": "Today",

@@ -12,6 +12,7 @@ from personal_planning.models import (
     Food,
     Goal,
     GoalFailure,
+    HydrationGoal,
     MealLog,
     MealType,
     MenuOption,
@@ -19,6 +20,7 @@ from personal_planning.models import (
     RoutineTask,
     TaskInstance,
     UserRoutineTemplate,
+    WaterLog,
     WorkoutDay,
     WorkoutExercise,
     WorkoutPlan,
@@ -61,6 +63,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     linked_book_title = serializers.CharField(
         source="linked_book.title", read_only=True, default=None
     )
+    linked_meal_type_name = serializers.CharField(
+        source="linked_meal_type.name", read_only=True, default=None
+    )
 
     class Meta:
         model = RoutineTask
@@ -102,6 +107,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "linked_financial_goal_description",
             "linked_book",
             "linked_book_title",
+            "linked_meal_type",
+            "linked_meal_type_name",
+            "linked_hydration_goal",
             "chained_task",
             "owner",
             "owner_name",
@@ -168,6 +176,8 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "scheduled_times",
             "linked_financial_goal",
             "linked_book",
+            "linked_meal_type",
+            "linked_hydration_goal",
             "chained_task",
         ]
 
@@ -175,6 +185,49 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
         """Validacao customizada."""
         instance = RoutineTask(**data)
         instance.clean()
+
+        # Vínculos com o módulo de Dieta só valem para a categoria Nutrição
+        def current(field):
+            if field in data:
+                return data[field]
+            return getattr(self.instance, field, None)
+
+        for field in ("linked_meal_type", "linked_hydration_goal"):
+            linked = current(field)
+            if not linked:
+                continue
+            if current("category") != "nutrition":
+                raise serializers.ValidationError(
+                    {
+                        field: (
+                            "Só tarefas da categoria Nutrição podem ser"
+                            " vinculadas a refeições ou à hidratação"
+                        )
+                    }
+                )
+            if linked.owner_id != getattr(current("owner"), "id", None):
+                raise serializers.ValidationError(
+                    {field: "Registro vinculado pertence a outro membro"}
+                )
+
+        # Refeição ↔ tarefa é 1:1 (constraint no banco; aqui a mensagem)
+        meal_type = current("linked_meal_type")
+        if meal_type:
+            taken = RoutineTask.objects.filter(
+                linked_meal_type=meal_type, deleted_at__isnull=True
+            )
+            if self.instance:
+                taken = taken.exclude(pk=self.instance.pk)
+            other = taken.first()
+            if other:
+                raise serializers.ValidationError(
+                    {
+                        "linked_meal_type": (
+                            f"Esta refeição já está vinculada à tarefa"
+                            f" '{other.name}'"
+                        )
+                    }
+                )
         return data
 
 
@@ -1051,6 +1104,7 @@ class MenuOptionIngredientCreateUpdateSerializer(serializers.ModelSerializer):
 
 class MenuOptionSerializer(serializers.ModelSerializer):
     ingredients = MenuOptionIngredientSerializer(many=True, read_only=True)
+    calories = serializers.FloatField(read_only=True)
 
     class Meta:
         model = MenuOption
@@ -1061,6 +1115,7 @@ class MenuOptionSerializer(serializers.ModelSerializer):
             "name",
             "order",
             "ingredients",
+            "calories",
             "owner",
             "created_at",
             "updated_at",
@@ -1086,12 +1141,24 @@ class MealTypeSerializer(serializers.ModelSerializer):
             "suggested_time",
             "order",
             "is_active",
+            "default_menu_option",
             "options",
             "owner",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def validate_default_menu_option(self, value):
+        return _validate_default_menu_option(self.instance, value)
+
+
+def _validate_default_menu_option(meal_type, option):
+    if option and (meal_type is None or option.meal_type_id != meal_type.id):
+        raise serializers.ValidationError(
+            "A opção padrão precisa ser uma opção desta refeição"
+        )
+    return option
 
 
 class MealTypeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -1103,8 +1170,12 @@ class MealTypeCreateUpdateSerializer(serializers.ModelSerializer):
             "suggested_time",
             "order",
             "is_active",
+            "default_menu_option",
             "owner",
         ]
+
+    def validate_default_menu_option(self, value):
+        return _validate_default_menu_option(self.instance, value)
 
 
 class MealLogSerializer(serializers.ModelSerializer):
@@ -1154,6 +1225,46 @@ class MealLogCreateUpdateSerializer(serializers.ModelSerializer):
             "notes",
             "owner",
         ]
+
+
+class HydrationGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HydrationGoal
+        fields = ["id", "daily_target_ml", "updated_at"]
+        read_only_fields = ["updated_at"]
+
+    def validate_daily_target_ml(self, value):
+        if not 500 <= value <= 10000:
+            raise serializers.ValidationError(
+                "A meta deve ficar entre 500 ml e 10 L"
+            )
+        return value
+
+
+class WaterLogSerializer(serializers.ModelSerializer):
+    from_task = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WaterLog
+        fields = [
+            "id",
+            "date",
+            "time",
+            "amount_ml",
+            "from_task",
+            "created_at",
+        ]
+        read_only_fields = ["created_at"]
+
+    def get_from_task(self, obj):
+        return obj.task_instance_id is not None
+
+    def validate_amount_ml(self, value):
+        if not 1 <= value <= 5000:
+            raise serializers.ValidationError(
+                "Quantidade deve ficar entre 1 ml e 5 L"
+            )
+        return value
 
 
 # ============================================================================

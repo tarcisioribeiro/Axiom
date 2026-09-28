@@ -39,6 +39,8 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
   String _periodicity = 'daily';
   int _weekday = 0;
   bool _isOptional = false;
+  int? _linkedMealType;
+  int? _linkedHydrationGoal;
   bool _isSaving = false;
   String? _error;
 
@@ -52,7 +54,11 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
     _periodicity = existing?.periodicity ?? 'daily';
     _weekday = existing?.weekday ?? 0;
     _isOptional = existing?.isOptional ?? false;
+    _linkedMealType = existing?.linkedMealType;
+    _linkedHydrationGoal = existing?.linkedHydrationGoal;
   }
+
+  bool get _isNutrition => _category == 'nutrition';
 
   @override
   void dispose() {
@@ -78,6 +84,9 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
       isActive: widget.existing?.isActive ?? true,
       isOptional: _isOptional,
       completionRate: widget.existing?.completionRate ?? 0,
+      // Vínculos com Dieta só valem para a categoria Nutrição
+      linkedMealType: _isNutrition ? _linkedMealType : null,
+      linkedHydrationGoal: _isNutrition ? _linkedHydrationGoal : null,
     );
 
     final service = ref.read(routineTasksServiceProvider);
@@ -88,6 +97,7 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
         await service.update(widget.existing!.id, task.toJson());
       }
       ref.invalidate(routineTasksProvider);
+      ref.invalidate(taskInstancesForDateProvider);
       if (mounted) {
         showAppToast(context, 'Salvo com sucesso.');
         Navigator.of(context).pop(true);
@@ -97,6 +107,58 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  List<Widget> _nutritionLinks() {
+    final mealTypes = ref.watch(mealTypesProvider).valueOrNull ?? const [];
+    final goalId = ref.watch(hydrationGoalProvider).valueOrNull?.id;
+    // Refeição ↔ tarefa é 1:1: refeições de outra tarefa ficam desabilitadas
+    final takenBy = {
+      for (final other in ref.watch(routineTasksProvider).valueOrNull ?? [])
+        if (other.linkedMealType != null && other.id != widget.existing?.id)
+          other.linkedMealType!: other.name,
+    };
+    // DropdownButton exige que o valor inicial exista entre os itens
+    final mealTypeIds = mealTypes.map((m) => m.id).toSet();
+    final selectedMeal =
+        mealTypeIds.contains(_linkedMealType) ? _linkedMealType : null;
+    return [
+      if (mealTypes.isNotEmpty) ...[
+        SizedBox(height: AppSpacing.sm),
+        DropdownButtonFormField<int?>(
+          initialValue: selectedMeal,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'Refeição vinculada',
+            helperText: 'Concluir a tarefa registra a refeição e vice-versa',
+          ),
+          items: [
+            const DropdownMenuItem<int?>(
+                value: null, child: Text('Nenhuma refeição')),
+            for (final m in mealTypes)
+              DropdownMenuItem<int?>(
+                value: m.id,
+                enabled: !takenBy.containsKey(m.id),
+                child: Text(takenBy.containsKey(m.id)
+                    ? '${m.name} · vinculada a "${takenBy[m.id]}"'
+                    : m.name),
+              ),
+          ],
+          onChanged: (v) => setState(() => _linkedMealType = v),
+        ),
+      ],
+      if (goalId != null)
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Vincular à meta de hidratação'),
+          subtitle: const Text(
+            'Cada ocorrência concluída registra meta ÷ ocorrências do dia',
+          ),
+          value: _linkedHydrationGoal != null,
+          onChanged: (v) =>
+              setState(() => _linkedHydrationGoal = v ? goalId : null),
+        ),
+    ];
   }
 
   @override
@@ -179,6 +241,7 @@ class _RoutineTaskFormSheetState extends ConsumerState<_RoutineTaskFormSheet> {
                 value: _isOptional,
                 onChanged: (v) => setState(() => _isOptional = v),
               ),
+              if (_isNutrition) ..._nutritionLinks(),
               FormSheetSubmitFooter(
                 error: _error,
                 isSaving: _isSaving,

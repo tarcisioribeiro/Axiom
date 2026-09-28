@@ -44,6 +44,8 @@ import { cn, formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
+import { hydrationGoalService, mealTypeService } from '@/services/nutrition-service';
+import { routineTasksService } from '@/services/routine-tasks-service';
 import { financialGoalsService } from '@/services/vaults-service';
 import {
   TASK_CATEGORIES,
@@ -105,6 +107,8 @@ export function RoutineTaskForm({
           scheduled_times: task.scheduled_times || null,
           linked_financial_goal: task.linked_financial_goal ?? null,
           linked_book: task.linked_book ?? null,
+          linked_meal_type: task.linked_meal_type ?? null,
+          linked_hydration_goal: task.linked_hydration_goal ?? null,
         }
       : {
           name: '',
@@ -128,6 +132,8 @@ export function RoutineTaskForm({
           scheduled_times: null,
           linked_financial_goal: null,
           linked_book: null,
+          linked_meal_type: null,
+          linked_hydration_goal: null,
         },
   });
 
@@ -160,6 +166,8 @@ export function RoutineTaskForm({
         scheduled_times: task.scheduled_times || null,
         linked_financial_goal: task.linked_financial_goal ?? null,
         linked_book: task.linked_book ?? null,
+        linked_meal_type: task.linked_meal_type ?? null,
+        linked_hydration_goal: task.linked_hydration_goal ?? null,
       });
     }
   }, [task, reset]);
@@ -208,7 +216,45 @@ export function RoutineTaskForm({
     }
   }, [periodicity, setValue, watch]);
 
-  const hasLinks = financialGoals.length > 0 || readingBooksList.length > 0;
+  // Vínculos com Dieta: só para a categoria Nutrição (regra também no backend)
+  const isNutrition = watch('category') === 'nutrition';
+  const { data: mealTypes = [] } = useQuery({
+    queryKey: ['meal-types', 'active'],
+    queryFn: () => mealTypeService.getActive(),
+    staleTime: 60_000,
+    enabled: isNutrition,
+  });
+  const { data: hydrationGoal } = useQuery({
+    queryKey: ['hydration-goal'],
+    queryFn: () => hydrationGoalService.get(),
+    staleTime: 60_000,
+    enabled: isNutrition,
+  });
+  const hydrationGoalId = hydrationGoal?.id ?? null;
+  // Refeição ↔ tarefa é 1:1: refeições já vinculadas a outra tarefa ficam
+  // desabilitadas (o backend também valida)
+  const { data: allTasks = [] } = useQuery({
+    queryKey: ['routine-tasks', 'all-pages'],
+    queryFn: () => routineTasksService.getAllPages(),
+    staleTime: 60_000,
+    enabled: isNutrition,
+  });
+  const mealTypeTakenBy = new Map(
+    allTasks
+      .filter((other) => other.linked_meal_type && other.id !== task?.id)
+      .map((other) => [other.linked_meal_type!, other.name])
+  );
+  const hasNutritionLinks = isNutrition && (mealTypes.length > 0 || !!hydrationGoalId);
+
+  useEffect(() => {
+    if (!isNutrition) {
+      setValue('linked_meal_type', null);
+      setValue('linked_hydration_goal', null);
+    }
+  }, [isNutrition, setValue]);
+
+  const hasLinks =
+    financialGoals.length > 0 || readingBooksList.length > 0 || hasNutritionLinks;
 
   const frequencyPreview = (): string => {
     const weekdayNames = [
@@ -1045,6 +1091,82 @@ export function RoutineTaskForm({
                   </Select>
                   <p className="text-muted-foreground text-xs">
                     {t('pages.routineTasks.form.linkedBookHint')}
+                  </p>
+                </div>
+              )}
+
+              {isNutrition && mealTypes.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.routineTasks.form.linkedMealTypeLabel')}
+                  </Label>
+                  <Select
+                    value={watch('linked_meal_type')?.toString() ?? ''}
+                    onValueChange={(value) =>
+                      setValue(
+                        'linked_meal_type',
+                        value && value !== 'none' ? parseInt(value) : null
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t(
+                          'pages.routineTasks.form.linkedMealTypePlaceholder'
+                        )}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        {t('pages.routineTasks.form.linkedMealTypePlaceholder')}
+                      </SelectItem>
+                      {mealTypes.map((mt) => (
+                        <SelectItem
+                          key={mt.id}
+                          value={mt.id.toString()}
+                          disabled={mealTypeTakenBy.has(mt.id)}
+                        >
+                          {mt.name}
+                          {mealTypeTakenBy.has(mt.id) &&
+                            ` · ${t('pages.routineTasks.form.linkedMealTypeTaken', {
+                              task: mealTypeTakenBy.get(mt.id),
+                            })}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.routineTasks.form.linkedMealTypeHint')}
+                  </p>
+                </div>
+              )}
+
+              {isNutrition && hydrationGoalId && (
+                <div className="space-y-sm">
+                  <div className="gap-sm flex items-center">
+                    <Checkbox
+                      id="linked-hydration-goal"
+                      checked={!!watch('linked_hydration_goal')}
+                      onCheckedChange={(checked) =>
+                        setValue(
+                          'linked_hydration_goal',
+                          checked ? hydrationGoalId : null
+                        )
+                      }
+                      disabled={isLoading}
+                    />
+                    <Label
+                      htmlFor="linked-hydration-goal"
+                      className="gap-xs flex items-center"
+                    >
+                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                      {t('pages.routineTasks.form.linkedHydrationLabel')}
+                    </Label>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pages.routineTasks.form.linkedHydrationHint')}
                   </p>
                 </div>
               )}

@@ -5,12 +5,14 @@ from personal_planning.models import (
     Food,
     Goal,
     GoalFailure,
+    HydrationGoal,
     MealLog,
     MealType,
     MenuOption,
     MenuOptionIngredient,
     RoutineTask,
     TaskInstance,
+    WaterLog,
     WorkoutDay,
     WorkoutExercise,
     WorkoutPlan,
@@ -182,6 +184,17 @@ class MenuOptionIngredientAdmin(admin.ModelAdmin):
     )
     list_filter = ("unit", "is_optional")
     search_fields = ("food__name",)
+
+
+@admin.register(HydrationGoal)
+class HydrationGoalAdmin(admin.ModelAdmin):
+    list_display = ("id", "owner", "daily_target_ml", "updated_at")
+
+
+@admin.register(WaterLog)
+class WaterLogAdmin(admin.ModelAdmin):
+    list_display = ("id", "date", "time", "amount_ml", "owner")
+    list_filter = ("date",)
 
 
 @admin.register(MealLog)

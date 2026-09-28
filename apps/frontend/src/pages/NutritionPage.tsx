@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Droplets,
   Edit,
   Flame,
   Loader2,
@@ -32,6 +33,11 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { FoodForm } from '@/components/nutrition/FoodForm';
+import {
+  HydrationGoalCard,
+  WaterLogPanel,
+  WaterTotal,
+} from '@/components/nutrition/Hydration';
 import { MealLogForm } from '@/components/nutrition/MealLogForm';
 import { MealTypeForm } from '@/components/nutrition/MealTypeForm';
 import { MenuOptionForm } from '@/components/nutrition/MenuOptionForm';
@@ -228,6 +234,9 @@ export default function NutritionPage() {
   const dayCalories = Math.round(
     selectedLogs.reduce((acc, log) => acc + log.calories, 0)
   );
+  const todayCalories = Math.round(
+    todayLogs.reduce((acc, log) => acc + log.calories, 0)
+  );
   const adherencePct =
     activeMealTypes.length > 0
       ? Math.round((selectedLogs.length / activeMealTypes.length) * 100)
@@ -248,8 +257,11 @@ export default function NutritionPage() {
   const invalidateFoods = () => queryClient.invalidateQueries({ queryKey: ['foods'] });
   const invalidateMealTypes = () =>
     queryClient.invalidateQueries({ queryKey: ['meal-types'] });
-  const invalidateLogs = () =>
-    queryClient.invalidateQueries({ queryKey: ['meal-logs'] });
+  const invalidateLogs = () => {
+    void queryClient.invalidateQueries({ queryKey: ['meal-logs'] });
+    // tarefas vinculadas à refeição são concluídas/reabertas pelo backend
+    return queryClient.invalidateQueries({ queryKey: ['task-instances'] });
+  };
 
   const aiGenerateMenuMutation = useMutation({
     mutationFn: (data: AIMenuFormValues) =>
@@ -620,6 +632,10 @@ export default function NutritionPage() {
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
             </TabsTrigger>
+            <TabsTrigger value="hydration" className="gap-xs flex-1">
+              <Droplets className="h-4 w-4" />
+              {t('pages.nutritionHydration.tab')}
+            </TabsTrigger>
             <TabsTrigger value="meal-types" className="gap-xs flex-1">
               <UtensilsCrossed className="h-4 w-4" />
               {t('pages.nutritionFoods.tabMealTypes')}
@@ -637,10 +653,16 @@ export default function NutritionPage() {
                 <p className="text-muted-foreground text-sm font-medium">
                   {t('pages.nutritionHub.subtitle')}
                 </p>
-                <Button onClick={() => setDialog({ type: 'new-log' })}>
-                  <Plus className="mr-sm h-4 w-4" />
-                  {t('pages.nutritionHub.addMeal')}
-                </Button>
+                <div className="gap-md flex items-center">
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                      <Flame className="h-5 w-5" />
+                      {todayCalories}
+                    </span>
+                    <p className="text-muted-foreground text-xs">kcal</p>
+                  </div>
+                  <WaterTotal date={today} />
+                </div>
               </div>
               {(() => {
                 if (todayLogsLoading) return <LoadingState />;
@@ -648,12 +670,8 @@ export default function NutritionPage() {
                   return (
                     <EmptyState
                       title={t('pages.nutritionHub.noMealsToday')}
+                      description={t('pages.nutritionHub.registerInLog')}
                       icon={<UtensilsCrossed className="h-8 w-8" />}
-                      action={{
-                        label: t('pages.nutritionHub.addMeal'),
-                        icon: <Plus className="mr-xs h-4 w-4" />,
-                        onClick: () => setDialog({ type: 'new-log' }),
-                      }}
                     />
                   );
                 return (
@@ -767,6 +785,7 @@ export default function NutritionPage() {
                     </span>
                     <p className="text-muted-foreground text-xs">kcal</p>
                   </div>
+                  <WaterTotal date={selectedDate} />
 
                   {/* Circular progress */}
                   {activeMealTypes.length > 0 && (
@@ -808,6 +827,8 @@ export default function NutritionPage() {
               </div>
             </div>
 
+            <WaterLogPanel date={selectedDate} />
+
             {logsLoading ? (
               <LoadingState />
             ) : (
@@ -828,6 +849,11 @@ export default function NutritionPage() {
                 t={t}
               />
             )}
+          </TabsContent>
+
+          {/* ── Hidratação ───────────────────────────────────────────────── */}
+          <TabsContent value="hydration" className="mt-0 flex-1">
+            <HydrationGoalCard />
           </TabsContent>
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}

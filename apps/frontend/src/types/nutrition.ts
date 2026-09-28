@@ -27,6 +27,8 @@ export interface MealType {
   suggested_time?: string | null;
   order: number;
   is_active: boolean;
+  /** Opção usada ao registrar pela tarefa; null = a de maior caloria. */
+  default_menu_option?: number | null;
   options: MenuOption[];
   owner: number;
   created_at: string;
@@ -38,6 +40,7 @@ export interface MealTypeFormData {
   suggested_time?: string | null;
   order: number;
   is_active: boolean;
+  default_menu_option?: number | null;
   owner: number;
 }
 
@@ -48,6 +51,8 @@ export interface MenuOption {
   name: string;
   order: number;
   ingredients: MenuOptionIngredient[];
+  /** Kcal dos ingredientes não opcionais (calculado no backend). */
+  calories?: number;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -120,4 +125,37 @@ export interface MealLogFormData {
   time?: string | null;
   notes?: string | null;
   owner: number;
+}
+
+export interface HydrationGoal {
+  id: number | null;
+  /** null quando o usuário ainda não definiu a meta. */
+  daily_target_ml: number | null;
+}
+
+export interface HydrationSuggestion {
+  suggested_ml: number | null;
+  weight_kg: number | null;
+  measured_at: string | null;
+  base_ml: number | null;
+  ml_per_kg: number;
+  training_days_per_week: number;
+  training_minutes_per_week: number;
+  exercise_ml: number;
+}
+
+export interface WaterLog {
+  id: number;
+  date: string;
+  time?: string | null;
+  amount_ml: number;
+  /** true quando o registro veio da conclusão de uma tarefa vinculada. */
+  from_task: boolean;
+  created_at: string;
+}
+
+export interface WaterLogFormData {
+  date: string;
+  time?: string | null;
+  amount_ml: number;
 }

@@ -2,6 +2,8 @@ import { API_CONFIG } from '@/config/api-config';
 import type {
   Food,
   FoodFormData,
+  HydrationGoal,
+  HydrationSuggestion,
   MealLog,
   MealLogFormData,
   MealType,
@@ -10,8 +12,11 @@ import type {
   MenuOptionFormData,
   MenuOptionIngredient,
   MenuOptionIngredientFormData,
+  WaterLog,
+  WaterLogFormData,
 } from '@/types/nutrition';
 
+import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
 class FoodService extends BaseService<Food, FoodFormData> {
@@ -71,8 +76,29 @@ class MealLogService extends BaseService<MealLog, MealLogFormData> {
   }
 }
 
+class WaterLogService extends BaseService<WaterLog, WaterLogFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.WATER_LOGS);
+  }
+
+  async getByDate(date: string): Promise<WaterLog[]> {
+    return this.getAll({ date });
+  }
+}
+
+export const hydrationGoalService = {
+  get: () => apiClient.get<HydrationGoal>(API_CONFIG.ENDPOINTS.HYDRATION_GOAL),
+  save: (daily_target_ml: number) =>
+    apiClient.put<HydrationGoal>(API_CONFIG.ENDPOINTS.HYDRATION_GOAL, {
+      daily_target_ml,
+    }),
+  getSuggestion: () =>
+    apiClient.get<HydrationSuggestion>(API_CONFIG.ENDPOINTS.HYDRATION_SUGGESTION),
+};
+
 export const foodService = new FoodService();
 export const mealTypeService = new MealTypeService();
 export const menuOptionService = new MenuOptionService();
 export const menuOptionIngredientService = new MenuOptionIngredientService();
 export const mealLogService = new MealLogService();
+export const waterLogService = new WaterLogService();

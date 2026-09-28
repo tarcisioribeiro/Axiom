@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/food.dart';
+import '../../models/hydration.dart';
 import '../../models/meal_log.dart';
 import '../../models/meal_type.dart';
 import '../../providers/planning_providers.dart';
@@ -34,7 +35,7 @@ class NutritionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         body: SafeArea(
           child: Column(
@@ -53,15 +54,23 @@ class NutritionScreen extends StatelessWidget {
                 ),
               ),
               TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 tabs: const [
                   Tab(text: 'Hoje'),
+                  Tab(text: 'Hidratação'),
                   Tab(text: 'Tipos de Refeição'),
                   Tab(text: 'Alimentos'),
                 ],
               ),
               const Expanded(
                 child: TabBarView(
-                  children: [_TodayTab(), _MealTypesTab(), _FoodsTab()],
+                  children: [
+                    _TodayTab(),
+                    _HydrationTab(),
+                    _MealTypesTab(),
+                    _FoodsTab(),
+                  ],
                 ),
               ),
             ],
@@ -80,6 +89,8 @@ class _TodayTab extends ConsumerWidget {
       await ref.read(mealLogsServiceProvider).delete(log.id);
       if (context.mounted) showAppToast(context, 'Excluído com sucesso.');
       ref.invalidate(mealLogsProvider);
+      // tarefas vinculadas à refeição são reabertas pelo backend
+      ref.invalidate(taskInstancesForDateProvider(_today()));
     } on ApiException catch (e) {
       if (context.mounted) {
         showAppToast(context, e.message, kind: ToastKind.error);
@@ -90,6 +101,10 @@ class _TodayTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final today = _today();
+    final waterMl = (ref.watch(waterLogsForDateProvider(today)).valueOrNull ??
+            const <WaterLog>[])
+        .fold<int>(0, (acc, log) => acc + log.amountMl);
+    final goalMl = ref.watch(hydrationGoalProvider).valueOrNull?.dailyTargetMl;
     final logsAsync = ref.watch(mealLogsProvider);
     final mealTypesAsync = ref.watch(mealTypesProvider);
     final summaryAsync = ref.watch(dailyCaloricSummaryProvider(today));
@@ -107,6 +122,8 @@ class _TodayTab extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(mealLogsProvider);
           ref.invalidate(dailyCaloricSummaryProvider(today));
+          ref.invalidate(waterLogsForDateProvider(today));
+          ref.invalidate(hydrationGoalProvider);
           await ref.read(mealLogsProvider.future);
         },
         child: AsyncSwitcher(
@@ -125,8 +142,13 @@ class _TodayTab extends ConsumerWidget {
                   error: (error, stackTrace) => const SizedBox.shrink(),
                   data: (summary) => summary.isEmpty
                       ? const SizedBox.shrink()
-                      : _CaloricSummaryCard(summary: summary),
+                      : _CaloricSummaryCard(
+                          summary: summary,
+                          waterMl: waterMl,
+                          waterGoalMl: goalMl,
+                        ),
                 ),
+                _WaterCard(date: today),
                 if (todayLogs.isEmpty)
                   const EmptyState(
                     icon: Icons.restaurant_rounded,
@@ -195,9 +217,15 @@ class _TodayTab extends ConsumerWidget {
 /// the member's body metrics *and* birth date (age) — without them the backend
 /// returns `bmr`/`tdee` as null, so we surface a hint instead of a raw dump.
 class _CaloricSummaryCard extends StatelessWidget {
-  const _CaloricSummaryCard({required this.summary});
+  const _CaloricSummaryCard({
+    required this.summary,
+    required this.waterMl,
+    this.waterGoalMl,
+  });
 
   final Map<String, dynamic> summary;
+  final int waterMl;
+  final int? waterGoalMl;
 
   int? _kcal(dynamic v) => v == null ? null : AppFormatters.toDouble(v).round();
 
@@ -257,6 +285,22 @@ class _CaloricSummaryCard extends StatelessWidget {
                 ),
               ),
               Text('kcal', style: theme.textTheme.bodySmall),
+            ],
+          ),
+          SizedBox(width: AppSpacing.md),
+          Column(
+            children: [
+              Text(
+                formatLiters(waterMl),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: context.semanticColors.info,
+                ),
+              ),
+              Text(
+                waterGoalMl == null ? 'L' : '/ ${formatLiters(waterGoalMl!)} L',
+                style: theme.textTheme.bodySmall,
+              ),
             ],
           ),
         ],
@@ -437,6 +481,330 @@ class _FoodsTab extends ConsumerWidget {
                       .toList(),
                 ),
         )),
+      ),
+    );
+  }
+}
+
+const _quickAmountsMl = [200, 250, 500];
+
+/// Registro de água do dia: progresso da meta, atalhos e lista.
+class _WaterCard extends ConsumerStatefulWidget {
+  const _WaterCard({required this.date});
+
+  final DateTime date;
+
+  @override
+  ConsumerState<_WaterCard> createState() => _WaterCardState();
+}
+
+class _WaterCardState extends ConsumerState<_WaterCard> {
+  final _customController = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _customController.dispose();
+    super.dispose();
+  }
+
+  void _invalidate() {
+    ref.invalidate(waterLogsForDateProvider(widget.date));
+    // ocorrências de tarefas vinculadas à meta são concluídas pelo backend
+    ref.invalidate(taskInstancesForDateProvider(widget.date));
+  }
+
+  Future<void> _run(Future<void> Function() action, String success) async {
+    setState(() => _busy = true);
+    try {
+      await action();
+      _invalidate();
+      if (mounted) showAppToast(context, success);
+    } on ApiException catch (e) {
+      if (mounted) showAppToast(context, e.message, kind: ToastKind.error);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _add(int ml) {
+    final now = TimeOfDay.now();
+    final time =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    _run(
+      () => ref
+          .read(hydrationServiceProvider)
+          .addWater(widget.date, ml, time: time),
+      'Água registrada.',
+    );
+    _customController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final water = context.semanticColors.info;
+    final logs = ref.watch(waterLogsForDateProvider(widget.date)).valueOrNull ??
+        const <WaterLog>[];
+    final goalMl = ref.watch(hydrationGoalProvider).valueOrNull?.dailyTargetMl;
+    final total = logs.fold<int>(0, (acc, log) => acc + log.amountMl);
+    final custom = int.tryParse(_customController.text);
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.water_drop_rounded, color: water),
+              SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text('Água do dia', style: theme.textTheme.titleSmall),
+              ),
+              Text(
+                goalMl == null
+                    ? '${formatLiters(total)} L'
+                    : '${formatLiters(total)} / ${formatLiters(goalMl)} L',
+                style: theme.textTheme.titleSmall?.copyWith(color: water),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.sm),
+          if (goalMl != null)
+            LinearProgressIndicator(
+              value: (total / goalMl).clamp(0, 1).toDouble(),
+              color: water,
+              backgroundColor: water.withValues(alpha: 0.15),
+            )
+          else
+            Text('Defina sua meta na aba Hidratação.',
+                style: theme.textTheme.bodySmall),
+          SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final ml in _quickAmountsMl)
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 16),
+                  label: Text('$ml ml'),
+                  onPressed: _busy ? null : () => _add(ml),
+                ),
+              SizedBox(
+                width: 96,
+                child: TextField(
+                  controller: _customController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'ml',
+                    isDense: true,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                  onSubmitted: (_) {
+                    if (custom != null && custom > 0) _add(custom);
+                  },
+                ),
+              ),
+              IconButton(
+                tooltip: 'Adicionar',
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: _busy || custom == null || custom <= 0
+                    ? null
+                    : () => _add(custom),
+              ),
+            ],
+          ),
+          for (final log in logs)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Text(log.time?.substring(0, 5) ?? '--:--'),
+              title: Text('${log.amountMl} ml'),
+              subtitle: log.fromTask ? const Text('via tarefa') : null,
+              trailing: IconButton(
+                tooltip: 'Excluir',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: _busy
+                    ? null
+                    : () => _run(
+                          () => ref
+                              .read(hydrationServiceProvider)
+                              .deleteWater(log.id),
+                          'Registro removido.',
+                        ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Meta de hidratação atual + sugestão (peso + treinos dos planos ativos).
+class _HydrationTab extends ConsumerStatefulWidget {
+  const _HydrationTab();
+
+  @override
+  ConsumerState<_HydrationTab> createState() => _HydrationTabState();
+}
+
+class _HydrationTabState extends ConsumerState<_HydrationTab> {
+  final _litersController = TextEditingController();
+  bool _initialized = false;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _litersController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final liters = double.tryParse(_litersController.text.replaceAll(',', '.'));
+    if (liters == null || liters <= 0) return;
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(hydrationServiceProvider)
+          .saveGoal((liters * 1000).round());
+      ref.invalidate(hydrationGoalProvider);
+      if (mounted) showAppToast(context, 'Meta de hidratação salva.');
+    } on ApiException catch (e) {
+      final errors = e.errors;
+      final msg = errors is Map && errors['daily_target_ml'] is List
+          ? (errors['daily_target_ml'] as List).first.toString()
+          : e.message;
+      if (mounted) showAppToast(context, msg, kind: ToastKind.error);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final water = context.semanticColors.info;
+    final goalAsync = ref.watch(hydrationGoalProvider);
+    final suggestion = ref.watch(hydrationSuggestionProvider).valueOrNull;
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(hydrationGoalProvider);
+        ref.invalidate(hydrationSuggestionProvider);
+        await ref.read(hydrationGoalProvider.future);
+      },
+      child: goalAsync.when(
+        loading: () => const LoadingState(variant: LoadingVariant.list),
+        error: (error, stackTrace) => ErrorState(
+            error: error, onRetry: () => ref.invalidate(hydrationGoalProvider)),
+        data: (goal) {
+          if (!_initialized) {
+            _initialized = true;
+            if (goal.dailyTargetMl != null) {
+              _litersController.text = formatLiters(goal.dailyTargetMl!);
+            }
+          }
+          return ListView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              AppCard(
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.water_drop_rounded, color: water),
+                        SizedBox(width: AppSpacing.sm),
+                        Text('Meta diária de hidratação',
+                            style: theme.textTheme.titleSmall),
+                      ],
+                    ),
+                    SizedBox(height: AppSpacing.xs),
+                    Text(
+                      goal.dailyTargetMl == null
+                          ? 'Nenhuma meta definida'
+                          : 'Meta atual: ${formatLiters(goal.dailyTargetMl!)} L por dia',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    SizedBox(height: AppSpacing.sm),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _litersController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            decoration: const InputDecoration(
+                              labelText: 'Meta (litros por dia)',
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: AppSpacing.sm),
+                        FilledButton(
+                          onPressed: _saving ? null : _save,
+                          child: const Text('Salvar'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              AppCard(
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Sugestão com base no seu corpo e treinos',
+                        style: theme.textTheme.titleSmall),
+                    SizedBox(height: AppSpacing.sm),
+                    if (suggestion?.suggestedMl == null)
+                      Text(
+                        'Cadastre seu peso em Medidas Corporais para receber '
+                        'uma sugestão.',
+                        style: theme.textTheme.bodySmall,
+                      )
+                    else ...[
+                      Text(
+                        '${formatLiters(suggestion!.suggestedMl!)} L',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: water,
+                        ),
+                      ),
+                      Text(
+                        '${AppFormatters.number(suggestion.weightKg)} kg × '
+                        '${suggestion.mlPerKg} ml = ${suggestion.baseMl} ml',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      Text(
+                        '+ ${suggestion.exerciseMl} ml de treino '
+                        '(${suggestion.trainingDaysPerWeek} dias, '
+                        '${suggestion.trainingMinutesPerWeek} min por semana)',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      SizedBox(height: AppSpacing.sm),
+                      OutlinedButton(
+                        onPressed: () => setState(() => _litersController.text =
+                            formatLiters(suggestion.suggestedMl!)),
+                        child: const Text('Usar sugestão'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Text(
+                'Tarefas da categoria Nutrição vinculadas à meta são concluídas '
+                'conforme você registra água — e concluir a tarefa registra a '
+                'água.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

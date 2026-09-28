@@ -40,6 +40,9 @@ export interface RoutineTask {
   linked_financial_goal_description?: string | null;
   linked_book?: number | null;
   linked_book_title?: string | null;
+  linked_meal_type?: number | null;
+  linked_meal_type_name?: string | null;
+  linked_hydration_goal?: number | null;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -73,6 +76,8 @@ export interface RoutineTaskFormData {
   unit: string;
   linked_financial_goal?: number | null;
   linked_book?: number | null;
+  linked_meal_type?: number | null;
+  linked_hydration_goal?: number | null;
   owner: number;
 }
 
