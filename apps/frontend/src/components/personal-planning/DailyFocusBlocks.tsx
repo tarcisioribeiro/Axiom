@@ -36,7 +36,10 @@ function matchInstance(block: FocusBlock, instances: TaskInstance[]): TaskInstan
     );
     if (instance) matched.push(instance);
   }
-  return matched;
+  // Tarefas sem horário vão para o fim.
+  return matched.sort((a, b) =>
+    (a.scheduled_time ?? '99:99').localeCompare(b.scheduled_time ?? '99:99')
+  );
 }
 
 interface DailyFocusBlocksProps {

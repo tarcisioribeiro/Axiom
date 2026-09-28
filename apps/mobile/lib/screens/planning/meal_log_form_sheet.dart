@@ -72,6 +72,8 @@ class _MealLogFormSheetState extends ConsumerState<_MealLogFormSheet> {
       await ref.read(mealLogsServiceProvider).create(log.toJson());
       ref.invalidate(mealLogsProvider);
       ref.invalidate(dailyCaloricSummaryProvider(widget.date));
+      // tarefas vinculadas à refeição são concluídas pelo backend
+      ref.invalidate(taskInstancesForDateProvider(widget.date));
       if (mounted) {
         showAppToast(context, 'Salvo com sucesso.');
         Navigator.of(context).pop(true);

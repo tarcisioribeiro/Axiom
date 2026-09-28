@@ -823,3 +823,50 @@ class CheckGoalCompletionsTaskTest(BasePlanningImprovementsTestCase):
         check_goal_completions.run()
         goal.refresh_from_db()
         self.assertEqual(goal.status, "active")
+
+
+class FocusBlockWriteResponseTest(BasePlanningImprovementsTestCase):
+    """Create/update devolvem o bloco completo (com block_tasks)."""
+
+    def test_create_and_update_return_block_tasks(self):
+        from personal_planning.models import FocusBlockTask
+
+        response = self.client.post(
+            "/api/v1/personal-planning/focus-blocks/",
+            {"name": "Manhã", "weekdays": [0, 1], "owner": self.member.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["block_tasks"], [])
+        self.assertNotIn("color", response.data)
+
+        block_id = response.data["id"]
+        task = RoutineTask.objects.create(
+            name="Água",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+        )
+        other = RoutineTask.objects.create(
+            name="Ler",
+            category="health",
+            periodicity="daily",
+            owner=self.member,
+        )
+        FocusBlockTask.objects.create(
+            focus_block_id=block_id, routine_task=task
+        )
+        FocusBlockTask.objects.create(
+            focus_block_id=block_id, routine_task=other, deleted_at=now()
+        )
+
+        response = self.client.put(
+            f"/api/v1/personal-planning/focus-blocks/{block_id}/",
+            {"name": "Manhã 2", "weekdays": [0], "owner": self.member.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [bt["routine_task"] for bt in response.data["block_tasks"]],
+            [task.id],
+        )

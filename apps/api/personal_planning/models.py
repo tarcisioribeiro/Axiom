@@ -291,6 +291,38 @@ class RoutineTask(BaseModel):
         verbose_name="Livro Vinculado",
         help_text="Livro em andamento vinculado a esta rotina de leitura",
     )
+    linked_meal_type = models.ForeignKey(
+        "MealType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_routine_tasks",
+        verbose_name="Refeição Vinculada",
+        help_text=(
+            "Concluir a tarefa registra a refeição e vice-versa"
+            " (só categoria Nutrição)"
+        ),
+    )
+    linked_hydration_goal = models.ForeignKey(
+        "HydrationGoal",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_routine_tasks",
+        verbose_name="Meta de Hidratação Vinculada",
+        help_text=(
+            "Cada ocorrência concluída registra meta ÷ ocorrências do dia"
+            " (só categoria Nutrição)"
+        ),
+    )
+    linked_workout = models.BooleanField(
+        default=False,
+        verbose_name="Vinculada ao Treino",
+        help_text=(
+            "Aparece só em dias com treino agendado e é concluída apenas pelo"
+            " registro das sessões (só categoria Exercício)"
+        ),
+    )
     chained_task = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -317,6 +349,16 @@ class RoutineTask(BaseModel):
         indexes = [
             models.Index(fields=["owner", "is_active"]),
             models.Index(fields=["periodicity", "is_active"]),
+        ]
+        constraints = [
+            # Refeição ↔ tarefa é 1:1 entre tarefas não excluídas
+            models.UniqueConstraint(
+                fields=["linked_meal_type"],
+                condition=models.Q(
+                    deleted_at__isnull=True, linked_meal_type__isnull=False
+                ),
+                name="unique_active_task_per_meal_type",
+            ),
         ]
 
     def clean(self):
@@ -471,6 +513,14 @@ class RoutineTask(BaseModel):
         if not self.is_active:
             return False
 
+        if self.linked_workout:
+            from personal_planning.services.workout_sync import (
+                scheduled_division_ids,
+            )
+
+            if not scheduled_division_ids(self.owner, date):
+                return False
+
         if self.periodicity == "daily":
             return True
 
@@ -587,12 +637,6 @@ class FocusBlock(BaseModel):
         blank=True,
         verbose_name="Ícone",
         help_text="Nome do ícone do Lucide (ex: Sun, Moon, Briefcase)",
-    )
-    color = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name="Cor",
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     is_active = models.BooleanField(default=True, verbose_name="Bloco Ativo")
@@ -1589,11 +1633,24 @@ MEASUREMENT_UNIT_CHOICES = (
 # ============================================================================
 
 
+WORKOUT_CATEGORY_CHOICES = [
+    ("cardio", "Cardiovascular"),
+    ("resistance", "Resistência"),
+    ("mobility", "Mobilidade"),
+]
+
+
 class Exercise(BaseModel):
     """Catálogo de exercícios disponíveis para uso nos planos de treino."""
 
     name = models.CharField(
         max_length=200, null=False, blank=False, verbose_name="Nome"
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=WORKOUT_CATEGORY_CHOICES,
+        default="resistance",
+        verbose_name="Categoria",
     )
     muscle_groups = models.CharField(
         max_length=200,
@@ -1650,6 +1707,13 @@ class WorkoutPlan(BaseModel):
     description = models.TextField(
         null=True, blank=True, verbose_name="Descrição"
     )
+    category = models.CharField(
+        max_length=20,
+        choices=WORKOUT_CATEGORY_CHOICES,
+        default="resistance",
+        verbose_name="Categoria",
+        help_text="Exercícios do plano devem ser da mesma categoria",
+    )
     is_active = models.BooleanField(default=True, verbose_name="Plano Ativo")
     owner = models.ForeignKey(
         "members.Member",
@@ -1666,17 +1730,6 @@ class WorkoutPlan(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({'ativo' if self.is_active else 'inativo'})"
-
-
-WORKOUT_WEEKDAY_CHOICES = [
-    (0, "Segunda-feira"),
-    (1, "Terça-feira"),
-    (2, "Quarta-feira"),
-    (3, "Quinta-feira"),
-    (4, "Sexta-feira"),
-    (5, "Sábado"),
-    (6, "Domingo"),
-]
 
 
 class WorkoutDay(BaseModel):
@@ -1703,13 +1756,12 @@ class WorkoutDay(BaseModel):
         verbose_name="Grupos Musculares",
         help_text="Ex: Costas / Ombro / Bíceps",
     )
-    day_of_week = models.PositiveSmallIntegerField(
-        null=True,
+    days_of_week = models.JSONField(
+        default=list,
         blank=True,
-        choices=WORKOUT_WEEKDAY_CHOICES,
-        verbose_name="Dia da Semana",
+        verbose_name="Dias da Semana",
         help_text=(
-            "Dia da semana em que esta divisão é executada "
+            "Dias da semana em que esta divisão é executada "
             "(0=Seg, 6=Dom). Vazio = qualquer dia."
         ),
     )
@@ -1807,6 +1859,15 @@ class WorkoutExercise(BaseModel):
         choices=LOAD_UNIT_CHOICES,
         default="kg",
         verbose_name="Unidade de Carga",
+    )
+    set_targets = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Alvos por Série",
+        help_text=(
+            'Carga/repetições de cada série: [{"reps": 12, "load": "20"}].'
+            " Valores vazios usam reps_min/load."
+        ),
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")
@@ -2148,6 +2209,18 @@ class MealType(BaseModel):
         default=0, verbose_name="Ordem", help_text="Ordem de exibição"
     )
     is_active = models.BooleanField(default=True, verbose_name="Ativa")
+    default_menu_option = models.ForeignKey(
+        "MenuOption",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        verbose_name="Opção Padrão",
+        help_text=(
+            "Usada ao registrar a refeição pela tarefa vinculada; sem ela,"
+            " vale a opção de maior caloria"
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -2200,6 +2273,30 @@ class MenuOption(BaseModel):
         verbose_name_plural = "Opções de Cardápio"
         ordering = ["meal_type", "order", "name"]
         indexes = [models.Index(fields=["meal_type", "order"])]
+
+    @property
+    def calories(self) -> float:
+        """Kcal da opção (ingredientes não opcionais)."""
+        total = 0.0
+        # .all() + filtro em Python para aproveitar prefetch_related
+        for ingredient in self.ingredients.all():
+            food = ingredient.food
+            if (
+                ingredient.is_deleted
+                or ingredient.is_optional
+                or not ingredient.quantity
+                or not food
+                or not food.calories_per_serving
+            ):
+                continue
+            cal_per_serving = float(food.calories_per_serving)
+            if food.serving_size and float(food.serving_size) > 0:
+                total += (
+                    float(ingredient.quantity) / float(food.serving_size)
+                ) * cal_per_serving
+            else:
+                total += cal_per_serving
+        return round(total, 1)
 
     def __str__(self):
         return f"{self.meal_type.name} — {self.name}"
@@ -2306,6 +2403,15 @@ class MealLog(BaseModel):
         help_text="Horário em que a refeição foi feita",
     )
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    task_instance = models.ForeignKey(
+        TaskInstance,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="meal_logs",
+        verbose_name="Tarefa de Origem",
+        help_text="Preenchido quando o registro veio da conclusão da tarefa",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -2327,30 +2433,64 @@ class MealLog(BaseModel):
         """Kcal da opção seguida (ingredientes não opcionais); 0 se livre."""
         if not self.menu_option or self.is_free_meal:
             return 0.0
-        total = 0.0
-        # .all() + filtro em Python para aproveitar prefetch_related
-        for ingredient in self.menu_option.ingredients.all():
-            food = ingredient.food
-            if (
-                ingredient.is_deleted
-                or ingredient.is_optional
-                or not ingredient.quantity
-                or not food
-                or not food.calories_per_serving
-            ):
-                continue
-            cal_per_serving = float(food.calories_per_serving)
-            if food.serving_size and float(food.serving_size) > 0:
-                total += (
-                    float(ingredient.quantity) / float(food.serving_size)
-                ) * cal_per_serving
-            else:
-                total += cal_per_serving
-        return round(total, 1)
+        return self.menu_option.calories
 
     def __str__(self):
         option_str = self.menu_option.name if self.menu_option else "Livre"
         return f"{self.meal_type.name} ({option_str}) — {self.date}"
+
+
+class HydrationGoal(BaseModel):
+    """Meta diária de hidratação — uma (a atual) por membro."""
+
+    daily_target_ml = models.PositiveIntegerField(
+        verbose_name="Meta Diária (ml)"
+    )
+    owner = models.OneToOneField(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="hydration_goal",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Meta de Hidratação"
+        verbose_name_plural = "Metas de Hidratação"
+
+    def __str__(self):
+        return f"{self.owner} — {self.daily_target_ml} ml/dia"
+
+
+class WaterLog(BaseModel):
+    """Registro de água ingerida."""
+
+    date = models.DateField(verbose_name="Data")
+    time = models.TimeField(null=True, blank=True, verbose_name="Horário")
+    amount_ml = models.PositiveIntegerField(verbose_name="Quantidade (ml)")
+    task_instance = models.ForeignKey(
+        TaskInstance,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="water_logs",
+        verbose_name="Tarefa de Origem",
+        help_text="Preenchido quando o registro veio da conclusão da tarefa",
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="water_logs",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Registro de Água"
+        verbose_name_plural = "Registros de Água"
+        ordering = ["-date", "-time"]
+        indexes = [models.Index(fields=["owner", "-date"])]
+
+    def __str__(self):
+        return f"{self.amount_ml} ml — {self.date}"
 
 
 # ============================================================================

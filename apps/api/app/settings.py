@@ -46,7 +46,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = (
 SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
 
 # Trust X-Forwarded-Proto from the TLS-terminating reverse proxy
-# (e.g. nginx). Set SECURE_PROXY_SSL_HEADER=true when running
+# (e.g. nginx). Set SECURE_PROXY_SSL_HEADER=True (case-sensitive) when running
 # behind an SSL-terminating proxy.
 if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

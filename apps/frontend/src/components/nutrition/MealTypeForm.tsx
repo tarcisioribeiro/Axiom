@@ -1,9 +1,10 @@
-/* eslint-disable react-hooks/incompatible-library */
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
   CheckCircle2,
   Clock,
   Loader2,
   Moon,
+  Star,
   Sun,
   Sunrise,
   UtensilsCrossed,
@@ -16,6 +17,13 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -95,6 +103,7 @@ export function MealTypeForm({
       suggested_time: mealType?.suggested_time ?? '',
       order: mealType?.order ?? 0,
       is_active: mealType?.is_active ?? true,
+      default_menu_option: mealType?.default_menu_option ?? null,
       owner: ownerId,
     },
   });
@@ -106,6 +115,7 @@ export function MealTypeForm({
         suggested_time: mealType.suggested_time ?? '',
         order: mealType.order,
         is_active: mealType.is_active,
+        default_menu_option: mealType.default_menu_option ?? null,
         owner: ownerId,
       });
     }
@@ -178,6 +188,36 @@ export function MealTypeForm({
           )}
         </div>
       </FormSection>
+
+      {/* Opção padrão — só na edição, quando a refeição já tem opções */}
+      {mealType && mealType.options.length > 0 && (
+        <FormSection title={t('pages.nutritionMealTypes.defaultOption')} icon={Star}>
+          <Select
+            value={watch('default_menu_option')?.toString() ?? 'auto'}
+            onValueChange={(value) =>
+              setValue('default_menu_option', value === 'auto' ? null : parseInt(value))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">
+                {t('pages.nutritionMealTypes.defaultOptionAuto')}
+              </SelectItem>
+              {mealType.options.map((opt) => (
+                <SelectItem key={opt.id} value={opt.id.toString()}>
+                  {opt.name}
+                  {opt.calories ? ` · ${Math.round(opt.calories)} kcal` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-xs text-muted-foreground text-xs">
+            {t('pages.nutritionMealTypes.defaultOptionHint')}
+          </p>
+        </FormSection>
+      )}
 
       {/* Status e Ordem */}
       <div className="gap-md grid grid-cols-[1fr_auto] items-start">

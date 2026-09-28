@@ -38,6 +38,16 @@ export function FocusBlockTasksEditor({
     takenByTask.set(bt.routine_task, set);
   }
 
+  const taskById = new Map(routineTasks.map((task) => [task.id, task]));
+  const startTime = (bt: FocusBlock['block_tasks'][number]) => {
+    const task = taskById.get(bt.routine_task);
+    return (task && getTimesForTask(task)[bt.occurrence_index ?? 0]) ?? null;
+  };
+  // Tarefas sem horário vão para o fim.
+  const sortedBlockTasks = [...block.block_tasks].sort((a, b) =>
+    (startTime(a) ?? '99:99').localeCompare(startTime(b) ?? '99:99')
+  );
+
   const addableTasks = routineTasks
     .filter((task) => block.weekdays.some((w) => appearsOnDay(task, w)))
     .map((task) => {
@@ -64,7 +74,7 @@ export function FocusBlockTasksEditor({
         </p>
       ) : (
         <div className="space-y-xs">
-          {block.block_tasks.map((bt) => (
+          {sortedBlockTasks.map((bt) => (
             <div
               key={bt.id}
               className="group gap-sm px-sm py-xs hover:bg-muted/40 flex items-center rounded-md transition-colors"

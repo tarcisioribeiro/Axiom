@@ -42,10 +42,6 @@ export function DailyFocusBlockCard({
             ? 'border-l-primary bg-primary/[0.03]'
             : 'border-l-muted-foreground/20 bg-card'
       )}
-      style={{
-        borderLeftColor:
-          !isAllDone && !hasProgress ? block.color || undefined : undefined,
-      }}
     >
       <div className="gap-sm px-md py-sm flex items-center">
         <BlockIcon

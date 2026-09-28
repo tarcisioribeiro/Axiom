@@ -74,9 +74,15 @@ export abstract class BaseService<
     const first = await apiClient.get<PaginatedResponse<T>>(this.endpoint, params);
     const results = [...first.results];
 
+    // Usa só o `page` do `next`: a URL absoluta vinda do backend pode sair
+    // com http:// atrás do proxy TLS e ser bloqueada como mixed content.
     let nextUrl = first.next;
     while (nextUrl) {
-      const page = await apiClient.get<PaginatedResponse<T>>(nextUrl);
+      const pageNumber = new URL(nextUrl).searchParams.get('page');
+      const page = await apiClient.get<PaginatedResponse<T>>(this.endpoint, {
+        ...params,
+        page: pageNumber,
+      });
       results.push(...page.results);
       nextUrl = page.next;
     }

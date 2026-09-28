@@ -473,7 +473,11 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
       );
       try {
-        await taskInstancesService.bulkUpdate([{ id: task.id, status: newStatus }]);
+        const result = await taskInstancesService.bulkUpdate([
+          { id: task.id, status: newStatus },
+        ]);
+        // Ex.: tarefa vinculada ao treino não pode ser concluída manualmente
+        if (result.errors.length > 0) throw new Error(result.errors[0].error);
       } catch (error: unknown) {
         setInstances((prev) =>
           prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t))
@@ -576,10 +580,19 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
       const promises: Promise<unknown>[] = [updatePromise];
       if (reflectionPromise) promises.push(reflectionPromise);
       await Promise.all(promises);
-      toast({
-        title: t('pages.dailyChecklist.saved'),
-        description: t('pages.dailyChecklist.savedDesc'),
-      });
+      const { errors } = await updatePromise;
+      if (errors.length > 0) {
+        toast({
+          title: t('pages.dailyChecklist.saveError'),
+          description: errors[0].error,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: t('pages.dailyChecklist.saved'),
+          description: t('pages.dailyChecklist.savedDesc'),
+        });
+      }
       // Invalida (em vez de recarregar direto) para que qualquer outra data
       // já visitada nesta sessão também seja recarregada do servidor da
       // próxima vez que for selecionada, em vez de servir dados em cache

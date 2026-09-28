@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
 import {
+  Activity,
   CheckCircle2,
   ClipboardList,
   Dumbbell,
@@ -18,7 +19,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { WORKOUT_CATEGORIES } from '@/types/workout';
 import type { WorkoutPlan, WorkoutPlanFormData } from '@/types/workout';
+import { getErrorMessage } from '@/utils/error-utils';
 
 interface WorkoutPlanFormProps {
   plan?: WorkoutPlan;
@@ -49,6 +52,7 @@ export function WorkoutPlanForm({
     defaultValues: {
       name: plan?.name ?? '',
       description: plan?.description ?? '',
+      category: plan?.category ?? 'resistance',
       is_active: plan?.is_active ?? false,
       owner: ownerId,
     },
@@ -59,6 +63,7 @@ export function WorkoutPlanForm({
       reset({
         name: plan.name,
         description: plan.description ?? '',
+        category: plan.category,
         is_active: plan.is_active,
         owner: ownerId,
       });
@@ -66,12 +71,17 @@ export function WorkoutPlanForm({
   }, [plan, ownerId, reset]);
 
   const isActive = watch('is_active');
+  const category = watch('category');
 
   const handleFormSubmit = async (data: WorkoutPlanFormData) => {
     try {
       await onSubmit(data);
-    } catch {
-      toast({ title: t('pages.workoutPlans.saveError'), variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({
+        title: t('pages.workoutPlans.saveError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -105,6 +115,27 @@ export function WorkoutPlanForm({
           {errors.name && (
             <p className="text-destructive text-xs">{t('common.required')}</p>
           )}
+        </div>
+      </FormSection>
+
+      {/* Categoria */}
+      <FormSection title={t('pages.workoutPlans.category')} icon={Activity}>
+        <div className="gap-sm grid grid-cols-3">
+          {WORKOUT_CATEGORIES.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setValue('category', key)}
+              className={cn(
+                'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
+                category === key
+                  ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
+                  : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+              )}
+            >
+              {t(`pages.workoutPlans.categories.${key}`)}
+            </button>
+          ))}
         </div>
       </FormSection>
 

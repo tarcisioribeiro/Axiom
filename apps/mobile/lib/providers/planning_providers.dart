@@ -5,6 +5,7 @@ import '../models/food.dart';
 import '../models/gamification_profile.dart';
 import '../models/goal.dart';
 import '../models/habit_heatmap.dart';
+import '../models/hydration.dart';
 import '../models/meal_log.dart';
 import '../models/meal_type.dart';
 import '../models/menu_option.dart';
@@ -17,6 +18,7 @@ import '../models/workout_session.dart';
 import '../services/exercise_catalog_service.dart';
 import '../services/foods_service.dart';
 import '../services/goals_service.dart';
+import '../services/hydration_service.dart';
 import '../services/meal_logs_service.dart';
 import '../services/meal_types_service.dart';
 import '../services/menu_option_ingredients_service.dart';
@@ -66,6 +68,8 @@ final menuOptionIngredientsServiceProvider = Provider(
 );
 final wellnessServiceProvider =
     Provider((ref) => WellnessService(ref.watch(apiClientProvider)));
+final hydrationServiceProvider =
+    Provider((ref) => HydrationService(ref.watch(apiClientProvider)));
 
 final routineTasksProvider = FutureProvider.autoDispose<List<RoutineTask>>(
   (ref) => ref.watch(routineTasksServiceProvider).getAll(),
@@ -141,6 +145,24 @@ final menuOptionsProvider =
 final dailyCaloricSummaryProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, DateTime>(
   (ref, date) => ref.watch(mealLogsServiceProvider).dailyCaloricSummary(date),
+);
+
+// --- Hidratação ---
+
+final hydrationGoalProvider = FutureProvider.autoDispose<HydrationGoal>(
+  (ref) => ref.watch(hydrationServiceProvider).goal(),
+);
+
+final hydrationSuggestionProvider =
+    FutureProvider.autoDispose<HydrationSuggestion>(
+  (ref) => ref.watch(hydrationServiceProvider).suggestion(),
+);
+
+/// Keyed by a date normalized to midnight (same as
+/// [taskInstancesForDateProvider]).
+final waterLogsForDateProvider =
+    FutureProvider.autoDispose.family<List<WaterLog>, DateTime>(
+  (ref, date) => ref.watch(hydrationServiceProvider).waterLogs(date),
 );
 
 // --- Wellness Center ---

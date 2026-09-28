@@ -31,6 +31,7 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   TimeOfDay? _suggestedTime;
+  int? _defaultMenuOption;
   bool _isSaving = false;
   String? _error;
 
@@ -38,6 +39,7 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.existing?.name ?? '');
+    _defaultMenuOption = widget.existing?.defaultMenuOption;
     final time = widget.existing?.suggestedTime;
     if (time != null && time.contains(':')) {
       final parts = time.split(':');
@@ -79,6 +81,7 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
               '${_suggestedTime!.minute.toString().padLeft(2, '0')}:00',
       order: widget.existing?.order ?? 0,
       isActive: widget.existing?.isActive ?? true,
+      defaultMenuOption: _defaultMenuOption,
     );
 
     final service = ref.read(mealTypesServiceProvider);
@@ -98,6 +101,42 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  /// Opção padrão — só na edição, quando a refeição já tem opções.
+  Widget _defaultOptionField(int mealTypeId) {
+    final options =
+        ref.watch(menuOptionsProvider(mealTypeId)).valueOrNull ?? const [];
+    if (options.isEmpty) return const SizedBox.shrink();
+    // DropdownButton exige que o valor inicial exista entre os itens
+    final selected = options.any((o) => o.id == _defaultMenuOption)
+        ? _defaultMenuOption
+        : null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: DropdownButtonFormField<int?>(
+        initialValue: selected,
+        isExpanded: true,
+        decoration: const InputDecoration(
+          labelText: 'Opção padrão',
+          helperText: 'Usada ao concluir a tarefa vinculada',
+        ),
+        items: [
+          const DropdownMenuItem<int?>(
+            value: null,
+            child: Text('Automática (maior caloria)'),
+          ),
+          for (final o in options)
+            DropdownMenuItem<int?>(
+              value: o.id,
+              child: Text(o.calories > 0
+                  ? '${o.name} · ${o.calories.round()} kcal'
+                  : o.name),
+            ),
+        ],
+        onChanged: (v) => setState(() => _defaultMenuOption = v),
+      ),
+    );
   }
 
   @override
@@ -136,6 +175,7 @@ class _MealTypeFormSheetState extends ConsumerState<_MealTypeFormSheet> {
                 trailing: const Icon(Icons.access_time_outlined, size: 18),
                 onTap: _pickTime,
               ),
+              if (isEditing) _defaultOptionField(widget.existing!.id),
               FormSheetSubmitFooter(
                 error: _error,
                 isSaving: _isSaving,

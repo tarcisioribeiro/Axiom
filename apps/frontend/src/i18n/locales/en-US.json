@@ -4091,6 +4091,12 @@
         "linkedBookLabel": "Linked Book",
         "linkedBookPlaceholder": "Select a book you are reading (optional)",
         "linkedBookHint": "Link this routine to a book you are currently reading",
+        "linkedMealTypeLabel": "Linked Meal",
+        "linkedMealTypeTaken": "linked to \"{{task}}\"",
+        "linkedMealTypePlaceholder": "No meal",
+        "linkedMealTypeHint": "Completing the task logs the meal, and logging the meal completes the task",
+        "linkedHydrationLabel": "Link to hydration goal",
+        "linkedHydrationHint": "Each completed occurrence logs goal ÷ daily occurrences; water logged in the Log tab completes occurrences",
         "periodicityOptions": {
           "daily": "Daily",
           "weekdays": "Weekdays",
@@ -4143,7 +4149,9 @@
           "weekly": "Every {{day}}",
           "monthly": "Every {{day}}th of the month",
           "custom": "Custom days"
-        }
+        },
+        "linkedWorkoutLabel": "Link to workouts",
+        "linkedWorkoutHint": "Shows only on days with a scheduled workout and is completed automatically once sessions for every plan of the day are logged. Cannot be completed manually."
       },
       "focusBlocks": {
         "title": "Focus Blocks",
@@ -4156,7 +4164,6 @@
         "nameLabel": "Name",
         "namePlaceholder": "E.g. Productive Morning",
         "descriptionLabel": "Description",
-        "colorLabel": "Color",
         "iconLabel": "Icon",
         "activeLabel": "Active block",
         "emptyState": "No focus blocks yet",
@@ -5488,8 +5495,8 @@
       "dayDeletedDesc": "The split was deleted successfully.",
       "dayName": "Split Name",
       "dayNamePlaceholder": "e.g. Workout A",
-      "dayOfWeek": "Day of Week",
-      "dayOfWeekHint": "Select the day this split will be performed. Leave empty to show every day.",
+      "dayOfWeek": "Days of Week",
+      "dayOfWeekHint": "Select one or more days this split will be performed. Leave empty to show every day.",
       "defaultScheduleSection": "Default Schedule",
       "defaultStartTime": "Default Start Time",
       "defaultDurationMinutes": "Default Duration (min)",
@@ -5574,7 +5581,19 @@
         "fullBody": "Full Body"
       },
       "hideNotes": "Hide notes",
-      "showNotes": "Add notes"
+      "showNotes": "Add notes",
+      "category": "Category",
+      "categories": {
+        "cardio": "Cardiovascular",
+        "resistance": "Resistance",
+        "mobility": "Mobility"
+      },
+      "bodyweight": "Bodyweight",
+      "perSetTitle": "Load and reps per set",
+      "perSetHint": "Empty fields use the minimum reps and default load.",
+      "setLabel": "Set",
+      "repsShort": "Reps",
+      "tabCalendar": "Calendar"
     },
     "exercises": {
       "title": "Exercises",
@@ -5612,7 +5631,9 @@
         "empty": "No exercises found",
         "emptyDesc": "Try a different search term.",
         "selectError": "Error setting exercise image"
-      }
+      },
+      "allCategories": "All categories",
+      "fieldCategory": "Category"
     },
     "workoutSessions": {
       "sectionSession": "Session Details",
@@ -5655,6 +5676,8 @@
       "sessionNotes": "Session Notes",
       "sessionNotesPlaceholder": "How was the workout?",
       "exercisesSection": "Exercises Performed",
+      "showDetails": "Show details",
+      "hideDetails": "Hide details",
       "addExercise": "Add Exercise",
       "exerciseName": "Exercise",
       "exerciseNamePlaceholder": "Exercise name",
@@ -5717,6 +5740,9 @@
       "servingUnitPorcao": "portion"
     },
     "nutritionMealTypes": {
+      "defaultOption": "Default option",
+      "defaultOptionAuto": "Automatic (highest calorie)",
+      "defaultOptionHint": "Used when the meal is logged by completing its linked task. Without a default, the highest-calorie option is used.",
       "newMealTypeBtn": "New Meal",
       "newMealTypeTitle": "New Meal Type",
       "editMealTypeTitle": "Edit Meal",
@@ -6112,7 +6138,6 @@
       "managePlans": "Manage Plans",
       "manageExercises": "Exercises",
       "viewHistory": "History",
-      "todaySessions": "Sessions logged today",
       "emptyDays": "No splits registered in this plan."
     },
     "nutritionHub": {
@@ -6124,7 +6149,31 @@
       "manageFoods": "Foods",
       "manageMeals": "Meals",
       "noMealsToday": "No meals logged today",
-      "addMeal": "Add Meal"
+      "addMeal": "Add Meal",
+      "registerInLog": "Log meals and water in the Log tab."
+    },
+    "nutritionHydration": {
+      "tab": "Hydration",
+      "goalTitle": "Daily hydration goal",
+      "currentGoal": "Current goal: {{liters}} L per day",
+      "noGoal": "No goal set",
+      "litersLabel": "Goal (liters per day)",
+      "saveGoal": "Save goal",
+      "goalSaved": "Hydration goal saved",
+      "suggestionTitle": "Suggestion based on your body and workouts",
+      "suggestionWeight": "{{weight}} kg × {{perKg}} ml = {{base}} ml",
+      "suggestionExercise": "+ {{exercise}} ml for training ({{days}} days, {{minutes}} min per week in active plans)",
+      "noWeight": "Add your weight in Body Metrics to get a suggestion.",
+      "useSuggestion": "Use suggestion",
+      "tasksHint": "Nutrition tasks linked to the hydration goal are completed automatically as you log water in the Log tab — and completing the task logs the water.",
+      "dayWater": "Water today",
+      "setGoalHint": "Set your goal in the Plan tab.",
+      "add": "Add",
+      "customAmount": "Amount in ml",
+      "noLogs": "No water logged on this day.",
+      "fromTask": "via task",
+      "logAdded": "Water logged",
+      "logDeleted": "Water entry removed"
     },
     "planningToday": {
       "title": "Today",
@@ -7308,5 +7357,17 @@
   },
   "intellect": {
     "streakDays": "days"
+  },
+  "workoutCalendar": {
+    "title": "Workout Calendar",
+    "summary": "{{done}} completed · {{pending}} pending · {{missed}} missed this month",
+    "noEvents": "No workouts on this day",
+    "dayDetail": "Workouts on {{date}}",
+    "extraSession": "Extra session",
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "missed": "Missed"
+    }
   }
 }
