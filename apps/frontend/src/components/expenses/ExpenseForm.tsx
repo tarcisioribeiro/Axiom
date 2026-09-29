@@ -593,6 +593,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <Select
                 value={watchedCategory || ''}
                 onValueChange={(v) => {
+                  if (!v) return;
                   setValue('category', v);
                   setAiSuggestion(null);
                 }}
@@ -661,7 +662,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </Label>
             <Select
               value={watchedAccount?.toString() || ''}
-              onValueChange={(v) => setValue('account', parseInt(v))}
+              onValueChange={(v) => v && setValue('account', parseInt(v))}
             >
               <SelectTrigger>
                 <SelectValue placeholder={t('common.actions.select')} />
@@ -831,7 +832,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       )}
 
       {/* Alertas de saldo */}
-      {isFutureDate && watchedAccount && watchedValue > 0 && (
+      {isFutureDate && !!watchedAccount && watchedValue > 0 && (
         <div
           className={`p-sm flex items-start gap-2 rounded-md border text-sm ${
             futureBalanceInfo && !futureBalanceInfo.canPay
