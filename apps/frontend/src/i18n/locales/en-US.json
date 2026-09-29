@@ -4724,7 +4724,7 @@
       "noMessages": "Select an agent and ask your first question!",
       "session": "Session",
       "provider": "Provider",
-      "unavailable": "LLM unavailable. Check settings in the admin panel.",
+      "unavailable": "The agent system is currently down. Please contact the system administrator.",
       "sources": "Sources",
       "keyboardHint": "Enter to send · Shift+Enter for new line",
       "selectAgent": "Choose an agent",
@@ -5162,6 +5162,7 @@
       }
     },
     "adminIntegrations": {
+      "llmWarnings": "Agent system (AI) issues:",
       "title": "Integrations",
       "subtitle": "Real-time status of all external services",
       "testAll": "Test all",

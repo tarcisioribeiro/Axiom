@@ -4790,7 +4790,7 @@
       "noMessages": "Selecione um agente e faça sua primeira pergunta!",
       "session": "Sessão",
       "provider": "Provedor",
-      "unavailable": "LLM indisponível. Verifique as configurações no painel admin.",
+      "unavailable": "O sistema de agentes está fora do ar no momento. Entre em contato com o administrador do sistema.",
       "sources": "Fontes",
       "keyboardHint": "Enter para enviar · Shift+Enter para nova linha",
       "selectAgent": "Escolha um agente",
@@ -5228,6 +5228,7 @@
       }
     },
     "adminIntegrations": {
+      "llmWarnings": "Problemas no sistema de agentes (IA):",
       "title": "Integrações",
       "subtitle": "Status em tempo real de todos os serviços externos",
       "testAll": "Testar todas",

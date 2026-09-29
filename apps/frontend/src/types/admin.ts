@@ -52,6 +52,7 @@ export interface IntegrationsResponse {
   llm_provider: string;
   ollama_model: string;
   anthropic_model: string;
+  llm_warnings: string[];
 }
 
 export interface AdminLog {

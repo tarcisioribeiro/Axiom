@@ -17,6 +17,18 @@ DEFAULT_CONFIGS: list[dict] = [
         "is_editable": True,
     },
     {
+        "key": "LLM_FALLBACK_PROVIDERS",
+        "category": "llm",
+        "label": "Providers de fallback",
+        "description": (
+            "Providers tentados em ordem se o principal falhar, separados por "
+            "vírgula (ex.: 'ollama' ou 'groq,ollama')."
+        ),
+        "is_secret": False,
+        "requires_restart": False,
+        "is_editable": True,
+    },
+    {
         "key": "OLLAMA_BASE_URL",
         "category": "llm",
         "label": "URL do Ollama",
@@ -81,8 +93,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "category": "llm",
         "label": "Modelo Groq",
         "description": (
-            "Modelo Groq a utilizar. Opções: llama-3.1-8b-instant (rápido), "
-            "llama-3.3-70b-versatile (melhor qualidade), gemma2-9b-it."
+            "Modelo Groq a utilizar (padrão: openai/gpt-oss-120b). "
+            "Veja os disponíveis em console.groq.com/docs/models."
         ),
         "is_secret": False,
         "requires_restart": False,

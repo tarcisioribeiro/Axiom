@@ -32,7 +32,6 @@ class ForecastAgent(BaseAgent):
     description = "Previsão de saldo e fluxo de caixa futuro"
     ollama_model = "qwen2.5:14b"
     anthropic_model = "claude-sonnet-4-6"
-    groq_model = "deepseek-r1-distill-llama-70b"
     openai_model = "gpt-4o"
 
     def can_handle(self, query: str) -> float:
