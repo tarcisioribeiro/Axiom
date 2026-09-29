@@ -181,12 +181,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   const originAccount = accounts.find((a) => a.id === watchedOriginAccount);
   const destinyAccount = accounts.find((a) => a.id === watchedDestinyAccount);
   const formattedValue =
-    (watchedValue ?? 0) > 0
-      ? (watchedValue ?? 0).toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-        })
-      : null;
+    (watchedValue ?? 0) > 0 ? formatCurrency(watchedValue ?? 0) : null;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
@@ -253,10 +248,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      })}
+                      {formatCurrency(a.available_balance)}
                     </span>
                   </SelectItem>
                 ))}
@@ -266,10 +258,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               <p
                 className={`text-xs ${parseFloat(originAccount.available_balance) >= (watchedValue ?? 0) ? 'text-success' : 'text-destructive'}`}
               >
-                {parseFloat(originAccount.available_balance).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
+                {formatCurrency(originAccount.available_balance)}
               </p>
             )}
           </div>
@@ -315,10 +304,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             </Select>
             {destinyAccount && (
               <p className="text-muted-foreground text-xs">
-                {parseFloat(destinyAccount.available_balance).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
+                {formatCurrency(destinyAccount.available_balance)}
               </p>
             )}
           </div>

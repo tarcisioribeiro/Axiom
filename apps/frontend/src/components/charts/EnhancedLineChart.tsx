@@ -24,6 +24,8 @@ interface EnhancedLineChartProps {
   dataKey?: string;
   nameKey?: string;
   formatter?: (value: number | string) => string;
+  /** Formatador do eixo de valores (ex.: formatCurrency); a largura do eixo passa a ser automática. */
+  valueAxisFormatter?: (value: number) => string;
   colors: string[];
   lines?: LineConfig[];
   dualYAxis?: DualYAxisConfig;
@@ -52,6 +54,7 @@ export const EnhancedLineChart = ({
   dataKey,
   nameKey = 'name',
   formatter,
+  valueAxisFormatter,
   colors,
   lines,
   dualYAxis,
@@ -155,8 +158,8 @@ export const EnhancedLineChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={axisFormatNumber}
-              width={dims.yAxisWidth}
+              tickFormatter={valueAxisFormatter ?? axisFormatNumber}
+              width={valueAxisFormatter ? 'auto' : dims.yAxisWidth}
             />
             <YAxis
               yAxisId="right"
@@ -164,8 +167,8 @@ export const EnhancedLineChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={axisFormatNumber}
-              width={dims.yAxisWidth}
+              tickFormatter={valueAxisFormatter ?? axisFormatNumber}
+              width={valueAxisFormatter ? 'auto' : dims.yAxisWidth}
             />
           </>
         ) : (
@@ -173,8 +176,8 @@ export const EnhancedLineChart = ({
             tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={axisFormatNumber}
-            width={dims.yAxisWidth}
+            tickFormatter={valueAxisFormatter ?? axisFormatNumber}
+            width={valueAxisFormatter ? 'auto' : dims.yAxisWidth}
           />
         )}
 

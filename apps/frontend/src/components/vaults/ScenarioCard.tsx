@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -64,24 +65,18 @@ export function ScenarioCard({
       <CardContent className="gap-md grid sm:grid-cols-2">
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
-          <Input
-            type="number"
+          <CurrencyInput
             min="0"
-            step="100"
             value={scenario.initial_amount}
             onChange={(e) => onUpdate(scenario.id, 'initial_amount', e.target.value)}
-            placeholder="0,00"
           />
         </div>
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.monthlyDeposit')}</Label>
-          <Input
-            type="number"
+          <CurrencyInput
             min="0"
-            step="100"
             value={scenario.monthly_deposit}
             onChange={(e) => onUpdate(scenario.id, 'monthly_deposit', e.target.value)}
-            placeholder="0,00"
           />
         </div>
         <div className="space-y-xs">

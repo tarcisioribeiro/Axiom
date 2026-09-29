@@ -413,10 +413,7 @@ export function LoanForm({
                     <SelectItem key={acc.id} value={acc.id.toString()}>
                       {acc.account_name}
                       <span className="text-muted-foreground ml-2 text-xs">
-                        {parseFloat(acc.balance).toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
+                        {formatCurrency(acc.balance)}
                       </span>
                     </SelectItem>
                   ))}

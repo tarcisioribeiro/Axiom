@@ -11,25 +11,21 @@ import i18next from 'i18next';
 import { parseLocalDate } from './utils';
 
 /**
- * Formata valores monetários em Real Brasileiro (BRL) respeitando o locale ativo.
+ * Formata valores monetários sempre no padrão brasileiro, independente do idioma da UI.
  *
  * @param value - Valor a ser formatado (string ou number)
- * @returns String formatada como moeda (ex: "R$ 1.234,56" em pt-BR, "R$1,234.56" em en-US)
+ * @returns String formatada como moeda (ex: "R$ 1.234,56"); valores inválidos viram "R$ 0,00"
  */
-export const formatCurrency = (value: string | number): string => {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-  if (isNaN(num)) {
-    return new Intl.NumberFormat(i18next.language || 'pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(0);
-  }
-
-  return new Intl.NumberFormat(i18next.language || 'pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(num);
+export const formatCurrency = (value: string | number | null | undefined): string => {
+  const num = typeof value === 'number' ? value : parseFloat(value ?? '');
+  return currencyFormatter.format(isNaN(num) ? 0 : num);
 };
 
 /**

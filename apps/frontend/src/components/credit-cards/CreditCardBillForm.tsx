@@ -1,13 +1,13 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -59,34 +59,33 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const { showAlert } = useAlertDialog();
   const { t } = useTranslation();
   const [isCalculating, setIsCalculating] = useState(false);
-  const { register, handleSubmit, setValue, reset, control } =
-    useForm<CreditCardBillFormData>({
-      defaultValues: bill
-        ? {
-            credit_card: bill.credit_card,
-            year: bill.year,
-            month: bill.month,
-            invoice_beginning_date: bill.invoice_beginning_date,
-            invoice_ending_date: bill.invoice_ending_date,
-            closed: bill.closed,
-            total_amount: parseFloat(bill.total_amount),
-            minimum_payment: parseFloat(bill.minimum_payment),
-            paid_amount: parseFloat(bill.paid_amount),
-            interest_charged: parseFloat(bill.interest_charged),
-            late_fee: parseFloat(bill.late_fee),
-            status: bill.status,
-            due_date: bill.due_date || '',
-            payment_date: bill.payment_date || '',
-          }
-        : {
-            credit_card: 0,
-            year: new Date().getFullYear().toString(),
-            month: 'Jan',
-            invoice_beginning_date: formatLocalDate(new Date()),
-            invoice_ending_date: formatLocalDate(new Date()),
-            closed: false,
-          },
-    });
+  const { handleSubmit, setValue, reset, control } = useForm<CreditCardBillFormData>({
+    defaultValues: bill
+      ? {
+          credit_card: bill.credit_card,
+          year: bill.year,
+          month: bill.month,
+          invoice_beginning_date: bill.invoice_beginning_date,
+          invoice_ending_date: bill.invoice_ending_date,
+          closed: bill.closed,
+          total_amount: parseFloat(bill.total_amount),
+          minimum_payment: parseFloat(bill.minimum_payment),
+          paid_amount: parseFloat(bill.paid_amount),
+          interest_charged: parseFloat(bill.interest_charged),
+          late_fee: parseFloat(bill.late_fee),
+          status: bill.status,
+          due_date: bill.due_date || '',
+          payment_date: bill.payment_date || '',
+        }
+      : {
+          credit_card: 0,
+          year: new Date().getFullYear().toString(),
+          month: 'Jan',
+          invoice_beginning_date: formatLocalDate(new Date()),
+          invoice_ending_date: formatLocalDate(new Date()),
+          closed: false,
+        },
+  });
 
   const watchedCreditCard = useWatch({ control, name: 'credit_card' });
   const watchedYear = useWatch({ control, name: 'year' });
@@ -439,13 +438,19 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                     </span>
                   )}
                 </div>
-                <Input
-                  id="total_amount"
-                  type="number"
-                  step="0.01"
-                  {...register('total_amount', { valueAsNumber: true })}
-                  placeholder="0.00"
-                  className="font-semibold"
+                <Controller
+                  name="total_amount"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="total_amount"
+                      className="font-semibold"
+                      ref={field.ref}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  )}
                 />
                 <p className="text-muted-foreground text-xs">
                   {t('pages.creditCardBills.form.totalAmountHint')}
@@ -456,14 +461,20 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 <Label htmlFor="minimum_payment">
                   {t('pages.creditCardBills.form.minPaymentLabel')}
                 </Label>
-                <Input
-                  id="minimum_payment"
-                  type="number"
-                  step="0.01"
-                  {...register('minimum_payment', { valueAsNumber: true })}
-                  placeholder="0.00"
-                  disabled
-                  className="text-warning font-semibold"
+                <Controller
+                  name="minimum_payment"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="minimum_payment"
+                      disabled
+                      className="text-warning font-semibold"
+                      ref={field.ref}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  )}
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.minPaymentHint')}
@@ -474,14 +485,20 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 <Label htmlFor="paid_amount">
                   {t('pages.creditCardBills.form.paidAmountLabel')}
                 </Label>
-                <Input
-                  id="paid_amount"
-                  type="number"
-                  step="0.01"
-                  {...register('paid_amount', { valueAsNumber: true })}
-                  placeholder="0.00"
-                  disabled
-                  className="text-success font-semibold"
+                <Controller
+                  name="paid_amount"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="paid_amount"
+                      disabled
+                      className="text-success font-semibold"
+                      ref={field.ref}
+                      value={field.value}
+                      onBlur={field.onBlur}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  )}
                 />
                 <p className="text-xs">
                   {t('pages.creditCardBills.form.paidAmountHint')}

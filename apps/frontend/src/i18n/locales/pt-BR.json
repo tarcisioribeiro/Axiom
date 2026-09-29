@@ -99,7 +99,7 @@
       "related_loan_hint_revenue": "Vincule esta receita a um empréstimo que você está recebendo",
       "related_payable": "Valor a Pagar Relacionado (Opcional)",
       "related_payable_hint": "Vincule esta despesa a um valor a pagar",
-      "balance_info": "Saldo: R$ {{value}}",
+      "balance_info": "Saldo: {{value}}",
       "select_optional": "Selecione (opcional)",
       "overdraft_limit": "Limite de Cheque Especial",
       "sex": "Sexo",
@@ -743,7 +743,7 @@
         "relatedFixedExpenseLabel": "Despesa Fixa Relacionada (Opcional)",
         "relatedFixedExpenseHint": "Vincule esta despesa a uma despesa fixa do planejamento mensal, para que ela não seja contada em duplicidade",
         "none": "Nenhum",
-        "balanceInfo": "Saldo: R$ {{value}}",
+        "balanceInfo": "Saldo: {{value}}",
         "splitToggle": "Dividir despesa",
         "splitToggleHint": "Ao criar, abrirá automaticamente o gerenciador de divisões",
         "redistributeDesc": "Esta dívida já tem um plano de pagamento. O valor lançado abate o saldo em aberto e as parcelas pendentes serão redistribuídas."

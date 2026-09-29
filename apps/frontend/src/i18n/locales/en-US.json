@@ -99,7 +99,7 @@
       "related_loan_hint_revenue": "Link this revenue to a loan you are receiving",
       "related_payable": "Related Payable (Optional)",
       "related_payable_hint": "Link this expense to a payable",
-      "balance_info": "Balance: R$ {{value}}",
+      "balance_info": "Balance: {{value}}",
       "select_optional": "Select (optional)",
       "overdraft_limit": "Overdraft Limit",
       "sex": "Gender",

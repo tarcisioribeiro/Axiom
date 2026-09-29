@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -220,10 +221,8 @@ export function VaultContributionsDialog({
                   <Label htmlFor="contrib_amount">
                     {t('pages.vaults.recurringContributions.fields.amount')}
                   </Label>
-                  <Input
+                  <CurrencyInput
                     id="contrib_amount"
-                    type="number"
-                    step="0.01"
                     min="0.01"
                     value={formData.amount}
                     onChange={(e) =>
@@ -232,7 +231,6 @@ export function VaultContributionsDialog({
                         amount: parseFloat(e.target.value) || 0,
                       })
                     }
-                    placeholder="0,00"
                   />
                 </div>
                 <div>

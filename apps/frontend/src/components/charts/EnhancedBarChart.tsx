@@ -23,6 +23,8 @@ interface EnhancedBarChartProps {
   dataKey: string;
   nameKey: string;
   formatter?: (value: number | string) => string;
+  /** Formatador do eixo de valores (ex.: formatCurrency); a largura do eixo passa a ser automática. */
+  valueAxisFormatter?: (value: number) => string;
   colors: string[];
   customColors?: (entry: ChartDataPoint) => string;
   layout?: BarLayout;
@@ -53,6 +55,7 @@ export const EnhancedBarChart = ({
   dataKey,
   nameKey,
   formatter,
+  valueAxisFormatter,
   colors,
   customColors,
   layout = 'vertical',
@@ -121,7 +124,7 @@ export const EnhancedBarChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickFormatter={axisFormatNumber}
+              tickFormatter={valueAxisFormatter ?? axisFormatNumber}
             />
             <YAxis
               dataKey={nameKey}
@@ -170,8 +173,8 @@ export const EnhancedBarChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={axisFormatNumber}
-              width={dims.yAxisWidth}
+              tickFormatter={valueAxisFormatter ?? axisFormatNumber}
+              width={valueAxisFormatter ? 'auto' : dims.yAxisWidth}
             />
           </>
         )}

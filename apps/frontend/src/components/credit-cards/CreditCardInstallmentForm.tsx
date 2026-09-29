@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -38,7 +38,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   isLoading = false,
 }) => {
   const { t } = useTranslation();
-  const { register, handleSubmit, setValue, watch } =
+  const { handleSubmit, control, setValue, watch } =
     useForm<CreditCardInstallmentUpdateData>({
       defaultValues: {
         value: installment.value,
@@ -118,13 +118,20 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
           <Label htmlFor="value">
             {t('pages.creditCardExpenses.installmentForm.installmentValueLabel')}
           </Label>
-          <Input
-            id="value"
-            type="number"
-            step="0.01"
-            {...register('value', { required: true, valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
+          <Controller
+            name="value"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <CurrencyInput
+                id="value"
+                disabled={isLoading}
+                ref={field.ref}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+              />
+            )}
           />
           <p className="text-muted-foreground text-xs">
             {t('pages.creditCardExpenses.installmentForm.originalValueHint', {

@@ -279,6 +279,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
               dataKey="value"
               nameKey="name"
               formatter={(v) => formatCurrency(Number(v))}
+              valueAxisFormatter={formatCurrency}
               colors={chartColors}
               emptyMessage={t('netWorth.noAssets')}
               lockChartType="pie"

@@ -242,14 +242,8 @@ export function LoanProgressDialog({
                         tick={{ fontSize: 10 }}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(v) =>
-                          new Intl.NumberFormat('pt-BR', {
-                            notation: 'compact',
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(v as number)
-                        }
-                        width={60}
+                        tickFormatter={(v) => formatCurrency(v as number)}
+                        width="auto"
                       />
                       <Tooltip
                         formatter={(value) => [

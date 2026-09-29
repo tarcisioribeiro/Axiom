@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -264,13 +265,11 @@ export function VaultTransactionsDialog({
                       </TableCell>
                       <TableCell>
                         {editingTx?.id === tx.id ? (
-                          <Input
-                            type="number"
-                            step="0.01"
+                          <CurrencyInput
                             min="0.01"
                             value={editAmount}
                             onChange={(e) => setEditAmount(e.target.value)}
-                            className="w-24"
+                            className="w-32"
                           />
                         ) : (
                           <span

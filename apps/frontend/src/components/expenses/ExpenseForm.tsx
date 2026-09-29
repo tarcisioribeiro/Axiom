@@ -671,10 +671,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      })}
+                      {formatCurrency(a.available_balance)}
                     </span>
                   </SelectItem>
                 ))}
@@ -683,10 +680,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             {selectedAccount && (
               <p className="text-muted-foreground text-xs">
                 {t('pages.expenses.form.balanceInfo', {
-                  value: parseFloat(selectedAccount.available_balance).toLocaleString(
-                    'pt-BR',
-                    { minimumFractionDigits: 2 }
-                  ),
+                  value: formatCurrency(selectedAccount.available_balance),
                 })}
               </p>
             )}
@@ -743,7 +737,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       <SelectItem value="none">{t('common.actions.none')}</SelectItem>
                       {eligibleLoans.map((loan) => (
                         <SelectItem key={loan.id} value={loan.id.toString()}>
-                          {loan.description} — R$ {loan.remaining_balance || '0.00'}
+                          {loan.description} — {formatCurrency(loan.remaining_balance)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -778,7 +772,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       <SelectItem value="none">{t('common.actions.none')}</SelectItem>
                       {eligiblePayables.map((payable) => (
                         <SelectItem key={payable.id} value={payable.id.toString()}>
-                          {payable.description} — R$ {payable.remaining_value || '0.00'}
+                          {payable.description} —{' '}
+                          {formatCurrency(payable.remaining_value)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -819,7 +814,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                           key={fixedExpense.id}
                           value={fixedExpense.id.toString()}
                         >
-                          {fixedExpense.description} — R$ {fixedExpense.default_value}
+                          {fixedExpense.description} —{' '}
+                          {formatCurrency(fixedExpense.default_value)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -8,12 +8,12 @@ import {
   CalendarClock,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
@@ -49,6 +49,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     formState: { errors },
@@ -274,31 +275,30 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             <Label htmlFor="amount">
               {t('pages.creditCardBills.payForm.paymentAmountLabel')}
             </Label>
-            <div className="relative">
-              <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                R$
-              </span>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={remaining}
-                className="pl-10"
-                {...register('amount', {
-                  valueAsNumber: true,
-                  required: true,
-                  min: { value: 0.01, message: '' },
-                  max: {
-                    value: remaining,
-                    message: t('pages.creditCardBills.payForm.maxHint', {
-                      value: formatCurrency(remaining.toString()),
-                    }),
-                  },
-                })}
-                disabled={isLoading}
-              />
-            </div>
+            <Controller
+              name="amount"
+              control={control}
+              rules={{
+                required: true,
+                min: { value: 0.01, message: '' },
+                max: {
+                  value: remaining,
+                  message: t('pages.creditCardBills.payForm.maxHint', {
+                    value: formatCurrency(remaining.toString()),
+                  }),
+                },
+              }}
+              render={({ field }) => (
+                <CurrencyInput
+                  id="amount"
+                  disabled={isLoading}
+                  ref={field.ref}
+                  value={field.value}
+                  onBlur={field.onBlur}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              )}
+            />
             {errors.amount && (
               <p className="text-destructive text-xs">{errors.amount.message}</p>
             )}
