@@ -284,7 +284,11 @@ class CreditCardAdditionalViewTest(APITestCase):
     def test_delete_credit_card(self):
         card = self._create_cc("Delete Card")
         url = reverse("credit-card-detail-view", args=[card.pk])
-        response = self.client.delete(url)
+        response = self.client.delete(
+            url,
+            {"card_number": "4111111111111111", "security_code": "123"},
+            format="json",
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_retrieve_credit_card_bill(self):

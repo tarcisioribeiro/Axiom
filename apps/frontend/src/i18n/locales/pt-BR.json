@@ -1258,9 +1258,7 @@
     "creditCards": {
       "title": "Cartões de Crédito",
       "newBtn": "Novo Cartão",
-      "editTitle": "Editar Cartão",
       "newTitle": "Novo Cartão",
-      "editDesc": "Atualize as informações do cartão",
       "newDesc": "Adicione um novo cartão ao sistema",
       "deleteTitle": "Excluir cartão",
       "deleteDesc": "Tem certeza que deseja excluir este cartão? Esta ação não pode ser desfeita.",
@@ -1271,7 +1269,6 @@
       "deleted": "Cartão excluído",
       "deletedDesc": "O cartão foi excluído com sucesso.",
       "noAccountMsg": "É necessário ter pelo menos uma conta cadastrada antes de criar um cartão de crédito.",
-      "viewBills": "Ver Faturas",
       "emptyTitle": "Nenhum cartão cadastrado",
       "emptyState": "Comece adicionando seu primeiro cartão de crédito.",
       "cardCount": "{{count}} cartão(ões) cadastrado(s)",
@@ -1335,27 +1332,22 @@
         "used": "Utilizado: {{value}}",
         "max": "Máximo: {{value}}",
         "saved": "Limite ajustado"
+      },
+      "deleteFlow": {
+        "continue": "Continuar",
+        "pendingTitle": "Faturas pendentes",
+        "pendingDesc": "Este cartão possui faturas não pagas. Quite todas elas antes de excluir o cartão.",
+        "viewBills": "Ver faturas",
+        "credentialsTitle": "Confirme os dados do cartão",
+        "credentialsDesc": "Para excluir, informe o número completo e o CVV do cartão.",
+        "finalTitle": "Excluir o cartão definitivamente?",
+        "finalDesc": "O cartão \"{{name}}\" deixará de aparecer na lista. Faturas, compras e despesas vinculadas serão mantidas."
       }
     },
     "creditCardHub": {
       "openHub": "Ver detalhes do cartão",
-      "tabs": {
-        "summary": "Resumo",
-        "bills": "Faturas",
-        "purchases": "Compras",
-        "settings": "Configurações"
-      },
       "usedCredit": "Crédito utilizado",
-      "currentBill": "Fatura atual",
-      "dueOn": "Vence em",
-      "recentBills": "Últimas faturas",
-      "billsFound": "fatura(s)",
-      "noBills": "Nenhuma fatura encontrada para este cartão.",
-      "noPurchases": "Nenhuma compra encontrada para este cartão.",
-      "purchasesFound": "compra(s)",
-      "installment": "parcela",
-      "dangerZone": "Zona de perigo",
-      "reopenConfirm": "Deseja reabrir a fatura de"
+      "currentBill": "Fatura atual"
     },
     "creditCardBills": {
       "title": "Faturas de Cartão",

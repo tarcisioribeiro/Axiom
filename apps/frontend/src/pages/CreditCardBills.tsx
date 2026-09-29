@@ -75,7 +75,13 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function CreditCardBills({ embedded = false }: { embedded?: boolean }) {
+export default function CreditCardBills({
+  embedded = false,
+  initialCardFilter = 'all',
+}: {
+  embedded?: boolean;
+  initialCardFilter?: string;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -86,7 +92,7 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [isRenegotiateSubmitting, setIsRenegotiateSubmitting] = useState(false);
-  const [cardFilter, setCardFilter] = useState<string>('all');
+  const [cardFilter, setCardFilter] = useState<string>(initialCardFilter);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const { toast } = useToast();

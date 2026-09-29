@@ -1,5 +1,5 @@
 import { CreditCard, Receipt } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -22,6 +22,8 @@ export default function CreditCardManagement() {
 
   const storedTab = localStorage.getItem(TAB_KEY);
   const defaultTab = storedTab === 'expenses' ? 'cards' : (storedTab ?? 'cards');
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [billsCardFilter, setBillsCardFilter] = useState<string>();
 
   useEffect(() => {
     setExtraLabel(t(TAB_LABEL_KEYS[defaultTab] ?? 'pages.creditCards.title'));
@@ -30,6 +32,7 @@ export default function CreditCardManagement() {
   }, []);
 
   const handleTabChange = (value: string) => {
+    setActiveTab(value);
     localStorage.setItem(TAB_KEY, value);
     setExtraLabel(t(TAB_LABEL_KEYS[value] ?? 'pages.creditCards.title'));
   };
@@ -37,7 +40,7 @@ export default function CreditCardManagement() {
   return (
     <PageContainer className="flex flex-1 flex-col">
       <Tabs
-        defaultValue={defaultTab}
+        value={activeTab}
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
@@ -53,10 +56,20 @@ export default function CreditCardManagement() {
         </TabsList>
 
         <TabsContent value="cards" className="mt-0 flex-1">
-          <CreditCards embedded />
+          <CreditCards
+            embedded
+            onShowBills={(cardId) => {
+              setBillsCardFilter(String(cardId));
+              handleTabChange('bills');
+            }}
+          />
         </TabsContent>
         <TabsContent value="bills" className="mt-0 flex-1">
-          <CreditCardBills embedded />
+          <CreditCardBills
+            key={billsCardFilter}
+            embedded
+            initialCardFilter={billsCardFilter}
+          />
         </TabsContent>
       </Tabs>
     </PageContainer>

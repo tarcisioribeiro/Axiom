@@ -36,3 +36,12 @@ class ThemeSyncRateThrottle(AnonRateThrottle):
     """Per-IP rate limit on the token-authenticated theme sync endpoint."""
 
     scope = "theme_sync"
+
+
+class CreditCardDeleteRateThrottle(UserRateThrottle):
+    """
+    Per-user rate limit on credit card deletion, which checks the full card
+    number and CVV — prevents using the endpoint as a CVV brute-force oracle.
+    """
+
+    scope = "credit_card_delete"
