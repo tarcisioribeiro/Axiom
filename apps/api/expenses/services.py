@@ -2,6 +2,7 @@ from calendar import month_abbr, monthrange
 from datetime import datetime
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Count, Sum
 from django.utils import timezone
 
@@ -124,6 +125,7 @@ def _blocked_cards(fixed_exps_map, expense_values, year, month_num, upsert):
     return blocked
 
 
+@transaction.atomic
 def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
     """Generate fixed expenses for a given month.
 
