@@ -712,17 +712,21 @@ class FocusBlockTask(BaseModel):
         verbose_name = "Tarefa do Bloco de Foco"
         verbose_name_plural = "Tarefas do Bloco de Foco"
         constraints = [
+            # Uma tarefa (ou ocorrência) pertence a no máximo um bloco.
             # `condition` scopes both constraints to non-deleted rows only —
             # otherwise re-adding a previously removed (soft-deleted) task
             # would collide with its own soft-deleted row and raise an
-            # IntegrityError instead of just creating a new one.
+            # IntegrityError instead of just creating a new one. The mixed
+            # case (tarefa inteira num bloco + ocorrência em outro) isn't
+            # expressible as a unique constraint — it's validated in
+            # FocusBlockTaskCreateUpdateSerializer.
             models.UniqueConstraint(
-                fields=["focus_block", "routine_task", "occurrence_index"],
+                fields=["routine_task", "occurrence_index"],
                 condition=models.Q(deleted_at__isnull=True),
                 name="unique_focus_block_task_occurrence",
             ),
             models.UniqueConstraint(
-                fields=["focus_block", "routine_task"],
+                fields=["routine_task"],
                 condition=models.Q(
                     occurrence_index__isnull=True, deleted_at__isnull=True
                 ),

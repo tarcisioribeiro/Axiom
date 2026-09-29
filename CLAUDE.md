@@ -55,7 +55,7 @@ Axiom/
 
 **Middleware order** (settings.py): PrometheusBeforeMiddleware → DecryptionCacheMiddleware → SecurityMiddleware → CorsMiddleware → SessionMiddleware → CommonMiddleware → CsrfViewMiddleware → AuthenticationMiddleware → JWTCookieMiddleware → AuditLoggingMiddleware → MessageMiddleware → XFrameOptionsMiddleware → SecurityHeadersMiddleware → PrometheusAfterMiddleware
 
-**Authentication**: JWT tokens stored in HttpOnly cookies. `authentication/middleware.py:JWTCookieMiddleware` extracts cookies → Authorization header. Access token: 15min, refresh: 1h. **2FA**: TOTP-based via `pyotp`. `TOTPDevice` model (one per user) stores the HMAC secret; backup codes are stored as SHA-256 hashes (plaintext never saved). Setup flow: `setup/` → `activate/` → `verify/` on subsequent logins. Email verification and password reset also handled in `authentication/` via token-based flows.
+**Authentication**: JWT tokens stored in HttpOnly cookies. `authentication/middleware.py:JWTCookieMiddleware` extracts cookies → Authorization header. Access token: 15min, refresh: 1h. **2FA**: TOTP-based via `pyotp`. `TOTPDevice` model (one per user) stores the HMAC secret; backup codes are stored as SHA-256 hashes (plaintext never saved). Setup flow: `setup/` → `activate/` → `verify/` on subsequent logins. Email verification and password reset also handled in `authentication/` via token-based flows. **Desktop theme sync**: `ThemePreference` (one per user) stores the theme pushed by the dotfiles repo's `theme_switcher.sh` via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT, throttle scope `theme_sync`); the token is issued with `manage.py issue_theme_sync_token <username>` (only its SHA-256 is stored, re-issuing revokes the old one) and can only change the theme. The web app reads it via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (enabled only by the Header's `<ThemeToggle syncWithDesktop />`, i.e. authenticated pages) and applies it whenever it differs from the last synced value (`localStorage.desktopThemeSynced`), so a manual pick lasts until the next desktop switch.
 
 **Async Tasks** (`Celery`): Worker container is `axiom-worker` (`celery -A app worker --concurrency=2`). Beat scheduler is `axiom-queue` using `DatabaseScheduler` (schedules stored in DB via `django_celery_beat`). In tests, `CELERY_TASK_ALWAYS_EAGER=True` so tasks run synchronously without Redis.
 
@@ -113,17 +113,7 @@ Axiom/
 
 **Architecture**: `go_router` `StatefulShellRoute.indexedStack` with 4 bottom-nav tabs (Finanças / Planejamento / Agente IA / Segurança), each its own nav stack. `flutter_riverpod` for DI + data cache: services extend `BaseService<T>` (mirror of `base-service.ts`), one `Provider` per service and a `FutureProvider.autoDispose` per list, invalidated after mutations (the mobile equivalent of `queryClient.invalidateQueries`). Screens follow model → service → provider → screen + `*_form_sheet.dart` (a `showModalBottomSheet`). No i18n framework — Portuguese labels for backend enums live in `utils/choice_labels.dart`.
 
-**Screens implemented** (the daily-use subset of the web app — reports, config and admin stay web-only):
-- **Finanças**: dashboard (grid de navegação para os submódulos), contas, transações, cartões + faturas + lançamento de compras, transferências, **contas a pagar/receber** (`payables`/`receivables`), **empréstimos** (`loans`), **calendário financeiro** (agregação client-side), **cofres** (`vaults` — depósito/saque/aplicar rendimento + extrato), **metas financeiras** (`vaults.FinancialGoal`) e **membros** (`members` — cadastro completo). Dívidas parceladas mostram a tabela de parcelas (read-only) num sheet.
-- **Finanças (planejamento)**: **planejamento mensal** (`MonthlyPlan`), **despesas/receitas fixas** (CRUD + lançar no mês) e **orçamentos**.
-- **Biblioteca** (via dashboard de Planejamento): livros, cursos, revisão de flashcards e habilidades.
-- **Planejamento**: dashboard (gamificação), checklist diário (toggle Lista/Quadro por status + toque longo p/ seletor de status — o kanban sem drag-and-drop) + rotinas (com **heatmap anual de hábitos** via `routine-tasks/heatmap/`) + metas, treino (planos com edição aninhada de dias/exercícios em `WorkoutPlanDetailScreen`), nutrição (tipos de refeição com edição de opções/ingredientes em `MealTypeDetailScreen`), **Bem-estar** (`WellnessScreen`: painel, check-in emocional, modo crise com resposta da IA, biblioteca de intervenções, relatório semanal por IA). **Pomodoro** local. **Geração via IA** de treino/cardápio (`ai-workout-plan/`, `ai-menu-plan/`) — o backend persiste.
-- **Segurança**: porta do cofre (setup/unlock) e, desbloqueado, 3 abas — senhas, **cartões guardados** (`stored-cards`), **contas guardadas** (`stored-accounts`) — revelar/copiar (auto-ocultar 30s) e favoritos.
-- **Agente IA**: seletor de 4 assistentes + chat com streaming SSE.
-
-`agents/` no backend continua a **única** fonte de LLM para o app; o mobile só chama os endpoints `personal-planning/ai-*` e `wellness/*` já existentes (que por sua vez usam `agents.core.llm_client`).
-
-**Deliberadamente web-only** (ver `documentation/mobile/README.md`): distribuição (Play Store / TestFlight — precisa de contas/assinatura); upload de foto e permissões de membro; ferramentas de renegociação/amortização/plano de pagamento de dívidas; questionário Rosenberg de autoestima; arrastar-e-soltar do kanban.
+**Scope**: implements the daily-use subset of the web app (finance, planning, library, wellness, password vault, AI chat); reports, config and admin stay web-only. The current screen list and the deliberately web-only features (store distribution, photo upload, debt renegotiation tools, kanban drag-and-drop, etc.) are in `documentation/mobile/README.md`. The backend `agents/` app remains the **only** LLM source — mobile only calls existing endpoints (`personal-planning/ai-*`, `wellness/*`) that use `agents.core.llm_client`.
 
 **Dependencies**: Pinned to exact versions in `pubspec.yaml` (no `^` ranges), same policy as the rest of the repo; `pubspec.lock` is committed.
 
@@ -325,7 +315,7 @@ Wrap components that use queries with `<QueryClientProvider client={queryClient}
 
 ### Adding a New Backend Resource
 1. Create `models.py` extending `BaseModel` from `app/models.py` (provides uuid PK, timestamps, audit fields, `is_deleted`)
-2. Create `serializers.py` using `ModelSerializer`; encrypted fields should be `write_only=True`
+2. Create `serializers.py` using `ModelSerializer` with an explicit `fields` list — `fields = "__all__"` is rejected by the custom flake8 rule `DRF001` (`apps/api/flake8_no_serializer_all.py`, registered in `pyproject.toml`); encrypted fields should be `write_only=True`
 3. Create `views.py` extending `BaseListCreateView` / `BaseRetrieveUpdateDestroyView` from `app/base_views.py` (permissions already included)
 4. Create `urls.py` under `api/v1/` prefix
 5. Register in `app/urls.py` and `INSTALLED_APPS` in `app/settings.py`
@@ -353,7 +343,7 @@ def get_queryset(self):
 
 ### Backend Testing Patterns
 
-Tests live in `apps/api/tests/`. All test classes extend `BaseAPITestCase(APITestCase)` which creates a superuser and JWT-authenticated client in `setUp()`.
+Tests live in `apps/api/tests/`. There is no shared base module — the common pattern is a `BaseAPITestCase(APITestCase)` defined locally in each test file (e.g. `tests/test_views.py`) that creates a superuser and JWT-authenticated client in `setUp()`.
 
 ```python
 class BaseAPITestCase(APITestCase):
@@ -460,6 +450,7 @@ All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) 
 |------|---------|
 | `apps/api/requirements.txt` | Production Python deps — pinned to exact versions |
 | `apps/api/requirements-dev.txt` | Dev/test Python deps — also pinned exactly |
+| `apps/api/requirements-lint.txt` | Static-analysis-only deps installed by the CI lint jobs — also pinned exactly |
 | `apps/frontend/package.json` | npm deps — exact versions, enforced by `package-lock.json` |
 
 ### Updating dependencies
@@ -480,7 +471,8 @@ Frontend: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc` with 
 
 ## Development Checklist
 
-After any change:
+Before pushing (or when the user asks — these are slow, so don't run them after every edit):
 1. Run `source .venv/bin/activate && ./ci-check.sh` (see [CI/CD Validation](#cicd-validation-run-before-every-push))
 2. Verify the Docker build still passes: `docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d`
-3. Tell the changes to user in brazilian portuguese
+
+Always report the changes to the user in Brazilian Portuguese.

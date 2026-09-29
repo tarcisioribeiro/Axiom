@@ -9,11 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useDesktopThemeSync } from '@/hooks/use-desktop-theme-sync';
 import { type DarkVariant, type LightVariant, useTheme } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 
 interface ThemeToggleProps {
   className?: string;
+  /** Segue o tema do desktop (theme_switcher.sh) — só em páginas autenticadas */
+  syncWithDesktop?: boolean;
 }
 
 interface DarkVariantOption {
@@ -79,9 +82,10 @@ const LIGHT_VARIANTS: LightVariantOption[] = [
   { id: 'mint-light', label: 'Linux Mint Light', primary: '#1F9EDE', bg: '#F8F8F9' },
 ];
 
-export function ThemeToggle({ className }: ThemeToggleProps) {
+export function ThemeToggle({ className, syncWithDesktop = false }: ThemeToggleProps) {
   const { isDark, darkVariant, lightVariant, setDarkVariant, setLightVariant } =
     useTheme();
+  useDesktopThemeSync(syncWithDesktop, setDarkVariant, setLightVariant);
 
   return (
     <DropdownMenu>

@@ -539,6 +539,7 @@ class MonthlyPlanApplyView(APIView):
                     upsert=is_reapply,
                 )
                 results["expenses_created"] = result.get("created_count", 0)
+                results["blocked_cards"] = result.get("blocked_cards", [])
             except Exception:
                 logger.exception(
                     "Failed to generate fixed expenses for plan %s", pk

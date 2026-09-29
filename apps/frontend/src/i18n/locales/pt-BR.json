@@ -1237,7 +1237,12 @@
         "skippedNotice_one": "{{count}} já havia sido lançada neste mês e foi ignorada.",
         "skippedNotice_other": "{{count}} já haviam sido lançadas neste mês e foram ignoradas.",
         "error": "Erro ao lançar despesas",
-        "allGenerated": "Todos os lançamentos deste período já foram feitos."
+        "allGenerated": "Todos os lançamentos deste período já foram feitos.",
+        "cardTotals": "Despesas vinculadas a cartões",
+        "cardTotalLine": "{{total}} de {{available}} disponível",
+        "insufficientLimit": "Limite insuficiente: faltam {{missing}} de limite adicional para registrar as compras deste cartão.",
+        "blockedTitle": "Despesas de cartão não lançadas",
+        "blockedLine": "{{card}}: limite insuficiente, faltam {{missing}} de limite adicional."
       },
       "generationLog": {
         "title": "Histórico de Gerações",
@@ -1320,10 +1325,17 @@
         "usedCredit": "Crédito utilizado",
         "ofTotalLimit": "de {{value}} no total"
       },
-      "ofLimit": "de {{value}} disponível",
+      "ofLimit": "Limite atual: {{value}}",
       "usedPercent": "{{percent}}% do limite",
       "billAmount": "Fatura: {{amount}}",
-      "dueDayText": "• vence dia {{day}}"
+      "dueDayText": "• vence dia {{day}}",
+      "maxLimitValue": "Limite máximo: {{value}}",
+      "adjustLimit": {
+        "title": "Ajustar limite",
+        "used": "Utilizado: {{value}}",
+        "max": "Máximo: {{value}}",
+        "saved": "Limite ajustado"
+      }
     },
     "creditCardHub": {
       "openHub": "Ver detalhes do cartão",
@@ -1479,6 +1491,11 @@
         "billWillBePaid": "A fatura atual será marcada como paga. As parcelas serão lançadas nas faturas futuras do cartão.",
         "interestWarning": "Informe o valor total já com os juros cobrados pelo banco — o sistema não calcula juros automaticamente.",
         "processing": "Processando..."
+      },
+      "limitAdjusted": {
+        "title": "Limite atual ajustado",
+        "desc": "As parcelas da renegociação ultrapassaram o limite atual. O limite atual foi ajustado de {{previous}} para {{value}}, igual ao total utilizado — não há limite disponível para novas compras até que parcelas sejam pagas ou o limite seja ajustado.",
+        "maxRaised": "O limite máximo também foi elevado para {{value}}."
       }
     },
     "creditCardExpenses": {

@@ -28,7 +28,7 @@ from credit_cards.serializers import (
     PayCreditCardBillSerializer,
     RenegotiateBillSerializer,
 )
-from credit_cards.utils import recalculate_bill_total
+from credit_cards.utils import get_used_credit, recalculate_bill_total
 from expenses.models import Expense
 
 
@@ -582,9 +582,27 @@ class RenegotiateBillView(APIView):
         )
         bill.save()
 
+        # A renegociação não é um gasto novo: as parcelas são sempre lançadas
+        # e, se o utilizado passar do limite atual, o limite atual sobe até o
+        # utilizado (sem sobra para gastos); o máximo sobe junto se preciso.
+        limit_adjustment = None
+        used = get_used_credit(card)
+        if used > card.credit_limit:
+            limit_adjustment = {
+                "previous_credit_limit": f"{card.credit_limit:.2f}",
+                "new_credit_limit": f"{used:.2f}",
+                "previous_max_limit": f"{card.max_limit:.2f}",
+                "new_max_limit": f"{max(card.max_limit, used):.2f}",
+            }
+            # update() evita o full_clean do save() (ex.: cartão já vencido)
+            CreditCard.objects.filter(pk=card.pk).update(
+                credit_limit=used, max_limit=max(card.max_limit, used)
+            )
+
         return Response(
             {
                 "message": "Renegociação realizada com sucesso",
+                "limit_adjustment": limit_adjustment,
                 "bill": {
                     "id": bill.id,
                     "month": bill.month,

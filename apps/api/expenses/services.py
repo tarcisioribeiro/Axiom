@@ -1,5 +1,6 @@
 from calendar import month_abbr, monthrange
 from datetime import datetime
+from decimal import Decimal
 
 from django.db.models import Count, Sum
 from django.utils import timezone
@@ -9,6 +10,7 @@ from credit_cards.models import (
     CreditCardInstallment,
     CreditCardPurchase,
 )
+from credit_cards.utils import get_used_credit
 from expenses.models import Expense, FixedExpense, FixedExpenseGenerationLog
 
 
@@ -73,6 +75,55 @@ def get_or_create_bill(credit_card, year, month_num, user):
     return bill, True
 
 
+def _blocked_cards(fixed_exps_map, expense_values, year, month_num, upsert):
+    """Cartões cujo limite disponível (atual - utilizado) não cobre o total
+    das despesas fixas do lote vinculadas a eles.
+
+    Retorna {card_id: {card_id, card_name, required, available, missing}}.
+    """
+    month_code = month_abbr[int(month_num)]
+    required = {}
+    cards = {}
+    for item in expense_values:
+        fixed_exp = fixed_exps_map.get(item["fixed_expense_id"])
+        if fixed_exp is None or not fixed_exp.credit_card:
+            continue
+        card = fixed_exp.credit_card
+        value = Decimal(str(item["value"]))
+        # Mesmo critério de deduplicação do loop principal (fatura aberta do
+        # mês), sem criar a fatura aqui.
+        existing = CreditCardInstallment.objects.filter(
+            purchase__description=fixed_exp.description,
+            purchase__card=card,
+            bill__year=year,
+            bill__month=month_code,
+            bill__status="open",
+            bill__is_deleted=False,
+            is_deleted=False,
+            purchase__is_deleted=False,
+        ).first()
+        if existing:
+            if not upsert or existing.payed:
+                continue
+            value -= Decimal(str(existing.value))
+        cards[card.id] = card
+        required[card.id] = required.get(card.id, Decimal("0")) + value
+
+    blocked = {}
+    for card_id, total in required.items():
+        card = cards[card_id]
+        available = card.credit_limit - get_used_credit(card)
+        if total > available:
+            blocked[card_id] = {
+                "card_id": card_id,
+                "card_name": card.name,
+                "required": float(total),
+                "available": float(available),
+                "missing": float(total - available),
+            }
+    return blocked
+
+
 def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
     """Generate fixed expenses for a given month.
 
@@ -80,6 +131,9 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
     expenses. `skipped_count` counts templates that already had a launch for
     this month (deduplicated, not an error). `created_count` includes both
     plain expenses and credit-card-linked purchases.
+    `blocked_cards` lists credit cards whose available limit (current limit -
+    used) does not cover their items in this batch; those items are not
+    generated, the rest of the batch is.
     Raises FixedExpense.DoesNotExist if any fixed expense id is invalid.
     """
     year, month_num = month.split("-")
@@ -99,10 +153,18 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
         ).select_related("credit_card", "account", "member")
     }
 
+    blocked = _blocked_cards(
+        fixed_exps_map, expense_values, year, month_num, upsert
+    )
+
     for item in expense_values:
         fixed_exp = fixed_exps_map.get(item["fixed_expense_id"])
         if fixed_exp is None:
             raise FixedExpense.DoesNotExist()
+        # Sem limite no cartão: não lança nem marca o mês como gerado, para
+        # poder ser lançada depois de ajustar o limite.
+        if fixed_exp.credit_card_id in blocked:
+            continue
         fixed_expense_ids.append(fixed_exp.id)
 
         last_day = monthrange(year_int, month_int)[1]
@@ -268,6 +330,7 @@ def bulk_generate_fixed_expenses(month, expense_values, user, upsert=False):
         "skipped_count": skipped_count,
         "month": month,
         "expenses": created_expenses,
+        "blocked_cards": list(blocked.values()),
     }
 
 

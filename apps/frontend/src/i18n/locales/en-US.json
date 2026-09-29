@@ -1237,7 +1237,12 @@
         "skippedNotice_one": "{{count}} had already been launched this month and was skipped.",
         "skippedNotice_other": "{{count}} had already been launched this month and were skipped.",
         "error": "Error launching expenses",
-        "allGenerated": "All entries for this period have already been created."
+        "allGenerated": "All entries for this period have already been created.",
+        "cardTotals": "Expenses linked to credit cards",
+        "cardTotalLine": "{{total}} of {{available}} available",
+        "insufficientLimit": "Insufficient limit: {{missing}} of additional limit is needed to register this card's purchases.",
+        "blockedTitle": "Card expenses not launched",
+        "blockedLine": "{{card}}: insufficient limit, {{missing}} of additional limit needed."
       },
       "generationLog": {
         "title": "Generation History",
@@ -1320,10 +1325,17 @@
         "usedCredit": "Used credit",
         "ofTotalLimit": "of {{value}} total"
       },
-      "ofLimit": "of {{value}} available",
+      "ofLimit": "Current limit: {{value}}",
       "usedPercent": "{{percent}}% of limit",
       "billAmount": "Bill: {{amount}}",
-      "dueDayText": "• due day {{day}}"
+      "dueDayText": "• due day {{day}}",
+      "maxLimitValue": "Max limit: {{value}}",
+      "adjustLimit": {
+        "title": "Adjust limit",
+        "used": "Used: {{value}}",
+        "max": "Max: {{value}}",
+        "saved": "Limit adjusted"
+      }
     },
     "creditCardHub": {
       "openHub": "View card details",
@@ -1479,6 +1491,11 @@
         "billWillBePaid": "The current bill will be marked as paid. Installments will be added to future card bills.",
         "interestWarning": "Enter the total amount already including the bank's interest — the system does not calculate interest automatically.",
         "processing": "Processing..."
+      },
+      "limitAdjusted": {
+        "title": "Current limit adjusted",
+        "desc": "The renegotiation installments exceeded the current limit. The current limit was adjusted from {{previous}} to {{value}}, equal to the used amount — no limit is available for new purchases until installments are paid or the limit is adjusted.",
+        "maxRaised": "The max limit was also raised to {{value}}."
       }
     },
     "creditCardExpenses": {

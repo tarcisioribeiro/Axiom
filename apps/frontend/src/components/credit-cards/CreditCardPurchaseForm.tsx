@@ -348,7 +348,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               {exceedsLimit && watchedTotalValue > 0 && (
                 <p className="mt-xs text-destructive text-xs">
                   {t('pages.creditCardExpenses.form.exceedsLimitBy', {
-                    amount: formatCurrency(
+                    value: formatCurrency(
                       watchedTotalValue - selectedCardInfo.availableCredit
                     ),
                   })}

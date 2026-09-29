@@ -12,6 +12,7 @@ import {
   Filter,
   RotateCcw,
   TrendingDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +26,7 @@ import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
 import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
+import { CreditLimitAdjustDialog } from '@/components/credit-cards/CreditLimitAdjustDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -136,6 +138,7 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
   const { user } = useAuthStore();
 
   const [hubCard, setHubCard] = useState<CreditCard | undefined>();
+  const [limitCard, setLimitCard] = useState<CreditCard | undefined>();
   const setExtraLabel = useBreadcrumbExtraStore((s) => s.setExtraLabel);
 
   useEffect(() => {
@@ -627,12 +630,17 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="text-muted-foreground text-xs">
-                          {t('pages.creditCards.limit')}
+                          {t('pages.creditCards.stats.availableCredit')}
                         </p>
                         <p className="text-xl font-bold">{formatCurrency(available)}</p>
                         <p className="text-muted-foreground text-xs">
                           {t('pages.creditCards.ofLimit', {
                             value: formatCurrency(limit),
+                          })}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {t('pages.creditCards.maxLimitValue', {
+                            value: formatCurrency(card.max_limit),
                           })}
                         </p>
                       </div>
@@ -651,6 +659,19 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
                             aria-label={t('pages.creditCards.viewBills')}
                           >
                             <Receipt className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLimitCard(card);
+                            }}
+                            title={t('pages.creditCards.adjustLimit.title')}
+                            aria-label={t('pages.creditCards.adjustLimit.title')}
+                          >
+                            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -749,6 +770,12 @@ export default function CreditCards({ embedded = false }: { embedded?: boolean }
           })}
         </div>
       )}
+
+      <CreditLimitAdjustDialog
+        key={limitCard?.id}
+        card={limitCard}
+        onOpenChange={(open) => !open && setLimitCard(undefined)}
+      />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">

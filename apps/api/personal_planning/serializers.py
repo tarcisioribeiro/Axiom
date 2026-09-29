@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -283,6 +284,36 @@ class FocusBlockTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "occurrence_index",
             "order",
         ]
+
+    def validate(self, attrs):
+        def get(field):
+            if field in attrs:
+                return attrs[field]
+            return getattr(self.instance, field, None)
+
+        routine_task = get("routine_task")
+        occurrence_index = get("occurrence_index")
+        conflicts = FocusBlockTask.objects.filter(
+            routine_task=routine_task, deleted_at__isnull=True
+        ).exclude(focus_block=get("focus_block"))
+        if self.instance:
+            conflicts = conflicts.exclude(pk=self.instance.pk)
+        if occurrence_index is not None:
+            conflicts = conflicts.filter(
+                Q(occurrence_index__isnull=True)
+                | Q(occurrence_index=occurrence_index)
+            )
+        conflict = conflicts.select_related("focus_block").first()
+        if conflict:
+            raise serializers.ValidationError(
+                {
+                    "routine_task": (
+                        "Esta tarefa já está no bloco de foco"
+                        f' "{conflict.focus_block.name}".'
+                    )
+                }
+            )
+        return attrs
 
 
 class FocusBlockSerializer(serializers.ModelSerializer):

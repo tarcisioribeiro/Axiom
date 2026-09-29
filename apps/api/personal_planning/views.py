@@ -307,6 +307,10 @@ class FocusBlockDetailView(BaseRetrieveUpdateDestroyView):
     def perform_destroy(self, instance):
         instance.deleted_at = timezone.now()
         instance.save()
+        # Libera as tarefas do bloco para serem usadas em outro bloco.
+        instance.block_tasks.filter(deleted_at__isnull=True).update(
+            deleted_at=instance.deleted_at
+        )
         log_activity(
             self.request,
             "delete",

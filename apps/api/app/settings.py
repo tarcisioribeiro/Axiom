@@ -295,6 +295,7 @@ REST_FRAMEWORK = {
         "login": "30/minute",
         "register": "3/minute",
         "share_token": "10/minute",
+        "theme_sync": "30/minute",
         "export": "20/minute",
         "vault_unlock": "10/minute",
         # LLM calls are expensive — conservative per-user cap

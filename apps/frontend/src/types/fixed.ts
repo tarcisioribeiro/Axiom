@@ -62,6 +62,16 @@ export interface BulkGenerateResponse {
   skipped_count: number;
   month: string;
   expenses: Expense[];
+  /** Cartões sem limite disponível: suas despesas não foram lançadas. */
+  blocked_cards: BlockedCard[];
+}
+
+export interface BlockedCard {
+  card_id: number;
+  card_name: string;
+  required: number;
+  available: number;
+  missing: number;
 }
 
 export interface FixedExpenseStats {

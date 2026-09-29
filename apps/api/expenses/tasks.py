@@ -93,6 +93,7 @@ def generate_fixed_expenses_for_month(
             "status": "ok",
             "month": month_str,
             "created": result["created_count"],
+            "blocked_cards": result["blocked_cards"],
         }
     except Exception as exc:
         raise self.retry(exc=exc)

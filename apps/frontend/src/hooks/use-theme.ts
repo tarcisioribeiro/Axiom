@@ -63,7 +63,7 @@ function readLightVariant(): LightVariant {
   return DEFAULT_LIGHT_VARIANT;
 }
 
-function isValidDarkVariant(value: string): value is DarkVariant {
+export function isValidDarkVariant(value: string): value is DarkVariant {
   return [
     'dracula',
     'catppuccin-mocha',
@@ -77,7 +77,7 @@ function isValidDarkVariant(value: string): value is DarkVariant {
   ].includes(value);
 }
 
-function isValidLightVariant(value: string): value is LightVariant {
+export function isValidLightVariant(value: string): value is LightVariant {
   return [
     'alucard',
     'catppuccin-latte',

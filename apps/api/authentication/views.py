@@ -20,7 +20,7 @@ from rest_framework.views import APIView
 from app.config import cfg
 from app.request_utils import request_data
 
-from .throttles import RegisterRateThrottle
+from .throttles import RegisterRateThrottle, ThemeSyncRateThrottle
 
 
 def validate_cpf(cpf: str) -> bool:
@@ -1012,3 +1012,63 @@ class TwoFactorStatusView(APIView):
             is_active = False
 
         return Response({"is_active": is_active})
+
+
+class MyThemeView(APIView):
+    """
+    GET /api/v1/me/theme/
+
+    Tema sincronizado do desktop para o usuário autenticado (ou null).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        from .models import ThemePreference
+
+        user = cast(User, request.user)
+        pref = ThemePreference.objects.filter(user=user).first()
+        return Response({"theme": (pref.theme or None) if pref else None})
+
+
+class ThemeSyncView(APIView):
+    """
+    PUT /api/v1/theme-sync/   Authorization: ThemeSync <token>
+
+    Chamado pelo theme_switcher.sh do desktop. O token (gerado com
+    `manage.py issue_theme_sync_token <username>`) só permite trocar o tema.
+    """
+
+    authentication_classes: list = []
+    permission_classes: list = []
+    throttle_classes = [ThemeSyncRateThrottle]
+
+    def put(self, request: Request) -> Response:
+        from .models import ThemePreference
+
+        scheme, _, token = request.headers.get("Authorization", "").partition(
+            " "
+        )
+        pref = (
+            ThemePreference.objects.filter(
+                sync_token_hash=ThemePreference.hash_token(token)
+            ).first()
+            if scheme == "ThemeSync" and token
+            else None
+        )
+        if pref is None:
+            return Response(
+                {"detail": "Token de sync inválido."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        theme = request_data(request).get("theme")
+        if theme not in ThemePreference.THEMES:
+            return Response(
+                {"theme": ["Tema inválido."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pref.theme = theme
+        pref.save(update_fields=["theme", "updated_at"])
+        return Response({"theme": theme})

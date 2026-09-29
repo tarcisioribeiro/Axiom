@@ -193,6 +193,7 @@ export function RoutineFocusBlocksSection({
             <RoutineFocusBlockCard
               key={block.id}
               block={block}
+              allBlocks={blocks}
               routineTasks={routineTasks}
               onEdit={() => handleEdit(block)}
               onDelete={() => void handleDelete(block)}
@@ -230,6 +231,7 @@ export function RoutineFocusBlocksSection({
             <div className="pt-sm border-t">
               <FocusBlockTasksEditor
                 block={selectedBlock}
+                allBlocks={blocks}
                 routineTasks={routineTasks}
                 onAddTask={(routineTaskId, occurrenceIndex) =>
                   void handleAddTask(selectedBlock.id, routineTaskId, occurrenceIndex)

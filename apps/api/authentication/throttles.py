@@ -30,3 +30,9 @@ class VaultUnlockRateThrottle(UserRateThrottle):
     """
 
     scope = "vault_unlock"
+
+
+class ThemeSyncRateThrottle(AnonRateThrottle):
+    """Per-IP rate limit on the token-authenticated theme sync endpoint."""
+
+    scope = "theme_sync"
