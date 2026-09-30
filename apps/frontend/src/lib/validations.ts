@@ -897,6 +897,18 @@ export const routineTaskSchema = z
         'Horario de encerramento so e permitido para tarefas com uma ocorrencia por dia',
       path: ['closing_time'],
     }
+  )
+  .refine(
+    (data) => {
+      if (data.linked_meal_type && data.linked_hydration_goal) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'Uma tarefa de nutrição não pode estar vinculada a uma refeição e a hidratação ao mesmo tempo',
+      path: ['linked_hydration_goal'],
+    }
   );
 
 export const goalSchema = z.object({
