@@ -189,7 +189,7 @@ function WellnessStatCard({
 
   return (
     <Card className="border-border/50 relative overflow-hidden">
-      <CardContent className="p-5">
+      <CardContent className="p-5 pt-5">
         <div className="flex items-start justify-between">
           <div className="space-y-xs">
             <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
@@ -457,7 +457,7 @@ function SelfEsteemTab() {
 
             {ROSENBERG_QUESTIONS.map((q, i) => (
               <Card key={i} className="border-border/50">
-                <CardContent className="p-md space-y-3">
+                <CardContent className="px-md py-md pt-md space-y-3">
                   <p className="text-sm leading-relaxed font-medium">
                     {i + 1}. {q}
                   </p>
@@ -513,7 +513,7 @@ function SelfEsteemTab() {
             </div>
 
             <Card className="border-border/50">
-              <CardContent className="p-md space-y-3">
+              <CardContent className="px-md py-md pt-md space-y-3">
                 <p className="text-foreground text-sm leading-relaxed">
                   {aiParsed.analysis}
                 </p>
@@ -601,7 +601,7 @@ function SelfEsteemTab() {
                   const sl = scoreLabel(a.score);
                   return (
                     <Card key={a.id} className="border-border/50">
-                      <CardContent className="gap-md p-md flex items-center">
+                      <CardContent className="gap-md px-md py-md pt-md flex items-center">
                         <div>
                           <p className="text-muted-foreground text-xs">
                             {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
@@ -784,7 +784,7 @@ function CheckinTab() {
           </p>
           {history.results.slice(0, 3).map((c) => (
             <Card key={c.id} className="border-border/50">
-              <CardContent className="flex items-center justify-between p-3">
+              <CardContent className="flex items-center justify-between p-3 pt-3">
                 <p className="text-muted-foreground text-xs">
                   {format(new Date(c.checked_at), 'dd/MM')}
                 </p>
@@ -909,7 +909,7 @@ function CrisisTab() {
             </p>
             {logs.results.slice(0, 5).map((log) => (
               <Card key={log.id} className="border-border/50">
-                <CardContent className="flex items-center justify-between p-3">
+                <CardContent className="flex items-center justify-between p-3 pt-3">
                   <div>
                     <p className="text-sm font-medium">{log.impulse_type_display}</p>
                     <p className="text-muted-foreground text-xs">
@@ -1026,7 +1026,7 @@ function CrisisTab() {
       {aiParsed ? (
         <>
           <Card className="border-primary/20">
-            <CardContent className="space-y-xs p-md">
+            <CardContent className="space-y-xs px-md py-md pt-md">
               <p className="text-primary text-xs font-medium tracking-wider uppercase">
                 Validação
               </p>
@@ -1035,7 +1035,7 @@ function CrisisTab() {
           </Card>
 
           <Card className="border-warning/20">
-            <CardContent className="space-y-xs p-md">
+            <CardContent className="space-y-xs px-md py-md pt-md">
               <p className="text-warning text-xs font-medium tracking-wider uppercase">
                 Contexto
               </p>
@@ -1067,7 +1067,7 @@ function CrisisTab() {
           </div>
 
           <Card className="border-success/20">
-            <CardContent className="p-md">
+            <CardContent className="px-md py-md pt-md">
               <p className="text-success text-center text-sm italic">
                 "{aiParsed.affirmation}"
               </p>
@@ -1076,7 +1076,7 @@ function CrisisTab() {
         </>
       ) : (
         <Card className="border-border/50">
-          <CardContent className="p-md">
+          <CardContent className="px-md py-md pt-md">
             <p className="text-muted-foreground text-sm">
               Impulso registrado. A análise da IA estará disponível em breve.
             </p>
@@ -1199,7 +1199,7 @@ function LibraryTab() {
                 key={item.id}
                 className={cn('border-border/50 transition', done && 'opacity-70')}
               >
-                <CardContent className="p-md space-y-3">
+                <CardContent className="px-md py-md pt-md space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="space-y-xs flex-1">
                       <div className="gap-sm flex flex-wrap items-center">
@@ -1377,7 +1377,7 @@ function ReportTab() {
               { label: 'Motivação', value: latest.avg_motivation },
             ].map(({ label, value }) => (
               <Card key={label} className="border-border/50">
-                <CardContent className="p-3 text-center">
+                <CardContent className="p-3 pt-3 text-center">
                   <p className="text-muted-foreground text-xs">{label}</p>
                   <p className="text-foreground text-xl font-bold">
                     {value ? Number(value).toFixed(1) : '—'}
