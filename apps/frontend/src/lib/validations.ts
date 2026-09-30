@@ -906,7 +906,8 @@ export const routineTaskSchema = z
       return true;
     },
     {
-      message: 'Uma tarefa de nutrição não pode estar vinculada a uma refeição e a hidratação ao mesmo tempo',
+      message:
+        'Uma tarefa de nutrição não pode estar vinculada a uma refeição e a hidratação ao mesmo tempo',
       path: ['linked_hydration_goal'],
     }
   );

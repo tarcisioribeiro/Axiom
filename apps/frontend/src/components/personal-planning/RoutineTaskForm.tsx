@@ -1132,7 +1132,8 @@ export function RoutineTaskForm({
                         'linked_meal_type',
                         value && value !== 'none' ? parseInt(value) : null
                       );
-                      if (value && value !== 'none') setValue('linked_hydration_goal', null);
+                      if (value && value !== 'none')
+                        setValue('linked_hydration_goal', null);
                     }}
                     disabled={isLoading || !!watch('linked_hydration_goal')}
                   >
@@ -1200,7 +1201,10 @@ export function RoutineTaskForm({
                       id="linked-hydration-goal"
                       checked={!!watch('linked_hydration_goal')}
                       onCheckedChange={(checked) => {
-                        setValue('linked_hydration_goal', checked ? hydrationGoalId : null);
+                        setValue(
+                          'linked_hydration_goal',
+                          checked ? hydrationGoalId : null
+                        );
                         if (checked) setValue('linked_meal_type', null);
                       }}
                       disabled={isLoading || !!watch('linked_meal_type')}
