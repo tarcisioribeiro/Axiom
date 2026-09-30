@@ -1,8 +1,9 @@
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -120,27 +121,27 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
               <Label htmlFor="total_with_interest">
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestLabel')}
               </Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
-                  R$
-                </span>
-                <Input
-                  id="total_with_interest"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="pl-10"
-                  {...register('total_with_interest', {
-                    valueAsNumber: true,
-                    required: t('pages.creditCardBills.renegotiateForm.totalRequired'),
-                    min: {
-                      value: 0.01,
-                      message: t('pages.creditCardBills.renegotiateForm.totalRequired'),
-                    },
-                  })}
-                  disabled={isLoading}
-                />
-              </div>
+              <Controller
+                name="total_with_interest"
+                control={control}
+                rules={{
+                  required: t('pages.creditCardBills.renegotiateForm.totalRequired'),
+                  min: {
+                    value: 0.01,
+                    message: t('pages.creditCardBills.renegotiateForm.totalRequired'),
+                  },
+                }}
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="total_with_interest"
+                    disabled={isLoading}
+                    ref={field.ref}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
+                )}
+              />
               {errors.total_with_interest && (
                 <p className="text-destructive text-xs">
                   {errors.total_with_interest.message}

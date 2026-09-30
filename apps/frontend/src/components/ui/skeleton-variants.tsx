@@ -115,7 +115,7 @@ export function SkeletonList({
 export function SkeletonStat({ className }: { className?: string }) {
   return (
     <Card className={className}>
-      <CardContent className="p-lg">
+      <CardContent className="px-lg py-lg pt-lg">
         <div className="flex items-center justify-between">
           <div className="space-y-sm">
             <Skeleton className="h-4 w-24" />

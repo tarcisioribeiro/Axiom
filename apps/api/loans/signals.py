@@ -12,6 +12,7 @@ Este módulo implementa signals que:
 from datetime import date
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Sum
 from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
@@ -158,6 +159,7 @@ def update_loan_status(loan):
 
 
 @receiver(post_save, sender="expenses.Expense")
+@transaction.atomic
 def update_loan_on_expense_save(sender, instance, created, **kwargs):
     """
     Atualiza o empréstimo quando uma despesa é criada ou editada.
@@ -201,6 +203,7 @@ def update_loan_on_expense_save(sender, instance, created, **kwargs):
 
 
 @receiver(pre_delete, sender="expenses.Expense")
+@transaction.atomic
 def update_loan_on_expense_delete(sender, instance, **kwargs):
     """
     Atualiza o empréstimo quando uma despesa é deletada.
@@ -244,6 +247,7 @@ def update_loan_on_expense_delete(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender="expenses.Expense")
+@transaction.atomic
 def recalculate_loan_after_expense_delete(sender, instance, **kwargs):
     """
     Recalcula o empréstimo após a despesa ser deletada.
@@ -280,6 +284,7 @@ def recalculate_loan_after_expense_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="revenues.Revenue")
+@transaction.atomic
 def update_loan_on_revenue_save(sender, instance, created, **kwargs):
     """
     Atualiza o empréstimo quando uma receita é criada ou editada.
@@ -323,6 +328,7 @@ def update_loan_on_revenue_save(sender, instance, created, **kwargs):
 
 
 @receiver(pre_delete, sender="revenues.Revenue")
+@transaction.atomic
 def update_loan_on_revenue_delete(sender, instance, **kwargs):
     """
     Atualiza o empréstimo quando uma receita é deletada.
@@ -364,6 +370,7 @@ def update_loan_on_revenue_delete(sender, instance, **kwargs):
 
 
 @receiver(post_delete, sender="revenues.Revenue")
+@transaction.atomic
 def recalculate_loan_after_revenue_delete(sender, instance, **kwargs):
     """
     Recalcula o empréstimo após a receita ser deletada.

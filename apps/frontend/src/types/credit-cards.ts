@@ -174,6 +174,13 @@ export interface RenegotiateBillResponse {
     installment_value: string;
     start_date: string;
   };
+  /** Presente quando as parcelas ultrapassaram o limite atual e ele foi elevado. */
+  limit_adjustment: {
+    previous_credit_limit: string;
+    new_credit_limit: string;
+    previous_max_limit: string;
+    new_max_limit: string;
+  } | null;
 }
 
 export interface CreditCardExpensesByCategory {

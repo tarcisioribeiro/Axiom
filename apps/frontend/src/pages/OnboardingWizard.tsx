@@ -487,7 +487,7 @@ function StepRoutine({
 
       {/* Summary card */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="gap-md p-md flex flex-wrap">
+        <CardContent className="gap-md px-md py-md pt-md flex flex-wrap">
           <div className="gap-xs flex items-center">
             <Activity className="text-primary h-4 w-4" />
             <span className="text-sm">

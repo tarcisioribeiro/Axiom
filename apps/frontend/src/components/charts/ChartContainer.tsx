@@ -24,6 +24,8 @@ interface ChartContainerProps {
   dataKey: string;
   nameKey: string;
   formatter?: (value: number | string) => string;
+  /** Formatador do eixo de valores (ex.: formatCurrency); a largura do eixo passa a ser automática. */
+  valueAxisFormatter?: (value: number) => string;
   colors: string[];
   enabledTypes?: ChartType[];
   emptyMessage?: string;
@@ -57,6 +59,7 @@ export const ChartContainer = ({
   dataKey,
   nameKey,
   formatter,
+  valueAxisFormatter,
   colors,
   enabledTypes = ['pie', 'bar', 'line'],
   emptyMessage,
@@ -168,6 +171,7 @@ export const ChartContainer = ({
               dataKey={dataKey}
               nameKey={nameKey}
               formatter={formatter}
+              valueAxisFormatter={valueAxisFormatter}
               colors={colors}
               customColors={customColors}
               layout={layout}
@@ -182,6 +186,7 @@ export const ChartContainer = ({
               dataKey={lines ? undefined : dataKey}
               nameKey={nameKey}
               formatter={formatter}
+              valueAxisFormatter={valueAxisFormatter}
               colors={colors}
               lines={lines}
               dualYAxis={dualYAxis}

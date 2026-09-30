@@ -18,6 +18,8 @@ import type { FocusBlock, RoutineTask } from '@/types';
 
 interface FocusBlockTasksEditorProps {
   block: FocusBlock;
+  /** Todos os blocos — uma tarefa (ou ocorrência) só pode estar em um. */
+  allBlocks: FocusBlock[];
   routineTasks: RoutineTask[];
   onAddTask: (routineTaskId: number, occurrenceIndex: number | null) => void;
   onRemoveTask: (focusBlockTaskId: number) => void;
@@ -25,6 +27,7 @@ interface FocusBlockTasksEditorProps {
 
 export function FocusBlockTasksEditor({
   block,
+  allBlocks,
   routineTasks,
   onAddTask,
   onRemoveTask,
@@ -36,6 +39,15 @@ export function FocusBlockTasksEditor({
     const set = takenByTask.get(bt.routine_task) ?? new Set<number | null>();
     set.add(bt.occurrence_index ?? null);
     takenByTask.set(bt.routine_task, set);
+  }
+  const takenElsewhere = new Map<number, Set<number | null>>();
+  for (const other of allBlocks) {
+    if (other.id === block.id) continue;
+    for (const bt of other.block_tasks) {
+      const set = takenElsewhere.get(bt.routine_task) ?? new Set<number | null>();
+      set.add(bt.occurrence_index ?? null);
+      takenElsewhere.set(bt.routine_task, set);
+    }
   }
 
   const taskById = new Map(routineTasks.map((task) => [task.id, task]));
@@ -52,15 +64,18 @@ export function FocusBlockTasksEditor({
     .filter((task) => block.weekdays.some((w) => appearsOnDay(task, w)))
     .map((task) => {
       const taken = takenByTask.get(task.id) ?? new Set<number | null>();
+      const elsewhere = takenElsewhere.get(task.id);
+      // Tarefa inteira em outro bloco ocupa todas as ocorrências.
+      if (elsewhere?.has(null)) return null;
       if (task.daily_occurrences <= 1) {
-        return taken.has(null) ? null : { task, occurrences: null };
+        return taken.has(null) || elsewhere ? null : { task, occurrences: null };
       }
       const times = getTimesForTask(task);
       const options = Array.from(
         { length: task.daily_occurrences },
         (_, i) => i
-      ).filter((i) => !taken.has(i));
-      const wholeAvailable = !taken.has(null);
+      ).filter((i) => !taken.has(i) && !elsewhere?.has(i));
+      const wholeAvailable = !taken.has(null) && !elsewhere;
       if (options.length === 0 && !wholeAvailable) return null;
       return { task, occurrences: { options, times, wholeAvailable } };
     })

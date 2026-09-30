@@ -22,6 +22,7 @@ from rest_framework.views import APIView
 
 from admin_panel.models import SystemConfig
 from admin_panel.serializers import SystemConfigSerializer
+from agents.core.llm_client import LLMClient
 from app.request_utils import request_data
 from security.models import ActivityLog
 from security.serializers import ActivityLogSerializer
@@ -423,6 +424,7 @@ class AdminIntegrationsView(AdminBaseView):
                 ),
                 "anthropic_model": _get_config_value("ANTHROPIC_MODEL")
                 or os.getenv("ANTHROPIC_MODEL", ""),
+                "llm_warnings": LLMClient.diagnostics(),
             }
         )
 

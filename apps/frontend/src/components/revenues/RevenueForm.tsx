@@ -35,6 +35,7 @@ import {
   translate,
 } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
@@ -305,10 +306,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   <SelectItem key={a.id} value={a.id.toString()}>
                     <span>{a.account_name}</span>
                     <span className="text-muted-foreground ml-2 text-xs">
-                      {parseFloat(a.available_balance).toLocaleString('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      })}
+                      {formatCurrency(a.available_balance)}
                     </span>
                   </SelectItem>
                 ))}
@@ -317,12 +315,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             {selectedAccount && (
               <p className="text-muted-foreground text-xs">
                 {t('common.fields.balance_info', {
-                  value: parseFloat(selectedAccount.available_balance).toLocaleString(
-                    'pt-BR',
-                    {
-                      minimumFractionDigits: 2,
-                    }
-                  ),
+                  value: formatCurrency(selectedAccount.available_balance),
                 })}
               </p>
             )}
@@ -370,7 +363,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   <SelectItem value="none">{t('common.actions.none')}</SelectItem>
                   {eligibleLoans.map((loan) => (
                     <SelectItem key={loan.id} value={loan.id.toString()}>
-                      {loan.description} — R$ {loan.remaining_balance || '0.00'}
+                      {loan.description} — {formatCurrency(loan.remaining_balance)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -405,7 +398,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                           key={fixedRevenue.id}
                           value={fixedRevenue.id.toString()}
                         >
-                          {fixedRevenue.description} — R$ {fixedRevenue.default_value}
+                          {fixedRevenue.description} —{' '}
+                          {formatCurrency(fixedRevenue.default_value)}
                         </SelectItem>
                       ))}
                     </SelectContent>

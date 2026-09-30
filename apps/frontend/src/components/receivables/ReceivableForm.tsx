@@ -28,6 +28,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
+import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import type { Receivable, ReceivableFormData } from '@/types';
 
@@ -176,16 +177,10 @@ export function ReceivableForm({
               </div>
               <Progress value={receivedPercent} className="[&>div]:bg-success h-1.5" />
               <p className="text-muted-foreground text-xs">
-                {(form.received_value ?? 0).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}{' '}
+                {formatCurrency(form.received_value ?? 0)}{' '}
                 {t('pages.payables.form.progressLabel', {
                   paid: '',
-                  total: form.value.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }),
+                  total: formatCurrency(form.value),
                 }).replace(' de ', ' / ')}
               </p>
             </div>

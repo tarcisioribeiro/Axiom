@@ -223,6 +223,7 @@ export type {
   FixedExpenseValue,
   BulkGenerateRequest,
   BulkGenerateResponse,
+  BlockedCard,
   FixedExpenseStats,
   FixedExpenseGenerationLog,
   FixedRevenue,

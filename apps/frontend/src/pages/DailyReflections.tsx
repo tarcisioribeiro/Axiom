@@ -142,7 +142,7 @@ function ReflectionCard({
 
   return (
     <Card className="group">
-      <CardContent className="p-5">
+      <CardContent className="p-5 pt-5">
         <div className="gap-md flex items-start">
           {/* Data estilo calendário */}
           <div className="bg-muted/40 py-sm flex w-14 shrink-0 flex-col items-center rounded-lg border text-center">

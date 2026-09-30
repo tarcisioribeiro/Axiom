@@ -11,7 +11,7 @@ from credit_cards.models import (
     CreditCardInstallment,
     CreditCardPurchase,
 )
-from credit_cards.utils import recalculate_bill_total
+from credit_cards.utils import get_used_credit, recalculate_bill_total
 
 
 class CreditCardSerializer(serializers.ModelSerializer):
@@ -51,15 +51,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
         """
         Retorna a soma das parcelas não pagas do cartão.
         """
-        from django.db.models import Sum
-
-        result = CreditCardInstallment.objects.filter(
-            purchase__card=obj,
-            purchase__is_deleted=False,
-            is_deleted=False,
-            payed=False,
-        ).aggregate(total=Sum("value"))
-        return float(result["total"] or 0)
+        return float(get_used_credit(obj))
 
     def get_available_credit(self, obj):
         """
@@ -95,6 +87,32 @@ class CreditCardSerializer(serializers.ModelSerializer):
                 "Data de validade deve ser posterior à data atual"
             )
         return value
+
+    def validate(self, attrs):
+        """
+        Limite atual (credit_limit) deve ficar entre o crédito já utilizado
+        e o limite máximo (max_limit) cadastrado.
+        """
+        instance = self.instance
+        credit_limit = attrs.get(
+            "credit_limit", instance.credit_limit if instance else None
+        )
+        max_limit = attrs.get(
+            "max_limit", instance.max_limit if instance else None
+        )
+        if credit_limit is None or max_limit is None:
+            return attrs
+        if credit_limit > max_limit:
+            raise serializers.ValidationError(
+                {"credit_limit": "Limite atual excede o limite máximo."}
+            )
+        if instance and Decimal(str(credit_limit)) < Decimal(
+            str(self.get_used_credit(instance))
+        ):
+            raise serializers.ValidationError(
+                {"credit_limit": "Limite atual menor que o crédito utilizado."}
+            )
+        return attrs
 
     def create(self, validated_data):
         """
@@ -578,6 +596,22 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
         Cria a compra e gera automaticamente as parcelas.
         Atualiza o total_amount das faturas e redefine o status se necessário.
         """
+        # Bloqueia a linha do cartão para que compras simultâneas não
+        # ultrapassem juntas o limite disponível (limite atual - utilizado).
+        card = CreditCard.objects.select_for_update().get(
+            pk=validated_data["card"].pk
+        )
+        available = card.credit_limit - get_used_credit(card)
+        if Decimal(str(validated_data["total_value"])) > available:
+            raise serializers.ValidationError(
+                {
+                    "total_value": (
+                        "Compra excede o limite disponível "
+                        f"(R$ {available:.2f})."
+                    )
+                }
+            )
+
         # Criar a compra
         purchase = CreditCardPurchase.objects.create(**validated_data)
 

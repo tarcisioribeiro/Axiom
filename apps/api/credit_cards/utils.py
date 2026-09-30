@@ -1,6 +1,19 @@
 from decimal import Decimal
 
+from django.db.models import Sum
+
 from credit_cards.models import CreditCardBill, CreditCardInstallment
+
+
+def get_used_credit(card) -> Decimal:
+    """Soma das parcelas não pagas do cartão."""
+    result = CreditCardInstallment.objects.filter(
+        purchase__card=card,
+        purchase__is_deleted=False,
+        is_deleted=False,
+        payed=False,
+    ).aggregate(total=Sum("value"))
+    return result["total"] or Decimal("0")
 
 
 def recalculate_bill_total(bill: CreditCardBill) -> None:

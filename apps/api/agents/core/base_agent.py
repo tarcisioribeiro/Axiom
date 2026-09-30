@@ -65,7 +65,6 @@ class BaseAgent(ABC):
     description: str
     ollama_model: str = "mistral:7b-instruct"
     anthropic_model: str = "claude-haiku-4-5-20251001"
-    groq_model: str = "llama-3.1-8b-instant"
     openai_model: str = "gpt-4o-mini"
 
     def get_model(self) -> str:
@@ -73,7 +72,9 @@ class BaseAgent(ABC):
         if provider == "anthropic":
             return self.anthropic_model
         if provider == "groq":
-            return self.groq_model
+            from agents.core.llm_client import GROQ_DEFAULT_MODEL
+
+            return cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         if provider == "openai":
             return self.openai_model
         return self.ollama_model

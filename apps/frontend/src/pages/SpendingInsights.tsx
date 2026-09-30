@@ -357,7 +357,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
                     tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                     axisLine={false}
                     tickLine={false}
-                    width={70}
+                    width="auto"
                   />
                   <Tooltip
                     content={<CurrencyTooltip labelFormatter={formatMonthLabel} />}

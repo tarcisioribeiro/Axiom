@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -96,15 +97,12 @@ export function VaultDepositDialog({
             <Label htmlFor="deposit_amount">
               {t('pages.vaults.depositAmountLabel')}
             </Label>
-            <Input
+            <CurrencyInput
               id="deposit_amount"
-              type="number"
-              step="0.01"
               min="0.01"
               max={vault ? parseFloat(vault.account_available_balance) : undefined}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
             />
           </div>
           <div>
@@ -215,15 +213,12 @@ export function VaultWithdrawDialog({
             <Label htmlFor="withdraw_amount">
               {t('pages.vaults.withdrawAmountLabel')}
             </Label>
-            <Input
+            <CurrencyInput
               id="withdraw_amount"
-              type="number"
-              step="0.01"
               min="0.01"
               max={vault ? parseFloat(vault.current_balance) : undefined}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
             />
           </div>
           <div>

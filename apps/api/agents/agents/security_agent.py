@@ -134,7 +134,6 @@ class SecurityAgent(BaseAgent):
     )
     ollama_model = "mistral:7b-instruct"
     anthropic_model = "claude-sonnet-4-6"
-    groq_model = "llama-3.1-8b-instant"
     openai_model = "gpt-4o"
 
     def can_handle(self, query: str) -> float:

@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -9,25 +10,26 @@ import {
 } from '@/lib/formatters';
 
 describe('formatCurrency', () => {
-  it('formats a valid number as BRL currency', () => {
-    const result = formatCurrency(1234.56);
-    expect(result).toContain('1');
-    expect(result).toContain('234');
+  // Intl usa espaço não-separável entre "R$" e o número
+  const fc = (v: Parameters<typeof formatCurrency>[0]) =>
+    formatCurrency(v).replace(/\s/g, ' ');
+
+  it('formats as R$ with thousands separator and two decimals', () => {
+    expect(fc(1234.5)).toBe('R$ 1.234,50');
+    expect(fc('500')).toBe('R$ 500,00');
+    expect(fc(-12.345)).toBe('-R$ 12,35');
   });
 
-  it('formats a numeric string', () => {
-    const result = formatCurrency('500');
-    expect(result).toContain('500');
+  it('formats invalid values as zero', () => {
+    expect(fc('not-a-number')).toBe('R$ 0,00');
+    expect(fc(null)).toBe('R$ 0,00');
+    expect(fc(0)).toBe('R$ 0,00');
   });
 
-  it('formats NaN-producing strings as zero', () => {
-    const result = formatCurrency('not-a-number');
-    expect(result).toContain('0');
-  });
-
-  it('handles zero', () => {
-    const result = formatCurrency(0);
-    expect(result).toContain('0');
+  it('ignores the UI language', async () => {
+    await i18next.changeLanguage('en-US');
+    expect(fc(1234.5)).toBe('R$ 1.234,50');
+    await i18next.changeLanguage('pt-BR');
   });
 });
 

@@ -277,25 +277,26 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
 
   function WeekdayDots({ task }: { task: RoutineTask }): ReactNode {
     const activeDays = getActiveWeekdays(task);
-    const labels = [0, 1, 2, 3, 4, 5, 6].map((i) =>
-      t(`pages.planningDashboard.weekdayShort.${i}`)
-    );
+    const displayOrder = [6, 0, 1, 2, 3, 4, 5];
     return (
       <div className="flex gap-0.5">
-        {labels.map((label, idx) => (
-          <div
-            key={idx}
-            title={label}
-            className={cn(
-              'text-2xs flex h-5 w-5 items-center justify-center rounded font-semibold',
-              activeDays.includes(idx)
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground'
-            )}
-          >
-            {label.charAt(0)}
-          </div>
-        ))}
+        {displayOrder.map((dayIdx) => {
+          const label = t(`pages.planningDashboard.weekdayShort.${dayIdx}`);
+          return (
+            <div
+              key={dayIdx}
+              title={label}
+              className={cn(
+                'text-2xs flex h-5 w-5 items-center justify-center rounded font-semibold',
+                activeDays.includes(dayIdx)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              )}
+            >
+              {label.charAt(0)}
+            </div>
+          );
+        })}
       </div>
     );
   }

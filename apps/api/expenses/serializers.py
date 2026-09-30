@@ -389,6 +389,9 @@ class BulkGenerateResponseSerializer(serializers.Serializer):
     skipped_count = serializers.IntegerField(default=0)
     month = serializers.CharField()
     expenses = ExpenseSerializer(many=True)
+    blocked_cards = serializers.ListField(
+        child=serializers.DictField(), default=list
+    )
 
 
 class BulkMarkPaidSerializer(serializers.Serializer):

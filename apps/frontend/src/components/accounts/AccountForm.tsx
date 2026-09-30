@@ -29,6 +29,7 @@ import {
   ACCOUNT_TYPE_ICONS as ACCOUNT_TYPE_ICONS_CONFIG,
   INSTITUTION_ICONS as INSTITUTION_ICONS_CONFIG,
 } from '@/config/icons';
+import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -129,12 +130,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             <p className="text-muted-foreground text-xs">
               {t('common.fields.balance')}
             </p>
-            <p className="font-semibold">
-              {balanceVal.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              })}
-            </p>
+            <p className="font-semibold">{formatCurrency(balanceVal)}</p>
           </div>
         </div>
         <div className="bg-primary/5 absolute -top-4 -right-4 h-16 w-16 rounded-full" />
@@ -274,10 +270,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             {overdraftVal > 0 && (
               <p className="text-muted-foreground text-xs">
                 {t('pages.accounts.form.balanceMinHint')}{' '}
-                {(-overdraftVal).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
+                {formatCurrency(-overdraftVal)}
               </p>
             )}
             {errors.balance && (
