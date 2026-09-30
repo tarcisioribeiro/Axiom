@@ -1458,6 +1458,7 @@ export default function Dashboard() {
                           dataKey="saldo"
                           nameKey="date"
                           formatter={formatCurrency}
+                          valueAxisFormatter={formatCurrency}
                           colors={COLORS}
                           lockChartType="line"
                           lines={[
@@ -1545,6 +1546,7 @@ export default function Dashboard() {
                         dataKey="saldo"
                         nameKey="month"
                         formatter={formatCurrency}
+                        valueAxisFormatter={formatCurrency}
                         colors={COLORS}
                         emptyMessage={t('pages.dashboard.noData')}
                         lockChartType="line"
@@ -1708,6 +1710,7 @@ export default function Dashboard() {
                       dataKey="value"
                       nameKey="name"
                       formatter={formatCurrency}
+                      valueAxisFormatter={formatCurrency}
                       colors={COLORS}
                       emptyMessage={t('pages.dashboard.noExpenses')}
                       lockChartType="pie"
@@ -1733,6 +1736,7 @@ export default function Dashboard() {
                       dataKey="value"
                       nameKey="name"
                       formatter={formatCurrency}
+                      valueAxisFormatter={formatCurrency}
                       colors={COLORS}
                       emptyMessage={t('pages.dashboard.noRevenues')}
                       lockChartType="pie"
@@ -1818,6 +1822,7 @@ export default function Dashboard() {
                       dataKey="value"
                       nameKey="name"
                       formatter={formatCurrency}
+                      valueAxisFormatter={formatCurrency}
                       colors={COLORS}
                       emptyMessage={t('pages.dashboard.noCardExpenses')}
                       lockChartType="pie"

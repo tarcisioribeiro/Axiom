@@ -870,3 +870,52 @@ class FocusBlockWriteResponseTest(BasePlanningImprovementsTestCase):
             [bt["routine_task"] for bt in response.data["block_tasks"]],
             [task.id],
         )
+
+
+class FocusBlockTaskUniqueAcrossBlocksTest(BasePlanningImprovementsTestCase):
+    """Uma tarefa (ou ocorrência) só pode estar em um bloco de foco."""
+
+    URL = "/api/v1/personal-planning/focus-block-tasks/"
+
+    def setUp(self):
+        super().setUp()
+        from personal_planning.models import FocusBlock
+
+        self.block_a = FocusBlock.objects.create(name="A", owner=self.member)
+        self.block_b = FocusBlock.objects.create(name="B", owner=self.member)
+        self.task = RoutineTask.objects.create(
+            name="Água",
+            category="health",
+            periodicity="daily",
+            daily_occurrences=3,
+            owner=self.member,
+        )
+
+    def _add(self, block, occurrence_index=None):
+        return self.client.post(
+            self.URL,
+            {
+                "focus_block": block.id,
+                "routine_task": self.task.id,
+                "occurrence_index": occurrence_index,
+            },
+            format="json",
+        )
+
+    def test_whole_task_blocks_other_block(self):
+        self.assertEqual(self._add(self.block_a).status_code, 201)
+        self.assertEqual(self._add(self.block_b).status_code, 400)
+        self.assertEqual(self._add(self.block_b, 1).status_code, 400)
+
+    def test_occurrences_split_across_blocks(self):
+        self.assertEqual(self._add(self.block_a, 0).status_code, 201)
+        self.assertEqual(self._add(self.block_b, 1).status_code, 201)
+        self.assertEqual(self._add(self.block_b, 0).status_code, 400)
+        self.assertEqual(self._add(self.block_b).status_code, 400)
+
+    def test_deleting_block_frees_its_tasks(self):
+        self.assertEqual(self._add(self.block_a).status_code, 201)
+        self.client.delete(
+            f"/api/v1/personal-planning/focus-blocks/{self.block_a.id}/"
+        )
+        self.assertEqual(self._add(self.block_b).status_code, 201)

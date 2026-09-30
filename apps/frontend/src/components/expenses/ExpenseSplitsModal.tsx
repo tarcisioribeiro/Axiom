@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -202,10 +203,8 @@ export function ExpenseSplitsModal({
               </div>
               <div className="space-y-xs">
                 <Label htmlFor="split-value">{t('common.fields.value')}</Label>
-                <Input
+                <CurrencyInput
                   id="split-value"
-                  type="number"
-                  step="0.01"
                   min="0"
                   value={form.value || ''}
                   onChange={(e) =>

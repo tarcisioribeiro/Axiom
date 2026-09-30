@@ -126,6 +126,54 @@ class TestLLMClientOpenAI(TestCase):
         self.assertTrue(LLMClient.is_available())
 
 
+def _cfg_groq_with_ollama_fallback(key: str, default: object = None) -> object:
+    return {
+        "LLM_PROVIDER": "groq",
+        "LLM_FALLBACK_PROVIDERS": "ollama",
+        "GROQ_API_KEY": "gsk-test",
+        "GROQ_MODEL": "retired-model",
+    }.get(key, default)
+
+
+def _fake_get(groq_models: list[str], ollama_models: list[str]):
+    def fake(url: str, **_kwargs: object) -> MagicMock:
+        resp = MagicMock(status_code=200, ok=True)
+        if "groq" in url:
+            resp.json.return_value = {"data": [{"id": m} for m in groq_models]}
+        else:
+            resp.json.return_value = {
+                "models": [{"name": m} for m in ollama_models]
+            }
+        return resp
+
+    return fake
+
+
+@patch(
+    "agents.core.llm_client._cfg", side_effect=_cfg_groq_with_ollama_fallback
+)
+class TestLLMClientAvailability(TestCase):
+    def test_down_when_primary_model_retired_and_fallback_missing_model(
+        self, _cfg: MagicMock
+    ) -> None:
+        from agents.core.llm_client import LLMClient
+
+        with patch("requests.get", side_effect=_fake_get(["other"], [])):
+            self.assertFalse(LLMClient.is_available())
+            warnings = LLMClient.diagnostics()
+        self.assertTrue(any("retired-model" in w for w in warnings))
+        self.assertTrue(
+            any(w.startswith("Fallback 'ollama'") for w in warnings)
+        )
+
+    def test_up_when_fallback_is_healthy(self, _cfg: MagicMock) -> None:
+        from agents.core.llm_client import LLMClient
+
+        fake = _fake_get(["other"], ["mistral:7b-instruct"])
+        with patch("requests.get", side_effect=fake):
+            self.assertTrue(LLMClient.is_available())
+
+
 class _SyncThread:
     """Replaces threading.Thread in tests — runs target synchronously on
     start()."""

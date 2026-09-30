@@ -30,6 +30,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
+import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
 import type { Payable, PayableFormData } from '@/types';
 
@@ -203,14 +204,8 @@ export function PayableForm({
               <Progress value={paymentPercent} className="h-1.5" />
               <p className="text-muted-foreground text-xs">
                 {t('pages.payables.form.progressLabel', {
-                  paid: (formData.paid_value ?? 0).toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }),
-                  total: formData.value.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  }),
+                  paid: formatCurrency(formData.paid_value ?? 0),
+                  total: formatCurrency(formData.value),
                 })}
               </p>
             </div>

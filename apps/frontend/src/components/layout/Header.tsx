@@ -86,7 +86,7 @@ export const Header = () => {
             </Button>
           )}
 
-          <ThemeToggle />
+          <ThemeToggle syncWithDesktop />
 
           {/* Language selector — hidden on small mobile to prevent overflow */}
           <div className="hidden sm:block">

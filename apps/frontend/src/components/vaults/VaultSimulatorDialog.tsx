@@ -3,6 +3,7 @@ import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -94,26 +95,20 @@ export function VaultSimulatorDialog({
         <div className="gap-md grid sm:grid-cols-2">
           <div className="space-y-xs">
             <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
-            <Input
-              type="number"
+            <CurrencyInput
               min="0"
-              step="100"
               value={initialAmount}
               onChange={(e) => setInitialAmount(e.target.value)}
-              placeholder="0,00"
             />
           </div>
           <div className="space-y-xs">
             <Label className="text-xs">
               {t('pages.vaultSimulator.monthlyDeposit')}
             </Label>
-            <Input
-              type="number"
+            <CurrencyInput
               min="0"
-              step="100"
               value={monthlyDeposit}
               onChange={(e) => setMonthlyDeposit(e.target.value)}
-              placeholder="0,00"
             />
           </div>
           <div className="space-y-xs">

@@ -38,6 +38,7 @@ import { translateCategory } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
+import type { BlockedCard } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -559,7 +560,7 @@ function EmbeddedWrapper({ children }: { children: ReactNode }) {
 export default function MonthlyPlanner({ embedded = false }: { embedded?: boolean }) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
-  const { showConfirm } = useAlertDialog();
+  const { showConfirm, showAlert } = useAlertDialog();
   const { toast } = useToast();
 
   const now = new Date();
@@ -629,8 +630,11 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
   const applyMutation = useMutation({
     mutationFn: (id: number) =>
-      apiClient.post(`${API_CONFIG.ENDPOINTS.MONTHLY_PLAN}${id}/apply/`, {}),
-    onSuccess: () => {
+      apiClient.post<{ results: { blocked_cards?: BlockedCard[] } }>(
+        `${API_CONFIG.ENDPOINTS.MONTHLY_PLAN}${id}/apply/`,
+        {}
+      ),
+    onSuccess: (data) => {
       void queryClient.invalidateQueries({ queryKey: ['monthlyPlan', month, year] });
       void queryClient.invalidateQueries({ queryKey: ['expenses'] });
       void queryClient.invalidateQueries({ queryKey: ['revenues'] });
@@ -638,6 +642,21 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       void queryClient.invalidateQueries({ queryKey: ['fixed-expenses'] });
       void queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
       toast({ title: t('monthlyPlanner.applySuccess') });
+      const blocked = data.results.blocked_cards ?? [];
+      if (blocked.length > 0) {
+        void showAlert({
+          title: t('pages.fixedExpenses.launchDialog.blockedTitle'),
+          description: blocked
+            .map((c) =>
+              t('pages.fixedExpenses.launchDialog.blockedLine', {
+                card: c.card_name,
+                missing: formatCurrency(c.missing),
+              })
+            )
+            .join('\n'),
+          variant: 'destructive',
+        });
+      }
     },
     onError: () => {
       toast({ title: t('monthlyPlanner.applyError'), variant: 'destructive' });

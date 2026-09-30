@@ -1,12 +1,14 @@
 from calendar import monthrange
 from datetime import datetime
 
+from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
 from revenues.models import FixedRevenue, FixedRevenueGenerationLog, Revenue
 
 
+@transaction.atomic
 def bulk_generate_fixed_revenues(month, revenue_values, user, upsert=False):
     """Generate fixed revenues for a given month.
 

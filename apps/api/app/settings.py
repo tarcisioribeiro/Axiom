@@ -295,8 +295,10 @@ REST_FRAMEWORK = {
         "login": "30/minute",
         "register": "3/minute",
         "share_token": "10/minute",
+        "theme_sync": "30/minute",
         "export": "20/minute",
         "vault_unlock": "10/minute",
+        "credit_card_delete": "5/minute",
         # LLM calls are expensive — conservative per-user cap
         "agent": "30/minute",
         "categorization_suggest": "20/minute",

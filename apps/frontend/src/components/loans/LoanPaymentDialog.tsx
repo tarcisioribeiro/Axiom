@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -100,12 +101,9 @@ export function LoanPaymentDialog({
         <div className="space-y-md">
           <div className="space-y-xs">
             <Label>{t('pages.loans.payment.value')} *</Label>
-            <Input
-              type="number"
-              step="0.01"
+            <CurrencyInput
               value={form.value}
               onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-              placeholder="0,00"
             />
           </div>
           <div className="space-y-xs">

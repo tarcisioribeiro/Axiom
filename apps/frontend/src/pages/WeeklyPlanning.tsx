@@ -249,7 +249,7 @@ export default function WeeklyPlanning() {
         {/* Week summary */}
         <div className="mb-md gap-md grid grid-cols-3">
           <Card>
-            <CardContent className="gap-sm p-md flex items-center">
+            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
               <Calendar className="text-muted-foreground h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">{totalTasks}</p>
@@ -260,7 +260,7 @@ export default function WeeklyPlanning() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="gap-sm p-md flex items-center">
+            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
               <CheckCircle2 className="text-success h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">{completedTasks}</p>
@@ -271,7 +271,7 @@ export default function WeeklyPlanning() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="gap-sm p-md flex items-center">
+            <CardContent className="gap-sm px-md py-md pt-md flex items-center">
               <Clock className="text-muted-foreground h-5 w-5" />
               <div>
                 <p className="text-lg font-bold">

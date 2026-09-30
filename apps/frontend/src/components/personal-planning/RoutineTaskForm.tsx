@@ -190,16 +190,21 @@ export function RoutineTaskForm({
     void loadCurrentUserMember();
   }, [task, setValue]);
 
+  const isIntellect = watch('category') === 'intellect';
+  const isFinance = watch('category') === 'finance';
+
   const { data: financialGoals = [] } = useQuery({
     queryKey: ['financial-goals-active'],
     queryFn: () => financialGoalsService.getAll({ is_active: 'true' }),
     staleTime: 60_000,
+    enabled: isFinance,
   });
 
   const { data: readingBooksList = [] } = useQuery({
     queryKey: ['books-reading'],
     queryFn: () => booksService.getAll({ read_status: 'reading' }),
     staleTime: 60_000,
+    enabled: isIntellect,
   });
 
   useEffect(() => {
@@ -218,6 +223,14 @@ export function RoutineTaskForm({
       }
     }
   }, [periodicity, setValue, watch]);
+
+  useEffect(() => {
+    if (!isIntellect) setValue('linked_book', null);
+  }, [isIntellect, setValue]);
+
+  useEffect(() => {
+    if (!isFinance) setValue('linked_financial_goal', null);
+  }, [isFinance, setValue]);
 
   // Vínculos com Dieta: só para a categoria Nutrição (regra também no backend)
   const isNutrition = watch('category') === 'nutrition';
@@ -262,8 +275,8 @@ export function RoutineTaskForm({
   }, [isExercise, setValue]);
 
   const hasLinks =
-    financialGoals.length > 0 ||
-    readingBooksList.length > 0 ||
+    (isFinance && financialGoals.length > 0) ||
+    (isIntellect && readingBooksList.length > 0) ||
     hasNutritionLinks ||
     isExercise;
 
@@ -1028,7 +1041,7 @@ export function RoutineTaskForm({
 
           {linksOpen && (
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-              {financialGoals.length > 0 && (
+              {isFinance && financialGoals.length > 0 && (
                 <div className="space-y-sm">
                   <Label className="gap-xs flex items-center">
                     <Link2 className="text-muted-foreground h-3.5 w-3.5" />
@@ -1068,7 +1081,7 @@ export function RoutineTaskForm({
                 </div>
               )}
 
-              {readingBooksList.length > 0 && (
+              {isIntellect && readingBooksList.length > 0 && (
                 <div className="space-y-sm">
                   <Label className="gap-xs flex items-center">
                     <Link2 className="text-muted-foreground h-3.5 w-3.5" />
@@ -1114,13 +1127,15 @@ export function RoutineTaskForm({
                   </Label>
                   <Select
                     value={watch('linked_meal_type')?.toString() ?? ''}
-                    onValueChange={(value) =>
+                    onValueChange={(value) => {
                       setValue(
                         'linked_meal_type',
                         value && value !== 'none' ? parseInt(value) : null
-                      )
-                    }
-                    disabled={isLoading}
+                      );
+                      if (value && value !== 'none')
+                        setValue('linked_hydration_goal', null);
+                    }}
+                    disabled={isLoading || !!watch('linked_hydration_goal')}
                   >
                     <SelectTrigger>
                       <SelectValue
@@ -1185,13 +1200,14 @@ export function RoutineTaskForm({
                     <Checkbox
                       id="linked-hydration-goal"
                       checked={!!watch('linked_hydration_goal')}
-                      onCheckedChange={(checked) =>
+                      onCheckedChange={(checked) => {
                         setValue(
                           'linked_hydration_goal',
                           checked ? hydrationGoalId : null
-                        )
-                      }
-                      disabled={isLoading}
+                        );
+                        if (checked) setValue('linked_meal_type', null);
+                      }}
+                      disabled={isLoading || !!watch('linked_meal_type')}
                     />
                     <Label
                       htmlFor="linked-hydration-goal"

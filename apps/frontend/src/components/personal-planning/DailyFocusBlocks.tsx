@@ -197,6 +197,7 @@ export function DailyFocusBlocks({
             <div className="pt-sm border-t">
               <FocusBlockTasksEditor
                 block={selectedBlock}
+                allBlocks={blocks}
                 routineTasks={routineTasks}
                 onAddTask={(routineTask, occurrenceIndex) =>
                   void handleAddTask(routineTask, occurrenceIndex)

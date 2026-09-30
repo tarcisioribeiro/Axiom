@@ -16,6 +16,7 @@ function BlockIcon({ name, className }: { name?: string | null; className?: stri
 
 interface RoutineFocusBlockCardProps {
   block: FocusBlock;
+  allBlocks: FocusBlock[];
   routineTasks: RoutineTask[];
   onEdit: () => void;
   onDelete: () => void;
@@ -25,6 +26,7 @@ interface RoutineFocusBlockCardProps {
 
 export function RoutineFocusBlockCard({
   block,
+  allBlocks,
   routineTasks,
   onEdit,
   onDelete,
@@ -60,6 +62,7 @@ export function RoutineFocusBlockCard({
       <div className="px-md pb-md pt-sm">
         <FocusBlockTasksEditor
           block={block}
+          allBlocks={allBlocks}
           routineTasks={routineTasks}
           onAddTask={onAddTask}
           onRemoveTask={onRemoveTask}

@@ -16,7 +16,6 @@ cloud
 import hashlib
 import json
 import logging
-import os
 import threading
 import time
 from collections.abc import Callable, Generator
@@ -29,6 +28,8 @@ from app.config import cfg as _cfg
 logger = logging.getLogger(__name__)
 
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+# Groq aposenta modelos com frequência — sobrescreva via GROQ_MODEL no admin.
+GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
 _OPENAI_BASE_URL = "https://api.openai.com/v1"
 
 _FALLBACK_ERROR: dict[str, str] = {
@@ -154,7 +155,9 @@ class LLMClient:
 
             t0 = time.monotonic()
             try:
-                result = cls._dispatch_chat(provider, messages, model)
+                result = cls._dispatch_chat(
+                    provider, messages, model if i == 0 else None
+                )
                 duration = time.monotonic() - t0
                 tokens_in = _count_tokens_in(messages)
                 tokens_out = _estimate_tokens(result)
@@ -227,7 +230,9 @@ class LLMClient:
 
             t0 = time.monotonic()
             try:
-                gen = cls._dispatch_stream(provider, messages, model)
+                gen = cls._dispatch_stream(
+                    provider, messages, model if i == 0 else None
+                )
                 first = next(gen, None)
             except Exception as exc:
                 if record_llm_request is not None:
@@ -409,7 +414,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
         groq_api_key = _cfg("GROQ_API_KEY", "")
-        groq_model = _cfg("GROQ_MODEL", "llama-3.1-8b-instant")
+        groq_model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or groq_model
         resp = requests.post(
@@ -434,7 +439,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
         groq_api_key = _cfg("GROQ_API_KEY", "")
-        groq_model = _cfg("GROQ_MODEL", "llama-3.1-8b-instant")
+        groq_model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or groq_model
         resp = requests.post(
@@ -623,28 +628,101 @@ class LLMClient:
     # ─────────────────────────────────────────────────────────────────
 
     @classmethod
-    def is_available(cls) -> bool:
+    def _provider_problems(cls, provider: str) -> list[str]:
+        """Motivos pelos quais o provider não conseguiria responder."""
+        if provider not in {"ollama", "groq", "anthropic", "openai"}:
+            return [f"provider desconhecido '{provider}'"]
+        key_name = f"{provider.upper()}_API_KEY"
+        if provider != "ollama" and not _cfg(key_name):
+            return [f"{key_name} não configurada"]
         try:
-            provider = _cfg("LLM_PROVIDER", "ollama")
-            if provider == "anthropic":
-                return bool(
-                    _cfg("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-                )
             if provider == "groq":
-                return bool(_cfg("GROQ_API_KEY"))
-            if provider == "openai":
-                return bool(_cfg("OPENAI_API_KEY"))
-            ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
-            resp = requests.get(f"{ollama_url}/api/tags", timeout=5)
-            return resp.status_code == 200
+                model = _cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)
+                resp = requests.get(
+                    f"{_GROQ_BASE_URL}/models",
+                    headers={"Authorization": f"Bearer {_cfg(key_name)}"},
+                    timeout=5,
+                )
+                if resp.status_code == 401:
+                    return ["GROQ_API_KEY inválida"]
+                resp.raise_for_status()
+                ids = {m["id"] for m in resp.json().get("data", [])}
+                if model not in ids:
+                    return [
+                        f"modelo '{model}' não existe mais no Groq"
+                        " — atualize GROQ_MODEL"
+                    ]
+            elif provider == "ollama":
+                model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+                if not cls._ollama_has_model(model):
+                    return [
+                        f"modelo '{model}' não baixado"
+                        f" (ollama pull {model})"
+                    ]
+        except requests.RequestException as exc:
+            return [f"inacessível: {exc}"]
+        return []
+
+    @classmethod
+    def _ollama_has_model(cls, name: str) -> bool:
+        url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+        resp = requests.get(f"{url}/api/tags", timeout=5)
+        resp.raise_for_status()
+        pulled = {m["name"] for m in resp.json().get("models", [])}
+        return name in pulled or f"{name}:latest" in pulled
+
+    @classmethod
+    def is_available(cls) -> bool:
+        """True se o provider principal ou algum fallback pode responder."""
+        try:
+            return any(
+                not cls._provider_problems(p) for p in cls._get_providers()
+            )
         except Exception:
             return False
+
+    @classmethod
+    def diagnostics(cls) -> list[str]:
+        """Problemas de configuração do LLM — exibido só para admins."""
+        warnings: list[str] = []
+        from admin_panel.models import SystemConfig
+
+        for row in SystemConfig.objects.filter(  # type: ignore[attr-defined]
+            category="llm", is_secret=True
+        ):
+            if row._value and row.get_value() is None:
+                warnings.append(
+                    f"{row.key} não pôde ser descriptografada"
+                    " (salva com outra ENCRYPTION_KEY) — cadastre-a novamente."
+                )
+
+        providers = cls._get_providers()
+        for i, provider in enumerate(providers):
+            label = "Provider" if i == 0 else "Fallback"
+            for problem in cls._provider_problems(provider):
+                warnings.append(f"{label} '{provider}': {problem}.")
+        if len(providers) == 1:
+            warnings.append(
+                "Nenhum fallback configurado (LLM_FALLBACK_PROVIDERS vazio)."
+            )
+
+        # Embeddings (RAG) sempre usam o Ollama, qualquer que seja o provider.
+        embed = _cfg("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+        try:
+            if not cls._ollama_has_model(embed):
+                warnings.append(
+                    f"Embeddings (RAG): modelo '{embed}' não baixado"
+                    f" (ollama pull {embed})."
+                )
+        except requests.RequestException as exc:
+            warnings.append(f"Embeddings (RAG): Ollama inacessível: {exc}")
+        return warnings
 
     @classmethod
     def list_models(cls) -> list[str]:
         provider = _cfg("LLM_PROVIDER", "ollama")
         if provider == "groq":
-            return [_cfg("GROQ_MODEL", "llama-3.1-8b-instant")]
+            return [_cfg("GROQ_MODEL", GROQ_DEFAULT_MODEL)]
         if provider == "openai":
             return [_cfg("OPENAI_MODEL", "gpt-4o-mini")]
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")

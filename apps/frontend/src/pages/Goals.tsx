@@ -172,7 +172,7 @@ function GoalCard({
           />
         )}
       </AnimatePresence>
-      <CardContent className="p-5">
+      <CardContent className="p-5 pt-5">
         <div className="mb-md flex items-start gap-3">
           <div
             className={cn(

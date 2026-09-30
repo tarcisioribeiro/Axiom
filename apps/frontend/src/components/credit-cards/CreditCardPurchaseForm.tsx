@@ -1,10 +1,11 @@
 /* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -214,13 +215,20 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           <Label htmlFor="total_value">
             {t('pages.creditCardExpenses.form.totalValueLabel')}
           </Label>
-          <Input
-            id="total_value"
-            type="number"
-            step="0.01"
-            {...register('total_value', { required: true, valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading || isEditMode}
+          <Controller
+            name="total_value"
+            control={control}
+            rules={{ required: true }}
+            render={({ field }) => (
+              <CurrencyInput
+                id="total_value"
+                disabled={isLoading || isEditMode}
+                ref={field.ref}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+              />
+            )}
           />
           {isEditMode && (
             <p className="text-warning text-xs">
@@ -348,7 +356,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
               {exceedsLimit && watchedTotalValue > 0 && (
                 <p className="mt-xs text-destructive text-xs">
                   {t('pages.creditCardExpenses.form.exceedsLimitBy', {
-                    amount: formatCurrency(
+                    value: formatCurrency(
                       watchedTotalValue - selectedCardInfo.availableCredit
                     ),
                   })}

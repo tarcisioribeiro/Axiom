@@ -52,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TabTransition } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -801,583 +802,589 @@ export function BookDetailModal({
         </div>
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
-          {/* Info tab */}
-          {activeTab === 'info' && (
-            <>
-              {/* Top section: cover + main info */}
-              <div className="gap-lg flex">
-                {/* Cover */}
-                <div className="shrink-0">
-                  {book.cover ? (
-                    <img
-                      src={book.cover}
-                      alt={t('pages.books.detail.coverAlt', { title: book.title })}
-                      className="h-64 w-44 rounded-md object-cover shadow-md"
-                    />
-                  ) : (
-                    <div className="bg-muted flex h-64 w-44 items-center justify-center rounded-md border shadow-sm">
-                      <BookOpen className="text-muted-foreground h-10 w-10" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Main info */}
-                <div className="min-w-0 flex-1 space-y-3">
-                  <div>
-                    <h2 className="text-xl leading-tight font-semibold">
-                      {book.title}
-                    </h2>
-                    <p className="mt-xs text-muted-foreground text-sm">
-                      {book.authors_names.join(', ')}
-                    </p>
+          <TabTransition key={activeTab}>
+            {/* Info tab */}
+            {activeTab === 'info' && (
+              <>
+                {/* Top section: cover + main info */}
+                <div className="gap-lg flex">
+                  {/* Cover */}
+                  <div className="shrink-0">
+                    {book.cover ? (
+                      <img
+                        src={book.cover}
+                        alt={t('pages.books.detail.coverAlt', { title: book.title })}
+                        className="h-64 w-44 rounded-md object-cover shadow-md"
+                      />
+                    ) : (
+                      <div className="bg-muted flex h-64 w-44 items-center justify-center rounded-md border shadow-sm">
+                        <BookOpen className="text-muted-foreground h-10 w-10" />
+                      </div>
+                    )}
                   </div>
 
-                  <div className="gap-sm flex flex-wrap">
-                    <Badge variant={statusVariant(book.read_status)}>
-                      {book.read_status_display}
-                    </Badge>
-                    <Badge variant="secondary">{book.genre_display}</Badge>
-                    {book.media_type_display && (
-                      <Badge variant="outline">{book.media_type_display}</Badge>
-                    )}
-                    {book.has_summary && (
-                      <Badge variant="outline">
-                        {t('pages.books.detail.hasSummary')}
+                  {/* Main info */}
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <div>
+                      <h2 className="text-xl leading-tight font-semibold">
+                        {book.title}
+                      </h2>
+                      <p className="mt-xs text-muted-foreground text-sm">
+                        {book.authors_names.join(', ')}
+                      </p>
+                    </div>
+
+                    <div className="gap-sm flex flex-wrap">
+                      <Badge variant={statusVariant(book.read_status)}>
+                        {book.read_status_display}
                       </Badge>
-                    )}
-                  </div>
+                      <Badge variant="secondary">{book.genre_display}</Badge>
+                      {book.media_type_display && (
+                        <Badge variant="outline">{book.media_type_display}</Badge>
+                      )}
+                      {book.has_summary && (
+                        <Badge variant="outline">
+                          {t('pages.books.detail.hasSummary')}
+                        </Badge>
+                      )}
+                    </div>
 
-                  {book.rating !== null && book.rating > 0 && (
-                    <StarRow rating={book.rating} />
-                  )}
+                    {book.rating !== null && book.rating > 0 && (
+                      <StarRow rating={book.rating} />
+                    )}
 
-                  <div className="space-y-sm">
-                    <MetaRow
-                      icon={<User className="h-4 w-4" />}
-                      label={t('pages.books.detail.metaPublisher')}
-                      value={book.publisher_name}
-                    />
-                    <MetaRow
-                      icon={<BookOpen className="h-4 w-4" />}
-                      label={t('pages.books.detail.metaPages')}
-                      value={t('pages.books.detail.pagesCount', { count: book.pages })}
-                    />
-                    <MetaRow
-                      icon={<Globe className="h-4 w-4" />}
-                      label={t('pages.books.detail.metaLanguage')}
-                      value={book.language_display}
-                    />
-                    <MetaRow
-                      icon={<Library className="h-4 w-4" />}
-                      label={t('pages.books.detail.metaType')}
-                      value={book.literarytype_display}
-                    />
-                    <MetaRow
-                      icon={<Hash className="h-4 w-4" />}
-                      label={t('pages.books.detail.metaEdition')}
-                      value={book.edition}
-                    />
-                    {book.publish_date && (
+                    <div className="space-y-sm">
                       <MetaRow
-                        icon={<Calendar className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaPublishDate')}
-                        value={formatDate(book.publish_date, 'dd/MM/yyyy')}
+                        icon={<User className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaPublisher')}
+                        value={book.publisher_name}
                       />
-                    )}
-                    {book.genre_display && (
                       <MetaRow
-                        icon={<Tag className="h-4 w-4" />}
-                        label={t('pages.books.detail.metaGenre')}
-                        value={book.genre_display}
+                        icon={<BookOpen className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaPages')}
+                        value={t('pages.books.detail.pagesCount', {
+                          count: book.pages,
+                        })}
                       />
-                    )}
+                      <MetaRow
+                        icon={<Globe className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaLanguage')}
+                        value={book.language_display}
+                      />
+                      <MetaRow
+                        icon={<Library className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaType')}
+                        value={book.literarytype_display}
+                      />
+                      <MetaRow
+                        icon={<Hash className="h-4 w-4" />}
+                        label={t('pages.books.detail.metaEdition')}
+                        value={book.edition}
+                      />
+                      {book.publish_date && (
+                        <MetaRow
+                          icon={<Calendar className="h-4 w-4" />}
+                          label={t('pages.books.detail.metaPublishDate')}
+                          value={formatDate(book.publish_date, 'dd/MM/yyyy')}
+                        />
+                      )}
+                      {book.genre_display && (
+                        <MetaRow
+                          icon={<Tag className="h-4 w-4" />}
+                          label={t('pages.books.detail.metaGenre')}
+                          value={book.genre_display}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Reading progress */}
-              {book.reading_progress > 0 && (
-                <>
-                  <div className="border-t" />
-                  <div className="space-y-sm">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="gap-xs flex items-center font-medium">
-                        <TrendingUp className="h-4 w-4" />
-                        {t('pages.books.detail.readingProgress')}
-                      </span>
-                      <span className="font-semibold">{book.reading_progress}%</span>
-                    </div>
-                    <Progress value={book.reading_progress} className="h-2" />
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.books.detail.pagesRead', {
-                        read: book.total_pages_read,
-                        total: book.pages,
-                      })}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* Completion forecast */}
-              {book.read_status === 'reading' &&
-                (book.estimated_completion_general ||
-                  book.estimated_completion_book) && (
+                {/* Reading progress */}
+                {book.reading_progress > 0 && (
                   <>
                     <div className="border-t" />
                     <div className="space-y-sm">
-                      <span className="gap-xs flex items-center text-sm font-medium">
-                        <Calendar className="h-4 w-4" />
-                        {t('pages.books.detail.completionForecast')}
-                      </span>
-                      <div className="gap-sm grid grid-cols-1 text-xs">
-                        {book.estimated_completion_book && (
-                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
-                            <span className="text-muted-foreground">
-                              {t('pages.books.detail.bookAvg')}
-                              {book.book_avg_pages_per_day > 0 && (
-                                <span className="ml-xs">
-                                  {t('pages.books.detail.pagesPerDay', {
-                                    count: book.book_avg_pages_per_day,
-                                  })}
-                                </span>
-                              )}
-                            </span>
-                            <span className="font-semibold">
-                              {new Date(
-                                book.estimated_completion_book + 'T12:00:00'
-                              ).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                        )}
-                        {book.estimated_completion_general && (
-                          <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
-                            <span className="text-muted-foreground">
-                              {t('pages.books.detail.generalAvg')}
-                              {book.general_avg_pages_per_day > 0 && (
-                                <span className="ml-xs">
-                                  {t('pages.books.detail.pagesPerDay', {
-                                    count: book.general_avg_pages_per_day,
-                                  })}
-                                </span>
-                              )}
-                            </span>
-                            <span className="font-semibold">
-                              {new Date(
-                                book.estimated_completion_general + 'T12:00:00'
-                              ).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                        )}
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="gap-xs flex items-center font-medium">
+                          <TrendingUp className="h-4 w-4" />
+                          {t('pages.books.detail.readingProgress')}
+                        </span>
+                        <span className="font-semibold">{book.reading_progress}%</span>
                       </div>
+                      <Progress value={book.reading_progress} className="h-2" />
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.books.detail.pagesRead', {
+                          read: book.total_pages_read,
+                          total: book.pages,
+                        })}
+                      </p>
                     </div>
                   </>
                 )}
 
-              {/* Synopsis */}
-              {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
-                <>
-                  <div className="border-t" />
-                  <div className="space-y-xs">
-                    <p className="text-sm font-medium">
-                      {t('pages.books.detail.synopsis')}
-                    </p>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      {book.synopsis}
-                    </p>
-                  </div>
-                </>
-              )}
+                {/* Completion forecast */}
+                {book.read_status === 'reading' &&
+                  (book.estimated_completion_general ||
+                    book.estimated_completion_book) && (
+                    <>
+                      <div className="border-t" />
+                      <div className="space-y-sm">
+                        <span className="gap-xs flex items-center text-sm font-medium">
+                          <Calendar className="h-4 w-4" />
+                          {t('pages.books.detail.completionForecast')}
+                        </span>
+                        <div className="gap-sm grid grid-cols-1 text-xs">
+                          {book.estimated_completion_book && (
+                            <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
+                              <span className="text-muted-foreground">
+                                {t('pages.books.detail.bookAvg')}
+                                {book.book_avg_pages_per_day > 0 && (
+                                  <span className="ml-xs">
+                                    {t('pages.books.detail.pagesPerDay', {
+                                      count: book.book_avg_pages_per_day,
+                                    })}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="font-semibold">
+                                {new Date(
+                                  book.estimated_completion_book + 'T12:00:00'
+                                ).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+                          )}
+                          {book.estimated_completion_general && (
+                            <div className="bg-muted py-sm flex items-center justify-between rounded-md px-3">
+                              <span className="text-muted-foreground">
+                                {t('pages.books.detail.generalAvg')}
+                                {book.general_avg_pages_per_day > 0 && (
+                                  <span className="ml-xs">
+                                    {t('pages.books.detail.pagesPerDay', {
+                                      count: book.general_avg_pages_per_day,
+                                    })}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="font-semibold">
+                                {new Date(
+                                  book.estimated_completion_general + 'T12:00:00'
+                                ).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
-              {/* Actions */}
-              <div className="border-t" />
-              <div className="gap-sm flex justify-between">
-                <div>
-                  {onAskIntellect && (
+                {/* Synopsis */}
+                {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
+                  <>
+                    <div className="border-t" />
+                    <div className="space-y-xs">
+                      <p className="text-sm font-medium">
+                        {t('pages.books.detail.synopsis')}
+                      </p>
+                      <p className="text-muted-foreground text-sm leading-relaxed">
+                        {book.synopsis}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Actions */}
+                <div className="border-t" />
+                <div className="gap-sm flex justify-between">
+                  <div>
+                    {onAskIntellect && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          onOpenChange(false);
+                          onAskIntellect(book);
+                        }}
+                      >
+                        <Brain className="mr-sm text-primary h-4 w-4" />
+                        {t('pages.books.chatTabDesc')}
+                      </Button>
+                    )}
+                  </div>
+                  <div className="gap-sm flex">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
                         onOpenChange(false);
-                        onAskIntellect(book);
+                        onDelete(book.id);
+                      }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="mr-sm h-4 w-4" />
+                      {t('common.actions.delete')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        onOpenChange(false);
+                        onEdit(book);
                       }}
                     >
-                      <Brain className="mr-sm text-primary h-4 w-4" />
-                      {t('pages.books.chatTabDesc')}
+                      <Edit className="mr-sm h-4 w-4" />
+                      {t('common.actions.edit')}
                     </Button>
-                  )}
+                  </div>
                 </div>
-                <div className="gap-sm flex">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onOpenChange(false);
-                      onDelete(book.id);
-                    }}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="mr-sm h-4 w-4" />
-                    {t('common.actions.delete')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      onOpenChange(false);
-                      onEdit(book);
-                    }}
-                  >
-                    <Edit className="mr-sm h-4 w-4" />
-                    {t('common.actions.edit')}
-                  </Button>
-                </div>
-              </div>
-            </> /* end info tab */
-          )}
+              </> /* end info tab */
+            )}
 
-          {/* Highlights tab */}
-          {activeTab === 'highlights' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm font-medium">
-                  {t('pages.books.detail.highlightsCount', {
-                    count: highlights.length,
-                  })}
-                </span>
-                <div className="gap-sm flex">
-                  {highlights.length > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void handleExport()}
-                      disabled={isExporting}
-                    >
-                      <Download className="mr-sm h-3.5 w-3.5" />
-                      {isExporting
-                        ? t('pages.books.detail.exportingBtn')
-                        : t('pages.books.detail.exportBtn')}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setEditingHighlight(undefined);
-                      setShowAddForm(true);
-                    }}
-                  >
-                    <Plus className="mr-sm h-3.5 w-3.5" />
-                    {t('pages.books.detail.addBtn')}
-                  </Button>
-                </div>
-              </div>
-
-              {showAddForm && (
-                <HighlightInlineForm
-                  bookId={book.id}
-                  ownerId={book.owner}
-                  onSaved={() => {
-                    setShowAddForm(false);
-                    void refreshHighlights();
-                  }}
-                  onCancel={() => setShowAddForm(false)}
-                />
-              )}
-
-              {isLoadingHighlights ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.loadingHighlights')}
-                </p>
-              ) : highlights.length === 0 && !showAddForm ? (
-                <p className="py-lg text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.noHighlights')}
-                </p>
-              ) : (
-                <div className="space-y-sm">
-                  {highlights.map((h) =>
-                    editingHighlight?.id === h.id ? (
-                      <HighlightInlineForm
-                        key={h.id}
-                        bookId={book.id}
-                        ownerId={book.owner}
-                        highlight={h}
-                        onSaved={() => {
-                          setEditingHighlight(undefined);
-                          void refreshHighlights();
-                        }}
-                        onCancel={() => setEditingHighlight(undefined)}
-                      />
-                    ) : (
-                      <div
-                        key={h.id}
-                        className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
+            {/* Highlights tab */}
+            {activeTab === 'highlights' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {t('pages.books.detail.highlightsCount', {
+                      count: highlights.length,
+                    })}
+                  </span>
+                  <div className="gap-sm flex">
+                    {highlights.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleExport()}
+                        disabled={isExporting}
                       >
-                        <div className="mb-sm gap-sm flex items-start justify-between">
-                          <div className="gap-sm flex flex-wrap items-center">
-                            <Badge
-                              variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
-                              className="text-xs"
-                            >
-                              {h.highlight_type_display}
-                            </Badge>
-                            {h.page_number && (
-                              <span className="text-muted-foreground text-xs">
-                                p. {h.page_number}
-                              </span>
-                            )}
-                            {h.chapter && (
-                              <span className="text-muted-foreground text-xs">
-                                {h.chapter}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex shrink-0 gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => setEditingHighlight(h)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                              onClick={() => void handleDeleteHighlight(h.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-sm leading-relaxed">{h.text}</p>
-                      </div>
-                    )
-                  )}
+                        <Download className="mr-sm h-3.5 w-3.5" />
+                        {isExporting
+                          ? t('pages.books.detail.exportingBtn')
+                          : t('pages.books.detail.exportBtn')}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setEditingHighlight(undefined);
+                        setShowAddForm(true);
+                      }}
+                    >
+                      <Plus className="mr-sm h-3.5 w-3.5" />
+                      {t('pages.books.detail.addBtn')}
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Readings tab */}
-          {activeTab === 'readings' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm font-medium">
-                  {t('pages.books.detail.readingsCount', { count: readings.length })}
-                </span>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setEditingReading(undefined);
-                    setIsReadingFormOpen(true);
-                  }}
-                >
-                  <Plus className="mr-sm h-3.5 w-3.5" />
-                  {t('pages.books.detail.addBtn')}
-                </Button>
-              </div>
+                {showAddForm && (
+                  <HighlightInlineForm
+                    bookId={book.id}
+                    ownerId={book.owner}
+                    onSaved={() => {
+                      setShowAddForm(false);
+                      void refreshHighlights();
+                    }}
+                    onCancel={() => setShowAddForm(false)}
+                  />
+                )}
 
-              {isLoadingReadings ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.loadingReadings')}
-                </p>
-              ) : readings.length === 0 ? (
-                <p className="py-lg text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.noReadings')}
-                </p>
-              ) : (
-                <div className="space-y-sm">
-                  {readings.map((r) => (
-                    <Card key={r.id}>
-                      <CardHeader className="pb-sm pt-3">
-                        <div className="gap-sm flex items-start justify-between">
-                          <div className="space-y-xs">
-                            <div className="gap-sm flex items-center text-sm">
-                              <Calendar className="text-muted-foreground h-3.5 w-3.5" />
-                              <span className="font-medium">
-                                {formatDate(r.reading_date, 'dd/MM/yyyy')}
-                              </span>
-                            </div>
-                            <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                              <span>
-                                {t('pages.books.detail.readingPagesRead', {
-                                  count: r.pages_read,
-                                })}
-                              </span>
-                              {r.reading_time > 0 && (
-                                <span>
-                                  {t('pages.books.detail.readingTime', {
-                                    count: r.reading_time,
-                                  })}
+                {isLoadingHighlights ? (
+                  <p className="py-md text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.loadingHighlights')}
+                  </p>
+                ) : highlights.length === 0 && !showAddForm ? (
+                  <p className="py-lg text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.noHighlights')}
+                  </p>
+                ) : (
+                  <div className="space-y-sm">
+                    {highlights.map((h) =>
+                      editingHighlight?.id === h.id ? (
+                        <HighlightInlineForm
+                          key={h.id}
+                          bookId={book.id}
+                          ownerId={book.owner}
+                          highlight={h}
+                          onSaved={() => {
+                            setEditingHighlight(undefined);
+                            void refreshHighlights();
+                          }}
+                          onCancel={() => setEditingHighlight(undefined)}
+                        />
+                      ) : (
+                        <div
+                          key={h.id}
+                          className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
+                        >
+                          <div className="mb-sm gap-sm flex items-start justify-between">
+                            <div className="gap-sm flex flex-wrap items-center">
+                              <Badge
+                                variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
+                                className="text-xs"
+                              >
+                                {h.highlight_type_display}
+                              </Badge>
+                              {h.page_number && (
+                                <span className="text-muted-foreground text-xs">
+                                  p. {h.page_number}
+                                </span>
+                              )}
+                              {h.chapter && (
+                                <span className="text-muted-foreground text-xs">
+                                  {h.chapter}
                                 </span>
                               )}
                             </div>
+                            <div className="flex shrink-0 gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => setEditingHighlight(h)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                onClick={() => void handleDeleteHighlight(h.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex shrink-0 gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              title={t('common.actions.edit')}
-                              onClick={() => {
-                                setEditingReading(r);
-                                setIsReadingFormOpen(true);
-                              }}
-                            >
-                              <Edit className="h-3 w-3" aria-hidden="true" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                              title={t('common.actions.delete')}
-                              onClick={() => void handleDeleteReading(r.id)}
-                            >
-                              <Trash2 className="h-3 w-3" aria-hidden="true" />
-                            </Button>
-                          </div>
+                          <p className="text-sm leading-relaxed">{h.text}</p>
                         </div>
-                      </CardHeader>
-                      {r.notes && (
-                        <CardContent className="pt-0 pb-3">
-                          <p className="text-muted-foreground line-clamp-2 text-xs">
-                            {r.notes}
-                          </p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Summaries tab */}
-          {activeTab === 'summaries' && (
-            <div className="space-y-3">
-              <div className="gap-sm flex flex-wrap items-center justify-between">
-                <span className="text-muted-foreground text-sm font-medium">
-                  {t('pages.books.detail.summariesCount', { count: summaries.length })}
-                </span>
-                <div className="gap-xs flex shrink-0 items-center">
-                  {book.read_status === 'read' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => void handleGenerateAiSummary()}
-                      disabled={isGeneratingAiSummary}
-                      title={t('pages.books.detail.aiSummaryBtn')}
-                    >
-                      {isGeneratingAiSummary ? (
-                        <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Sparkles className="mr-xs h-3.5 w-3.5" />
-                      )}
-                      {t('pages.books.detail.aiSummaryBtn')}
-                    </Button>
-                  )}
+            {/* Readings tab */}
+            {activeTab === 'readings' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {t('pages.books.detail.readingsCount', { count: readings.length })}
+                  </span>
                   <Button
                     size="sm"
-                    onClick={openSummaryCreate}
-                    disabled={book.read_status !== 'read'}
-                    title={
-                      book.read_status !== 'read'
-                        ? t('pages.books.detail.summariesReadOnlyBtn')
-                        : undefined
-                    }
+                    onClick={() => {
+                      setEditingReading(undefined);
+                      setIsReadingFormOpen(true);
+                    }}
                   >
                     <Plus className="mr-sm h-3.5 w-3.5" />
                     {t('pages.books.detail.addBtn')}
                   </Button>
                 </div>
-              </div>
-              {book.read_status !== 'read' && (
-                <p
-                  className="bg-muted py-sm text-muted-foreground rounded-md px-3 text-xs"
-                  dangerouslySetInnerHTML={{
-                    __html: t('pages.books.detail.summariesReadOnlyNote'),
-                  }}
-                />
-              )}
 
-              {isLoadingSummaries ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.loadingSummaries')}
-                </p>
-              ) : summaries.length === 0 ? (
-                <p className="py-lg text-muted-foreground text-center text-sm">
-                  {t('pages.books.detail.noSummaries')}
-                </p>
-              ) : (
-                <div className="space-y-sm">
-                  {summaries.map((s) => (
-                    <Card key={s.id}>
-                      <CardHeader className="pb-sm pt-3">
-                        <div className="gap-sm flex items-start justify-between">
-                          <div className="space-y-xs">
-                            <CardTitle className="text-sm">{s.title}</CardTitle>
-                            <div className="gap-sm flex items-center">
-                              {s.is_vectorized ? (
-                                <Badge variant="default" className="gap-xs text-xs">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {t('pages.summaries.vectorized')}
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="gap-xs text-xs">
-                                  <XCircle className="h-3 w-3" />
-                                  {t('pages.summaries.notVectorized')}
-                                </Badge>
-                              )}
+                {isLoadingReadings ? (
+                  <p className="py-md text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.loadingReadings')}
+                  </p>
+                ) : readings.length === 0 ? (
+                  <p className="py-lg text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.noReadings')}
+                  </p>
+                ) : (
+                  <div className="space-y-sm">
+                    {readings.map((r) => (
+                      <Card key={r.id}>
+                        <CardHeader className="pb-sm pt-3">
+                          <div className="gap-sm flex items-start justify-between">
+                            <div className="space-y-xs">
+                              <div className="gap-sm flex items-center text-sm">
+                                <Calendar className="text-muted-foreground h-3.5 w-3.5" />
+                                <span className="font-medium">
+                                  {formatDate(r.reading_date, 'dd/MM/yyyy')}
+                                </span>
+                              </div>
+                              <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                                <span>
+                                  {t('pages.books.detail.readingPagesRead', {
+                                    count: r.pages_read,
+                                  })}
+                                </span>
+                                {r.reading_time > 0 && (
+                                  <span>
+                                    {t('pages.books.detail.readingTime', {
+                                      count: r.reading_time,
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                title={t('common.actions.edit')}
+                                onClick={() => {
+                                  setEditingReading(r);
+                                  setIsReadingFormOpen(true);
+                                }}
+                              >
+                                <Edit className="h-3 w-3" aria-hidden="true" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                title={t('common.actions.delete')}
+                                onClick={() => void handleDeleteReading(r.id)}
+                              >
+                                <Trash2 className="h-3 w-3" aria-hidden="true" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex shrink-0 gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              title={t('common.actions.edit')}
-                              onClick={() => openSummaryEdit(s)}
-                            >
-                              <Edit className="h-3 w-3" aria-hidden="true" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
-                              title={t('common.actions.delete')}
-                              onClick={() => void handleDeleteSummary(s.id)}
-                            >
-                              <Trash2 className="h-3 w-3" aria-hidden="true" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0 pb-3">
-                        <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
-                          {s.text}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Chat tab */}
-          {activeTab === 'chat' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Brain className="text-primary h-4 w-4" />
-                <span className="text-sm font-medium">
-                  {t('pages.books.detail.chat.title')}
-                </span>
-                <span className="text-muted-foreground ml-auto text-xs">
-                  {book.title}
-                </span>
+                        </CardHeader>
+                        {r.notes && (
+                          <CardContent className="pt-0 pb-3">
+                            <p className="text-muted-foreground line-clamp-2 text-xs">
+                              {r.notes}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-              <BookChat book={book} />
-            </div>
-          )}
+            )}
+
+            {/* Summaries tab */}
+            {activeTab === 'summaries' && (
+              <div className="space-y-3">
+                <div className="gap-sm flex flex-wrap items-center justify-between">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    {t('pages.books.detail.summariesCount', {
+                      count: summaries.length,
+                    })}
+                  </span>
+                  <div className="gap-xs flex shrink-0 items-center">
+                    {book.read_status === 'read' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleGenerateAiSummary()}
+                        disabled={isGeneratingAiSummary}
+                        title={t('pages.books.detail.aiSummaryBtn')}
+                      >
+                        {isGeneratingAiSummary ? (
+                          <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-xs h-3.5 w-3.5" />
+                        )}
+                        {t('pages.books.detail.aiSummaryBtn')}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={openSummaryCreate}
+                      disabled={book.read_status !== 'read'}
+                      title={
+                        book.read_status !== 'read'
+                          ? t('pages.books.detail.summariesReadOnlyBtn')
+                          : undefined
+                      }
+                    >
+                      <Plus className="mr-sm h-3.5 w-3.5" />
+                      {t('pages.books.detail.addBtn')}
+                    </Button>
+                  </div>
+                </div>
+                {book.read_status !== 'read' && (
+                  <p
+                    className="bg-muted py-sm text-muted-foreground rounded-md px-3 text-xs"
+                    dangerouslySetInnerHTML={{
+                      __html: t('pages.books.detail.summariesReadOnlyNote'),
+                    }}
+                  />
+                )}
+
+                {isLoadingSummaries ? (
+                  <p className="py-md text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.loadingSummaries')}
+                  </p>
+                ) : summaries.length === 0 ? (
+                  <p className="py-lg text-muted-foreground text-center text-sm">
+                    {t('pages.books.detail.noSummaries')}
+                  </p>
+                ) : (
+                  <div className="space-y-sm">
+                    {summaries.map((s) => (
+                      <Card key={s.id}>
+                        <CardHeader className="pb-sm pt-3">
+                          <div className="gap-sm flex items-start justify-between">
+                            <div className="space-y-xs">
+                              <CardTitle className="text-sm">{s.title}</CardTitle>
+                              <div className="gap-sm flex items-center">
+                                {s.is_vectorized ? (
+                                  <Badge variant="default" className="gap-xs text-xs">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    {t('pages.summaries.vectorized')}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="gap-xs text-xs">
+                                    <XCircle className="h-3 w-3" />
+                                    {t('pages.summaries.notVectorized')}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                title={t('common.actions.edit')}
+                                onClick={() => openSummaryEdit(s)}
+                              >
+                                <Edit className="h-3 w-3" aria-hidden="true" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                                title={t('common.actions.delete')}
+                                onClick={() => void handleDeleteSummary(s.id)}
+                              >
+                                <Trash2 className="h-3 w-3" aria-hidden="true" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 pb-3">
+                          <p className="text-muted-foreground line-clamp-4 text-xs whitespace-pre-wrap">
+                            {s.text}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Chat tab */}
+            {activeTab === 'chat' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Brain className="text-primary h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {t('pages.books.detail.chat.title')}
+                  </span>
+                  <span className="text-muted-foreground ml-auto text-xs">
+                    {book.title}
+                  </span>
+                </div>
+                <BookChat book={book} />
+              </div>
+            )}
+          </TabTransition>
 
           {/* Reading form dialog */}
           <Dialog open={isReadingFormOpen} onOpenChange={setIsReadingFormOpen}>

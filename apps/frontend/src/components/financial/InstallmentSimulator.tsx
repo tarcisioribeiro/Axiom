@@ -2,6 +2,7 @@ import { Calculator } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -59,7 +60,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
   const [principal, setPrincipal] = useState('');
   const [annualRate, setAnnualRate] = useState('');
 
-  const principalNum = parseFloat(principal.replace(',', '.')) || 0;
+  const principalNum = parseFloat(principal) || 0;
   const rateNum = parseFloat(annualRate.replace(',', '.')) || 0;
 
   const INSTALLMENT_OPTIONS = [1, 2, 3, 6, 9, 12, 18, 24, 36, 48, 60];
@@ -90,19 +91,11 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
               <Label htmlFor="sim-principal">
                 {t('components.installmentSimulator.purchaseValue')}
               </Label>
-              <div className="relative">
-                <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-xs">
-                  R$
-                </span>
-                <Input
-                  id="sim-principal"
-                  placeholder="0,00"
-                  value={principal}
-                  onChange={(e) => setPrincipal(e.target.value)}
-                  className="pl-8"
-                  inputMode="decimal"
-                />
-              </div>
+              <CurrencyInput
+                id="sim-principal"
+                value={principal}
+                onChange={(e) => setPrincipal(e.target.value)}
+              />
             </div>
 
             <div className="space-y-xs">

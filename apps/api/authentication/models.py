@@ -69,3 +69,71 @@ class TOTPDevice(BaseModel):
         codes = [secrets.token_hex(5).upper() for _ in range(8)]
         hashed = [hashlib.sha256(c.encode()).hexdigest() for c in codes]
         return codes, hashed
+
+
+class ThemePreference(BaseModel):
+    """
+    Tema preferido do usuário, sincronizado a partir do desktop
+    (theme_switcher.sh do repo de dotfiles). O token de sync só permite trocar
+    o tema — nunca autentica o usuário no resto da API. Só o hash é armazenado.
+    """
+
+    THEMES = (
+        # dark
+        "dracula",
+        "catppuccin-mocha",
+        "tokyo-night",
+        "gruvbox-dark",
+        "cyberpunk",
+        "flat-remix-blue-darkest",
+        "everforest",
+        "ubuntu",
+        "mint-dark",
+        # light
+        "alucard",
+        "catppuccin-latte",
+        "rose-pine-dawn",
+        "everforest-light",
+        "gruvbox-light",
+        "solarized-light",
+        "nord-light",
+        "ubuntu-light",
+        "mint-light",
+    )
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="theme_preference",
+        verbose_name="Usuário",
+    )
+    theme = models.CharField(
+        max_length=32,
+        blank=True,
+        choices=[(t, t) for t in THEMES],
+        verbose_name="Tema",
+    )
+    sync_token_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        db_index=True,
+        verbose_name="Hash do token de sync",
+    )
+
+    class Meta:
+        verbose_name = "Preferência de tema"
+        verbose_name_plural = "Preferências de tema"
+
+    def __str__(self) -> str:
+        return f"ThemePreference({self.user.username}, {self.theme or '-'})"
+
+    @staticmethod
+    def hash_token(token: str) -> str:
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def issue_sync_token(self) -> str:
+        """Gera um novo token (invalida o anterior) e retorna o plaintext."""
+        token = secrets.token_hex(32)
+        self.sync_token_hash = self.hash_token(token)
+        self.save(update_fields=["sync_token_hash", "updated_at"])
+        return token

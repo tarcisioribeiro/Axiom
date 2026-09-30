@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertTriangle,
   Bot,
   Database,
   HardDrive,
@@ -80,6 +81,21 @@ export default function AdminIntegrations() {
                 </span>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Problemas de configuração do sistema de agentes */}
+      {data && data.llm_warnings.length > 0 && (
+        <div className="gap-sm px-md py-sm flex items-start rounded-lg border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.1)] text-sm text-[hsl(var(--warning))]">
+          <AlertTriangle className="mt-xs h-4 w-4 flex-shrink-0" />
+          <div>
+            <p className="font-medium">{t('pages.adminIntegrations.llmWarnings')}</p>
+            <ul className="pl-md list-disc">
+              {data.llm_warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
           </div>
         </div>
       )}

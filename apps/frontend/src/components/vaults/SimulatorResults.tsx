@@ -214,7 +214,7 @@ export function SimulatorResults({ results }: SimulatorResultsProps) {
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={axisFormatCurrency}
-                width={70}
+                width="auto"
               />
               <Tooltip content={<SimulatorTooltip />} />
               <Legend

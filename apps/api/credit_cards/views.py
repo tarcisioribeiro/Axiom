@@ -1,3 +1,5 @@
+import hmac
+import re
 from decimal import Decimal
 
 from django.db import transaction
@@ -11,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
+from authentication.throttles import CreditCardDeleteRateThrottle
 from credit_cards.models import (
     CreditCard,
     CreditCardBill,
@@ -28,7 +31,7 @@ from credit_cards.serializers import (
     PayCreditCardBillSerializer,
     RenegotiateBillSerializer,
 )
-from credit_cards.utils import recalculate_bill_total
+from credit_cards.utils import get_used_credit, recalculate_bill_total
 from expenses.models import Expense
 
 
@@ -95,6 +98,63 @@ class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
+
+    def get_throttles(self):
+        if self.request.method == "DELETE":
+            return [CreditCardDeleteRateThrottle()]
+        return super().get_throttles()
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Soft delete: exige número completo + CVV e nenhuma fatura não paga.
+        Faturas, compras, parcelas e despesas vinculadas permanecem intactas.
+        """
+        card = self.get_object()
+
+        pending = (
+            CreditCardBill.objects.filter(credit_card=card)
+            .exclude(status="paid")
+            .order_by("year", "month")
+        )
+        if pending.exists():
+            return Response(
+                {
+                    "detail": "O cartão possui faturas não pagas. "
+                    "Quite-as antes de excluir o cartão.",
+                    "code": "pending_bills",
+                    "pending_bills": list(
+                        pending.values(
+                            "id", "month", "year", "status", "total_amount"
+                        )
+                    ),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        def digits(value):
+            return re.sub(r"\D", "", str(value or ""))
+
+        number = digits(request.data.get("card_number"))
+        cvv = digits(request.data.get("security_code"))
+        number_ok = hmac.compare_digest(number, digits(card.card_number))
+        cvv_ok = hmac.compare_digest(cvv, digits(card.security_code))
+        if not (number and cvv and number_ok and cvv_ok):
+            return Response(
+                {
+                    "detail": "Número do cartão ou CVV não conferem.",
+                    "code": "invalid_credentials",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # update() evita save()/full_clean() e não dispara cascata/sinais.
+        CreditCard.objects.filter(pk=card.pk).update(
+            is_deleted=True,
+            deleted_at=timezone.now(),
+            deleted_by=request.user,
+            updated_by=request.user,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CreditCardBillCreateListView(BaseListCreateView):
@@ -582,9 +642,27 @@ class RenegotiateBillView(APIView):
         )
         bill.save()
 
+        # A renegociação não é um gasto novo: as parcelas são sempre lançadas
+        # e, se o utilizado passar do limite atual, o limite atual sobe até o
+        # utilizado (sem sobra para gastos); o máximo sobe junto se preciso.
+        limit_adjustment = None
+        used = get_used_credit(card)
+        if used > card.credit_limit:
+            limit_adjustment = {
+                "previous_credit_limit": f"{card.credit_limit:.2f}",
+                "new_credit_limit": f"{used:.2f}",
+                "previous_max_limit": f"{card.max_limit:.2f}",
+                "new_max_limit": f"{max(card.max_limit, used):.2f}",
+            }
+            # update() evita o full_clean do save() (ex.: cartão já vencido)
+            CreditCard.objects.filter(pk=card.pk).update(
+                credit_limit=used, max_limit=max(card.max_limit, used)
+            )
+
         return Response(
             {
                 "message": "Renegociação realizada com sucesso",
+                "limit_adjustment": limit_adjustment,
                 "bill": {
                     "id": bill.id,
                     "month": bill.month,

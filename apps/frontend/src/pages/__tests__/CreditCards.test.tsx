@@ -5,6 +5,7 @@ vi.mock('@/services/credit-cards-service', () => ({
     create: vi.fn().mockResolvedValue({ id: 1, name: 'Nubank', brand: 'mastercard' }),
     update: vi.fn().mockResolvedValue({}),
     delete: vi.fn().mockResolvedValue(undefined),
+    deleteWithCredentials: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -117,8 +118,9 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import ptBR from '@/i18n/locales/pt-BR.json';
 import { queryClient } from '@/lib/query-client';
 import CreditCards from '@/pages/CreditCards';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
-import type { CreditCard } from '@/types';
+import type { CreditCard, CreditCardBill } from '@/types';
 
 queryClient.setDefaultOptions({ queries: { retry: false } });
 
@@ -171,6 +173,7 @@ describe('CreditCards page', () => {
     queryClient.clear();
     mockToast.mockClear();
     mockShowConfirm.mockClear();
+    vi.mocked(creditCardsService.deleteWithCredentials).mockClear();
     vi.mocked(creditCardsService.getAll).mockResolvedValue([]);
   });
 
@@ -235,25 +238,54 @@ describe('CreditCards page', () => {
     });
   });
 
-  it('calls creditCardsService.delete after confirm', async () => {
+  it('deletes only after confirm, card number + CVV and a second confirm', async () => {
     vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
+    vi.mocked(creditCardBillsService.getAll).mockResolvedValue([]);
+    mockShowConfirm.mockResolvedValue(true);
 
     const user = userEvent.setup();
     renderCreditCards();
-
     await waitFor(() => screen.getByText('Nubank'));
 
-    const deleteButtons = screen.getAllByRole('button', {
-      name: /excluir|delete|trash/i,
+    await user.click(screen.getAllByRole('button', { name: /excluir/i })[0]);
+    await user.type(await screen.findByLabelText(/número/i), '5555444433331111');
+    await user.type(screen.getByLabelText(/cvv/i), '123');
+    expect(mockShowConfirm).toHaveBeenCalledTimes(1);
+    expect(creditCardsService.deleteWithCredentials).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /continuar/i }));
+
+    await waitFor(() => {
+      expect(creditCardsService.deleteWithCredentials).toHaveBeenCalledWith(1, {
+        card_number: '5555444433331111',
+        security_code: '123',
+      });
     });
-    if (deleteButtons.length > 0) {
-      await user.click(deleteButtons[0]);
-      await waitFor(() => {
-        expect(mockShowConfirm).toHaveBeenCalled();
-      });
-      await waitFor(() => {
-        expect(creditCardsService.delete).toHaveBeenCalledWith(1);
-      });
-    }
+    expect(mockShowConfirm).toHaveBeenCalledTimes(2);
+  });
+
+  it('blocks deletion and lists unpaid bills', async () => {
+    vi.mocked(creditCardsService.getAll).mockResolvedValue([makeCard()]);
+    vi.mocked(creditCardBillsService.getAll).mockResolvedValue([
+      {
+        id: 7,
+        credit_card: 1,
+        month: 'Sep',
+        year: '2026',
+        total_amount: '100.00',
+        status: 'overdue',
+      } as CreditCardBill,
+    ]);
+
+    const user = userEvent.setup();
+    renderCreditCards();
+    await waitFor(() => screen.getByText('Nubank'));
+
+    await user.click(screen.getAllByRole('button', { name: /excluir/i })[0]);
+
+    expect(await screen.findByText(/faturas pendentes/i)).toBeInTheDocument();
+    expect(mockShowConfirm).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText(/cvv/i)).not.toBeInTheDocument();
+    expect(creditCardsService.deleteWithCredentials).not.toHaveBeenCalled();
   });
 });

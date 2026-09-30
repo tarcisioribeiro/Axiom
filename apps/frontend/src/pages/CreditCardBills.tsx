@@ -75,7 +75,13 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function CreditCardBills({ embedded = false }: { embedded?: boolean }) {
+export default function CreditCardBills({
+  embedded = false,
+  initialCardFilter = 'all',
+}: {
+  embedded?: boolean;
+  initialCardFilter?: string;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -86,11 +92,11 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [isRenegotiateSubmitting, setIsRenegotiateSubmitting] = useState(false);
-  const [cardFilter, setCardFilter] = useState<string>('all');
+  const [cardFilter, setCardFilter] = useState<string>(initialCardFilter);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
+  const { showConfirm, showAlert } = useAlertDialog();
   const { user } = useAuthStore();
   const setExtraSubLabel = useBreadcrumbExtraStore((s) => s.setExtraSubLabel);
 
@@ -274,6 +280,25 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
       });
       setIsRenegotiateDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
+      void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
+      const adj = response.limit_adjustment;
+      if (adj) {
+        const maxRaised = adj.new_max_limit !== adj.previous_max_limit;
+        await showAlert({
+          title: t('pages.creditCardBills.limitAdjusted.title'),
+          description:
+            t('pages.creditCardBills.limitAdjusted.desc', {
+              previous: formatCurrency(adj.previous_credit_limit),
+              value: formatCurrency(adj.new_credit_limit),
+            }) +
+            (maxRaised
+              ? ` ${t('pages.creditCardBills.limitAdjusted.maxRaised', {
+                  value: formatCurrency(adj.new_max_limit),
+                })}`
+              : ''),
+          variant: 'warning',
+        });
+      }
     } catch (error: unknown) {
       toast({
         title: t('pages.creditCardBills.renegotiateError'),

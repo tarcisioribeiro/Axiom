@@ -256,6 +256,7 @@ export default function MemberFinancialReportPage() {
             dataKey="value"
             nameKey="name"
             formatter={(value) => formatCurrency(value.toString())}
+            valueAxisFormatter={formatCurrency}
             colors={chartColors}
             emptyMessage={t('pages.memberFinancialReport.noExpensesByCategory')}
             lockChartType="pie"

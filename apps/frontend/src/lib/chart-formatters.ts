@@ -3,6 +3,8 @@
  * Formatadores localizados para pt-BR
  */
 
+import { formatCurrency } from './formatters';
+
 const LOCALE = 'pt-BR';
 
 /**
@@ -20,26 +22,7 @@ export const formatNumber = (value: number, decimals = 0): string => {
  * Formata valores monetários em BRL
  * Ex: 1234.56 -> "R$ 1.234,56"
  */
-export const formatCurrencyBR = (value: number): string => {
-  return new Intl.NumberFormat(LOCALE, {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
-
-/**
- * Formata valores monetários de forma compacta
- * Ex: 1234567 -> "R$ 1,2 mi"
- */
-export const formatCurrencyCompact = (value: number): string => {
-  if (Math.abs(value) >= 1_000_000) {
-    return `R$ ${formatNumber(value / 1_000_000, 1)} mi`;
-  }
-  if (Math.abs(value) >= 1_000) {
-    return `R$ ${formatNumber(value / 1_000, 1)} mil`;
-  }
-  return formatCurrencyBR(value);
-};
+export const formatCurrencyBR = (value: number): string => formatCurrency(value);
 
 /**
  * Formata percentuais
@@ -69,17 +52,9 @@ export const formatCompact = (value: number): string => {
 
 /**
  * Formatador para eixos de gráficos - valores monetários
- * Versão curta para caber nos eixos
+ * Mesmo padrão do restante da UI ("R$ 1.234,56"); use `width="auto"` no eixo.
  */
-export const axisFormatCurrency = (value: number): string => {
-  if (Math.abs(value) >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1).replace('.', ',')} mi`;
-  }
-  if (Math.abs(value) >= 1_000) {
-    return `${(value / 1_000).toFixed(0)} mil`;
-  }
-  return value.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
+export const axisFormatCurrency = (value: number): string => formatCurrency(value);
 
 /**
  * Formatador para eixos de gráficos - números genéricos

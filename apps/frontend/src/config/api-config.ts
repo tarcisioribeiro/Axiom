@@ -53,6 +53,7 @@ export const API_CONFIG = {
     TWO_FACTOR_DISABLE: '/api/v1/users/2fa/disable/',
     TWO_FACTOR_STATUS: '/api/v1/users/2fa/status/',
     CURRENT_USER: '/api/v1/me/',
+    MY_THEME: '/api/v1/me/theme/',
 
     // Resources
     ACCOUNTS: '/api/v1/accounts/',

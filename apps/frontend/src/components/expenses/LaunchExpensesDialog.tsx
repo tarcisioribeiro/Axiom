@@ -23,9 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
+import { creditCardsService } from '@/services/credit-cards-service';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense, BulkGenerateRequest } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -68,6 +70,14 @@ export const LaunchExpensesDialog = ({
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<number>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { showAlert } = useAlertDialog();
+
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['credit-cards', 'list'],
+    queryFn: () => creditCardsService.getAll(),
+    enabled: isOpen,
+    staleTime: 0,
+  });
 
   const { data: fullyGeneratedMonths = [] } = useQuery({
     queryKey: ['fixedExpenses', 'generatedMonths'],
@@ -185,6 +195,21 @@ export const LaunchExpensesDialog = ({
         description: `${createdDesc}${skippedNotice}`,
       });
 
+      if (response.blocked_cards.length > 0) {
+        await showAlert({
+          title: t('pages.fixedExpenses.launchDialog.blockedTitle'),
+          description: response.blocked_cards
+            .map((c) =>
+              t('pages.fixedExpenses.launchDialog.blockedLine', {
+                card: c.card_name,
+                missing: formatCurrency(c.missing),
+              })
+            )
+            .join('\n'),
+          variant: 'destructive',
+        });
+      }
+
       onSuccess();
       onClose();
     } catch (error: unknown) {
@@ -202,6 +227,27 @@ export const LaunchExpensesDialog = ({
     (sum, exp) => sum + (expenseValues[exp.id] || parseFloat(exp.default_value)),
     0
   );
+
+  // Total do lote por cartão vs. limite disponível (atual - utilizado). O
+  // backend aplica a mesma regra e não lança as despesas do cartão sem limite.
+  const totalsByCard: Record<number, number> = {};
+  selectedExpenses.forEach((exp) => {
+    if (!exp.credit_card) return;
+    totalsByCard[exp.credit_card] =
+      (totalsByCard[exp.credit_card] ?? 0) +
+      (expenseValues[exp.id] || parseFloat(exp.default_value));
+  });
+  const cardTotals = Object.entries(totalsByCard).map(([id, total]) => {
+    const card = creditCards.find((c) => c.id === Number(id));
+    const available = card?.available_credit ?? 0;
+    return {
+      id,
+      name: card?.name ?? '',
+      total,
+      available,
+      missing: Math.max(0, total - available),
+    };
+  });
 
   const bounds = validMonth ? monthBounds(validMonth) : null;
   const noMonthsAvailable = monthOptions.length === 0;
@@ -327,6 +373,32 @@ export const LaunchExpensesDialog = ({
                 </div>
               </ScrollArea>
             </div>
+
+            {cardTotals.length > 0 && (
+              <div className="space-y-sm p-md rounded-lg border">
+                <Label>{t('pages.fixedExpenses.launchDialog.cardTotals')}</Label>
+                {cardTotals.map((c) => (
+                  <div key={c.id} className="text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{c.name}</span>
+                      <span>
+                        {t('pages.fixedExpenses.launchDialog.cardTotalLine', {
+                          total: formatCurrency(c.total),
+                          available: formatCurrency(c.available),
+                        })}
+                      </span>
+                    </div>
+                    {c.missing > 0 && (
+                      <p className="text-destructive mt-xs text-xs">
+                        {t('pages.fixedExpenses.launchDialog.insufficientLimit', {
+                          missing: formatCurrency(c.missing),
+                        })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Total */}
             <div className="bg-muted p-md flex items-center justify-between rounded-lg">

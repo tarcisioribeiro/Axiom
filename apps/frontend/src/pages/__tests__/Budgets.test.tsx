@@ -189,8 +189,8 @@ describe('Budgets page', () => {
     await waitFor(() => screen.getByRole('dialog'));
 
     // Set limit_amount via fireEvent (avoids happy-dom HTML5 required validation)
-    const limitInput = screen.getByRole('spinbutton');
-    fireEvent.change(limitInput, { target: { value: '300' } });
+    const limitInput = document.getElementById('limit_amount')!;
+    fireEvent.change(limitInput, { target: { value: '300,00' } });
 
     // Submit the form directly
     const form = limitInput.closest('form')!;

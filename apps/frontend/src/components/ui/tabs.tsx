@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { HTMLMotionProps } from 'framer-motion';
 import * as React from 'react';
 
@@ -94,6 +94,24 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
 );
 TabsTrigger.displayName = 'TabsTrigger';
 
+// Transição leve ao trocar de aba — usada pelo TabsContent e por abas feitas à mão
+// (envolva o conteúdo com `<TabTransition key={activeTab}>`).
+const TabTransition = React.forwardRef<HTMLDivElement, HTMLMotionProps<'div'>>(
+  (props, ref) => {
+    const reduced = useReducedMotion();
+    return (
+      <motion.div
+        ref={ref}
+        initial={reduced ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        {...props}
+      />
+    );
+  }
+);
+TabTransition.displayName = 'TabTransition';
+
 interface TabsContentProps extends HTMLMotionProps<'div'> {
   value: string;
 }
@@ -103,11 +121,8 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
     const ctx = React.useContext(TabsContext);
     if (ctx.value !== value) return null;
     return (
-      <motion.div
+      <TabTransition
         key={value}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
         ref={ref}
         role="tabpanel"
         data-state="active"
@@ -118,10 +133,10 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
         {...props}
       >
         {children}
-      </motion.div>
+      </TabTransition>
     );
   }
 );
 TabsContent.displayName = 'TabsContent';
 
-export { Tabs, TabsContent, TabsList, TabsTrigger };
+export { Tabs, TabsContent, TabsList, TabsTrigger, TabTransition };
