@@ -1,5 +1,4 @@
 import { API_CONFIG } from '@/config/api-config';
-import type { SecuritySearchResults } from '@/types/security';
 
 import { apiClient } from './api-client';
 
@@ -138,12 +137,6 @@ class SecurityDashboardService {
     return await apiClient.put<VaultAlertConfig>(
       '/api/v1/security/alert-config/',
       data
-    );
-  }
-
-  async globalSearch(q: string): Promise<SecuritySearchResults> {
-    return await apiClient.get<SecuritySearchResults>(
-      `${API_CONFIG.ENDPOINTS.SECURITY_SEARCH}?q=${encodeURIComponent(q)}`
     );
   }
 }

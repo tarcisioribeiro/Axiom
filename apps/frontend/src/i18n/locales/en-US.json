@@ -2420,16 +2420,6 @@
       "exportVaultSuccess": "Export started",
       "exportVaultSuccessDesc": "The ZIP file download has started.",
       "exportVaultError": "Error exporting vault",
-      "vaultSearch": {
-        "placeholder": "Search vault (passwords, cards, accounts, files)...",
-        "title": "Global Vault Search",
-        "noResults": "No results found",
-        "noResultsDesc": "Try a different search term.",
-        "groupPasswords": "Passwords",
-        "groupCards": "Cards",
-        "groupAccounts": "Accounts",
-        "groupArchives": "Archives"
-      },
       "vaultHub": {
         "overview": "Vault Overview",
         "anomalyTitle": "Suspicious Activity Detected",
@@ -4950,8 +4940,7 @@
       "shortcuts": {
         "title": "Keyboard shortcuts",
         "lockVault": "Lock vault",
-        "showShortcuts": "Show shortcuts",
-        "button": "Shortcuts"
+        "showShortcuts": "Show shortcuts"
       }
     },
     "vaultHealth": {

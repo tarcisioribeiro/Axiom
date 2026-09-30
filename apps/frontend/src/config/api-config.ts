@@ -95,7 +95,6 @@ export const API_CONFIG = {
     SECURITY_VAULT_PREFERENCES: '/api/v1/security/vault/preferences/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
     SECURITY_VAULT_EXPORT: '/api/v1/security/vault/export/',
-    SECURITY_SEARCH: '/api/v1/security/search/',
     PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
     PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
     PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',

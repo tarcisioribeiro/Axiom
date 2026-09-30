@@ -774,7 +774,7 @@ interface VaultGuardProps {
  *
  * - Não configurado → mostra tela de configuração de senha mestre
  * - Configurado, bloqueado → mostra tela de desbloqueio
- * - Desbloqueado → renderiza children + badge de expiração + atalhos de teclado
+ * - Desbloqueado → renderiza children + atalhos de teclado
  */
 export function VaultGuard({ children }: VaultGuardProps) {
   const { t } = useTranslation();
@@ -795,19 +795,6 @@ export function VaultGuard({ children }: VaultGuardProps) {
 
   return (
     <>
-      <div className="mb-sm gap-sm flex items-center justify-end">
-        {status.expires_at && <VaultExpiryBadge expiresAt={status.expires_at} />}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-xs px-sm text-muted-foreground h-7 text-xs"
-          onClick={() => setShowShortcuts(true)}
-          title={t('pages.vaultGuard.shortcuts.button')}
-        >
-          <Keyboard className="h-3.5 w-3.5" />
-          {t('pages.vaultGuard.shortcuts.button')}
-        </Button>
-      </div>
       {children}
       <VaultKeyboardShortcutsPanel
         open={showShortcuts}
