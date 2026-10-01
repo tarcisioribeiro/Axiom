@@ -87,7 +87,6 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
         totp_secret_text = validated_data.pop("totp_secret", None)
         instance = Password(**validated_data)
         instance.password = password_text  # Property setter criptografa
-        instance.strength_score = Password.calculate_strength(password_text)
         if totp_secret_text:
             instance.totp_secret = totp_secret_text
             instance.totp_enabled = True
@@ -103,9 +102,6 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
 
         if password_text:
             instance.password = password_text
-            instance.strength_score = Password.calculate_strength(
-                password_text
-            )
 
         if totp_secret_text is not None:
             if totp_secret_text:

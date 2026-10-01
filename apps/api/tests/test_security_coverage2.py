@@ -408,7 +408,7 @@ class VaultHealthReportDataTest(BaseSecurityCoverageTestCase):
         # Weak password
         self._make_password("Weak1", password="abc")
         # Medium password
-        self._make_password("Medium1", password="abcdef12")
+        self._make_password("Medium1", password="blue77sky")
         # Strong password
         self._make_password("Strong1", password="Str0ng!Passw0rd#99")
         # Duplicate passwords (same plaintext)

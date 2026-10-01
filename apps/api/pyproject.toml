@@ -157,6 +157,7 @@ module = [
     "pytesseract",
     "PIL",
     "PIL.*",
+    "zxcvbn",
 ]
 ignore_missing_imports = true
 

@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
+from zxcvbn import zxcvbn
+
 from app.models import BaseModel
 from security.vault_crypto import (
     VaultEncryptedField,
@@ -72,20 +74,23 @@ class Password(BaseModel):
 
     @staticmethod
     def calculate_strength(password_text: str) -> int:
-        score = 0
-        if len(password_text) >= 8:
-            score += 1
-        if len(password_text) >= 12:
-            score += 1
-        has_upper = any(c.isupper() for c in password_text)
-        has_lower = any(c.islower() for c in password_text)
-        if has_upper and has_lower:
-            score += 1
-        if any(c.isdigit() for c in password_text):
-            score += 1
-        if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?/~`" for c in password_text):
-            score += 1
-        return min(4, score)
+        """Score 0-4 do zxcvbn (estimativa de tempo de quebra)."""
+        # zxcvbn rejeita entradas acima de 72 caracteres
+        return zxcvbn(password_text[:72])["score"]
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if update_fields is None or "_password" in update_fields:
+            plaintext = self.password
+            # Sem a vault_key a decriptação falha: mantém o score atual
+            if plaintext:
+                self.strength_score = self.calculate_strength(plaintext)
+                if update_fields is not None:
+                    kwargs["update_fields"] = {
+                        *update_fields,
+                        "strength_score",
+                    }
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Senha"

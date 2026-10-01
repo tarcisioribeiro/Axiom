@@ -22,7 +22,7 @@ export const Header = () => {
 
   return (
     <header className="z-header border-border/60 bg-card/80 px-md py-md md:px-lg sticky top-0 border-b backdrop-blur-md">
-      <div className="gap-sm flex items-center justify-between">
+      <div className="gap-sm relative flex items-center justify-between">
         {/* Hamburger — mobile only */}
         <Button
           variant="ghost"
@@ -38,6 +38,16 @@ export const Header = () => {
         <div className="min-w-0 flex-1 md:flex-none">
           <Breadcrumb />
         </div>
+
+        {/* Expiração do cofre — centralizada na barra a partir do md; no mobile fica no fluxo */}
+        {vaultStatus?.is_unlocked && vaultStatus.expires_at && (
+          <div className="shrink-0 md:absolute md:left-1/2 md:-translate-x-1/2">
+            <VaultExpiryBadge
+              expiresAt={vaultStatus.expires_at}
+              onRenew={refreshVaultStatus}
+            />
+          </div>
+        )}
 
         {/* Right-side actions */}
         <div className="gap-xs flex shrink-0 items-center">
@@ -65,13 +75,6 @@ export const Header = () => {
           >
             <Search className="h-4 w-4" aria-hidden="true" />
           </Button>
-
-          {vaultStatus?.is_unlocked && vaultStatus.expires_at && (
-            <VaultExpiryBadge
-              expiresAt={vaultStatus.expires_at}
-              onRenew={refreshVaultStatus}
-            />
-          )}
 
           {/* Tour guiado da página atual */}
           {getTourKey(pathname) && (

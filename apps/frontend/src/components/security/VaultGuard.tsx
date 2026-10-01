@@ -72,25 +72,28 @@ function CapsLockWarning() {
 // Password Strength Indicator
 // ============================================================================
 
-interface PasswordStrengthProps {
-  password: string;
+type StrengthScorer = (password: string) => number;
+
+// zxcvbn (~800KB) carregado sob demanda: mesmo algoritmo do backend (score 0-4)
+function useStrengthScorer(): StrengthScorer | null {
+  const [scorer, setScorer] = useState<StrengthScorer | null>(null);
+  useEffect(() => {
+    let active = true;
+    void import('zxcvbn').then(({ default: zxcvbn }) => {
+      // zxcvbn rejeita entradas acima de 72 caracteres no backend; mantém paridade
+      if (active) setScorer(() => (pw: string) => zxcvbn(pw.slice(0, 72)).score);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return scorer;
 }
 
-function getStrengthScore(password: string): number {
+// Escala 1-5 da UI = score zxcvbn + 1 (1 enquanto o zxcvbn carrega)
+function getStrengthScore(password: string, scorer: StrengthScorer | null): number {
   if (!password) return 0;
-  const criteria = [
-    /[A-Z]/.test(password),
-    /[a-z]/.test(password),
-    /\d/.test(password),
-    /[!@#$%^&*()\-_=+[\]{};:'",.<>?/\\|`~]/.test(password),
-  ];
-  const met = criteria.filter(Boolean).length;
-  const long = password.length >= 12;
-  if (password.length < 8) return 1;
-  if (met < 2) return 2;
-  if (met === 2 || !long) return 3;
-  if (met === 3) return 4;
-  return 5;
+  return scorer ? scorer(password) + 1 : 1;
 }
 
 function getStrengthLabel(score: number, t: (key: string) => string): string {
@@ -112,13 +115,14 @@ function getStrengthLabel(score: number, t: (key: string) => string): string {
 
 function getStrength(
   password: string,
+  scorer: StrengthScorer | null,
   t: (key: string) => string
 ): {
   score: number;
   label: string;
   color: string;
 } {
-  const score = getStrengthScore(password);
+  const score = getStrengthScore(password, scorer);
   if (!password) return { score: 0, label: '', color: '' };
   const colors = [
     '',
@@ -131,11 +135,12 @@ function getStrength(
   return { score, label: getStrengthLabel(score, t), color: colors[score] ?? '' };
 }
 
-function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
-  const { t } = useTranslation();
-  const { score, label, color } = getStrength(password, t);
-
-  if (!password) return null;
+function PasswordStrengthIndicator({
+  strength: { score, label, color },
+}: {
+  strength: ReturnType<typeof getStrength>;
+}) {
+  if (!score) return null;
 
   return (
     <div className="space-y-xs">
@@ -356,7 +361,8 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
   const [acknowledged, setAcknowledged] = useState(false);
   const { toast } = useToast();
 
-  const strength = getStrength(masterPassword, t);
+  const strengthScorer = useStrengthScorer();
+  const strength = getStrength(masterPassword, strengthScorer, t);
   const isWeakPassword = masterPassword.length > 0 && strength.score < 3;
 
   const handleSetup = async (e: React.FormEvent) => {
@@ -450,9 +456,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   )}
                 </PlainButton>
               </div>
-              {masterPassword && (
-                <PasswordStrengthIndicator password={masterPassword} />
-              )}
+              {masterPassword && <PasswordStrengthIndicator strength={strength} />}
               {isWeakPassword && (
                 <p className="text-muted-foreground text-xs">
                   {t('pages.vaultGuard.setup.passwordHint')}

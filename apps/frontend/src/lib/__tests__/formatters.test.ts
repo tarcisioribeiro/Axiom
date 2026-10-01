@@ -49,6 +49,13 @@ describe('formatDate', () => {
     expect(formatDate('2025-12-25', 'yyyy')).toBe('2025');
   });
 
+  it('preserves the time of ISO timestamps when the format includes hours', () => {
+    const iso = '2026-08-10T14:35:00Z';
+    const local = new Date(iso);
+    const expected = `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`;
+    expect(formatDate(iso, 'dd/MM/yyyy HH:mm')).toContain(expected);
+  });
+
   it('returns an invalid date message for unparseable strings', () => {
     const result = formatDate('not-a-date');
     expect(result).toMatch(/inválida|invalid/i);

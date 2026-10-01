@@ -37,8 +37,11 @@ export const formatCurrency = (value: string | number | null | undefined): strin
  */
 export const formatDate = (date: string | Date, formatStr?: string): string => {
   try {
-    const dateObj = typeof date === 'string' ? parseLocalDate(date) : date;
-    if (!dateObj)
+    // Formatos com hora precisam do timestamp completo; parseLocalDate descarta a hora
+    const withTime = typeof date === 'string' && /[Hh]/.test(formatStr ?? '');
+    const dateObj =
+      typeof date !== 'string' ? date : withTime ? new Date(date) : parseLocalDate(date);
+    if (!dateObj || isNaN(dateObj.getTime()))
       return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
 
     const locale = i18next.language || 'pt-BR';

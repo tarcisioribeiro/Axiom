@@ -120,6 +120,27 @@ class PasswordListCreateView(VaultLockedMixin, BaseListCreateView):
             return PasswordCreateUpdateSerializer
         return PasswordSerializer
 
+    def list(self, request, *args, **kwargs):
+        # Senhas anteriores ao strength_score (ou importadas antes da correção)
+        # ficaram com 0; só dá para recalcular com o cofre desbloqueado.
+        # ponytail: re-checa senhas realmente fracas a cada listagem; adicionar
+        # flag "score calculado" se isso pesar.
+        stale = list(
+            Password.objects.filter(
+                owner__user=request.user, strength_score=0
+            ).only("id", "_password", "strength_score")
+        )
+        changed = []
+        for pw in stale:
+            plaintext = pw.password
+            if plaintext:
+                pw.strength_score = Password.calculate_strength(plaintext)
+                if pw.strength_score:
+                    changed.append(pw)
+        if changed:
+            Password.objects.bulk_update(changed, ["strength_score"])
+        return super().list(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         password = serializer.save(
             created_by=self.request.user, updated_by=self.request.user
@@ -1142,7 +1163,7 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             if not decrypted_password:
                 continue
 
-            strength = self._get_password_strength(decrypted_password)
+            strength = get_password_strength(decrypted_password)
             strength_counts[strength] += 1
 
         distribution = []
@@ -1172,25 +1193,6 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             )
 
         return distribution
-
-    def _get_password_strength(self, password):
-        """Determina a força de uma senha."""
-        if len(password) < 8:
-            return "weak"
-
-        has_upper = bool(re.search(r"[A-Z]", password))
-        has_lower = bool(re.search(r"[a-z]", password))
-        has_digit = bool(re.search(r"\d", password))
-        has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
-
-        criteria_met = sum([has_upper, has_lower, has_digit, has_special])
-
-        if len(password) >= 12 and criteria_met >= 3:
-            return "strong"
-        elif len(password) >= 8 and criteria_met >= 2:
-            return "medium"
-        else:
-            return "weak"
 
 
 # ============================================================================
@@ -1579,23 +1581,13 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
 
 
 def get_password_strength(password):
-    """Determina a força de uma senha (standalone function)."""
-    if len(password) < 8:
-        return "weak"
-
-    has_upper = bool(re.search(r"[A-Z]", password))
-    has_lower = bool(re.search(r"[a-z]", password))
-    has_digit = bool(re.search(r"\d", password))
-    has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
-
-    criteria_met = sum([has_upper, has_lower, has_digit, has_special])
-
-    if len(password) >= 12 and criteria_met >= 3:
+    """Agrupa o score zxcvbn (0-4) em weak/medium/strong."""
+    score = Password.calculate_strength(password)
+    if score >= 3:
         return "strong"
-    elif len(password) >= 8 and criteria_met >= 2:
+    if score == 2:
         return "medium"
-    else:
-        return "weak"
+    return "weak"
 
 
 # ============================================================================
