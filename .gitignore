@@ -133,3 +133,7 @@ temp/
 .agents/
 skills-lock.json
 graphify-out/
+*.mkv
+*.mp4
+*.jpg
+*.png

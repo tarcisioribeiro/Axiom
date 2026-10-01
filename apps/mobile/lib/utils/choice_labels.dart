@@ -11,6 +11,7 @@ class ChoiceLabels {
     'CS': 'Conta Salário',
     'FG': 'Fundo de Garantia',
     'VA': 'Vale Alimentação',
+    'CM': 'Carteira Móvel',
   };
 
   static const institutions = {
@@ -88,6 +89,7 @@ class ChoiceLabels {
     'doc': 'DOC',
     'ted': 'TED',
     'pix': 'PIX',
+    'withdrawal': 'Saque',
   };
 
   static const transferStatuses = {

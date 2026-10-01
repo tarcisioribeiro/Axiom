@@ -30,6 +30,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { TimePicker } from '@/components/ui/time-picker';
 import {
+  isRevenueCategoryAllowed,
   REVENUE_CATEGORIES_CANONICAL,
   TRANSLATIONS,
   translate,
@@ -272,19 +273,23 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
-                {revenueCategories.map(({ key }) => {
-                  const Icon = REVENUE_CATEGORY_ICONS[key];
-                  return (
-                    <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
-                        {Icon && (
-                          <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
-                        )}
-                        {translate('revenueCategories', key)}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
+                {revenueCategories
+                  .filter(({ key }) =>
+                    isRevenueCategoryAllowed(key, selectedAccount?.account_type)
+                  )
+                  .map(({ key }) => {
+                    const Icon = REVENUE_CATEGORY_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {Icon && (
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                          )}
+                          {translate('revenueCategories', key)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
               </SelectContent>
             </Select>
           </div>

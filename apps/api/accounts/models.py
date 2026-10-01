@@ -10,7 +10,10 @@ ACCOUNT_TYPES = (
     ("CS", "Conta Salário"),
     ("FG", "Fundo de Garantia"),
     ("VA", "Vale Alimentação"),
+    ("CM", "Carteira Móvel"),
 )
+
+WALLET_ACCOUNT_TYPE = "CM"
 
 ACCOUNT_NAMES = (
     ("NUB", "Nubank"),
@@ -99,6 +102,13 @@ class Account(BaseModel):
         ordering = ["-account_name"]
         verbose_name = "Conta"
         verbose_name_plural = "Contas"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["created_by"],
+                condition=models.Q(account_type="CM", is_deleted=False),
+                name="unique_wallet_account_per_user",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.account_name

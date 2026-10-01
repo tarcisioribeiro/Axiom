@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
 import {
   ArrowDown,
-  ArrowLeftRight,
   ArrowRight,
   ArrowUp,
   Ban,
@@ -139,6 +138,7 @@ export const ACCOUNT_TYPE_ICONS: Record<string, IconComponent> = {
   VA: Utensils,
   VR: Salad,
   CP: PiggyBank,
+  CM: Wallet,
 };
 
 export const STORED_ACCOUNT_TYPE_ICONS: Record<string, IconComponent> = {
@@ -292,7 +292,7 @@ export const TRANSFER_TYPE_ICONS: Record<string, IconComponent> = {
   pix: Zap,
   ted: Building2,
   doc: FileText,
-  internal: ArrowLeftRight,
+  withdrawal: Banknote,
 };
 
 export const CARD_FLAG_ICON: IconComponent = CreditCard;

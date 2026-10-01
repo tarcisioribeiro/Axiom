@@ -3,7 +3,7 @@ from typing import Any
 
 from rest_framework import serializers
 
-from accounts.models import Account
+from accounts.models import WALLET_ACCOUNT_TYPE, Account
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -71,6 +71,22 @@ class AccountSerializer(serializers.ModelSerializer):
                     )
                 }
             )
+        account_type = attrs.get(
+            "account_type", getattr(self.instance, "account_type", None)
+        )
+        request = self.context.get("request")
+        if account_type == WALLET_ACCOUNT_TYPE and request:
+            wallets = Account.objects.filter(
+                created_by=request.user,
+                account_type=WALLET_ACCOUNT_TYPE,
+                is_deleted=False,
+            )
+            if self.instance:
+                wallets = wallets.exclude(pk=self.instance.pk)
+            if wallets.exists():
+                raise serializers.ValidationError(
+                    {"account_type": "Só é permitida uma Carteira Móvel."}
+                )
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Account:

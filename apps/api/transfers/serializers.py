@@ -1,6 +1,33 @@
 from rest_framework import serializers
 
+from accounts.models import WALLET_ACCOUNT_TYPE
 from transfers.models import FixedTransfer, Transfer
+
+
+def validate_wallet_rules(serializer, attrs):
+    """Carteira Móvel só recebe saques e saque só vai para a Carteira."""
+
+    def get(field):
+        return attrs.get(field, getattr(serializer.instance, field, None))
+
+    origin, destiny = get("origin_account"), get("destiny_account")
+    is_withdrawal = get("category") == "withdrawal"
+    if origin and origin.account_type == WALLET_ACCOUNT_TYPE:
+        raise serializers.ValidationError(
+            {"origin_account": "A Carteira Móvel não pode ser origem."}
+        )
+    if destiny and is_withdrawal != (
+        destiny.account_type == WALLET_ACCOUNT_TYPE
+    ):
+        raise serializers.ValidationError(
+            {
+                "destiny_account": (
+                    "Saques devem ter a Carteira Móvel como destino."
+                    if is_withdrawal
+                    else "A Carteira Móvel só recebe saques."
+                )
+            }
+        )
 
 
 # TODO(security #341): `origin_account`/`destiny_account` are unscoped
@@ -15,6 +42,10 @@ class TransferSerializer(serializers.ModelSerializer):
     destiny_account_name = serializers.CharField(
         source="destiny_account.account_name", read_only=True
     )
+
+    def validate(self, attrs):
+        validate_wallet_rules(self, attrs)
+        return attrs
 
     class Meta:
         model = Transfer
@@ -119,6 +150,7 @@ class FixedTransferCreateUpdateSerializer(serializers.ModelSerializer):
                     )
                 }
             )
+        validate_wallet_rules(self, attrs)
         return attrs
 
 

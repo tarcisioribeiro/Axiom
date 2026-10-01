@@ -47,7 +47,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import {
+  isRevenueCategoryAllowed,
+  REVENUE_CATEGORIES_CANONICAL,
+  translate,
+} from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -606,7 +610,12 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                     <SelectValue placeholder={t('common.actions.select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                    {REVENUE_CATEGORIES_CANONICAL.filter(({ key }) =>
+                      isRevenueCategoryAllowed(
+                        key,
+                        accounts.find((a) => a.id === formData.account)?.account_type
+                      )
+                    ).map(({ key }) => {
                       const Icon = REVENUE_CATEGORY_ICONS[key];
                       return (
                         <SelectItem key={key} value={key}>
