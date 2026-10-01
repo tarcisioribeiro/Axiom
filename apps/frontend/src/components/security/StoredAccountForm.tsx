@@ -347,6 +347,9 @@ export function StoredAccountForm({
                 disabled={isLoading}
               />
               <Button
+                aria-label={t(
+                  showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+                )}
                 type="button"
                 variant="ghost"
                 size="sm"
@@ -390,6 +393,11 @@ export function StoredAccountForm({
                 disabled={isLoading}
               />
               <Button
+                aria-label={t(
+                  showSecondPassword
+                    ? 'auth.login.hidePassword'
+                    : 'auth.login.showPassword'
+                )}
                 type="button"
                 variant="ghost"
                 size="sm"

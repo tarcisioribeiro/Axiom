@@ -844,6 +844,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
         {fileType === 'pdf' && (
           <div className="gap-xs flex shrink-0 items-center">
             <Button
+              aria-label={t('common.table.previousPage')}
               variant="ghost"
               size="icon"
               className="h-8 w-8"
@@ -873,6 +874,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               </span>
             </div>
             <Button
+              aria-label={t('common.table.nextPage')}
               variant="ghost"
               size="icon"
               className="h-8 w-8"

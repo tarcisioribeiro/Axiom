@@ -477,6 +477,11 @@ export default function LibraryDashboard() {
             </div>
             <div className="gap-sm flex">
               <PlainButton
+                aria-label={t(
+                  timerRunning
+                    ? 'pages.libraryDashboard.studyTimerPause'
+                    : 'pages.libraryDashboard.studyTimerStart'
+                )}
                 onClick={() => setTimerRunning((v) => !v)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full"
               >
@@ -487,6 +492,7 @@ export default function LibraryDashboard() {
                 )}
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.reset')}
                 onClick={() => {
                   setTimerRunning(false);
                   setTimerSeconds(timerMode === 'study' ? 25 * 60 : 5 * 60);

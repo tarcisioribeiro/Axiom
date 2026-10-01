@@ -53,6 +53,7 @@ export function ScenarioCard({
         </CardTitle>
         {canRemove && (
           <Button
+            aria-label={t('common.actions.remove')}
             variant="ghost"
             size="icon"
             onClick={() => onRemove(scenario.id)}

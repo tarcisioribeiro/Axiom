@@ -464,7 +464,12 @@ export default function FinancialCalendar({
                   }),
                 })}
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedDay(null)}>
+              <Button
+                aria-label={t('common.actions.close')}
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedDay(null)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>

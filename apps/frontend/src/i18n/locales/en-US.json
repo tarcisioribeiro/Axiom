@@ -42,7 +42,18 @@
       "test": "Test",
       "exportCSV": "Export CSV",
       "details": "Details",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "previous": "Previous",
+      "send": "Send",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "clear": "Clear",
+      "reset": "Reset",
+      "increase": "Increase",
+      "decrease": "Decrease",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitView": "Fit to screen"
     },
     "required": "Required field",
     "messages": {

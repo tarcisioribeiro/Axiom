@@ -206,12 +206,14 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
               </div>
               <div className="gap-xs flex shrink-0">
                 <PlainButton
+                  aria-label={t('common.actions.edit')}
                   onClick={() => handleEdit(tag)}
                   className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </PlainButton>
                 <PlainButton
+                  aria-label={t('common.actions.delete')}
                   onClick={() => void handleDelete(tag)}
                   className="p-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
                 >

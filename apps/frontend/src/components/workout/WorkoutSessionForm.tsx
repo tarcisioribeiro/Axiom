@@ -398,6 +398,7 @@ function ExerciseBlock({
           {...register(`exercises.${exIdx}.exercise_name`, { required: true })}
         />
         <Button
+          aria-label={t('common.actions.remove')}
           type="button"
           variant="ghost"
           size="icon"
@@ -454,6 +455,7 @@ function ExerciseBlock({
               {...register(`exercises.${exIdx}.sets.${sIdx}.reps_done`)}
             />
             <Button
+              aria-label={t('common.actions.remove')}
               type="button"
               variant="ghost"
               size="icon"

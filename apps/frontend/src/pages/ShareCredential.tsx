@@ -138,6 +138,7 @@ export default function ShareCredential() {
                     {credential.username}
                   </code>
                   <Button
+                    aria-label={t('common.actions.copy')}
                     size="sm"
                     variant="ghost"
                     onClick={() => handleCopy(credential.username)}
@@ -165,6 +166,7 @@ export default function ShareCredential() {
                       : t('common.actions.reveal')}
                   </Button>
                   <Button
+                    aria-label={t('common.actions.copy')}
                     size="sm"
                     variant={copied ? 'default' : 'ghost'}
                     onClick={() => handleCopy(credential.password)}

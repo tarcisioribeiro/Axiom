@@ -277,10 +277,16 @@ export default function Webhooks() {
                 >
                   <Send className="h-md w-md" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => openEdit(w)}>
+                <Button
+                  aria-label={t('common.actions.edit')}
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openEdit(w)}
+                >
                   <Pencil className="h-md w-md" />
                 </Button>
                 <Button
+                  aria-label={t('common.actions.delete')}
                   variant="ghost"
                   size="icon"
                   className="text-destructive"

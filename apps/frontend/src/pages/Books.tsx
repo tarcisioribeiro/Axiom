@@ -989,6 +989,7 @@ export default function Books() {
                   </span>
                   <div className="gap-xs flex items-center">
                     <Button
+                      aria-label={t('common.table.previousPage')}
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
@@ -998,6 +999,7 @@ export default function Books() {
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
+                      aria-label={t('common.table.nextPage')}
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"

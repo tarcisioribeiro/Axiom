@@ -450,7 +450,12 @@ function SelfEsteemTab() {
           >
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Responda com sinceridade</h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowForm(false)}>
+              <Button
+                aria-label="Fechar"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForm(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -939,7 +944,12 @@ function CrisisTab() {
     return (
       <div className="space-y-5">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setStep('idle')}>
+          <Button
+            aria-label="Fechar"
+            variant="ghost"
+            size="sm"
+            onClick={() => setStep('idle')}
+          >
             <X className="h-4 w-4" />
           </Button>
           <h2 className="font-semibold">O que você está sentindo?</h2>

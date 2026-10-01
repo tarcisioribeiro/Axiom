@@ -1,5 +1,6 @@
 import { Edit, Trash2 } from 'lucide-react';
 import { createElement } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { getIconByName } from '@/components/ui/icon-picker';
@@ -33,6 +34,7 @@ export function RoutineFocusBlockCard({
   onAddTask,
   onRemoveTask,
 }: RoutineFocusBlockCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-hidden rounded-lg border border-l-4">
       <div className="gap-sm px-md py-sm bg-muted/20 flex items-center">
@@ -51,10 +53,22 @@ export function RoutineFocusBlockCard({
         <span className="bg-muted text-muted-foreground px-xs rounded-full py-0.5 text-xs font-medium tabular-nums">
           {block.block_tasks.length}
         </span>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
           <Edit className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete}>
+        <Button
+          aria-label={t('common.actions.delete')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onDelete}
+        >
           <Trash2 className="text-destructive h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>

@@ -455,6 +455,7 @@ export function SharePasswordModal({
                             {newShareUrl}
                           </code>
                           <Button
+                            aria-label={t('common.actions.copy')}
                             size="sm"
                             variant="outline"
                             onClick={handleCopyNewLink}

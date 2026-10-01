@@ -1130,6 +1130,7 @@ export default function WorkoutPage() {
                             </div>
                             <div className="ml-md gap-xs flex shrink-0">
                               <PlainButton
+                                aria-label={t('common.actions.edit')}
                                 type="button"
                                 onClick={() =>
                                   setDialog({ type: 'edit-plan', plan: activePlan })
@@ -1139,6 +1140,7 @@ export default function WorkoutPage() {
                                 <Edit className="h-4 w-4" />
                               </PlainButton>
                               <PlainButton
+                                aria-label={t('common.actions.delete')}
                                 type="button"
                                 onClick={() => handleDeletePlan(activePlan)}
                                 className="p-xs rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
@@ -1240,6 +1242,7 @@ export default function WorkoutPage() {
                                     </div>
                                     <div className="gap-xs flex">
                                       <Button
+                                        aria-label={t('common.actions.edit')}
                                         variant="ghost"
                                         size="icon"
                                         className="h-7 w-7"
@@ -1250,6 +1253,7 @@ export default function WorkoutPage() {
                                         <Edit className="h-3 w-3" />
                                       </Button>
                                       <Button
+                                        aria-label={t('common.actions.delete')}
                                         variant="ghost"
                                         size="icon"
                                         className="text-destructive hover:text-destructive h-7 w-7"
@@ -2057,10 +2061,17 @@ function ExerciseCatalogCard({
           >
             <ImagePlus className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onEdit}
+          >
             <Edit className="h-3.5 w-3.5" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive h-7 w-7"
@@ -2387,6 +2398,7 @@ function SortableExerciseItem({
           <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
             {onEdit && (
               <PlainButton
+                aria-label={t('common.actions.edit')}
                 type="button"
                 onClick={() => onEdit(ex)}
                 className="p-xs text-muted-foreground hover:text-foreground rounded"
@@ -2396,6 +2408,7 @@ function SortableExerciseItem({
             )}
             {onDelete && (
               <PlainButton
+                aria-label={t('common.actions.delete')}
                 type="button"
                 onClick={() => onDelete(ex)}
                 className="p-xs text-muted-foreground hover:text-destructive rounded"
@@ -2563,10 +2576,16 @@ function InactivePlanRow({
           <Badge variant="secondary" className="text-xs">
             {t('pages.workoutPlans.inactive')}
           </Badge>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive"
@@ -2620,6 +2639,7 @@ function InactivePlanRow({
                         {day.exercise_count} {t('pages.workoutPlans.exercises')}
                       </span>
                       <Button
+                        aria-label={t('common.actions.edit')}
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
@@ -2628,6 +2648,7 @@ function InactivePlanRow({
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button
+                        aria-label={t('common.actions.delete')}
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive h-7 w-7"
@@ -2754,10 +2775,17 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
             )}
           </div>
           <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+            <Button
+              aria-label={t('common.actions.edit')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={onEdit}
+            >
               <Edit className="h-3 w-3" />
             </Button>
             <Button
+              aria-label={t('common.actions.delete')}
               variant="ghost"
               size="icon"
               className="text-destructive hover:text-destructive h-7 w-7"

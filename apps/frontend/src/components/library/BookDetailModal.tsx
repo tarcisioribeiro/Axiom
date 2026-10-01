@@ -376,6 +376,7 @@ function BookChat({ book }: { book: Book }) {
           className="border-border bg-background placeholder:text-muted-foreground focus:ring-primary/40 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
         />
         <Button
+          aria-label={t('common.actions.send')}
           size="sm"
           onClick={() => void handleChatSend()}
           disabled={!chatInput.trim() || isStreaming}
@@ -1093,6 +1094,7 @@ export function BookDetailModal({
                             </div>
                             <div className="flex shrink-0 gap-0.5">
                               <Button
+                                aria-label={t('common.actions.edit')}
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0"
@@ -1101,6 +1103,7 @@ export function BookDetailModal({
                                 <Edit className="h-3 w-3" />
                               </Button>
                               <Button
+                                aria-label={t('common.actions.delete')}
                                 variant="ghost"
                                 size="sm"
                                 className="text-destructive hover:text-destructive h-6 w-6 p-0"

@@ -74,6 +74,7 @@ function CounterInput({
   min?: number;
   label: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="gap-xs flex flex-col items-center">
       <span className="text-muted-foreground text-2xs font-semibold tracking-wider uppercase">
@@ -81,6 +82,7 @@ function CounterInput({
       </span>
       <div className="border-border bg-background flex flex-col items-center rounded-lg border shadow-sm">
         <PlainButton
+          aria-label={t('common.actions.increase')}
           type="button"
           onClick={() => onChange(value + 1)}
           className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-t-lg border-b transition-colors"
@@ -91,6 +93,7 @@ function CounterInput({
           {value}
         </span>
         <PlainButton
+          aria-label={t('common.actions.decrease')}
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-b-lg border-t transition-colors"

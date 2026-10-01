@@ -971,13 +971,23 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
       {/* Month navigation */}
       <div className="mb-lg flex items-center justify-between">
         <div className="gap-sm flex items-center">
-          <Button variant="outline" size="sm" onClick={() => navigateMonth(-1)}>
+          <Button
+            aria-label={t('financialCalendar.prevMonth')}
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth(-1)}
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="min-w-44 text-center text-2xl font-bold tracking-tight">
             {monthNames[month - 1]} {year}
           </span>
-          <Button variant="outline" size="sm" onClick={() => navigateMonth(1)}>
+          <Button
+            aria-label={t('financialCalendar.nextMonth')}
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth(1)}
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

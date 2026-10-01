@@ -309,6 +309,9 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                   className="pr-10"
                 />
                 <PlainButton
+                  aria-label={t(
+                    showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+                  )}
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2"
@@ -451,6 +454,9 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   className="pr-10"
                 />
                 <PlainButton
+                  aria-label={t(
+                    showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+                  )}
                   type="button"
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
@@ -584,6 +590,9 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                   className="pr-10"
                 />
                 <PlainButton
+                  aria-label={t(
+                    showPassword ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+                  )}
                   type="button"
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}

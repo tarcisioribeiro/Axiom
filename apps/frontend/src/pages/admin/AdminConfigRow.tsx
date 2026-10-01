@@ -132,6 +132,9 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                 />
                 {config.is_secret && (
                   <PlainButton
+                    aria-label={t(
+                      showValue ? 'common.actions.hide' : 'common.actions.reveal'
+                    )}
                     type="button"
                     onClick={() => setShowValue((v) => !v)}
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
@@ -157,6 +160,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                 {t('pages.adminConfig.save')}
               </button>
               <PlainButton
+                aria-label={t('common.actions.cancel')}
                 onClick={() => setEditing(false)}
                 className="border-border p-sm text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg border"
               >

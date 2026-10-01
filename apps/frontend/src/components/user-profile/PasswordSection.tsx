@@ -54,6 +54,9 @@ export function PasswordSection() {
               className="pr-9"
             />
             <PlainButton
+              aria-label={t(
+                showCurrent ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+              )}
               type="button"
               onClick={() => setShowCurrent((v) => !v)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
@@ -77,6 +80,9 @@ export function PasswordSection() {
               className="pr-9"
             />
             <PlainButton
+              aria-label={t(
+                showNext ? 'auth.login.hidePassword' : 'auth.login.showPassword'
+              )}
               type="button"
               onClick={() => setShowNext((v) => !v)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"

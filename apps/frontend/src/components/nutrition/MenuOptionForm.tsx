@@ -447,6 +447,7 @@ function IngredientRow({
           {label}
         </span>
         <PlainButton
+          aria-label={t('common.actions.remove')}
           type="button"
           onClick={onRemove}
           className="text-muted-foreground hover:text-destructive rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"

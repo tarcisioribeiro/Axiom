@@ -128,10 +128,7 @@ export function useExpensesPage(opts?: {
   const setStartDate = (d: Date | undefined) =>
     setFilter('startDate', d ? formatLocalDate(d) : '');
 
-  const endDate = useMemo(
-    () => parseLocalDate(filters.endDate),
-    [filters.endDate]
-  );
+  const endDate = useMemo(() => parseLocalDate(filters.endDate), [filters.endDate]);
   const setEndDate = (d: Date | undefined) =>
     setFilter('endDate', d ? formatLocalDate(d) : '');
 

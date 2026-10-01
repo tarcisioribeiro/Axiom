@@ -210,6 +210,7 @@ export default function AdminLogs() {
             </p>
             <div className="gap-sm flex items-center">
               <PlainButton
+                aria-label={t('common.table.previousPage')}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
                 className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
@@ -217,6 +218,7 @@ export default function AdminLogs() {
                 <ChevronLeft className="h-4 w-4" />
               </PlainButton>
               <PlainButton
+                aria-label={t('common.table.nextPage')}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
                 className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"

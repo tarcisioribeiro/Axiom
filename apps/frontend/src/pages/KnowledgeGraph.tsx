@@ -218,6 +218,7 @@ function NodeDetailPanel({
           </div>
         </div>
         <PlainButton
+          aria-label={t('common.actions.close')}
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
@@ -383,6 +384,7 @@ function NodeDetailPanel({
                     </div>
                     {link.link_id && (
                       <PlainButton
+                        aria-label={t('common.actions.delete')}
                         onClick={() => onDeleteLink(link.link_id!)}
                         className="ml-xs text-destructive/60 hover:text-destructive shrink-0 transition-colors"
                       >
@@ -959,6 +961,7 @@ export default function KnowledgeGraph() {
               />
               {search && (
                 <PlainButton
+                  aria-label={t('common.actions.clear')}
                   onClick={() => setSearch('')}
                   className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                 >
@@ -1135,6 +1138,7 @@ export default function KnowledgeGraph() {
                     {t('pages.knowledgeGraph.suggestionsPanel')}
                   </p>
                   <PlainButton
+                    aria-label={t('common.actions.close')}
                     onClick={() => setShowSuggestions(false)}
                     className="hover:bg-muted rounded p-0.5"
                   >
@@ -1205,6 +1209,7 @@ export default function KnowledgeGraph() {
                 </PlainButton>
               </Tooltip>
               <PlainButton
+                aria-label={t('common.actions.zoomIn')}
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1215,6 +1220,7 @@ export default function KnowledgeGraph() {
                 <ZoomIn className="h-3.5 w-3.5" />
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.zoomOut')}
                 onClick={() => {
                   const g = graphRef.current;
                   if (!g) return;
@@ -1225,6 +1231,7 @@ export default function KnowledgeGraph() {
                 <ZoomOut className="h-3.5 w-3.5" />
               </PlainButton>
               <PlainButton
+                aria-label={t('common.actions.fitView')}
                 onClick={() => graphRef.current?.zoomToFit(400)}
                 className="border-border bg-card/80 text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-md border shadow-sm backdrop-blur-sm transition-colors"
               >

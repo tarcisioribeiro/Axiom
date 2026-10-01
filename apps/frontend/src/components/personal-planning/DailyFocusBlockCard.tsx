@@ -1,5 +1,6 @@
 import { CheckCircle2, Circle, Edit } from 'lucide-react';
 import { createElement } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { getIconByName } from '@/components/ui/icon-picker';
@@ -26,6 +27,7 @@ export function DailyFocusBlockCard({
   onToggleTaskComplete,
   onEdit,
 }: DailyFocusBlockCardProps) {
+  const { t } = useTranslation();
   const doneCount = tasks.filter((t) => t.status === 'completed').length;
   const total = tasks.length;
   const progressPct = total > 0 ? (doneCount / total) * 100 : 0;
@@ -61,7 +63,13 @@ export function DailyFocusBlockCard({
             {doneCount}/{total}
           </span>
         )}
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onEdit}
+        >
           <Edit className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>
@@ -106,9 +114,11 @@ export function DailyFocusBlockCard({
             >
               {task.task_name}
             </span>
-            {task.time_display && (
-              <span className="text-muted-foreground/70 text-xs">
-                {task.time_display}
+            {(task.time_display || task.closing_time) && (
+              <span className="text-muted-foreground/70 text-xs tabular-nums">
+                {[task.time_display, task.closing_time?.substring(0, 5)]
+                  .filter(Boolean)
+                  .join(' — ')}
               </span>
             )}
           </div>

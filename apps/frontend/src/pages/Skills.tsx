@@ -350,6 +350,7 @@ export default function Skills() {
           </div>
           <div className="border-border flex rounded-lg border">
             <PlainButton
+              aria-label={t('pages.skills.viewList')}
               type="button"
               onClick={() => setViewMode('list')}
               className={cn(
@@ -362,6 +363,7 @@ export default function Skills() {
               <LayoutGrid className="h-4 w-4" />
             </PlainButton>
             <PlainButton
+              aria-label={t('pages.skills.viewRadar')}
               type="button"
               onClick={() => setViewMode('radar')}
               className={cn(

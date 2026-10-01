@@ -135,6 +135,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                   {file?.name}
                 </Badge>
                 <PlainButton
+                  aria-label={t('common.actions.remove')}
                   type="button"
                   className="bg-background absolute top-2 right-2 rounded-full p-0.5 shadow"
                   onClick={(e) => {

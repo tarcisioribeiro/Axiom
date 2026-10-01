@@ -220,7 +220,13 @@ export function PasswordGenerator({
             <code className="flex-1 font-mono text-sm break-all select-all">
               {generatedPassword}
             </code>
-            <Button size="sm" variant="ghost" onClick={handleCopy} className="shrink-0">
+            <Button
+              aria-label={t('common.actions.copy')}
+              size="sm"
+              variant="ghost"
+              onClick={handleCopy}
+              className="shrink-0"
+            >
               {copied ? (
                 <Check className="h-4 w-4 text-[hsl(var(--success))]" />
               ) : (

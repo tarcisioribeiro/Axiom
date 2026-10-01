@@ -174,6 +174,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       <div className="gap-sm flex flex-wrap items-center justify-between">
         <div className="gap-xs flex items-center">
           <Button
+            aria-label={t('common.actions.previous')}
             variant="ghost"
             size="icon"
             className="h-7 w-7"
@@ -183,6 +184,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
           </Button>
           <span className="min-w-[3rem] text-center text-sm font-semibold">{year}</span>
           <Button
+            aria-label={t('common.actions.next')}
             variant="ghost"
             size="icon"
             className="h-7 w-7"

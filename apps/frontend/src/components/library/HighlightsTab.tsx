@@ -399,6 +399,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                   </div>
                   <div className="gap-xs flex shrink-0">
                     <Button
+                      aria-label={t('common.actions.edit')}
                       variant="ghost"
                       size="sm"
                       className="h-7 w-7 p-0"
@@ -407,6 +408,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                       <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <Button
+                      aria-label={t('common.actions.delete')}
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive h-7 w-7 p-0"

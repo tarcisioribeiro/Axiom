@@ -153,7 +153,12 @@ export function VaultRecoveryKeyModal({
                       readOnly
                       className="font-mono text-sm"
                     />
-                    <Button variant="outline" size="icon" onClick={handleCopy}>
+                    <Button
+                      aria-label={t('common.actions.copy')}
+                      variant="outline"
+                      size="icon"
+                      onClick={handleCopy}
+                    >
                       {copied ? (
                         <CheckCircle2 className="text-success h-4 w-4" />
                       ) : (

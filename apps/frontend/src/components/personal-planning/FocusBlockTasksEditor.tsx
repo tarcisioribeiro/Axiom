@@ -55,6 +55,20 @@ export function FocusBlockTasksEditor({
     const task = taskById.get(bt.routine_task);
     return (task && getTimesForTask(task)[bt.occurrence_index ?? 0]) ?? null;
   };
+  const timeLabel = (bt: FocusBlock['block_tasks'][number]) => {
+    const task = taskById.get(bt.routine_task);
+    if (!task) return null;
+    const times = getTimesForTask(task);
+    // Tarefa inteira com várias ocorrências: lista todos os horários.
+    const starts = (bt.occurrence_index == null ? times : [times[bt.occurrence_index]])
+      .filter((time): time is string => !!time)
+      .map((time) => time.substring(0, 5));
+    const end =
+      task.daily_occurrences === 1 && task.closing_time
+        ? task.closing_time.substring(0, 5)
+        : null;
+    return [starts.join(' · '), end].filter(Boolean).join(' — ') || null;
+  };
   // Tarefas sem horário vão para o fim.
   const sortedBlockTasks = [...block.block_tasks].sort((a, b) =>
     (startTime(a) ?? '99:99').localeCompare(startTime(b) ?? '99:99')
@@ -95,6 +109,11 @@ export function FocusBlockTasksEditor({
               className="group gap-sm px-sm py-xs hover:bg-muted/40 flex items-center rounded-md transition-colors"
             >
               <span className="flex-1 text-sm">{bt.routine_task_name}</span>
+              {timeLabel(bt) && (
+                <span className="text-muted-foreground/70 text-xs tabular-nums">
+                  {timeLabel(bt)}
+                </span>
+              )}
               {bt.occurrence_index !== null && bt.occurrence_index !== undefined && (
                 <span className="bg-primary/10 text-primary px-xs rounded font-mono text-xs font-medium">
                   {t('pages.routineTasks.focusBlocks.occurrenceLabel', {

@@ -42,7 +42,18 @@
       "test": "Testar",
       "exportCSV": "Exportar CSV",
       "details": "Detalhes",
-      "refresh": "Atualizar"
+      "refresh": "Atualizar",
+      "previous": "Anterior",
+      "send": "Enviar",
+      "expand": "Expandir",
+      "collapse": "Recolher",
+      "clear": "Limpar",
+      "reset": "Reiniciar",
+      "increase": "Aumentar",
+      "decrease": "Diminuir",
+      "zoomIn": "Aproximar",
+      "zoomOut": "Afastar",
+      "fitView": "Ajustar à tela"
     },
     "required": "Campo obrigatório",
     "messages": {

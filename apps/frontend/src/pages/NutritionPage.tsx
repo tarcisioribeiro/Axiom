@@ -701,6 +701,7 @@ export default function NutritionPage() {
                               {log.time ?? ''}
                             </span>
                             <Button
+                              aria-label={t('common.actions.delete')}
                               size="sm"
                               variant="ghost"
                               className="text-destructive h-7 w-7 p-0"
@@ -1260,10 +1261,16 @@ function MealTypeCard({
               ? t('pages.nutritionMealTypes.active')
               : t('pages.nutritionMealTypes.inactive')}
           </Badge>
-          <Button variant="ghost" size="icon" onClick={onEdit}>
+          <Button
+            aria-label={t('common.actions.edit')}
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-destructive hover:text-destructive"
@@ -1327,6 +1334,7 @@ function MealTypeCard({
                         </div>
                         <div className="gap-xs flex">
                           <Button
+                            aria-label={t('common.actions.edit')}
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
@@ -1335,6 +1343,7 @@ function MealTypeCard({
                             <Edit className="h-3 w-3" />
                           </Button>
                           <Button
+                            aria-label={t('common.actions.delete')}
                             variant="ghost"
                             size="icon"
                             className="text-destructive hover:text-destructive h-7 w-7"
@@ -1502,6 +1511,7 @@ function MealTimeline({
                         </span>
                       )}
                       <Button
+                        aria-label={t('common.actions.edit')}
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7"
@@ -1510,6 +1520,7 @@ function MealTimeline({
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button
+                        aria-label={t('common.actions.delete')}
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive h-7 w-7"
@@ -1583,10 +1594,17 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
         )}
       </div>
       <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+        <Button
+          aria-label={t('common.actions.edit')}
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
           <Edit className="h-3 w-3" />
         </Button>
         <Button
+          aria-label={t('common.actions.delete')}
           variant="ghost"
           size="icon"
           className="text-destructive hover:text-destructive h-7 w-7"

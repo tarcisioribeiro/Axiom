@@ -328,6 +328,7 @@ export function ReadingGoalModal({
                         }
                       />
                       <Button
+                        aria-label={t('common.actions.remove')}
                         type="button"
                         variant="ghost"
                         size="icon"

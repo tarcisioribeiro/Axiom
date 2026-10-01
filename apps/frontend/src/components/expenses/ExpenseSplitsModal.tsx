@@ -160,6 +160,7 @@ export function ExpenseSplitsModal({
                       <XCircle className="text-muted-foreground h-4 w-4" />
                     )}
                     <PlainButton
+                      aria-label={t('common.actions.delete')}
                       onClick={() => void handleDelete(split.id)}
                       className="text-muted-foreground hover:text-destructive"
                     >

@@ -611,6 +611,7 @@ function RuleCard({
             </svg>
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive h-7 w-7"
@@ -619,6 +620,9 @@ function RuleCard({
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
           <Button
+            aria-label={t(
+              expanded ? 'common.actions.collapse' : 'common.actions.expand'
+            )}
             variant="ghost"
             size="icon"
             className="h-7 w-7"

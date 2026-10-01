@@ -215,6 +215,7 @@ function ModuleItem({
                 className="h-7 text-sm"
               />
               <Button
+                aria-label={t('common.actions.save')}
                 size="sm"
                 variant="outline"
                 className="px-sm h-7"
@@ -233,6 +234,7 @@ function ModuleItem({
             {completedCount}/{lessons.length}
           </span>
           <Button
+            aria-label={t('common.actions.edit')}
             size="icon"
             variant="ghost"
             className="h-6 w-6"
@@ -244,6 +246,7 @@ function ModuleItem({
             <Edit className="h-3 w-3" />
           </Button>
           <Button
+            aria-label={t('common.actions.delete')}
             size="icon"
             variant="ghost"
             className="text-destructive hover:text-destructive h-6 w-6"
@@ -324,6 +327,7 @@ function ModuleItem({
             className="gap-sm px-sm py-xs hover:bg-muted/40 flex items-center justify-between rounded transition-colors"
           >
             <PlainButton
+              aria-label={t('common.actions.select')}
               type="button"
               className="flex shrink-0"
               onClick={() => toggleSelect(lesson.id)}
@@ -355,6 +359,7 @@ function ModuleItem({
               </span>
             </button>
             <Button
+              aria-label={t('common.actions.delete')}
               size="icon"
               variant="ghost"
               className="text-muted-foreground hover:text-destructive h-5 w-5 shrink-0"
@@ -392,6 +397,7 @@ function ModuleItem({
               }}
             />
             <Button
+              aria-label={t('common.actions.add')}
               size="sm"
               variant="outline"
               className="px-sm h-7"
@@ -467,6 +473,7 @@ function SessionItem({
           {session.duration_hours}h
         </span>
         <Button
+          aria-label={t('common.actions.delete')}
           size="icon"
           variant="ghost"
           className="text-muted-foreground hover:text-destructive h-6 w-6"
@@ -1023,6 +1030,7 @@ export function CourseDetailModal({
                     }}
                   />
                   <Button
+                    aria-label={t('common.actions.add')}
                     variant="outline"
                     onClick={() => {
                       if (newModuleTitle.trim()) {
@@ -1177,6 +1185,7 @@ export function CourseDetailModal({
                     </div>
                     <div className="gap-xs flex shrink-0">
                       <PlainButton
+                        aria-label={t('common.actions.remove')}
                         type="button"
                         disabled={uploadingCert}
                         onClick={() => void handleCertificateRemove()}

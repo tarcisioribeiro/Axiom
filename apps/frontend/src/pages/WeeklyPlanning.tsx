@@ -187,6 +187,7 @@ export default function WeeklyPlanning() {
         >
           <div className="gap-sm flex items-center">
             <Button
+              aria-label={t('common.actions.previous')}
               variant="outline"
               size="sm"
               onClick={() => setWeekOffset((o) => o - 1)}
@@ -202,6 +203,7 @@ export default function WeeklyPlanning() {
               {t('weeklyPlanning.thisWeek')}
             </Button>
             <Button
+              aria-label={t('common.actions.next')}
               variant="outline"
               size="sm"
               onClick={() => setWeekOffset((o) => o + 1)}
