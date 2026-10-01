@@ -18,8 +18,10 @@ const FINANCE_MODULE_PATTERN =
   /^\/(dashboard|accounts|transactions|recurring|fixed-expenses|fixed-revenues|finance|categorization-rules|automation-rules|tags|credit-cards|credit-card-bills|credit-card-expenses|transfers|loans|bills|members|budgets|webhooks|bank-reconciliation|vaults|financial-goals)(\/|$)/;
 
 // Intelecto module routes (see nav-config.ts `library` module — titled
-// "Intelecto" in the UI).
-const INTELLECT_MODULE_PATTERN = /^\/library(\/|$)/;
+// "Intelecto" in the UI): reading timer on the reading pages, study timer on
+// the course/skill pages.
+const READING_TIMER_PATTERN = /^\/library\/(books|authors|publishers)(\/|$)/;
+const STUDY_TIMER_PATTERN = /^\/library\/(courses|skills|knowledge-graph)(\/|$)/;
 
 export const Layout = () => {
   const { t } = useTranslation();
@@ -55,8 +57,11 @@ export const Layout = () => {
       {/* Tour guiado da página atual */}
       <PageTour />
 
-      {/* Floating study timer — Intelecto module only */}
-      {INTELLECT_MODULE_PATTERN.test(pathname) && <StudyTimer />}
+      {/* Floating reading/study timers — Intelecto module only */}
+      {READING_TIMER_PATTERN.test(pathname) && (
+        <StudyTimer key="reading" mode="reading" />
+      )}
+      {STUDY_TIMER_PATTERN.test(pathname) && <StudyTimer key="course" mode="course" />}
 
       {/* Floating AI chat widget — Controle Financeiro module only */}
       {FINANCE_MODULE_PATTERN.test(pathname) && <AgentChatWidget />}

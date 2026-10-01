@@ -1,9 +1,11 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, X, Play, Pause, Square, Timer } from 'lucide-react';
+import { BookOpen, GraduationCap, X, Play, Pause, Square, Timer } from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { AddSessionForm } from '@/components/library/CourseDetailModal';
+import { ReadingForm } from '@/components/library/ReadingForm';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,8 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -23,49 +23,44 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import type { ReadingFormData } from '@/lib/validations';
 import { booksService } from '@/services/books-service';
-import { coursesService, courseSessionsService } from '@/services/courses-service';
-import { membersService } from '@/services/members-service';
+import { coursesService } from '@/services/courses-service';
 import { readingsService } from '@/services/readings-service';
 import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 import type { Book } from '@/types';
 import type { Course } from '@/types/intellect';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const SESSION_KEY = 'studyTimer.state';
-
-type TimerMode = 'reading' | 'course';
+export type StudyTimerMode = 'reading' | 'course';
 type TimerPhase = 'idle' | 'running' | 'paused';
 
 interface PersistedState {
-  mode: TimerMode;
-  bookId: number | null;
-  courseId: number | null;
+  resourceId: number | null;
   elapsed: number;
   phase: TimerPhase;
   startedAt: number | null;
 }
 
-function loadState(): PersistedState {
+const sessionKey = (mode: StudyTimerMode) => `studyTimer.${mode}`;
+
+function loadState(mode: StudyTimerMode): PersistedState {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(sessionKey(mode));
     if (raw) return JSON.parse(raw) as PersistedState;
   } catch {
     // ignore
   }
-  return {
-    mode: 'reading',
-    bookId: null,
-    courseId: null,
-    elapsed: 0,
-    phase: 'idle',
-    startedAt: null,
-  };
+  return { resourceId: null, elapsed: 0, phase: 'idle', startedAt: null };
 }
 
-function saveState(s: PersistedState) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+function saveState(mode: StudyTimerMode, s: PersistedState) {
+  try {
+    sessionStorage.setItem(sessionKey(mode), JSON.stringify(s));
+  } catch {
+    // ignore
+  }
 }
 
 function formatElapsed(seconds: number) {
@@ -77,9 +72,10 @@ function formatElapsed(seconds: number) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function StudyTimer() {
+export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const isReading = mode === 'reading';
 
   const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
 
@@ -87,22 +83,20 @@ export function StudyTimer() {
   const [books, setBooks] = useState<Book[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
 
-  const [state, setState] = useState<PersistedState>(loadState);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [pagesRead, setPagesRead] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [state, setState] = useState<PersistedState>(() => loadState(mode));
+  // Recurso recarregado ao encerrar — alimenta o modal com dados atuais
+  // (páginas já lidas / aulas concluídas).
+  const [confirmBook, setConfirmBook] = useState<Book | null>(null);
+  const [confirmCourse, setConfirmCourse] = useState<Course | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
 
   // Recover elapsed time from startedAt when phase is 'running' (page reload).
   // Runs once via useQuery — avoids calling setState directly inside a plain
   // useEffect body.
   useQuery({
-    queryKey: ['study-timer-recover'],
+    queryKey: ['study-timer-recover', mode],
     queryFn: () => {
       if (state.phase === 'running' && state.startedAt) {
         const recovered = Math.floor((Date.now() - state.startedAt) / 1000);
@@ -120,11 +114,7 @@ export function StudyTimer() {
   useEffect(() => {
     if (state.phase === 'running') {
       intervalRef.current = setInterval(() => {
-        setState((s) => {
-          const next = { ...s, elapsed: s.elapsed + 1 };
-          saveState(next);
-          return next;
-        });
+        setState((s) => ({ ...s, elapsed: s.elapsed + 1 }));
       }, 1000);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -134,33 +124,55 @@ export function StudyTimer() {
     };
   }, [state.phase]);
 
-  // Persist non-elapsed state changes
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    saveState(mode, state);
+  }, [mode, state]);
 
-  // Load books + courses when panel opens
+  // Load books ("Lendo") or courses ("Em andamento") when panel opens
   useEffect(() => {
     if (!isOpen) return;
-    void booksService
-      .getAll()
-      .then((items) => setBooks(items.filter((b) => b.read_status !== 'read')))
-      .catch(() => {});
-    void coursesService
-      .getAll()
-      .then((items) => setCourses(items))
-      .catch(() => {});
-  }, [isOpen]);
+    if (isReading) {
+      void booksService
+        .getAll()
+        .then((items) => setBooks(items.filter((b) => b.read_status === 'reading')))
+        .catch(() => {});
+    } else {
+      void coursesService
+        .getAll()
+        .then((items) => setCourses(items.filter((c) => c.status === 'in_progress')))
+        .catch(() => {});
+    }
+  }, [isOpen, isReading]);
 
   const updateState = useCallback((patch: Partial<PersistedState>) => {
-    setState((s) => {
-      const next = { ...s, ...patch };
-      saveState(next);
-      return next;
-    });
+    setState((s) => ({ ...s, ...patch }));
   }, []);
 
-  const handleStart = () => {
+  // Curso precisa existir e ter módulos com aulas cadastradas.
+  const loadValidCourse = async (id: number): Promise<Course | null> => {
+    try {
+      const course = await coursesService.getById(id);
+      if (course.total_lessons > 0) return course;
+      toast({
+        title: t('pages.libraryDashboard.studyTimerNoLessons'),
+        variant: 'destructive',
+      });
+    } catch {
+      toast({
+        title: t('pages.libraryDashboard.studyTimerCourseNotFound'),
+        variant: 'destructive',
+      });
+    }
+    return null;
+  };
+
+  const handleStart = async () => {
+    if (!isReading && state.phase === 'idle' && state.resourceId) {
+      setIsBusy(true);
+      const course = await loadValidCourse(state.resourceId);
+      setIsBusy(false);
+      if (!course) return;
+    }
     updateState({ phase: 'running', startedAt: Date.now() });
   };
 
@@ -168,47 +180,45 @@ export function StudyTimer() {
     updateState({ phase: 'paused', startedAt: null });
   };
 
-  const handleStop = () => {
+  const handleStop = async () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     updateState({ phase: 'paused', startedAt: null });
-    setShowConfirm(true);
+    if (!state.resourceId) return;
+    setIsBusy(true);
+    try {
+      if (isReading) {
+        setConfirmBook(await booksService.getById(state.resourceId));
+      } else {
+        setConfirmCourse(await loadValidCourse(state.resourceId));
+      }
+    } catch (err) {
+      toast({ title: getErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setIsBusy(false);
+    }
   };
 
   const handleReset = () => {
     updateState({ phase: 'idle', elapsed: 0, startedAt: null });
-    setPagesRead('');
   };
 
-  const handleSave = async () => {
-    const { mode, bookId, courseId, elapsed } = stateRef.current;
-    const durationMinutes = Math.max(1, Math.round(elapsed / 60));
+  const closeConfirm = () => {
+    setConfirmBook(null);
+    setConfirmCourse(null);
+  };
 
+  const finish = () => {
+    closeConfirm();
+    handleReset();
+    setIsOpen(false);
+  };
+
+  const handleReadingSubmit = async (data: ReadingFormData) => {
     try {
-      setIsSaving(true);
-      const member = await membersService.getCurrentUserMember();
-      const today = formatLocalDate(new Date());
-
-      if (mode === 'reading' && bookId) {
-        await readingsService.create({
-          book: bookId,
-          reading_date: today,
-          reading_time: durationMinutes,
-          pages_read: parseInt(pagesRead || '0', 10) || 1,
-          owner: member.id,
-        });
-      } else if (mode === 'course' && courseId) {
-        await courseSessionsService.create({
-          course: courseId,
-          session_date: today,
-          duration_minutes: durationMinutes,
-          owner: member.id,
-        });
-      }
-
+      setIsBusy(true);
+      await readingsService.create(data);
       toast({ title: t('pages.libraryDashboard.studyTimerSaved') });
-      setShowConfirm(false);
-      handleReset();
-      setIsOpen(false);
+      finish();
     } catch (err) {
       toast({
         title: t('common.messages.saveError'),
@@ -216,17 +226,22 @@ export function StudyTimer() {
         variant: 'destructive',
       });
     } finally {
-      setIsSaving(false);
+      setIsBusy(false);
     }
   };
 
+  const durationMinutes = Math.max(1, Math.round(state.elapsed / 60));
   const isActive = state.phase !== 'idle';
-  const selectedBook = books.find((b) => b.id === state.bookId);
-  const selectedCourse = courses.find((c) => c.id === state.courseId);
-  const canStart =
-    state.phase === 'idle' &&
-    ((state.mode === 'reading' && !!state.bookId) ||
-      (state.mode === 'course' && !!state.courseId));
+  const canStart = state.phase === 'idle' && !!state.resourceId && !isBusy;
+  const title = t(
+    isReading
+      ? 'pages.libraryDashboard.readingTimerTitle'
+      : 'pages.libraryDashboard.studyTimerTitle'
+  );
+  const Icon = isReading ? BookOpen : GraduationCap;
+  const options = isReading
+    ? books.map((b) => ({ id: b.id, label: b.title }))
+    : courses.map((c) => ({ id: c.id, label: c.title }));
 
   return (
     <>
@@ -246,9 +261,7 @@ export function StudyTimer() {
             <div className="px-md py-sm flex items-center justify-between border-b">
               <div className="gap-sm flex items-center">
                 <Timer className="text-category-intellect h-4 w-4" />
-                <span className="text-sm font-semibold">
-                  {t('pages.libraryDashboard.studyTimerTitle')}
-                </span>
+                <span className="text-sm font-semibold">{title}</span>
               </div>
               <PlainButton
                 onClick={() => setIsOpen(false)}
@@ -260,71 +273,29 @@ export function StudyTimer() {
             </div>
 
             <div className="space-y-sm p-md">
-              {/* Mode selector */}
-              <div className="gap-xs flex rounded-md border p-0.5">
-                {(['reading', 'course'] as TimerMode[]).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    disabled={isActive}
-                    onClick={() =>
-                      updateState({ mode: m, bookId: null, courseId: null })
-                    }
-                    className={`px-sm py-xs flex-1 rounded text-xs transition-colors ${
-                      state.mode === m
-                        ? 'bg-category-intellect text-white dark:text-black'
-                        : 'text-muted-foreground hover:text-foreground disabled:cursor-not-allowed'
-                    }`}
-                  >
-                    {t(
-                      m === 'reading'
-                        ? 'pages.libraryDashboard.studyTimerReading'
-                        : 'pages.libraryDashboard.studyTimerCourse'
-                    )}
-                  </button>
-                ))}
-              </div>
-
               {/* Resource selector */}
-              {state.mode === 'reading' ? (
-                <Select
-                  disabled={isActive}
-                  value={state.bookId ? String(state.bookId) : ''}
-                  onValueChange={(v) => updateState({ bookId: parseInt(v, 10) })}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue
-                      placeholder={t('pages.libraryDashboard.studyTimerSelectBook')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {books.map((b) => (
-                      <SelectItem key={b.id} value={String(b.id)}>
-                        {b.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Select
-                  disabled={isActive}
-                  value={state.courseId ? String(state.courseId) : ''}
-                  onValueChange={(v) => updateState({ courseId: parseInt(v, 10) })}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue
-                      placeholder={t('pages.libraryDashboard.studyTimerSelectCourse')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select
+                disabled={isActive}
+                value={state.resourceId ? String(state.resourceId) : ''}
+                onValueChange={(v) => updateState({ resourceId: parseInt(v, 10) })}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue
+                    placeholder={t(
+                      isReading
+                        ? 'pages.libraryDashboard.studyTimerSelectBook'
+                        : 'pages.libraryDashboard.studyTimerSelectCourse'
+                    )}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((o) => (
+                    <SelectItem key={o.id} value={String(o.id)}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               {/* Timer display */}
               <div className="text-center text-3xl font-bold tracking-tight tabular-nums">
@@ -337,7 +308,7 @@ export function StudyTimer() {
                   <Button
                     size="sm"
                     disabled={!canStart}
-                    onClick={handleStart}
+                    onClick={() => void handleStart()}
                     className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
                   >
                     <Play className="mr-xs h-3.5 w-3.5" />
@@ -350,7 +321,12 @@ export function StudyTimer() {
                       <Pause className="mr-xs h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerPause')}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={handleStop}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={isBusy}
+                      onClick={() => void handleStop()}
+                    >
                       <Square className="mr-xs h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
@@ -360,19 +336,33 @@ export function StudyTimer() {
                   <>
                     <Button
                       size="sm"
-                      onClick={handleStart}
+                      onClick={() => void handleStart()}
                       className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
                     >
                       <Play className="mr-xs h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerResume')}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={handleStop}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={isBusy}
+                      onClick={() => void handleStop()}
+                    >
                       <Square className="mr-xs h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
                   </>
                 )}
               </div>
+              {isActive && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-muted-foreground hover:text-foreground w-full text-center text-xs"
+                >
+                  {t('pages.libraryDashboard.studyTimerCancel')}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -381,80 +371,55 @@ export function StudyTimer() {
         <button
           onClick={() => setIsOpen((o) => !o)}
           className="bg-category-intellect hoverable:hover:scale-105 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-95 dark:text-black"
-          aria-label={t('pages.libraryDashboard.studyTimerTitle')}
+          aria-label={title}
         >
           {state.phase === 'running' ? (
             <span className="text-xs font-bold tabular-nums">
               {formatElapsed(state.elapsed).split(':').slice(-2).join(':')}
             </span>
           ) : (
-            <BookOpen className="h-5 w-5" />
+            <Icon className="h-5 w-5" />
           )}
         </button>
       </div>
 
-      {/* Confirmation dialog */}
-      <Dialog
-        open={showConfirm}
-        onOpenChange={(open) => {
-          if (!open) setShowConfirm(false);
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
+      {/* Registro da leitura (reaproveita ReadingForm) */}
+      <Dialog open={!!confirmBook} onOpenChange={(open) => !open && closeConfirm()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('pages.readings.newTitle')}</DialogTitle>
+            <DialogDescription>{confirmBook?.title}</DialogDescription>
+          </DialogHeader>
+          {confirmBook && (
+            <ReadingForm
+              books={[confirmBook]}
+              defaultReadingTime={durationMinutes}
+              lockSession
+              onSubmit={(data) => void handleReadingSubmit(data)}
+              onCancel={closeConfirm}
+              isLoading={isBusy}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Registro da sessão de estudo (reaproveita AddSessionForm) */}
+      <Dialog open={!!confirmCourse} onOpenChange={(open) => !open && closeConfirm()}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {t('pages.libraryDashboard.studyTimerConfirmTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {state.mode === 'reading' && selectedBook
-                ? selectedBook.title
-                : (selectedCourse?.title ?? '')}
-            </DialogDescription>
+            <DialogDescription>{confirmCourse?.title}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-md py-sm">
-            <div className="bg-muted px-md py-sm flex items-center justify-between rounded-lg">
-              <span className="text-muted-foreground text-sm">
-                {t('pages.libraryDashboard.studyTimerDuration')}
-              </span>
-              <span className="text-sm font-bold">{formatElapsed(state.elapsed)}</span>
-            </div>
-            {state.mode === 'reading' && (
-              <div className="space-y-xs">
-                <Label htmlFor="pages-read" className="text-sm">
-                  {t('pages.libraryDashboard.studyTimerPagesRead')}
-                </Label>
-                <Input
-                  id="pages-read"
-                  type="number"
-                  min={1}
-                  value={pagesRead}
-                  onChange={(e) => setPagesRead(e.target.value)}
-                  placeholder="0"
-                  className="h-8"
-                />
-              </div>
-            )}
-          </div>
-          <div className="gap-sm flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setShowConfirm(false);
-                handleReset();
-              }}
-            >
-              {t('pages.libraryDashboard.studyTimerCancel')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => void handleSave()}
-              disabled={isSaving}
-              className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
-            >
-              {t('pages.libraryDashboard.studyTimerSave')}
-            </Button>
-          </div>
+          {confirmCourse && (
+            <AddSessionForm
+              course={confirmCourse}
+              defaultMinutes={durationMinutes}
+              onSaved={finish}
+              onCancel={closeConfirm}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>

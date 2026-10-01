@@ -3135,7 +3135,10 @@
       "studyTimerSave": "Salvar",
       "studyTimerCancel": "Descartar",
       "studyTimerSaved": "Sessão salva!",
-      "studyTimerPagesRead": "Páginas lidas"
+      "studyTimerPagesRead": "Páginas lidas",
+      "readingTimerTitle": "Timer de Leitura",
+      "studyTimerNoLessons": "Cadastre módulos e aulas no curso antes de iniciar o timer.",
+      "studyTimerCourseNotFound": "Curso não encontrado."
     },
     "books": {
       "title": "Obras",
@@ -3560,12 +3563,16 @@
         "bookPlaceholder": "Selecione um livro",
         "bookPages": "{{count}} páginas",
         "pagesReadLabel": "Páginas Lidas *",
-        "pagesReadMax": "Máximo: {{count}} páginas",
+        "pagesReadMax": "Máximo: {{count}} páginas restantes",
         "readingDateLabel": "Data da Leitura *",
         "readingDatePlaceholder": "Selecione a data de leitura",
         "readingTimeLabel": "Tempo de Leitura (minutos) *",
-        "currentPageLabel": "Página Atual",
-        "currentPagePlaceholder": "Opcional",
+        "progressLabel": "Progresso da leitura",
+        "progressValue": "{{read}}/{{total}} páginas ({{percent}}%)",
+        "progressDelta": "Antes: {{before}}% → Agora: {{after}}% (+{{delta}} p.p.)",
+        "progressForecast": "Previsão de conclusão: {{date}} (ritmo de {{pace}} pág./dia)",
+        "progressFinished": "Obra concluída com esta leitura",
+        "progressNoForecast": "Sem ritmo de leitura suficiente para prever a conclusão",
         "timeOfDayLabel": "Período do Dia",
         "timeOfDayPlaceholder": "Opcional",
         "timeOfDayMorning": "Manhã",
@@ -3783,7 +3790,12 @@
         "notesLabel": "Notas",
         "notesPlaceholder": "O que estudou nessa sessão?",
         "totalHours": "Total: {{hours}}h",
-        "needsLesson": "Cadastre ao menos uma aula do curso antes de registrar sessões de estudo."
+        "needsLesson": "Cadastre ao menos uma aula do curso antes de registrar sessões de estudo.",
+        "moduleLabel": "Módulo",
+        "modulePlaceholder": "Selecione o módulo",
+        "lessonLabel": "Aula concluída",
+        "lessonPlaceholder": "Selecione a aula (opcional)",
+        "progressValue": "{{done}}/{{total}} aulas ({{percent}}%)"
       },
       "certificate": {
         "fileLabel": "Comprovante de Conclusão",

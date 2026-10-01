@@ -1,5 +1,6 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { BookOpen, CalendarDays, Clock, FileText, Hash, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -19,10 +21,13 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TIME_OF_DAY_ICONS } from '@/config/icons';
+import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
+import { projectReading } from '@/lib/reading-projection';
 import { formatLocalDate } from '@/lib/utils';
 import { readingSchema, type ReadingFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
+import { readingsService } from '@/services/readings-service';
 import type { Reading, Book } from '@/types';
 
 const TIME_OF_DAY_KEYS = ['morning', 'afternoon', 'evening', 'dawn'] as const;
@@ -33,6 +38,10 @@ interface ReadingFormProps {
   onSubmit: (data: ReadingFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Pré-preenche o tempo de leitura (min) — usado pelo timer de leitura. */
+  defaultReadingTime?: number;
+  /** Trava data e tempo — leitura vinda de uma sessão do timer. */
+  lockSession?: boolean;
 }
 
 export function ReadingForm({
@@ -41,6 +50,8 @@ export function ReadingForm({
   onSubmit,
   onCancel,
   isLoading = false,
+  defaultReadingTime = 0,
+  lockSession = false,
 }: ReadingFormProps) {
   const { t } = useTranslation();
   const {
@@ -48,6 +59,7 @@ export function ReadingForm({
     handleSubmit,
     setValue,
     watch,
+    setError,
     formState: { errors },
   } = useForm<ReadingFormData>({
     resolver: zodResolver(readingSchema),
@@ -66,7 +78,7 @@ export function ReadingForm({
           book: books[0]?.id ?? 0,
           pages_read: 0,
           reading_date: formatLocalDate(new Date()),
-          reading_time: 0,
+          reading_time: defaultReadingTime,
           notes: '',
           current_page: null,
           time_of_day: null,
@@ -90,13 +102,43 @@ export function ReadingForm({
   }, [reading, setValue]);
 
   const selectedBook = watch('book');
-  const getBookMaxPages = (bookId: number): number => {
-    const book = books.find((b) => b.id === bookId);
-    return book?.pages || 1;
+
+  // Progresso projetado: leituras anteriores da obra (sem esta, se for
+  // edição) + páginas informadas agora.
+  const progressBook = books.find((b) => b.id === selectedBook);
+  const { data: bookReadings = [] } = useQuery({
+    queryKey: ['readings', 'book', progressBook?.id],
+    queryFn: () => readingsService.getAllPages({ book: progressBook!.id }),
+    enabled: !!progressBook,
+    staleTime: 0,
+  });
+  const previousReadings = bookReadings.filter((r) => r.id !== reading?.id);
+  const previousPages = previousReadings.reduce((sum, r) => sum + r.pages_read, 0);
+  // Mínimo 1; máximo = páginas restantes da obra.
+  const maxPages = Math.max(1, (progressBook?.pages ?? 1) - previousPages);
+  const clampPages = (value: number) => Math.min(maxPages, Math.max(1, value || 1));
+
+  const submit = (data: ReadingFormData) => {
+    if (data.pages_read > maxPages) {
+      setError('pages_read', {
+        message: t('pages.readings.form.pagesReadMax', { count: maxPages }),
+      });
+      return;
+    }
+    onSubmit(data);
   };
 
+  const projection = progressBook
+    ? projectReading({
+        bookPages: progressBook.pages,
+        previousReadings,
+        pagesRead: watch('pages_read') || 0,
+        readingDate: watch('reading_date'),
+      })
+    : null;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(submit)} className="space-y-lg">
       <FormSection title={t('pages.readings.form.sectionProgress')} icon={BookOpen}>
         <div className="gap-md grid">
           {books.length > 1 && (
@@ -138,9 +180,13 @@ export function ReadingForm({
                 id="pages_read"
                 type="number"
                 min="1"
-                max={selectedBook ? getBookMaxPages(selectedBook) : undefined}
+                max={maxPages}
                 {...register('pages_read', {
                   setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+                  onBlur: (e: React.FocusEvent<HTMLInputElement>) =>
+                    setValue('pages_read', clampPages(parseInt(e.target.value)), {
+                      shouldValidate: true,
+                    }),
                 })}
                 disabled={isLoading}
               />
@@ -152,30 +198,28 @@ export function ReadingForm({
               {selectedBook > 0 && (
                 <p className="text-muted-foreground text-xs">
                   {t('pages.readings.form.pagesReadMax', {
-                    count: getBookMaxPages(selectedBook),
+                    count: maxPages,
                   })}
                 </p>
               )}
             </div>
 
             <div className="space-y-sm">
-              <Label htmlFor="current_page" className="gap-xs flex items-center">
-                <Hash className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.readings.form.currentPageLabel')}
+              <Label className="gap-xs flex items-center">
+                <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.readings.form.readingDateLabel')}
               </Label>
-              <Input
-                id="current_page"
-                type="number"
-                min="1"
-                placeholder={t('pages.readings.form.currentPagePlaceholder')}
-                {...register('current_page', {
-                  setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
-                })}
-                disabled={isLoading}
+              <DatePicker
+                value={watch('reading_date')}
+                onChange={(date) =>
+                  setValue('reading_date', date ? formatLocalDate(date) : '')
+                }
+                placeholder={t('pages.readings.form.readingDatePlaceholder')}
+                disabled={isLoading || lockSession}
               />
-              {errors.current_page && (
+              {errors.reading_date && (
                 <p className="mt-xs text-destructive text-sm">
-                  {errors.current_page.message}
+                  {errors.reading_date.message}
                 </p>
               )}
             </div>
@@ -185,26 +229,6 @@ export function ReadingForm({
 
       <FormSection title={t('pages.readings.form.sectionRecord')} icon={CalendarDays}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.readings.form.readingDateLabel')}
-            </Label>
-            <DatePicker
-              value={watch('reading_date')}
-              onChange={(date) =>
-                setValue('reading_date', date ? formatLocalDate(date) : '')
-              }
-              placeholder={t('pages.readings.form.readingDatePlaceholder')}
-              disabled={isLoading}
-            />
-            {errors.reading_date && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.reading_date.message}
-              </p>
-            )}
-          </div>
-
           <div className="space-y-sm">
             <Label htmlFor="reading_time" className="gap-xs flex items-center">
               <Clock className="text-muted-foreground h-3.5 w-3.5" />
@@ -217,6 +241,10 @@ export function ReadingForm({
               {...register('reading_time', {
                 setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
               })}
+              // readOnly (não disabled): RHF envia campos disabled como undefined.
+              readOnly={lockSession}
+              aria-disabled={lockSession}
+              className={lockSession ? 'cursor-not-allowed opacity-50' : undefined}
               disabled={isLoading}
             />
             {errors.reading_time && (
@@ -226,7 +254,7 @@ export function ReadingForm({
             )}
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.readings.form.timeOfDayLabel')}
@@ -280,6 +308,40 @@ export function ReadingForm({
             <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
           )}
         </div>
+        {progressBook && projection && (
+          <div className="mt-md space-y-xs">
+            <div className="text-muted-foreground flex items-center justify-between text-xs">
+              <span>{t('pages.readings.form.progressLabel')}</span>
+              <span className="text-foreground font-semibold">
+                {t('pages.readings.form.progressValue', {
+                  read: projection.totalPages,
+                  total: progressBook.pages,
+                  percent: projection.progress,
+                })}
+              </span>
+            </div>
+            <Progress value={projection.progress} className="h-2" />
+            <p className="text-muted-foreground text-xs">
+              {t('pages.readings.form.progressDelta', {
+                before: projection.previousProgress,
+                after: projection.progress,
+                delta:
+                  Math.round((projection.progress - projection.previousProgress) * 10) /
+                  10,
+              })}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {projection.finished
+                ? t('pages.readings.form.progressFinished')
+                : projection.estimatedCompletion
+                  ? t('pages.readings.form.progressForecast', {
+                      date: formatDate(projection.estimatedCompletion),
+                      pace: projection.avgPagesPerDay,
+                    })
+                  : t('pages.readings.form.progressNoForecast')}
+            </p>
+          </div>
+        )}
       </FormSection>
 
       <div className="gap-sm pt-md flex justify-end border-t">

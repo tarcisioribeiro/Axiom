@@ -3080,7 +3080,10 @@
       "studyTimerSave": "Save",
       "studyTimerCancel": "Discard",
       "studyTimerSaved": "Session saved!",
-      "studyTimerPagesRead": "Pages read"
+      "studyTimerPagesRead": "Pages read",
+      "readingTimerTitle": "Reading Timer",
+      "studyTimerNoLessons": "Add modules and lessons to the course before starting the timer.",
+      "studyTimerCourseNotFound": "Course not found."
     },
     "books": {
       "title": "Works",
@@ -3505,12 +3508,16 @@
         "bookPlaceholder": "Select a book",
         "bookPages": "{{count}} pages",
         "pagesReadLabel": "Pages Read *",
-        "pagesReadMax": "Maximum: {{count}} pages",
+        "pagesReadMax": "Maximum: {{count}} remaining pages",
         "readingDateLabel": "Reading Date *",
         "readingDatePlaceholder": "Select reading date",
         "readingTimeLabel": "Reading Time (minutes) *",
-        "currentPageLabel": "Current Page",
-        "currentPagePlaceholder": "Optional",
+        "progressLabel": "Reading progress",
+        "progressValue": "{{read}}/{{total}} pages ({{percent}}%)",
+        "progressDelta": "Before: {{before}}% → Now: {{after}}% (+{{delta}} p.p.)",
+        "progressForecast": "Estimated completion: {{date}} ({{pace}} pages/day pace)",
+        "progressFinished": "Book finished with this reading",
+        "progressNoForecast": "Not enough reading pace to estimate completion",
         "timeOfDayLabel": "Time of Day",
         "timeOfDayPlaceholder": "Optional",
         "timeOfDayMorning": "Morning",
@@ -3717,7 +3724,12 @@
         "notesLabel": "Notes",
         "notesPlaceholder": "What did you study in this session?",
         "totalHours": "Total: {{hours}}h",
-        "needsLesson": "Add at least one lesson to the course before logging study sessions."
+        "needsLesson": "Add at least one lesson to the course before logging study sessions.",
+        "moduleLabel": "Module",
+        "modulePlaceholder": "Select the module",
+        "lessonLabel": "Completed lesson",
+        "lessonPlaceholder": "Select the lesson (optional)",
+        "progressValue": "{{done}}/{{total}} lessons ({{percent}}%)"
       },
       "certificate": {
         "fileLabel": "Completion Certificate",

@@ -43,6 +43,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
@@ -478,19 +485,22 @@ function SessionItem({
   );
 }
 
-function AddSessionForm({
-  courseId,
-  ownerId,
+export function AddSessionForm({
+  course,
+  defaultMinutes = 60,
   onSaved,
   onCancel,
 }: {
-  courseId: number;
-  ownerId: number;
+  course: Course;
+  defaultMinutes?: number;
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [moduleId, setModuleId] = useState('');
+  const [lessonId, setLessonId] = useState('');
   const { register, handleSubmit, setValue, watch } = useForm<{
     session_date: string;
     duration_minutes: number;
@@ -498,15 +508,37 @@ function AddSessionForm({
   }>({
     defaultValues: {
       session_date: formatLocalDate(new Date()),
-      duration_minutes: 60,
+      duration_minutes: defaultMinutes,
       notes: '',
     },
   });
 
+  // Módulos já vêm com as aulas aninhadas (CourseModuleSerializer.lessons).
+  const { data: modules = [] } = useQuery({
+    queryKey: ['course-modules', course.id],
+    queryFn: () => courseModulesService.getAll({ course: course.id, page_size: 200 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+  const pendingLessons = (
+    modules.find((m) => String(m.id) === moduleId)?.lessons ?? []
+  ).filter((l) => !l.is_completed);
+
+  const projectedCompleted = course.completed_lessons + (lessonId ? 1 : 0);
+  const projectedProgress =
+    course.total_lessons > 0
+      ? Math.round((projectedCompleted / course.total_lessons) * 100)
+      : 0;
+
   const create = useMutation({
-    mutationFn: (data: CourseSessionFormData) => courseSessionsService.create(data),
+    mutationFn: async (data: CourseSessionFormData) => {
+      await courseSessionsService.create(data);
+      if (lessonId) await courseLessonsService.bulkComplete([Number(lessonId)], true);
+    },
     onSuccess: () => {
       toast({ title: t('pages.courses.sessions.saved') });
+      void queryClient.invalidateQueries({ queryKey: ['course-modules', course.id] });
+      void queryClient.invalidateQueries({ queryKey: ['course-lessons'] });
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
       onSaved();
     },
     onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
@@ -518,11 +550,11 @@ function AddSessionForm({
     notes: string;
   }) => {
     create.mutate({
-      course: courseId,
+      course: course.id,
       session_date: values.session_date,
       duration_minutes: Number(values.duration_minutes),
       notes: values.notes || null,
-      owner: ownerId,
+      owner: course.owner,
     });
   };
 
@@ -567,6 +599,65 @@ function AddSessionForm({
           placeholder={t('pages.courses.sessions.notesPlaceholder')}
           {...register('notes')}
         />
+      </div>
+      <div className="gap-md grid grid-cols-2">
+        <div className="space-y-xs">
+          <Label className="text-xs">{t('pages.courses.sessions.moduleLabel')}</Label>
+          <Select
+            value={moduleId}
+            onValueChange={(v) => {
+              setModuleId(v);
+              setLessonId('');
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t('pages.courses.sessions.modulePlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {modules.map((m) => (
+                <SelectItem key={m.id} value={String(m.id)}>
+                  {m.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-xs">
+          <Label className="text-xs">{t('pages.courses.sessions.lessonLabel')}</Label>
+          <Select
+            value={lessonId}
+            onValueChange={setLessonId}
+            disabled={pendingLessons.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t('pages.courses.sessions.lessonPlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {pendingLessons.map((l) => (
+                <SelectItem key={l.id} value={String(l.id)}>
+                  {l.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-xs">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span>{t('pages.courses.stats.progress')}</span>
+          <span className="text-category-intellect font-semibold">
+            {t('pages.courses.sessions.progressValue', {
+              done: projectedCompleted,
+              total: course.total_lessons,
+              percent: projectedProgress,
+            })}
+          </span>
+        </div>
+        <Progress value={projectedProgress} className="bg-category-intellect/20 h-2" />
       </div>
       <div className="gap-sm flex justify-end">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
@@ -1055,8 +1146,7 @@ export function CourseDetailModal({
 
               {showAddSession && (
                 <AddSessionForm
-                  courseId={displayCourse.id}
-                  ownerId={displayCourse.owner}
+                  course={displayCourse}
                   onSaved={() => {
                     setShowAddSession(false);
                     handleSessionUpdated();

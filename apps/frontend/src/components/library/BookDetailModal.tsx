@@ -301,8 +301,8 @@ function BookChat({ book }: { book: Book }) {
   const showStreamBubble = isStreaming || (accumulatedText.length > 0 && !streamError);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="pr-xs max-h-64 min-h-32 space-y-3 overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="pr-xs min-h-0 flex-1 space-y-3 overflow-y-auto">
         {isLoadingHistory ? (
           <p className="py-md text-muted-foreground text-center text-xs">
             {t('common.actions.loading')}
@@ -750,7 +750,7 @@ export function BookDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-3xl flex-col">
+      <DialogContent className="flex h-[85vh] max-w-3xl flex-col">
         <DialogHeader>
           <DialogTitle className="sr-only">{book.title}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -802,7 +802,7 @@ export function BookDetailModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <TabTransition key={activeTab}>
+          <TabTransition key={activeTab} className="h-full">
             {/* Info tab */}
             {activeTab === 'info' && (
               <>
@@ -1371,7 +1371,7 @@ export function BookDetailModal({
 
             {/* Chat tab */}
             {activeTab === 'chat' && (
-              <div className="space-y-3">
+              <div className="flex h-full flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <Brain className="text-primary h-4 w-4" />
                   <span className="text-sm font-medium">
