@@ -129,6 +129,12 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     t(`pages.planningDashboard.monthShort.${i}`)
   );
 
+  // Start scrolled to the end so the most recent days are visible.
+  // Stable ref: runs only when the grid mounts (after each load), not on re-renders.
+  const scrollToEnd = useCallback((el: HTMLDivElement | null) => {
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
+
   const getCellLabel = useCallback(
     (day: HeatmapDay): string => {
       const [year, month, d] = day.date.split('-');
@@ -256,7 +262,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       {isLoading ? (
         <div className="bg-muted h-[110px] animate-pulse rounded-md" />
       ) : (
-        <div className="pb-xs relative overflow-x-auto">
+        <div ref={scrollToEnd} className="pb-xs relative overflow-x-auto">
           {/* Wrapper with left padding for weekday labels */}
           <div className="gap-xs flex">
             {/* Weekday labels */}

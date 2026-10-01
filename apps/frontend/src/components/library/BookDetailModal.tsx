@@ -801,7 +801,7 @@ export function BookDetailModal({
           ))}
         </div>
 
-        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <TabTransition key={activeTab}>
             {/* Info tab */}
             {activeTab === 'info' && (

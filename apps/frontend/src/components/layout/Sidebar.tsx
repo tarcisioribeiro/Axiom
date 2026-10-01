@@ -469,7 +469,7 @@ export const Sidebar = () => {
       {/* Navigation */}
       <nav
         ref={navRef}
-        className="custom-scrollbar flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto"
         aria-label={t('layout.mainMenu')}
       >
         {isCollapsed && !isMobile ? (

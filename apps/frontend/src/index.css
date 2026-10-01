@@ -1601,6 +1601,25 @@
 @layer base {
   * {
     @apply border-border;
+    /* Scrollbar global seguindo o tema (Firefox / Chrome 121+) */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+  }
+  /* Fallback WebKit (Safari / Chrome antigo) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
   body {
     @apply bg-background text-foreground;
@@ -1744,32 +1763,6 @@
   /* Sidebar text com contraste total */
   .sidebar-text {
     @apply text-foreground;
-  }
-
-  /* Custom scrollbar para browsers com suporte */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 5px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 5px;
-    transition: background var(--duration-fast);
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
   }
 
   /* Kanban scrollbar estilizado - Dracula/Alucard */

@@ -183,7 +183,7 @@ export function VaultTransactionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-6xl overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.vaults.transactionsTitle')}</DialogTitle>
           <DialogDescription>

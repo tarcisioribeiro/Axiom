@@ -52,7 +52,7 @@ export function BillPurchasesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.creditCardBills.purchases.title')}</DialogTitle>
           <DialogDescription>

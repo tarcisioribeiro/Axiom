@@ -175,7 +175,7 @@ export function CommandPalette() {
         {/* Lista de comandos */}
         <div
           ref={listRef}
-          className="custom-scrollbar p-sm max-h-[60vh] overflow-y-auto"
+          className="p-sm max-h-[60vh] overflow-y-auto"
           role="listbox"
           aria-label={t('layout.commandPalette.ariaLabel')}
         >

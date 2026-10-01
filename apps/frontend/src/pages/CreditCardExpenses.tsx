@@ -1331,7 +1331,7 @@ export default function CreditCardExpenses({
       </AnimatePresence>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-3xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {selectedPurchase
@@ -1355,7 +1355,7 @@ export default function CreditCardExpenses({
       </Dialog>
 
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {t('pages.creditCardExpenses.editInstallmentTitle')}

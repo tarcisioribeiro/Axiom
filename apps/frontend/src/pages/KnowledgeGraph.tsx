@@ -1141,7 +1141,7 @@ export default function KnowledgeGraph() {
                     <X className="h-3.5 w-3.5" />
                   </PlainButton>
                 </div>
-                <div className="custom-scrollbar p-sm flex-1 overflow-y-auto">
+                <div className="p-sm flex-1 overflow-y-auto">
                   {suggestLoading ? (
                     <p className="py-md text-muted-foreground text-center text-xs">
                       {t('pages.knowledgeGraph.loadingSuggestions')}

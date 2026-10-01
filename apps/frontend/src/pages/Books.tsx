@@ -1045,7 +1045,7 @@ export default function Books() {
 
       {/* Create / Edit form dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="custom-scrollbar max-w-3xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {editingBook ? t('pages.books.editTitle') : t('pages.books.newTitle')}

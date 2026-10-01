@@ -222,6 +222,7 @@ log "MinIO restaurado com sucesso."
 # sobrescrevem o .env via cfg(). Aqui sincronizamos as chaves MinIO do
 # SystemConfig com as credenciais locais (fix_storage_config_for_local) antes
 # de subir os containers de aplicação.
+SYSCONFIG_SYNCED=0
 if docker inspect "$CONTAINER_API" &>/dev/null 2>&1; then
     log "Sincronizando SystemConfig com credenciais locais (${ENV_FILE})..."
 
@@ -240,26 +241,26 @@ if docker inspect "$CONTAINER_API" &>/dev/null 2>&1; then
     done
 
     if [[ $_django_ready -eq 1 ]]; then
-        docker exec \
+        if docker exec \
             -e "MINIO_ROOT_USER=${MINIO_ROOT_USER}" \
             -e "MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}" \
             -e "MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}" \
             -e "MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-axiom}" \
             "$CONTAINER_API" \
-            python manage.py fix_storage_config_for_local \
-            || log "AVISO: falha ao sincronizar SystemConfig. Rode manualmente: docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
-        log "SystemConfig sincronizado."
+            python manage.py fix_storage_config_for_local; then
+            SYSCONFIG_SYNCED=1
+            log "SystemConfig sincronizado."
+        else
+            log "AVISO: falha ao sincronizar SystemConfig."
+        fi
     else
-        log "AVISO: timeout aguardando Django. Assim que os containers subirem, rode manualmente:"
-        log "  docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
+        log "AVISO: timeout aguardando Django — SystemConfig NÃO foi sincronizado."
     fi
 
     log "  Parando '${CONTAINER_API}'..."
     docker stop "$CONTAINER_API" &>/dev/null || true
 else
     log "AVISO: container '${CONTAINER_API}' não existe ainda — SystemConfig NÃO foi sincronizado."
-    log "  Depois de subir os containers ('docker compose ... up -d'), rode manualmente:"
-    log "  docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
 fi
 
 # ── Reiniciar containers de aplicação ─────────────────────────────────────────
@@ -303,3 +304,12 @@ log "Restauração concluída com sucesso!"
 log "Banco   : ${DB_NAME} (container: ${CONTAINER_DB})"
 log "MinIO   : bucket '${MINIO_BUCKET}' (container: ${CONTAINER_MINIO})"
 log "══════════════════════════════════════════════════"
+
+# Repetido no fim para não se perder no meio do log: sem essa sincronização o
+# SystemConfig restaurado aponta para o MinIO de origem (mídia retorna 403).
+if [[ $SYSCONFIG_SYNCED -ne 1 ]]; then
+    log "⚠  ATENÇÃO: SystemConfig (MinIO) NÃO foi sincronizado — fotos/capas/PDFs vão falhar."
+    log "   Com os containers no ar, rode:"
+    log "   docker exec ${CONTAINER_API} python manage.py fix_storage_config_for_local"
+    log "   docker restart ${CONTAINER_API} axiom-worker"
+fi

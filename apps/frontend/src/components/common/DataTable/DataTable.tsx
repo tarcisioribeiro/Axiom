@@ -220,7 +220,7 @@ export function DataTable<T>({
 
       {/* Desktop table */}
       <div className="bg-card hidden overflow-hidden rounded-lg border md:block">
-        <div className="custom-scrollbar overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50 border-b">
               <tr>

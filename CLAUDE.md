@@ -44,7 +44,7 @@ Axiom/
 
 **Authentication**: JWT in HttpOnly cookies. `JWTCookieMiddleware` extracts cookies → Authorization header. Access: 15min, refresh: 1h. 2FA: TOTP via `pyotp` (`TOTPDevice` per user; backup codes as SHA-256 hashes).
 
-**Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token`. Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
+**Desktop theme sync**: `ThemePreference` (one per user) updated via `PUT /api/v1/theme-sync/` (`Authorization: ThemeSync <token>`, no JWT). Token issued with `manage.py issue_theme_sync_token` or `POST /api/v1/me/theme/sync-token/` (authenticated; used by the dotfiles repo's `setup-env.sh`). Web app reads via `GET /api/v1/me/theme/` in `hooks/use-desktop-theme-sync.ts` (applies when different from `localStorage.desktopThemeSynced`).
 
 **Agents / LLM** (`apps/api/agents/`): Six domain agents selected by `core/router.py`. Endpoints: `/api/v1/agents/` (ask/, stream/, history/, sessions/, status/). **Rule**: `providers/` is the **only** place in `agents/` allowed to import models from other apps — tools, domain agents, and views consume data through it. See `documentation/architecture/agents-llm-boundary.md`.
 
@@ -106,6 +106,11 @@ $DC logs -f api                           # API logs
 $DC exec api python manage.py <command>   # Management commands
 $DC up -d --build                         # Rebuild after dep changes
 ```
+
+> **Build/rebuild**: when the user asks to build/rebuild the application, run exactly:
+> ```bash
+> docker compose -f infra/docker/docker-compose.yml --project-directory . up --build -d && docker system prune -af
+> ```
 
 > **IMPORTANT**: API container does NOT mount source — code is baked in. After editing host files: `docker cp <file> axiom-api:/app/<path>` for a quick test, or rebuild.
 

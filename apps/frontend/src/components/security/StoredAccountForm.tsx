@@ -201,7 +201,7 @@ export function StoredAccountForm({
                       onChange={(e) => setBankSearch(e.target.value)}
                     />
                   </div>
-                  <div className="custom-scrollbar max-h-48 overflow-y-auto">
+                  <div className="max-h-48 overflow-y-auto">
                     {filteredInstitutions.map((inst) => {
                       const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
                       return (

@@ -57,16 +57,13 @@ export function ReceiptPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        size="lg"
-        className="custom-scrollbar max-h-[90vh] overflow-y-auto"
-      >
+      <DialogContent size="lg" className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('receipt.title', { typeLabel: data.typeLabel })}</DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="custom-scrollbar bg-muted p-md flex justify-center overflow-auto rounded-lg">
+        <div className="bg-muted p-md flex justify-center overflow-auto rounded-lg">
           <div className="origin-top scale-[0.65] transform">
             <ReceiptTemplate data={data} />
           </div>

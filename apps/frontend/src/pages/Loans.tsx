@@ -497,7 +497,7 @@ export default function Loans() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}

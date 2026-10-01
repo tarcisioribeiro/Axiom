@@ -38,7 +38,7 @@ export function LoanAmortizationDialog({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('pages.loans.amortization.title')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>

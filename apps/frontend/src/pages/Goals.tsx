@@ -714,7 +714,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
       {/* Modal edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}

@@ -576,7 +576,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-4xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>
               {selectedTask

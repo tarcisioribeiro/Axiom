@@ -530,7 +530,7 @@ export default function Archives() {
 
         {/* Dialog para criar/editar arquivo */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="custom-scrollbar max-w-2xl">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {selectedArchive
@@ -555,7 +555,7 @@ export default function Archives() {
 
         {/* Dialog para visualizar conteúdo de texto */}
         <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-          <DialogContent className="custom-scrollbar max-w-4xl">
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>{selectedArchive?.title}</DialogTitle>
               <DialogDescription>

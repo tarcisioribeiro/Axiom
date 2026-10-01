@@ -692,7 +692,7 @@ export default function CreditCardBills({
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[98vh] max-w-3xl">
+        <DialogContent className="max-h-[98vh] max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {selectedBill
@@ -713,7 +713,7 @@ export default function CreditCardBills({
       </Dialog>
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="custom-scrollbar max-w-lg">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('pages.creditCardBills.payTitle')}</DialogTitle>
             <DialogDescription>{t('pages.creditCardBills.payDesc')}</DialogDescription>

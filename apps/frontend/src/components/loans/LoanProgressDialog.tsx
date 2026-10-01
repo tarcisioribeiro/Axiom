@@ -130,7 +130,7 @@ export function LoanProgressDialog({
 
   return (
     <Dialog open={!!loan} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{p('title', 'lentTitle')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>

@@ -595,7 +595,7 @@ export default function Accounts() {
 
       {/* Bank Reconciliation dialog */}
       <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
-        <DialogContent className="custom-scrollbar max-w-3xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="gap-sm flex items-center">
               <ArrowLeftRight className="h-5 w-5" />

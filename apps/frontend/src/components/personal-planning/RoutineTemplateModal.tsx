@@ -567,7 +567,7 @@ export function RoutineTemplateModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('pages.routineTasks.templates.title')}</DialogTitle>
             <DialogDescription>
@@ -618,7 +618,7 @@ export function RoutineTemplateModal({
 
       {/* Create template dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t('pages.routineTasks.templates.createTitle')}</DialogTitle>
             <DialogDescription>
@@ -669,7 +669,7 @@ export function RoutineTemplateModal({
                 onChange={(e) => setTaskSearch(e.target.value)}
                 placeholder={t('pages.routineTasks.templates.searchTasksPlaceholder')}
               />
-              <div className="custom-scrollbar bg-muted/20 p-sm max-h-52 overflow-y-auto rounded-lg border">
+              <div className="bg-muted/20 p-sm max-h-52 overflow-y-auto rounded-lg border">
                 {isLoadingAllTasks ? (
                   <div className="py-md flex items-center justify-center">
                     <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />

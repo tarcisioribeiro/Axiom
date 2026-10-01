@@ -311,17 +311,17 @@ export default function MemberFinancialReportPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="expenses" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <ExpensesTable items={report.expenses} />
           </div>
         </TabsContent>
         <TabsContent value="revenues" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <RevenuesTable items={report.revenues} />
           </div>
         </TabsContent>
         <TabsContent value="loans_benefited" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <LoansTable
               items={report.loans_as_benefited}
               counterpartLabel={t('pages.memberFinancialReport.creditor')}
@@ -331,7 +331,7 @@ export default function MemberFinancialReportPage() {
           </div>
         </TabsContent>
         <TabsContent value="loans_creditor" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <LoansTable
               items={report.loans_as_creditor}
               counterpartLabel={t('pages.memberFinancialReport.benefited')}
@@ -341,12 +341,12 @@ export default function MemberFinancialReportPage() {
           </div>
         </TabsContent>
         <TabsContent value="payables" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <PayablesTable items={report.payables} />
           </div>
         </TabsContent>
         <TabsContent value="transfers" className="mt-0 flex-1">
-          <div className="custom-scrollbar overflow-x-auto">
+          <div className="overflow-x-auto">
             <TransfersTable items={report.transfers} />
           </div>
         </TabsContent>

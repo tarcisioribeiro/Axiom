@@ -964,37 +964,37 @@ export default function PersonalPlanningDashboard() {
                     <HabitHeatmap />
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Linha 5: Treinos por dia (30d) */}
-              {workoutByDayData.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-sm">
-                    <CardTitle className="gap-sm flex items-center text-sm">
-                      <Dumbbell className="h-4 w-4" />
-                      {t('pages.planningDashboard.workoutsByDayTitle')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer
-                      chartId="planning-workout-by-day"
-                      data={workoutByDayData}
-                      dataKey="count"
-                      nameKey="day"
-                      formatter={(value) =>
-                        t('pages.planningDashboard.sessionCount', {
-                          count: Number(value),
-                        })
-                      }
-                      colors={COLORS}
-                      emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
-                      lockChartType="bar"
-                      height={200}
-                      tooltipNameFormatter={() => null}
-                    />
-                  </CardContent>
-                </Card>
-              )}
+                {/* Treinos por dia (30d) */}
+                {workoutByDayData.length > 0 && (
+                  <Card className="lg:col-span-1">
+                    <CardHeader className="pb-sm">
+                      <CardTitle className="gap-sm flex items-center text-sm">
+                        <Dumbbell className="h-4 w-4" />
+                        {t('pages.planningDashboard.workoutsByDayTitle')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer
+                        chartId="planning-workout-by-day"
+                        data={workoutByDayData}
+                        dataKey="count"
+                        nameKey="day"
+                        formatter={(value) =>
+                          t('pages.planningDashboard.sessionCount', {
+                            count: Number(value),
+                          })
+                        }
+                        colors={COLORS}
+                        emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
+                        lockChartType="bar"
+                        height={200}
+                        tooltipNameFormatter={() => null}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
 
               {/* Linha 5b: Humor × Conclusão */}
               {reflectionCorrelation.length > 0 && (

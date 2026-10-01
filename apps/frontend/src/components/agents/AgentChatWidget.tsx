@@ -184,7 +184,7 @@ export function AgentChatWidget() {
             </div>
 
             {/* Messages */}
-            <div className="custom-scrollbar p-md flex-1 overflow-y-auto">
+            <div className="p-md flex-1 overflow-y-auto">
               {isEmpty ? (
                 <div className="space-y-md">
                   <p className="text-muted-foreground text-center text-sm">

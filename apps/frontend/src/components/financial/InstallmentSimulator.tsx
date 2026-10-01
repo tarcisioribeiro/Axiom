@@ -77,7 +77,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] w-full max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-full max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <Calculator className="h-5 w-5" />

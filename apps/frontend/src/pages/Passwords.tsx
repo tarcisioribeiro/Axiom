@@ -1293,7 +1293,7 @@ export default function Passwords() {
             if (!open) void refresh();
           }}
         >
-          <DialogContent className="custom-scrollbar max-w-4xl">
+          <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>{t('pages.passwordImport.title')}</DialogTitle>
               <DialogDescription>
