@@ -14,7 +14,7 @@ import { useUrlFilters } from '@/hooks/use-url-filters';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
-import { formatLocalDate } from '@/lib/utils';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import type { ExpenseExportParams } from '@/services/expenses-service';
 import { expensesService } from '@/services/expenses-service';
@@ -122,14 +122,14 @@ export function useExpensesPage(opts?: {
   const setStatusFilter = (v: string) => setFilter('status', v);
 
   const startDate = useMemo(
-    () => (filters.startDate ? new Date(filters.startDate) : undefined),
+    () => parseLocalDate(filters.startDate),
     [filters.startDate]
   );
   const setStartDate = (d: Date | undefined) =>
     setFilter('startDate', d ? formatLocalDate(d) : '');
 
   const endDate = useMemo(
-    () => (filters.endDate ? new Date(filters.endDate) : undefined),
+    () => parseLocalDate(filters.endDate),
     [filters.endDate]
   );
   const setEndDate = (d: Date | undefined) =>

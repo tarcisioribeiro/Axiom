@@ -31,6 +31,16 @@ describe('formatLocalDate', () => {
 });
 
 describe('parseLocalDate', () => {
+  it('round-trips with formatLocalDate in a negative-offset timezone', () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = 'America/Sao_Paulo';
+    try {
+      expect(formatLocalDate(parseLocalDate('2026-08-31')!)).toBe('2026-08-31');
+    } finally {
+      process.env.TZ = originalTz;
+    }
+  });
+
   it('parses a YYYY-MM-DD string', () => {
     const result = parseLocalDate('2025-06-15');
     expect(result).toBeInstanceOf(Date);
