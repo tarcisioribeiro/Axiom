@@ -52,6 +52,7 @@ export interface BalanceForecast {
   loans_to_receive: number;
   loans_to_pay: number;
   pending_payables: number;
+  pending_receivables: number;
   summary: {
     total_income: number;
     total_outcome: number;

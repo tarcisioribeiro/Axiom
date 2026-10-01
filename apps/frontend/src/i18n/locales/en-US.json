@@ -2145,6 +2145,7 @@
       "creditCardBills": "Credit Card Bills",
       "loansToPay": "Loans to Pay",
       "valuesToPay": "Values to Pay",
+      "valuesToReceive": "Values to Receive",
       "totalOutflows": "Total Outflows",
       "cashFlowProjection": "Cash Flow Projection",
       "period30": "30 days",

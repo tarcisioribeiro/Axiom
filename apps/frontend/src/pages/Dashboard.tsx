@@ -1284,6 +1284,14 @@ export default function Dashboard() {
                                   +{formatCurrency(balanceForecast.loans_to_receive)}
                                 </span>
                               </div>
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                  {t('pages.dashboard.valuesToReceive')}
+                                </span>
+                                <span className="text-success font-medium">
+                                  +{formatCurrency(balanceForecast.pending_receivables)}
+                                </span>
+                              </div>
                               <div className="pt-sm flex items-center justify-between border-t text-sm">
                                 <span className="font-semibold">
                                   {t('pages.dashboard.totalInflows')}

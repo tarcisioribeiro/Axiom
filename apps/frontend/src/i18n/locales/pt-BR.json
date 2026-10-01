@@ -2192,6 +2192,7 @@
       "creditCardBills": "Faturas de Cartão",
       "loansToPay": "Empréstimos a Pagar",
       "valuesToPay": "Valores a Pagar",
+      "valuesToReceive": "Valores a Receber",
       "totalOutflows": "Total Saídas",
       "cashFlowProjection": "Projeção de Fluxo de Caixa",
       "period30": "30 dias",

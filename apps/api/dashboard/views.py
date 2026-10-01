@@ -395,6 +395,7 @@ class BalanceForecastView(APIView):
     - Empréstimos a receber (usuário é credor)
     - Empréstimos a pagar (usuário é beneficiado)
     - Valores a pagar pendentes (payables)
+    - Valores a receber pendentes (receivables)
 
     Response:
     {
@@ -406,6 +407,7 @@ class BalanceForecastView(APIView):
         "loans_to_receive": 500.00,
         "loans_to_pay": 1300.00,
         "pending_payables": 500.00,
+        "pending_receivables": 0.00,
         "summary": {
             "total_income": 1300.00,
             "total_outcome": 5300.00,
@@ -489,8 +491,20 @@ class BalanceForecastView(APIView):
             "0.00"
         )
 
+        # Valores a receber pendentes (receivables ativos ou em atraso)
+        pending_receivables = Receivable.objects.filter(
+            created_by=request.user,
+            status__in=["active", "overdue"],
+        ).aggregate(total=Sum("value") - Sum("received_value"))[
+            "total"
+        ] or Decimal(
+            "0.00"
+        )
+
         # Calcular totais
-        total_income = pending_revenues + loans_to_receive
+        total_income = (
+            pending_revenues + loans_to_receive + pending_receivables
+        )
         total_outcome = (
             pending_expenses
             + pending_card_bills
@@ -510,6 +524,7 @@ class BalanceForecastView(APIView):
                 "loans_to_receive": float(loans_to_receive),
                 "loans_to_pay": float(loans_to_pay),
                 "pending_payables": float(pending_payables),
+                "pending_receivables": float(pending_receivables),
                 "summary": {
                     "total_income": float(total_income),
                     "total_outcome": float(total_outcome),
