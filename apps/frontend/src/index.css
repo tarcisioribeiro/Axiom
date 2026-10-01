@@ -1895,6 +1895,19 @@
   }
 }
 
+/* ── Rodapé de ações de modal ──────────────────────────────────────── */
+/* Fica fixo na base do modal enquanto o conteúdo rola. Escopado a
+   [role='dialog'] para que forms reutilizados fora de modais não mudem.
+   Fora de @layer de propósito: no Tailwind v4 qualquer regra em layer perde
+   para utilities (ex.: p-lg do DialogContent), independente da especificidade. */
+[role='dialog']:has(.dialog-footer) {
+  padding-bottom: 0;
+}
+
+[role='dialog'] .dialog-footer {
+  @apply -mx-lg px-lg pb-lg pt-md border-border/60 bg-card sticky bottom-0 z-10 border-t;
+}
+
 @layer components {
   /* ── Hierarquia tipográfica semântica ──────────────────────────────── */
 

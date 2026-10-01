@@ -12,6 +12,8 @@ import {
   ArchiveIcon,
   Calendar,
   Tag,
+  Copy,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -572,7 +574,7 @@ export default function Archives() {
                 rows={20}
                 className="font-mono text-sm"
               />
-              <div className="gap-sm flex justify-end">
+              <div className="dialog-footer gap-sm flex justify-end">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -583,9 +585,11 @@ export default function Archives() {
                     });
                   }}
                 >
+                  <Copy className="mr-sm h-4 w-4" />
                   {t('common.actions.copy')}
                 </Button>
                 <Button onClick={() => setIsContentDialogOpen(false)}>
+                  <X className="mr-sm h-4 w-4" />
                   {t('common.actions.close')}
                 </Button>
               </div>
@@ -629,7 +633,7 @@ export default function Archives() {
                 title="PDF Preview"
               />
             ) : null}
-            <div className="flex justify-end">
+            <div className="dialog-footer flex justify-end">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -638,6 +642,7 @@ export default function Archives() {
                   setPreviewType(null);
                 }}
               >
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.close')}
               </Button>
             </div>

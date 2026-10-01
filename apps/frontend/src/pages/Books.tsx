@@ -20,6 +20,8 @@ import {
   BookOpen,
   Brain,
   CheckCircle,
+  Check,
+  X,
 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -1137,6 +1139,7 @@ export default function Books() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsQuickCaptureOpen(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -1150,7 +1153,10 @@ export default function Books() {
             >
               {quickCaptureMutation.isPending ? (
                 <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              ) : null}
+              ) : (
+                <Check className="mr-sm h-4 w-4" />
+              )}
+
               {t('common.actions.confirm')}
             </Button>
           </DialogFooter>

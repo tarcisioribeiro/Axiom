@@ -12,6 +12,7 @@ import {
   Link2,
   Tag,
   CircleDot,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -1422,12 +1423,13 @@ export default function CreditCardExpenses({
                       </SelectContent>
                     </Select>
                   )}
-                  <div className="gap-sm flex justify-end">
+                  <div className="dialog-footer gap-sm flex justify-end">
                     <Button
                       variant="outline"
                       onClick={() => setIsAssignBillDialogOpen(false)}
                       disabled={isSubmitting}
                     >
+                      <X className="mr-sm h-4 w-4" />
                       {t('common.actions.cancel')}
                     </Button>
                     <Button
@@ -1438,6 +1440,7 @@ export default function CreditCardExpenses({
                         eligibleBills.length === 0
                       }
                     >
+                      <Link2 className="mr-sm h-4 w-4" />
                       {t('pages.creditCardExpenses.assignBillBtn')}
                     </Button>
                   </div>

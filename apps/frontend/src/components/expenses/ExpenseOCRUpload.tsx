@@ -1,4 +1,4 @@
-import { ScanText, Upload, X } from 'lucide-react';
+import { ScanText, Upload, X, Check, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -166,7 +166,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
             onChange={handleInputChange}
           />
 
-          <div className="gap-sm flex justify-end">
+          <div className="dialog-footer gap-sm flex justify-end">
             <Button
               type="button"
               variant="outline"
@@ -175,6 +175,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                 setOpen(false);
               }}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -182,6 +183,11 @@ export function ExpenseOCRUpload({ onResult }: Props) {
               onClick={() => void handleSubmit()}
               disabled={!file || uploading}
             >
+              {uploading ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-sm h-4 w-4" />
+              )}
               {uploading
                 ? t('pages.expenseOCR.uploading')
                 : t('common.actions.confirm')}

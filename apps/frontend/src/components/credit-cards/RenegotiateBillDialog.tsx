@@ -1,4 +1,4 @@
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, X } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -206,13 +206,14 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
             <p>{t('pages.creditCardBills.renegotiateForm.billWillBePaid')}</p>
           </div>
 
-          <div className="gap-sm pt-md flex justify-end border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading} className="gap-sm">

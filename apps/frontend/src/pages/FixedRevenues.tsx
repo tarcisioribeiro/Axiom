@@ -14,6 +14,9 @@ import {
   CalendarDays,
   History,
   ClipboardList,
+  Loader2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -756,9 +759,15 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-sm h-4 w-4" />
+                )}
                 {isSubmitting
                   ? t('common.actions.saving')
                   : selectedRevenue

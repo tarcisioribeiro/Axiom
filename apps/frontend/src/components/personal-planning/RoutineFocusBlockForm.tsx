@@ -1,3 +1,4 @@
+import { Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -129,14 +130,16 @@ export function RoutineFocusBlockForm({
         />
       </div>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !name.trim() || weekdays.length === 0}
         >
+          <Save className="mr-sm h-4 w-4" />
           {t('common.actions.save')}
         </Button>
       </div>

@@ -14,6 +14,9 @@ import {
   Tag,
   Users,
   Wallet,
+  ArrowLeft,
+  X,
+  Save,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -730,13 +733,15 @@ export function LoanForm({
         </div>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         {step > 1 && !isEditing && (
           <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+            <ArrowLeft className="mr-sm h-4 w-4" />
             {t('common.actions.back')}
           </Button>
         )}
         <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -750,11 +755,14 @@ export function LoanForm({
             </>
           ) : !isEditing && step < totalSteps ? (
             <>
+              <ArrowRight className="mr-sm h-4 w-4" />
               {t('pages.loans.wizard.next')}
-              <ArrowRight className="ml-sm h-4 w-4" />
             </>
           ) : (
-            t('common.actions.save')
+            <>
+              <Save className="mr-sm h-4 w-4" />
+              {t('common.actions.save')}
+            </>
           )}
         </Button>
       </div>

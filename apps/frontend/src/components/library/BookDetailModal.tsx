@@ -24,6 +24,8 @@ import {
   TrendingUp,
   User,
   XCircle,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -991,50 +993,6 @@ export function BookDetailModal({
                     </div>
                   </>
                 )}
-
-                {/* Actions */}
-                <div className="border-t" />
-                <div className="gap-sm flex justify-between">
-                  <div>
-                    {onAskIntellect && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          onOpenChange(false);
-                          onAskIntellect(book);
-                        }}
-                      >
-                        <Brain className="mr-sm text-primary h-4 w-4" />
-                        {t('pages.books.chatTabDesc')}
-                      </Button>
-                    )}
-                  </div>
-                  <div className="gap-sm flex">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        onOpenChange(false);
-                        onDelete(book.id);
-                      }}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="mr-sm h-4 w-4" />
-                      {t('common.actions.delete')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        onOpenChange(false);
-                        onEdit(book);
-                      }}
-                    >
-                      <Edit className="mr-sm h-4 w-4" />
-                      {t('common.actions.edit')}
-                    </Button>
-                  </div>
-                </div>
               </> /* end info tab */
             )}
 
@@ -1466,9 +1424,15 @@ export function BookDetailModal({
                     onClick={() => setIsSummaryFormOpen(false)}
                     disabled={isSummarySubmitting}
                   >
+                    <X className="mr-sm h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
                   <Button type="submit" disabled={isSummarySubmitting}>
+                    {isSummarySubmitting ? (
+                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-sm h-4 w-4" />
+                    )}
                     {isSummarySubmitting
                       ? t('common.actions.saving')
                       : editingSummary
@@ -1480,6 +1444,51 @@ export function BookDetailModal({
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Ações fora da área rolável para ficarem sempre visíveis */}
+        {activeTab === 'info' && (
+          <div className="dialog-footer gap-sm flex shrink-0 justify-between">
+            <div>
+              {onAskIntellect && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onAskIntellect(book);
+                  }}
+                >
+                  <Brain className="mr-sm text-primary h-4 w-4" />
+                  {t('pages.books.chatTabDesc')}
+                </Button>
+              )}
+            </div>
+            <div className="gap-sm flex">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete(book.id);
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="mr-sm h-4 w-4" />
+                {t('common.actions.delete')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEdit(book);
+                }}
+              >
+                <Edit className="mr-sm h-4 w-4" />
+                {t('common.actions.edit')}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

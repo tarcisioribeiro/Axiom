@@ -1,3 +1,4 @@
+import { ArrowRight, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -123,12 +124,18 @@ export function IncreaseValueDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleRequestPreview()}
             disabled={isLoadingPreview || addValue <= 0}
           >
+            {isLoadingPreview ? (
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRight className="mr-sm h-4 w-4" />
+            )}
             {isLoadingPreview ? t('common.actions.loading') : t('common.actions.next')}
           </Button>
         </DialogFooter>

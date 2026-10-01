@@ -10,6 +10,8 @@ import {
   Settings,
   User,
   Wallet,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -427,21 +429,22 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
         </TabTransition>
       )}
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
-              {t('common.actions.saving')}
-            </>
-          ) : creditCard ? (
-            t('common.actions.update')
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (
-            t('common.actions.create')
+            <Save className="mr-sm h-4 w-4" />
           )}
+          {isLoading
+            ? t('common.actions.saving')
+            : creditCard
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

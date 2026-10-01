@@ -1,5 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -336,12 +336,18 @@ export function WorkoutSessionForm({
         />
       </div>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>

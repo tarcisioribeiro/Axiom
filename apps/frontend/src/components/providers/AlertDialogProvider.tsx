@@ -1,3 +1,5 @@
+import { Check, Trash2, X } from 'lucide-react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +64,7 @@ export const AlertDialogProvider = () => {
         <AlertDialogFooter>
           {onCancel && (
             <AlertDialogCancel onClick={handleCancel} className="min-w-24">
+              <X className="mr-sm h-4 w-4" />
               {cancelText || 'Cancelar'}
             </AlertDialogCancel>
           )}
@@ -69,6 +72,11 @@ export const AlertDialogProvider = () => {
             onClick={handleConfirm}
             className={cn('min-w-24', getActionButtonClass())}
           >
+            {variant === 'destructive' ? (
+              <Trash2 className="mr-sm h-4 w-4" />
+            ) : (
+              <Check className="mr-sm h-4 w-4" />
+            )}
             {confirmText || 'Confirmar'}
           </AlertDialogAction>
         </AlertDialogFooter>

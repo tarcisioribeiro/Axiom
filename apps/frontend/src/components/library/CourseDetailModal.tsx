@@ -19,6 +19,7 @@ import {
   Trash2,
   Upload,
   X,
+  Save,
 } from 'lucide-react';
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 // (same setup as BookReader.tsx — safe to register more than once).
@@ -57,7 +58,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
-import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import {
   courseModulesService,
   courseLessonsService,
@@ -490,11 +491,14 @@ export function AddSessionForm({
   defaultMinutes = 60,
   onSaved,
   onCancel,
+  stickyActions = false,
 }: {
   course: Course;
   defaultMinutes?: number;
   onSaved: () => void;
   onCancel: () => void;
+  /** Fixa os botões na base do modal quando o form é o corpo inteiro do dialog. */
+  stickyActions?: boolean;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -659,8 +663,9 @@ export function AddSessionForm({
         </div>
         <Progress value={projectedProgress} className="bg-category-intellect/20 h-2" />
       </div>
-      <div className="gap-sm flex justify-end">
+      <div className={cn('gap-sm flex justify-end', stickyActions && 'dialog-footer')}>
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -670,8 +675,11 @@ export function AddSessionForm({
           className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {create.isPending ? (
-            <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
-          ) : null}
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>
@@ -916,27 +924,6 @@ export function CourseDetailModal({
                 </div>
               </div>
             </DialogHeader>
-
-            <div className="mt-md gap-sm flex">
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-xs h-8"
-                onClick={() => onEdit(displayCourse)}
-              >
-                <Edit className="h-3.5 w-3.5" />
-                {t('common.actions.edit')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-xs text-destructive hover:text-destructive h-8"
-                onClick={() => onDelete(displayCourse)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                {t('common.actions.delete')}
-              </Button>
-            </div>
           </div>
 
           {/* Tabs */}
@@ -1260,6 +1247,23 @@ export function CourseDetailModal({
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Ações fixas na base do modal (o DialogContent aqui é p-0) */}
+          <div className="dialog-footer gap-sm px-xl! mx-0! flex justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onDelete(displayCourse)}
+            >
+              <Trash2 className="mr-sm h-4 w-4" />
+              {t('common.actions.delete')}
+            </Button>
+            <Button size="sm" onClick={() => onEdit(displayCourse)}>
+              <Edit className="mr-sm h-4 w-4" />
+              {t('common.actions.edit')}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

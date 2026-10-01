@@ -1,3 +1,4 @@
+import { Loader2, Save, X } from 'lucide-react';
 /* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -428,11 +429,17 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
       </div>
 
-      <div className="gap-sm pt-md flex justify-end">
+      <div className="dialog-footer gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
           {isLoading
             ? t('common.actions.saving')
             : purchase

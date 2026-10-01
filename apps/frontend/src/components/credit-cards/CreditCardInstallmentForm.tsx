@@ -1,3 +1,4 @@
+import { Loader2, Save, X } from 'lucide-react';
 /* eslint-disable react-hooks/incompatible-library */
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -188,11 +189,17 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
       </div>
 
-      <div className="gap-sm pt-md flex justify-end">
+      <div className="dialog-footer gap-sm pt-md flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>

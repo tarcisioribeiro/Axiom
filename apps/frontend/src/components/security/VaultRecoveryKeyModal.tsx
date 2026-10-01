@@ -1,4 +1,13 @@
-import { Key, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  Key,
+  Copy,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  Check,
+  Unlock,
+  Loader2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -158,6 +167,7 @@ export function VaultRecoveryKeyModal({
                 </div>
                 <DialogFooter>
                   <Button onClick={handleClose}>
+                    <Check className="mr-sm h-4 w-4" />
                     {t('userProfile.security.recoveryKey.savedConfirm')}
                   </Button>
                 </DialogFooter>
@@ -183,12 +193,18 @@ export function VaultRecoveryKeyModal({
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button
                 onClick={() => void handleUnlock()}
                 disabled={loading || !recoveryInput.trim()}
               >
+                {loading ? (
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <Unlock className="mr-sm h-4 w-4" />
+                )}
                 {loading
                   ? t('common.actions.loading')
                   : t('userProfile.security.recoveryKey.unlockBtn')}

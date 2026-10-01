@@ -1,3 +1,4 @@
+import { X, ArrowDownToLine, Loader2, ArrowUpFromLine } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -119,12 +120,18 @@ export function VaultDepositDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleDeposit()}
             disabled={isSubmitting || !amount}
           >
+            {isSubmitting ? (
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowDownToLine className="mr-sm h-4 w-4" />
+            )}
             {isSubmitting
               ? t('pages.vaults.depositAction')
               : t('pages.vaults.depositBtn')}
@@ -235,6 +242,7 @@ export function VaultWithdrawDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
@@ -242,6 +250,11 @@ export function VaultWithdrawDialog({
             onClick={() => void handleWithdraw()}
             disabled={isSubmitting || !amount}
           >
+            {isSubmitting ? (
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowUpFromLine className="mr-sm h-4 w-4" />
+            )}
             {isSubmitting
               ? t('pages.vaults.withdrawAction')
               : t('pages.vaults.withdrawBtn')}

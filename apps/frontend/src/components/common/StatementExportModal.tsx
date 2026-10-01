@@ -1,4 +1,4 @@
-import { FileText, Loader2, Download } from 'lucide-react';
+import { FileText, Loader2, Download, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -140,12 +140,13 @@ export function StatementExportModal({
           </div>
         </div>
 
-        <div className="gap-sm pt-sm flex justify-end">
+        <div className="dialog-footer gap-sm pt-sm flex justify-end">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isGenerating}
           >
+            <X className="mr-sm h-4 w-4" />
             {t('pages.dashboard.statementModal.cancelBtn')}
           </Button>
           <Button onClick={handleExport} disabled={isGenerating} className="gap-sm">

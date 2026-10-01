@@ -26,6 +26,9 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
+  Loader2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -1857,15 +1860,21 @@ export default function BodyMetrics() {
                 />
               </div>
 
-              <div className="gap-sm pt-sm flex justify-end">
+              <div className="dialog-footer gap-sm pt-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
                 >
+                  <X className="mr-sm h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSaving || !form.measured_at}>
+                  {isSaving ? (
+                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-sm h-4 w-4" />
+                  )}
                   {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>

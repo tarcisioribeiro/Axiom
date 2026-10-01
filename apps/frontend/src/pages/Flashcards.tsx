@@ -1,7 +1,16 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Brain, ChevronLeft, Plus, RotateCcw, Star } from 'lucide-react';
+import {
+  Brain,
+  ChevronLeft,
+  Plus,
+  RotateCcw,
+  Star,
+  Loader2,
+  Save,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -429,15 +438,21 @@ export default function Flashcards() {
                   required
                 />
               </div>
-              <div className="gap-sm flex justify-end">
+              <div className="dialog-footer gap-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setCreateOpen(false)}
                 >
+                  <X className="mr-sm h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? (
+                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-sm h-4 w-4" />
+                  )}
                   {createMutation.isPending
                     ? t('common.actions.saving')
                     : t('common.actions.save')}

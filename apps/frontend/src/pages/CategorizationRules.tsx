@@ -1,6 +1,17 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Filter, Hash, Pencil, Plus, Tag, Trash2, Zap } from 'lucide-react';
+import {
+  Filter,
+  Hash,
+  Pencil,
+  Plus,
+  Tag,
+  Trash2,
+  Zap,
+  Loader2,
+  Save,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -216,12 +227,18 @@ function RuleForm({
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !merchantContains.trim() || !category}
         >
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
           {isLoading
             ? t('common.actions.saving')
             : rule

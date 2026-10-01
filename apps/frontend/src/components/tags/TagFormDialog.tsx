@@ -1,3 +1,4 @@
+import { Loader2, Save, X } from 'lucide-react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -106,9 +107,15 @@ export function TagFormDialog({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isPending || !form.name.trim()}>
+              {isPending ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
               {isPending
                 ? t('common.actions.saving')
                 : selected

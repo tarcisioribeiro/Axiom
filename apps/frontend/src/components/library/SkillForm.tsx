@@ -13,6 +13,7 @@ import {
   Paintbrush,
   Palette,
   X,
+  Save,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -355,8 +356,9 @@ export function SkillForm({
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-sm flex justify-end">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -364,6 +366,7 @@ export function SkillForm({
           disabled={isLoading}
           className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
+          <Save className="mr-sm h-4 w-4" />
           {t('common.actions.save')}
         </Button>
       </div>

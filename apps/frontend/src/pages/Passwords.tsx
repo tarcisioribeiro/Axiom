@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   History,
   Shield,
+  Save,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -1481,23 +1482,22 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="gap-sm flex justify-end">
+              <div className="dialog-footer gap-sm flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                 >
+                  <X className="mr-sm h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                      {t('common.actions.saving')}
-                    </>
+                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                   ) : (
-                    t('common.actions.save')
+                    <Save className="mr-sm h-4 w-4" />
                   )}
+                  {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>
               </div>
             </form>

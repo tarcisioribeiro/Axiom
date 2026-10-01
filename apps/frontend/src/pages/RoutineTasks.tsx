@@ -13,6 +13,7 @@ import {
   Save,
   Bookmark,
   LayoutList,
+  X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -645,6 +646,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
                 setTemplateName('');
               }}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button

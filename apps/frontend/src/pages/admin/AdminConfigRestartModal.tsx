@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Container, RefreshCw, RotateCcw, Server } from 'lucide-react';
+import { Container, RefreshCw, RotateCcw, Server, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -123,6 +123,7 @@ export function RestartModal({
             onClick={handleClose}
             disabled={mutation.isPending || countdown !== null}
           >
+            <X className="mr-sm h-4 w-4" />
             {t('pages.adminConfig.restartModal.cancel')}
           </Button>
           <Button

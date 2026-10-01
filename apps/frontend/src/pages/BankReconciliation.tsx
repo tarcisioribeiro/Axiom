@@ -7,6 +7,8 @@ import {
   Upload,
   Search,
   CheckCircle2,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -225,9 +227,15 @@ function UploadDialog({
               onClick={onClose}
               disabled={loading}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
+              {loading ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-sm h-4 w-4" />
+              )}
               {loading
                 ? t('pages.bankReconciliation.upload.importing')
                 : t('pages.bankReconciliation.upload.importBtn')}

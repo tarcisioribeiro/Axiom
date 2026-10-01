@@ -22,6 +22,8 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  Save,
+  X,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -766,6 +768,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
                 setFailureDate('');
               }}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -774,13 +777,13 @@ export default function Goals({ embedded = false }: GoalsProps) {
               disabled={!failureDate || isRegisteringFailure}
             >
               {isRegisteringFailure ? (
-                <>
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                  {t('common.actions.saving')}
-                </>
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               ) : (
-                t('pages.goals.registerFailureConfirmBtn')
+                <Save className="mr-sm h-4 w-4" />
               )}
+              {isRegisteringFailure
+                ? t('common.actions.saving')
+                : t('pages.goals.registerFailureConfirmBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -817,6 +820,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
           </ul>
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewingFailuresGoal(undefined)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.close')}
             </Button>
           </DialogFooter>

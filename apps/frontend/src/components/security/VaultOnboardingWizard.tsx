@@ -5,6 +5,10 @@ import {
   KeyRound,
   Lock,
   ShieldCheck,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  SkipForward,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -195,22 +199,28 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         </div>
 
         {/* Navigation */}
-        <div className="gap-sm flex justify-between">
+        <div className="dialog-footer gap-sm flex justify-between">
           {step > 1 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
+              <ArrowLeft className="mr-sm h-4 w-4" />
               {t('vaultOnboarding.back')}
             </Button>
           ) : (
             <Button variant="ghost" onClick={handleComplete}>
+              <SkipForward className="mr-sm h-4 w-4" />
               {t('vaultOnboarding.skip')}
             </Button>
           )}
           {step < STEPS.length ? (
             <Button onClick={() => setStep((s) => s + 1)}>
+              <ArrowRight className="mr-sm h-4 w-4" />
               {t('vaultOnboarding.next')}
             </Button>
           ) : (
-            <Button onClick={handleComplete}>{t('vaultOnboarding.finish')}</Button>
+            <Button onClick={handleComplete}>
+              <Check className="mr-sm h-4 w-4" />
+              {t('vaultOnboarding.finish')}
+            </Button>
           )}
         </div>
       </DialogContent>

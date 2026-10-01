@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarDays, Loader2, MessageSquare, Smile } from 'lucide-react';
+import { CalendarDays, Loader2, MessageSquare, Smile, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -157,19 +157,20 @@ export function DailyReflectionForm({
         </div>
       </FormSection>
 
-      <div className="gap-sm pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('pages.dailyReflections.form.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              {t('pages.dailyReflections.form.saving')}
-            </>
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (
-            t('pages.dailyReflections.form.save')
+            <Save className="mr-sm h-4 w-4" />
           )}
+          {isLoading
+            ? t('pages.dailyReflections.form.saving')
+            : t('pages.dailyReflections.form.save')}
         </Button>
       </div>
     </form>

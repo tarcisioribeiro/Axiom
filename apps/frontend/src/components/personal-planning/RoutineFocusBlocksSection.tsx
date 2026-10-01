@@ -228,7 +228,7 @@ export function RoutineFocusBlocksSection({
             isLoading={isSubmitting}
           />
           {selectedBlock && (
-            <div className="pt-sm border-t">
+            <div className="pt-sm pb-lg border-t">
               <FocusBlockTasksEditor
                 block={selectedBlock}
                 allBlocks={blocks}

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, Loader2, Plus, Trash2, User } from 'lucide-react';
+import { Download, Loader2, Plus, Trash2, User, Save, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -713,19 +713,25 @@ export function RoutineTemplateModal({
             </div>
           </div>
 
-          <div className="gap-sm pt-sm flex justify-end">
+          <div className="dialog-footer gap-sm pt-sm flex justify-end">
             <Button
               variant="outline"
               onClick={() => setShowCreateDialog(false)}
               disabled={isSavingTemplate}
             >
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
               onClick={() => void handleCreateTemplate()}
               disabled={isSavingTemplate || !newName.trim()}
             >
-              {isSavingTemplate && <Loader2 className="mr-xs h-4 w-4 animate-spin" />}
+              {isSavingTemplate ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
+
               {t('common.actions.save')}
             </Button>
           </div>

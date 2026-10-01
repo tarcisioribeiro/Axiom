@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Pencil } from 'lucide-react';
+import { Pencil, Loader2, Save, X } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -336,9 +336,15 @@ export function InstallmentsPlanDialog({
                     }}
                     disabled={isSaving}
                   >
+                    <X className="mr-sm h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
                   <Button onClick={() => void handleSave()} disabled={isSaving}>
+                    {isSaving ? (
+                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-sm h-4 w-4" />
+                    )}
                     {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                   </Button>
                 </>

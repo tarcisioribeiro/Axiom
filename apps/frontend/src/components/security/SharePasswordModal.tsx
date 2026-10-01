@@ -1,7 +1,17 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Loader2, Share2, Trash2, Search, User, Check } from 'lucide-react';
+import {
+  Copy,
+  Loader2,
+  Share2,
+  Trash2,
+  Search,
+  User,
+  Check,
+  ArrowLeft,
+  ArrowRight,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -460,16 +470,20 @@ export function SharePasswordModal({
             </AnimatePresence>
           </div>
 
-          <div className="gap-sm pt-md flex justify-between border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-between border-t">
             {step > 0 ? (
               <Button variant="outline" onClick={goBack} disabled={isCreating}>
+                <ArrowLeft className="mr-sm h-4 w-4" />
                 {t('pages.sharePassword.backBtn')}
               </Button>
             ) : (
               <div />
             )}
             {step < 2 ? (
-              <Button onClick={goNext}>{t('pages.sharePassword.nextBtn')}</Button>
+              <Button onClick={goNext}>
+                <ArrowRight className="mr-sm h-4 w-4" />
+                {t('pages.sharePassword.nextBtn')}
+              </Button>
             ) : (
               <Button
                 onClick={() => void handleCreate()}
@@ -491,7 +505,7 @@ export function SharePasswordModal({
           </div>
         </div>
 
-        <div className="space-y-sm pt-md border-t">
+        <div className="space-y-sm pt-md pb-lg border-t">
           <p className="text-sm font-medium">
             {t('pages.sharePassword.existingLinks')}
           </p>

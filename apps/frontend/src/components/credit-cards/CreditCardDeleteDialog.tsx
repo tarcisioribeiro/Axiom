@@ -1,4 +1,4 @@
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2, X, FileText, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -124,8 +124,9 @@ export function CreditCardDeleteDialog({
                 </li>
               ))}
             </ul>
-            <div className="gap-sm flex justify-end">
+            <div className="dialog-footer gap-sm flex justify-end">
               <Button variant="outline" onClick={close}>
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               {onShowBills && card && (
@@ -135,6 +136,7 @@ export function CreditCardDeleteDialog({
                     onShowBills(card.id);
                   }}
                 >
+                  <FileText className="mr-sm h-4 w-4" />
                   {t('pages.creditCards.deleteFlow.viewBills')}
                 </Button>
               )}
@@ -180,12 +182,18 @@ export function CreditCardDeleteDialog({
                 required
               />
             </div>
-            <div className="gap-sm flex justify-end">
+            <div className="dialog-footer gap-sm flex justify-end">
               <Button type="button" variant="outline" onClick={close}>
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" variant="destructive" disabled={isDeleting}>
-                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isDeleting ? (
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-sm h-4 w-4" />
+                )}
+
                 {t('pages.creditCards.deleteFlow.continue')}
               </Button>
             </div>

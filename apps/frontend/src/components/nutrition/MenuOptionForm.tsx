@@ -8,6 +8,8 @@ import {
   Salad,
   StickyNote,
   Trash2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -390,8 +392,9 @@ export function MenuOptionForm({
         </div>
       </FormSection>
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -399,7 +402,12 @@ export function MenuOptionForm({
           disabled={isLoading}
           className="bg-category-nutrition hover:bg-category-nutrition/90"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>

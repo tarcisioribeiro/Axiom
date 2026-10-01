@@ -1,6 +1,16 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronUp, History, Plus, Trash2, Zap } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronUp,
+  History,
+  Plus,
+  Trash2,
+  Zap,
+  Loader2,
+  Save,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -425,6 +435,7 @@ function RuleFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -436,6 +447,11 @@ function RuleFormDialog({
                 actions.length === 0
               }
             >
+              {isLoading ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
               {isLoading ? t('common.actions.saving') : t('common.actions.save')}
             </Button>
           </DialogFooter>

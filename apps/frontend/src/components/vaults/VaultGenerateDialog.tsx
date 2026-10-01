@@ -1,3 +1,4 @@
+import { Loader2, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -135,9 +136,15 @@ export function VaultGenerateDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={() => void handleGenerate()} disabled={isGenerating}>
+            {isGenerating ? (
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-sm h-4 w-4" />
+            )}
             {isGenerating
               ? t('common.actions.saving')
               : t('pages.vaults.recurringContributions.generateConfirm')}

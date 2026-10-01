@@ -15,6 +15,9 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
+  Loader2,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -930,6 +933,7 @@ export default function FinancialGoals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -938,6 +942,11 @@ export default function FinancialGoals() {
                 isSubmitting || !formData.description || formData.target_value <= 0
               }
             >
+              {isSubmitting ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('common.actions.saving')
                 : selectedGoal
@@ -1004,9 +1013,15 @@ export default function FinancialGoals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsVaultsDialogOpen(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSaveVaults} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
               {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
             </Button>
           </DialogFooter>

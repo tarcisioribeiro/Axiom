@@ -32,6 +32,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  X,
 } from 'lucide-react';
 import {
   useState,
@@ -913,6 +914,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 </Link>
                 <div className="gap-sm flex">
                   <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
+                    <X className="mr-sm h-4 w-4" />
                     {t('common.actions.close')}
                   </Button>
                   <Button
@@ -924,6 +926,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                       (reflection.trim().length > 0 && reflection.trim().length < 10)
                     }
                   >
+                    <Save className="mr-sm h-4 w-4" />
                     {t('common.actions.save')}
                   </Button>
                 </div>

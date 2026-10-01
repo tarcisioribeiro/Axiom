@@ -12,6 +12,8 @@ import {
   Trash2,
   XCircle,
   Zap,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -449,10 +451,16 @@ export default function Webhooks() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-sm h-md w-md animate-spin" />}
+              {isSaving ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-sm h-4 w-4" />
+              )}
+
               {editingWebhook
                 ? t('webhooks.form.saveBtn')
                 : t('webhooks.form.createBtn')}

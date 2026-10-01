@@ -45,6 +45,9 @@ import {
   Target,
   Trash2,
   Zap,
+  ArrowLeft,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 import React, { type ReactNode, useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -1944,11 +1947,13 @@ function QuickLogForm({
               </select>
             </div>
           </FormSection>
-          <div className="gap-sm pt-md flex justify-end border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
             <Button type="button" variant="outline" onClick={onCancel}>
+              <X className="mr-sm h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="button" onClick={() => setStep(2)}>
+              <ArrowRight className="mr-sm h-4 w-4" />
               {t('pages.workoutSessions.quickLogNext')}
             </Button>
           </div>
@@ -1995,8 +2000,9 @@ function QuickLogForm({
               </div>
             </FormSection>
           )}
-          <div className="gap-sm pt-md flex justify-end border-t">
+          <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
+              <ArrowLeft className="mr-sm h-4 w-4" />
               {t('common.actions.back')}
             </Button>
             <Button
@@ -2004,7 +2010,12 @@ function QuickLogForm({
               onClick={() => void handleConfirm()}
               disabled={isSubmitting}
             >
-              {isSubmitting && <Loader2 className="mr-sm h-4 w-4 animate-spin" />}
+              {isSubmitting ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-sm h-4 w-4" />
+              )}
+
               {t('pages.workoutSessions.quickLogConfirm')}
             </Button>
           </div>

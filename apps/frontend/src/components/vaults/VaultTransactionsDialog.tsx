@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -366,6 +366,7 @@ export function VaultTransactionsDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.close')}
           </Button>
         </DialogFooter>

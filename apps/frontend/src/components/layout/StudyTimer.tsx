@@ -418,6 +418,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
               defaultMinutes={durationMinutes}
               onSaved={finish}
               onCancel={closeConfirm}
+              stickyActions
             />
           )}
         </DialogContent>

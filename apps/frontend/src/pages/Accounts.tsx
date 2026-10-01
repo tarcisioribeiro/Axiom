@@ -11,6 +11,9 @@ import {
   Banknote,
   ShieldCheck,
   Building2,
+  Loader2,
+  Upload,
+  X,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -721,9 +724,15 @@ export default function Accounts() {
                 onClick={() => setIsUploadOpen(false)}
                 disabled={uploadLoading}
               >
+                <X className="mr-sm h-4 w-4" />
                 Cancelar
               </Button>
               <Button type="submit" disabled={uploadLoading || !uploadFile}>
+                {uploadLoading ? (
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-sm h-4 w-4" />
+                )}
                 {uploadLoading ? 'Importando...' : 'Importar'}
               </Button>
             </DialogFooter>

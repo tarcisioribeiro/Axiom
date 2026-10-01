@@ -9,6 +9,8 @@ import {
   Sunrise,
   UtensilsCrossed,
   Zap,
+  Save,
+  X,
 } from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
@@ -330,8 +332,9 @@ export function MealLogForm({
         />
       </FormSection>
 
-      <div className="gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -339,7 +342,12 @@ export function MealLogForm({
           disabled={isLoading}
           className="bg-category-nutrition hover:bg-category-nutrition/90"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading ? (
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-sm h-4 w-4" />
+          )}
+
           {t('common.actions.save')}
         </Button>
       </div>

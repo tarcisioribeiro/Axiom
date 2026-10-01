@@ -9,6 +9,8 @@ import {
   Key,
   RefreshCw,
   Keyboard,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -321,19 +323,23 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
               </div>
               <CapsLockWarning />
             </div>
-            <div className="gap-sm flex justify-end">
+            <div className="dialog-footer gap-sm flex justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsRenewOpen(false)}
                 disabled={isSubmitting}
               >
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || !masterPassword}>
                 {isSubmitting ? (
-                  <RefreshCw className="mr-xs h-4 w-4 animate-spin" />
-                ) : null}
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-sm h-4 w-4" />
+                )}
+
                 {t('pages.vaultGuard.expiry.renewConfirm')}
               </Button>
             </div>

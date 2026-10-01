@@ -1,5 +1,6 @@
-/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { X, CalendarPlus, Loader2 } from 'lucide-react';
+/* eslint-disable max-lines */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -413,13 +414,14 @@ export const LaunchExpensesDialog = ({
         )}
 
         {/* Actions */}
-        <div className="gap-sm flex justify-end">
+        <div className="dialog-footer gap-sm flex justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isSubmitting}
           >
+            <X className="mr-sm h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           {!noMonthsAvailable && (
@@ -427,6 +429,11 @@ export const LaunchExpensesDialog = ({
               onClick={handleSubmit}
               disabled={isSubmitting || !validMonth || selectedExpenses.length === 0}
             >
+              {isSubmitting ? (
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              ) : (
+                <CalendarPlus className="mr-sm h-4 w-4" />
+              )}
               {isSubmitting
                 ? t('pages.fixedExpenses.launchDialog.generating')
                 : t('pages.fixedExpenses.launchDialog.generateBtn', {

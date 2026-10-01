@@ -12,6 +12,8 @@ import {
   CalendarDays,
   RotateCcw,
   ShoppingCart,
+  Save,
+  X,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -673,9 +675,15 @@ export default function Budgets() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
+                <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-sm h-4 w-4" />
+                )}
                 {isSubmitting
                   ? t('common.actions.saving')
                   : selectedBudget
