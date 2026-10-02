@@ -1,24 +1,5 @@
-/* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  CreditCard,
-  ArrowLeftRight,
-  Key,
-  Lock,
-  BookOpen,
-  BookMarked,
-  LayoutDashboard,
-  LayoutGrid,
-  Shield,
-  Library,
-  Calendar,
-  GitFork,
-  ExternalLink,
-} from 'lucide-react';
+import { Wallet, LayoutGrid, Shield, Brain, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -26,9 +7,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
-import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 
 interface ModuleCard {
   title: string;
@@ -40,12 +19,6 @@ interface ModuleCard {
 
 export default function Home() {
   const { t } = useTranslation();
-
-  const { data: graphData } = useQuery({
-    queryKey: ['knowledge-graph', 'summary'],
-    queryFn: () => knowledgeGraphService.getGraph(false),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
 
   const modules: ModuleCard[] = [
     {
@@ -71,83 +44,16 @@ export default function Home() {
     },
     {
       title: t('pages.home.library.title'),
-      icon: <Library className="h-8 w-8" />,
+      icon: <Brain className="h-8 w-8" />,
       href: '/library/books',
       badgeClass: 'agent-badge-intellect',
       features: t('pages.home.library.features', { returnObjects: true }) as string[],
     },
   ];
 
-  const quickActions = [
-    {
-      icon: <TrendingDown className="h-5 w-5" />,
-      label: t('pages.home.quickActions.newExpense'),
-      href: '/expenses',
-    },
-    {
-      icon: <TrendingUp className="h-5 w-5" />,
-      label: t('pages.home.quickActions.newRevenue'),
-      href: '/revenues',
-    },
-    {
-      icon: <ArrowLeftRight className="h-5 w-5" />,
-      label: t('pages.home.quickActions.transfer'),
-      href: '/transfers',
-    },
-    {
-      icon: <CreditCard className="h-5 w-5" />,
-      label: t('pages.home.quickActions.cards'),
-      href: '/credit-cards',
-    },
-    {
-      icon: <Key className="h-5 w-5" />,
-      label: t('pages.home.quickActions.passwords'),
-      href: '/security/passwords',
-    },
-    {
-      icon: <BookOpen className="h-5 w-5" />,
-      label: t('pages.home.quickActions.books'),
-      href: '/library/books',
-    },
-  ];
-
   return (
-    <PageContainer className="space-y-xl">
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="gap-sm flex items-center">
-            <LayoutDashboard className="h-5 w-5" />
-            {t('pages.home.quickActionsTitle')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <motion.div
-            className="gap-md grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {quickActions.map((action) => (
-              <motion.div key={action.href} variants={itemVariants}>
-                <Link
-                  to={action.href}
-                  className="gap-sm border-border p-md hover:border-primary hover:bg-accent hoverable:hover:scale-105 flex flex-col items-center justify-center rounded-lg border transition"
-                >
-                  <div className="bg-primary/10 text-primary rounded-full p-3">
-                    {action.icon}
-                  </div>
-                  <span className="text-center text-sm font-medium">
-                    {action.label}
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </CardContent>
-      </Card>
-
-      {/* Modules */}
+    // ponytail: 5rem ≈ altura do Header; ajustar se o Header mudar de altura
+    <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col justify-center">
       <div className="space-y-lg">
         <PageHeader title={t('pages.home.modulesTitle')} icon={<LayoutGrid />} />
         <motion.div
@@ -195,94 +101,6 @@ export default function Home() {
           ))}
         </motion.div>
       </div>
-
-      {/* Knowledge Graph Widget */}
-      <Link to="/library/knowledge-graph" className="block">
-        <Card className="border-primary/20 hover:border-primary transition hover:shadow-md">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <GitFork className="text-primary h-4 w-4" />
-              {t('pages.home.knowledgeGraph.title')}
-              <ExternalLink className="text-muted-foreground ml-auto h-3.5 w-3.5" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="gap-lg flex items-center">
-              <div className="gap-xs flex flex-col">
-                <span className="text-2xl font-bold">
-                  {graphData?.nodes?.length ?? '—'}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {t('pages.home.knowledgeGraph.nodes')}
-                </span>
-              </div>
-              <div className="bg-border h-8 w-px" />
-              <div className="gap-xs flex flex-col">
-                <span className="text-2xl font-bold">
-                  {graphData?.links?.length ?? '—'}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {t('pages.home.knowledgeGraph.links')}
-                </span>
-              </div>
-              <p className="text-muted-foreground ml-auto text-xs">
-                {t('pages.home.knowledgeGraph.desc')}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
-
-      {/* Info Cards */}
-      <motion.div
-        className="gap-md grid grid-cols-1 md:grid-cols-3"
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.3 }}
-      >
-        <motion.div variants={itemVariants}>
-          <Card className="border-success/20 from-success/10 to-success/20 bg-gradient-to-br">
-            <CardHeader>
-              <CardTitle className="gap-sm text-success flex items-center">
-                <Wallet className="h-5 w-5" />
-                {t('pages.home.infoCards.financeTitle')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{t('pages.home.infoCards.financeDesc')}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card className="border-info/20 from-info/10 to-primary/20 bg-gradient-to-br">
-            <CardHeader>
-              <CardTitle className="gap-sm text-info flex items-center">
-                <Lock className="h-5 w-5" />
-                {t('pages.home.infoCards.securityTitle')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{t('pages.home.infoCards.securityDesc')}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Card className="border-primary/20 from-primary/10 to-accent/20 bg-gradient-to-br">
-            <CardHeader>
-              <CardTitle className="gap-sm text-primary flex items-center">
-                <BookMarked className="h-5 w-5" />
-                {t('pages.home.infoCards.knowledgeTitle')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">{t('pages.home.infoCards.knowledgeDesc')}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </motion.div>
     </PageContainer>
   );
 }

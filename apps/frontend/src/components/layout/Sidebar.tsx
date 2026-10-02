@@ -429,7 +429,7 @@ export const Sidebar = () => {
           isCollapsed && !isMobile ? 'justify-center' : 'justify-between'
         )}
       >
-        <Link to="/" className="gap-sm flex items-center" aria-label={t('nav.home')}>
+        <div className="gap-sm flex items-center">
           <div className="ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1">
             <img
               src={icon}
@@ -450,7 +450,7 @@ export const Sidebar = () => {
               </motion.span>
             )}
           </AnimatePresence>
-        </Link>
+        </div>
 
         {/* Mobile close button */}
         {isMobile && (
@@ -479,10 +479,6 @@ export const Sidebar = () => {
             ))}
 
             <div className="my-sm border-border/40 border-t" />
-
-            <p className="px-md pb-xs text-muted-foreground/60 text-2xs font-semibold tracking-widest uppercase">
-              {t('layout.sectionModules')}
-            </p>
 
             {navModules.map((module) => renderModule(module))}
           </div>

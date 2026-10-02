@@ -337,7 +337,6 @@
     "collapseSidebar": "Collapse sidebar",
     "userSettings": "Account settings",
     "userMenu": "User menu",
-    "sectionModules": "Modules",
     "adminPanel": "Admin Panel",
     "superuser": "Superuser",
     "adminNav": {
@@ -476,10 +475,8 @@
     },
     "twoFactor": {
       "title": "Two-step verification",
-      "description": "Enter the code from your authenticator app.",
       "step": "Step 2 of 2",
       "codeLabel": "Verification code",
-      "backupHint": "You can also use a backup code.",
       "submit": "Verify",
       "loading": "Verifying...",
       "back": "← Back to login"
@@ -573,32 +570,9 @@
           "Skills Map"
         ]
       },
-      "knowledgeGraph": {
-        "title": "Knowledge Graph",
-        "nodes": "nodes",
-        "links": "connections",
-        "desc": "View full graph"
-      },
-      "quickActionsTitle": "Quick Actions",
       "modulesTitle": "Available Modules",
       "modules": {
         "navigateTo": "Navigate to {{module}}"
-      },
-      "quickActions": {
-        "newExpense": "New Expense",
-        "newRevenue": "New Revenue",
-        "transfer": "Transfer",
-        "cards": "Cards",
-        "passwords": "Passwords",
-        "books": "Works"
-      },
-      "infoCards": {
-        "financeTitle": "Organized Finances",
-        "financeDesc": "Full control of your personal finances with intuitive dashboards and detailed reports.",
-        "securityTitle": "Maximum Security",
-        "securityDesc": "Your data protected with end-to-end encryption and secure storage.",
-        "knowledgeTitle": "Knowledge",
-        "knowledgeDesc": "Organize your personal library and track your reading progress."
       }
     },
     "accounts": {

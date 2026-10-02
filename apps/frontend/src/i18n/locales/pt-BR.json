@@ -337,7 +337,6 @@
     "collapseSidebar": "Recolher menu lateral",
     "userSettings": "Configurações da conta",
     "userMenu": "Menu do usuário",
-    "sectionModules": "Módulos",
     "adminPanel": "Painel Administrativo",
     "superuser": "Superusuário",
     "adminNav": {
@@ -476,10 +475,8 @@
     },
     "twoFactor": {
       "title": "Verificação em duas etapas",
-      "description": "Digite o código do seu aplicativo autenticador.",
       "step": "Etapa 2 de 2",
       "codeLabel": "Código de verificação",
-      "backupHint": "Você também pode usar um código de backup.",
       "submit": "Verificar",
       "loading": "Verificando...",
       "back": "← Voltar ao login"
@@ -573,32 +570,9 @@
           "Mapa de Habilidades"
         ]
       },
-      "knowledgeGraph": {
-        "title": "Grafo de Conhecimento",
-        "nodes": "nós",
-        "links": "conexões",
-        "desc": "Ver grafo completo"
-      },
-      "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
       "modules": {
         "navigateTo": "Navegar para {{module}}"
-      },
-      "quickActions": {
-        "newExpense": "Nova Despesa",
-        "newRevenue": "Nova Receita",
-        "transfer": "Transferência",
-        "cards": "Cartões",
-        "passwords": "Senhas",
-        "books": "Obras"
-      },
-      "infoCards": {
-        "financeTitle": "Finanças Organizadas",
-        "financeDesc": "Controle total das suas finanças pessoais com dashboards intuitivos e relatórios detalhados.",
-        "securityTitle": "Segurança Máxima",
-        "securityDesc": "Seus dados protegidos com criptografia de ponta a ponta e armazenamento seguro.",
-        "knowledgeTitle": "Conhecimento",
-        "knowledgeDesc": "Organize sua biblioteca pessoal e acompanhe seu progresso de leitura."
       }
     },
     "accounts": {
