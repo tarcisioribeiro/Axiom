@@ -9,8 +9,10 @@ import {
   Shield,
   BookOpen,
   BarChart3,
+  ChevronDown,
   ChevronRight,
   CheckCircle2,
+  Send,
   AlertCircle,
   Sparkles,
   Clock,
@@ -32,6 +34,15 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapse } from '@/components/ui/collapsible-section';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -152,6 +163,7 @@ function ScaleInput({
         type="range"
         min={0}
         max={10}
+        aria-label={label}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="bg-muted accent-primary h-2 w-full cursor-pointer appearance-none rounded-full"
@@ -356,6 +368,8 @@ function SelfEsteemTab() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<SelfEsteemAssessment | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [step, setStep] = useState(0);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [aiParsed, setAiParsed] = useState<{
     analysis: string;
     strengths: string[];
@@ -375,6 +389,7 @@ function SelfEsteemTab() {
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
       setSubmitted(result);
       setShowForm(false);
+      setAiParsed(null);
       if (result.ai_analysis) {
         try {
           const parsed = JSON.parse(result.ai_analysis) as {
@@ -397,6 +412,8 @@ function SelfEsteemTab() {
   });
 
   const allAnswered = ROSENBERG_QUESTIONS.every((_, i) => `q${i + 1}` in answers);
+  const stepKey = `q${step + 1}`;
+  const isLastStep = step === ROSENBERG_QUESTIONS.length - 1;
 
   function handleSubmit() {
     if (!allAnswered) return;
@@ -419,86 +436,83 @@ function SelfEsteemTab() {
 
   return (
     <div className="space-y-5">
-      {!showForm && (
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-foreground font-semibold">Escala de Rosenberg</h2>
-            <p className="text-muted-foreground text-sm">
-              10 perguntas sobre como você se vê
-            </p>
-          </div>
-          <Button
-            onClick={() => {
-              setShowForm(true);
-              setSubmitted(null);
-              setAiParsed(null);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Nova avaliação
-          </Button>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-foreground font-semibold">Escala de Rosenberg</h2>
+          <p className="text-muted-foreground text-sm">
+            10 perguntas sobre como você se vê
+          </p>
         </div>
-      )}
+        <Button
+          onClick={() => {
+            setAnswers({});
+            setStep(0);
+            setShowForm(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Nova avaliação
+        </Button>
+      </div>
+
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        {/* altura fixa: o modal não varia com o tamanho do texto da pergunta */}
+        <DialogContent size="sm" className="flex h-[26rem] flex-col">
+          <DialogHeader>
+            <DialogTitle>Responda com sinceridade</DialogTitle>
+            <DialogDescription>
+              Pergunta {step + 1} de {ROSENBERG_QUESTIONS.length}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div key={step} className="animate-fade-in space-y-md flex-1">
+            <p className="text-sm leading-relaxed font-medium">
+              {ROSENBERG_QUESTIONS[step]}
+            </p>
+            <div className="gap-sm grid grid-cols-2">
+              {ROSENBERG_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={answers[stepKey] === opt.value}
+                  onClick={() =>
+                    setAnswers((prev) => ({ ...prev, [stepKey]: opt.value }))
+                  }
+                  className={cn(
+                    'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
+                    answers[stepKey] === opt.value
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            {isLastStep ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={!allAnswered || mutation.isPending}
+              >
+                <Send className="h-4 w-4" />
+                {mutation.isPending ? 'Analisando...' : 'Enviar'}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setStep((s) => s + 1)}
+                disabled={!(stepKey in answers)}
+              >
+                Confirmar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AnimatePresence mode="wait">
-        {showForm && (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-md"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Responda com sinceridade</h2>
-              <Button
-                aria-label="Fechar"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowForm(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {ROSENBERG_QUESTIONS.map((q, i) => (
-              <Card key={i} className="border-border/50">
-                <CardContent className="px-md py-md pt-md space-y-3">
-                  <p className="text-sm leading-relaxed font-medium">
-                    {i + 1}. {q}
-                  </p>
-                  <div className="gap-sm grid grid-cols-2 sm:grid-cols-4">
-                    {ROSENBERG_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() =>
-                          setAnswers((prev) => ({ ...prev, [`q${i + 1}`]: opt.value }))
-                        }
-                        className={cn(
-                          'py-sm rounded-lg border px-3 text-center text-xs font-medium transition',
-                          answers[`q${i + 1}`] === opt.value
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            <Button
-              className="w-full"
-              onClick={handleSubmit}
-              disabled={!allAnswered || mutation.isPending}
-            >
-              {mutation.isPending ? 'Analisando...' : 'Enviar e obter análise da IA'}
-            </Button>
-          </motion.div>
-        )}
-
         {submitted && aiParsed && (
           <motion.div
             key="result"
@@ -593,7 +607,7 @@ function SelfEsteemTab() {
           </motion.div>
         )}
 
-        {!showForm && !submitted && (
+        {!(submitted && aiParsed) && (
           <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {history?.results?.length === 0 ? (
               <EmptyState
@@ -607,27 +621,63 @@ function SelfEsteemTab() {
                   const sl = scoreLabel(a.score);
                   return (
                     <Card key={a.id} className="border-border/50">
-                      <CardContent className="gap-md px-md py-md pt-md flex items-center">
-                        <div>
-                          <p className="text-muted-foreground text-xs">
-                            {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
-                          </p>
-                          <p className={cn('text-2xl font-bold', sl.color)}>
-                            {a.score}
-                            <span className="text-muted-foreground text-sm font-normal">
-                              /30
-                            </span>
-                          </p>
-                          <Badge variant="outline" className="mt-xs text-xs">
-                            {sl.label}
-                          </Badge>
+                      <CardContent className="px-md py-md pt-md">
+                        <div className="gap-md flex items-center">
+                          <div>
+                            <p className="text-muted-foreground text-xs">
+                              {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
+                            </p>
+                            <p className={cn('text-2xl font-bold', sl.color)}>
+                              {a.score}
+                              <span className="text-muted-foreground text-sm font-normal">
+                                /30
+                              </span>
+                            </p>
+                            <Badge variant="outline" className="mt-xs text-xs">
+                              {sl.label}
+                            </Badge>
+                          </div>
+                          <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+                            <div
+                              className="bg-primary h-full rounded-full"
+                              style={{ width: `${(a.score / 30) * 100}%` }}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-expanded={expandedId === a.id}
+                            onClick={() =>
+                              setExpandedId(expandedId === a.id ? null : a.id)
+                            }
+                          >
+                            Ver detalhes
+                            <ChevronDown
+                              className={cn(
+                                'h-4 w-4 transition-transform',
+                                expandedId === a.id && 'rotate-180'
+                              )}
+                            />
+                          </Button>
                         </div>
-                        <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
-                          <div
-                            className="bg-primary h-full rounded-full"
-                            style={{ width: `${(a.score / 30) * 100}%` }}
-                          />
-                        </div>
+                        <Collapse open={expandedId === a.id}>
+                          <ol className="space-y-sm border-border/50 mt-md pt-md border-t">
+                            {ROSENBERG_QUESTIONS.map((q, i) => (
+                              <li key={i} className="text-sm">
+                                <p className="text-muted-foreground">
+                                  {i + 1}. {q}
+                                </p>
+                                <p className="text-foreground font-medium">
+                                  {ROSENBERG_OPTIONS.find(
+                                    (o) =>
+                                      o.value ===
+                                      a[`q${i + 1}` as keyof SelfEsteemAssessment]
+                                  )?.label ?? '—'}
+                                </p>
+                              </li>
+                            ))}
+                          </ol>
+                        </Collapse>
                       </CardContent>
                     </Card>
                   );
@@ -643,22 +693,50 @@ function SelfEsteemTab() {
 
 // ─── Check-in tab ─────────────────────────────────────────────────────────────
 
+const CHECKIN_SCALES = [
+  { key: 'loneliness', label: 'Solidão', colorHigh: false },
+  { key: 'neediness', label: 'Carência', colorHigh: false },
+  { key: 'anxiety', label: 'Ansiedade', colorHigh: false },
+  { key: 'sadness', label: 'Tristeza', colorHigh: false },
+  { key: 'motivation', label: 'Motivação', colorHigh: true },
+  { key: 'energy', label: 'Energia', colorHigh: true },
+] as const;
+
+const CHECKIN_TEXTS = [
+  {
+    key: 'what_happened',
+    label: 'O que aconteceu hoje?',
+    placeholder: 'Pode ser algo simples ou complexo...',
+  },
+  {
+    key: 'occupying_thoughts',
+    label: 'Existe algo ocupando seus pensamentos? (opcional)',
+    placeholder: 'Uma preocupação, uma pessoa, um pensamento recorrente...',
+  },
+] as const;
+
+const CHECKIN_STEPS = CHECKIN_SCALES.length + CHECKIN_TEXTS.length;
+
+const CHECKIN_INITIAL = {
+  loneliness: 5,
+  neediness: 5,
+  anxiety: 5,
+  sadness: 5,
+  motivation: 5,
+  energy: 5,
+  what_happened: '',
+  occupying_thoughts: '',
+};
+
 function CheckinTab() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [form, setForm] = useState({
-    loneliness: 5,
-    neediness: 5,
-    anxiety: 5,
-    sadness: 5,
-    motivation: 5,
-    energy: 5,
-    what_happened: '',
-    occupying_thoughts: '',
-  });
-  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState(CHECKIN_INITIAL);
+  const [showForm, setShowForm] = useState(false);
+  const [step, setStep] = useState(0);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const { data: history } = useQuery({
+  const { data: history, isLoading } = useQuery({
     queryKey: ['wellness', 'checkins', 30],
     queryFn: () => wellnessService.getCheckins(30),
   });
@@ -667,7 +745,7 @@ function CheckinTab() {
     mutationFn: wellnessService.createCheckin.bind(wellnessService),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
-      setSubmitted(true);
+      setShowForm(false);
       toast({ title: 'Check-in registrado!' });
     },
     onError: () => toast({ title: 'Erro ao salvar', variant: 'destructive' }),
@@ -680,134 +758,149 @@ function CheckinTab() {
     });
   }
 
-  if (submitted) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="space-y-md flex flex-col items-center justify-center py-12 text-center"
-      >
-        <div className="bg-success/10 flex h-16 w-16 items-center justify-center rounded-full">
-          <CheckCircle2 className="text-success h-8 w-8" />
-        </div>
-        <h2 className="text-lg font-semibold">Check-in registrado</h2>
-        <p className="text-muted-foreground max-w-xs text-sm">
-          Ótimo trabalho em reservar um momento para se conectar com você mesmo.
-        </p>
-        <Button onClick={() => setSubmitted(false)}>Fazer outro check-in</Button>
-      </motion.div>
-    );
-  }
+  const scale = CHECKIN_SCALES[step];
+  const text = CHECKIN_TEXTS[step - CHECKIN_SCALES.length];
+  const isLastStep = step === CHECKIN_STEPS - 1;
+
+  if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-lg">
-      <div>
-        <h2 className="font-semibold">Como você está agora?</h2>
-        <p className="text-muted-foreground text-sm">
-          Responda com honestidade — só você vai ver.
-        </p>
-      </div>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <ScaleInput
-          label="Solidão"
-          value={form.loneliness}
-          onChange={(v) => setForm((p) => ({ ...p, loneliness: v }))}
-        />
-        <ScaleInput
-          label="Carência"
-          value={form.neediness}
-          onChange={(v) => setForm((p) => ({ ...p, neediness: v }))}
-        />
-        <ScaleInput
-          label="Ansiedade"
-          value={form.anxiety}
-          onChange={(v) => setForm((p) => ({ ...p, anxiety: v }))}
-        />
-        <ScaleInput
-          label="Tristeza"
-          value={form.sadness}
-          onChange={(v) => setForm((p) => ({ ...p, sadness: v }))}
-        />
-        <ScaleInput
-          label="Motivação"
-          value={form.motivation}
-          onChange={(v) => setForm((p) => ({ ...p, motivation: v }))}
-          colorHigh
-        />
-        <ScaleInput
-          label="Energia"
-          value={form.energy}
-          onChange={(v) => setForm((p) => ({ ...p, energy: v }))}
-          colorHigh
-        />
-      </div>
-
-      <div className="space-y-3">
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
         <div>
-          <label
-            htmlFor="what-happened"
-            className="mb-xs.5 text-foreground block text-sm font-medium"
-          >
-            O que aconteceu hoje?
-          </label>
-          <textarea
-            id="what-happened"
-            value={form.what_happened}
-            onChange={(e) => setForm((p) => ({ ...p, what_happened: e.target.value }))}
-            className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary min-h-[80px] w-full resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
-            placeholder="Pode ser algo simples ou complexo..."
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="occupying-thoughts"
-            className="mb-xs.5 text-foreground block text-sm font-medium"
-          >
-            Existe algo ocupando seus pensamentos?{' '}
-            <span className="text-muted-foreground font-normal">(opcional)</span>
-          </label>
-          <textarea
-            id="occupying-thoughts"
-            value={form.occupying_thoughts}
-            onChange={(e) =>
-              setForm((p) => ({ ...p, occupying_thoughts: e.target.value }))
-            }
-            className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary min-h-[70px] w-full resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
-            placeholder="Uma preocupação, uma pessoa, um pensamento recorrente..."
-          />
-        </div>
-      </div>
-
-      <Button className="w-full" onClick={handleSubmit} disabled={mutation.isPending}>
-        {mutation.isPending ? 'Salvando...' : 'Registrar check-in'}
-      </Button>
-
-      {history && history.results.length > 0 && (
-        <div className="space-y-sm border-border/50 pt-sm border-t">
-          <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Últimos check-ins
+          <h2 className="text-foreground font-semibold">Como você está agora?</h2>
+          <p className="text-muted-foreground text-sm">
+            Responda com honestidade — só você vai ver.
           </p>
-          {history.results.slice(0, 3).map((c) => (
+        </div>
+        <Button
+          onClick={() => {
+            setForm(CHECKIN_INITIAL);
+            setStep(0);
+            setShowForm(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Registrar
+        </Button>
+      </div>
+
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
+        <DialogContent size="sm" className="flex h-[22rem] flex-col">
+          <DialogHeader>
+            <DialogTitle>Como você está agora?</DialogTitle>
+            <DialogDescription>
+              Pergunta {step + 1} de {CHECKIN_STEPS}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div key={step} className="animate-fade-in flex-1">
+            {scale ? (
+              <ScaleInput
+                label={scale.label}
+                value={form[scale.key]}
+                onChange={(v) => setForm((p) => ({ ...p, [scale.key]: v }))}
+                colorHigh={scale.colorHigh}
+              />
+            ) : (
+              <div className="space-y-sm flex h-full flex-col">
+                <label
+                  htmlFor={text.key}
+                  className="text-foreground block text-sm font-medium"
+                >
+                  {text.label}
+                </label>
+                <textarea
+                  id={text.key}
+                  value={form[text.key]}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, [text.key]: e.target.value }))
+                  }
+                  className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary w-full flex-1 resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
+                  placeholder={text.placeholder}
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            {isLastStep ? (
+              <Button onClick={handleSubmit} disabled={mutation.isPending}>
+                <CheckCircle2 className="h-4 w-4" />
+                {mutation.isPending ? 'Salvando...' : 'Registrar'}
+              </Button>
+            ) : (
+              <Button onClick={() => setStep((s) => s + 1)}>Confirmar</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {history?.results?.length === 0 ? (
+        <EmptyState
+          icon={<Heart />}
+          title="Nenhum check-in ainda"
+          description="Registre seu primeiro check-in para começar a acompanhar como você se sente."
+        />
+      ) : (
+        <div className="space-y-3">
+          {history?.results?.map((c) => (
             <Card key={c.id} className="border-border/50">
-              <CardContent className="flex items-center justify-between p-3 pt-3">
-                <p className="text-muted-foreground text-xs">
-                  {format(new Date(c.checked_at), 'dd/MM')}
-                </p>
-                <div className="text-muted-foreground flex gap-3 text-xs">
-                  <span className="gap-xs flex items-center">
-                    <Heart className="text-info h-3 w-3" />
-                    {c.loneliness}
-                  </span>
-                  <span className="gap-xs flex items-center">
-                    <Brain className="text-warning h-3 w-3" />
-                    {c.anxiety}
-                  </span>
-                  <span className="gap-xs flex items-center">
-                    <Zap className="text-success h-3 w-3" />
-                    {c.motivation}
-                  </span>
+              <CardContent className="px-md py-md pt-md">
+                <div className="gap-md flex items-center">
+                  <p className="text-muted-foreground text-xs">
+                    {format(new Date(c.checked_at), 'dd/MM/yyyy')}
+                  </p>
+                  <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
+                    <span className="gap-xs flex items-center">
+                      <Heart className="text-info h-3 w-3" />
+                      {c.loneliness}
+                    </span>
+                    <span className="gap-xs flex items-center">
+                      <Brain className="text-warning h-3 w-3" />
+                      {c.anxiety}
+                    </span>
+                    <span className="gap-xs flex items-center">
+                      <Zap className="text-success h-3 w-3" />
+                      {c.motivation}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-expanded={expandedId === c.id}
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                  >
+                    Ver detalhes
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        expandedId === c.id && 'rotate-180'
+                      )}
+                    />
+                  </Button>
                 </div>
+                <Collapse open={expandedId === c.id}>
+                  <div className="space-y-md border-border/50 mt-md pt-md border-t text-sm">
+                    <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
+                      {CHECKIN_SCALES.map((s) => (
+                        <div key={s.key}>
+                          <dt className="text-muted-foreground">{s.label}</dt>
+                          <dd className="text-foreground font-medium">{c[s.key]}/10</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {CHECKIN_TEXTS.map((t) => (
+                      <div key={t.key}>
+                        <p className="text-muted-foreground">{t.label}</p>
+                        <p className="text-foreground font-medium whitespace-pre-wrap">
+                          {c[t.key] || '—'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </Collapse>
               </CardContent>
             </Card>
           ))}
@@ -892,12 +985,7 @@ function CrisisTab() {
           <div className="border-destructive/20 bg-destructive/10 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border">
             <Shield className="text-destructive h-10 w-10" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">Modo Crise</h2>
-            <p className="mt-xs text-muted-foreground mx-auto max-w-xs text-sm">
-              Quando um impulso aparecer, este espaço é para você. Sem julgamento.
-            </p>
-          </div>
+          <h2 className="text-lg font-semibold">Modo Crise</h2>
           <Button
             size="lg"
             variant="destructive"
@@ -1416,7 +1504,7 @@ export default function EmotionalWellness() {
             {TABS.map((tab) => {
               const Icon = tab.icon;
               return (
-                <TabsTrigger key={tab.id} value={tab.id} className="gap-xs.5 flex-1">
+                <TabsTrigger key={tab.id} value={tab.id} className="gap-xs flex-1">
                   <Icon className="h-3.5 w-3.5" />
                   {tab.label}
                 </TabsTrigger>

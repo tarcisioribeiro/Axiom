@@ -288,8 +288,13 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
 
       <Dialog open={isRenewOpen} onOpenChange={setIsRenewOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('pages.vaultGuard.expiry.renewTitle')}</DialogTitle>
+          <DialogHeader className="sm:text-center">
+            <div className="mb-md bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+              <Lock className="text-muted-foreground h-8 w-8" />
+            </div>
+            <DialogTitle className="text-2xl">
+              {t('pages.vaultGuard.expiry.renewTitle')}
+            </DialogTitle>
             <DialogDescription>
               {t('pages.vaultGuard.expiry.renewDesc')}
             </DialogDescription>
@@ -326,17 +331,22 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
               </div>
               <CapsLockWarning />
             </div>
-            <div className="dialog-footer gap-sm flex justify-end">
+            <div className="gap-sm flex">
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1"
                 onClick={() => setIsRenewOpen(false)}
                 disabled={isSubmitting}
               >
                 <X className="mr-sm h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
-              <Button type="submit" disabled={isSubmitting || !masterPassword}>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={isSubmitting || !masterPassword}
+              >
                 {isSubmitting ? (
                   <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                 ) : (
