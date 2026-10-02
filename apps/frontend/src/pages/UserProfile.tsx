@@ -35,7 +35,9 @@ export default function UserProfile() {
   const emailVerified = member?.email_verified ?? false;
 
   return (
-    <PageContainer>
+    // ponytail: 5rem ≈ altura do Header (que não tem altura fixa); se ele
+    // crescer, trocar por uma variável CSS compartilhada.
+    <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col justify-center">
       <Card className="divide-border/60 divide-y overflow-hidden">
         <header className="gap-md p-lg sm:p-xl flex items-center">
           <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
@@ -43,16 +45,7 @@ export default function UserProfile() {
         </header>
 
         <div className="divide-border/60 grid max-lg:divide-y lg:grid-cols-[minmax(0,1fr)_24rem] lg:divide-x">
-          <div className="divide-border/60 divide-y">
-            {member && <PersonalDataSection memberId={member.id} />}
-
-            <Section
-              icon={<Shield className="h-4 w-4" />}
-              title={t('userProfile.security.title')}
-            >
-              <TwoFactorRow />
-            </Section>
-          </div>
+          <div>{member && <PersonalDataSection memberId={member.id} />}</div>
 
           <div className="divide-border/60 divide-y">
             <EmailVerificationSection emailVerified={emailVerified} />
@@ -75,13 +68,20 @@ export default function UserProfile() {
                 </Button>
               </div>
             </Section>
+
+            <Section
+              icon={<Shield className="h-4 w-4" />}
+              title={t('userProfile.security.title')}
+            >
+              <TwoFactorRow />
+            </Section>
           </div>
         </div>
       </Card>
 
       <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-        {/* Título e rodapé fixos: só a lista rola. */}
-        <DialogContent size="lg" className="flex flex-col overflow-hidden">
+        {/* Título e rodapé fixos: a lista só rola em telas pequenas. */}
+        <DialogContent size="xl" className="flex flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>{t('pages.notificationPreferences.title')}</DialogTitle>
           </DialogHeader>

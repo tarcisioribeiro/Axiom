@@ -6,8 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -49,25 +49,11 @@ const CHANNEL_OPTION_KEYS: { value: NotificationChannel; icon: React.ReactNode }
   { value: 'both', icon: <BellRing className="h-3.5 w-3.5" /> },
 ];
 
-// ─── Channel badge ─────────────────────────────────────────────────────────
-
 const CHANNEL_KEY_MAP: Record<NotificationChannel, string> = {
   in_app: 'channelInApp',
   email: 'channelEmail',
   both: 'channelBoth',
 };
-
-function ChannelBadge({ channel }: { channel: NotificationChannel }) {
-  const { t } = useTranslation();
-  const option = CHANNEL_OPTION_KEYS.find((o) => o.value === channel);
-  if (!option) return null;
-  return (
-    <Badge variant="outline" className="gap-xs text-xs">
-      {option.icon}
-      {t(`pages.notificationPreferences.${CHANNEL_KEY_MAP[channel]}`)}
-    </Badge>
-  );
-}
 
 // ─── Content ───────────────────────────────────────────────────────────────
 
@@ -181,51 +167,35 @@ export function NotificationPreferencesContent({
 
   return (
     <>
-      <div className={cn('gap-md grid sm:grid-cols-2', bodyClassName)}>
-        {NOTIFICATION_TYPE_KEYS.map((key) => {
-          const currentChannel = getChannel(key);
-          const label = t(`pages.notificationPreferences.types.${key}_label`);
-          const isPending = key in pendingChanges;
-
-          return (
-            <Card
-              key={key}
-              className={`flex flex-col ${isPending ? 'ring-primary/40 ring-1' : ''}`}
+      <div className={cn('gap-x-xl gap-y-sm grid sm:grid-cols-2', bodyClassName)}>
+        {NOTIFICATION_TYPE_KEYS.map((key) => (
+          <div key={key} className="gap-md flex items-center justify-between">
+            <Label htmlFor={key} className="text-sm">
+              {t(`pages.notificationPreferences.types.${key}_label`)}
+            </Label>
+            <Select
+              value={getChannel(key)}
+              onValueChange={(val) =>
+                handleChannelChange(key, val as NotificationChannel)
+              }
+              disabled={isSaving}
             >
-              <CardHeader className="pb-sm">
-                <div className="gap-sm flex items-start justify-between">
-                  <CardTitle className="text-sm font-semibold">{label}</CardTitle>
-                  <ChannelBadge channel={currentChannel} />
-                </div>
-              </CardHeader>
-              <CardContent className="mt-auto pt-0">
-                <Select
-                  value={currentChannel}
-                  onValueChange={(val) =>
-                    handleChannelChange(key, val as NotificationChannel)
-                  }
-                  disabled={isSaving}
-                >
-                  <SelectTrigger className="w-full text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CHANNEL_OPTION_KEYS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        <span className="gap-sm flex items-center">
-                          {opt.icon}
-                          {t(
-                            `pages.notificationPreferences.${CHANNEL_KEY_MAP[opt.value]}`
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          );
-        })}
+              <SelectTrigger id={key} className="w-44 shrink-0 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CHANNEL_OPTION_KEYS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <span className="gap-sm flex items-center">
+                      {opt.icon}
+                      {t(`pages.notificationPreferences.${CHANNEL_KEY_MAP[opt.value]}`)}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
       </div>
 
       <DialogFooter>

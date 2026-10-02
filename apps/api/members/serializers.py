@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from members.models import Member
@@ -7,6 +8,9 @@ class MemberSerializer(serializers.ModelSerializer):
     # Declare explicitly so DRF treats it as writable (descriptor, not a DB
     # field)
     document = serializers.CharField(required=True)
+    email = serializers.EmailField(
+        required=False, allow_null=True, allow_blank=True, max_length=200
+    )
     profile_photo = serializers.SerializerMethodField()
 
     def get_profile_photo(self, obj):
@@ -49,6 +53,13 @@ class MemberSerializer(serializers.ModelSerializer):
             "created_by",
             "updated_by",
         ]
+
+    def validate_birth_date(self, value):
+        if value and value > timezone.localdate():
+            raise serializers.ValidationError(
+                "A data de nascimento não pode ser futura."
+            )
+        return value
 
     def validate_document(self, value):
         from members.models import compute_document_hash

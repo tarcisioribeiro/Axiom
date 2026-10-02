@@ -6351,7 +6351,11 @@
       "showDocument": "Show document",
       "hideDocument": "Hide document",
       "sex": "Sex",
-      "birthDate": "Date of birth"
+      "birthDate": "Date of birth",
+      "edit": "Edit data",
+      "nameRequired": "Enter your full name.",
+      "documentInvalid": "Invalid CPF.",
+      "birthDateFuture": "Date of birth cannot be in the future."
     },
     "emailVerification": {
       "title": "Email Verification",

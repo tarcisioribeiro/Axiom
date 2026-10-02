@@ -6396,7 +6396,11 @@
       "showDocument": "Mostrar documento",
       "hideDocument": "Ocultar documento",
       "sex": "Sexo",
-      "birthDate": "Data de nascimento"
+      "birthDate": "Data de nascimento",
+      "edit": "Alterar dados",
+      "nameRequired": "Informe o nome completo.",
+      "documentInvalid": "CPF inválido.",
+      "birthDateFuture": "A data de nascimento não pode ser futura."
     },
     "emailVerification": {
       "title": "Verificação de E-mail",
