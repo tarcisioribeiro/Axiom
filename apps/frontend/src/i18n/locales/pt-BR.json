@@ -4901,10 +4901,7 @@
       "title": "Autenticação de dois fatores (2FA)",
       "confirmCode": "Código de confirmação",
       "confirmCodePlaceholder": "Digite o código de 6 dígitos",
-      "setupTitle": "Configurar Autenticação de Dois Fatores",
       "setupDesc": "Aumente a segurança da sua conta com 2FA",
-      "step1": "Escaneie o QR Code",
-      "step1Desc": "Use um aplicativo autenticador (Google Authenticator, Authy) para escanear o código.",
       "step2": "Confirme o código",
       "step2Desc": "Digite o código de 6 dígitos gerado pelo aplicativo.",
       "enableBtn": "Ativar 2FA",
@@ -5091,7 +5088,6 @@
     "notificationPreferences": {
       "title": "Preferências de Notificação",
       "subtitle": "Escolha como deseja receber cada tipo de alerta: somente no app, por e-mail ou ambos.",
-      "emailNote": "Para receber e-mails, certifique-se de que um endereço de e-mail válido esteja cadastrado na sua conta.",
       "savedSuccess": "Preferências salvas com sucesso.",
       "savedSuccessDesc": "Suas configurações de notificação foram atualizadas.",
       "saveBtn": "Salvar configurações",
@@ -5107,31 +5103,18 @@
       "channelBoth": "App e E-mail",
       "types": {
         "task_today_label": "Tarefa do Dia",
-        "task_today_desc": "Tarefas agendadas para hoje ainda não concluídas.",
         "task_overdue_label": "Tarefa Atrasada",
-        "task_overdue_desc": "Tarefas com data passada ainda pendentes.",
         "payable_due_soon_label": "Vencimento Próximo",
-        "payable_due_soon_desc": "Valores a pagar vencendo nos próximos 3 dias.",
         "payable_overdue_label": "Pagamento Atrasado",
-        "payable_overdue_desc": "Valores a pagar com data já vencida.",
         "loan_due_soon_label": "Empréstimo Vencendo",
-        "loan_due_soon_desc": "Empréstimos com vencimento nos próximos 3 dias.",
         "loan_overdue_label": "Empréstimo Atrasado",
-        "loan_overdue_desc": "Empréstimos com vencimento já passado.",
         "bill_due_soon_label": "Fatura Vencendo",
-        "bill_due_soon_desc": "Faturas de cartão vencendo nos próximos 3 dias.",
         "bill_overdue_label": "Fatura Atrasada",
-        "bill_overdue_desc": "Faturas de cartão com vencimento já passado.",
         "budget_warning_label": "Alerta de Orçamento",
-        "budget_warning_desc": "Orçamento mensal atingiu 80% ou mais do limite definido.",
         "budget_exceeded_label": "Orçamento Estourado",
-        "budget_exceeded_desc": "Gastos ultrapassaram o limite do orçamento mensal.",
         "financial_goal_reached_label": "Meta Financeira Atingida",
-        "financial_goal_reached_desc": "Meta financeira concluída: valor atual atingiu o valor alvo.",
         "financial_goal_approaching_label": "Meta Financeira Próxima do Prazo",
-        "financial_goal_approaching_desc": "Meta financeira com prazo vencendo nos próximos 30 dias.",
-        "agent_insight_label": "Insight Semanal do Assistente",
-        "agent_insight_desc": "Resumo financeiro semanal gerado automaticamente pelo assistente de IA toda segunda-feira."
+        "agent_insight_label": "Insight Semanal do Assistente"
       }
     },
     "memberFinancialReport": {
@@ -6397,7 +6380,6 @@
   },
   "userProfile": {
     "title": "Configurações da Conta",
-    "subtitle": "Gerencie suas informações pessoais e segurança",
     "personalData": {
       "title": "Dados Pessoais",
       "description": "Seu nome, contato e informações de perfil",
@@ -6407,12 +6389,18 @@
       "save": "Salvar alterações",
       "saving": "Salvando...",
       "success": "Dados atualizados com sucesso.",
-      "error": "Erro ao atualizar dados."
+      "error": "Erro ao atualizar dados.",
+      "emailInvalid": "E-mail inválido.",
+      "phoneInvalid": "Telefone inválido. Use o formato +55 (35) 99949-0239.",
+      "document": "CPF/CNPJ",
+      "showDocument": "Mostrar documento",
+      "hideDocument": "Ocultar documento",
+      "sex": "Sexo",
+      "birthDate": "Data de nascimento"
     },
     "emailVerification": {
       "title": "Verificação de E-mail",
       "description": "Status da verificação do seu endereço de e-mail",
-      "verified": "E-mail verificado",
       "unverified": "E-mail não verificado",
       "resend": "Reenviar e-mail de verificação",
       "sending": "Enviando...",
@@ -6434,7 +6422,11 @@
       "twoFactorActive": "Ativa",
       "twoFactorInactive": "Inativa",
       "twoFactorManage": "Gerenciar 2FA",
-      "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta",
+      "rules": {
+        "minLength": "Mínimo de 8 caracteres",
+        "notNumeric": "Não pode conter apenas números",
+        "matches": "As senhas coincidem"
+      },
       "recoveryKey": {
         "menuBtn": "Chave de Recuperação",
         "generateTitle": "Gerar Chave de Recuperação",

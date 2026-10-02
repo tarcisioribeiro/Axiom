@@ -37,30 +37,22 @@ export function EmailVerificationSection({
       icon={<Mail className="h-4 w-4" />}
       title={t('userProfile.emailVerification.title')}
     >
-      <div className="gap-md flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {emailVerified ? (
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-          ) : (
+      {emailVerified ? (
+        <Badge className="bg-success text-success-foreground hover:bg-success border-transparent">
+          <CheckCircle2 className="mr-xs h-3 w-3" />
+          Verificado
+        </Badge>
+      ) : (
+        <div className="gap-md flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Mail className="text-muted-foreground h-5 w-5" />
-          )}
-          <div>
             <p className="text-sm font-medium">
-              {emailVerified
-                ? t('userProfile.emailVerification.verified')
-                : t('userProfile.emailVerification.unverified')}
+              {t('userProfile.emailVerification.unverified')}
             </p>
           </div>
+          <Badge variant="warning">Pendente</Badge>
         </div>
-        <Badge
-          variant={emailVerified ? 'default' : 'outline'}
-          className={
-            emailVerified ? 'bg-green-500/15 text-green-600 hover:bg-green-500/15' : ''
-          }
-        >
-          {emailVerified ? 'Verificado' : 'Pendente'}
-        </Badge>
-      </div>
+      )}
 
       {!emailVerified && (
         <Button

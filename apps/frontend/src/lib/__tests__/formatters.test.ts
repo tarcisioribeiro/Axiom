@@ -5,6 +5,7 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
+  formatDocument,
   formatNumber,
   formatPercentage,
 } from '@/lib/formatters';
@@ -105,5 +106,17 @@ describe('formatPercentage', () => {
 
   it('returns "0.00%" for NaN', () => {
     expect(formatPercentage(NaN)).toBe('0.00%');
+  });
+});
+
+describe('formatDocument', () => {
+  it('formats CPF and CNPJ, with or without punctuation', () => {
+    expect(formatDocument('12345678909')).toBe('123.456.789-09');
+    expect(formatDocument('123.456.789-09')).toBe('123.456.789-09');
+    expect(formatDocument('12345678000195')).toBe('12.345.678/0001-95');
+  });
+
+  it('returns other lengths untouched', () => {
+    expect(formatDocument('1234')).toBe('1234');
   });
 });

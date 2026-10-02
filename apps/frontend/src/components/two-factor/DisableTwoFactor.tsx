@@ -4,13 +4,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/auth-service';
@@ -37,37 +30,34 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
   });
 
   return (
-    <Card className="border-destructive/30">
-      <CardHeader>
-        <CardTitle className="gap-sm text-destructive flex items-center">
-          <ShieldOff className="h-5 w-5" />
-          {t('pages.twoFactor.disableBtn')}
-        </CardTitle>
-        <CardDescription>{t('pages.twoFactor.disableDesc')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            mutation.mutate(password);
-          }}
-          className="flex gap-3"
-        >
-          <Input
-            type="password"
-            placeholder={t('userProfile.security.currentPassword')}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="max-w-xs"
-          />
-          <Button type="submit" variant="destructive" disabled={mutation.isPending}>
-            {mutation.isPending
-              ? t('pages.twoFactor.verifying')
-              : t('pages.twoFactor.disableBtn')}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        mutation.mutate(password);
+      }}
+      className="space-y-3"
+    >
+      <p className="text-muted-foreground text-sm">
+        {t('pages.twoFactor.disableDesc')}
+      </p>
+      <div className="flex flex-wrap gap-3">
+        <Input
+          type="password"
+          autoComplete="current-password"
+          aria-label={t('userProfile.security.currentPassword')}
+          placeholder={t('userProfile.security.currentPassword')}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="max-w-xs"
+        />
+        <Button type="submit" variant="destructive" loading={mutation.isPending}>
+          {!mutation.isPending && <ShieldOff />}
+          {mutation.isPending
+            ? t('pages.twoFactor.verifying')
+            : t('pages.twoFactor.disableBtn')}
+        </Button>
+      </div>
+    </form>
   );
 }
