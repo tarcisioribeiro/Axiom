@@ -6,7 +6,6 @@ import {
   Link2,
   Plus,
   RefreshCw,
-  Search,
   Unlink,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -17,6 +16,7 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -626,19 +625,15 @@ export default function BankReconciliationDetail() {
             </div>
           )}
 
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-            <Input
-              className="pl-xl"
-              placeholder={
-                candidateLabel === 'despesas'
-                  ? t('pages.bankReconciliation.detail.searchExpenses')
-                  : t('pages.bankReconciliation.detail.searchRevenues')
-              }
-              value={candidateSearch}
-              onChange={(e) => setCandidateSearch(e.target.value)}
-            />
-          </div>
+          <SearchInput
+            placeholder={
+              candidateLabel === 'despesas'
+                ? t('pages.bankReconciliation.detail.searchExpenses')
+                : t('pages.bankReconciliation.detail.searchRevenues')
+            }
+            value={candidateSearch}
+            onValueChange={setCandidateSearch}
+          />
 
           <div className="space-y-sm max-h-72 overflow-y-auto">
             {candidateLoading ? (

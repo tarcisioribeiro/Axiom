@@ -3,6 +3,7 @@ import { Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { FilterBar } from '@/components/common/FilterBar';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -200,10 +200,12 @@ export function VaultTransactionsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-md">
-          <div className="gap-sm flex items-center">
-            <Label>{t('pages.vaults.filterByType')}</Label>
+          <FilterBar
+            hasActiveFilters={filter !== 'all'}
+            onClear={() => handleFilterChange('all')}
+          >
             <Select value={filter} onValueChange={handleFilterChange}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger aria-label={t('pages.vaults.filterByType')}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +219,7 @@ export function VaultTransactionsDialog({
                 <SelectItem value="yield">{t('pages.vaults.filterYields')}</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FilterBar>
           <div className="rounded-md border">
             <Table>
               <TableHeader>

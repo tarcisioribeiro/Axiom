@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import { Collapse } from '@/components/ui/collapsible-section';
 import { FormSection } from '@/components/ui/form-section';
@@ -216,16 +217,11 @@ export function WorkoutExerciseModal({
       {/* Seleção de exercício */}
       <FormSection title={t('pages.workoutPlans.selectExercise')} icon={Search}>
         <div className="space-y-xs">
-          <div className="relative">
-            <Search className="left-sm text-muted-foreground absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={t('pages.workoutPlans.searchExercise')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="border-input bg-background pr-sm focus:ring-ring w-full rounded-lg border py-2 pl-8 text-sm outline-none focus:ring-2"
-            />
-          </div>
+          <SearchInput
+            placeholder={t('pages.workoutPlans.searchExercise')}
+            value={search}
+            onValueChange={setSearch}
+          />
 
           <div className="space-y-xs border-border p-xs max-h-40 overflow-y-auto rounded-lg border">
             {filtered.length === 0 ? (

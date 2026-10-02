@@ -5,7 +5,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Filter,
   ShoppingCart,
   Calendar,
   DollarSign,
@@ -19,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
@@ -874,12 +874,127 @@ export default function CreditCardExpenses({
         </div>
       )}
 
-      <div className="space-y-md bg-card p-md rounded-lg border">
-        <div className="flex items-center justify-between">
-          <div className="gap-sm flex items-center">
-            <Filter className="h-4 w-4" />
-            <span className="font-semibold">{t('common.actions.filter')}</span>
-          </div>
+      <div className="space-y-sm">
+        <FilterBar
+          hasActiveFilters={
+            categoryFilter !== 'all' ||
+            statusFilter !== 'all' ||
+            !!purchaseDateFrom ||
+            !!purchaseDateTo
+          }
+          onClear={() => {
+            setCategoryFilter('all');
+            setStatusFilter('all');
+            setPurchaseDateFrom(undefined);
+            setPurchaseDateTo(undefined);
+          }}
+        >
+          <Select value={cardFilter} onValueChange={setCardFilter}>
+            <SelectTrigger aria-label={t('pages.creditCardExpenses.columns.card')}>
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCards')}
+              </SelectItem>
+              {creditCards.map((c) => (
+                <SelectItem key={c.id} value={c.id.toString()}>
+                  {getCardDisplayName(c.id)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {viewMode === 'bills' ? (
+            <Select
+              value={billFilter}
+              onValueChange={setBillFilter}
+              disabled={availableBills.length === 0}
+            >
+              <SelectTrigger aria-label={t('pages.creditCardExpenses.columns.bill')}>
+                <SelectValue
+                  placeholder={
+                    availableBills.length === 0
+                      ? t('pages.creditCardExpenses.noBills')
+                      : t('pages.creditCardExpenses.allBills')
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.creditCardExpenses.allBills')}
+                </SelectItem>
+                {availableBills.map((b) => (
+                  <SelectItem key={b.id} value={b.id.toString()}>
+                    {translate('months', b.month)}/{b.year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="gap-xs flex items-center">
+              <DatePicker
+                value={purchaseDateFrom}
+                onChange={setPurchaseDateFrom}
+                placeholder={t('common.actions.filters.fromDate')}
+                clearable
+                maxDate={purchaseDateTo}
+              />
+              <DatePicker
+                value={purchaseDateTo}
+                onChange={setPurchaseDateTo}
+                placeholder={t('common.actions.filters.toDate')}
+                clearable
+                minDate={purchaseDateFrom}
+              />
+            </div>
+          )}
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              aria-label={t('pages.creditCardExpenses.columns.category')}
+              startIcon={<Tag className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCategories')}
+              </SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+                const Icon = EXPENSE_CATEGORY_ICONS[key];
+                return (
+                  <SelectItem
+                    key={key}
+                    value={key}
+                    icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              aria-label={t('pages.creditCardExpenses.columns.status')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allStatus')}
+              </SelectItem>
+              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterBar>
+        {purchaseDateRangeInvalid && (
+          <p className="text-destructive text-sm">
+            {t('pages.creditCardExpenses.dateRangeWarning')}
+          </p>
+        )}
+        <div className="gap-md px-xs flex flex-wrap items-center justify-between">
           <div className="gap-sm flex items-center">
             <span className="text-sm">{t('pages.creditCardExpenses.viewMode')}</span>
             <Select
@@ -898,150 +1013,16 @@ export default function CreditCardExpenses({
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
-        </div>
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-xs">
             <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.card')}
+              {t(
+                isPurchasesView
+                  ? 'pages.creditCardExpenses.foundPurchases'
+                  : 'pages.creditCardExpenses.foundInstallments',
+                { count: displayCount }
+              )}
             </span>
-            <Select value={cardFilter} onValueChange={setCardFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.creditCardExpenses.allCards')}
-                </SelectItem>
-                {creditCards.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {getCardDisplayName(c.id)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-          {viewMode === 'bills' ? (
-            <div className="space-y-xs">
-              <span className="text-muted-foreground text-sm">
-                {t('pages.creditCardExpenses.columns.bill')}
-              </span>
-              <Select
-                value={billFilter}
-                onValueChange={setBillFilter}
-                disabled={availableBills.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      availableBills.length === 0
-                        ? t('pages.creditCardExpenses.noBills')
-                        : t('pages.creditCardExpenses.allBills')
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {t('pages.creditCardExpenses.allBills')}
-                  </SelectItem>
-                  {availableBills.map((b) => (
-                    <SelectItem key={b.id} value={b.id.toString()}>
-                      {translate('months', b.month)}/{b.year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div className="gap-sm grid grid-cols-2">
-              <div className="space-y-xs">
-                <span className="text-muted-foreground text-sm">
-                  {t('pages.creditCardExpenses.dateFrom')}
-                </span>
-                <DatePicker
-                  value={purchaseDateFrom}
-                  onChange={setPurchaseDateFrom}
-                  placeholder={t('common.actions.filters.fromDate')}
-                  clearable
-                  maxDate={purchaseDateTo}
-                />
-              </div>
-              <div className="space-y-xs">
-                <span className="text-muted-foreground text-sm">
-                  {t('pages.creditCardExpenses.dateTo')}
-                </span>
-                <DatePicker
-                  value={purchaseDateTo}
-                  onChange={setPurchaseDateTo}
-                  placeholder={t('common.actions.filters.toDate')}
-                  clearable
-                  minDate={purchaseDateFrom}
-                />
-              </div>
-            </div>
-          )}
-          <div className="space-y-xs">
-            <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.category')}
-            </span>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger startIcon={<Tag className="h-3.5 w-3.5" />}>
-                <SelectValue
-                  placeholder={t('pages.creditCardExpenses.allCategories')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.creditCardExpenses.allCategories')}
-                </SelectItem>
-                {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
-                  const Icon = EXPENSE_CATEGORY_ICONS[key];
-                  return (
-                    <SelectItem
-                      key={key}
-                      value={key}
-                      icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
-                    >
-                      {label}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-xs">
-            <span className="text-muted-foreground text-sm">
-              {t('pages.creditCardExpenses.columns.status')}
-            </span>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger startIcon={<CircleDot className="h-3.5 w-3.5" />}>
-                <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('pages.creditCardExpenses.allStatus')}
-                </SelectItem>
-                <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
-                <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        {purchaseDateRangeInvalid && (
-          <p className="text-destructive text-sm">
-            {t('pages.creditCardExpenses.dateRangeWarning')}
-          </p>
-        )}
-        <div className="pt-sm flex items-center justify-between border-t">
-          <span className="text-sm">
-            {t(
-              isPurchasesView
-                ? 'pages.creditCardExpenses.foundPurchases'
-                : 'pages.creditCardExpenses.foundInstallments',
-              { count: displayCount }
-            )}
-          </span>
-          <div className="gap-md flex items-center">
+          <div className="gap-md flex flex-wrap items-center">
             <span className="text-sm">
               <span className="text-muted-foreground">
                 {t('pages.creditCardExpenses.totalPaid')}

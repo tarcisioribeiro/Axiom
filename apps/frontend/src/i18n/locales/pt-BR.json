@@ -6218,7 +6218,6 @@
       "suggestionExercise": "+ {{exercise}} ml de treino ({{days}} dias, {{minutes}} min por semana nos planos ativos)",
       "noWeight": "Cadastre seu peso em Medidas Corporais para receber uma sugestão.",
       "useSuggestion": "Usar sugestão",
-      "tasksHint": "Tarefas da categoria Nutrição vinculadas à meta de hidratação são concluídas automaticamente conforme você registra água no Diário — e concluir a tarefa registra a água.",
       "dayWater": "Água do dia",
       "setGoalHint": "Defina sua meta na aba Plano.",
       "add": "Adicionar",

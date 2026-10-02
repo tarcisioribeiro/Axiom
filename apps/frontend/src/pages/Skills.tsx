@@ -10,7 +10,6 @@ import {
   LayoutGrid,
   Plus,
   Radar,
-  Search,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,9 +17,11 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { SkillForm } from '@/components/library/SkillForm';
 import { SkillsRadarChart } from '@/components/library/SkillsRadarChart';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -338,15 +338,17 @@ export default function Skills() {
 
         {/* Search + View Toggle */}
         <div className="gap-sm flex items-center">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              className="pl-9"
+          <FilterBar
+            className="flex-1"
+            hasActiveFilters={!!search}
+            onClear={() => setSearch('')}
+          >
+            <SearchInput
               placeholder={t('pages.skills.searchPlaceholder')}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onValueChange={setSearch}
             />
-          </div>
+          </FilterBar>
           <div className="border-border flex rounded-lg border">
             <PlainButton
               aria-label={t('pages.skills.viewList')}

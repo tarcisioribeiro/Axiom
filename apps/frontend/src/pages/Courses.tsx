@@ -4,11 +4,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   CheckCircle2,
+  CircleDot,
   Clock,
   GraduationCap,
   Layers,
   Plus,
-  Search,
   Timer,
   Trash2,
   Edit,
@@ -30,9 +30,11 @@ import {
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
 import { Badge } from '@/components/ui/badge';
@@ -45,15 +47,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PLATFORM_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
 import { coursesService, courseSessionsService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
 import type { Course, CourseFormData, CourseStatus } from '@/types';
@@ -444,36 +451,37 @@ export default function Courses() {
         </Card>
 
         {/* Filters */}
-        <div className="gap-sm flex flex-wrap items-center">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              className="pl-9"
-              placeholder={t('pages.courses.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="gap-xs flex">
-            {STATUS_FILTER_KEYS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={cn(
-                  'px-md py-xs rounded-lg text-xs font-medium transition-colors',
-                  statusFilter === s
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                )}
-              >
-                {s === 'all'
-                  ? t('pages.courses.filters.all')
-                  : t(`pages.courses.filters.${s}`)}
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterBar
+          hasActiveFilters={!!search || statusFilter !== 'all'}
+          onClear={() => {
+            setSearch('');
+            setStatusFilter('all');
+          }}
+        >
+          <SearchInput
+            placeholder={t('pages.courses.searchPlaceholder')}
+            value={search}
+            onValueChange={setSearch}
+          />
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as CourseStatus | 'all')}
+          >
+            <SelectTrigger
+              aria-label={t('common.fields.status')}
+              startIcon={<CircleDot className="h-3.5 w-3.5" />}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTER_KEYS.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {t(`pages.courses.filters.${s}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterBar>
 
         {/* Grid */}
         {isLoading ? (

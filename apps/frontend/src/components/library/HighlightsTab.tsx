@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
@@ -344,12 +345,17 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   return (
     <div className="space-y-md">
       <div className="gap-sm flex items-center">
-        <SearchInput
-          placeholder={t('pages.highlights.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="max-w-sm"
-        />
+        <FilterBar
+          className="flex-1"
+          hasActiveFilters={!!searchTerm}
+          onClear={() => setSearchTerm('')}
+        >
+          <SearchInput
+            placeholder={t('pages.highlights.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
+        </FilterBar>
         {highlights.length > 0 && (
           <Button
             variant="outline"

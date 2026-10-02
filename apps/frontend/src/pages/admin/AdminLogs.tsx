@@ -1,20 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  RefreshCw,
-  ScrollText,
-  Search,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw, ScrollText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { DatePicker } from '@/components/ui/date-picker';
+import { SearchInput } from '@/components/common/SearchInput';
+import { Button } from '@/components/ui/button';
 import { PlainButton } from '@/components/ui/plain-button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import i18n from '@/i18n';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -86,63 +88,38 @@ export default function AdminLogs() {
         }
       />
 
-      {/* Filters */}
-      <div className="border-border bg-card p-md rounded-lg border">
-        <div className="gap-sm mb-3 flex items-center">
-          <Filter className="text-muted-foreground h-4 w-4" />
-          <span className="text-foreground text-sm font-medium">
-            {t('pages.adminLogs.filters')}
-          </span>
-          {hasFilters && (
-            <button
-              onClick={clearFilters}
-              className="gap-xs text-muted-foreground hover:text-foreground ml-auto flex items-center text-xs"
-            >
-              <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
-            </button>
-          )}
-        </div>
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={t('pages.adminLogs.userPlaceholder')}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="border-border bg-background py-sm pl-xl text-foreground focus:ring-primary w-full rounded-lg border pr-3 text-sm focus:ring-2 focus:outline-none"
-            />
-          </div>
-          <select
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            className="border-border bg-background py-sm text-foreground focus:ring-primary rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
-          >
-            <option value="">{t('pages.adminLogs.allActions')}</option>
-            {Object.keys(ACTION_KEYS).map((k) => (
-              <option key={k} value={k}>
-                {t(`pages.adminLogs.actions.${k}`)}
-              </option>
-            ))}
-          </select>
-          <DatePicker
-            value={dateFrom}
-            onChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
-            clearable
-          />
-          <DatePicker
-            value={dateTo}
-            onChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
-            clearable
-          />
-        </div>
-        <button
-          onClick={applyFilters}
-          className="bg-primary px-md py-sm text-primary-foreground hover:bg-primary/90 mt-3 rounded-lg text-sm font-medium"
+      <FilterBar hasActiveFilters={hasFilters} onClear={clearFilters}>
+        <SearchInput
+          placeholder={t('pages.adminLogs.userPlaceholder')}
+          value={username}
+          onValueChange={setUsername}
+        />
+        <Select
+          value={action || 'all'}
+          onValueChange={(v) => setAction(v === 'all' ? '' : v)}
         >
+          <SelectTrigger aria-label={t('pages.adminLogs.allActions')}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.adminLogs.allActions')}</SelectItem>
+            {Object.keys(ACTION_KEYS).map((k) => (
+              <SelectItem key={k} value={k}>
+                {t(`pages.adminLogs.actions.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DateRangeFilter
+          startDate={dateFrom}
+          endDate={dateTo}
+          onStartChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
+          onEndChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
+        />
+        <Button size="sm" onClick={applyFilters}>
           {t('pages.adminLogs.applyFilters')}
-        </button>
-      </div>
+        </Button>
+      </FilterBar>
 
       {/* Table */}
       <div className="border-border bg-card overflow-hidden rounded-lg border">

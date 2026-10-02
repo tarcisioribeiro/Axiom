@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -147,17 +148,19 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
   return (
     <Wrapper>
       <PageHeader title={t('pages.tags.title')} icon={<TagIcon className="h-5 w-5" />}>
-        <SearchInput
-          placeholder={`${t('common.actions.search')}...`}
-          value={search}
-          onValueChange={setSearch}
-          className="w-48"
-        />
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
           {t('pages.tags.newBtn')}
         </Button>
       </PageHeader>
+
+      <FilterBar hasActiveFilters={!!search} onClear={() => setSearch('')}>
+        <SearchInput
+          placeholder={`${t('common.actions.search')}...`}
+          value={search}
+          onValueChange={setSearch}
+        />
+      </FilterBar>
 
       {isLoading ? (
         <LoadingState />

@@ -16,7 +16,6 @@ import {
   Moon,
   Plus,
   Salad,
-  Search,
   Sparkles,
   Sun,
   Sunrise,
@@ -28,9 +27,11 @@ import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { FoodForm } from '@/components/nutrition/FoodForm';
 import {
   HydrationGoalCard,
@@ -925,16 +926,17 @@ export default function NutritionPage() {
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods" className="mt-0 flex-1">
             <div className="mb-md gap-sm flex items-center">
-              <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                <input
-                  type="text"
+              <FilterBar
+                className="flex-1"
+                hasActiveFilters={!!foodSearch}
+                onClear={() => setFoodSearch('')}
+              >
+                <SearchInput
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}
-                  onChange={(e) => setFoodSearch(e.target.value)}
-                  className="border-input bg-background py-sm focus:ring-ring w-full rounded-lg border pr-3 pl-9 text-sm outline-none focus:ring-2"
+                  onValueChange={setFoodSearch}
                 />
-              </div>
+              </FilterBar>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
                 <Plus className="h-4 w-4" />
                 {t('pages.nutritionFoods.newFoodBtn')}

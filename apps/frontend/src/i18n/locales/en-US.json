@@ -6173,7 +6173,6 @@
       "suggestionExercise": "+ {{exercise}} ml for training ({{days}} days, {{minutes}} min per week in active plans)",
       "noWeight": "Add your weight in Body Metrics to get a suggestion.",
       "useSuggestion": "Use suggestion",
-      "tasksHint": "Nutrition tasks linked to the hydration goal are completed automatically as you log water in the Log tab — and completing the task logs the water.",
       "dayWater": "Water today",
       "setGoalHint": "Set your goal in the Plan tab.",
       "add": "Add",

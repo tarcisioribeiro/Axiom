@@ -18,6 +18,7 @@ import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
@@ -455,65 +456,73 @@ export default function CreditCardBills({
   return (
     <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
-        <div className="gap-sm flex flex-wrap items-center">
-          <Select value={cardFilter} onValueChange={setCardFilter}>
-            <SelectTrigger className="w-52">
-              <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.creditCardBills.allCards')}</SelectItem>
-              {creditCards.map((c) => {
-                const masked = c.card_number_masked || '****';
-                const digitsOnly = masked.replace(/[^\d]/g, '');
-                const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
-                const hasValidNumber = last4 !== '****' && /^\d{4}$/.test(last4);
-                const cardNumber = hasValidNumber ? `**** ${last4}` : '';
-                const brandName = translate('cardBrands', c.flag);
-                return (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.on_card_name} {cardNumber} - {brandName}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger
-              className="w-auto whitespace-nowrap"
-              startIcon={<CircleDot className="h-3.5 w-3.5" />}
-            >
-              <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                {t('pages.creditCardBills.allStatus')}
-              </SelectItem>
-              {Object.keys(TRANSLATIONS.billStatus).map((k) => (
-                <SelectItem key={k} value={k}>
-                  {translate('billStatus', k)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-auto whitespace-nowrap">
-              <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.creditCardBills.allYears')}</SelectItem>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.creditCardBills.newBtn')}
-          </Button>
-        </div>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.creditCardBills.newBtn')}
+        </Button>
       </PageHeader>
+
+      <FilterBar
+        hasActiveFilters={
+          cardFilter !== 'all' || statusFilter !== 'all' || yearFilter !== 'all'
+        }
+        onClear={() => {
+          setCardFilter('all');
+          setStatusFilter('all');
+          setYearFilter('all');
+        }}
+      >
+        <Select value={cardFilter} onValueChange={setCardFilter}>
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.creditCardBills.allCards')}</SelectItem>
+            {creditCards.map((c) => {
+              const masked = c.card_number_masked || '****';
+              const digitsOnly = masked.replace(/[^\d]/g, '');
+              const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
+              const hasValidNumber = last4 !== '****' && /^\d{4}$/.test(last4);
+              const cardNumber = hasValidNumber ? `**** ${last4}` : '';
+              const brandName = translate('cardBrands', c.flag);
+              return (
+                <SelectItem key={c.id} value={c.id.toString()}>
+                  {c.on_card_name} {cardNumber} - {brandName}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger
+            className="w-auto whitespace-nowrap"
+            startIcon={<CircleDot className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.creditCardBills.allStatus')}</SelectItem>
+            {Object.keys(TRANSLATIONS.billStatus).map((k) => (
+              <SelectItem key={k} value={k}>
+                {translate('billStatus', k)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="w-auto whitespace-nowrap">
+            <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.creditCardBills.allYears')}</SelectItem>
+            {years.map((y) => (
+              <SelectItem key={y} value={y}>
+                {y}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
       {/* Summary cards */}
       {filteredBills.length > 0 &&

@@ -6,7 +6,6 @@ import {
   Loader2,
   Share2,
   Trash2,
-  Search,
   User,
   Check,
   ArrowLeft,
@@ -15,6 +14,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -293,15 +292,11 @@ export function SharePasswordModal({
                     <p className="text-muted-foreground text-sm">
                       {t('pages.sharePassword.step1Desc')}
                     </p>
-                    <div className="relative">
-                      <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                      <Input
-                        value={memberSearch}
-                        onChange={(e) => setMemberSearch(e.target.value)}
-                        placeholder={t('pages.sharePassword.searchMembers')}
-                        className="pl-9"
-                      />
-                    </div>
+                    <SearchInput
+                      value={memberSearch}
+                      onValueChange={setMemberSearch}
+                      placeholder={t('pages.sharePassword.searchMembers')}
+                    />
                     <div className="max-h-52 overflow-y-auto rounded-lg border">
                       {isLoadingMembers ? (
                         <div className="py-md flex justify-center">

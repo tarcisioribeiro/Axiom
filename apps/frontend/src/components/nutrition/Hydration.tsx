@@ -325,11 +325,6 @@ export function HydrationGoalCard() {
           </p>
         )}
       </div>
-
-      <p className="text-muted-foreground gap-xs flex items-start text-xs">
-        <Link2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        {t('pages.nutritionHydration.tasksHint')}
-      </p>
     </div>
   );
 }
