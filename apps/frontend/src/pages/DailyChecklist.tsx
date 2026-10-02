@@ -690,11 +690,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
       />
 
-      {!embedded && (
-        <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
-          {viewToggle}
-        </PageHeader>
-      )}
+      <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
+        {viewToggle}
+      </PageHeader>
 
       {/* Modo Foco + saudação + nível/XP + controles lado a lado em telas largas */}
       <div className="gap-lg flex flex-col 2xl:flex-row 2xl:items-center">
@@ -752,8 +750,8 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 <div className="text-muted-foreground flex justify-between text-xs">
                   <span className="gap-xs flex items-center">
                     <Zap className="text-warning h-3 w-3" />
-                    {gamification.xp_in_level}/
-                    {gamification.xp_needed_for_next_level} XP
+                    {gamification.xp_in_level}/{gamification.xp_needed_for_next_level}{' '}
+                    XP
                   </span>
                   <span>{gamification.level_progress_pct}%</span>
                 </div>
@@ -780,7 +778,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
 
         {/* Toolbar */}
         <div className="gap-md flex shrink-0 flex-wrap items-center">
-          {embedded && viewToggle}
           <div className="gap-sm flex items-center">
             <div role="group" aria-label={t('common.fields.date')}>
               <DatePicker

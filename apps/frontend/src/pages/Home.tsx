@@ -12,6 +12,7 @@ import {
   BookOpen,
   BookMarked,
   LayoutDashboard,
+  LayoutGrid,
   Shield,
   Library,
   Calendar,
@@ -148,7 +149,7 @@ export default function Home() {
 
       {/* Modules */}
       <div className="space-y-lg">
-        <PageHeader title={t('pages.home.modulesTitle')} />
+        <PageHeader title={t('pages.home.modulesTitle')} icon={<LayoutGrid />} />
         <motion.div
           className="gap-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}

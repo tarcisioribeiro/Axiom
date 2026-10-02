@@ -1409,7 +1409,7 @@ export default function EmotionalWellness() {
   return (
     <AnimatedPage>
       <PageContainer>
-        <PageHeader title="Centro de Bem-Estar" />
+        <PageHeader title="Centro de Bem-Estar" icon={<Heart />} />
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-lg w-full overflow-x-auto">

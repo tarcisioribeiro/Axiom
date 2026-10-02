@@ -10,6 +10,7 @@ import {
   Plus,
   Send,
   Trash2,
+  Webhook as WebhookIcon,
   XCircle,
   Zap,
   Save,
@@ -194,6 +195,7 @@ export default function Webhooks() {
     <PageContainer>
       <PageHeader
         title={t('webhooks.title')}
+        icon={<WebhookIcon />}
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />

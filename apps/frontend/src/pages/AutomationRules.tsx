@@ -818,6 +818,7 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
     <Wrapper>
       <PageHeader
         title={t('pages.automationRules.title')}
+        icon={<Zap />}
         actions={
           <div className="gap-sm flex">
             <Button

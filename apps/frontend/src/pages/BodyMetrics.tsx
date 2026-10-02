@@ -15,6 +15,7 @@ import {
   BarChart3,
   Dumbbell,
   Edit,
+  History,
   Layers,
   Percent,
   PieChart,
@@ -744,6 +745,7 @@ export default function BodyMetrics() {
       <PageContainer>
         <PageHeader
           title={t('pages.bodyMetrics.title')}
+          icon={<Scale />}
           actions={
             <div className="gap-sm flex">
               {metrics.length > 0 && (
@@ -859,10 +861,12 @@ export default function BodyMetrics() {
 
             <Tabs defaultValue="chart">
               <TabsList className="mb-md">
-                <TabsTrigger value="chart">
+                <TabsTrigger value="chart" className="gap-xs">
+                  <BarChart3 className="h-4 w-4" />
                   {t('pages.bodyMetrics.tabChart')}
                 </TabsTrigger>
-                <TabsTrigger value="history">
+                <TabsTrigger value="history" className="gap-xs">
+                  <History className="h-4 w-4" />
                   {t('pages.bodyMetrics.tabHistory')}
                 </TabsTrigger>
               </TabsList>

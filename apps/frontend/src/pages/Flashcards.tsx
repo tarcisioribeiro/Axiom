@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Brain,
+  CalendarClock,
   ChevronLeft,
+  Layers,
   Plus,
   RotateCcw,
   Star,
@@ -327,10 +329,12 @@ export default function Flashcards() {
         ) : (
           <Tabs defaultValue="all">
             <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">
+              <TabsTrigger value="all" className="gap-xs flex-1">
+                <Layers className="h-4 w-4" />
                 {t('pages.flashcards.stats.total')}
               </TabsTrigger>
-              <TabsTrigger value="due" className="flex-1">
+              <TabsTrigger value="due" className="gap-xs flex-1">
+                <CalendarClock className="h-4 w-4" />
                 {t('pages.flashcards.dueToday')}
               </TabsTrigger>
             </TabsList>

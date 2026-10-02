@@ -163,7 +163,11 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
   if (isError || !data) {
     return (
       <Wrapper>
-        <PageHeader title={t('spendingInsights.title')} actions={monthNav} />
+        <PageHeader
+          title={t('spendingInsights.title')}
+          icon={<BarChart3 />}
+          actions={monthNav}
+        />
         <EmptyState
           title={t('spendingInsights.unavailable')}
           description={t('spendingInsights.unavailableDesc')}
@@ -198,7 +202,11 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
 
   return (
     <Wrapper>
-      <PageHeader title={t('spendingInsights.title')} actions={monthNav} />
+      <PageHeader
+        title={t('spendingInsights.title')}
+        icon={<BarChart3 />}
+        actions={monthNav}
+      />
 
       {/* Trend summary row */}
       <div className="gap-lg grid grid-cols-1 sm:grid-cols-3">
