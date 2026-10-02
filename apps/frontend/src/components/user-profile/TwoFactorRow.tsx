@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { authService } from '@/services/auth-service';
 
+import { PasswordSection } from './PasswordSection';
+
 export function TwoFactorRow() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -26,7 +28,7 @@ export function TwoFactorRow() {
   const isActive = data?.is_active ?? false;
 
   return (
-    <div className="gap-md flex items-center justify-between">
+    <div className="gap-md flex flex-wrap items-center justify-between">
       <div className="flex items-center gap-3">
         {isActive ? (
           <ShieldCheck className="text-success h-5 w-5" />
@@ -35,7 +37,7 @@ export function TwoFactorRow() {
         )}
         <p className="text-sm font-medium">{t('userProfile.security.twoFactor')}</p>
       </div>
-      <div className="gap-sm flex shrink-0 items-center">
+      <div className="gap-sm ml-auto flex flex-wrap items-center justify-end">
         <Badge variant={isActive ? 'success' : 'outline'}>
           {isActive
             ? t('userProfile.security.twoFactorActive')
@@ -45,14 +47,18 @@ export function TwoFactorRow() {
           <Settings />
           {t('userProfile.security.twoFactorManage')}
         </Button>
+        <PasswordSection />
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent size="sm">
+        {/* Altura fixa: igual em todas as etapas e cabe a mais alta (QR Code). */}
+        <DialogContent size="sm" className="h-[32rem] max-w-lg grid-rows-[auto_1fr]">
           <DialogHeader>
             <DialogTitle>{t('pages.twoFactor.title')}</DialogTitle>
           </DialogHeader>
-          <TwoFactorManager onDisabled={() => setOpen(false)} />
+          <div className="flex flex-col">
+            <TwoFactorManager onDisabled={() => setOpen(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>

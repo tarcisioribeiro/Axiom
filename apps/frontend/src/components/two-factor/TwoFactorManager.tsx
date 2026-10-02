@@ -30,7 +30,7 @@ export function TwoFactorManager({ onDisabled }: { onDisabled?: () => void }) {
 
   if (data?.is_active && !justActivated) {
     return (
-      <div className="space-y-md">
+      <div className="gap-md flex flex-1 flex-col">
         <p className="gap-sm flex items-center text-sm font-medium">
           <ShieldCheck className="text-success h-5 w-5" />
           {t('pages.twoFactor.status')}: {t('pages.twoFactor.active')}

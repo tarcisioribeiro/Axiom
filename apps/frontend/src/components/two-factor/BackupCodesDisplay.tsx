@@ -1,4 +1,4 @@
-import { Check, Copy, Eye, EyeOff } from 'lucide-react';
+import { Check, Copy, Download, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,8 +15,19 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownload = () => {
+    const url = URL.createObjectURL(
+      new Blob([codes.join('\n')], { type: 'text/plain' })
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'backup-codes.txt';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div className="border-warning/40 bg-warning/5 p-md space-y-3 rounded-lg border">
+    <div className="border-warning/40 bg-warning/5 p-md my-auto space-y-3 rounded-lg border">
       <div className="space-y-xs">
         <p className="text-base font-semibold">{t('pages.twoFactor.backupCodes')}</p>
         <p className="text-muted-foreground text-sm">
@@ -42,7 +53,7 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
           </div>
         )}
       </div>
-      <div className="gap-sm flex">
+      <div className="gap-sm flex flex-wrap">
         <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
           {visible ? (
             <>
@@ -65,6 +76,9 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
               <Copy className="mr-sm h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
             </>
           )}
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleDownload}>
+          <Download className="mr-sm h-4 w-4" /> {t('pages.twoFactor.downloadBackup')}
         </Button>
       </div>
     </div>

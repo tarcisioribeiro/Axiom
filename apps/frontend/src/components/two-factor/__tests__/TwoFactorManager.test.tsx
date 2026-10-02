@@ -77,5 +77,17 @@ describe('TwoFactorManager', () => {
     );
     expect(screen.getByText('Códigos de backup')).toBeTruthy();
     expect(authService.getTwoFactorSetup).toHaveBeenCalledTimes(1);
+
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:codes');
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        expect(this.download).toBe('backup-codes.txt');
+      });
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar códigos' }));
+    expect(click).toHaveBeenCalledTimes(1);
+    await expect((createUrl.mock.calls[0][0] as Blob).text()).resolves.toBe(
+      'AAAA-1111'
+    );
   });
 });

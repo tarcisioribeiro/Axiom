@@ -107,45 +107,47 @@ function PersonalDataForm({
         <FormField id="name" label={t('userProfile.personalData.name')}>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </FormField>
-        <div className="space-y-sm">
-          <Label htmlFor="document">{t('userProfile.personalData.document')}</Label>
-          <div className="relative">
-            <Input
-              id="document"
-              readOnly
-              value={showDocument ? formattedDocument : maskedDocument}
-              className="bg-muted/40 text-muted-foreground pr-9"
-            />
-            <PlainButton
-              aria-label={t(
-                showDocument
-                  ? 'userProfile.personalData.hideDocument'
-                  : 'userProfile.personalData.showDocument'
-              )}
-              type="button"
-              onClick={() => setShowDocument((v) => !v)}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-            >
-              {showDocument ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </PlainButton>
+        <div className="gap-md grid sm:grid-cols-2">
+          <div className="space-y-sm">
+            <Label htmlFor="document">{t('userProfile.personalData.document')}</Label>
+            <div className="relative">
+              <Input
+                id="document"
+                readOnly
+                value={showDocument ? formattedDocument : maskedDocument}
+                className="bg-muted/40 text-muted-foreground pr-9"
+              />
+              <PlainButton
+                aria-label={t(
+                  showDocument
+                    ? 'userProfile.personalData.hideDocument'
+                    : 'userProfile.personalData.showDocument'
+                )}
+                type="button"
+                onClick={() => setShowDocument((v) => !v)}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+              >
+                {showDocument ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </PlainButton>
+            </div>
           </div>
+          <FormField
+            id="email"
+            label={t('userProfile.personalData.email')}
+            error={emailError}
+          >
+            <Input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value.trim())}
+            />
+          </FormField>
         </div>
-        <FormField
-          id="email"
-          label={t('userProfile.personalData.email')}
-          error={emailError}
-        >
-          <Input
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value.trim())}
-          />
-        </FormField>
         <FormField
           id="phone"
           label={t('userProfile.personalData.phone')}

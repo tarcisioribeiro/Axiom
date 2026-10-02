@@ -4,11 +4,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ValidationError } from '@/services/api-errors';
 import { authService } from '@/services/auth-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -18,12 +25,14 @@ function PasswordField({
   value,
   onChange,
   autoComplete,
+  error,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
+  error?: string;
 }) {
   const { t } = useTranslation();
   const [show, setShow] = useState(false);
@@ -38,6 +47,8 @@ function PasswordField({
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           className="pr-9"
         />
         <PlainButton
@@ -49,6 +60,11 @@ function PasswordField({
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </PlainButton>
       </div>
+      {error && (
+        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -69,8 +85,33 @@ function Rule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
 
 export function PasswordSection() {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <KeyRound />
+        {t('userProfile.security.changePassword')}
+      </Button>
+      {/* Fechar desmonta o formulário, o que já zera os campos. */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        {/* Mesma altura fixa do modal de 2FA; avisos e erro não o redimensionam. */}
+        <DialogContent size="sm" className="h-[32rem] max-w-lg grid-rows-[auto_1fr]">
+          <DialogHeader>
+            <DialogTitle>{t('userProfile.security.changePassword')}</DialogTitle>
+          </DialogHeader>
+          <PasswordForm onClose={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function PasswordForm({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [current, setCurrent] = useState('');
+  const [currentError, setCurrentError] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -84,14 +125,21 @@ export function PasswordSection() {
     mutationFn: () => authService.changePassword(current, next, confirm),
     onSuccess: () => {
       toast({ title: t('userProfile.security.passwordSuccess') });
-      setCurrent('');
-      setNext('');
-      setConfirm('');
+      onClose();
     },
     onError: (err) => {
+      // O backend responde { error } quando a senha atual está errada e
+      // { error, details } quando os validadores do Django recusam a nova senha.
+      const data: Record<string, unknown> =
+        err instanceof ValidationError ? err.errors : {};
+      const details = Array.isArray(data.details) ? data.details.join(' ') : '';
+      if (!details && typeof data.error === 'string') {
+        setCurrentError(data.error);
+        return;
+      }
       toast({
         title: t('userProfile.security.passwordError'),
-        description: getErrorMessage(err),
+        description: details || getErrorMessage(err),
         variant: 'destructive',
       });
     },
@@ -99,19 +147,22 @@ export function PasswordSection() {
 
   return (
     <form
-      className="space-y-md"
+      className="gap-md flex flex-col"
       onSubmit={(e) => {
         e.preventDefault();
         mutation.mutate();
       }}
     >
-      <p className="text-sm font-medium">{t('userProfile.security.changePassword')}</p>
       <PasswordField
         id="current-pw"
         label={t('userProfile.security.currentPassword')}
         value={current}
-        onChange={setCurrent}
+        onChange={(value) => {
+          setCurrent(value);
+          setCurrentError('');
+        }}
         autoComplete="current-password"
+        error={currentError}
       />
       <PasswordField
         id="new-pw"
@@ -120,10 +171,12 @@ export function PasswordSection() {
         onChange={setNext}
         autoComplete="new-password"
       />
-      <ul className="space-y-xs">
-        <Rule ok={hasMinLength}>{t('userProfile.security.rules.minLength')}</Rule>
-        <Rule ok={notOnlyNumbers}>{t('userProfile.security.rules.notNumeric')}</Rule>
-      </ul>
+      {next && (
+        <ul className="space-y-xs">
+          <Rule ok={hasMinLength}>{t('userProfile.security.rules.minLength')}</Rule>
+          <Rule ok={notOnlyNumbers}>{t('userProfile.security.rules.notNumeric')}</Rule>
+        </ul>
+      )}
       <PasswordField
         id="confirm-pw"
         label={t('userProfile.security.confirmPassword')}
@@ -131,10 +184,15 @@ export function PasswordSection() {
         onChange={setConfirm}
         autoComplete="new-password"
       />
-      <ul>
-        <Rule ok={matches}>{t('userProfile.security.rules.matches')}</Rule>
-      </ul>
-      <div className="flex justify-end">
+      {confirm && (
+        <ul>
+          <Rule ok={matches}>{t('userProfile.security.rules.matches')}</Rule>
+        </ul>
+      )}
+      <div className="gap-sm mt-auto flex justify-end">
+        <Button type="button" variant="ghost" onClick={onClose}>
+          {t('common.actions.cancel')}
+        </Button>
         <Button
           type="submit"
           variant="outline"

@@ -14,7 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { EmailVerificationSection } from '@/components/user-profile/EmailVerificationSection';
-import { PasswordSection } from '@/components/user-profile/PasswordSection';
 import { PersonalDataSection } from '@/components/user-profile/PersonalDataSection';
 import { ProfileAvatar } from '@/components/user-profile/ProfileAvatar';
 import { Section } from '@/components/user-profile/Section';
@@ -52,8 +51,6 @@ export default function UserProfile() {
               title={t('userProfile.security.title')}
             >
               <TwoFactorRow />
-              <div className="bg-border h-px" />
-              <PasswordSection />
             </Section>
           </div>
 
