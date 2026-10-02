@@ -2363,7 +2363,6 @@
         "errorDesc": "Could not generate the IR report."
       },
       "monthComposition": "Month overview",
-      "monthCompositionShort": "This month",
       "monthOverMonth": "Month over month",
       "vsPrevMonth": "vs prev. month:",
       "installmentSimulator": "Installment Simulator",

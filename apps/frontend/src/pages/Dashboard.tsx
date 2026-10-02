@@ -95,6 +95,9 @@ import { useAuthStore } from '@/stores/auth-store';
 
 type CategoryStat = { category: string; name: string; value: number };
 
+// Botões da linha de ferramentas: mesmo tamanho e largura
+const TOOL_BUTTON_CLASS = 'gap-xs w-44';
+
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -132,27 +135,9 @@ export default function Dashboard() {
   const [installmentSimOpen, setInstallmentSimOpen] = useState(false);
   const { toast } = useToast();
 
-  // Collapsible section state — persisted to localStorage
-  const [monthlyAnalysisOpen, setMonthlyAnalysisOpen] = useState(
-    () => localStorage.getItem('dashboard-monthly-analysis') !== 'false'
-  );
-  const [advancedAnalysisOpen, setAdvancedAnalysisOpen] = useState(
-    () => localStorage.getItem('dashboard-advanced-analysis') === 'true'
-  );
-
-  useEffect(() => {
-    localStorage.setItem(
-      'dashboard-monthly-analysis',
-      monthlyAnalysisOpen ? 'true' : 'false'
-    );
-  }, [monthlyAnalysisOpen]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      'dashboard-advanced-analysis',
-      advancedAnalysisOpen ? 'true' : 'false'
-    );
-  }, [advancedAnalysisOpen]);
+  // Seções recolhíveis — sempre começam recolhidas
+  const [monthlyAnalysisOpen, setMonthlyAnalysisOpen] = useState(false);
+  const [advancedAnalysisOpen, setAdvancedAnalysisOpen] = useState(false);
 
   const now = useMemo(() => new Date(), []);
 
@@ -679,11 +664,6 @@ export default function Dashboard() {
       <PageHeader
         title={`${greeting.text}${displayName ? `, ${displayName}` : ''}`}
         icon={<LayoutDashboard />}
-        action={{
-          label: t('pages.dashboard.exportStatement'),
-          icon: <FileDown className="h-4 w-4" />,
-          onClick: () => setStatementModalOpen(true),
-        }}
       />
 
       {/* 2. StatementExportModal */}
@@ -692,22 +672,48 @@ export default function Dashboard() {
         onOpenChange={setStatementModalOpen}
       />
 
-      {/* 3. Ferramentas: LGPD + IR + Botão Alertas Financeiros */}
-      <div className="gap-sm flex flex-wrap">
+      {/* 3. Superávit / Déficit + ferramentas (alinhadas à direita) */}
+      <div className="gap-sm flex flex-wrap items-center justify-end">
+        {stats && (
+          <div
+            className={cn(
+              'gap-sm flex h-8 items-center rounded-md px-3 text-xs font-medium',
+              stats.total_revenues > stats.total_expenses
+                ? 'bg-success/10 text-success'
+                : 'bg-destructive/10 text-destructive'
+            )}
+          >
+            {stats.total_revenues > stats.total_expenses ? (
+              <TrendingUp className="h-4 w-4 shrink-0" />
+            ) : (
+              <TrendingDown className="h-4 w-4 shrink-0" />
+            )}
+            <span>
+              {stats.total_revenues > stats.total_expenses
+                ? t('pages.dashboard.surplusThisMonth', {
+                    amount: formatCurrency(stats.total_revenues - stats.total_expenses),
+                  })
+                : t('pages.dashboard.deficitThisMonth', {
+                    amount: formatCurrency(stats.total_expenses - stats.total_revenues),
+                  })}
+            </span>
+          </div>
+        )}
+        <div className="flex-1" />
         <Button
           variant="outline"
           size="sm"
           onClick={() => lgpdMutation.mutate()}
           disabled={lgpdMutation.isPending}
-          className="gap-xs"
+          className={TOOL_BUTTON_CLASS}
         >
           <Download className="h-4 w-4" />
           {t('pages.dashboard.lgpdExport.title')}
         </Button>
-        <div className="gap-xs flex items-center">
+        <div className="gap-sm flex items-center">
           <Select value={String(irYear)} onValueChange={(v) => setIrYear(parseInt(v))}>
             <SelectTrigger
-              className="h-9 w-28"
+              className="h-8 w-44 text-xs"
               aria-label={t('pages.dashboard.irReport.year')}
             >
               <SelectValue />
@@ -726,7 +732,7 @@ export default function Dashboard() {
             variant="outline"
             size="sm"
             onClick={() => void handleLoadIRReport()}
-            className="gap-xs"
+            className={TOOL_BUTTON_CLASS}
           >
             <FileText className="h-4 w-4" />
             {t('pages.dashboard.irReport.title')}
@@ -736,7 +742,7 @@ export default function Dashboard() {
           variant="outline"
           size="sm"
           onClick={() => setInstallmentSimOpen(true)}
-          className="gap-xs"
+          className={TOOL_BUTTON_CLASS}
         >
           <Calculator className="h-4 w-4" />
           {t('pages.dashboard.installmentSimulator')}
@@ -746,7 +752,7 @@ export default function Dashboard() {
             variant="outline"
             size="sm"
             onClick={() => setAlertsModalOpen(true)}
-            className="gap-xs"
+            className={TOOL_BUTTON_CLASS}
           >
             <AlertTriangle className="h-4 w-4" />
             {t('pages.dashboard.financialAlerts.title')}
@@ -755,6 +761,15 @@ export default function Dashboard() {
             </Badge>
           </Button>
         )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setStatementModalOpen(true)}
+          className={TOOL_BUTTON_CLASS}
+        >
+          <FileDown className="h-4 w-4" />
+          {t('pages.dashboard.exportStatement')}
+        </Button>
         <InstallmentSimulator
           open={installmentSimOpen}
           onOpenChange={setInstallmentSimOpen}
@@ -812,93 +827,51 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* 5. Faixa de Superávit / Déficit */}
-      {stats && (
-        <div
-          className={cn(
-            'px-md py-sm flex items-center gap-3 rounded-lg text-sm font-medium',
-            stats.total_revenues > stats.total_expenses
-              ? 'bg-success/10 text-success'
-              : 'bg-destructive/10 text-destructive'
-          )}
-        >
-          {stats.total_revenues > stats.total_expenses ? (
-            <TrendingUp className="h-4 w-4 shrink-0" />
-          ) : (
-            <TrendingDown className="h-4 w-4 shrink-0" />
-          )}
-          <span>
-            {stats.total_revenues > stats.total_expenses
-              ? t('pages.dashboard.surplusThisMonth', {
-                  amount: formatCurrency(stats.total_revenues - stats.total_expenses),
-                })
-              : t('pages.dashboard.deficitThisMonth', {
-                  amount: formatCurrency(stats.total_expenses - stats.total_revenues),
-                })}
-          </span>
-        </div>
-      )}
-
-      {/* 6. StatCards — saldo total em destaque, demais em 3 cols */}
+      {/* 6. StatCards — saldo total, receitas, despesas e cartão */}
       <motion.div
-        className="space-y-md"
+        className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Saldo total — informação primária em destaque */}
         <motion.div variants={itemVariants}>
           <StatCard
             title={t('pages.dashboard.totalBalance')}
             value={formatCurrency(stats?.total_balance || 0)}
-            icon={<Wallet className="h-5 w-5" />}
+            icon={<Wallet className="h-4 w-4" />}
             accentColor={(stats?.total_balance || 0) >= 0 ? 'green' : 'red'}
-            prominent
-            description={t('pages.dashboard.accountBalanceDesc')}
           />
         </motion.div>
 
-        {/* Separador visual entre primário e secundários */}
-        <div className="flex items-center gap-3">
-          <div className="bg-border h-px flex-1" />
-          <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.dashboard.monthCompositionShort')}
-          </span>
-          <div className="bg-border h-px flex-1" />
-        </div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title={t('pages.dashboard.monthRevenues')}
+            value={formatCurrency(stats?.total_revenues || 0)}
+            icon={<TrendingUp className="h-4 w-4" />}
+            accentColor="green"
+            onClick={() => navigate('/transactions')}
+          />
+        </motion.div>
 
-        {/* Receitas, Despesas e Cartão — informações secundárias */}
-        <div className="gap-md grid grid-cols-1 md:grid-cols-3">
-          <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.monthRevenues')}
-              value={formatCurrency(stats?.total_revenues || 0)}
-              icon={<TrendingUp className="h-4 w-4" />}
-              accentColor="green"
-              onClick={() => navigate('/transactions')}
-            />
-          </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title={t('pages.dashboard.monthExpenses')}
+            value={formatCurrency(stats?.total_expenses || 0)}
+            icon={<TrendingDown className="h-4 w-4" />}
+            accentColor="red"
+            onClick={() => navigate('/transactions')}
+          />
+        </motion.div>
 
-          <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.monthExpenses')}
-              value={formatCurrency(stats?.total_expenses || 0)}
-              icon={<TrendingDown className="h-4 w-4" />}
-              accentColor="red"
-              onClick={() => navigate('/transactions')}
-            />
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.creditLimit')}
-              value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
-              icon={<CreditCard className="h-4 w-4" />}
-              accentColor="blue"
-              onClick={() => navigate('/credit-cards')}
-            />
-          </motion.div>
-        </div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title={t('pages.dashboard.creditLimit')}
+            value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
+            icon={<CreditCard className="h-4 w-4" />}
+            accentColor="blue"
+            onClick={() => navigate('/credit-cards')}
+          />
+        </motion.div>
       </motion.div>
 
       {/* 7. Score de Saúde Financeira */}

@@ -191,7 +191,7 @@ describe('Dashboard page', () => {
   it('renders the dashboard title after data loads', async () => {
     renderDashboard();
     await waitFor(() => {
-      expect(screen.getByText(/resumo financeiro/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
   });
 
@@ -280,7 +280,7 @@ describe('Dashboard page', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/resumo financeiro/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
 
     // Restore defaults

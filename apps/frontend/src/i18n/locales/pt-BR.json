@@ -2417,7 +2417,6 @@
         "errorDesc": "Não foi possível gerar o relatório IR."
       },
       "monthComposition": "Composição do mês",
-      "monthCompositionShort": "Este mês",
       "monthOverMonth": "Comparativo mês a mês",
       "vsPrevMonth": "vs mês anterior:",
       "installmentSimulator": "Simulador de Parcelas",
