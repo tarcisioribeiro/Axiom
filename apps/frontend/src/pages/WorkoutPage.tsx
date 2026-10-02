@@ -1933,21 +1933,22 @@ function QuickLogForm({
           >
             <div className="space-y-sm">
               <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
-              <select
-                value={selectedDayId}
-                onChange={(e) => handleDaySelect(e.target.value)}
-                className="border-border bg-background px-sm py-xs focus:ring-ring w-full rounded-md border text-sm focus:ring-2 focus:outline-none"
-              >
-                <option value="none">
-                  {t('pages.workoutSessions.quickLogNoPlan')}
-                </option>
-                {relevantDays.map((day) => (
-                  <option key={day.id} value={day.id.toString()}>
-                    {day.name}
-                    {day.muscle_groups ? ` — ${day.muscle_groups}` : ''}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedDayId} onValueChange={handleDaySelect}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t('pages.workoutSessions.quickLogNoPlan')}
+                  </SelectItem>
+                  {relevantDays.map((day) => (
+                    <SelectItem key={day.id} value={day.id.toString()}>
+                      {day.name}
+                      {day.muscle_groups ? ` — ${day.muscle_groups}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </FormSection>
           <div className="dialog-footer gap-sm pt-md flex justify-end border-t">

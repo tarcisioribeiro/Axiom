@@ -1,12 +1,19 @@
 /* eslint-disable react-hooks/incompatible-library */
 import { FileText, Flame, Loader2, Salad, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -44,6 +51,7 @@ export function FoodForm({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -161,16 +169,24 @@ export function FoodForm({
               <label className="text-foreground text-xs font-medium">
                 {t('pages.nutritionFoods.servingUnit', 'Unidade')}
               </label>
-              <select
-                {...register('serving_unit')}
-                className="border-input bg-background px-sm focus:ring-ring w-full rounded-md border py-2 text-sm focus:ring-2 focus:outline-none"
-              >
-                {SERVING_UNIT_VALUES.map((val) => (
-                  <option key={val} value={val}>
-                    {t(`units.${val}`)}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="serving_unit"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value ?? 'g'} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVING_UNIT_VALUES.map((val) => (
+                        <SelectItem key={val} value={val}>
+                          {t(`units.${val}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
           <div className="space-y-xs">

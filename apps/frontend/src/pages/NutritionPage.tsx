@@ -12,11 +12,9 @@ import {
   Clock,
   Edit,
   Flame,
-  Loader2,
   Moon,
   Plus,
   Salad,
-  Sparkles,
   Sun,
   Sunrise,
   Trash2,
@@ -51,14 +49,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate } from '@/lib/utils';
-import { apiClient } from '@/services/api-client';
 import { membersService } from '@/services/members-service';
 import {
   foodService,
@@ -88,15 +83,7 @@ type DialogMode =
   | { type: 'edit-option'; option: MenuOption }
   | { type: 'new-log'; prefillMealType?: number }
   | { type: 'edit-log'; log: MealLog }
-  | { type: 'ai-generate-menu' }
   | null;
-
-interface AIMenuFormValues {
-  calories: number;
-  preferences: string;
-  restrictions: string;
-  meals_per_day: number;
-}
 
 interface MealPeriodTheme {
   cardBg: string;
@@ -184,12 +171,6 @@ export default function NutritionPage() {
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [aiMenuForm, setAiMenuForm] = useState<AIMenuFormValues>({
-    calories: 2000,
-    preferences: '',
-    restrictions: '',
-    meals_per_day: 3,
-  });
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
   const [foodSearch, setFoodSearch] = useState('');
   const today = formatLocalDate(new Date());
@@ -261,35 +242,6 @@ export default function NutritionPage() {
     // tarefas vinculadas à refeição são concluídas/reabertas pelo backend
     return queryClient.invalidateQueries({ queryKey: ['task-instances'] });
   };
-
-  const aiGenerateMenuMutation = useMutation({
-    mutationFn: (data: AIMenuFormValues) =>
-      apiClient.post<{ meal_types_created: number; options_created: number }>(
-        '/api/v1/personal-planning/ai-menu-plan/',
-        data
-      ),
-    onSuccess: (result) => {
-      void invalidateMealTypes();
-      toast({
-        title: 'Cardápio gerado com sucesso!',
-        description: `${result.meal_types_created} refeições com ${result.options_created} opções criadas.`,
-      });
-      setAiMenuForm({
-        calories: 2000,
-        preferences: '',
-        restrictions: '',
-        meals_per_day: 3,
-      });
-      setDialog(null);
-    },
-    onError: () => {
-      toast({
-        title: 'Erro ao gerar cardápio',
-        description: 'Não foi possível gerar o cardápio. Tente novamente.',
-        variant: 'destructive',
-      });
-    },
-  });
 
   const createFoodMutation = useMutation({
     mutationFn: (data: FoodFormData) => foodService.create(data),
@@ -572,8 +524,6 @@ export default function NutritionPage() {
         return t('pages.nutritionLog.newLogTitle');
       case 'edit-log':
         return t('pages.nutritionLog.editLogTitle');
-      case 'ai-generate-menu':
-        return 'Gerar Cardápio com IA';
     }
   };
 
@@ -596,8 +546,6 @@ export default function NutritionPage() {
         return t('pages.nutritionLog.newLogDesc');
       case 'edit-log':
         return t('pages.nutritionLog.editLogDesc');
-      case 'ai-generate-menu':
-        return 'Informe suas preferências e a IA criará tipos de refeição com opções variadas.';
     }
   };
 
@@ -851,23 +799,16 @@ export default function NutritionPage() {
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types" className="mt-0 flex-1">
+            <div className="mb-md flex justify-end">
+              <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionMealTypes.newMealTypeBtn')}
+              </Button>
+            </div>
+
             <div className="gap-lg grid items-start lg:grid-cols-2">
               <HydrationGoalCard />
               <div>
-                <div className="mb-md gap-sm flex justify-end">
-                  <Button
-                    variant="outline"
-                    onClick={() => setDialog({ type: 'ai-generate-menu' })}
-                  >
-                    <Sparkles className="mr-sm text-primary h-4 w-4" />
-                    Gerar com IA
-                  </Button>
-                  <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                    <Plus className="h-4 w-4" />
-                    {t('pages.nutritionMealTypes.newMealTypeBtn')}
-                  </Button>
-                </div>
-
                 {mealTypesLoading ? (
                   <LoadingState />
                 ) : mealTypes.length === 0 ? (
@@ -1072,100 +1013,6 @@ export default function NutritionPage() {
                 onCancel={() => setDialog(null)}
                 isLoading={createLogMutation.isPending || updateLogMutation.isPending}
               />
-            )}
-
-            {dialog?.type === 'ai-generate-menu' && (
-              <div className="space-y-md">
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-calories">Objetivo calórico diário (kcal)</Label>
-                  <Input
-                    id="ai-calories"
-                    type="number"
-                    min={800}
-                    max={5000}
-                    step={50}
-                    value={aiMenuForm.calories}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, calories: Number(e.target.value) }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-preferences">Preferências alimentares</Label>
-                  <Input
-                    id="ai-preferences"
-                    placeholder="Ex: vegetariano, low carb, mediterrâneo…"
-                    value={aiMenuForm.preferences}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, preferences: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="ai-restrictions">Restrições alimentares</Label>
-                  <Input
-                    id="ai-restrictions"
-                    placeholder="Ex: sem glúten, sem lactose, alergia a amendoim…"
-                    value={aiMenuForm.restrictions}
-                    onChange={(e) =>
-                      setAiMenuForm((f) => ({ ...f, restrictions: e.target.value }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-sm">
-                  <Label>Refeições por dia: {aiMenuForm.meals_per_day}</Label>
-                  <div className="gap-xs flex">
-                    {[2, 3, 4, 5, 6].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() =>
-                          setAiMenuForm((f) => ({ ...f, meals_per_day: n }))
-                        }
-                        className={cn(
-                          'flex h-8 w-8 items-center justify-center rounded-md border text-xs font-bold transition-colors',
-                          aiMenuForm.meals_per_day === n
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-input bg-background text-muted-foreground hover:bg-muted'
-                        )}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="gap-sm pt-sm flex">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setDialog(null)}
-                    disabled={aiGenerateMenuMutation.isPending}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    disabled={aiGenerateMenuMutation.isPending}
-                    onClick={() => aiGenerateMenuMutation.mutate(aiMenuForm)}
-                  >
-                    {aiGenerateMenuMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-                        Gerando…
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-sm h-4 w-4" />
-                        Gerar Cardápio
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
             )}
           </DialogContent>
         </Dialog>

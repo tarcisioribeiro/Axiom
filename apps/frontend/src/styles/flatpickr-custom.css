@@ -180,6 +180,12 @@
   color: hsl(var(--foreground));
 }
 
+/* Mês fora de minDate/maxDate: o flatpickr só marca a seta, não a esconde */
+.flatpickr-months .flatpickr-prev-month.flatpickr-disabled,
+.flatpickr-months .flatpickr-next-month.flatpickr-disabled {
+  visibility: hidden;
+}
+
 .flatpickr-months .flatpickr-prev-month svg,
 .flatpickr-months .flatpickr-next-month svg {
   width: 14px;

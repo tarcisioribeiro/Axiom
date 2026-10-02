@@ -15,6 +15,13 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { BOOK_LITERARY_TYPE_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
@@ -285,34 +292,39 @@ export function ReadingGoalModal({
                 <div className="space-y-sm">
                   {ltgDrafts.map((draft, index) => (
                     <div key={index} className="gap-sm flex items-center">
-                      <select
-                        className="border-input bg-background py-xs flex h-9 flex-1 rounded-md border px-3 text-sm shadow-sm"
+                      <Select
                         value={draft.literary_type}
-                        onChange={(e) =>
-                          updateLtg(index, 'literary_type', e.target.value)
-                        }
+                        onValueChange={(v) => updateLtg(index, 'literary_type', v)}
                       >
-                        {LITERARY_TYPE_GOAL_VALUES.filter(
-                          (v) =>
-                            v === draft.literary_type ||
-                            !usedTypes.has(v) ||
-                            ltgDrafts.findIndex(
-                              (d, i) => i !== index && d.literary_type === v
-                            ) === -1
-                        ).map((v) => (
-                          <option key={v} value={v}>
-                            {(() => {
-                              const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
-                              return LitIcon ? (
-                                <LitIcon className="mr-1 inline h-4 w-4" />
-                              ) : null;
-                            })()}
-                            {t(
-                              `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
-                            )}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LITERARY_TYPE_GOAL_VALUES.filter(
+                            (v) =>
+                              v === draft.literary_type ||
+                              !usedTypes.has(v) ||
+                              ltgDrafts.findIndex(
+                                (d, i) => i !== index && d.literary_type === v
+                              ) === -1
+                          ).map((v) => {
+                            const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
+                            return (
+                              <SelectItem
+                                key={v}
+                                value={v}
+                                icon={
+                                  LitIcon ? <LitIcon className="h-4 w-4" /> : undefined
+                                }
+                              >
+                                {t(
+                                  `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
+                                )}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                       <Input
                         type="number"
                         min={1}

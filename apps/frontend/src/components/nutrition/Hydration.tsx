@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Droplets, Link2, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Droplets, Link2, Loader2, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -239,8 +239,8 @@ export function HydrationGoalCard() {
   if (isLoading) return null;
 
   return (
-    <div className="space-y-md">
-      <div className="border-border bg-card p-lg space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-lg space-y-md rounded-lg border shadow-sm">
+      <div className="space-y-md">
         <div className="gap-sm flex items-center">
           <Droplets className="h-6 w-6 text-sky-500" />
           <div>
@@ -278,15 +278,17 @@ export function HydrationGoalCard() {
             />
           </div>
           <Button type="submit" disabled={!(ml > 0) || saveMutation.isPending}>
-            {saveMutation.isPending && (
+            {saveMutation.isPending ? (
               <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-xs h-4 w-4" />
             )}
             {t('pages.nutritionHydration.saveGoal')}
           </Button>
         </form>
       </div>
 
-      <div className="border-border bg-card p-lg space-y-sm rounded-lg border shadow-sm">
+      <div className="border-border pt-md space-y-sm border-t">
         <p className="gap-xs flex items-center font-semibold">
           <Sparkles className="text-primary h-4 w-4" />
           {t('pages.nutritionHydration.suggestionTitle')}

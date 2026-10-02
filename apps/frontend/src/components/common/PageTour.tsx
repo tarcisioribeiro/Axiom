@@ -80,7 +80,7 @@ export function PageTour() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && close()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="gap-sm flex items-center">
             <Compass className="text-primary h-5 w-5" />
@@ -109,7 +109,8 @@ export function PageTour() {
           ))}
         </div>
 
-        <div className="gap-md py-md flex flex-col items-center text-center">
+        {/* Altura fixa: o modal não muda de tamanho entre passos. */}
+        <div className="gap-md py-md flex h-60 flex-col items-center overflow-y-auto text-center">
           <Icon className="text-primary h-16 w-16" />
           <div className="space-y-xs">
             <h3 className="text-lg font-semibold">{steps[step].title}</h3>
