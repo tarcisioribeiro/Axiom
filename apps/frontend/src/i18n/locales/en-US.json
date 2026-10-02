@@ -4777,7 +4777,6 @@
         "error": "Error receiving agent response"
       },
       "stop": "Stop generation",
-      "sessions": "Session history",
       "suggestedQuestions": {
         "intellect": [
           "What did I learn from my last book?",

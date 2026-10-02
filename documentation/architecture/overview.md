@@ -296,7 +296,7 @@ Configurado via `LLM_PROVIDER` — padrão: **Ollama local**.
 - Completamente local e gratuito — requer ≥ 8GB RAM
 
 **Groq** (cloud alternativo):
-- Chat: `llama-3.1-8b-instant`
+- Chat: `openai/gpt-oss-120b`
 - Gratuito com limites; embeddings sempre via Ollama
 
 **Anthropic** (cloud premium):

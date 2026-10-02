@@ -166,6 +166,31 @@ class TestLLMClientAvailability(TestCase):
             any(w.startswith("Fallback 'ollama'") for w in warnings)
         )
 
+    def test_retired_model_falls_back_to_default(
+        self, _cfg: MagicMock
+    ) -> None:
+        from django.core.cache import cache
+
+        from agents.core.llm_client import GROQ_DEFAULT_MODEL, LLMClient
+
+        cache.clear()
+        fake = _fake_get([GROQ_DEFAULT_MODEL], [])
+        with (
+            patch("requests.get", side_effect=fake),
+            patch("requests.post") as mock_post,
+        ):
+            self.assertTrue(LLMClient.is_available())
+            mock_post.return_value.json.return_value = {
+                "choices": [{"message": {"content": "ok"}}]
+            }
+            LLMClient._groq_chat([{"role": "user", "content": "oi"}])
+            warnings = LLMClient.diagnostics()
+        cache.clear()
+        self.assertEqual(
+            mock_post.call_args.kwargs["json"]["model"], GROQ_DEFAULT_MODEL
+        )
+        self.assertTrue(any("retired-model" in w for w in warnings))
+
     def test_up_when_fallback_is_healthy(self, _cfg: MagicMock) -> None:
         from agents.core.llm_client import LLMClient
 

@@ -4843,7 +4843,6 @@
         "error": "Erro ao receber resposta do agente"
       },
       "stop": "Parar geração",
-      "sessions": "Histórico de sessões",
       "suggestedQuestions": {
         "intellect": [
           "O que aprendi no último livro?",

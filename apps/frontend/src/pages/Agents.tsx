@@ -3,13 +3,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
+  ArrowLeftRight,
   BookOpen,
   BotMessageSquare,
   Brain,
   CheckCircle2,
   DollarSign,
   ExternalLink,
-  History,
   Loader2,
   Send,
   Shield,
@@ -481,8 +481,6 @@ export default function Agents() {
 
   const sessionId = selectedAgent ? sessionsByAgent[selectedAgent] : undefined;
 
-  const [showHistory, setShowHistory] = useState(false);
-
   const {
     isStreaming,
     accumulatedText,
@@ -636,174 +634,171 @@ export default function Agents() {
 
   return (
     <PageContainer>
-      <div className="border-border bg-card flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-lg border">
-        {/* Header */}
-        <div className="border-border px-md flex flex-shrink-0 items-center justify-between gap-3 border-b py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
-              <BotMessageSquare className="text-primary h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-foreground text-sm leading-tight font-semibold">
-                {activeAgentName ?? t('pages.agents.title')}
-              </h1>
-              {status && (
-                <div className="mt-0.5">
-                  <StatusBadge
-                    provider={status.provider}
-                    available={status.available}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="gap-sm flex flex-shrink-0 items-center">
-            {conversationStarted && (
-              <button
-                onClick={handleChangeAgent}
-                title={t('pages.agents.changeAgent')}
-                className="border-border bg-background px-sm py-xs text-muted-foreground hover:bg-muted rounded-lg border text-xs"
-              >
-                {t('pages.agents.changeAgent')}
-              </button>
-            )}
-            <PlainButton
-              onClick={() => setShowHistory((v) => !v)}
-              title={t('pages.agents.sessions')}
-              className={cn(
-                'border-border bg-background p-sm text-muted-foreground hover:bg-muted rounded-lg border',
-                showHistory && 'bg-muted text-foreground'
-              )}
-            >
-              <History className="h-3.5 w-3.5" />
-            </PlainButton>
-            {messages.length > 0 && (
-              <PlainButton
-                onClick={() => void handleClearHistory()}
-                title={t('pages.agents.clearHistory')}
-                className="border-border bg-background p-sm text-muted-foreground rounded-lg border hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </PlainButton>
-            )}
-          </div>
-        </div>
-
-        {/* LLM unavailable banner — usa --warning em vez de amber hardcoded */}
-        {status && !status.available && (
-          <div className="gap-sm px-md py-sm flex items-center border-b border-[hsl(var(--warning)/0.2)] bg-[hsl(var(--warning)/0.1)] text-xs text-[hsl(var(--warning))]">
-            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
-            {t('pages.agents.unavailable')}
-          </div>
-        )}
-
-        {/* Content area */}
-        <div className="px-md py-md flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            {showSelector ? (
-              <AgentSelector
-                key="selector"
-                selected={selectedAgent}
-                onSelect={handleSelectAgent}
-              />
-            ) : historyLoading ? (
-              <div key="loading" className="flex h-full items-center justify-center">
-                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+      <div className="flex h-[calc(100vh-10rem)] items-center">
+        <div className="border-border bg-card flex h-[calc(100vh-14rem)] w-full flex-col overflow-hidden rounded-lg border">
+          {/* Header */}
+          <div className="border-border px-md flex flex-shrink-0 flex-wrap items-center gap-3 border-b py-3 md:flex-nowrap">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                <BotMessageSquare className="text-primary h-4 w-4" />
               </div>
-            ) : (
-              <div key="messages" className="space-y-md">
-                <AnimatePresence initial={false}>
-                  {messages.map((msg) => (
-                    <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                      agentLabel={getAgentLabel(msg.agent_name)}
+              <div className="min-w-0">
+                <h1 className="text-foreground text-sm leading-tight font-semibold">
+                  {activeAgentName ?? t('pages.agents.title')}
+                </h1>
+                {status && (
+                  <div className="mt-0.5">
+                    <StatusBadge
+                      provider={status.provider}
+                      available={status.available}
                     />
-                  ))}
-                  {showStreamingBubble && (
-                    <StreamingBubble
-                      key="streaming"
-                      text={accumulatedText}
-                      isStreaming={isStreaming}
-                      agentName={currentAgent}
-                      sources={sources}
-                      indexedSources={indexedSources}
-                      getAgentLabel={getAgentLabel}
-                    />
-                  )}
-                  {isStreaming && !accumulatedText && <ThinkingBubble key="thinking" />}
-                </AnimatePresence>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {isLlmUnavailable && (
+              <div
+                role="alert"
+                className="gap-sm px-md py-xs order-last flex w-full items-center justify-center rounded-full border border-[hsl(var(--warning)/0.3)] bg-[hsl(var(--warning)/0.1)] text-xs font-medium text-[hsl(var(--warning))] md:order-none md:w-auto"
+              >
+                <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                {t('pages.agents.unavailable')}
               </div>
             )}
-          </AnimatePresence>
-          <div ref={messagesEndRef} />
-        </div>
 
-        {/* Input area — visível após seleção de agente ou durante/após streaming */}
-        {(conversationStarted ||
-          selectedAgent ||
-          showStreamingBubble ||
-          messages.length > 0) && (
-          <div className="border-border bg-card px-md flex-shrink-0 border-t py-3">
-            {selectedAgent &&
-              messages.length === 0 &&
-              !showStreamingBubble &&
-              !query && (
-                <div className="mb-sm gap-xs flex flex-wrap">
-                  {(
-                    (t(`pages.agents.suggestedQuestions.${selectedAgent}`, {
-                      returnObjects: true,
-                    }) as string[]) ?? []
-                  ).map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => setQuery(q)}
-                      className="border-border bg-muted px-sm py-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full border text-xs transition-colors"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              )}
-            <div className="gap-sm border-border bg-background py-sm focus-within:ring-primary/40 flex items-end rounded-lg border px-3 focus-within:ring-2">
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={query}
-                onChange={handleQueryChange}
-                onKeyDown={handleKeyDown}
-                placeholder={inputPlaceholder}
-                disabled={inputDisabled}
-                aria-label={inputPlaceholder}
-                className="text-foreground placeholder:text-muted-foreground max-h-40 flex-1 resize-none bg-transparent text-sm focus:outline-none disabled:opacity-50"
-              />
-              {isStreaming ? (
-                <PlainButton
-                  onClick={cancelStream}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity"
-                  aria-label={t('pages.agents.stop')}
-                  title={t('pages.agents.stop')}
+            <div className="gap-sm flex flex-1 items-center justify-end">
+              {conversationStarted && (
+                <button
+                  onClick={handleChangeAgent}
+                  title={t('pages.agents.changeAgent')}
+                  className="border-border bg-background gap-xs px-sm py-xs text-muted-foreground hover:bg-muted inline-flex items-center rounded-lg border text-xs"
                 >
-                  <Square className="h-4 w-4 fill-current" />
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
+                  {t('pages.agents.changeAgent')}
+                </button>
+              )}
+              {messages.length > 0 && (
+                <PlainButton
+                  onClick={() => void handleClearHistory()}
+                  title={t('pages.agents.clearHistory')}
+                  className="border-border bg-background p-sm text-muted-foreground rounded-lg border hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
                 </PlainButton>
+              )}
+            </div>
+          </div>
+
+          {/* Content area */}
+          <div className="px-md py-md flex-1 overflow-y-auto">
+            <AnimatePresence mode="wait">
+              {showSelector ? (
+                <AgentSelector
+                  key="selector"
+                  selected={selectedAgent}
+                  onSelect={handleSelectAgent}
+                />
+              ) : historyLoading ? (
+                <div key="loading" className="flex h-full items-center justify-center">
+                  <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                </div>
               ) : (
-                <PlainButton
-                  onClick={() => void handleSend()}
-                  disabled={!query.trim() || inputDisabled}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
-                  aria-label={t('pages.agents.send')}
-                >
-                  <Send className="h-4 w-4" />
-                </PlainButton>
+                <div key="messages" className="space-y-md">
+                  <AnimatePresence initial={false}>
+                    {messages.map((msg) => (
+                      <MessageBubble
+                        key={msg.id}
+                        message={msg}
+                        agentLabel={getAgentLabel(msg.agent_name)}
+                      />
+                    ))}
+                    {showStreamingBubble && (
+                      <StreamingBubble
+                        key="streaming"
+                        text={accumulatedText}
+                        isStreaming={isStreaming}
+                        agentName={currentAgent}
+                        sources={sources}
+                        indexedSources={indexedSources}
+                        getAgentLabel={getAgentLabel}
+                      />
+                    )}
+                    {isStreaming && !accumulatedText && (
+                      <ThinkingBubble key="thinking" />
+                    )}
+                  </AnimatePresence>
+                </div>
               )}
-            </div>
-            <p className="mt-sm text-muted-foreground/60 text-2xs text-center">
-              {t('pages.agents.keyboardHint')}
-            </p>
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
           </div>
-        )}
+
+          {/* Input area — visível após seleção de agente ou durante/após streaming */}
+          {(conversationStarted ||
+            selectedAgent ||
+            showStreamingBubble ||
+            messages.length > 0) && (
+            <div className="border-border bg-card px-md flex-shrink-0 border-t py-3">
+              {selectedAgent &&
+                messages.length === 0 &&
+                !showStreamingBubble &&
+                !query && (
+                  <div className="mb-sm gap-xs flex flex-wrap">
+                    {(
+                      (t(`pages.agents.suggestedQuestions.${selectedAgent}`, {
+                        returnObjects: true,
+                      }) as string[]) ?? []
+                    ).map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setQuery(q)}
+                        className="border-border bg-muted px-sm py-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-full border text-xs transition-colors"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              <div className="gap-sm border-border bg-background py-sm focus-within:ring-primary/40 flex items-end rounded-lg border px-3 focus-within:ring-2">
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={query}
+                  onChange={handleQueryChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={inputPlaceholder}
+                  disabled={inputDisabled}
+                  aria-label={inputPlaceholder}
+                  className="text-foreground placeholder:text-muted-foreground max-h-40 flex-1 resize-none bg-transparent text-sm focus:outline-none disabled:opacity-50"
+                />
+                {isStreaming ? (
+                  <PlainButton
+                    onClick={cancelStream}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity"
+                    aria-label={t('pages.agents.stop')}
+                    title={t('pages.agents.stop')}
+                  >
+                    <Square className="h-4 w-4 fill-current" />
+                  </PlainButton>
+                ) : (
+                  <PlainButton
+                    onClick={() => void handleSend()}
+                    disabled={!query.trim() || inputDisabled}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-opacity disabled:opacity-40"
+                    aria-label={t('pages.agents.send')}
+                  >
+                    <Send className="h-4 w-4" />
+                  </PlainButton>
+                )}
+              </div>
+              <p className="mt-sm text-muted-foreground/60 text-2xs text-center">
+                {t('pages.agents.keyboardHint')}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </PageContainer>
   );

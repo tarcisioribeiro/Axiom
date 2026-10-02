@@ -47,6 +47,8 @@ data:
   OLLAMA_MODEL: "mistral:7b-instruct"
   OLLAMA_EMBED_MODEL: "nomic-embed-text"
   LLM_PROVIDER: "ollama"
+  # O provider principal é ignorado na lista, então serve para ollama ou groq.
+  LLM_FALLBACK_PROVIDERS: "groq,ollama"
 
   # Sentry environment tag
   SENTRY_ENVIRONMENT: "production"
