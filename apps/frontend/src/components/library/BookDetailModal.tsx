@@ -1010,24 +1010,22 @@ export function BookDetailModal({
                     {highlights.length > 0 && (
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => void handleExport()}
                         disabled={isExporting}
                       >
-                        <Download className="mr-sm h-3.5 w-3.5" />
+                        <Download className="h-4 w-4" />
                         {isExporting
                           ? t('pages.books.detail.exportingBtn')
                           : t('pages.books.detail.exportBtn')}
                       </Button>
                     )}
                     <Button
-                      size="sm"
                       onClick={() => {
                         setEditingHighlight(undefined);
                         setShowAddForm(true);
                       }}
                     >
-                      <Plus className="mr-sm h-3.5 w-3.5" />
+                      <Plus className="h-4 w-4" />
                       {t('pages.books.detail.addBtn')}
                     </Button>
                   </div>
@@ -1130,13 +1128,12 @@ export function BookDetailModal({
                     {t('pages.books.detail.readingsCount', { count: readings.length })}
                   </span>
                   <Button
-                    size="sm"
                     onClick={() => {
                       setEditingReading(undefined);
                       setIsReadingFormOpen(true);
                     }}
                   >
-                    <Plus className="mr-sm h-3.5 w-3.5" />
+                    <Plus className="h-4 w-4" />
                     {t('pages.books.detail.addBtn')}
                   </Button>
                 </div>
@@ -1228,22 +1225,20 @@ export function BookDetailModal({
                   <div className="gap-xs flex shrink-0 items-center">
                     {book.read_status === 'read' && (
                       <Button
-                        size="sm"
                         variant="outline"
                         onClick={() => void handleGenerateAiSummary()}
                         disabled={isGeneratingAiSummary}
                         title={t('pages.books.detail.aiSummaryBtn')}
                       >
                         {isGeneratingAiSummary ? (
-                          <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Sparkles className="mr-xs h-3.5 w-3.5" />
+                          <Sparkles className="h-4 w-4" />
                         )}
                         {t('pages.books.detail.aiSummaryBtn')}
                       </Button>
                     )}
                     <Button
-                      size="sm"
                       onClick={openSummaryCreate}
                       disabled={book.read_status !== 'read'}
                       title={
@@ -1252,7 +1247,7 @@ export function BookDetailModal({
                           : undefined
                       }
                     >
-                      <Plus className="mr-sm h-3.5 w-3.5" />
+                      <Plus className="h-4 w-4" />
                       {t('pages.books.detail.addBtn')}
                     </Button>
                   </div>

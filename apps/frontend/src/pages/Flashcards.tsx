@@ -206,7 +206,7 @@ export default function Flashcards() {
             mode === 'list' ? (
               <div className="gap-sm flex">
                 <Button variant="outline" onClick={() => setCreateOpen(true)}>
-                  <Plus className="mr-sm h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                   {t('pages.flashcards.newCard')}
                 </Button>
                 {dueCount > 0 && (

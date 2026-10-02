@@ -17,6 +17,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Plus,
   Star,
   RefreshCw,
   X,
@@ -427,13 +428,13 @@ function SelfEsteemTab() {
             </p>
           </div>
           <Button
-            size="sm"
             onClick={() => {
               setShowForm(true);
               setSubmitted(null);
               setAiParsed(null);
             }}
           >
+            <Plus className="h-4 w-4" />
             Nova avaliação
           </Button>
         </div>

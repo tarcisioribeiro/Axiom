@@ -767,7 +767,7 @@ export default function BodyMetrics() {
             description={t('pages.bodyMetrics.emptyDesc')}
             action={{
               label: t('pages.bodyMetrics.emptyAction'),
-              icon: <Plus className="mr-xs h-4 w-4" />,
+              icon: <Plus className="h-4 w-4" />,
               onClick: openCreate,
             }}
           />

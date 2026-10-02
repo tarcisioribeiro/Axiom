@@ -372,7 +372,7 @@ export default function CategorizationRules({
     <Wrapper>
       <PageHeader title={t('pages.categorizationRules.title')} icon={<Tag />}>
         <Button onClick={handleCreate}>
-          <Plus className="mr-sm h-4 w-4" />
+          <Plus className="h-4 w-4" />
           {t('pages.categorizationRules.newBtn')}
         </Button>
       </PageHeader>

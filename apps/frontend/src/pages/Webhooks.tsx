@@ -196,7 +196,7 @@ export default function Webhooks() {
         title={t('webhooks.title')}
         actions={
           <Button onClick={openCreate}>
-            <Plus className="mr-sm h-md w-md" />
+            <Plus className="h-4 w-4" />
             {t('webhooks.newBtn')}
           </Button>
         }
@@ -211,7 +211,7 @@ export default function Webhooks() {
           description={t('webhooks.emptyDesc')}
           action={
             <Button onClick={openCreate}>
-              <Plus className="mr-sm h-md w-md" />
+              <Plus className="h-4 w-4" />
               {t('webhooks.createBtn')}
             </Button>
           }

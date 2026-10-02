@@ -1119,8 +1119,7 @@ export function CourseDetailModal({
                   })}
                 </span>
                 <Button
-                  size="sm"
-                  className="gap-xs bg-category-intellect hover:bg-category-intellect/90 text-white"
+                  className="bg-category-intellect hover:bg-category-intellect/90 text-white"
                   onClick={() => setShowAddSession(true)}
                   disabled={displayCourse.total_lessons === 0}
                   title={
@@ -1129,7 +1128,7 @@ export function CourseDetailModal({
                       : undefined
                   }
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4" />
                   {t('pages.courses.sessions.newBtn')}
                 </Button>
               </div>

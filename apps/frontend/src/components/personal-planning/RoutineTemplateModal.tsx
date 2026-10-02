@@ -599,8 +599,8 @@ export function RoutineTemplateModal({
             </TabsContent>
             <TabsContent value="user" className="mt-md">
               <div className="mb-md flex justify-end">
-                <Button size="sm" onClick={openCreateDialog}>
-                  <Plus className="mr-xs h-4 w-4" />
+                <Button onClick={openCreateDialog}>
+                  <Plus className="h-4 w-4" />
                   {t('pages.routineTasks.templates.createBtn')}
                 </Button>
               </div>

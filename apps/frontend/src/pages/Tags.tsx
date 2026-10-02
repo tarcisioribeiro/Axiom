@@ -169,7 +169,7 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
             !search
               ? {
                   label: t('pages.tags.newBtn'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  icon: <Plus className="h-4 w-4" />,
                   onClick: handleCreate,
                 }
               : undefined

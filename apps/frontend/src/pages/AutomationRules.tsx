@@ -821,21 +821,19 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
           <div className="gap-sm flex">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => applyMutation.mutate()}
               disabled={applyMutation.isPending}
             >
-              <Zap className="mr-xs h-3.5 w-3.5" />
+              <Zap className="h-4 w-4" />
               {t('pages.automationRules.applyAll')}
             </Button>
             <Button
-              size="sm"
               onClick={() => {
                 setEditingRule(undefined);
                 setFormOpen(true);
               }}
             >
-              <Plus className="mr-xs h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
               {t('pages.automationRules.newRule')}
             </Button>
           </div>
@@ -850,6 +848,7 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
           description={t('pages.automationRules.emptyDesc')}
           action={{
             label: t('pages.automationRules.newRule'),
+            icon: <Plus className="h-4 w-4" />,
             onClick: () => {
               setEditingRule(undefined);
               setFormOpen(true);

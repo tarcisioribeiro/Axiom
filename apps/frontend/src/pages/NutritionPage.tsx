@@ -863,7 +863,7 @@ export default function NutritionPage() {
                     Gerar com IA
                   </Button>
                   <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                    <Plus className="mr-sm h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                     {t('pages.nutritionMealTypes.newMealTypeBtn')}
                   </Button>
                 </div>
@@ -937,7 +937,7 @@ export default function NutritionPage() {
                 />
               </div>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
-                <Plus className="mr-sm h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 {t('pages.nutritionFoods.newFoodBtn')}
               </Button>
             </div>

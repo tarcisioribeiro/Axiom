@@ -87,7 +87,7 @@ export default function VaultSimulator() {
         <div className="flex flex-wrap gap-3">
           {scenarios.length < 3 && (
             <Button variant="outline" size="sm" onClick={addScenario}>
-              <Plus className="mr-sm h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {t('pages.vaultSimulator.addScenario')}
             </Button>
           )}

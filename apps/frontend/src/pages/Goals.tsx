@@ -663,7 +663,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
           message={t('pages.goals.emptyStateDesc')}
           action={{
             label: t('pages.goals.emptyStateAction'),
-            icon: <Plus className="mr-xs h-4 w-4" />,
+            icon: <Plus className="h-4 w-4" />,
             onClick: handleCreate,
           }}
         />

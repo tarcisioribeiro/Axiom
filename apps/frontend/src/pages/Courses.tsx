@@ -489,7 +489,7 @@ export default function Courses() {
               !search
                 ? {
                     label: t('pages.courses.newBtn'),
-                    icon: <Plus className="mr-xs h-4 w-4" />,
+                    icon: <Plus className="h-4 w-4" />,
                     onClick: openNew,
                   }
                 : undefined

@@ -165,7 +165,7 @@ export default function Vaults() {
             {t('pages.vaults.recurringContributions.generateBtn')}
           </Button>
           <Button onClick={handleCreate}>
-            <Plus className="mr-sm h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {t('pages.vaults.newBtn')}
           </Button>
         </div>

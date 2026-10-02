@@ -620,14 +620,14 @@ export default function Books() {
               </Button>
             </div>
             <Button onClick={handleCreate}>
-              <Plus className="mr-sm h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {t('pages.books.newBtn')}
             </Button>
           </div>
         )}
         {activeTab === 'highlights' && (
           <Button onClick={() => setIsHighlightCreateOpen(true)}>
-            <Plus className="mr-sm h-4 w-4" />
+            <Plus className="h-4 w-4" />
             {t('pages.highlights.newBtn')}
           </Button>
         )}

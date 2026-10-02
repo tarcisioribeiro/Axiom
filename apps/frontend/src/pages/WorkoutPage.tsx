@@ -982,7 +982,7 @@ export default function WorkoutPage() {
                 {t('pages.workoutSessions.quickLogBtn')}
               </Button>
               <Button onClick={() => setDialog({ type: 'new-session' })}>
-                <Plus className="mr-sm h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 {t('pages.workoutSessions.newSessionBtn')}
               </Button>
             </div>
@@ -996,7 +996,7 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
                 action={{
                   label: t('pages.workoutSessions.emptyAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  icon: <Plus className="h-4 w-4" />,
                   onClick: () => setDialog({ type: 'new-session' }),
                 }}
               />
@@ -1062,7 +1062,7 @@ export default function WorkoutPage() {
                 Gerar com IA
               </Button>
               <Button onClick={() => setDialog({ type: 'new-plan' })}>
-                <Plus className="mr-sm h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 {t('pages.workoutPlans.newPlanBtn')}
               </Button>
             </div>
@@ -1076,7 +1076,7 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
                 action={{
                   label: t('pages.workoutPlans.emptyPlansAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  icon: <Plus className="h-4 w-4" />,
                   onClick: () => setDialog({ type: 'new-plan' }),
                 }}
               />
@@ -1343,7 +1343,7 @@ export default function WorkoutPage() {
           <TabsContent value="exercises" className="mt-0 flex-1">
             <div className="mb-md flex justify-end">
               <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
-                <Plus className="mr-sm h-4 w-4" />
+                <Plus className="h-4 w-4" />
                 {t('pages.exercises.newBtn')}
               </Button>
             </div>
@@ -1355,7 +1355,7 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
                 action={{
                   label: t('pages.exercises.emptyAction'),
-                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  icon: <Plus className="h-4 w-4" />,
                   onClick: () => setDialog({ type: 'new-catalog-exercise' }),
                 }}
               />
@@ -2967,7 +2967,7 @@ function TodayPlanTab({
               icon={<Dumbbell className="h-8 w-8" />}
               action={{
                 label: t('pages.workoutSessions.newSessionBtn'),
-                icon: <Plus className="mr-xs h-4 w-4" />,
+                icon: <Plus className="h-4 w-4" />,
                 onClick: onStartSession,
               }}
             />
