@@ -744,7 +744,6 @@ export default function BodyMetrics() {
       <PageContainer>
         <PageHeader
           title={t('pages.bodyMetrics.title')}
-          description={t('pages.bodyMetrics.subtitle')}
           actions={
             <div className="gap-sm flex">
               {metrics.length > 0 && (

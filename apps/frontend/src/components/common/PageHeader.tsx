@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
-  description?: string;
   icon?: React.ReactNode;
   action?: {
     label: string;
@@ -76,16 +74,12 @@ function getModuleFromPath(pathname: string): Module | null {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
-  subtitle,
-  description,
   icon,
   action,
   actions,
   children,
 }) => {
   const { pathname } = useLocation();
-  const subtitleText = subtitle ?? description;
-
   const module = getModuleFromPath(pathname);
   const colors = module ? moduleColors[module] : null;
 
@@ -112,12 +106,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {icon}
           </div>
         )}
-        <div>
-          <h1 className="heading-1">{title}</h1>
-          {subtitleText && (
-            <p className="text-muted-foreground mt-0.5 text-sm">{subtitleText}</p>
-          )}
-        </div>
+        <h1 className="heading-1">{title}</h1>
       </div>
       {(children || actions || action) && (
         <div className="flex items-center gap-3">

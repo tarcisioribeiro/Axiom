@@ -287,7 +287,6 @@ export default function Skills() {
       <PageContainer>
         <PageHeader
           title={t('pages.skills.title')}
-          subtitle={t('pages.skills.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             <Button

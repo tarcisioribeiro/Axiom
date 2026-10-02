@@ -927,7 +927,6 @@ export default function KnowledgeGraph() {
       <PageContainer>
         <PageHeader
           title={t('pages.knowledgeGraph.title')}
-          description={t('pages.knowledgeGraph.description')}
           icon={<Network className="h-5 w-5" />}
         />
 

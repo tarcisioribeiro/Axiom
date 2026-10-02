@@ -2395,7 +2395,6 @@
         "page": "Página",
         "of": "de"
       },
-      "subtitle": "Aqui está seu resumo financeiro de hoje.",
       "lgpdExport": {
         "title": "Exportar Dados (LGPD)",
         "description": "Baixe todos os seus dados financeiros em formato JSON.",
@@ -3668,7 +3667,6 @@
     },
     "courses": {
       "title": "Cursos",
-      "subtitle": "Meus Cursos Online",
       "newBtn": "Novo Curso",
       "searchPlaceholder": "Buscar cursos...",
       "emptyState": "Nenhum curso cadastrado",
@@ -3824,7 +3822,6 @@
     },
     "skills": {
       "title": "Habilidades",
-      "subtitle": "Mapa de Habilidades",
       "newBtn": "Nova Habilidade",
       "searchPlaceholder": "Buscar habilidades...",
       "emptyState": "Nenhuma habilidade cadastrada. Clique em \"Nova Habilidade\" para começar.",
@@ -4454,7 +4451,6 @@
     },
     "permissions": {
       "title": "Gerenciamento de Permissões",
-      "subtitle": "Controle o acesso dos membros aos diferentes módulos do Axiom",
       "membersTitle": "Membros",
       "membersDesc": "Selecione um membro para gerenciar suas permissões",
       "noMembers": "Nenhum membro cadastrado",
@@ -4611,7 +4607,6 @@
     },
     "personalAnalytics": {
       "title": "Analytics Pessoal",
-      "description": "Análise de consistência e padrões dos últimos 90 dias.",
       "rate7d": "Taxa 7 dias",
       "rate30d": "Taxa 30 dias",
       "currentStreak": "Sequência Atual",
@@ -5158,8 +5153,6 @@
     },
     "adminLogs": {
       "title": "Logs de Atividade",
-      "subtitle": "{{records}} registros no total",
-      "loading": "Carregando...",
       "refresh": "Atualizar",
       "filters": "Filtros",
       "clearFilters": "Limpar",
@@ -5195,7 +5188,6 @@
     },
     "adminOverview": {
       "title": "Visão Geral do Sistema",
-      "subtitle": "Status em tempo real de todos os serviços",
       "updatedAt": "Atualizado às {{time}}",
       "refresh": "Atualizar",
       "statusHealthy": "Todos os serviços operacionais",
@@ -5243,7 +5235,6 @@
     "adminIntegrations": {
       "llmWarnings": "Problemas no sistema de agentes (IA):",
       "title": "Integrações",
-      "subtitle": "Status em tempo real de todos os serviços externos",
       "testAll": "Testar todas",
       "activeProvider": "Provedor ativo:",
       "model": "Modelo:",
@@ -5277,7 +5268,6 @@
     },
     "adminConfig": {
       "title": "Configurações do Sistema",
-      "subtitle": "Valores armazenados no banco de dados. Secrets nunca são exibidos.",
       "restartBtn": "Reiniciar e Aplicar",
       "notConfigured": "Não configurado",
       "secretBadge": "Secreto",
@@ -5946,7 +5936,6 @@
     },
     "bodyMetrics": {
       "title": "Medidas Corporais",
-      "subtitle": "Acompanhe sua evolução física ao longo do tempo",
       "newBtn": "Novo Registro",
       "newTitle": "Novo Registro de Medidas",
       "editTitle": "Editar Registro",
@@ -6044,7 +6033,6 @@
     },
     "knowledgeGraph": {
       "title": "Grafo de Conhecimento",
-      "description": "Visualize e conecte livros, cursos, habilidades e notas",
       "search": "Buscar nós...",
       "nodeTypesFilter": "Tipos de nó",
       "includeHighlights": "Incluir destaques",
@@ -6126,7 +6114,6 @@
     },
     "flashcards": {
       "title": "Flash Cards",
-      "subtitle": "Revisão espaçada de destaques",
       "newCard": "Novo Card",
       "reviewNow": "Revisar agora",
       "dueToday": "Para revisar hoje",
@@ -6170,7 +6157,6 @@
     },
     "intellectToday": {
       "title": "Hoje no Intelecto",
-      "subtitle": "Seu hub diário de aprendizado",
       "continueReading": "Continuar Lendo",
       "startReading": "Começar a ler",
       "startCourse": "Iniciar um curso",
@@ -6366,7 +6352,6 @@
     },
     "debtPayoff": {
       "title": "Planejador de Quitação de Dívidas",
-      "description": "Estratégia personalizada para sair das dívidas com menor custo",
       "totalDebt": "Dívida Total",
       "totalDebts": "Dívidas Ativas",
       "minimumMonthly": "Mínimo Mensal",
@@ -6708,7 +6693,6 @@
   },
   "financialCalendar": {
     "title": "Calendário Financeiro",
-    "subtitle": "Visão temporal unificada de todos os vencimentos",
     "prevMonth": "Mês anterior",
     "nextMonth": "Próximo mês",
     "summaryDue": "{{count}} vencimento(s) este mês",
@@ -7118,7 +7102,6 @@
   },
   "netWorth": {
     "title": "Patrimônio Líquido",
-    "subtitle": "Ativos menos passivos — sua riqueza real",
     "netWorthLabel": "Patrimônio Líquido",
     "assetsLabel": "Ativos",
     "liabilitiesLabel": "Passivos",
@@ -7138,7 +7121,6 @@
   },
   "subscriptions": {
     "title": "Assinaturas",
-    "subtitle": "Controle de gastos recorrentes mensais",
     "monthlyTotal": "Total Mensal",
     "activeCount": "{{count}} assinatura(s) ativa(s)",
     "dueSoon": "Vence em breve",
@@ -7171,7 +7153,6 @@
   },
   "webhooks": {
     "title": "Webhooks",
-    "description": "Receba notificações em tempo real de eventos do Axiom em sistemas externos.",
     "newBtn": "Novo Webhook",
     "createBtn": "Criar webhook",
     "empty": "Nenhum webhook configurado",
@@ -7286,7 +7267,6 @@
   },
   "monthComparison": {
     "title": "Comparação Mensal",
-    "subtitle": "Compare dois períodos financeiros lado a lado",
     "monthA": "Período A",
     "monthB": "Período B",
     "selectMonthA": "Selecione o período A",
@@ -7309,7 +7289,6 @@
   },
   "monthlyPlanner": {
     "title": "Planejador Financeiro Mensal",
-    "description": "Planeje seu mês antes de ele acontecer",
     "projectedRevenues": "Receitas Previstas",
     "projectedExpenses": "Despesas Previstas",
     "projectedBalance": "Saldo Projetado",
@@ -7376,7 +7355,6 @@
   },
   "spendingInsights": {
     "title": "Insights de Gastos",
-    "description": "Análise de gastos — {{month}}",
     "prevMonth": "Mês anterior",
     "nextMonth": "Próximo mês",
     "unavailable": "Dados indisponíveis",

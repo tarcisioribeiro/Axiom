@@ -98,7 +98,6 @@ export default function IntellectToday() {
       <PageContainer>
         <PageHeader
           title={t('pages.intellectToday.title')}
-          subtitle={t('pages.intellectToday.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
         />
 

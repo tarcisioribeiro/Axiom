@@ -194,7 +194,6 @@ export default function Webhooks() {
     <PageContainer>
       <PageHeader
         title={t('webhooks.title')}
-        description={t('webhooks.description')}
         actions={
           <Button onClick={openCreate}>
             <Plus className="mr-sm h-md w-md" />

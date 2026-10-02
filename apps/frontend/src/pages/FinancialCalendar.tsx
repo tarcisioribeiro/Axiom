@@ -336,11 +336,7 @@ export default function FinancialCalendar({
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('financialCalendar.title')}
-        icon={<CalendarDays />}
-        subtitle={t('financialCalendar.subtitle')}
-      />
+      <PageHeader title={t('financialCalendar.title')} icon={<CalendarDays />} />
 
       <div className="mt-md bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
         {t('financialCalendar.summaryDue', { count: totalEventsThisMonth })}

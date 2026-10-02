@@ -964,7 +964,6 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
     <Wrapper>
       <PageHeader
         title={t('monthlyPlanner.title')}
-        description={t('monthlyPlanner.description')}
         icon={<CalendarCheck className="h-5 w-5" />}
       />
 

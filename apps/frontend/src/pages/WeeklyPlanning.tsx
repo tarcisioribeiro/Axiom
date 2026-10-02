@@ -180,12 +180,9 @@ export default function WeeklyPlanning() {
   return (
     <AnimatedPage>
       <PageContainer>
-        <PageHeader
-          title={t('weeklyPlanning.title')}
-          icon={<Calendar />}
-          subtitle={weekLabel}
-        >
+        <PageHeader title={t('weeklyPlanning.title')} icon={<Calendar />}>
           <div className="gap-sm flex items-center">
+            <span className="text-muted-foreground text-sm">{weekLabel}</span>
             <Button
               aria-label={t('common.actions.previous')}
               variant="outline"

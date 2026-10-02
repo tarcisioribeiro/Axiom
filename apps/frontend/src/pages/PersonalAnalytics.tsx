@@ -328,7 +328,6 @@ export default function PersonalAnalytics() {
       <PageContainer>
         <PageHeader
           title={t('pages.personalAnalytics.title')}
-          description={t('pages.personalAnalytics.description')}
           icon={<BarChart3 className="text-primary h-6 w-6" />}
         />
 

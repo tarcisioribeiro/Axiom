@@ -216,11 +216,7 @@ export default function MonthComparison({ embedded = false }: { embedded?: boole
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('monthComparison.title')}
-        icon={<BarChart3 />}
-        subtitle={t('monthComparison.subtitle')}
-      />
+      <PageHeader title={t('monthComparison.title')} icon={<BarChart3 />} />
 
       <div className="gap-md bg-muted/40 p-md flex flex-wrap items-end rounded-lg border">
         <MonthSelector

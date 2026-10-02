@@ -198,11 +198,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('spendingInsights.title')}
-        description={t('spendingInsights.description', { month: monthName })}
-        actions={monthNav}
-      />
+      <PageHeader title={t('spendingInsights.title')} actions={monthNav} />
 
       {/* Trend summary row */}
       <div className="gap-lg grid grid-cols-1 sm:grid-cols-3">

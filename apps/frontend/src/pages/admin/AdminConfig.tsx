@@ -55,7 +55,6 @@ export default function AdminConfig() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminConfig.title')}
-        subtitle={t('pages.adminConfig.subtitle')}
         icon={<Settings />}
         actions={
           <Button

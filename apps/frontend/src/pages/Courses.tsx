@@ -346,7 +346,6 @@ export default function Courses() {
       <PageContainer>
         <PageHeader
           title={t('pages.courses.title')}
-          subtitle={t('pages.courses.subtitle')}
           icon={<GraduationCap className="text-primary h-6 w-6" />}
           actions={
             <Button

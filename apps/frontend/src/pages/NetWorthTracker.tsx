@@ -237,11 +237,7 @@ export default function NetWorthTracker({ embedded = false }: { embedded?: boole
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('netWorth.title')}
-        icon={<TrendingUp />}
-        subtitle={t('netWorth.subtitle')}
-      />
+      <PageHeader title={t('netWorth.title')} icon={<TrendingUp />} />
 
       <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-3">
         <StatCard

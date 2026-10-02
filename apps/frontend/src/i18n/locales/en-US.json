@@ -2341,7 +2341,6 @@
         "page": "Page",
         "of": "of"
       },
-      "subtitle": "Here is your financial summary for today.",
       "lgpdExport": {
         "title": "Export Data (LGPD)",
         "description": "Download all your financial data in JSON format.",
@@ -3602,7 +3601,6 @@
     },
     "courses": {
       "title": "Courses",
-      "subtitle": "My Online Courses",
       "newBtn": "New Course",
       "searchPlaceholder": "Search courses...",
       "emptyState": "No courses registered",
@@ -3758,7 +3756,6 @@
     },
     "skills": {
       "title": "Skills",
-      "subtitle": "Skills Map",
       "newBtn": "New Skill",
       "searchPlaceholder": "Search skills...",
       "emptyState": "No skills registered. Click \"New Skill\" to get started.",
@@ -4388,7 +4385,6 @@
     },
     "permissions": {
       "title": "Permission Management",
-      "subtitle": "Control member access to the different Axiom modules",
       "membersTitle": "Members",
       "membersDesc": "Select a member to manage their permissions",
       "noMembers": "No members registered",
@@ -4545,7 +4541,6 @@
     },
     "personalAnalytics": {
       "title": "Personal Analytics",
-      "description": "Consistency analysis and patterns from the last 90 days.",
       "rate7d": "7-day Rate",
       "rate30d": "30-day Rate",
       "currentStreak": "Current Streak",
@@ -5092,8 +5087,6 @@
     },
     "adminLogs": {
       "title": "Activity Logs",
-      "subtitle": "{{records}} records in total",
-      "loading": "Loading...",
       "refresh": "Refresh",
       "filters": "Filters",
       "clearFilters": "Clear",
@@ -5129,7 +5122,6 @@
     },
     "adminOverview": {
       "title": "System Overview",
-      "subtitle": "Real-time status of all services",
       "updatedAt": "Updated at {{time}}",
       "refresh": "Refresh",
       "statusHealthy": "All services operational",
@@ -5177,7 +5169,6 @@
     "adminIntegrations": {
       "llmWarnings": "Agent system (AI) issues:",
       "title": "Integrations",
-      "subtitle": "Real-time status of all external services",
       "testAll": "Test all",
       "activeProvider": "Active provider:",
       "model": "Model:",
@@ -5211,7 +5202,6 @@
     },
     "adminConfig": {
       "title": "System Settings",
-      "subtitle": "Values stored in the database. Secrets are never displayed.",
       "restartBtn": "Restart & Apply",
       "notConfigured": "Not configured",
       "secretBadge": "Secret",
@@ -5880,7 +5870,6 @@
     },
     "bodyMetrics": {
       "title": "Body Measurements",
-      "subtitle": "Track your physical progress over time",
       "newBtn": "New Record",
       "newTitle": "New Body Measurements Record",
       "editTitle": "Edit Record",
@@ -5978,7 +5967,6 @@
     },
     "knowledgeGraph": {
       "title": "Knowledge Graph",
-      "description": "Visualize and connect books, courses, skills and notes",
       "search": "Search nodes...",
       "nodeTypesFilter": "Node types",
       "includeHighlights": "Include highlights",
@@ -6060,7 +6048,6 @@
     },
     "flashcards": {
       "title": "Flash Cards",
-      "subtitle": "Spaced repetition of highlights",
       "newCard": "New Card",
       "reviewNow": "Review now",
       "dueToday": "Due today",
@@ -6104,7 +6091,6 @@
     },
     "intellectToday": {
       "title": "Intellect Today",
-      "subtitle": "Your daily learning hub",
       "continueReading": "Continue Reading",
       "startReading": "Start reading",
       "startCourse": "Start a course",
@@ -6321,7 +6307,6 @@
     },
     "debtPayoff": {
       "title": "Debt Payoff Planner",
-      "description": "Personalized strategy to pay off debts at minimum cost",
       "totalDebt": "Total Debt",
       "totalDebts": "Active Debts",
       "minimumMonthly": "Monthly Minimum",
@@ -6663,7 +6648,6 @@
   },
   "financialCalendar": {
     "title": "Financial Calendar",
-    "subtitle": "Unified temporal view of all due dates",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "summaryDue": "{{count}} due date(s) this month",
@@ -7073,7 +7057,6 @@
   },
   "netWorth": {
     "title": "Net Worth",
-    "subtitle": "Assets minus liabilities — your real wealth",
     "netWorthLabel": "Net Worth",
     "assetsLabel": "Assets",
     "liabilitiesLabel": "Liabilities",
@@ -7093,7 +7076,6 @@
   },
   "subscriptions": {
     "title": "Subscriptions",
-    "subtitle": "Monthly recurring expense tracker",
     "monthlyTotal": "Monthly Total",
     "activeCount": "{{count}} active subscription(s)",
     "dueSoon": "Due soon",
@@ -7126,7 +7108,6 @@
   },
   "webhooks": {
     "title": "Webhooks",
-    "description": "Receive real-time notifications of Axiom events in external systems.",
     "newBtn": "New Webhook",
     "createBtn": "Create webhook",
     "empty": "No webhooks configured",
@@ -7255,7 +7236,6 @@
   },
   "monthComparison": {
     "title": "Monthly Comparison",
-    "subtitle": "Compare two financial periods side by side",
     "monthA": "Period A",
     "monthB": "Period B",
     "selectMonthA": "Select period A",
@@ -7278,7 +7258,6 @@
   },
   "monthlyPlanner": {
     "title": "Monthly Financial Planner",
-    "description": "Plan your month before it happens",
     "projectedRevenues": "Expected Revenues",
     "projectedExpenses": "Expected Expenses",
     "projectedBalance": "Projected Balance",
@@ -7345,7 +7324,6 @@
   },
   "spendingInsights": {
     "title": "Spending Insights",
-    "description": "Spending analysis — {{month}}",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "unavailable": "Data Unavailable",

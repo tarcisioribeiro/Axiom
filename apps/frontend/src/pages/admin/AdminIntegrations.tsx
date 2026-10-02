@@ -34,7 +34,6 @@ export default function AdminIntegrations() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminIntegrations.title')}
-        subtitle={t('pages.adminIntegrations.subtitle')}
         icon={<Link2 />}
         actions={
           <button

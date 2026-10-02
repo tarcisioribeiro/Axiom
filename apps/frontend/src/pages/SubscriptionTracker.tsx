@@ -101,11 +101,7 @@ export default function SubscriptionTracker({
 
   return (
     <Wrapper>
-      <PageHeader
-        title={t('subscriptions.title')}
-        icon={<RefreshCcw />}
-        subtitle={t('subscriptions.subtitle')}
-      />
+      <PageHeader title={t('subscriptions.title')} icon={<RefreshCcw />} />
 
       <div className="mt-md gap-md grid grid-cols-1 md:grid-cols-2">
         <StatCard

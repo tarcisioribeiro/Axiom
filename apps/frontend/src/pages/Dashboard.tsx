@@ -78,6 +78,7 @@ import {
 } from '@/components/ui/table';
 import { translate, TRANSLATIONS } from '@/config/constants';
 import { GREETING_ICONS } from '@/config/icons';
+import { useDismissedAlerts } from '@/hooks/use-dismissed-alerts';
 import { useToast } from '@/hooks/use-toast';
 import { containerVariants, itemVariants, DURATION } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
@@ -362,12 +363,16 @@ export default function Dashboard() {
     [summaryQuery.data]
   );
   const cashFlowForecast = cashFlowForecastQuery.data ?? null;
-  const financialAlerts = useMemo(
+  const allFinancialAlerts = useMemo(
     () =>
       Array.isArray(summaryQuery.data?.financial_alerts)
         ? summaryQuery.data.financial_alerts
         : [],
     [summaryQuery.data]
+  );
+  const { visibleAlerts: financialAlerts, dismiss: dismissAlert } = useDismissedAlerts(
+    allFinancialAlerts,
+    user?.id
   );
 
   const anomalies = useMemo(
@@ -674,7 +679,6 @@ export default function Dashboard() {
       <PageHeader
         title={`${greeting.text}${displayName ? `, ${displayName}` : ''}`}
         icon={<LayoutDashboard />}
-        subtitle={t('pages.dashboard.subtitle')}
         action={{
           label: t('pages.dashboard.exportStatement'),
           icon: <FileDown className="h-4 w-4" />,
@@ -1972,7 +1976,7 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle>{t('pages.dashboard.financialAlerts.title')}</DialogTitle>
           </DialogHeader>
-          <AlertsPanel alerts={financialAlerts} />
+          <AlertsPanel alerts={financialAlerts} onDismiss={dismissAlert} />
         </DialogContent>
       </Dialog>
     </PageContainer>

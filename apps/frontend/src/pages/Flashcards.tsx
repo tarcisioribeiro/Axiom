@@ -201,7 +201,6 @@ export default function Flashcards() {
       <PageContainer>
         <PageHeader
           title={t('pages.flashcards.title')}
-          subtitle={t('pages.flashcards.subtitle')}
           icon={<Brain className="text-primary h-6 w-6" />}
           actions={
             mode === 'list' ? (

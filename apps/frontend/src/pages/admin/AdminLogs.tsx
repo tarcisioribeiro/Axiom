@@ -73,13 +73,6 @@ export default function AdminLogs() {
     <PageContainer>
       <PageHeader
         title={t('pages.adminLogs.title')}
-        subtitle={
-          data
-            ? t('pages.adminLogs.subtitle', {
-                records: data.count.toLocaleString(i18n.language),
-              })
-            : t('pages.adminLogs.loading')
-        }
         icon={<ScrollText />}
         actions={
           <button

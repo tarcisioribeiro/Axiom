@@ -115,7 +115,6 @@ export default function DebtPayoffPlanner({
     <Wrapper>
       <PageHeader
         title={t('pages.debtPayoff.title')}
-        description={t('pages.debtPayoff.description')}
         icon={<TrendingDown className="text-destructive h-6 w-6" />}
       />
 

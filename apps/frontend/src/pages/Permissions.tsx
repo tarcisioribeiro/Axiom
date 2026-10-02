@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -157,13 +158,7 @@ export default function Permissions() {
 
   return (
     <PageContainer>
-      <div>
-        <h1 className="gap-sm flex items-center text-3xl font-bold">
-          <Shield className="h-8 w-8" />
-          {t('pages.permissions.title')}
-        </h1>
-        <p className="mt-sm">{t('pages.permissions.subtitle')}</p>
-      </div>
+      <PageHeader title={t('pages.permissions.title')} icon={<Shield />} />
 
       <div className="gap-lg grid grid-cols-1 lg:grid-cols-3">
         {/* Lista de Membros */}

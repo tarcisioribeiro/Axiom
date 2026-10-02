@@ -1408,10 +1408,7 @@ export default function EmotionalWellness() {
   return (
     <AnimatedPage>
       <PageContainer>
-        <PageHeader
-          title="Centro de Bem-Estar"
-          description="Autoconhecimento, equilíbrio emocional e crescimento pessoal"
-        />
+        <PageHeader title="Centro de Bem-Estar" />
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-lg w-full overflow-x-auto">
