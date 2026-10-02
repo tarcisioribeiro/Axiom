@@ -78,6 +78,12 @@ Axiom/
 
 **Design tokens**: prefer semantic spacing (`p-md`, `gap-lg`) over numeric Tailwind (`p-4`). Defined in `index.css`, mapped in `tailwind.config.js`.
 
+**Animation standard**: only `opacity`/`transform`, tokens only — no ad-hoc durations/curves.
+- Tokens (`index.css`, mirrored in `lib/animations/transitions.ts`): `fast` 150ms (hover, click, exits), `normal` 220ms (modal, popover, page, tab, expand), `medium` 350ms (layout), `slow` 600ms (progress/decorative); easing `--ease-out`.
+- CSS: bare `transition-*` already uses `fast` + `ease-out`; override with `duration-{fast,normal,medium,slow}`. Enter/exit: `animate-fade-in/out`, `animate-pop-in/out` (Radix: `data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out`). Click feedback: `active:scale-[0.96]` (built into `Button`).
+- Framer Motion: `MotionConfig` in `App.tsx` defaults every `motion.*` to `transitions.normal` — omit the `transition` prop; use `transitions.fast` only for micro-interactions.
+- Show/hide toggles ("Ver detalhes"): `<Collapse open={x}>…</Collapse>` from `components/ui/collapsible-section` instead of `{x && …}`.
+
 **Common Components** (`components/common/`) — use before creating new ones: `PageContainer`, `EmptyState`, `LoadingState`, `DataTable`, `PageHeader`, `SearchInput`, `StatCard`, `ExportModal`, `StatementExportModal`, `AnimatedPage`, `IconButton`, `ErrorBoundary`, `LanguageSelector`, `ThemeToggle`.
 
 **UI Primitives** (`components/ui/`): `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`, `currency-input` (BRL, `accentColor` variants), `form-section`, `status-toggle`.

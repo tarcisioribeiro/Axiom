@@ -78,7 +78,7 @@ export function DailyFocusBlockCard({
         <div className="mx-md mb-xs bg-muted/50 h-1 overflow-hidden rounded-full">
           <div
             className={cn(
-              'h-full w-full origin-left rounded-full transition-transform duration-500',
+              'duration-slow h-full w-full origin-left rounded-full transition-transform',
               isAllDone ? 'bg-success' : 'bg-primary'
             )}
             style={{ transform: `scaleX(${progressPct / 100})` }}

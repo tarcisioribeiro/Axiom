@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -123,7 +124,7 @@ function SystemTemplateList({
               </div>
             </div>
 
-            {isExpanded && (
+            <Collapse open={isExpanded}>
               <div className="mt-md gap-sm pt-md flex flex-col border-t">
                 {template.tasks.map((task, index) => {
                   const TaskIcon = getIconByName(task.icon ?? '');
@@ -153,7 +154,7 @@ function SystemTemplateList({
                   );
                 })}
               </div>
-            )}
+            </Collapse>
           </div>
         );
       })}
@@ -260,7 +261,7 @@ function UserTemplateList({
               </div>
             </div>
 
-            {isExpanded && template.tasks.length > 0 && (
+            <Collapse open={isExpanded && template.tasks.length > 0}>
               <div className="mt-md gap-sm pt-md flex flex-col border-t">
                 {template.tasks.map((task, index) => {
                   const TaskIcon = getIconByName(task.icon ?? '');
@@ -290,7 +291,7 @@ function UserTemplateList({
                   );
                 })}
               </div>
-            )}
+            </Collapse>
           </div>
         );
       })}

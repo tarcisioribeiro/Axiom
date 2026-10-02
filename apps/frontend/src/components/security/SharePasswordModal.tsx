@@ -287,7 +287,6 @@ export function SharePasswordModal({
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
               >
                 {step === 0 && (
                   <div className="space-y-sm">

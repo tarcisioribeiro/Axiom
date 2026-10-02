@@ -512,7 +512,7 @@ export default function PersonalPlanningDashboard() {
                 <Progress
                   value={Math.min(gamification.level_progress_pct, 100)}
                   className="bg-muted h-2"
-                  indicatorClassName="duration-700"
+                  indicatorClassName="duration-slow"
                 />
               </div>
             </Card>
@@ -607,7 +607,7 @@ export default function PersonalPlanningDashboard() {
               <Progress
                 value={weeklyXP.xpInLevel}
                 className="bg-muted h-3"
-                indicatorClassName="bg-warning duration-700"
+                indicatorClassName="bg-warning duration-slow"
               />
             </div>
             {weeklyXP.streak > 3 && (
@@ -629,7 +629,7 @@ export default function PersonalPlanningDashboard() {
           {t('pages.planningDashboard.sectionWorkoutNutrition')}
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 transition-transform duration-200',
+              'duration-normal h-3.5 w-3.5 transition-transform',
               workoutNutritionOpen && 'rotate-180'
             )}
           />
@@ -852,7 +852,7 @@ export default function PersonalPlanningDashboard() {
           {t('pages.planningDashboard.sectionDetailedAnalysis')}
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 transition-transform duration-200',
+              'duration-normal h-3.5 w-3.5 transition-transform',
               detailedAnalysisOpen && 'rotate-180'
             )}
           />

@@ -17,6 +17,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Collapse } from '@/components/ui/collapsible-section';
 import { FormSection } from '@/components/ui/form-section';
 import { PlainButton } from '@/components/ui/plain-button';
 import { Textarea } from '@/components/ui/textarea';
@@ -468,14 +469,14 @@ export function WorkoutExerciseModal({
             : t('pages.workoutPlans.showNotes', 'Adicionar observações')}
           {showNotes ? <ChevronUp className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
         </button>
-        {showNotes && (
+        <Collapse open={showNotes}>
           <Textarea
             placeholder={t('pages.workoutPlans.notesPlaceholder')}
             rows={2}
             {...register('notes')}
             className="mt-sm resize-none"
           />
-        )}
+        </Collapse>
       </div>
 
       <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">

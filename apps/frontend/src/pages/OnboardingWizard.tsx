@@ -221,7 +221,7 @@ export default function OnboardingWizard() {
                 <div
                   key={i}
                   className={cn(
-                    'h-1.5 flex-1 rounded-full transition duration-300',
+                    'duration-medium h-1.5 flex-1 rounded-full transition',
                     i <= step ? 'bg-primary' : 'bg-muted'
                   )}
                 />

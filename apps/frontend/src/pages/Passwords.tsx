@@ -53,6 +53,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -74,7 +75,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
 import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
@@ -1226,7 +1226,6 @@ export default function Passwords() {
                 initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 40 }}
-                transition={{ duration: DURATION.fast, ease: 'easeOut' }}
                 className="hidden lg:block lg:w-[60%] lg:shrink-0"
               >
                 <div className="bg-card sticky top-4 rounded-lg border shadow-lg">
@@ -1386,14 +1385,14 @@ export default function Passwords() {
                 {errors.password && (
                   <p className="text-destructive text-sm">{errors.password.message}</p>
                 )}
-                {showGenerator && (
+                <Collapse open={showGenerator}>
                   <div className="bg-muted/30 rounded-lg border p-3">
                     <PasswordGenerator
                       compact
                       onPasswordGenerated={(pwd) => setValue('password', pwd)}
                     />
                   </div>
-                )}
+                </Collapse>
               </div>
 
               <div className="space-y-sm">

@@ -1131,7 +1131,7 @@ export default function KnowledgeGraph() {
 
             {/* Suggest links panel */}
             {showSuggestions && (
-              <div className="right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
+              <div className="animate-pop-in right-md top-md border-border bg-card absolute z-20 flex max-h-[60vh] w-72 flex-col overflow-hidden rounded-lg border shadow-lg">
                 <div className="border-border px-md py-sm flex items-center justify-between border-b">
                   <p className="text-sm font-semibold">
                     {t('pages.knowledgeGraph.suggestionsPanel')}

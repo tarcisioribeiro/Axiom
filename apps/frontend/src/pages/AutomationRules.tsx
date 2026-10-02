@@ -20,6 +20,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -637,7 +638,7 @@ function RuleCard({
         </div>
       </div>
 
-      {expanded && (
+      <Collapse open={expanded}>
         <div className="mt-md gap-sm border-border/40 pt-md grid border-t md:grid-cols-2">
           <div>
             <p className="mb-xs text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -682,7 +683,7 @@ function RuleCard({
             </div>
           </div>
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

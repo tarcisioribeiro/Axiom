@@ -933,7 +933,7 @@ export default function Dashboard() {
           {t('pages.dashboard.sectionAdvancedAnalysis')}
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 transition-transform duration-200',
+              'duration-normal h-3.5 w-3.5 transition-transform',
               advancedAnalysisOpen && 'rotate-180'
             )}
           />
@@ -1575,7 +1575,7 @@ export default function Dashboard() {
           {t('pages.dashboard.sectionMonthlyAnalysis')}
           <ChevronDown
             className={cn(
-              'h-3.5 w-3.5 transition-transform duration-200',
+              'duration-normal h-3.5 w-3.5 transition-transform',
               monthlyAnalysisOpen && 'rotate-180'
             )}
           />

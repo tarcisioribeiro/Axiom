@@ -279,7 +279,6 @@ export function DataTable<T>({
                           : { opacity: 1, scale: 1 }
                       }
                       exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                      transition={{ duration: 0.2 }}
                       layout
                     >
                       {columns.map((column) => (

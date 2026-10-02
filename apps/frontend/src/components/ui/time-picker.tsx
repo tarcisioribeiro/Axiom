@@ -124,7 +124,7 @@ export function TimePicker({
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-          'transition-all duration-200',
+          'duration-normal transition-all',
           'hover:border-primary/40',
           disabled && 'cursor-not-allowed opacity-50'
         )}
@@ -141,7 +141,7 @@ export function TimePicker({
             'flex items-center justify-center',
             'hover:text-destructive',
             'hover:bg-destructive/10',
-            'transition-colors duration-150'
+            'duration-fast transition-colors'
           )}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />

@@ -114,7 +114,6 @@ export function AgentChatWidget() {
             ? { opacity: 0, scale: 0.6, y: 16 }
             : { opacity: 1, scale: 1, y: 0 }
         }
-        transition={{ duration: 0.2, ease: 'easeOut' }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         className={cn(
@@ -137,7 +136,6 @@ export function AgentChatWidget() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.15 }}
             >
               <X className="h-6 w-6" />
             </motion.span>
@@ -147,7 +145,6 @@ export function AgentChatWidget() {
               initial={{ rotate: 90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: -90, opacity: 0 }}
-              transition={{ duration: 0.15 }}
             >
               <BotMessageSquare className="h-6 w-6" />
             </motion.span>
@@ -163,7 +160,6 @@ export function AgentChatWidget() {
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
             className="right-lg bg-background fixed bottom-[5.5rem] z-50 flex w-80 flex-col overflow-hidden rounded-2xl border shadow-2xl sm:w-96"
             style={{ maxHeight: 'min(520px, calc(100vh - 12rem))' }}
           >

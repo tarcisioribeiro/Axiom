@@ -7,7 +7,7 @@ import type { IconComponent } from '@/types/icon';
 type AlertVariant = 'default' | 'success' | 'warning' | 'destructive' | 'info';
 
 /** Tipo de animacao de entrada */
-type AnimationType = 'default' | 'slideUp' | 'slideDown' | 'bounce' | 'shake';
+type AnimationType = 'default' | 'shake';
 
 /** Nivel de blur do backdrop */
 type BlurLevel = 'none' | 'sm' | 'md' | 'lg';
@@ -161,7 +161,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'success',
-      animation: 'bounce',
       ...options,
     });
   };
@@ -183,7 +182,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'warning',
-      animation: 'slideDown',
       ...options,
     });
   };
@@ -225,7 +223,6 @@ export const useAlertDialog = () => {
       title,
       description,
       variant: 'info',
-      animation: 'slideUp',
       ...options,
     });
   };

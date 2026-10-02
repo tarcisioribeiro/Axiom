@@ -365,8 +365,8 @@ export default function CreditCards({
                   duration: DURATION.fast,
                   delay: creditCards.indexOf(card) * 0.05,
                 }}
-                whileHover={{ y: -2, transition: { duration: 0.15 } }}
-                whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setHubCard(card)}
                 className="cursor-pointer"
                 title={t('pages.creditCardHub.openHub')}

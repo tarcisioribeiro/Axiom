@@ -15,6 +15,7 @@ import { Layout } from './components/layout/Layout';
 import { PlanningLayout } from './components/layout/PlanningLayout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
+import { transitions } from './lib/animations/transitions';
 import { queryClient } from './lib/query-client';
 // Eager load (páginas públicas carregadas imediatamente)
 import ForgotPassword from './pages/ForgotPassword';
@@ -815,7 +816,7 @@ function App() {
     // sem depender de useReducedMotion() manual em cada um dos ~38 arquivos
     // que usam motion.*. O fallback CSS abaixo cobre apenas animação via
     // classes/keyframes do Tailwind, que o Framer Motion não usa.
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="user" transition={transitions.normal}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <EnvironmentBanner />

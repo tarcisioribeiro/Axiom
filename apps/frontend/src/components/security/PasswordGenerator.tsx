@@ -249,7 +249,7 @@ export function PasswordGenerator({
               <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
                 <div
                   className={cn(
-                    'h-full rounded-full transition-[width,background-color] duration-300',
+                    'duration-medium h-full rounded-full transition-[width,background-color]',
                     strengthInfo.color,
                     strengthInfo.width
                   )}

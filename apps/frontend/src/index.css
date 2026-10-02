@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @config '../tailwind.config.js';
 
+/* Padrão global de animação: todo `transition-*` sem duração/easing explícitos
+   usa --duration-fast + --ease-out (espelhados aqui porque @theme não resolve
+   var() de :root). */
+@theme {
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Nossos tokens --spacing-{xs,sm,md,lg,xl} colidem, por nome, com a escala
    nomeada padrão do Tailwind para max-width e min-width (container sizes).
    Em Tailwind v4 (com ou sem @config), quando existe uma chave de spacing
@@ -140,10 +148,10 @@
     --radius: 0.5rem;
 
     /* Animation duration tokens */
-    --duration-fast: 200ms;
-    --duration-normal: 300ms;
-    --duration-medium: 400ms;
-    --duration-slow: 600ms;
+    --duration-fast: 150ms; /* micro: hover, clique, chevrons, saídas */
+    --duration-normal: 220ms; /* entradas: modal, popover, página, aba, expandir */
+    --duration-medium: 350ms; /* layout: largura da sidebar */
+    --duration-slow: 600ms; /* decorativo: barras de progresso */
 
     /* Animation easing tokens — fonte única para entradas/saídas (ver
        lib/animations/transitions.ts EASE_OUT/EASE_IN_OUT, que espelham os
@@ -1956,6 +1964,27 @@
   /* 24 px — ícones em PageHeader e destaques */
   .icon-lg {
     @apply h-6 w-6 shrink-0;
+  }
+}
+
+/* <details> nativo: abre/fecha no padrão de expandir. Só onde o navegador
+   anima até height:auto (interpolate-size); nos demais segue instantâneo. */
+@supports (interpolate-size: allow-keywords) {
+  details {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      block-size var(--duration-normal) var(--ease-out),
+      opacity var(--duration-normal) var(--ease-out),
+      content-visibility var(--duration-normal) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
   }
 }
 

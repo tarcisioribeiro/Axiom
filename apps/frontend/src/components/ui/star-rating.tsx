@@ -55,7 +55,7 @@ export function StarRating({
           onMouseEnter={() => !disabled && setHoverValue(rating)}
           aria-label={`${rating} estrela${rating > 1 ? 's' : ''}`}
           className={cn(
-            'focus-visible:ring-ring rounded-sm transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+            'focus-visible:ring-ring duration-fast rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
             disabled
               ? 'cursor-not-allowed opacity-50'
               : 'cursor-pointer hover:scale-110'
@@ -64,7 +64,7 @@ export function StarRating({
           <Star
             className={cn(
               sizeClasses[size],
-              'transition-colors duration-150',
+              'duration-fast transition-colors',
               rating <= displayValue
                 ? 'fill-star text-star'
                 : 'hover:text-star/50 fill-transparent'

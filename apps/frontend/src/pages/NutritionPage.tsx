@@ -55,7 +55,6 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -807,7 +806,7 @@ export default function NutritionPage() {
                           fill="none"
                           strokeWidth="7"
                           strokeLinecap="round"
-                          className="stroke-category-nutrition transition duration-500"
+                          className="stroke-category-nutrition duration-slow transition"
                           strokeDasharray={CIRC}
                           strokeDashoffset={dashOffset}
                         />
@@ -1288,7 +1287,6 @@ function MealTypeCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
             style={{ overflow: 'hidden' }}
           >
             <div className="border-border bg-card p-md border-t">

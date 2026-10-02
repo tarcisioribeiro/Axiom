@@ -161,7 +161,6 @@ export const StatCard: React.FC<StatCardProps> = ({
           {icon && (
             <motion.div
               whileHover={{ scale: 1.05, rotate: 4 }}
-              transition={{ duration: 0.25 }}
               className={cn(
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
                 iconClass

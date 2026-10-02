@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Collapse } from '@/components/ui/collapsible-section';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
@@ -236,13 +237,13 @@ export function CategorySection({
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         )}
       </button>
-      {open && (
+      <Collapse open={open}>
         <div className="border-border border-t">
           {configs.map((cfg) => (
             <ConfigRow key={cfg.key} config={cfg} />
           ))}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

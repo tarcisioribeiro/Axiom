@@ -21,7 +21,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   CalendarDays,
@@ -61,6 +60,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -90,7 +90,6 @@ import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { DURATION } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
@@ -2596,93 +2595,82 @@ function InactivePlanRow({
         </div>
       </div>
 
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            key="inactive-plan-content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: DURATION.fast, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-            <div className="space-y-sm border-border bg-background p-md border-t">
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={onNewDay}>
-                  <Plus className="mr-xs h-3 w-3" />
-                  {t('pages.workoutPlans.newDayBtn')}
-                </Button>
-              </div>
-              {plan.days?.map((day) => (
-                <div
-                  key={day.id}
-                  className="border-border overflow-hidden rounded-lg border"
+      <Collapse open={expanded}>
+        <div className="space-y-sm border-border bg-background p-md border-t">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={onNewDay}>
+              <Plus className="mr-xs h-3 w-3" />
+              {t('pages.workoutPlans.newDayBtn')}
+            </Button>
+          </div>
+          {plan.days?.map((day) => (
+            <div
+              key={day.id}
+              className="border-border overflow-hidden rounded-lg border"
+            >
+              <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
+                <button
+                  type="button"
+                  className="gap-xs flex min-w-0 flex-1 items-center text-left"
+                  onClick={() => onToggleDay(day.id)}
                 >
-                  <div className="bg-muted/30 px-sm py-xs flex items-center justify-between">
-                    <button
-                      type="button"
-                      className="gap-xs flex min-w-0 flex-1 items-center text-left"
-                      onClick={() => onToggleDay(day.id)}
-                    >
-                      <div className="text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center">
-                        {getMuscleIcon(day.muscle_groups)}
-                      </div>
-                      <span className="text-sm font-medium">{day.name}</span>
-                      {day.muscle_groups && (
-                        <span className="text-muted-foreground truncate text-xs">
-                          — {day.muscle_groups}
-                        </span>
-                      )}
-                    </button>
-                    <div className="gap-xs flex shrink-0 items-center">
-                      <span className="text-muted-foreground text-xs">
-                        {day.exercise_count} {t('pages.workoutPlans.exercises')}
-                      </span>
-                      <Button
-                        aria-label={t('common.actions.edit')}
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onEditDay(day)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        aria-label={t('common.actions.delete')}
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive h-7 w-7"
-                        onClick={() => onDeleteDay(day)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+                  <div className="text-muted-foreground flex h-5 w-5 shrink-0 items-center justify-center">
+                    {getMuscleIcon(day.muscle_groups)}
                   </div>
-                  {expandedDays.has(day.id) && (
-                    <div className="space-y-xs px-sm pb-sm pt-xs">
-                      {day.exercises && day.exercises.length > 0 && (
-                        <ExerciseList
-                          exercises={day.exercises}
-                          onEdit={(ex) => onEditExercise(ex, day)}
-                          onDelete={onDeleteExercise}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => onAddExercise(day)}
-                        className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
-                      >
-                        <Plus className="h-3 w-3" />
-                        {t('pages.workoutPlans.addExerciseBtn')}
-                      </button>
-                    </div>
+                  <span className="text-sm font-medium">{day.name}</span>
+                  {day.muscle_groups && (
+                    <span className="text-muted-foreground truncate text-xs">
+                      — {day.muscle_groups}
+                    </span>
                   )}
+                </button>
+                <div className="gap-xs flex shrink-0 items-center">
+                  <span className="text-muted-foreground text-xs">
+                    {day.exercise_count} {t('pages.workoutPlans.exercises')}
+                  </span>
+                  <Button
+                    aria-label={t('common.actions.edit')}
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => onEditDay(day)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    aria-label={t('common.actions.delete')}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive h-7 w-7"
+                    onClick={() => onDeleteDay(day)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
-              ))}
+              </div>
+              <Collapse open={expandedDays.has(day.id)}>
+                <div className="space-y-xs px-sm pb-sm pt-xs">
+                  {day.exercises && day.exercises.length > 0 && (
+                    <ExerciseList
+                      exercises={day.exercises}
+                      onEdit={(ex) => onEditExercise(ex, day)}
+                      onDelete={onDeleteExercise}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onAddExercise(day)}
+                    className="gap-sm border-category-exercise/30 py-xs text-category-exercise hover:border-category-exercise/60 hover:bg-category-exercise/5 flex w-full items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {t('pages.workoutPlans.addExerciseBtn')}
+                  </button>
+                </div>
+              </Collapse>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          ))}
+        </div>
+      </Collapse>
     </div>
   );
 }
@@ -2863,7 +2851,7 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
                 : t('pages.workoutSessions.showDetails')}
             </button>
 
-            {expanded && (
+            <Collapse open={expanded}>
               <div className="mt-sm space-y-sm">
                 {[...session.session_exercises]
                   .sort((a, b) => a.order - b.order)
@@ -2919,7 +2907,7 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
                     </div>
                   ))}
               </div>
-            )}
+            </Collapse>
           </>
         )}
       </div>

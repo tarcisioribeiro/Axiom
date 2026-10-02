@@ -439,7 +439,7 @@ export function RoutineTaskForm({
                   type="button"
                   onClick={() => setValue('periodicity', period.value)}
                   disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition duration-150 ${
+                  className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
                     periodicity === period.value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

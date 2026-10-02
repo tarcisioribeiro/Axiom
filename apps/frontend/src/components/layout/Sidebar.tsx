@@ -89,7 +89,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
   const Icon = item.icon;
 
   const base = cn(
-    'relative flex items-center gap-3 rounded-lg transition duration-150',
+    'relative flex items-center gap-3 rounded-lg transition duration-fast',
     active
       ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
       : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground',
@@ -119,7 +119,6 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: 'auto' }}
             exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15 }}
             className="truncate"
           >
             {t(item.titleKey)}
@@ -260,7 +259,7 @@ export const Sidebar = () => {
               onClick={() => handleModuleClick(module.id)}
               aria-label={t(module.titleKey)}
               className={cn(
-                'relative flex h-10 w-10 items-center justify-center rounded-lg transition duration-150',
+                'duration-fast relative flex h-10 w-10 items-center justify-center rounded-lg transition',
                 hasActiveItem
                   ? 'text-primary font-medium'
                   : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -280,7 +279,7 @@ export const Sidebar = () => {
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
             className={cn(
-              'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-200',
+              'px-md py-sm duration-normal flex w-full items-center gap-3 rounded-lg text-sm transition',
               hasActiveItem
                 ? 'text-primary font-medium'
                 : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -296,7 +295,7 @@ export const Sidebar = () => {
             )}
             <ChevronDown
               className={cn(
-                'h-4 w-4 shrink-0 transition-transform duration-200',
+                'duration-normal h-4 w-4 shrink-0 transition-transform',
                 isExpanded ? 'rotate-0' : 'rotate-90'
               )}
               aria-hidden="true"
@@ -309,7 +308,7 @@ export const Sidebar = () => {
           <div
             id={`module-${module.id}`}
             className={cn(
-              'grid transition duration-200 ease-in-out',
+              'duration-normal grid transition ease-in-out',
               isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
             )}
           >
@@ -340,7 +339,7 @@ export const Sidebar = () => {
                         aria-expanded={isSubExpanded}
                         aria-controls={`submodule-${subModule.id}`}
                         className={cn(
-                          'px-md py-sm flex w-full items-center gap-3 rounded-lg text-sm transition duration-150',
+                          'px-md py-sm duration-fast flex w-full items-center gap-3 rounded-lg text-sm transition',
                           isSubExpanded
                             ? 'bg-primary/10 text-primary font-medium'
                             : hasSubActiveItem
@@ -350,7 +349,7 @@ export const Sidebar = () => {
                       >
                         <SubIcon
                           className={cn(
-                            'h-4 w-4 shrink-0 transition-colors duration-150',
+                            'duration-fast h-4 w-4 shrink-0 transition-colors',
                             isSubExpanded ? 'text-primary' : ''
                           )}
                           aria-hidden="true"
@@ -360,7 +359,7 @@ export const Sidebar = () => {
                         </span>
                         <ChevronDown
                           className={cn(
-                            'h-3 w-3 shrink-0 transition-transform duration-200',
+                            'duration-normal h-3 w-3 shrink-0 transition-transform',
                             isSubExpanded ? 'rotate-0' : 'rotate-90'
                           )}
                           aria-hidden="true"
@@ -370,7 +369,7 @@ export const Sidebar = () => {
                       <div
                         id={`submodule-${subModule.id}`}
                         className={cn(
-                          'grid transition duration-200 ease-in-out',
+                          'duration-normal grid transition ease-in-out',
                           isSubExpanded
                             ? 'grid-rows-[1fr] opacity-100'
                             : 'grid-rows-[0fr] opacity-0'
@@ -445,7 +444,6 @@ export const Sidebar = () => {
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.15 }}
                 className="text-foreground text-lg font-semibold tracking-tight"
               >
                 Axiom
@@ -652,7 +650,6 @@ export const Sidebar = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             onClick={close}
             aria-hidden="true"
           />
@@ -666,7 +663,7 @@ export const Sidebar = () => {
           'z-sidebar fixed inset-y-0 left-0 md:sticky md:top-0',
           'border-border/50 bg-card flex h-screen flex-col border-r',
           // desktop width transition
-          'transition-[width,padding] duration-300 ease-in-out',
+          'duration-medium transition-[width,padding] ease-in-out',
           isCollapsed && !isMobile ? 'p-sm w-[3.75rem]' : 'p-md w-64',
           // mobile slide
           'transform md:transform-none',

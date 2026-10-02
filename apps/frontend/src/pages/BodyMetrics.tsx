@@ -911,7 +911,7 @@ export default function BodyMetrics() {
                             key={key}
                             onClick={() => toggleMetric(key)}
                             className={cn(
-                              'gap-xs px-sm py-xs inline-flex items-center rounded-full border text-xs font-medium transition duration-200',
+                              'gap-xs px-sm py-xs duration-normal inline-flex items-center rounded-full border text-xs font-medium transition',
                               isActive ? 'shadow-sm' : 'hover:opacity-70'
                             )}
                             style={{

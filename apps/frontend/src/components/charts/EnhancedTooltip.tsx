@@ -11,7 +11,7 @@ export const EnhancedTooltip = ({
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="animate-in fade-in-0 zoom-in-95 border-border/60 bg-popover max-w-[300px] min-w-[160px] rounded-lg border shadow-xl duration-150">
+    <div className="animate-pop-in border-border/60 bg-popover max-w-[300px] min-w-[160px] rounded-lg border shadow-xl">
       {/* Label/Título */}
       {label && (
         <div className="border-border/40 py-sm border-b px-3">

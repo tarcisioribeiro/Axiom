@@ -5,7 +5,7 @@ import { TooltipBubble } from '@/components/ui/tooltip-bubble';
 export type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
 
 export const bubbleClasses =
-  'border-border/60 bg-popover px-sm py-xs text-popover-foreground pointer-events-none fixed z-[9999] max-w-[calc(100vw-1rem)] rounded-md border text-xs font-medium shadow-md';
+  'animate-fade-in border-border/60 bg-popover px-sm py-xs text-popover-foreground pointer-events-none fixed z-[9999] max-w-[calc(100vw-1rem)] rounded-md border text-xs font-medium shadow-md';
 
 // Botões dentro de um <Tooltip> já têm tooltip próprio — evita duplicar.
 export const InsideTooltipContext = React.createContext(false);

@@ -99,12 +99,12 @@ export function ThemeToggle({ className, syncWithDesktop = false }: ThemeToggleP
         >
           {isDark ? (
             <Sun
-              className="text-warning h-5 w-5 transition-transform duration-200 hover:rotate-12"
+              className="text-warning duration-normal h-5 w-5 transition-transform hover:rotate-12"
               aria-hidden="true"
             />
           ) : (
             <Moon
-              className="text-primary h-5 w-5 transition-transform duration-200 hover:rotate-12"
+              className="text-primary duration-normal h-5 w-5 transition-transform hover:rotate-12"
               aria-hidden="true"
             />
           )}

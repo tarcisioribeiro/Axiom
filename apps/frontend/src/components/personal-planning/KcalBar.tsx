@@ -12,7 +12,7 @@ export function KcalBar({ value, max, color }: KcalBarProps) {
     <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
       <div
         className={cn(
-          'h-full w-full origin-left rounded-full transition-transform duration-500',
+          'duration-slow h-full w-full origin-left rounded-full transition-transform',
           color
         )}
         style={{ transform: `scaleX(${pct / 100})` }}

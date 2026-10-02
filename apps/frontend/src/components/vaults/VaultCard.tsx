@@ -149,7 +149,7 @@ export function VaultCard({
             </div>
             <div className="bg-muted h-1.5 overflow-hidden rounded-full">
               <div
-                className="h-full w-full origin-left rounded-full transition-transform duration-500"
+                className="duration-slow h-full w-full origin-left rounded-full transition-transform"
                 style={{
                   transform: `scaleX(${proportion / 100})`,
                   backgroundColor: color.barColor,

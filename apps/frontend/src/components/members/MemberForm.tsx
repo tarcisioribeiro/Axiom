@@ -106,7 +106,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
                   type="button"
                   onClick={() => setValue('sex', sex)}
                   disabled={isLoading}
-                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
+                  className={`gap-xs duration-fast flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition ${
                     watchedSex === sex
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

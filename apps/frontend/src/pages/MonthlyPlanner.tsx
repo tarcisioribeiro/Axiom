@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapse } from '@/components/ui/collapsible-section';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
 import { Input } from '@/components/ui/input';
 import { API_CONFIG } from '@/config/constants';
@@ -536,7 +537,7 @@ function ActualItemsSection({
         )}
       </button>
       {summary}
-      {expanded && (
+      <Collapse open={expanded}>
         <div className="space-y-xs">
           {items.length === 0 ? (
             <p className="py-sm text-muted-foreground text-center text-xs">
@@ -546,7 +547,7 @@ function ActualItemsSection({
             items.map((item, idx) => renderItem(item, idx))
           )}
         </div>
-      )}
+      </Collapse>
     </div>
   );
 }

@@ -1,20 +1,17 @@
 import type { Variants } from 'framer-motion';
 
-import { DURATION, EASING } from './transitions';
+import { transitions } from './transitions';
 
 // Page transitions - apenas fade para evitar movimento do menu lateral
 export const pageVariants: Variants = {
   initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    transition: {
-      duration: DURATION.fast,
-      ease: EASING.smooth,
-    },
+    transition: transitions.normal,
   },
   exit: {
     opacity: 0,
-    transition: { duration: DURATION.fast },
+    transition: transitions.fast,
   },
 };
 
@@ -35,7 +32,7 @@ export const itemVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: DURATION.normal, ease: EASING.smooth },
+    transition: transitions.normal,
   },
 };
 
@@ -46,16 +43,13 @@ export const cardVariants: Variants = {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: {
-      duration: DURATION.normal,
-      ease: EASING.smooth,
-    },
+    transition: transitions.normal,
   },
   hover: {
     scale: 1.012,
     y: -2,
     boxShadow: 'var(--shadow-card-hover)',
-    transition: { duration: DURATION.fast, ease: EASING.snappy },
+    transition: transitions.fast,
   },
   tap: { scale: 0.98 },
 };
@@ -79,7 +73,7 @@ export const toastVariants: Variants = {
   exit: {
     opacity: 0,
     x: '100%',
-    transition: { duration: 0.2 },
+    transition: transitions.fast,
   },
 };
 
@@ -89,10 +83,7 @@ export const emptyStateVariants: Variants = {
   animate: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: DURATION.normal,
-      ease: EASING.smooth,
-    },
+    transition: transitions.normal,
   },
 };
 

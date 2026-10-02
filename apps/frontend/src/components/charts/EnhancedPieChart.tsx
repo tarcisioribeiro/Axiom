@@ -146,7 +146,7 @@ export const EnhancedPieChart = ({
                 fill={fillColor}
                 stroke="hsl(var(--background))"
                 strokeWidth={3}
-                className="transition-opacity duration-200 hover:opacity-75"
+                className="duration-normal transition-opacity hover:opacity-75"
                 style={{
                   cursor: 'pointer',
                   filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',

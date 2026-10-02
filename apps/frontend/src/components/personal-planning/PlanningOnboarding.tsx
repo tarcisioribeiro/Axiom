@@ -91,7 +91,6 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
-        transition={{ duration: 0.2 }}
         className="mx-md border-border bg-card p-xl relative w-full max-w-lg rounded-2xl border shadow-2xl"
       >
         <PlainButton

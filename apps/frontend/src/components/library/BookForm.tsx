@@ -363,7 +363,7 @@ export function BookForm({
                   type="button"
                   onClick={() => setValue('media_type', value)}
                   disabled={isLoading}
-                  className={`gap-xs flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition duration-150 ${
+                  className={`gap-xs duration-fast flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition ${
                     mediaType === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -679,7 +679,7 @@ export function BookForm({
                   type="button"
                   onClick={() => setValue('read_status', value)}
                   disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition duration-150 ${
+                  className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
                     watch('read_status') === value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'

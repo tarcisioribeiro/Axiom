@@ -140,7 +140,7 @@ export function FormField({
       {error && (
         <p
           id={errorId}
-          className="animate-in slide-in-from-top-1 text-destructive text-sm duration-200"
+          className="animate-fade-in text-destructive text-sm"
           role="alert"
           aria-live="polite"
         >

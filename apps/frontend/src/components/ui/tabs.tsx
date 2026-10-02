@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { HTMLMotionProps } from 'framer-motion';
 import * as React from 'react';
 
+import { transitions } from '@/lib/animations/transitions';
 import { cn } from '@/lib/utils';
 
 interface TabsContextValue {
@@ -81,7 +82,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         data-state={isActive ? 'active' : 'inactive'}
         onClick={() => ctx.onValueChange(value)}
         className={cn(
-          'ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+          'ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.96] disabled:pointer-events-none disabled:opacity-50',
           isActive && 'bg-background text-foreground shadow',
           className
         )}
@@ -104,7 +105,7 @@ const TabTransition = React.forwardRef<HTMLDivElement, HTMLMotionProps<'div'>>(
         ref={ref}
         initial={reduced ? false : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        transition={transitions.normal}
         {...props}
       />
     );

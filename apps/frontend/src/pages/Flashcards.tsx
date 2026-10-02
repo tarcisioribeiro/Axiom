@@ -91,7 +91,7 @@ function FlipCard({
     >
       <div
         className={cn(
-          'absolute inset-0 transition-transform duration-500',
+          'duration-slow absolute inset-0 transition-transform',
           '[transform-style:preserve-3d]',
           flipped ? '[transform:rotateY(180deg)]' : ''
         )}

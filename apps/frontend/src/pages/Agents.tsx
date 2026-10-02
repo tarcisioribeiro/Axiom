@@ -176,7 +176,7 @@ function AgentSelectorCard({
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(agentKey)}
       className={cn(
-        'bg-card p-md flex w-full flex-col gap-3 rounded-lg border-2 text-left transition duration-200',
+        'bg-card p-md duration-normal flex w-full flex-col gap-3 rounded-lg border-2 text-left transition',
         selected
           ? cn('border-2', cardClass, 'shadow-medium')
           : 'border-border hover:border-muted-foreground/40'
