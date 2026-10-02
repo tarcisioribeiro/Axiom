@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -25,7 +25,10 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
-import { RoutineFocusBlocksSection } from '@/components/personal-planning/RoutineFocusBlocksSection';
+import {
+  RoutineFocusBlocksSection,
+  type RoutineFocusBlocksSectionHandle,
+} from '@/components/personal-planning/RoutineFocusBlocksSection';
 import { RoutineTaskForm } from '@/components/personal-planning/RoutineTaskForm';
 import { RoutineTemplateModal } from '@/components/personal-planning/RoutineTemplateModal';
 import { Badge } from '@/components/ui/badge';
@@ -89,6 +92,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<'tasks' | 'focusBlocks'>('tasks');
+  const focusBlocksRef = useRef<RoutineFocusBlocksSectionHandle>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { isExporting, exportPDF, exportExcel } = useRoutineExport();
@@ -483,52 +487,65 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     <Wrapper embedded={embedded}>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
         <div className="gap-sm flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {activeTab === 'tasks' && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isExporting || tasks.length === 0}
+                  >
+                    <Download className="mr-sm h-4 w-4" />
+                    {isExporting
+                      ? t('pages.routineTasks.export.exporting')
+                      : t('pages.routineTasks.export.btn')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => void handleExport('pdf')}>
+                    <FileText className="mr-sm h-4 w-4" />
+                    {t('pages.routineTasks.export.pdf')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => void handleExport('excel')}>
+                    <Sheet className="mr-sm h-4 w-4" />
+                    {t('pages.routineTasks.export.excel')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={isExporting || tasks.length === 0}
+                onClick={() => setIsTemplateModalOpen(true)}
               >
-                <Download className="mr-sm h-4 w-4" />
-                {isExporting
-                  ? t('pages.routineTasks.export.exporting')
-                  : t('pages.routineTasks.export.btn')}
+                <Library className="mr-sm h-4 w-4" />
+                {t('pages.routineTasks.templates.importBtn')}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => void handleExport('pdf')}>
-                <FileText className="mr-sm h-4 w-4" />
-                {t('pages.routineTasks.export.pdf')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => void handleExport('excel')}>
-                <Sheet className="mr-sm h-4 w-4" />
-                {t('pages.routineTasks.export.excel')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsTemplateModalOpen(true)}
-          >
-            <Library className="mr-sm h-4 w-4" />
-            {t('pages.routineTasks.templates.importBtn')}
-          </Button>
-          {tasks.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSaveAsTemplate}
-              title={t('pages.routineTasks.templates.saveAsTemplate')}
-            >
-              <Bookmark className="mr-sm h-4 w-4" />
-              {t('pages.routineTasks.templates.saveAsTemplate')}
-            </Button>
+              {tasks.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveAsTemplate}
+                  title={t('pages.routineTasks.templates.saveAsTemplate')}
+                >
+                  <Bookmark className="mr-sm h-4 w-4" />
+                  {t('pages.routineTasks.templates.saveAsTemplate')}
+                </Button>
+              )}
+            </>
           )}
-          <Button onClick={handleCreate} className="gap-sm">
+          <Button
+            onClick={
+              activeTab === 'tasks'
+                ? handleCreate
+                : () => focusBlocksRef.current?.create()
+            }
+            className="gap-sm"
+          >
             <Plus className="h-4 w-4" />
-            {t('pages.routineTasks.newBtn')}
+            {activeTab === 'tasks'
+              ? t('pages.routineTasks.newBtn')
+              : t('pages.routineTasks.focusBlocks.newBlock')}
           </Button>
         </div>
       </PageHeader>
@@ -572,7 +589,11 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         </TabsContent>
 
         <TabsContent value="focusBlocks" className="mt-0">
-          <RoutineFocusBlocksSection routineTasks={tasks} ownerId={ownerId} />
+          <RoutineFocusBlocksSection
+            ref={focusBlocksRef}
+            routineTasks={tasks}
+            ownerId={ownerId}
+          />
         </TabsContent>
       </Tabs>
 

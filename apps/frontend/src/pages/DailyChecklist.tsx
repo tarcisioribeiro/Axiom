@@ -18,9 +18,7 @@ import {
   Save,
   CheckCircle2,
   Circle,
-  StickyNote,
   RefreshCw,
-  ExternalLink,
   AlertCircle,
   Flame,
   LayoutList,
@@ -32,18 +30,17 @@ import {
   Play,
   Pause,
   RotateCcw,
-  X,
 } from 'lucide-react';
 import {
   useState,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useCallback,
   type ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -58,38 +55,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { SuccessAnimation } from '@/components/ui/success-animation';
-import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
 import { useTaskReminders } from '@/hooks/use-task-reminders';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { appService } from '@/services/app-service';
-import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
 import { taskInstancesService } from '@/services/task-instances-service';
 import { useNotificationsStore } from '@/stores/notifications-store';
 import {
-  MOOD_CHOICES,
   type TaskInstance,
   type TaskCard,
   type KanbanStatus,
@@ -170,7 +147,7 @@ function PomodoroBar() {
         : 'hsl(var(--warning))';
 
   return (
-    <div className="gap-md bg-card px-lg py-md flex items-center rounded-lg border">
+    <div className="gap-md bg-card px-lg py-md flex flex-wrap items-center rounded-lg border">
       <div className="gap-sm flex items-center">
         <Timer className="text-muted-foreground h-4 w-4" />
         <span className="text-muted-foreground text-sm font-medium">
@@ -271,13 +248,9 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   const [instances, setInstances] = useState<TaskInstance[]>([]);
   const [cards, setCards] = useState<TaskCard[]>([]);
   const [activeCard, setActiveCard] = useState<TaskCard | null>(null);
-  const [reflection, setReflection] = useState('');
-  const [mood, setMood] = useState<string>('');
-  const [reflectionId, setReflectionId] = useState<number | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isReflectionOpen, setIsReflectionOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'kanban'
@@ -287,13 +260,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   const prevDayRateRef = useRef<number>(0);
   const xp = useXPTrigger();
   useTaskReminders(cards);
-  const [summary, setSummary] = useState({
-    total: 0,
-    completed: 0,
-    in_progress: 0,
-    pending: 0,
-    completion_rate: 0,
-  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -437,22 +403,11 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     const isFreshDate = loadedDateRef.current !== selectedDate;
     try {
       if (isFreshDate) setIsLoading(true);
-      const [instancesResponse, reflections] = await Promise.all([
-        taskInstancesService.getForDate(selectedDate, sync),
-        dailyReflectionsService.getAll(),
-      ]);
+      const instancesResponse = await taskInstancesService.getForDate(
+        selectedDate,
+        sync
+      );
       setInstances(instancesResponse.instances);
-      setSummary(instancesResponse.summary);
-      const dayReflection = reflections.find((r) => r.date === selectedDate);
-      if (dayReflection) {
-        setReflection(dayReflection.reflection);
-        setMood(dayReflection.mood || '');
-        setReflectionId(dayReflection.id);
-      } else {
-        setReflection('');
-        setMood('');
-        setReflectionId(undefined);
-      }
       loadedDateRef.current = selectedDate;
     } catch (error: unknown) {
       toast({
@@ -560,28 +515,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         status: mapKanbanToInstance(card.status),
         notes: card.notes,
       }));
-      const updatePromise = taskInstancesService.bulkUpdate(updates);
-      let reflectionPromise;
-      if (reflection.trim().length >= 10) {
-        const reflectionData = {
-          date: selectedDate,
-          reflection: reflection.trim(),
-          mood: mood || undefined,
-          owner: ownerId,
-        };
-        if (reflectionId) {
-          reflectionPromise = dailyReflectionsService.update(
-            reflectionId,
-            reflectionData
-          );
-        } else {
-          reflectionPromise = dailyReflectionsService.create(reflectionData);
-        }
-      }
-      const promises: Promise<unknown>[] = [updatePromise];
-      if (reflectionPromise) promises.push(reflectionPromise);
-      await Promise.all(promises);
-      const { errors } = await updatePromise;
+      const { errors } = await taskInstancesService.bulkUpdate(updates);
       if (errors.length > 0) {
         toast({
           title: t('pages.dailyChecklist.saveError'),
@@ -714,6 +648,32 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     </div>
   );
 
+  // Limita a altura das colunas do kanban ao espaço que sobra na viewport,
+  // para a página não ganhar scroll. Mede o topo do quadro com offsetTop (e
+  // não getBoundingClientRect) para ignorar o transform da animação de
+  // entrada da página.
+  const boardRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const board = boardRef.current;
+      if (!board) return;
+      let top = 0;
+      let el: Element | null = board;
+      while (el instanceof HTMLElement) {
+        top += el.offsetTop;
+        el = el.offsetParent;
+      }
+      board.style.setProperty(
+        '--kanban-max-h',
+        `calc(100vh - ${top}px - var(--spacing-xl))`
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, [isLoading, viewMode, instances.length]);
+
   if (isLoading) return <LoadingState />;
 
   const GreetIcon = greeting.Icon;
@@ -736,78 +696,130 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         </PageHeader>
       )}
 
-      <PomodoroBar />
+      {/* Modo Foco + saudação + nível/XP + controles lado a lado em telas largas */}
+      <div className="gap-lg flex flex-col 2xl:flex-row 2xl:items-center">
+        <div className="gap-lg grid 2xl:flex-1 2xl:auto-cols-fr 2xl:grid-flow-col">
+          <PomodoroBar />
 
-      {/* Saudação + progresso do dia */}
-      <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
-        <CircularProgress
-          value={dayRate}
-          size={64}
-          strokeWidth={5}
-          color={dayRingColor}
-        >
-          <span className="text-sm font-bold">{completedTasks}</span>
-        </CircularProgress>
-        <div className="flex-1">
-          <div className="gap-sm flex items-center">
-            <GreetIcon className="text-muted-foreground h-5 w-5" />
-            <span className="text-lg font-semibold">{greeting.label}</span>
-          </div>
-          <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold">
-            {completedTasks}
-            <span className="text-muted-foreground text-base font-normal">
-              /{cards.length}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.todayTasks.tasksLabel')}
-          </p>
-        </div>
-      </div>
-
-      {gamification && (
-        <div className="gap-md bg-muted/30 px-md py-sm flex items-center rounded-lg border">
-          <div className="gap-sm flex items-center">
-            <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
-              {gamification.current_level}
+          {/* Saudação + progresso do dia */}
+          <div className="gap-lg bg-card px-lg py-md flex items-center rounded-lg border">
+            <CircularProgress
+              value={dayRate}
+              size={64}
+              strokeWidth={5}
+              color={dayRingColor}
+            >
+              <span className="text-sm font-bold">{completedTasks}</span>
+            </CircularProgress>
+            <div className="flex-1">
+              <div className="gap-sm flex items-center">
+                <GreetIcon className="text-muted-foreground h-5 w-5" />
+                <span className="text-lg font-semibold">{greeting.label}</span>
+              </div>
+              <p className="text-muted-foreground mt-0.5 capitalize">{dateLabel}</p>
             </div>
-            <div className="hidden sm:block">
-              <p className="text-xs font-medium">
-                {t('pages.dailyChecklist.level', { level: gamification.current_level })}
+            <div className="text-right">
+              <p className="text-2xl font-bold">
+                {completedTasks}
+                <span className="text-muted-foreground text-base font-normal">
+                  /{cards.length}
+                </span>
               </p>
               <p className="text-muted-foreground text-xs">
-                {gamification.total_xp} XP
+                {t('pages.todayTasks.tasksLabel')}
               </p>
             </div>
           </div>
-          <div className="flex flex-1 flex-col gap-0.5">
-            <div className="text-muted-foreground flex justify-between text-xs">
-              <span className="gap-xs flex items-center">
-                <Zap className="text-warning h-3 w-3" />
-                {gamification.xp_in_level}/{gamification.xp_needed_for_next_level} XP
-              </span>
-              <span>{gamification.level_progress_pct}%</span>
-            </div>
-            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-              <div
-                className="bg-primary h-full rounded-full transition-[width]"
-                style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
-              />
-            </div>
-          </div>
-          {gamification.current_streak > 0 && (
-            <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
-              <Flame className="h-3.5 w-3.5 text-orange-500" />
-              <span className="text-sm font-bold text-orange-500">
-                {gamification.current_streak}
-              </span>
+
+          {gamification && (
+            <div className="gap-md bg-muted/30 px-md py-sm flex items-center rounded-lg border">
+              <div className="gap-sm flex items-center">
+                <div className="bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold">
+                  {gamification.current_level}
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-xs font-medium">
+                    {t('pages.dailyChecklist.level', {
+                      level: gamification.current_level,
+                    })}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {gamification.total_xp} XP
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col gap-0.5">
+                <div className="text-muted-foreground flex justify-between text-xs">
+                  <span className="gap-xs flex items-center">
+                    <Zap className="text-warning h-3 w-3" />
+                    {gamification.xp_in_level}/
+                    {gamification.xp_needed_for_next_level} XP
+                  </span>
+                  <span>{gamification.level_progress_pct}%</span>
+                </div>
+                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                  <div
+                    className="bg-primary h-full rounded-full transition-[width]"
+                    style={{
+                      width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+              {gamification.current_streak > 0 && (
+                <div className="gap-xs px-sm py-xs flex items-center rounded-full bg-orange-500/10">
+                  <Flame className="h-3.5 w-3.5 text-orange-500" />
+                  <span className="text-sm font-bold text-orange-500">
+                    {gamification.current_streak}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
+
+        {/* Toolbar */}
+        <div className="gap-md flex shrink-0 flex-wrap items-center">
+          {embedded && viewToggle}
+          <div className="gap-sm flex items-center">
+            <div role="group" aria-label={t('common.fields.date')}>
+              <DatePicker
+                value={selectedDate ? parseLocalDate(selectedDate) : undefined}
+                onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
+                placeholder={t('pages.dailyChecklist.datePlaceholder')}
+                maxDate={new Date()}
+                className="max-w-xs"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleSync}
+              disabled={isSyncing || isLoading}
+              aria-label={t('pages.dailyChecklist.syncBtn')}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+              />
+            </Button>
+            {viewMode === 'kanban' && (
+              <Button
+                size="icon"
+                onClick={handleSave}
+                disabled={isSaving}
+                aria-label={t('common.actions.save')}
+                title={t('common.actions.save')}
+              >
+                <Save
+                  className={cn('h-4 w-4', isSaving && 'animate-pulse')}
+                  aria-hidden="true"
+                />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {overdueTaskNotifications.length > 0 && (
         <div className="gap-sm border-destructive/30 bg-destructive/10 px-md py-sm text-destructive flex items-center rounded-lg border text-sm">
@@ -819,132 +831,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
           </span>
         </div>
       )}
-
-      {/* Toolbar */}
-      <div className="gap-md flex flex-wrap items-center">
-        {embedded && viewToggle}
-        <div className="gap-sm flex items-end">
-          <div>
-            <Label htmlFor="date">{t('common.fields.date')}</Label>
-            <DatePicker
-              value={selectedDate ? parseLocalDate(selectedDate) : undefined}
-              onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
-              placeholder={t('pages.dailyChecklist.datePlaceholder')}
-              maxDate={new Date()}
-              className="max-w-xs"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleSync}
-            disabled={isSyncing || isLoading}
-            aria-label={t('pages.dailyChecklist.syncBtn')}
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
-              aria-hidden="true"
-            />
-          </Button>
-          <Dialog open={isReflectionOpen} onOpenChange={setIsReflectionOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="relative"
-                aria-label={t('pages.dailyChecklist.addReflection')}
-              >
-                <StickyNote className="h-4 w-4" aria-hidden="true" />
-                {(reflection.trim() || mood) && (
-                  <span className="bg-primary absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full" />
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent size="md">
-              <DialogHeader>
-                <DialogTitle>{t('pages.dailyChecklist.reflectionTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('pages.dailyChecklist.reflectionPlaceholder')}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-md py-md">
-                <div>
-                  <Label htmlFor="mood">{t('pages.dailyChecklist.moodQuestion')}</Label>
-                  <Select value={mood} onValueChange={setMood}>
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('pages.dailyChecklist.moodPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MOOD_CHOICES.map((choice) => (
-                        <SelectItem key={choice.value} value={choice.value}>
-                          {choice.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="reflection">
-                    {t('pages.dailyChecklist.reflectionLabel')}
-                  </Label>
-                  <Textarea
-                    id="reflection"
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    placeholder={t('pages.dailyChecklist.reflectionTextPlaceholder')}
-                    rows={6}
-                  />
-                  {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-xs text-destructive text-sm">
-                      {t('pages.dailyChecklist.reflectionMinLength')}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <DialogFooter className="gap-sm flex-col sm:flex-row sm:items-center sm:justify-between">
-                <Link
-                  to="/planning/reflections"
-                  className="gap-xs text-muted-foreground hover:text-primary flex items-center text-xs transition-colors"
-                  onClick={() => setIsReflectionOpen(false)}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {t('pages.dailyChecklist.viewAllReflections')}
-                </Link>
-                <div className="gap-sm flex">
-                  <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
-                    <X className="mr-sm h-4 w-4" />
-                    {t('common.actions.close')}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      void handleSave().then(() => setIsReflectionOpen(false));
-                    }}
-                    disabled={
-                      isSaving ||
-                      (reflection.trim().length > 0 && reflection.trim().length < 10)
-                    }
-                  >
-                    <Save className="mr-sm h-4 w-4" />
-                    {t('common.actions.save')}
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="flex-1" />
-        <div className="text-lg font-semibold">
-          {completedTasks}{' '}
-          {t('pages.dailyChecklist.itemsCompleted', { total: cards.length })}
-          {summary.completion_rate > 0 && (
-            <span className="ml-sm text-sm">
-              ({summary.completion_rate.toFixed(0)}%)
-            </span>
-          )}
-        </div>
-      </div>
 
       {/* Vista Bloco de Foco */}
       {viewMode === 'focusBlocks' && selectedDate && (
@@ -1048,7 +934,13 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="gap-md md:gap-lg grid grid-cols-1 md:grid-cols-3">
+              {/* mb-0: o DndContext injeta nós ocultos de acessibilidade depois
+                  do quadro, então ele não é o último filho e receberia a
+                  margem inferior do space-y do wrapper. */}
+              <div
+                ref={boardRef}
+                className="gap-md md:gap-lg mb-0 grid grid-cols-1 md:grid-cols-3"
+              >
                 <KanbanColumn
                   status="todo"
                   title={t('pages.dailyChecklist.todo')}
@@ -1070,43 +962,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
               </DragOverlay>
             </DndContext>
           )}
-
-          {requiredCards.length > 0 &&
-            requiredCards.every((c) => c.status === 'done') &&
-            !reflection.trim() && (
-              <div className="gap-md border-success/30 bg-success/5 px-md py-md flex items-center rounded-lg border">
-                <CheckCircle2 className="text-success h-6 w-6 shrink-0" />
-                <div className="flex-1">
-                  <p className="text-foreground text-sm font-medium">
-                    {t('pages.dailyChecklist.reflectionPrompt')}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsReflectionOpen(true)}
-                >
-                  <StickyNote className="mr-xs h-3.5 w-3.5" />
-                  {t('pages.dailyChecklist.addReflection')}
-                </Button>
-              </div>
-            )}
-
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isSaving} size="lg">
-              {isSaving ? (
-                <>
-                  <Save className="mr-sm h-4 w-4 animate-pulse" />
-                  {t('common.actions.saving')}
-                </>
-              ) : (
-                <>
-                  <Save className="mr-sm h-4 w-4" />
-                  {t('common.actions.save')}
-                </>
-              )}
-            </Button>
-          </div>
         </>
       )}
     </Wrapper>

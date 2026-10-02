@@ -148,13 +148,6 @@ export function DailyFocusBlocks({
 
   return (
     <div className="space-y-sm">
-      <div className="gap-sm flex items-center">
-        <LayoutList className="text-primary h-4 w-4" />
-        <span className="text-sm font-semibold">
-          {t('pages.routineTasks.focusBlocks.title')}
-        </span>
-      </div>
-
       {visibleBlocks.length === 0 ? (
         <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
           <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />
@@ -165,15 +158,17 @@ export function DailyFocusBlocks({
           </p>
         </div>
       ) : (
-        visibleBlocks.map(({ block, tasks }) => (
-          <DailyFocusBlockCard
-            key={block.id}
-            block={block}
-            tasks={tasks}
-            onToggleTaskComplete={onToggleTaskComplete}
-            onEdit={() => handleEdit(block)}
-          />
-        ))
+        <div className="gap-sm grid lg:auto-cols-fr lg:grid-flow-col">
+          {visibleBlocks.map(({ block, tasks }) => (
+            <DailyFocusBlockCard
+              key={block.id}
+              block={block}
+              tasks={tasks}
+              onToggleTaskComplete={onToggleTaskComplete}
+              onEdit={() => handleEdit(block)}
+            />
+          ))}
+        </div>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

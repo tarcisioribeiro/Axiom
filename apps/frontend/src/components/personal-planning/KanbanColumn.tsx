@@ -52,7 +52,7 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
   };
 
   return (
-    <div className="flex max-h-[calc(100vh-14rem)] flex-col">
+    <div className="flex max-h-[var(--kanban-max-h,calc(100vh-14rem))] flex-col">
       <div
         className={`${getHeaderColor()} ${getHeaderTextColor()} px-md flex-shrink-0 rounded-t-lg py-3`}
       >
@@ -73,9 +73,6 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
             {cards.length}
           </span>
         </div>
-        <p className="text-sm opacity-90">
-          {t('pages.todayTasks.taskCount', { count: cards.length })}
-        </p>
       </div>
 
       <div

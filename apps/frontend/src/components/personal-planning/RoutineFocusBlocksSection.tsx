@@ -1,9 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { LayoutList, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { LayoutList } from 'lucide-react';
+import { useImperativeHandle, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -23,14 +22,20 @@ import { FocusBlockTasksEditor } from './FocusBlockTasksEditor';
 import { RoutineFocusBlockCard } from './RoutineFocusBlockCard';
 import { RoutineFocusBlockForm } from './RoutineFocusBlockForm';
 
+export interface RoutineFocusBlocksSectionHandle {
+  create: () => void;
+}
+
 interface RoutineFocusBlocksSectionProps {
   routineTasks: RoutineTask[];
   ownerId: number;
+  ref?: Ref<RoutineFocusBlocksSectionHandle>;
 }
 
 export function RoutineFocusBlocksSection({
   routineTasks,
   ownerId,
+  ref,
 }: RoutineFocusBlocksSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -54,6 +59,8 @@ export function RoutineFocusBlocksSection({
     setSelectedBlock(undefined);
     setIsDialogOpen(true);
   };
+
+  useImperativeHandle(ref, () => ({ create: handleCreate }));
 
   const handleEdit = (block: FocusBlock) => {
     setSelectedBlock(block);
@@ -159,27 +166,6 @@ export function RoutineFocusBlocksSection({
 
   return (
     <div className="space-y-sm">
-      <div className="gap-sm flex items-center">
-        <LayoutList className="text-primary h-4 w-4" />
-        <span className="text-sm font-semibold">
-          {t('pages.routineTasks.focusBlocks.title')}
-        </span>
-        {blocks.length > 0 && (
-          <span className="bg-primary/10 text-primary px-xs rounded-full py-0.5 text-xs font-medium">
-            {blocks.length}
-          </span>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCreate}
-          className="gap-xs px-sm ml-auto h-7 text-xs"
-        >
-          <Plus className="h-3 w-3" />
-          {t('pages.routineTasks.focusBlocks.newBlock')}
-        </Button>
-      </div>
-
       {blocks.length === 0 ? (
         <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
           <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />

@@ -63,6 +63,12 @@ type GoalFormData = z.infer<typeof goalSchema>;
 
 const AUTO_GOAL_TYPES = ['consecutive_days', 'total_days', 'avoid_habit'];
 
+const GOAL_STATUS_BADGE: Partial<Record<string, 'info' | 'success' | 'destructive'>> = {
+  active: 'info',
+  completed: 'success',
+  failed: 'destructive',
+};
+
 const GOAL_TYPE_META: Record<
   string,
   { icon: React.ElementType; label: string; color: string }
@@ -320,14 +326,7 @@ function GoalCard({
         )}
 
         <div className="flex items-center justify-between border-t pt-3">
-          <Badge
-            className={cn(
-              goal.status === 'active' && 'bg-info',
-              goal.status === 'completed' && 'bg-success',
-              goal.status === 'failed' && 'bg-destructive',
-              goal.status === 'cancelled' && 'bg-muted'
-            )}
-          >
+          <Badge variant={GOAL_STATUS_BADGE[goal.status] ?? 'secondary'}>
             {t(`pages.goals.form.statusOptions.${goal.status}`)}
           </Badge>
           <div className="gap-xs flex">

@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { PomodoroTriggerButton } from '@/components/personal-planning/PomodoroTimer';
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { cn } from '@/lib/utils';
@@ -186,7 +185,6 @@ export function KanbanCard({ card }: KanbanCardProps) {
               className="gap-xs flex flex-wrap items-center"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              {!isDone && <PomodoroTriggerButton taskName={card.task_name} />}
               {card.is_optional && (
                 <Badge variant="outline" className="text-xs">
                   {t('pages.dailyChecklist.optionalBadge', {
