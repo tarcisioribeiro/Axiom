@@ -9,13 +9,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { membersService } from '@/services/members-service';
 import { permissionsService, type Permission } from '@/services/permissions-service';
@@ -168,7 +162,6 @@ export default function Permissions() {
               <Users className="h-5 w-5" />
               {t('pages.permissions.membersTitle')}
             </CardTitle>
-            <CardDescription>{t('pages.permissions.membersDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-sm">
@@ -214,11 +207,6 @@ export default function Permissions() {
                 ? t('pages.permissions.permissionsOf', { name: selectedMember.name })
                 : t('pages.permissions.selectMember')}
             </CardTitle>
-            <CardDescription>
-              {selectedMember
-                ? t('pages.permissions.checkPermissions')
-                : t('pages.permissions.selectMemberDesc')}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             {selectedMember ? (

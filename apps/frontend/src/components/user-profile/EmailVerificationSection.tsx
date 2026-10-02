@@ -36,7 +36,6 @@ export function EmailVerificationSection({
     <Section
       icon={<Mail className="h-4 w-4" />}
       title={t('userProfile.emailVerification.title')}
-      description={t('userProfile.emailVerification.description')}
     >
       <div className="gap-md flex items-center justify-between">
         <div className="flex items-center gap-3">

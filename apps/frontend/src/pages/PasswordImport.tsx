@@ -449,9 +449,6 @@ export default function PasswordImport() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.passwordImport.categoryMappingStep')}</CardTitle>
-              <p className="text-muted-foreground text-sm">
-                {t('pages.passwordImport.categoryMappingDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-sm pr-xs max-h-96 overflow-y-auto">

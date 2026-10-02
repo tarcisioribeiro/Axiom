@@ -92,9 +92,6 @@ export default function ShareCredential() {
             <KeyRound className="text-primary h-7 w-7" />
           </div>
           <h1 className="text-2xl font-bold">{t('pages.shareCredential.title')}</h1>
-          <p className="mt-xs text-muted-foreground text-sm">
-            {t('pages.shareCredential.subtitle')}
-          </p>
         </div>
 
         {/* Loading */}

@@ -964,9 +964,6 @@ export default function Dashboard() {
                           {t('pages.dashboard.anomalies.title')}
                         </CardTitle>
                       </div>
-                      <p className="text-sm">
-                        {t('pages.dashboard.anomalies.subtitle')}
-                      </p>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-sm">
@@ -1022,9 +1019,6 @@ export default function Dashboard() {
                           {t('pages.dashboard.accountBalance')}
                         </CardTitle>
                       </div>
-                      <p className="text-sm">
-                        {t('pages.dashboard.accountBalanceDesc')}
-                      </p>
                     </CardHeader>
                     <CardContent>
                       {accountBalances.length > 0 ? (
@@ -1177,9 +1171,6 @@ export default function Dashboard() {
                             {t('pages.dashboard.balanceForecast')}
                           </CardTitle>
                         </div>
-                        <p className="text-sm">
-                          {t('pages.dashboard.balanceForecastDesc')}
-                        </p>
                       </CardHeader>
                       <CardContent>
                         <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -1684,9 +1675,6 @@ export default function Dashboard() {
                     <CardTitle as="h2">
                       {t('pages.dashboard.expensesByCategory')}
                     </CardTitle>
-                    <p className="text-sm">
-                      {t('pages.dashboard.expensesByCategoryDesc')}
-                    </p>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
@@ -1710,9 +1698,6 @@ export default function Dashboard() {
                     <CardTitle as="h2">
                       {t('pages.dashboard.revenuesByCategory')}
                     </CardTitle>
-                    <p className="text-sm">
-                      {t('pages.dashboard.revenuesByCategoryDesc')}
-                    </p>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
@@ -1737,9 +1722,6 @@ export default function Dashboard() {
                       <CreditCard className="h-4 w-4" />
                       {t('pages.dashboard.cardExpensesByCategory')}
                     </CardTitle>
-                    <p className="text-sm">
-                      {t('pages.dashboard.cardExpensesByCategoryDesc')}
-                    </p>
                     <div className="gap-sm pt-sm flex flex-wrap">
                       <Select
                         value={selectedCard}
@@ -1865,9 +1847,6 @@ export default function Dashboard() {
                             {t('pages.dashboard.monthBudgets')}
                           </CardTitle>
                         </div>
-                        <p className="text-muted-foreground text-sm">
-                          {t('pages.dashboard.monthBudgetsDesc')}
-                        </p>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-md">

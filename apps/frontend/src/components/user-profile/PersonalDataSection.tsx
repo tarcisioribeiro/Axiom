@@ -55,7 +55,6 @@ function PersonalDataForm({
     <Section
       icon={<User className="h-4 w-4" />}
       title={t('userProfile.personalData.title')}
-      description={t('userProfile.personalData.description')}
     >
       <div className="gap-md grid sm:grid-cols-2">
         <div className="sm:col-span-2">

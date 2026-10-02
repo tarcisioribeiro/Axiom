@@ -1074,9 +1074,6 @@ export default function LibraryDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
-          <p className="text-sm">
-            {t('pages.libraryDashboard.contentDistributionDesc')}
-          </p>
         </CardHeader>
         <CardContent>
           <ChartContainer
@@ -1350,9 +1347,6 @@ export default function LibraryDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
-            <p className="text-sm">
-              {t('pages.libraryDashboard.contentDistributionDesc')}
-            </p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -1642,9 +1636,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.monthlyComparisonDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               {stats?.monthly_comparison &&
@@ -1751,9 +1742,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.topGenresByTime')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.topGenresByTimeDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               {!translatedTopGenresByTime || translatedTopGenresByTime.length === 0 ? (
@@ -1810,9 +1798,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.genreDistribution')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.genreDistributionDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1835,7 +1820,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.readingStatus')}</CardTitle>
-              <p className="text-sm">{t('pages.libraryDashboard.readingStatusDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1867,9 +1851,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.readingTimelineDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1933,7 +1914,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.topAuthors')}</CardTitle>
-              <p className="text-sm">{t('pages.libraryDashboard.topAuthorsDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1965,9 +1945,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.ratingDistributionDesc')}
-              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -1990,9 +1967,6 @@ export default function LibraryDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>{t('pages.libraryDashboard.distributions')}</CardTitle>
-              <p className="text-sm">
-                {t('pages.libraryDashboard.distributionsDescExtended')}
-              </p>
             </CardHeader>
             <CardContent>
               <div className="gap-lg grid grid-cols-1 md:grid-cols-3">

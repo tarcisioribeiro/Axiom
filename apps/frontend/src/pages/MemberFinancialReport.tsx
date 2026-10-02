@@ -141,9 +141,6 @@ export default function MemberFinancialReportPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold">{report.member.name}</h2>
-            <p className="text-muted-foreground text-sm">
-              {t('pages.memberFinancialReport.subtitle')}
-            </p>
             {appliedStart && appliedEnd && (
               <p className="mt-xs text-muted-foreground text-xs">
                 {formatDate(appliedStart)} a {formatDate(appliedEnd)}

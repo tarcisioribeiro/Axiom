@@ -186,9 +186,6 @@ export default function NotificationPreferences() {
         title={t('pages.notificationPreferences.title')}
         icon={<Bell className="h-6 w-6" />}
       />
-      <p className="text-muted-foreground">
-        {t('pages.notificationPreferences.subtitle')}
-      </p>
 
       <div className="gap-md grid sm:grid-cols-2">
         {NOTIFICATION_TYPE_KEYS.map((key) => {

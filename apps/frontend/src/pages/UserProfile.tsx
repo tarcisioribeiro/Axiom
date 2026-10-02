@@ -71,7 +71,6 @@ export default function UserProfile() {
         <Section
           icon={<Shield className="h-4 w-4" />}
           title={t('userProfile.security.title')}
-          description={t('userProfile.security.description')}
         >
           <TwoFactorRow />
           <div className="bg-border h-px" />
@@ -81,7 +80,6 @@ export default function UserProfile() {
         <Section
           icon={<Bell className="h-4 w-4" />}
           title={t('pages.notificationPreferences.title')}
-          description={t('pages.notificationPreferences.subtitle')}
         >
           <div className="flex items-center justify-between">
             <p className="text-muted-foreground text-sm">

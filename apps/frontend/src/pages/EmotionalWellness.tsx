@@ -439,9 +439,6 @@ function SelfEsteemTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground font-semibold">Escala de Rosenberg</h2>
-          <p className="text-muted-foreground text-sm">
-            10 perguntas sobre como você se vê
-          </p>
         </div>
         <Button
           onClick={() => {
@@ -769,9 +766,6 @@ function CheckinTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground font-semibold">Como você está agora?</h2>
-          <p className="text-muted-foreground text-sm">
-            Responda com honestidade — só você vai ver.
-          </p>
         </div>
         <Button
           onClick={() => {
@@ -1391,9 +1385,6 @@ function ReportTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-semibold">Relatório Semanal</h2>
-          <p className="text-muted-foreground text-sm">
-            Análise dos seus padrões emocionais
-          </p>
         </div>
         <Button
           size="sm"

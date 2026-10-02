@@ -421,9 +421,6 @@ function AgentSelector({
           <BotMessageSquare className="text-primary h-7 w-7" />
         </div>
         <h2 className="heading-2 text-foreground">{t('pages.agents.selectAgent')}</h2>
-        <p className="mt-xs text-muted-foreground text-sm">
-          {t('pages.agents.selectAgentDesc')}
-        </p>
       </div>
 
       <div className="grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">

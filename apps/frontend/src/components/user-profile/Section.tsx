@@ -1,20 +1,12 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function Section({
   icon,
   title,
-  description,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
-  description: string;
   children: React.ReactNode;
 }) {
   return (
@@ -26,7 +18,6 @@ export function Section({
           </div>
           <div>
             <CardTitle className="text-base">{title}</CardTitle>
-            <CardDescription className="text-xs">{description}</CardDescription>
           </div>
         </div>
       </CardHeader>

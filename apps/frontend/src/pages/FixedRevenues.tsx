@@ -402,9 +402,6 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             <h3 className="text-base font-semibold">
               {t('pages.fixedRevenues.launchSection')}
             </h3>
-            <p className="mt-xs text-muted-foreground text-sm">
-              {t('pages.fixedRevenues.launchDesc')}
-            </p>
           </div>
           <Button
             onClick={() => setIsLaunchDialogOpen(true)}

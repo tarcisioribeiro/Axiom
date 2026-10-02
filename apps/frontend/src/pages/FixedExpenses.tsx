@@ -291,9 +291,6 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                 <h3 className="text-base font-semibold">
                   {t('pages.fixedExpenses.launchSection')}
                 </h3>
-                <p className="mt-xs text-muted-foreground text-sm">
-                  {t('pages.fixedExpenses.launchDesc')}
-                </p>
               </div>
               <Button
                 onClick={() => setIsLaunchDialogOpen(true)}
