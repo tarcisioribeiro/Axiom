@@ -31,7 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, formatQuantity } from '@/lib/utils';
 import type { MealLog, MealLogFormData, MealType } from '@/types/nutrition';
 
 interface MealLogFormProps {
@@ -307,7 +307,7 @@ export function MealLogForm({
                           <span>
                             {ing.food_name}
                             {ing.quantity
-                              ? ` — ${ing.quantity} ${t(`units.${ing.unit}`)}`
+                              ? ` — ${formatQuantity(t, ing.quantity, ing.unit)}`
                               : ''}
                             {ing.notes ? ` (${ing.notes})` : ''}
                           </span>

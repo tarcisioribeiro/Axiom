@@ -53,7 +53,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn, formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate, formatQuantity } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import {
   foodService,
@@ -646,7 +646,7 @@ export default function NutritionPage() {
                           </div>
                           <div className="gap-sm flex items-center">
                             <span className="text-muted-foreground text-xs">
-                              {log.time ?? ''}
+                              {log.time?.slice(0, 5) ?? ''}
                             </span>
                             <Button
                               aria-label={t('common.actions.delete')}
@@ -1425,12 +1425,12 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           {food.calories_per_serving && (
             <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
               <Flame className="h-3 w-3" />
-              {food.calories_per_serving} kcal
+              {Math.round(Number(food.calories_per_serving))} kcal
             </span>
           )}
           {food.serving_size && food.serving_unit && (
             <span className="text-muted-foreground text-xs">
-              {food.serving_size} {t(`units.${food.serving_unit}`, food.serving_unit)}
+              {formatQuantity(t, food.serving_size, food.serving_unit)}
             </span>
           )}
         </div>
@@ -1483,7 +1483,7 @@ function IngredientItem({ ing }: { ing: MenuOptionIngredient }) {
       <div className="mt-xs bg-category-nutrition/50 h-1.5 w-1.5 shrink-0 rounded-full" />
       <span className="text-muted-foreground text-xs">
         <span className="text-foreground font-medium">{ing.food_name}</span>
-        {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
+        {ing.quantity ? ` — ${formatQuantity(t, ing.quantity, ing.unit)}` : ''}
         {cal != null && (
           <span className="ml-xs inline-flex items-center gap-0.5 text-orange-500">
             <Flame className="h-2.5 w-2.5" />

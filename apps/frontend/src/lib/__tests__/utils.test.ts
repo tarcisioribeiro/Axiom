@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
+import i18n from '@/i18n';
 import {
   cn,
   formatLocalDate,
@@ -7,6 +8,7 @@ import {
   copyToClipboard,
   toLocalDate,
   getErrorMessage,
+  formatQuantity,
 } from '@/lib/utils';
 
 describe('cn', () => {
@@ -135,5 +137,16 @@ describe('getErrorMessage', () => {
 
   it('accepts a custom fallback', () => {
     expect(getErrorMessage(null, 'custom fallback')).toBe('custom fallback');
+  });
+});
+
+describe('formatQuantity', () => {
+  it('arredonda para inteiro e pluraliza a unidade', () => {
+    const t = i18n.getFixedT('pt-BR');
+    expect(formatQuantity(t, '2.00', 'tablespoon')).toBe('2 colheres de sopa');
+    expect(formatQuantity(t, '1.00', 'cup')).toBe('1 xícara');
+    expect(formatQuantity(t, '150.00', 'g')).toBe('150 g');
+    expect(formatQuantity(t, '3.00', 'clove')).toBe('3 dentes');
+    expect(formatQuantity(t, '2.00', 'capsule')).toBe('2 cápsulas');
   });
 });
