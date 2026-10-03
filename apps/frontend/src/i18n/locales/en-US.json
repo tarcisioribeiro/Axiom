@@ -3841,12 +3841,9 @@
       "level": "Level",
       "tasksCompleted": "tasks completed",
       "toNextLevel": "to next level",
-      "ctaChecklist": "▶ Open Today's Checklist",
-      "ctaTasks": "View Tasks & Goals",
       "ctaReflect": "Write Reflection",
       "ctaLogWorkout": "+ Log Workout",
       "ctaLogMeal": "+ Log Meal",
-      "insights": "Habit Insights",
       "taskCount_one": "{{count}} task",
       "taskCount_other": "{{count}} tasks",
       "weekdayShort": {
@@ -3857,15 +3854,6 @@
         "4": "Fri",
         "5": "Sat",
         "6": "Sun"
-      },
-      "weekdayLong": {
-        "0": "Monday",
-        "1": "Tuesday",
-        "2": "Wednesday",
-        "3": "Thursday",
-        "4": "Friday",
-        "5": "Saturday",
-        "6": "Sunday"
       },
       "monthShort": {
         "0": "Jan",
@@ -3891,12 +3879,6 @@
       "reflectionCorrelationTitle": "Mood × Task Completion",
       "heatmapTooltipNotScheduled": "{{date}} — not scheduled",
       "heatmapTooltipScheduled": "{{date}} — {{completed}} of {{expected}} completed",
-      "insightBestDay": "You are very consistent on {{weekday}} ({{rate}}% completion rate). Keep it up!",
-      "insightWorstDay": "{{weekday}} is your most difficult day ({{rate}}% completion rate). Consider reducing tasks on this day.",
-      "insightWeekendDrop": "Your consistency drops {{diff}}% on weekends ({{weekendRate}}% vs {{weekdayRate}}% on weekdays).",
-      "insightWeekendBetter": "You are more consistent on weekends ({{weekendRate}}% vs {{weekdayRate}}% on weekdays).",
-      "insightOverallExcellent": "Excellent! Your average completion rate over the last 90 days is {{rate}}%.",
-      "insightOverallLow": "Your average completion rate is {{rate}}%. Try reducing the number of tasks to focus on what matters most.",
       "workoutsTitle": "Workouts — last 30 days",
       "sessions30d": "Sessions (30d)",
       "thisWeek": "This week",
@@ -3910,12 +3892,9 @@
       "noWorkoutsRegistered": "No workouts registered",
       "sessionCount_one": "{{count}} session",
       "sessionCount_other": "{{count}} sessions",
-      "weeklyXP": "Weekly Progress — XP",
       "xpLabel": "XP this week",
       "xpProgress": "Level {{level}}",
-      "insightCTAWorstDay": "Adjust routine",
-      "insightCTAWorkout": "Log workout",
-      "insightCTAGoals": "See goals",
+      "sectionOverview": "Overview",
       "sectionWorkoutNutrition": "Workouts & Nutrition",
       "sectionDetailedAnalysis": "Detailed Analysis",
       "caloricSummary": {
@@ -3931,16 +3910,6 @@
         "noDuration": "No duration",
         "noMetrics": "Register your body measurements to enable the caloric summary.",
         "goToMetrics": "Go to measurements"
-      },
-      "moduleCards": {
-        "workoutTitle": "Workout",
-        "workoutSubtitle": "Sessions and exercises",
-        "nutritionTitle": "Nutrition",
-        "nutritionSubtitle": "Meals and macros",
-        "tasksTitle": "Tasks",
-        "tasksSubtitle": "Checklist and routine",
-        "goalsTitle": "Goals",
-        "goalsSubtitle": "Personal objectives"
       }
     },
     "routineTasks": {
@@ -6018,13 +5987,13 @@
         "mastered": "Mastered"
       },
       "rating": {
-        "label": "How did you do?",
         "0": "Forgot",
         "1": "Hard",
         "2": "With effort",
         "3": "Good",
         "4": "Easy",
-        "5": "Very easy"
+        "5": "Very easy",
+        "label": "How did you do?"
       },
       "stats": {
         "total": "Total",
