@@ -991,6 +991,7 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
     def validate(self, data):
+        self._validate_unique_name(data)
         value = data.get("category")
         if self.instance and value and value != self.instance.category:
             conflict = (
@@ -1013,6 +1014,32 @@ class WorkoutPlanSerializer(serializers.ModelSerializer):
                     }
                 )
         return data
+
+    def _validate_unique_name(self, data):
+        """Um plano por nome (sem diferenciar maiúsculas) + categoria por dono."""
+        instance = self.instance
+        name = data.get("name", instance.name if instance else "")
+        name = (name or "").strip()
+        category = data.get(
+            "category", instance.category if instance else "resistance"
+        )
+        owner = data.get("owner", instance.owner if instance else None)
+        if not name or owner is None:
+            return
+        if "name" in data:
+            data["name"] = name
+        duplicates = WorkoutPlan.objects.filter(
+            owner=owner,
+            category=category,
+            name__iexact=name,
+            deleted_at__isnull=True,
+        )
+        if instance:
+            duplicates = duplicates.exclude(pk=instance.pk)
+        if duplicates.exists():
+            raise serializers.ValidationError(
+                {"name": "Já existe um plano com este nome nesta categoria."}
+            )
 
     def get_day_count(self, obj):
         # `days` (e `days.exercises`) já vêm filtrados por soft-delete via

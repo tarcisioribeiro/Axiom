@@ -182,6 +182,7 @@ export function RoutineFocusBlocksSection({
           items={blocks}
           pageSize={LIST_PAGE_SIZE}
           className="gap-sm grid md:grid-cols-2"
+          pinNav={false}
         >
           {(pageBlocks) =>
             pageBlocks.map((block) => (

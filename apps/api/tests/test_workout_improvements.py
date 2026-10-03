@@ -257,3 +257,59 @@ class WorkoutImprovementsTest(APITestCase):
             {"category": "cardio"},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class WorkoutPlanUniqueNameTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser(
+            username="wk_unique", email="wku@test.com", password="testpass123"
+        )
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+        self.member = Member.objects.create(
+            name="WKU User",
+            document_hash="u" * 64,
+            phone="11999999934",
+            sex="M",
+            user=self.user,
+        )
+        self.plan = WorkoutPlan.objects.create(
+            name="Hipertrofia", category="resistance", owner=self.member
+        )
+
+    def _create(self, name, category="resistance"):
+        return self.client.post(
+            reverse("workout-plan-list-create"),
+            {"name": name, "category": category, "owner": self.member.pk},
+        )
+
+    def test_rejects_same_name_and_category_ignoring_case_and_spaces(self):
+        response = self._create("  hipertrofia ")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("name", response.data)
+
+    def test_allows_same_name_in_other_category(self):
+        response = self._create("Hipertrofia", category="cardio")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_allows_name_of_deleted_plan(self):
+        self.plan.is_deleted = True
+        self.plan.deleted_at = timezone.now()
+        self.plan.save()
+        response = self._create("Hipertrofia")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_rejects_rename_to_existing_plan(self):
+        other = WorkoutPlan.objects.create(
+            name="Força", category="resistance", owner=self.member
+        )
+        url = reverse("workout-plan-detail", args=[other.pk])
+        response = self.client.patch(url, {"name": "HIPERTROFIA"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_allows_saving_plan_with_its_own_name(self):
+        url = reverse("workout-plan-detail", args=[self.plan.pk])
+        response = self.client.patch(url, {"name": "Hipertrofia", "is_active": False})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

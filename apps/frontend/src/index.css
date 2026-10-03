@@ -1916,6 +1916,23 @@
   @apply -mx-lg px-lg pb-lg pt-md border-border/60 bg-card sticky bottom-0 z-10 border-t;
 }
 
+/* Área que ocupa a altura restante da página (.page-fill): cada ancestral até o
+   <main> vira coluna flex e cresce. Usado pelo PaginatedSlide (navegação na
+   mesma altura em todas as telas) e por conteúdos centralizados na vertical.
+   Grid e flex em linha ficam de fora para não quebrar layouts; nesses casos o
+   conteúdo só fica na altura natural. */
+main:has(.page-fill),
+main :has(.page-fill):not(.grid, .flex) {
+  display: flex;
+  flex-direction: column;
+}
+
+main > :has(.page-fill),
+main :has(.page-fill):not(.grid, .flex) > :has(.page-fill),
+main .flex-col > :has(.page-fill) {
+  flex-grow: 1;
+}
+
 /* Cabeçalho fixo (DialogHeader sticky). O modal vira block: num grid, um
    item sticky fica preso à própria linha e não acompanha a rolagem. */
 [role='dialog']:has(.dialog-header-sticky) {

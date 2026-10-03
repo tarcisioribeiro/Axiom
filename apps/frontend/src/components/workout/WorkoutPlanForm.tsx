@@ -3,7 +3,6 @@ import {
   Activity,
   CheckCircle2,
   ClipboardList,
-  Dumbbell,
   FileText,
   Loader2,
   XCircle,
@@ -21,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ValidationError } from '@/services/api-errors';
 import { WORKOUT_CATEGORIES } from '@/types/workout';
 import type { WorkoutPlan, WorkoutPlanFormData } from '@/types/workout';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -49,6 +49,7 @@ export function WorkoutPlanForm({
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<WorkoutPlanFormData>({
     defaultValues: {
@@ -79,6 +80,12 @@ export function WorkoutPlanForm({
     try {
       await onSubmit(data);
     } catch (err: unknown) {
+      // Nome duplicado (mesmo nome + categoria) → mensagem no próprio campo
+      const nameError = err instanceof ValidationError ? err.errors.name?.[0] : null;
+      if (nameError) {
+        setError('name', { type: 'server', message: nameError });
+        return;
+      }
       toast({
         title: t('pages.workoutPlans.saveError'),
         description: getErrorMessage(err),
@@ -88,122 +95,101 @@ export function WorkoutPlanForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header visual */}
-      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <Dumbbell className="text-category-exercise h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-exercise text-sm font-semibold">
-            {plan
-              ? t('pages.workoutPlans.editPlanTitle')
-              : t('pages.workoutPlans.newPlanTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.workoutPlans.newPlanDesc')}
-          </p>
-        </div>
-      </div>
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="gap-md flex min-h-0 flex-1 flex-col"
+    >
+      {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
+      <div className="space-y-lg px-xs min-h-0 flex-1 overflow-y-auto">
+        {/* Identificação */}
+        <FormSection title={t('pages.workoutPlans.planName')} icon={ClipboardList}>
+          <div className="space-y-sm">
+            <Input
+              placeholder={t('pages.workoutPlans.planNamePlaceholder')}
+              {...register('name', { required: true })}
+              className={cn(errors.name && 'border-destructive')}
+            />
+            {errors.name && (
+              <p className="text-destructive text-xs">
+                {errors.name.message || t('common.required')}
+              </p>
+            )}
+          </div>
+        </FormSection>
 
-      {/* Identificação */}
-      <FormSection title={t('pages.workoutPlans.planName')} icon={ClipboardList}>
-        <div className="space-y-sm">
-          <Input
-            placeholder={t('pages.workoutPlans.planNamePlaceholder')}
-            {...register('name', { required: true })}
-            className={cn(errors.name && 'border-destructive')}
+        {/* Categoria */}
+        <FormSection title={t('pages.workoutPlans.category')} icon={Activity}>
+          <div className="gap-sm grid grid-cols-3">
+            {WORKOUT_CATEGORIES.map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setValue('category', key)}
+                className={cn(
+                  'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
+                  category === key
+                    ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
+                    : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+                )}
+              >
+                {t(`pages.workoutPlans.categories.${key}`)}
+              </button>
+            ))}
+          </div>
+        </FormSection>
+
+        {/* Descrição */}
+        <FormSection title={t('pages.workoutPlans.planDescription')} icon={FileText}>
+          <Textarea
+            placeholder={t('pages.workoutPlans.planDescriptionPlaceholder')}
+            rows={3}
+            {...register('description')}
+            className="resize-none"
           />
-          {errors.name && (
-            <p className="text-destructive text-xs">{t('common.required')}</p>
-          )}
-        </div>
-      </FormSection>
+        </FormSection>
 
-      {/* Categoria */}
-      <FormSection title={t('pages.workoutPlans.category')} icon={Activity}>
-        <div className="gap-sm grid grid-cols-3">
-          {WORKOUT_CATEGORIES.map((key) => (
+        {/* Status */}
+        <div className="space-y-sm">
+          <Label className="gap-xs text-muted-foreground flex items-center text-xs font-semibold tracking-wider uppercase">
+            {t('pages.workoutPlans.planActive')}
+          </Label>
+          <div className="gap-sm grid grid-cols-2">
             <button
-              key={key}
               type="button"
-              onClick={() => setValue('category', key)}
+              onClick={() => setValue('is_active', true)}
               className={cn(
-                'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
-                category === key
-                  ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
-                  : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+                'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
+                isActive
+                  ? 'border-success bg-success/10 text-success'
+                  : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
               )}
             >
-              {t(`pages.workoutPlans.categories.${key}`)}
+              <CheckCircle2 className="h-4 w-4" />
+              {t('pages.workoutPlans.active')}
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setValue('is_active', false)}
+              className={cn(
+                'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
+                !isActive
+                  ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
+                  : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30'
+              )}
+            >
+              <XCircle className="h-4 w-4" />
+              {t('pages.workoutPlans.inactive')}
+            </button>
+          </div>
         </div>
-      </FormSection>
-
-      {/* Descrição */}
-      <FormSection title={t('pages.workoutPlans.planDescription')} icon={FileText}>
-        <Textarea
-          placeholder={t('pages.workoutPlans.planDescriptionPlaceholder')}
-          rows={3}
-          {...register('description')}
-          className="resize-none"
-        />
-      </FormSection>
-
-      {/* Status */}
-      <div className="space-y-sm">
-        <Label className="gap-xs text-muted-foreground flex items-center text-xs font-semibold tracking-wider uppercase">
-          {t('pages.workoutPlans.planActive')}
-        </Label>
-        <div className="gap-sm grid grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setValue('is_active', true)}
-            className={cn(
-              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
-              isActive
-                ? 'border-success bg-success/10 text-success'
-                : 'border-border bg-card text-muted-foreground hover:border-success/40 hover:bg-success/5'
-            )}
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            {t('pages.workoutPlans.active')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setValue('is_active', false)}
-            className={cn(
-              'gap-sm px-md py-sm flex items-center justify-center rounded-lg border-2 text-sm font-medium transition',
-              !isActive
-                ? 'border-muted-foreground/40 bg-muted/60 text-muted-foreground'
-                : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30'
-            )}
-          >
-            <XCircle className="h-4 w-4" />
-            {t('pages.workoutPlans.inactive')}
-          </button>
-        </div>
-        {isActive && (
-          <p className="text-muted-foreground text-xs">
-            {t(
-              'pages.workoutPlans.activeWarning',
-              'Planos ativos aparecem em destaque na tela de treinos.'
-            )}
-          </p>
-        )}
       </div>
 
-      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-exercise hover:bg-category-exercise/90"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (

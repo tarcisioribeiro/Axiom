@@ -4,12 +4,18 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface PaginatedSlideProps<T> {
   items: T[];
   pageSize: number;
   /** Classes do container de cada página (ex.: grid, space-y). */
   className?: string;
+  /** Fixa a navegação no rodapé da área da página (padrão). Use `false` em
+   * listas que são só uma seção dentro de outra tela. */
+  pinNav?: boolean;
+  /** Centraliza a lista na vertical no espaço acima da navegação. */
+  centerList?: boolean;
   children: (pageItems: T[]) => ReactNode;
 }
 
@@ -23,11 +29,17 @@ const slideVariants = {
  * Lista paginada no cliente com navegação ‹ › centralizada e transição de
  * deslize na direção da navegação. Para voltar à primeira página (ex.: troca
  * de filtro), remonte com `key`.
+ *
+ * Com `pinNav`, a classe `page-fill` faz os ancestrais até o <main>
+ * ocuparem a altura restante (ver index.css), e a lista cresce empurrando a navegação:
+ * fica na mesma altura em todas as telas.
  */
 export function PaginatedSlide<T>({
   items,
   pageSize,
   className,
+  pinNav = true,
+  centerList = false,
   children,
 }: PaginatedSlideProps<T>) {
   const { t } = useTranslation();
@@ -57,21 +69,25 @@ export function PaginatedSlide<T>({
     setPage({ index: pageIndex + direction, direction });
 
   return (
-    <div className="space-y-md">
-      <div ref={listRef} className="overflow-hidden">
-        <AnimatePresence mode="wait" initial={false} custom={page.direction}>
-          <motion.div
-            key={pageIndex}
-            custom={page.direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className={className}
-          >
-            {children(pageItems)}
-          </motion.div>
-        </AnimatePresence>
+    <div className={cn('gap-md flex flex-1 flex-col', pinNav && 'page-fill')}>
+      {/* Ocupa o espaço livre acima da navegação; a lista (listRef) mede só o
+          próprio conteúdo, para a altura travada não crescer com a janela. */}
+      <div className={cn('flex flex-1 flex-col', centerList && 'justify-center')}>
+        <div ref={listRef} className="overflow-hidden">
+          <AnimatePresence mode="wait" initial={false} custom={page.direction}>
+            <motion.div
+              key={pageIndex}
+              custom={page.direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className={className}
+            >
+              {children(pageItems)}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
       {totalPages > 1 && (
         <div className="gap-sm flex items-center justify-center">

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   addDays,
   addMonths,
@@ -9,9 +9,9 @@ import {
   isSameDay,
   startOfMonth,
   startOfWeek,
-  subMonths,
 } from 'date-fns';
 import { enUS, ptBR } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +47,13 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
   const locale = i18n.language === 'pt-BR' ? ptBR : enUS;
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  // 1 = avançou, -1 = voltou: define o lado de onde o novo mês entra
+  const [direction, setDirection] = useState(1);
+  const goToMonth = (delta: number) => {
+    setDirection(delta);
+    setSelectedDay(null);
+    setCurrentDate((d) => addMonths(d, delta));
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -58,6 +65,7 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
     queryFn: () =>
       workoutSessionService.getAllPages({ date_from: startStr, date_to: endStr }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
+    placeholderData: keepPreviousData,
   });
 
   const monthDays = useMemo(
@@ -83,9 +91,6 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
     return map;
   }, [events]);
 
-  const counts = { completed: 0, pending: 0, missed: 0 };
-  for (const ev of events) counts[ev.status] += 1;
-
   const weekdayLabels = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 });
     return Array.from({ length: 7 }, (_, i) =>
@@ -100,22 +105,14 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-md">
-      <div className="bg-muted/30 px-md py-sm text-muted-foreground rounded-lg border text-sm font-medium">
-        {t('workoutCalendar.summary', {
-          done: counts.completed,
-          pending: counts.pending,
-          missed: counts.missed,
-        })}
-      </div>
-
+    <div className="gap-md grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <Card>
         <CardHeader className="pb-sm">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setCurrentDate((d) => subMonths(d, 1))}
+              onClick={() => goToMonth(-1)}
               aria-label={t('financialCalendar.prevMonth')}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -126,7 +123,7 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setCurrentDate((d) => addMonths(d, 1))}
+              onClick={() => goToMonth(1)}
               aria-label={t('financialCalendar.nextMonth')}
             >
               <ChevronRight className="h-4 w-4" />
@@ -143,6 +140,13 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
                 {d}
               </div>
             ))}
+          </div>
+          <motion.div
+            key={startStr}
+            initial={{ opacity: 0, x: direction * 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="grid grid-cols-7 gap-px"
+          >
             {Array.from({ length: getDay(monthStart) }, (_, i) => (
               <div key={`blank-${i}`} className="min-h-[72px]" />
             ))}
@@ -186,7 +190,7 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
                 </button>
               );
             })}
-          </div>
+          </motion.div>
 
           <div className="mt-md gap-md flex flex-wrap">
             {(Object.keys(STATUS_DOT) as WorkoutEventStatus[]).map((status) => (
@@ -202,8 +206,9 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
         </CardContent>
       </Card>
 
-      {selectedDay && (
-        <Card>
+      {selectedDay ? (
+        // key troca a cada dia clicado → remonta e repete o pop-in
+        <Card key={format(selectedDay, 'yyyy-MM-dd')} className="animate-pop-in">
           <CardHeader className="pb-sm">
             <div className="flex items-center justify-between">
               <CardTitle as="h3">
@@ -244,6 +249,10 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
               </div>
             )}
           </CardContent>
+        </Card>
+      ) : (
+        <Card className="animate-fade-in p-lg text-muted-foreground text-center text-sm">
+          {t('workoutCalendar.selectDay')}
         </Card>
       )}
     </div>

@@ -5,9 +5,6 @@ import {
   Dumbbell,
   Loader2,
   Minus,
-  Plus,
-  Search,
-  StickyNote,
   Timer,
   Save,
   X,
@@ -16,13 +13,18 @@ import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
-import { Collapse } from '@/components/ui/collapsible-section';
 import { FormSection } from '@/components/ui/form-section';
 import { PlainButton } from '@/components/ui/plain-button';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { degradedReps } from '@/lib/workout-reps';
 import type { Exercise, SetTarget, WorkoutExercise } from '@/types/workout';
 
 interface FormValues {
@@ -55,6 +57,8 @@ interface WorkoutExerciseModalProps {
   }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Último peso da tela de Medidas, exibido quando a carga é peso corporal. */
+  bodyWeightKg?: string | number | null;
 }
 
 const LOAD_UNITS = [
@@ -63,7 +67,7 @@ const LOAD_UNITS = [
   { value: 'bw', label: 'Peso Corp.' },
 ];
 
-const REST_PRESETS = [0, 30, 60, 90, 120, 180];
+const REST_PRESETS = [30, 60, 90, 120, 180];
 
 function CounterInput({
   value,
@@ -79,7 +83,7 @@ function CounterInput({
   const { t } = useTranslation();
   return (
     <div className="gap-xs flex flex-col items-center">
-      <span className="text-muted-foreground text-2xs font-semibold tracking-wider uppercase">
+      <span className="text-muted-foreground text-2xs font-semibold tracking-wider whitespace-nowrap uppercase">
         {label}
       </span>
       <div className="border-border bg-background flex flex-col items-center rounded-lg border shadow-sm">
@@ -114,10 +118,9 @@ export function WorkoutExerciseModal({
   onSubmit,
   onCancel,
   isLoading = false,
+  bodyWeightKg = null,
 }: WorkoutExerciseModalProps) {
-  const { t } = useTranslation();
-  const [search, setSearch] = useState('');
-  const [showNotes, setShowNotes] = useState(!!existing?.notes);
+  const { t, i18n } = useTranslation();
   const [setTargets, setSetTargets] = useState<SetTarget[]>(
     existing?.set_targets ?? []
   );
@@ -155,16 +158,12 @@ export function WorkoutExerciseModal({
     if (selectedExercise) setValue('exercise_id', selectedExercise.id);
   }, [selectedExercise, setValue]);
 
-  const filtered = exercises.filter(
-    (e) =>
-      e.name.toLowerCase().includes(search.toLowerCase()) ||
-      (e.muscle_groups ?? '').toLowerCase().includes(search.toLowerCase())
-  );
-
   const handleFormSubmit = async (data: FormValues) => {
     if (!selectedExercise) return;
     const targets = Array.from({ length: data.sets }, (_, i) => ({
-      reps: setTargets[i]?.reps ?? null,
+      // Série vazia grava a sugestão (máximo → mínimo ao longo das séries)
+      reps:
+        setTargets[i]?.reps ?? degradedReps(i, data.sets, data.reps_min, data.reps_max),
       load: data.load_unit === 'bw' ? null : (setTargets[i]?.load ?? null),
     }));
     await onSubmit({
@@ -185,306 +184,208 @@ export function WorkoutExerciseModal({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-exercise/10 px-md py-sm ring-category-exercise/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-exercise/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <Dumbbell className="text-category-exercise h-5 w-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-category-exercise text-sm font-semibold">
-            {existing
-              ? t('pages.workoutPlans.editExerciseTitle')
-              : t('pages.workoutPlans.addExerciseTitle')}
-          </p>
-          {selectedExercise ? (
-            <p className="text-muted-foreground truncate text-xs">
-              {selectedExercise.name}
-              {selectedExercise.muscle_groups && (
-                <span className="ml-xs opacity-60">
-                  · {selectedExercise.muscle_groups}
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="gap-md flex min-h-0 flex-1 flex-col"
+    >
+      {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
+      <div className="space-y-lg px-xs min-h-0 flex-1 overflow-y-auto">
+        <FormSection title={t('pages.workoutPlans.selectExercise')} icon={Dumbbell}>
+          <Select
+            value={selectedExercise ? String(selectedExercise.id) : undefined}
+            onValueChange={(id) =>
+              setSelectedExercise(exercises.find((e) => String(e.id) === id) ?? null)
+            }
+            disabled={exercises.length === 0}
+          >
+            <SelectTrigger aria-label={t('pages.workoutPlans.selectExercise')}>
+              <SelectValue
+                placeholder={
+                  exercises.length === 0
+                    ? t('pages.exercises.empty')
+                    : t('pages.workoutPlans.selectExercise')
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {exercises.map((ex) => (
+                <SelectItem key={ex.id} value={String(ex.id)}>
+                  {ex.name}
+                  {ex.muscle_groups && (
+                    <span className="text-muted-foreground ml-xs text-xs">
+                      · {ex.muscle_groups}
+                    </span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormSection>
+
+        {/* Séries, descanso e carga lado a lado */}
+        <div className="gap-lg grid md:grid-cols-3">
+          {/* Séries e repetições */}
+          <FormSection
+            title={
+              t('pages.workoutPlans.sets') + ' & ' + t('pages.workoutPlans.repsMin')
+            }
+            icon={Dumbbell}
+          >
+            <div className="gap-lg py-xs flex items-start justify-center">
+              <CounterInput
+                value={sets}
+                onChange={(v) => setValue('sets', v)}
+                min={0}
+                label={t('pages.workoutPlans.sets')}
+              />
+              <div className="gap-md flex items-end">
+                <CounterInput
+                  value={repsMin}
+                  onChange={(v) => setValue('reps_min', Math.min(v, repsMax))}
+                  min={0}
+                  label={t('pages.workoutPlans.repsMin')}
+                />
+                {/* Mesma altura do corpo do contador (h-8 + h-10 + h-8): "–" no meio */}
+                <span className="text-muted-foreground flex h-[6.5rem] items-center text-xs font-medium">
+                  –
                 </span>
-              )}
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-xs">
-              {t('pages.workoutPlans.selectExercise')}
-            </p>
-          )}
-        </div>
-      </div>
+                <CounterInput
+                  value={repsMax}
+                  onChange={(v) => setValue('reps_max', Math.max(v, repsMin))}
+                  min={0}
+                  label={t('pages.workoutPlans.repsMax')}
+                />
+              </div>
+            </div>
+          </FormSection>
 
-      {/* Seleção de exercício */}
-      <FormSection title={t('pages.workoutPlans.selectExercise')} icon={Search}>
-        <div className="space-y-xs">
-          <SearchInput
-            placeholder={t('pages.workoutPlans.searchExercise')}
-            value={search}
-            onValueChange={setSearch}
-          />
+          {/* Descanso entre séries */}
+          <FormSection
+            title={t('pages.workoutPlans.restSeconds', 'Descanso entre séries')}
+            icon={Timer}
+            // Seções da linha esticam até a mais alta (contadores): opções no meio
+            className="flex flex-col"
+            contentClassName="flex flex-1 items-center justify-center"
+          >
+            <div className="gap-xs flex flex-wrap justify-center">
+              {REST_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setValue('rest_seconds', preset)}
+                  className={cn(
+                    'px-sm py-xs rounded-lg border text-xs font-semibold transition',
+                    restSeconds === preset
+                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
+                  )}
+                >
+                  {preset}s
+                </button>
+              ))}
+            </div>
+          </FormSection>
 
-          <div className="space-y-xs border-border p-xs max-h-40 overflow-y-auto rounded-lg border">
-            {filtered.length === 0 ? (
-              <p className="py-sm text-muted-foreground text-center text-xs">
-                {t('pages.exercises.empty')}
-              </p>
-            ) : (
-              filtered.map((ex) => {
-                const isSelected = selectedExercise?.id === ex.id;
-                return (
+          {/* Carga */}
+          <FormSection
+            title={t('pages.workoutPlans.load')}
+            icon={Minus}
+            className="flex flex-col"
+            contentClassName="flex flex-1 items-center justify-center"
+          >
+            <div className="gap-sm flex items-center">
+              <input
+                type="number"
+                min={0}
+                step="0.5"
+                placeholder="0"
+                {...register('load')}
+                className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
+              />
+              <div className="gap-xs flex">
+                {LOAD_UNITS.map((unit) => (
                   <button
-                    key={ex.id}
+                    key={unit.value}
                     type="button"
-                    onClick={() => setSelectedExercise(ex)}
+                    onClick={() => setValue('load_unit', unit.value)}
                     className={cn(
-                      'gap-sm px-sm py-xs flex w-full items-center rounded-lg text-left transition',
-                      isSelected
-                        ? 'bg-category-exercise/15 ring-category-exercise/30 ring-1'
-                        : 'hover:bg-accent'
+                      'px-sm py-xs rounded-lg border text-xs font-semibold transition',
+                      loadUnit === unit.value
+                        ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                        : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
                     )}
                   >
-                    <div
-                      className={cn(
-                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-                        isSelected
-                          ? 'bg-category-exercise/25 text-category-exercise'
-                          : 'bg-muted text-muted-foreground'
-                      )}
-                    >
-                      <Dumbbell className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <span
-                        className={cn(
-                          'block text-sm font-medium',
-                          isSelected && 'text-category-exercise'
-                        )}
-                      >
-                        {ex.name}
-                      </span>
-                      {ex.muscle_groups && (
-                        <span className="text-muted-foreground text-xs">
-                          {ex.muscle_groups}
-                        </span>
-                      )}
-                    </div>
+                    {unit.label}
                   </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </FormSection>
-
-      {/* Séries e repetições */}
-      <FormSection
-        title={t('pages.workoutPlans.sets') + ' & ' + t('pages.workoutPlans.repsMin')}
-        icon={Dumbbell}
-      >
-        <div className="gap-lg py-xs flex items-start justify-center">
-          <CounterInput
-            value={sets}
-            onChange={(v) => setValue('sets', v)}
-            min={0}
-            label={t('pages.workoutPlans.sets')}
-          />
-          <div className="gap-md flex items-center pt-8">
-            <CounterInput
-              value={repsMin}
-              onChange={(v) => setValue('reps_min', Math.min(v, repsMax))}
-              min={0}
-              label={t('pages.workoutPlans.repsMin')}
-            />
-            <span className="text-muted-foreground pb-2 text-xs font-medium">–</span>
-            <CounterInput
-              value={repsMax}
-              onChange={(v) => setValue('reps_max', Math.max(v, repsMin))}
-              min={0}
-              label={t('pages.workoutPlans.repsMax')}
-            />
-          </div>
-        </div>
-        <div className="bg-muted/40 py-xs text-muted-foreground rounded-lg text-center text-xs">
-          {sets === 0 ? (
-            <span>{t('pages.workoutPlans.noSetsLabel')}</span>
-          ) : repsMin === 0 && repsMax === 0 ? (
-            <>
-              <strong className="text-foreground font-semibold">{sets}</strong>{' '}
-              {t('pages.workoutPlans.setsOf')}{' '}
-              <span>{t('pages.workoutPlans.noRepsLabel', 'sem repetições')}</span>
-            </>
-          ) : (
-            <>
-              <strong className="text-foreground font-semibold">{sets}</strong>{' '}
-              {t('pages.workoutPlans.setsOf')}{' '}
-              <strong className="text-foreground font-semibold">
-                {repsMin === repsMax ? repsMin : `${repsMin}–${repsMax}`}
-              </strong>{' '}
-              {t('pages.workoutPlans.repsPlural', 'repetições')}
-            </>
-          )}
-        </div>
-      </FormSection>
-
-      {/* Descanso entre séries */}
-      <FormSection
-        title={t('pages.workoutPlans.restSeconds', 'Descanso entre séries')}
-        icon={Timer}
-      >
-        <div className="space-y-sm">
-          <div className="gap-xs flex flex-wrap">
-            {REST_PRESETS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setValue('rest_seconds', preset)}
-                className={cn(
-                  'px-sm py-xs rounded-lg border text-xs font-semibold transition',
-                  restSeconds === preset
-                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
-                )}
-              >
-                {preset === 0 ? t('pages.workoutPlans.noRest') : `${preset}s`}
-              </button>
-            ))}
-          </div>
-          <div className="gap-sm flex items-center">
-            <input
-              type="number"
-              min={0}
-              step={5}
-              {...register('rest_seconds', { valueAsNumber: true })}
-              className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
-            />
-            <span className="text-muted-foreground text-sm">
-              {t('pages.workoutPlans.seconds')}
-            </span>
-          </div>
-        </div>
-      </FormSection>
-
-      {/* Carga */}
-      <FormSection title={t('pages.workoutPlans.load')} icon={Minus}>
-        <div className="gap-sm flex items-center">
-          <input
-            type="number"
-            min={0}
-            step="0.5"
-            placeholder="0"
-            {...register('load')}
-            className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
-          />
-          <div className="gap-xs flex">
-            {LOAD_UNITS.map((unit) => (
-              <button
-                key={unit.value}
-                type="button"
-                onClick={() => setValue('load_unit', unit.value)}
-                className={cn(
-                  'px-sm py-xs rounded-lg border text-xs font-semibold transition',
-                  loadUnit === unit.value
-                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
-                )}
-              >
-                {unit.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </FormSection>
-
-      {/* Carga e repetições por série */}
-      {sets > 0 && (
-        <FormSection title={t('pages.workoutPlans.perSetTitle')} icon={Dumbbell}>
-          <div className="space-y-xs">
-            <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[3.5rem_1fr_1fr] text-xs font-medium">
-              <span>{t('pages.workoutPlans.setLabel')}</span>
-              <span>{t('pages.workoutPlans.repsShort')}</span>
-              <span>{t('pages.workoutPlans.load')}</span>
+                ))}
+              </div>
             </div>
-            {Array.from({ length: sets }, (_, i) => (
-              <div
-                key={i}
-                className="gap-xs grid grid-cols-[3.5rem_1fr_1fr] items-center"
-              >
-                <span className="text-muted-foreground text-center text-xs font-medium">
-                  {i + 1}
-                </span>
-                <input
-                  type="number"
-                  min={0}
-                  aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.repsShort')}`}
-                  placeholder={String(repsMin)}
-                  value={setTargets[i]?.reps ?? ''}
-                  onChange={(e) =>
-                    updateSetTarget(i, {
-                      reps: e.target.value === '' ? null : Number(e.target.value),
-                    })
-                  }
-                  className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
-                />
-                {loadUnit === 'bw' ? (
-                  <span className="text-muted-foreground text-center text-xs">
-                    {t('pages.workoutPlans.bodyweight')}
+          </FormSection>
+        </div>
+
+        {/* Carga e repetições por série */}
+        {sets > 0 && (
+          <FormSection title={t('pages.workoutPlans.perSetTitle')} icon={Dumbbell}>
+            <div className="space-y-xs">
+              <div className="gap-xs px-xs text-muted-foreground grid grid-cols-[3.5rem_1fr_1fr] text-center text-xs font-medium">
+                <span>{t('pages.workoutPlans.setLabel')}</span>
+                <span>{t('pages.workoutPlans.repsShort')}</span>
+                <span>{t('pages.workoutPlans.load')}</span>
+              </div>
+              {Array.from({ length: sets }, (_, i) => (
+                <div
+                  key={i}
+                  className="gap-xs grid grid-cols-[3.5rem_1fr_1fr] items-center"
+                >
+                  <span className="text-muted-foreground text-center text-xs font-medium">
+                    {i + 1}
                   </span>
-                ) : (
                   <input
                     type="number"
                     min={0}
-                    step="0.5"
-                    aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.load')}`}
-                    placeholder={watch('load') || '0'}
-                    value={setTargets[i]?.load ?? ''}
+                    aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.repsShort')}`}
+                    placeholder={String(degradedReps(i, sets, repsMin, repsMax))}
+                    value={setTargets[i]?.reps ?? ''}
                     onChange={(e) =>
-                      updateSetTarget(i, { load: e.target.value || null })
+                      updateSetTarget(i, {
+                        reps: e.target.value === '' ? null : Number(e.target.value),
+                      })
                     }
                     className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
                   />
-                )}
-              </div>
-            ))}
-            <p className="text-muted-foreground text-xs">
-              {t('pages.workoutPlans.perSetHint')}
-            </p>
-          </div>
-        </FormSection>
-      )}
-
-      {/* Observações */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowNotes((v) => !v)}
-          className="gap-xs text-muted-foreground hover:text-foreground flex items-center text-xs font-medium"
-        >
-          <StickyNote className="h-3.5 w-3.5" />
-          {showNotes
-            ? t('pages.workoutPlans.hideNotes', 'Ocultar observações')
-            : t('pages.workoutPlans.showNotes', 'Adicionar observações')}
-          {showNotes ? <ChevronUp className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-        </button>
-        <Collapse open={showNotes}>
-          <Textarea
-            placeholder={t('pages.workoutPlans.notesPlaceholder')}
-            rows={2}
-            {...register('notes')}
-            className="mt-sm resize-none"
-          />
-        </Collapse>
+                  {loadUnit === 'bw' ? (
+                    <span className="text-muted-foreground text-center text-xs">
+                      {t('pages.workoutPlans.bodyweight')}
+                      {bodyWeightKg != null &&
+                        ` - ${Number(bodyWeightKg).toLocaleString(i18n.language)} kg`}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.5"
+                      aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.load')}`}
+                      placeholder={watch('load') || '0'}
+                      value={setTargets[i]?.load ?? ''}
+                      onChange={(e) =>
+                        updateSetTarget(i, { load: e.target.value || null })
+                      }
+                      className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </FormSection>
+        )}
       </div>
 
-      <div className="dialog-footer gap-sm border-border pt-md flex justify-end border-t">
+      <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading || !selectedExercise}
-          className="bg-category-exercise hover:bg-category-exercise/90"
-        >
+        <Button type="submit" disabled={isLoading || !selectedExercise}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (
