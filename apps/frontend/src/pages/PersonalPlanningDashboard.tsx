@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -252,23 +251,6 @@ export default function PersonalPlanningDashboard() {
         count: item.count,
       }))
     : [];
-
-  const reflectionCorrelation = useMemo(() => {
-    if (!stats?.recent_reflections || !stats?.weekly_progress) return [];
-    const progressByDate: Record<string, number> = {};
-    stats.weekly_progress.forEach((p) => {
-      progressByDate[p.date] = p.rate;
-    });
-    return stats.recent_reflections
-      .filter((r) => progressByDate[r.date] !== undefined)
-      .map((r) => ({
-        date: r.date,
-        mood: r.mood ?? '',
-        mood_display: r.mood_display ?? '',
-        rate: progressByDate[r.date],
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [stats]);
 
   const getCategoryColor = (category: string) =>
     categoryColors[category as keyof typeof categoryColors] || categoryColors.other;
@@ -882,78 +864,6 @@ export default function PersonalPlanningDashboard() {
             </Card>
           </div>
 
-          {/* Linha 5b: Humor × Conclusão */}
-          {reflectionCorrelation.length > 0 && (
-            <Card>
-              <CardHeader className="pb-sm">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="gap-sm flex items-center text-sm">
-                    <Activity className="text-info h-4 w-4" />
-                    {t('pages.planningDashboard.reflectionCorrelationTitle', {
-                      defaultValue: 'Humor × Conclusão de Tarefas',
-                    })}
-                  </CardTitle>
-                  <Link
-                    to="/planning/reflections"
-                    className="bg-muted px-sm text-muted-foreground hover:text-foreground rounded-md py-0.5 text-xs font-medium transition-colors"
-                  >
-                    {t('pages.planningDashboard.ctaReflect')}
-                  </Link>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="gap-md flex flex-wrap">
-                  {reflectionCorrelation.map((entry) => {
-                    const parts = entry.date.split('-');
-                    const dateLabel = `${parts[2]}/${parts[1]}`;
-                    const moodColor =
-                      entry.mood === 'excellent'
-                        ? 'bg-success text-success-foreground'
-                        : entry.mood === 'good'
-                          ? 'bg-info text-info-foreground'
-                          : entry.mood === 'neutral'
-                            ? 'bg-warning text-warning-foreground'
-                            : entry.mood === 'bad'
-                              ? 'bg-orange-500 text-white'
-                              : entry.mood === 'terrible'
-                                ? 'bg-destructive text-destructive-foreground'
-                                : 'bg-muted text-muted-foreground';
-                    const barWidth = Math.min(entry.rate, 100);
-                    return (
-                      <div
-                        key={entry.date}
-                        className="gap-xs p-sm flex min-w-[120px] flex-1 flex-col rounded-lg border"
-                      >
-                        <div className="gap-xs flex items-center justify-between">
-                          <span className="text-muted-foreground text-xs">
-                            {dateLabel}
-                          </span>
-                          {entry.mood && (
-                            <span
-                              className={`px-xs rounded-full py-0.5 text-xs font-medium ${moodColor}`}
-                            >
-                              {entry.mood_display}
-                            </span>
-                          )}
-                        </div>
-                        <div className="gap-xs flex items-center">
-                          <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
-                            <div
-                              className="bg-primary h-full rounded-full transition-[width]"
-                              style={{ width: `${barWidth}%` }}
-                            />
-                          </div>
-                          <span className="w-9 text-right text-xs font-semibold">
-                            {entry.rate.toFixed(0)}%
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </Collapse>
     </PageContainer>

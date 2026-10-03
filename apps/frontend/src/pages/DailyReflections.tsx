@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format, parseISO, subDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Plus,
@@ -24,6 +24,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { DailyReflectionForm } from '@/components/personal-planning/DailyReflectionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -64,14 +64,6 @@ const MOOD_VARIANT: Record<
   terrible: 'destructive',
 };
 
-const MOOD_DOT: Record<string, string> = {
-  excellent: 'bg-success',
-  good: 'bg-info',
-  neutral: 'bg-secondary',
-  bad: 'bg-warning',
-  terrible: 'bg-destructive',
-};
-
 function getMoodIcon(mood: string) {
   const cls = 'h-4 w-4';
   switch (mood) {
@@ -88,37 +80,6 @@ function getMoodIcon(mood: string) {
     default:
       return null;
   }
-}
-
-function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
-  const today = new Date();
-  const days = Array.from({ length: 21 }, (_, i) => {
-    const d = subDays(today, 20 - i);
-    const key = formatLocalDate(d);
-    const ref = reflections.find((r) => r.date === key);
-    return { date: d, key, mood: ref?.mood };
-  });
-
-  return (
-    <div className="mb-lg gap-sm flex items-end">
-      {days.map(({ date, key, mood }) => (
-        <div key={key} className="gap-xs flex flex-col items-center">
-          <div
-            title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
-            className={cn(
-              'h-3 w-3 rounded-full transition',
-              mood ? MOOD_DOT[mood] : 'bg-muted'
-            )}
-          />
-          {date.getDay() === 0 && (
-            <span className="text-muted-foreground text-2xs">
-              {format(date, 'dd/MM')}
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function ReflectionCard({
@@ -219,6 +180,7 @@ function ReflectionCard({
 }
 
 const EMPTY_REFLECTIONS: DailyReflection[] = [];
+const REFLECTIONS_PAGE_SIZE = 4;
 
 export default function DailyReflections() {
   const { t } = useTranslation();
@@ -344,28 +306,6 @@ export default function DailyReflections() {
         }}
       />
 
-      {/* Timeline de humores dos últimos 21 dias */}
-      {reflections.length > 0 && (
-        <div className="bg-card py-md rounded-lg border px-5">
-          <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">
-            {t('pages.dailyReflections.moodTimeline')}
-          </p>
-          <MoodTimeline reflections={reflections} />
-          <div className="gap-md text-muted-foreground flex items-center text-xs">
-            {MOOD_CHOICES.map((c) => (
-              <span key={c.value} className="gap-xs flex items-center">
-                <span className={cn('h-2.5 w-2.5 rounded-full', MOOD_DOT[c.value])} />
-                {c.label}
-              </span>
-            ))}
-            <span className="gap-xs flex items-center">
-              <span className="bg-muted h-2.5 w-2.5 rounded-full" />
-              {t('pages.dailyReflections.noMood')}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Filtros */}
       <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
         <Select value={moodFilter} onValueChange={setMoodFilter}>
@@ -423,31 +363,38 @@ export default function DailyReflections() {
           }}
         />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((r) => (
-            <ReflectionCard
-              key={r.id}
-              reflection={r}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          key={`${moodFilter}-${startDate?.getTime()}-${endDate?.getTime()}`}
+          items={filtered}
+          pageSize={REFLECTIONS_PAGE_SIZE}
+          className="space-y-3"
+        >
+          {(pageReflections) =>
+            pageReflections.map((r) => (
+              <ReflectionCard
+                key={r.id}
+                reflection={r}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              {selected ? (
+                <Edit className="text-primary h-4 w-4" />
+              ) : (
+                <BookOpen className="text-primary h-4 w-4" />
+              )}
               {selected
                 ? t('pages.dailyReflections.editTitle')
                 : t('pages.dailyReflections.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selected
-                ? t('pages.dailyReflections.editDesc')
-                : t('pages.dailyReflections.newDesc')}
-            </DialogDescription>
           </DialogHeader>
           <DailyReflectionForm
             reflection={selected}
