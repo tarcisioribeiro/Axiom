@@ -33,6 +33,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
@@ -393,6 +395,8 @@ interface GoalsProps {
 }
 
 const EMPTY_GOALS: Goal[] = [];
+// Uma linha do grid (3 colunas em lg+).
+const GOALS_PAGE_SIZE = 3;
 const EMPTY_TASKS: RoutineTask[] = [];
 
 function Wrapper({
@@ -618,11 +622,10 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
   if (isLoading) return <LoadingState />;
 
-  const activeGoals = goals.filter((g) => g.status === 'active');
-  const completedGoals = goals.filter((g) => g.status === 'completed');
-  const otherGoals = goals.filter(
-    (g) => g.status !== 'active' && g.status !== 'completed'
-  );
+  // Ativos primeiro, depois concluídos, depois os demais (ordem estável).
+  const statusRank = (g: Goal) =>
+    g.status === 'active' ? 0 : g.status === 'completed' ? 1 : 2;
+  const sortedGoals = [...goals].sort((a, b) => statusRank(a) - statusRank(b));
 
   const cardProps = {
     onEdit: handleEdit,
@@ -668,61 +671,45 @@ export default function Goals({ embedded = false }: GoalsProps) {
           }}
         />
       ) : (
-        <div className="space-y-xl">
-          {activeGoals.length > 0 && (
-            <section>
-              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
-                <span className="bg-info h-2 w-2 rounded-full" />
-                {t('pages.goals.sectionActive')} ({activeGoals.length})
-              </h2>
-              <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
-                {activeGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
-                ))}
+        <PaginatedSlide
+          items={sortedGoals}
+          pageSize={GOALS_PAGE_SIZE}
+          className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageGoals) =>
+            pageGoals.map((goal) => (
+              <div
+                key={goal.id}
+                className={cn(
+                  goal.status !== 'active' &&
+                    goal.status !== 'completed' &&
+                    'opacity-70'
+                )}
+              >
+                <GoalCard goal={goal} {...cardProps} />
               </div>
-            </section>
-          )}
-
-          {completedGoals.length > 0 && (
-            <section>
-              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
-                <span className="bg-success h-2 w-2 rounded-full" />
-                {t('pages.goals.sectionCompleted')} ({completedGoals.length})
-              </h2>
-              <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3">
-                {completedGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {otherGoals.length > 0 && (
-            <section>
-              <h2 className="gap-sm text-muted-foreground mb-3 flex items-center text-sm font-semibold tracking-wide uppercase">
-                <span className="bg-muted-foreground h-2 w-2 rounded-full" />
-                {t('pages.goals.sectionOther')} ({otherGoals.length})
-              </h2>
-              <div className="gap-md grid opacity-70 sm:grid-cols-2 lg:grid-cols-3">
-                {otherGoals.map((goal) => (
-                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       {/* Modal edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle className="gap-sm flex items-center">
+              {selectedGoal ? (
+                <Edit className="text-primary h-4 w-4" />
+              ) : (
+                <Trophy className="text-primary h-4 w-4" />
+              )}
               {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedGoal ? t('pages.goals.editDesc') : t('pages.goals.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedGoal ? t('pages.goals.editDesc') : t('pages.goals.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <GoalForm
             goal={selectedGoal}

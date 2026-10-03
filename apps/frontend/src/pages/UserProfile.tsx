@@ -85,7 +85,10 @@ export default function UserProfile() {
           <DialogHeader>
             <DialogTitle>{t('pages.notificationPreferences.title')}</DialogTitle>
           </DialogHeader>
-          <NotificationPreferencesContent bodyClassName="-mx-lg px-lg min-h-0 flex-1 overflow-y-auto py-px" />
+          <NotificationPreferencesContent
+            bodyClassName="-mx-lg px-lg min-h-0 flex-1 overflow-y-auto py-px"
+            onClose={() => setNotificationsOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

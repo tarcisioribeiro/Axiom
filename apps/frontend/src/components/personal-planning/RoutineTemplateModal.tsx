@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -614,6 +615,7 @@ export function RoutineTemplateModal({
               />
             </TabsContent>
           </Tabs>
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
 

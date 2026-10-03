@@ -24,6 +24,7 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import {
   RoutineFocusBlocksSection,
@@ -35,6 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -51,6 +53,7 @@ import { getIconByName } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
@@ -64,6 +67,8 @@ import type { RoutineTask } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
+
+const LIST_PAGE_SIZE = 5;
 
 interface RoutineTasksProps {
   embedded?: boolean;
@@ -566,26 +571,30 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         </TabsList>
 
         <TabsContent value="tasks" className="mt-0">
-          <DataTable
-            data={tasks}
-            columns={columns}
-            keyExtractor={(task) => task.id}
-            isLoading={isLoading}
-            emptyState={{
-              icon: <CheckSquare className="h-12 w-12" />,
-              title: t('pages.routineTasks.emptyState'),
-              message: t('pages.routineTasks.emptyStateDesc'),
-              action: {
-                label: t('pages.routineTasks.emptyStateAction'),
-                onClick: handleCreate,
-              },
-            }}
-            rowClassName={(task) =>
-              highlightedIds.has(task.id)
-                ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
-                : ''
-            }
-          />
+          <PaginatedSlide items={tasks} pageSize={LIST_PAGE_SIZE}>
+            {(pageTasks) => (
+              <DataTable
+                data={pageTasks}
+                columns={columns}
+                keyExtractor={(task) => task.id}
+                isLoading={isLoading}
+                emptyState={{
+                  icon: <CheckSquare className="h-12 w-12" />,
+                  title: t('pages.routineTasks.emptyState'),
+                  message: t('pages.routineTasks.emptyStateDesc'),
+                  action: {
+                    label: t('pages.routineTasks.emptyStateAction'),
+                    onClick: handleCreate,
+                  },
+                }}
+                rowClassName={(task) =>
+                  highlightedIds.has(task.id)
+                    ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
+                    : ''
+                }
+              />
+            )}
+          </PaginatedSlide>
         </TabsContent>
 
         <TabsContent value="focusBlocks" className="mt-0">
@@ -599,17 +608,24 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle className="gap-sm flex items-center">
+              {selectedTask ? (
+                <Edit className="text-primary h-4 w-4" />
+              ) : (
+                <CheckSquare className="text-primary h-4 w-4" />
+              )}
               {selectedTask
                 ? t('pages.routineTasks.editTitle')
                 : t('pages.routineTasks.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedTask
-                ? t('pages.routineTasks.editDesc')
-                : t('pages.routineTasks.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedTask
+                  ? t('pages.routineTasks.editDesc')
+                  : t('pages.routineTasks.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RoutineTaskForm
             task={selectedTask}
@@ -697,6 +713,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
           {heatmapTask && (
             <HabitHeatmap taskId={heatmapTask.id} taskName={heatmapTask.name} />
           )}
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </Wrapper>

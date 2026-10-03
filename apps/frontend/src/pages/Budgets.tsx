@@ -31,6 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -360,6 +361,7 @@ export default function Budgets() {
               ))}
             </div>
           )}
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
 

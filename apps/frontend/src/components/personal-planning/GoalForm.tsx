@@ -173,7 +173,7 @@ export function GoalForm({
               id="description"
               {...register('description')}
               placeholder={t('pages.goals.form.descriptionPlaceholder')}
-              rows={3}
+              rows={2}
               disabled={isLoading}
             />
             {errors.description && (
@@ -187,7 +187,7 @@ export function GoalForm({
 
       <FormSection title={t('pages.goals.form.sectionConfig')} icon={Target}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.goalTypeLabel')}
@@ -221,7 +221,7 @@ export function GoalForm({
             )}
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Activity className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.goalSourceLabel')}
@@ -245,7 +245,7 @@ export function GoalForm({
           </div>
 
           {isTaskSource && (
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <Tag className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.goals.form.relatedTaskLabel')}
@@ -361,13 +361,6 @@ export function GoalForm({
               <div className="border-input bg-muted/40 text-muted-foreground flex h-10 items-center rounded-md border px-3 text-sm">
                 {computedEndDate ? formatDate(computedEndDate) : '—'}
               </div>
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  isManualSource
-                    ? 'pages.goals.form.endDateComputedManualHint'
-                    : 'pages.goals.form.endDateComputedHint'
-                )}
-              </p>
             </div>
           ) : (
             <div className="space-y-sm">

@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -514,6 +515,7 @@ function RuleLogsDialog({
             ))}
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -114,6 +115,7 @@ export function LoanAmortizationDialog({
             </table>
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

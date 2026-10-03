@@ -56,6 +56,7 @@ import {
 import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -1301,6 +1302,7 @@ export default function Passwords() {
               </DialogDescription>
             </DialogHeader>
             <PasswordImportContent />
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
 

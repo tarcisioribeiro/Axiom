@@ -4011,7 +4011,6 @@
         "weekdayLabel": "Weekday *",
         "weekdayPlaceholder": "Select weekday",
         "dayOfMonthLabel": "Day of Month *",
-        "weekdaysNote": "This task will appear Monday through Friday.",
         "customSection": "Custom Configuration",
         "customWeekdaysLabel": "Weekdays (optional)",
         "customMonthDaysLabel": "Month days (optional, comma-separated)",
@@ -4023,9 +4022,7 @@
         "targetQuantityLabel": "Target Quantity *",
         "unitLabel": "Unit *",
         "scheduleSection": "Schedule Settings",
-        "scheduleSectionNote": "Configure specific times for each task occurrence during the day.",
         "defaultTimeLabel": "Default Time",
-        "defaultTimeHint": "Base time for all occurrences",
         "dailyOccurrencesLabel": "Daily Occurrences",
         "dailyOccurrencesHint": "How many times per day (1-24)",
         "intervalHoursLabel": "Interval Between Repetitions (hours)",
@@ -4110,8 +4107,7 @@
           "monthly": "Every {{day}}th of the month",
           "custom": "Custom days"
         },
-        "linkedWorkoutLabel": "Link to workouts",
-        "linkedWorkoutHint": "Shows only on days with a scheduled workout and is completed automatically once sessions for every plan of the day are logged. Cannot be completed manually."
+        "linkedWorkoutLabel": "Link to workouts"
       },
       "focusBlocks": {
         "title": "Focus Blocks",
@@ -4186,9 +4182,6 @@
       "loadError": "Error loading data",
       "saveError": "Error saving",
       "deleteError": "Error deleting goal",
-      "sectionActive": "Active",
-      "sectionCompleted": "Completed",
-      "sectionOther": "Closed",
       "form": {
         "titleLabel": "Title *",
         "titlePlaceholder": "Ex: Meditate 30 consecutive days",
@@ -4211,8 +4204,6 @@
         "startDatePlaceholder": "Select start date",
         "endDateLabel": "End Date",
         "endDatePlaceholder": "Select end date",
-        "endDateComputedHint": "Automatically calculated from the start date and the target.",
-        "endDateComputedManualHint": "Automatically calculated: start date + (target − current progress).",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Consecutive Days",

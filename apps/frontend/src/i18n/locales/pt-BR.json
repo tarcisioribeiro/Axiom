@@ -4072,12 +4072,11 @@
         "descriptionLabel": "Descrição",
         "descriptionPlaceholder": "Descrição da tarefa (opcional)",
         "categoryLabel": "Categoria *",
-        "iconLabel": "Icone",
+        "iconLabel": "Ícone",
         "periodicityLabel": "Periodicidade *",
         "weekdayLabel": "Dia da Semana *",
         "weekdayPlaceholder": "Selecione o dia da semana",
         "dayOfMonthLabel": "Dia do Mês *",
-        "weekdaysNote": "Esta tarefa aparecerá de Segunda a Sexta-feira.",
         "customSection": "Configuração Personalizada",
         "customWeekdaysLabel": "Dias da Semana (opcional)",
         "customMonthDaysLabel": "Dias do Mês (opcional, separados por vírgula)",
@@ -4089,9 +4088,7 @@
         "targetQuantityLabel": "Quantidade Alvo *",
         "unitLabel": "Unidade *",
         "scheduleSection": "Agendamento de Horários",
-        "scheduleSectionNote": "Configure horários específicos para cada ocorrência da tarefa no dia.",
         "defaultTimeLabel": "Horário Padrão",
-        "defaultTimeHint": "Horário base para todas as ocorrências",
         "dailyOccurrencesLabel": "Ocorrências por Dia",
         "dailyOccurrencesHint": "Quantas vezes no dia (1-24)",
         "intervalHoursLabel": "Intervalo entre Repetições (horas)",
@@ -4176,8 +4173,7 @@
           "monthly": "Todo dia {{day}} do mês",
           "custom": "Dias personalizados"
         },
-        "linkedWorkoutLabel": "Vincular ao treino",
-        "linkedWorkoutHint": "Aparece só nos dias com treino agendado e é concluída automaticamente quando as sessões de todos os planos do dia forem registradas. Não pode ser concluída manualmente."
+        "linkedWorkoutLabel": "Vincular ao treino"
       },
       "focusBlocks": {
         "title": "Blocos de Foco",
@@ -4252,9 +4248,6 @@
       "loadError": "Erro ao carregar dados",
       "saveError": "Erro ao salvar",
       "deleteError": "Erro ao excluir objetivo",
-      "sectionActive": "Ativos",
-      "sectionCompleted": "Concluídos",
-      "sectionOther": "Encerrados",
       "form": {
         "titleLabel": "Título *",
         "titlePlaceholder": "Ex: Meditar 30 dias consecutivos",
@@ -4277,8 +4270,6 @@
         "startDatePlaceholder": "Selecione a data de início",
         "endDateLabel": "Data de Término",
         "endDatePlaceholder": "Selecione a data de término",
-        "endDateComputedHint": "Calculada automaticamente a partir da data de início e da meta.",
-        "endDateComputedManualHint": "Calculada automaticamente: data de início + (meta − progresso atual).",
         "statusLabel": "Status *",
         "goalTypeOptions": {
           "consecutive_days": "Dias Consecutivos",

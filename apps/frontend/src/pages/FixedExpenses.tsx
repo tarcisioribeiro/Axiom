@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -554,6 +555,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               </table>
             </div>
           )}
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </Wrapper>

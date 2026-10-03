@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -209,6 +210,7 @@ export function VaultSimulatorDialog({
             )}
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

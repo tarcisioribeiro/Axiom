@@ -2,7 +2,9 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const Dialog = DialogPrimitive.Root;
@@ -68,21 +70,24 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="ring-offset-background focus-visible:ring-ring data-[state=open]:bg-accent data-[state=open]:text-foreground absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+/** `sticky`: cabeçalho fixo no topo enquanto o conteúdo rola (ver
+ * `.dialog-header-sticky` em index.css). */
 const DialogHeader = ({
   className,
+  sticky,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: React.HTMLAttributes<HTMLDivElement> & { sticky?: boolean }) => (
   <div
-    className={cn('space-y-sm flex flex-col text-center sm:text-left', className)}
+    className={cn(
+      'space-y-sm flex flex-col text-center sm:text-left',
+      sticky && 'dialog-header-sticky',
+      className
+    )}
     {...props}
   />
 );
@@ -101,6 +106,21 @@ const DialogFooter = ({
   />
 );
 DialogFooter.displayName = 'DialogFooter';
+
+/** Rodapé fixo com só "Fechar", para modais informativos sem outra ação de saída. */
+const DialogCloseFooter = () => {
+  const { t } = useTranslation();
+  return (
+    <DialogFooter>
+      <DialogClose asChild>
+        <Button variant="outline">
+          <X className="mr-sm h-4 w-4" />
+          {t('common.actions.close')}
+        </Button>
+      </DialogClose>
+    </DialogFooter>
+  );
+};
 
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
@@ -135,6 +155,7 @@ export {
   DialogContent,
   DialogHeader,
   DialogFooter,
+  DialogCloseFooter,
   DialogTitle,
   DialogDescription,
 };

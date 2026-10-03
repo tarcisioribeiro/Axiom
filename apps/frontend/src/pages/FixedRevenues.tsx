@@ -33,6 +33,7 @@ import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -840,6 +841,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
               </table>
             </div>
           )}
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </Wrapper>

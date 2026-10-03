@@ -8,6 +8,7 @@ import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -148,6 +149,7 @@ export function ExerciseDatasetPicker({
             {t('pages.exercises.picker.loadMore')}
           </Button>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -522,6 +523,7 @@ export default function Skills() {
                 ))}
               </div>
             )}
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
       </PageContainer>

@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -115,6 +116,7 @@ export function BillPurchasesDialog({
             </TableFooter>
           </Table>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   CheckSquare,
   ChevronDown,
-  ChevronUp,
   Clock,
   HelpCircle,
   Link2,
@@ -23,6 +22,7 @@ import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapse } from '@/components/ui/collapsible-section';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { IconPicker } from '@/components/ui/icon-picker';
@@ -528,12 +528,6 @@ export function RoutineTaskForm({
             </div>
           )}
 
-          {periodicity === 'weekdays' && (
-            <p className="text-muted-foreground text-sm">
-              {t('pages.routineTasks.form.weekdaysNote')}
-            </p>
-          )}
-
           {periodicity === 'custom' && (
             <div className="space-y-md bg-muted/50 p-md rounded-lg border">
               <h4 className="gap-xs flex items-center text-sm font-medium">
@@ -740,10 +734,6 @@ export function RoutineTaskForm({
 
       <FormSection title={t('pages.routineTasks.form.scheduleSection')} icon={Clock}>
         <div className="space-y-md">
-          <p className="text-muted-foreground text-xs">
-            {t('pages.routineTasks.form.scheduleSectionNote')}
-          </p>
-
           <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div className="space-y-sm">
               <Label htmlFor="default_time" className="gap-xs flex items-center">
@@ -755,9 +745,6 @@ export function RoutineTaskForm({
                 onChange={(t) => setValue('default_time', t ?? null)}
                 disabled={isLoading}
               />
-              <p className="text-muted-foreground text-xs">
-                {t('pages.routineTasks.form.defaultTimeHint')}
-              </p>
               {errors.default_time && (
                 <p className="mt-xs text-destructive text-sm">
                   {errors.default_time.message}
@@ -865,14 +852,15 @@ export function RoutineTaskForm({
               {t('pages.routineTasks.form.advancedSettings')}
             </span>
             <div className="bg-border/50 h-px flex-1" />
-            {advancedOpen ? (
-              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
-            )}
+            <ChevronDown
+              className={cn(
+                'text-muted-foreground duration-normal h-3.5 w-3.5 transition-transform',
+                advancedOpen && 'rotate-180'
+              )}
+            />
           </button>
 
-          {advancedOpen && (
+          <Collapse open={advancedOpen}>
             <div className="gap-md bg-muted/20 p-md grid grid-cols-1 rounded-lg border md:grid-cols-2">
               <div className="space-y-sm">
                 <Label htmlFor="daily_occurrences" className="gap-xs flex items-center">
@@ -1018,7 +1006,7 @@ export function RoutineTaskForm({
                 )}
               </div>
             </div>
-          )}
+          </Collapse>
         </div>
       </FormSection>
 
@@ -1034,14 +1022,15 @@ export function RoutineTaskForm({
               {t('common.form.sections.links')}
             </span>
             <div className="bg-border/50 h-px flex-1" />
-            {linksOpen ? (
-              <ChevronUp className="text-muted-foreground h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-3.5 w-3.5" />
-            )}
+            <ChevronDown
+              className={cn(
+                'text-muted-foreground duration-normal h-3.5 w-3.5 transition-transform',
+                linksOpen && 'rotate-180'
+              )}
+            />
           </button>
 
-          {linksOpen && (
+          <Collapse open={linksOpen}>
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               {isFinance && financialGoals.length > 0 && (
                 <div className="space-y-sm">
@@ -1172,27 +1161,19 @@ export function RoutineTaskForm({
               )}
 
               {isExercise && (
-                <div className="space-y-sm">
-                  <div className="gap-sm flex items-center">
-                    <Checkbox
-                      id="linked-workout"
-                      checked={!!watch('linked_workout')}
-                      onCheckedChange={(checked) =>
-                        setValue('linked_workout', checked === true)
-                      }
-                      disabled={isLoading}
-                    />
-                    <Label
-                      htmlFor="linked-workout"
-                      className="gap-xs flex items-center"
-                    >
-                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.routineTasks.form.linkedWorkoutLabel')}
-                    </Label>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.routineTasks.form.linkedWorkoutHint')}
-                  </p>
+                <div className="gap-sm flex items-center">
+                  <Checkbox
+                    id="linked-workout"
+                    checked={!!watch('linked_workout')}
+                    onCheckedChange={(checked) =>
+                      setValue('linked_workout', checked === true)
+                    }
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="linked-workout" className="gap-xs flex items-center">
+                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.routineTasks.form.linkedWorkoutLabel')}
+                  </Label>
                 </div>
               )}
 
@@ -1225,7 +1206,7 @@ export function RoutineTaskForm({
                 </div>
               )}
             </div>
-          )}
+          </Collapse>
         </div>
       )}
 

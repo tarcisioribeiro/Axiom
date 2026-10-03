@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -1327,6 +1328,7 @@ export function CourseDetailModal({
                 </div>
               )}
             </div>
+            <DialogCloseFooter />
           </DialogContent>
         </Dialog>
       )}

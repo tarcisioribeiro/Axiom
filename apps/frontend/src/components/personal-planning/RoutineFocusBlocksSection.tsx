@@ -3,6 +3,7 @@ import { LayoutList } from 'lucide-react';
 import { useImperativeHandle, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,9 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { FocusBlockTasksEditor } from './FocusBlockTasksEditor';
 import { RoutineFocusBlockCard } from './RoutineFocusBlockCard';
 import { RoutineFocusBlockForm } from './RoutineFocusBlockForm';
+
+// Uma linha do grid (2 colunas em md+).
+const LIST_PAGE_SIZE = 2;
 
 export interface RoutineFocusBlocksSectionHandle {
   create: () => void;
@@ -174,22 +178,28 @@ export function RoutineFocusBlocksSection({
           </p>
         </div>
       ) : (
-        <div className="gap-sm grid md:grid-cols-2">
-          {blocks.map((block) => (
-            <RoutineFocusBlockCard
-              key={block.id}
-              block={block}
-              allBlocks={blocks}
-              routineTasks={routineTasks}
-              onEdit={() => handleEdit(block)}
-              onDelete={() => void handleDelete(block)}
-              onAddTask={(routineTaskId, occurrenceIndex) =>
-                void handleAddTask(block.id, routineTaskId, occurrenceIndex)
-              }
-              onRemoveTask={(id) => void handleRemoveTask(block.id, id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          items={blocks}
+          pageSize={LIST_PAGE_SIZE}
+          className="gap-sm grid md:grid-cols-2"
+        >
+          {(pageBlocks) =>
+            pageBlocks.map((block) => (
+              <RoutineFocusBlockCard
+                key={block.id}
+                block={block}
+                allBlocks={blocks}
+                routineTasks={routineTasks}
+                onEdit={() => handleEdit(block)}
+                onDelete={() => void handleDelete(block)}
+                onAddTask={(routineTaskId, occurrenceIndex) =>
+                  void handleAddTask(block.id, routineTaskId, occurrenceIndex)
+                }
+                onRemoveTask={(id) => void handleRemoveTask(block.id, id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -14,6 +14,7 @@ import {
 
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -317,6 +318,7 @@ export function LoanProgressDialog({
             )}
           </div>
         )}
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

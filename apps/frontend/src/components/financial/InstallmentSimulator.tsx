@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -200,6 +201,7 @@ export function InstallmentSimulator({ open, onOpenChange }: Props) {
             </p>
           )}
         </div>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );

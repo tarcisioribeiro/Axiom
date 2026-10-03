@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Mail, BellRing, Save, Zap } from 'lucide-react';
+import { Bell, Mail, BellRing, Save, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -62,8 +62,11 @@ const EMPTY_PREFERENCES: NotificationPreference[] = [];
 /** Renderiza a lista e o rodapé de ações como irmãos, para o modal fixar o rodapé. */
 export function NotificationPreferencesContent({
   bodyClassName,
+  onClose,
 }: {
   bodyClassName?: string;
+  /** Quando em modal: mostra o botão "Fechar" no rodapé. */
+  onClose?: () => void;
 }) {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -199,6 +202,12 @@ export function NotificationPreferencesContent({
       </div>
 
       <DialogFooter>
+        {onClose && (
+          <Button variant="outline" onClick={onClose}>
+            <X className="mr-sm h-4 w-4" />
+            {t('common.actions.close')}
+          </Button>
+        )}
         <Button variant="outline" onClick={handleTest} disabled={isSaving}>
           <Zap />
           {t('pages.notificationPreferences.testBtn')}

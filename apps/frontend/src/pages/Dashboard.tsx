@@ -57,6 +57,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -1929,6 +1930,7 @@ export default function Dashboard() {
             <DialogTitle>{t('pages.dashboard.financialAlerts.title')}</DialogTitle>
           </DialogHeader>
           <AlertsPanel alerts={financialAlerts} onDismiss={dismissAlert} />
+          <DialogCloseFooter />
         </DialogContent>
       </Dialog>
     </PageContainer>

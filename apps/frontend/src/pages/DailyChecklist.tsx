@@ -14,10 +14,8 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   Circle,
   RefreshCw,
@@ -48,6 +46,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { DailyFocusBlocks } from '@/components/personal-planning/DailyFocusBlocks';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
@@ -262,7 +261,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
   );
   const [showCelebration, setShowCelebration] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
-  const [listPage, setListPage] = useState({ index: 0, direction: 1 });
   const prevDayRateRef = useRef<number>(0);
   const xp = useXPTrigger();
   useTaskReminders(cards);
@@ -688,36 +686,10 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
     return () => observer.disconnect();
   }, [isLoading, viewMode, instances.length]);
 
-  // Mantém a altura da lista paginada na maior já vista (página cheia), para os
-  // botões de navegação não pularem durante a transição nem na última página.
-  // Reinicia ao trocar de data.
-  const listRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    list.style.minHeight = '';
-    const observer = new ResizeObserver(() => {
-      const current = parseFloat(list.style.minHeight) || 0;
-      if (list.offsetHeight > current) list.style.minHeight = `${list.offsetHeight}px`;
-    });
-    observer.observe(list);
-    return () => observer.disconnect();
-  }, [isLoading, viewMode, selectedDate]);
-
   if (isLoading) return <LoadingState />;
 
   const GreetIcon = greeting.Icon;
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
-
-  const listTotalPages = Math.max(1, Math.ceil(instances.length / LIST_PAGE_SIZE));
-  // Clampa caso a lista encolha (ex.: após sincronizar) e a página atual suma.
-  const listPageIndex = Math.min(listPage.index, listTotalPages - 1);
-  const pagedInstances = instances.slice(
-    listPageIndex * LIST_PAGE_SIZE,
-    (listPageIndex + 1) * LIST_PAGE_SIZE
-  );
-  const goToListPage = (direction: 1 | -1) =>
-    setListPage({ index: listPageIndex + direction, direction });
 
   return (
     <Wrapper>
@@ -824,7 +796,6 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 value={selectedDate ? parseLocalDate(selectedDate) : undefined}
                 onChange={(date) => {
                   setSelectedDate(date ? formatLocalDate(date) : '');
-                  setListPage({ index: 0, direction: 1 });
                 }}
                 placeholder={t('pages.dailyChecklist.datePlaceholder')}
                 maxDate={new Date()}
@@ -886,123 +857,75 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 message={t('pages.dailyChecklist.noTasksDesc')}
               />
             ) : (
-              <div className="space-y-md">
-                <div ref={listRef} className="overflow-hidden">
-                  <AnimatePresence
-                    mode="wait"
-                    initial={false}
-                    custom={listPage.direction}
-                  >
-                    <motion.div
-                      key={listPageIndex}
-                      custom={listPage.direction}
-                      variants={{
-                        enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
-                        center: { opacity: 1, x: 0 },
-                        exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
-                      }}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      className="space-y-sm"
-                    >
-                      {pagedInstances.map((task) => {
-                        const isCompleted = task.status === 'completed';
-                        const isUpdating = updatingTaskId === task.id;
-                        return (
-                          <div
-                            key={task.id}
+              <PaginatedSlide
+                key={selectedDate}
+                items={instances}
+                pageSize={LIST_PAGE_SIZE}
+                className="space-y-sm"
+              >
+                {(pageTasks) =>
+                  pageTasks.map((task) => {
+                    const isCompleted = task.status === 'completed';
+                    const isUpdating = updatingTaskId === task.id;
+                    return (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          'gap-md p-md flex items-center rounded-lg border transition-opacity',
+                          isCompleted && 'opacity-60'
+                        )}
+                      >
+                        <PlainButton
+                          type="button"
+                          disabled={isUpdating}
+                          onClick={() => void handleToggleTaskComplete(task)}
+                          className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
+                          title={
+                            isCompleted
+                              ? t('pages.todayTasks.markPending')
+                              : t('pages.todayTasks.markCompleted')
+                          }
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 className="text-success h-6 w-6" />
+                          ) : (
+                            <Circle className="h-6 w-6" />
+                          )}
+                        </PlainButton>
+                        <div className="flex-1">
+                          <h3
                             className={cn(
-                              'gap-md p-md flex items-center rounded-lg border transition-opacity',
-                              isCompleted && 'opacity-60'
+                              'gap-sm flex items-center font-semibold',
+                              isCompleted && 'line-through'
                             )}
                           >
-                            <PlainButton
-                              type="button"
-                              disabled={isUpdating}
-                              onClick={() => void handleToggleTaskComplete(task)}
-                              className="text-muted-foreground hover:text-primary shrink-0 transition-colors disabled:opacity-50"
-                              title={
-                                isCompleted
-                                  ? t('pages.todayTasks.markPending')
-                                  : t('pages.todayTasks.markCompleted')
-                              }
-                            >
-                              {isCompleted ? (
-                                <CheckCircle2 className="text-success h-6 w-6" />
-                              ) : (
-                                <Circle className="h-6 w-6" />
-                              )}
-                            </PlainButton>
-                            <div className="flex-1">
-                              <h3
-                                className={cn(
-                                  'gap-sm flex items-center font-semibold',
-                                  isCompleted && 'line-through'
-                                )}
-                              >
-                                {task.task_name}
-                                {task.is_optional && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {t('pages.dailyChecklist.optionalBadge')}
-                                  </Badge>
-                                )}
-                              </h3>
-                              {task.time_display && (
-                                <p className="text-muted-foreground text-sm">
-                                  {t('pages.todayTasks.timeLabel', {
-                                    time: task.time_display,
-                                  })}
-                                </p>
-                              )}
-                            </div>
-                            {task.category && (
-                              <TaskCategoryBadge
-                                icon={task.icon}
-                                label={translate('taskCategories', task.category)}
-                                category={task.category}
-                              />
+                            {task.task_name}
+                            {task.is_optional && (
+                              <Badge variant="outline" className="text-xs">
+                                {t('pages.dailyChecklist.optionalBadge')}
+                              </Badge>
                             )}
-                          </div>
-                        );
-                      })}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-                {listTotalPages > 1 && (
-                  <div className="gap-sm flex items-center justify-center">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => goToListPage(-1)}
-                      disabled={listPageIndex === 0}
-                      aria-label={t('common.actions.previous')}
-                      title={t('common.actions.previous')}
-                    >
-                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <span
-                      className="text-muted-foreground min-w-32 text-center text-sm tabular-nums"
-                      aria-live="polite"
-                    >
-                      {t('common.table.pageOf', {
-                        page: listPageIndex + 1,
-                        totalPages: listTotalPages,
-                      })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => goToListPage(1)}
-                      disabled={listPageIndex >= listTotalPages - 1}
-                      aria-label={t('common.actions.next')}
-                      title={t('common.actions.next')}
-                    >
-                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+                          </h3>
+                          {task.time_display && (
+                            <p className="text-muted-foreground text-sm">
+                              {t('pages.todayTasks.timeLabel', {
+                                time: task.time_display,
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        {task.category && (
+                          <TaskCategoryBadge
+                            icon={task.icon}
+                            label={translate('taskCategories', task.category)}
+                            category={task.category}
+                          />
+                        )}
+                      </div>
+                    );
+                  })
+                }
+              </PaginatedSlide>
             )}
           </>
         )}

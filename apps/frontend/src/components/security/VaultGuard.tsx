@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/card';
 import {
   Dialog,
+  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -785,6 +786,7 @@ function VaultKeyboardShortcutsPanel({
             <kbd className="bg-muted px-xs rounded py-0.5 font-mono text-xs">?</kbd>
           </div>
         </div>
+        <DialogCloseFooter />
       </DialogContent>
     </Dialog>
   );
