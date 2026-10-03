@@ -3842,8 +3842,6 @@
       "tasksCompleted": "tasks completed",
       "toNextLevel": "to next level",
       "ctaReflect": "Write Reflection",
-      "ctaLogWorkout": "+ Log Workout",
-      "ctaLogMeal": "+ Log Meal",
       "taskCount_one": "{{count}} task",
       "taskCount_other": "{{count}} tasks",
       "weekdayShort": {

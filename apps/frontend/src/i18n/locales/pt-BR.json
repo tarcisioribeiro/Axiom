@@ -3908,8 +3908,6 @@
       "tasksCompleted": "tarefas concluídas",
       "toNextLevel": "para o próximo nível",
       "ctaReflect": "Escrever Reflexão",
-      "ctaLogWorkout": "+ Registrar Treino",
-      "ctaLogMeal": "+ Registrar Refeição",
       "taskCount_one": "{{count}} tarefa",
       "taskCount_other": "{{count}} tarefas",
       "weekdayShort": {

@@ -295,7 +295,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
             <DialogTitle className="text-2xl">
               {t('pages.vaultGuard.expiry.renewTitle')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="sr-only">
               {t('pages.vaultGuard.expiry.renewDesc')}
             </DialogDescription>
           </DialogHeader>

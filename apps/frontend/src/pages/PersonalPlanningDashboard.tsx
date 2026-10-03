@@ -551,191 +551,174 @@ export default function PersonalPlanningDashboard() {
       />
 
       <Collapse open={openSection === 'workout-nutrition'}>
-        {/* Resumo Calórico | Treinos + Nutrição | Treinos por dia (30d) */}
-        <div className="gap-md grid grid-cols-1 lg:grid-cols-3">
+        {/* Resumo Calórico | Treinos | Nutrição | Treinos por dia (30d) */}
+        <div
+          className={cn(
+            'gap-md grid grid-cols-1 md:grid-cols-2',
+            workoutByDayData.length > 0 ? 'xl:grid-cols-4' : 'xl:grid-cols-3'
+          )}
+        >
           <DailyCaloricSummaryCard
             data={caloricSummary}
             isLoading={caloricSummaryLoading}
           />
 
-          <div className="gap-md flex flex-col">
-            <Card>
-              <CardHeader className="pb-sm">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="gap-sm flex items-center text-sm">
-                    <Dumbbell className="text-category-health h-4 w-4" />
-                    {t('pages.planningDashboard.workoutsTitle')}
-                  </CardTitle>
-                  <Link
-                    to="/planning/workout"
-                    className="bg-primary/10 px-sm text-primary hover:bg-primary/20 rounded-md py-0.5 text-xs font-medium transition-colors"
-                  >
-                    {t('pages.planningDashboard.ctaLogWorkout')}
-                  </Link>
+          <Card>
+            <CardHeader className="pb-sm">
+              <CardTitle className="gap-sm flex items-center text-sm">
+                <Dumbbell className="text-category-health h-4 w-4" />
+                {t('pages.planningDashboard.workoutsTitle')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="gap-md grid grid-cols-2">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <Dumbbell className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.sessions30d')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">{workoutStats.sessions30d}</span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="gap-md grid grid-cols-2">
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <Dumbbell className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.sessions30d')}
-                      </span>
-                    </div>
-                    <span className="text-2xl font-bold">
-                      {workoutStats.sessions30d}
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <Activity className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.thisWeek')}
                     </span>
                   </div>
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <Activity className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.thisWeek')}
-                      </span>
-                    </div>
-                    <span className="text-info text-2xl font-bold">
-                      {workoutStats.sessionsWeek}
-                    </span>
-                  </div>
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <Timer className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.totalTime30d')}
-                      </span>
-                    </div>
-                    <span className="text-2xl font-bold">
-                      {workoutStats.totalMinutes30d > 0
-                        ? `${Math.round(workoutStats.totalMinutes30d / 60)}h`
-                        : '—'}
-                    </span>
-                  </div>
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <ClipboardList className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.activeWorkoutPlan')}
-                      </span>
-                    </div>
-                    {workoutStats.activePlanName ? (
-                      <span
-                        className="truncate text-sm font-bold"
-                        title={workoutStats.activePlanName}
-                      >
-                        {workoutStats.activePlanName}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">
-                        {t('common.actions.none')}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-info text-2xl font-bold">
+                    {workoutStats.sessionsWeek}
+                  </span>
                 </div>
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <Timer className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.totalTime30d')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {workoutStats.totalMinutes30d > 0
+                      ? `${Math.round(workoutStats.totalMinutes30d / 60)}h`
+                      : '—'}
+                  </span>
+                </div>
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <ClipboardList className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.activeWorkoutPlan')}
+                    </span>
+                  </div>
+                  {workoutStats.activePlanName ? (
+                    <span
+                      className="truncate text-sm font-bold"
+                      title={workoutStats.activePlanName}
+                    >
+                      {workoutStats.activePlanName}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">
+                      {t('common.actions.none')}
+                    </span>
+                  )}
+                </div>
+              </div>
 
-                {workoutStats.activePlanName && (
-                  <div className="mt-md gap-lg pt-md text-muted-foreground flex items-center border-t text-sm">
-                    <span>
-                      <span className="text-foreground font-semibold">
-                        {workoutStats.activePlanDays}
-                      </span>{' '}
-                      {t('pages.planningDashboard.days')}
-                    </span>
-                    <span>
-                      <span className="text-foreground font-semibold">
-                        {workoutStats.activePlanExercises}
-                      </span>{' '}
-                      {t('pages.planningDashboard.planExercises')}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-sm">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="gap-sm flex items-center text-sm">
-                    <UtensilsCrossed className="text-category-health h-4 w-4" />
-                    {t('pages.planningDashboard.nutritionTitle')}
-                  </CardTitle>
-                  <Link
-                    to="/planning/nutrition"
-                    className="bg-success/10 px-sm text-success hover:bg-success/20 rounded-md py-0.5 text-xs font-medium transition-colors"
-                  >
-                    {t('pages.planningDashboard.ctaLogMeal')}
-                  </Link>
+              {workoutStats.activePlanName && (
+                <div className="mt-md gap-lg pt-md text-muted-foreground flex items-center border-t text-sm">
+                  <span>
+                    <span className="text-foreground font-semibold">
+                      {workoutStats.activePlanDays}
+                    </span>{' '}
+                    {t('pages.planningDashboard.days')}
+                  </span>
+                  <span>
+                    <span className="text-foreground font-semibold">
+                      {workoutStats.activePlanExercises}
+                    </span>{' '}
+                    {t('pages.planningDashboard.planExercises')}
+                  </span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="gap-md grid grid-cols-3">
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <Utensils className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.mealsToday')}
-                      </span>
-                    </div>
-                    <span className="text-success text-2xl font-bold">
-                      {nutritionStats.todayMeals}
-                    </span>
-                  </div>
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.thisWeek')}
-                      </span>
-                    </div>
-                    <span className="text-2xl font-bold">
-                      {nutritionStats.weekMeals}
-                    </span>
-                  </div>
-                  <div className="gap-xs flex flex-col">
-                    <div className="gap-sm text-muted-foreground flex items-center">
-                      <ClipboardList className="h-4 w-4" />
-                      <span className="text-xs">
-                        {t('pages.planningDashboard.activeMealTypes')}
-                      </span>
-                    </div>
-                    <span className="text-2xl font-bold">
-                      {nutritionStats.activeMealTypes}
-                    </span>
-                  </div>
-                </div>
+              )}
+            </CardContent>
+          </Card>
 
-                {nutritionStats.byMealTypeData.length > 0 && (
-                  <div className="mt-md space-y-sm pt-md border-t">
-                    {nutritionStats.byMealTypeData
-                      .sort((a, b) => b.count - a.count)
-                      .slice(0, 4)
-                      .map((item, i) => {
-                        const max = nutritionStats.byMealTypeData[0]?.count ?? 1;
-                        const pct = Math.round((item.count / max) * 100);
-                        return (
-                          <div key={i} className="flex items-center gap-3">
-                            <span className="text-muted-foreground w-28 shrink-0 truncate text-xs">
-                              {item.name}
-                            </span>
-                            <div className="gap-sm flex flex-1 items-center">
-                              <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                                <div
-                                  className="bg-primary/70 h-full rounded-full transition-[width]"
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                              <span className="w-6 text-right text-xs font-medium">
-                                {item.count}
-                              </span>
+          <Card>
+            <CardHeader className="pb-sm">
+              <CardTitle className="gap-sm flex items-center text-sm">
+                <UtensilsCrossed className="text-category-health h-4 w-4" />
+                {t('pages.planningDashboard.nutritionTitle')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="gap-md grid grid-cols-3">
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <Utensils className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.mealsToday')}
+                    </span>
+                  </div>
+                  <span className="text-success text-2xl font-bold">
+                    {nutritionStats.todayMeals}
+                  </span>
+                </div>
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.thisWeek')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">{nutritionStats.weekMeals}</span>
+                </div>
+                <div className="gap-xs flex flex-col">
+                  <div className="gap-sm text-muted-foreground flex items-center">
+                    <ClipboardList className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.planningDashboard.activeMealTypes')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {nutritionStats.activeMealTypes}
+                  </span>
+                </div>
+              </div>
+
+              {nutritionStats.byMealTypeData.length > 0 && (
+                <div className="mt-md space-y-sm pt-md border-t">
+                  {nutritionStats.byMealTypeData
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 4)
+                    .map((item, i) => {
+                      const max = nutritionStats.byMealTypeData[0]?.count ?? 1;
+                      const pct = Math.round((item.count / max) * 100);
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-muted-foreground w-28 shrink-0 truncate text-xs">
+                            {item.name}
+                          </span>
+                          <div className="gap-sm flex flex-1 items-center">
+                            <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
+                              <div
+                                className="bg-primary/70 h-full rounded-full transition-[width]"
+                                style={{ width: `${pct}%` }}
+                              />
                             </div>
+                            <span className="w-6 text-right text-xs font-medium">
+                              {item.count}
+                            </span>
                           </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {workoutByDayData.length > 0 && (
             <Card>
@@ -806,12 +789,12 @@ export default function PersonalPlanningDashboard() {
                   />
                 </div>
                 {analytics && (
-                  <div>
+                  <div className="flex flex-col">
                     <h3 className="gap-sm mb-sm flex items-center text-sm font-semibold">
                       <BarChart3 className="h-4 w-4" />
                       {t('pages.planningDashboard.weekdayAnalytics')}
                     </h3>
-                    <div className="space-y-sm">
+                    <div className="space-y-sm flex flex-1 flex-col justify-center">
                       {analytics.completion_by_weekday.map((day) => (
                         <div key={day.weekday} className="flex items-center gap-3">
                           <span className="text-muted-foreground w-28 shrink-0 text-sm">
@@ -844,21 +827,23 @@ export default function PersonalPlanningDashboard() {
             {/* Consistência de hábitos | Progresso de objetivos ativos */}
             <Card>
               <CardContent className="gap-lg pt-md grid grid-cols-1 sm:grid-cols-2">
-                <div>
+                <div className="flex flex-col">
                   <h3 className="gap-sm mb-sm flex items-center text-sm font-semibold">
                     <Activity className="h-4 w-4" />
                     {t('pages.planningDashboard.habitConsistency')}
                   </h3>
-                  <HabitHeatmap />
+                  <div className="flex flex-1 flex-col justify-center">
+                    <HabitHeatmap />
+                  </div>
                 </div>
                 {stats.active_goals_progress &&
                   stats.active_goals_progress.length > 0 && (
-                    <div>
+                    <div className="flex flex-col">
                       <h3 className="gap-sm mb-sm flex items-center text-sm font-semibold">
                         <Flag className="h-4 w-4" />
                         {t('pages.planningDashboard.activeGoalsProgress')}
                       </h3>
-                      <div className="space-y-3">
+                      <div className="mx-auto flex max-w-full flex-1 flex-col justify-center space-y-3">
                         {stats.active_goals_progress.slice(0, 4).map((goal, index) => {
                           const pct = goal.progress_percentage;
                           const ringColor =
