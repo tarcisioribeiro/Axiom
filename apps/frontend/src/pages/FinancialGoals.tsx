@@ -822,7 +822,6 @@ export default function FinancialGoals() {
                       })
                     }
                     placeholder={t('common.fields.selectDate')}
-                    clearable
                   />
                 </div>
               </div>

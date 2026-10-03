@@ -24,7 +24,6 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         value={startDate}
         onChange={onStartChange}
         placeholder={t('common.actions.filters.fromDate')}
-        clearable
       />
       <ArrowRight
         className="text-muted-foreground/40 h-3 w-3 shrink-0"
@@ -34,7 +33,6 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         value={endDate}
         onChange={onEndChange}
         placeholder={t('common.actions.filters.toDate')}
-        clearable
       />
     </div>
   );

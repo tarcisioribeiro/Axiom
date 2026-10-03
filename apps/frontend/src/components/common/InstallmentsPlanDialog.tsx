@@ -229,7 +229,6 @@ export function InstallmentsPlanDialog({
                             <div className="w-44">
                               <DatePicker
                                 value={d.due_date}
-                                clearable={false}
                                 onChange={(date) =>
                                   setDraft(inst.installment_number, {
                                     due_date: date ? formatLocalDate(date) : '',

@@ -112,7 +112,6 @@ export function StatementExportModal({
                 value={dateFrom}
                 onChange={setDateFrom}
                 placeholder={t('pages.dashboard.statementModal.dateFromPlaceholder')}
-                clearable
               />
             </div>
             <div className="space-y-xs">
@@ -123,7 +122,6 @@ export function StatementExportModal({
                 value={dateTo}
                 onChange={setDateTo}
                 placeholder={t('pages.dashboard.statementModal.dateToPlaceholder')}
-                clearable
               />
             </div>
           </div>

@@ -343,7 +343,6 @@ export const LaunchExpensesDialog = ({
                           value={dateFor(exp)}
                           minDate={bounds?.min}
                           maxDate={bounds?.max}
-                          clearable={false}
                           floating
                           disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
                           onChange={(date) =>

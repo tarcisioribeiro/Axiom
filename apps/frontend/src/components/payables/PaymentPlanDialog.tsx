@@ -152,7 +152,6 @@ export function PaymentPlanDialog({
             <Label>{t('pages.payables.form.firstInstallmentLabel')}</Label>
             <DatePicker
               value={firstDueDate}
-              clearable={false}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}
             />
             <p className="text-muted-foreground text-xs">

@@ -398,7 +398,6 @@ export default function DailyReflections() {
             value={startDate ? formatLocalDate(startDate) : ''}
             onChange={setStartDate}
             placeholder={t('pages.dailyReflections.filters.startDate')}
-            clearable
           />
           <span className="text-muted-foreground text-xs whitespace-nowrap">
             {t('pages.dailyReflections.filters.endDate')}
@@ -407,7 +406,6 @@ export default function DailyReflections() {
             value={endDate ? formatLocalDate(endDate) : ''}
             onChange={setEndDate}
             placeholder={t('pages.dailyReflections.filters.endDate')}
-            clearable
           />
         </div>
       </FilterBar>

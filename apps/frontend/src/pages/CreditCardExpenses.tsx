@@ -936,14 +936,12 @@ export default function CreditCardExpenses({
                 value={purchaseDateFrom}
                 onChange={setPurchaseDateFrom}
                 placeholder={t('common.actions.filters.fromDate')}
-                clearable
                 maxDate={purchaseDateTo}
               />
               <DatePicker
                 value={purchaseDateTo}
                 onChange={setPurchaseDateTo}
                 placeholder={t('common.actions.filters.toDate')}
-                clearable
                 minDate={purchaseDateFrom}
               />
             </div>

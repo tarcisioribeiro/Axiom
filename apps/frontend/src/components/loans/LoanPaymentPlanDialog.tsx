@@ -100,7 +100,6 @@ export function LoanPaymentPlanDialog({
             <Label>{t('pages.loans.paymentPlan.firstInstallmentLabel')}</Label>
             <DatePicker
               value={firstDueDate}
-              clearable={false}
               onChange={(date) => setFirstDueDate(date ? formatLocalDate(date) : '')}
             />
             <p className="text-muted-foreground text-xs">

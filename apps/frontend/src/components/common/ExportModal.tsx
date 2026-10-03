@@ -96,7 +96,6 @@ export function ExportModal({
                 value={dateFrom}
                 onChange={setDateFrom}
                 placeholder={t('common.export.from')}
-                clearable
               />
             </div>
             <div className="space-y-xs">
@@ -105,7 +104,6 @@ export function ExportModal({
                 value={dateTo}
                 onChange={setDateTo}
                 placeholder={t('common.export.to')}
-                clearable
               />
             </div>
           </div>

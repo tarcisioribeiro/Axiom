@@ -135,7 +135,6 @@ export function TransferFilters({
           value={startDate}
           onChange={onStartDateChange}
           placeholder={t('pages.transfers.dateFrom')}
-          clearable
         />
         <span className="text-muted-foreground text-xs whitespace-nowrap">
           {t('pages.transfers.dateTo')}
@@ -144,7 +143,6 @@ export function TransferFilters({
           value={endDate}
           onChange={onEndDateChange}
           placeholder={t('pages.transfers.dateTo')}
-          clearable
         />
       </div>
     </FilterBar>

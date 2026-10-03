@@ -8,16 +8,27 @@
 vi.mock('framer-motion', async (importOriginal) => {
   const React = await import('react');
   const actual = await importOriginal();
+  // Um componente estável por tag: criar um novo a cada acesso faria o React
+  // remontar o elemento a cada render, e os callback refs do Dashboard
+  // (setState no ref) entrariam em loop infinito.
+  const cache = new Map<string, React.ElementType>();
   return {
     ...(actual as Record<string, unknown>),
     motion: new Proxy(
       {},
       {
-        get: (_target, tag: string) =>
-          React.forwardRef(
-            ({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
-              React.createElement(tag, { ...props, ref }, children)
-          ),
+        get: (_target, tag: string) => {
+          if (!cache.has(tag)) {
+            cache.set(
+              tag,
+              React.forwardRef(
+                ({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
+                  React.createElement(tag, { ...props, ref }, children)
+              )
+            );
+          }
+          return cache.get(tag);
+        },
       }
     ),
     useReducedMotion: () => true,
@@ -37,14 +48,17 @@ vi.mock('@/lib/animations', () => ({
 // ---- Service mocks ----
 vi.mock('@/services/dashboard-service', () => ({
   dashboardService: {
-    getStats: vi.fn().mockResolvedValue({
-      total_balance: 10000,
-      total_expenses: 2000,
-      total_revenues: 5000,
-      available_credit_limit: 3000,
-      total_credit_limit: 5000,
+    getSummary: vi.fn().mockResolvedValue({
+      stats: {
+        total_balance: 10000,
+        total_expenses: 2000,
+        total_revenues: 5000,
+        available_credit_limit: 3000,
+        total_credit_limit: 5000,
+      },
+      account_balances: [],
+      financial_alerts: [],
     }),
-    getAccountBalances: vi.fn().mockResolvedValue([]),
     getCreditCardExpensesByCategory: vi.fn().mockResolvedValue([]),
     getBalanceForecast: vi.fn().mockResolvedValue({
       current_total_balance: 8000,
@@ -69,8 +83,12 @@ vi.mock('@/services/dashboard-service', () => ({
       min_balance_date: '2024-01-15',
       daily_breakdown: [],
     }),
-    getFinancialAlerts: vi.fn().mockResolvedValue([]),
+    getAnomalies: vi.fn().mockResolvedValue([]),
   },
+}));
+
+vi.mock('@/services/notifications-service', () => ({
+  notificationsService: { getAll: vi.fn().mockResolvedValue([]) },
 }));
 
 vi.mock('@/services/expenses-service', () => ({
@@ -129,7 +147,7 @@ vi.mock('@/hooks/use-toast', () => ({
 
 // ---- Imports ----
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, act, waitFor } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
 import i18next from 'i18next';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import { initReactI18next } from 'react-i18next';
@@ -176,7 +194,12 @@ describe('Dashboard page accessibility', () => {
     await act(async () => {
       ({ container } = renderDashboard());
     });
-    // Wait for queries to resolve so we test the loaded state, not the spinner
+    // Wait for queries to resolve so we test the loaded state, not the spinner.
+    // Charts live in the collapsed "Análise Avançada" section — expand it.
+    const advancedToggle = await screen.findByRole('button', {
+      name: new RegExp(ptBR.pages.dashboard.sectionAdvancedAnalysis, 'i'),
+    });
+    fireEvent.click(advancedToggle);
     await waitFor(() => {
       expect(container.querySelector('[data-testid="chart-container"]')).toBeTruthy();
     });

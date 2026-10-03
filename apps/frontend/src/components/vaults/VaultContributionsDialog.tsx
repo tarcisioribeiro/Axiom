@@ -277,7 +277,6 @@ export function VaultContributionsDialog({
                         end_date: date ? formatLocalDate(date) : undefined,
                       })
                     }
-                    clearable
                   />
                 </div>
                 <div className="gap-sm col-span-2 flex items-center">

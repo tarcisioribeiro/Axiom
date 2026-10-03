@@ -249,7 +249,6 @@ export function LaunchRevenuesDialog({
                           value={dateFor(r)}
                           minDate={bounds?.min}
                           maxDate={bounds?.max}
-                          clearable={false}
                           floating
                           disabled={isSubmitting || !selectedIds.has(r.id)}
                           onChange={(date) =>

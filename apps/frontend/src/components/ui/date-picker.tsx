@@ -1,11 +1,10 @@
 import flatpickr from 'flatpickr';
 import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
-import { Calendar as CalendarIcon, X } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PlainButton } from '@/components/ui/plain-button';
 import { floatingOptions } from '@/lib/flatpickr-floating';
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
@@ -18,7 +17,6 @@ interface DatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  clearable?: boolean;
   minDate?: Date | string;
   maxDate?: Date | string;
   /**
@@ -87,7 +85,6 @@ export function DatePicker({
   disabled = false,
   className,
   floating = true,
-  clearable = true,
   minDate,
   maxDate,
 }: DatePickerProps) {
@@ -128,7 +125,6 @@ export function DatePicker({
       // Usa a ref para chamar o onChange atual
       // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
       // valor do formulário durante a inicialização ou transições internas.
-      // A limpeza explícita é feita pelo botão de clear (handleClear).
       onChange: (selectedDates: Date[]) => {
         if (selectedDates.length > 0) {
           onChangeRef.current?.(selectedDates[0]);
@@ -208,14 +204,6 @@ export function DatePicker({
     }
   }, [dateValue]);
 
-  // Handler para limpar a data
-  const handleClear = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    flatpickrRef.current?.clear();
-    onChange?.(undefined);
-  };
-
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       {/* Ícone do calendário */}
@@ -234,7 +222,7 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'py-sm h-10 w-full pr-10 pl-10',
+          'py-sm pr-md h-10 w-full pl-10',
           'border-input bg-background rounded-md border',
           'text-foreground placeholder:text-foreground text-sm',
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
@@ -243,25 +231,6 @@ export function DatePicker({
           disabled && 'cursor-not-allowed opacity-50'
         )}
       />
-
-      {/* Botão para limpar */}
-      {clearable && dateValue && !disabled && (
-        <PlainButton
-          type="button"
-          onClick={handleClear}
-          aria-label="Limpar data"
-          className={cn(
-            'absolute top-1/2 right-3 z-10 -translate-y-1/2',
-            'h-5 w-5 rounded-full',
-            'flex items-center justify-center',
-            'hover:text-destructive',
-            'hover:bg-destructive/10',
-            'duration-fast transition-colors'
-          )}
-        >
-          <X className="h-3.5 w-3.5" aria-hidden="true" />
-        </PlainButton>
-      )}
     </div>
   );
 }

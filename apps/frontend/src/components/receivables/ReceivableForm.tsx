@@ -222,7 +222,6 @@ export function ReceivableForm({
                 }))
               }
               placeholder={t('common.fields.selectDate')}
-              clearable
               disabled={isLoading}
             />
             {dueDateInfo && (
