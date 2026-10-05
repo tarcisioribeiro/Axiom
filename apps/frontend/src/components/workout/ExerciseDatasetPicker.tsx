@@ -128,10 +128,7 @@ export function ExerciseDatasetPicker({
               ))}
             </div>
           ) : showEmpty ? (
-            <EmptyState
-              title={t('pages.exercises.picker.empty')}
-              message={t('pages.exercises.picker.emptyDesc')}
-            />
+            <EmptyState title={t('pages.exercises.picker.empty')} />
           ) : (
             <div className="gap-sm grid grid-cols-3 sm:grid-cols-4">
               {results.map((entry) => (

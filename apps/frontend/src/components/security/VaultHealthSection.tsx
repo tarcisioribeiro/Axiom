@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -367,11 +368,7 @@ export function VaultHealthSection() {
               <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <p className="text-muted-foreground text-sm">
-                {t('pages.vaultHealth.noPasswords')}
-              </p>
-            </div>
+            <EmptyState title={t('pages.vaultHealth.noPasswords')} />
           )}
         </CardContent>
       </Card>
@@ -402,14 +399,12 @@ export function VaultHealthSection() {
           {history.length > 1 ? (
             <ScoreHistoryChart data={history} />
           ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <p className="text-muted-foreground text-center text-sm">
-                {t('pages.vaultHealth.noScoreHistory', {
-                  defaultValue:
-                    'Ainda não há histórico suficiente para exibir a evolução.',
-                })}
-              </p>
-            </div>
+            <EmptyState
+              title={t('pages.vaultHealth.noScoreHistory', {
+                defaultValue:
+                  'Ainda não há histórico suficiente para exibir a evolução.',
+              })}
+            />
           )}
         </CardContent>
       </Card>

@@ -442,7 +442,7 @@ export default function Accounts() {
       ) : filteredAccounts.length === 0 ? (
         <EmptyState
           icon={<Wallet className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.accounts.emptyState')}
+          title={t('pages.accounts.emptyState')}
         />
       ) : (
         <PaginatedSlide
@@ -638,7 +638,6 @@ export default function Accounts() {
             <EmptyState
               icon={<ArrowLeftRight className="text-muted-foreground h-12 w-12" />}
               title={t('pages.accounts.noImports')}
-              message={t('pages.accounts.noImportsDesc')}
             />
           ) : (
             <div className="rounded-md border">

@@ -232,7 +232,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
       {filteredPayables.length === 0 ? (
         <EmptyState
           icon={<Receipt className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.payables.emptySearch')
               : t('pages.payables.emptyState')

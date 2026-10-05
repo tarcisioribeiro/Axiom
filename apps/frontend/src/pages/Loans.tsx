@@ -278,7 +278,7 @@ export default function Loans() {
       {roleFilteredLoans.length === 0 ? (
         <EmptyState
           icon={<HandCoins className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')
           }
         />

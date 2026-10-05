@@ -45,6 +45,7 @@ import {
 
 import { ChartContainer } from '@/components/charts';
 import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -1745,9 +1746,7 @@ export default function LibraryDashboard() {
             </CardHeader>
             <CardContent>
               {!translatedTopGenresByTime || translatedTopGenresByTime.length === 0 ? (
-                <div className="flex h-32 items-center justify-center text-sm">
-                  {t('pages.libraryDashboard.noReadings')}
-                </div>
+                <EmptyState title={t('pages.libraryDashboard.noReadings')} />
               ) : (
                 <div className="space-y-3">
                   {translatedTopGenresByTime.map((item, index) => {

@@ -368,7 +368,7 @@ export default function Archives() {
         {filteredArchives.length === 0 ? (
           <EmptyState
             icon={<ArchiveIcon className="text-muted-foreground h-12 w-12" />}
-            message={
+            title={
               searchTerm
                 ? t('pages.archives.emptySearch')
                 : t('pages.archives.emptyState')

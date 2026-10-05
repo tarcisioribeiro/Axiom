@@ -18,6 +18,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
@@ -123,17 +124,7 @@ export default function DebtPayoffPlanner({
           {t('common.actions.loading')}
         </div>
       ) : activeDebts.length === 0 ? (
-        <div className="gap-md flex h-64 flex-col items-center justify-center text-center">
-          <Trophy className="text-success h-16 w-16 opacity-60" />
-          <div>
-            <p className="text-success text-lg font-semibold">
-              {t('pages.debtPayoff.noDebts')}
-            </p>
-            <p className="text-muted-foreground text-sm">
-              {t('pages.debtPayoff.noDebtsDesc')}
-            </p>
-          </div>
-        </div>
+        <EmptyState title={t('pages.debtPayoff.noDebts')} icon={<Trophy />} />
       ) : (
         <div className="space-y-lg">
           {/* Summary stats */}

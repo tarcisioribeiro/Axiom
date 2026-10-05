@@ -3,6 +3,7 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -315,9 +316,7 @@ export function VaultContributionsDialog({
               {t('common.messages.loading')}
             </div>
           ) : contributions.length === 0 ? (
-            <div className="py-xl text-muted-foreground text-center text-sm">
-              {t('pages.vaults.recurringContributions.emptyState')}
-            </div>
+            <EmptyState title={t('pages.vaults.recurringContributions.emptyState')} />
           ) : (
             <div className="space-y-sm">
               {contributions.map((c) => (

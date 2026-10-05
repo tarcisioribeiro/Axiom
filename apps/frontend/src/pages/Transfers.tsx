@@ -104,7 +104,7 @@ export default function Transfers() {
         isLoading={isLoading}
         emptyState={{
           icon: <ArrowLeftRight className="text-muted-foreground h-12 w-12" />,
-          message: emptyMessage,
+          title: emptyMessage,
         }}
         pagination={{
           page,

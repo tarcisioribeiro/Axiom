@@ -174,7 +174,6 @@ export default function IntellectToday() {
               ) : (
                 <EmptyState
                   title={t('pages.intellectToday.noActiveBook')}
-                  description={t('pages.intellectToday.startReading')}
                   icon={<BookOpen className="text-muted-foreground h-8 w-8" />}
                 />
               )}
@@ -219,7 +218,6 @@ export default function IntellectToday() {
               ) : (
                 <EmptyState
                   title={t('pages.intellectToday.noCourse')}
-                  description={t('pages.intellectToday.startCourse')}
                   icon={<PlayCircle className="text-muted-foreground h-8 w-8" />}
                 />
               )}

@@ -494,9 +494,7 @@ function RuleLogsDialog({
         {isLoading ? (
           <LoadingState />
         ) : logs.length === 0 ? (
-          <p className="py-md text-muted-foreground text-center text-sm">
-            {t('pages.automationRules.noLogs')}
-          </p>
+          <EmptyState title={t('pages.automationRules.noLogs')} />
         ) : (
           <div className="space-y-sm max-h-96 overflow-y-auto">
             {logs.map((log) => (
@@ -851,18 +849,7 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
       {isLoading ? (
         <LoadingState />
       ) : rules.length === 0 ? (
-        <EmptyState
-          title={t('pages.automationRules.empty')}
-          description={t('pages.automationRules.emptyDesc')}
-          action={{
-            label: t('pages.automationRules.newRule'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: () => {
-              setEditingRule(undefined);
-              setFormOpen(true);
-            },
-          }}
-        />
+        <EmptyState title={t('pages.automationRules.empty')} />
       ) : (
         <PaginatedSlide items={rules} pageSize={LIST_PAGE_SIZE} className="space-y-sm">
           {(pageItems) =>

@@ -3,6 +3,7 @@ import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
@@ -123,9 +124,7 @@ export function ExpenseSplitsModal({
               {t('common.messages.loading')}
             </p>
           ) : splits.length === 0 && !addingNew ? (
-            <p className="py-md text-muted-foreground text-center text-sm">
-              {t('pages.expenses.splits.empty')}
-            </p>
+            <EmptyState title={t('pages.expenses.splits.empty')} />
           ) : (
             <div className="space-y-xs">
               {splits.map((split) => (

@@ -560,12 +560,6 @@ export default function BodyMetrics() {
           <EmptyState
             icon={<Scale className="h-8 w-8" />}
             title={t('pages.bodyMetrics.empty')}
-            description={t('pages.bodyMetrics.emptyDesc')}
-            action={{
-              label: t('pages.bodyMetrics.emptyAction'),
-              icon: <Plus className="h-4 w-4" />,
-              onClick: openCreate,
-            }}
           />
         ) : (
           <>
@@ -638,12 +632,10 @@ export default function BodyMetrics() {
                   </div>
 
                   {chartData.length < 2 ? (
-                    <div className="py-xl flex flex-col items-center justify-center text-center">
-                      <Activity className="mb-sm text-muted-foreground/40 h-8 w-8" />
-                      <p className="text-muted-foreground text-sm">
-                        {t('pages.bodyMetrics.noDataForChart')}
-                      </p>
-                    </div>
+                    <EmptyState
+                      title={t('pages.bodyMetrics.noDataForChart')}
+                      icon={<Activity />}
+                    />
                   ) : (
                     <ResponsiveContainer width="100%" height={360}>
                       <AreaChart
@@ -833,12 +825,10 @@ export default function BodyMetrics() {
                           />
                         </>
                       ) : (
-                        <div className="py-xl flex flex-col items-center justify-center text-center">
-                          <PieChart className="mb-sm text-muted-foreground/40 h-8 w-8" />
-                          <p className="text-muted-foreground text-sm">
-                            {t('pages.bodyMetrics.noDataForComposition')}
-                          </p>
-                        </div>
+                        <EmptyState
+                          title={t('pages.bodyMetrics.noDataForComposition')}
+                          icon={<PieChart />}
+                        />
                       )}
                     </CardContent>
                   </Card>

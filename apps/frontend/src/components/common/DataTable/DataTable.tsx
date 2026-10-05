@@ -39,15 +39,7 @@ export interface DataTableProps<T> {
   keyExtractor: (item: T) => string | number;
   isLoading?: boolean;
   density?: DataTableDensity;
-  emptyState?: {
-    icon?: React.ReactNode;
-    title?: string;
-    message: string;
-    action?: {
-      label: string;
-      onClick: () => void;
-    };
-  };
+  emptyState?: React.ComponentProps<typeof EmptyState>;
   /** Paginação no servidor (`data` já é a página atual). Sem ela, o
    * DataTable pagina `data` no cliente com `pageSize` itens por página. */
   pagination?: {
@@ -154,12 +146,7 @@ export function DataTable<T>({
 
   // Empty state
   if (data.length === 0) {
-    if (emptyState) return <EmptyState {...emptyState} />;
-    return (
-      <div className="bg-card rounded-lg border p-12 text-center">
-        <p>{t('common.table.noData')}</p>
-      </div>
-    );
+    return <EmptyState title={t('common.table.noData')} {...emptyState} />;
   }
 
   // Render column content

@@ -129,7 +129,6 @@ export default function SubscriptionTracker({
         <div className="mt-md">
           <EmptyState
             title={t('subscriptions.noSubscriptions')}
-            message={t('subscriptions.noSubscriptionsDesc')}
             icon={<RefreshCcw className="h-8 w-8" />}
           />
         </div>

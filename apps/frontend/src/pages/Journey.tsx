@@ -128,10 +128,7 @@ export default function Journey() {
             </CardHeader>
             <CardContent>
               {(badges ?? []).length === 0 ? (
-                <EmptyState
-                  title={t('pages.journey.noBadges')}
-                  description={t('pages.journey.noBadgesDesc')}
-                />
+                <EmptyState title={t('pages.journey.noBadges')} />
               ) : (
                 <div className="gap-sm grid grid-cols-2">
                   {(badges ?? []).map((b) => (
@@ -161,10 +158,7 @@ export default function Journey() {
             </CardHeader>
             <CardContent>
               {events.length === 0 ? (
-                <EmptyState
-                  title={t('pages.journey.noEvents')}
-                  description={t('pages.journey.noEventsDesc')}
-                />
+                <EmptyState title={t('pages.journey.noEvents')} />
               ) : (
                 <PaginatedSlide items={events} pageSize={LIST_PAGE_SIZE} pinNav={false}>
                   {(pageEvents) => (

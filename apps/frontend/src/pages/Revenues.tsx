@@ -333,7 +333,7 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
         rowClassName={(revenue) => (revenue.received ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.revenues.emptyState'),
+          title: t('pages.revenues.emptyState'),
         }}
         pagination={{
           page,

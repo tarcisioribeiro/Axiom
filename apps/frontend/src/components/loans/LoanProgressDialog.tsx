@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   Dialog,
   DialogCloseFooter,
@@ -312,9 +313,7 @@ export function LoanProgressDialog({
             )}
 
             {installments.length === 0 && (
-              <p className="py-sm text-muted-foreground text-center text-sm">
-                {t('pages.loans.progress.noInstallments')}
-              </p>
+              <EmptyState title={t('pages.loans.progress.noInstallments')} />
             )}
           </div>
         )}

@@ -207,7 +207,7 @@ export default function ActivityLogs() {
       {logs.length === 0 ? (
         <EmptyState
           icon={<ScrollText className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.activityLogs.emptyState')}
+          title={t('pages.activityLogs.emptyState')}
         />
       ) : (
         <PaginatedSlide items={logs} pageSize={LIST_PAGE_SIZE} className="space-y-lg">

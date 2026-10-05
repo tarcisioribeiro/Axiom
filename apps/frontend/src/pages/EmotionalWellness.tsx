@@ -4,24 +4,23 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
+  ListChecks,
   Zap,
   Brain,
   Shield,
   BookOpen,
   BarChart3,
-  ChevronDown,
   ChevronRight,
   CheckCircle2,
   Send,
   AlertCircle,
-  Sparkles,
   Clock,
   TrendingUp,
   TrendingDown,
   Minus,
+  Play,
   Plus,
   Star,
-  RefreshCw,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -31,11 +30,10 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogContent,
@@ -48,11 +46,13 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
   type CrisisImpulseLog,
   type CrisisImpulseLogCreate,
+  type EmotionalCheckin,
   type EmotionalState,
   type ImpulseType,
   type InterventionCategory,
@@ -64,7 +64,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'dashboard' | 'self-esteem' | 'checkin' | 'crisis' | 'library' | 'report';
+type Tab = 'dashboard' | 'self-esteem' | 'checkin' | 'crisis' | 'library';
 
 // ─── Rosenberg questions ──────────────────────────────────────────────────────
 
@@ -233,7 +233,6 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'checkin', label: 'Check-in', icon: Heart },
   { id: 'crisis', label: 'Modo Crise', icon: Shield },
   { id: 'library', label: 'Intervenções', icon: BookOpen },
-  { id: 'report', label: 'Relatório IA', icon: Sparkles },
 ];
 
 // ─── Dashboard tab ────────────────────────────────────────────────────────────
@@ -257,7 +256,7 @@ function DashboardTab() {
   const history = historyData?.results ?? [];
 
   return (
-    <div className="space-y-lg">
+    <div className="page-fill space-y-lg flex flex-1 flex-col justify-center">
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <WellnessStatCard
@@ -352,11 +351,7 @@ function DashboardTab() {
       )}
 
       {history.length === 0 && d.emotional.checkins_this_week === 0 && (
-        <EmptyState
-          icon={<Heart />}
-          title="Nenhum dado ainda"
-          description="Comece com um check-in emocional ou faça a avaliação de autoestima."
-        />
+        <EmptyState icon={<Heart />} title="Nenhum dado ainda" />
       )}
     </div>
   );
@@ -364,14 +359,28 @@ function DashboardTab() {
 
 // ─── Self-esteem tab ──────────────────────────────────────────────────────────
 
-function SelfEsteemTab() {
+function SelfEsteemTab({
+  showForm,
+  setShowForm,
+}: {
+  showForm: boolean;
+  setShowForm: (open: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<SelfEsteemAssessment | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(0);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<SelfEsteemAssessment | null>(null);
+  // Reinicia o questionário a cada abertura (padrão "estado da renderização anterior").
+  const [wasOpen, setWasOpen] = useState(showForm);
+  if (wasOpen !== showForm) {
+    setWasOpen(showForm);
+    if (showForm) {
+      setAnswers({});
+      setStep(0);
+    }
+  }
   const [aiParsed, setAiParsed] = useState<{
     analysis: string;
     strengths: string[];
@@ -437,23 +446,7 @@ function SelfEsteemTab() {
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-foreground font-semibold">Escala de Rosenberg</h2>
-        </div>
-        <Button
-          onClick={() => {
-            setAnswers({});
-            setStep(0);
-            setShowForm(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Nova avaliação
-        </Button>
-      </div>
-
+    <div className="flex flex-1 flex-col space-y-5">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         {/* altura fixa: o modal não varia com o tamanho do texto da pergunta */}
         <DialogContent size="sm" className="flex h-[26rem] flex-col">
@@ -505,9 +498,44 @@ function SelfEsteemTab() {
                 disabled={!(stepKey in answers)}
               >
                 Confirmar
+                <ChevronRight className="h-4 w-4" />
               </Button>
             )}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent size="sm">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="gap-sm flex items-center">
+                  Avaliação de {format(new Date(selected.assessed_at), 'dd/MM/yyyy')}
+                  <Badge variant="outline" className="text-xs">
+                    {scoreLabel(selected.score).label}
+                  </Badge>
+                </DialogTitle>
+                <DialogDescription>Pontuação: {selected.score}/30</DialogDescription>
+              </DialogHeader>
+              <ol className="space-y-sm">
+                {ROSENBERG_QUESTIONS.map((q, i) => (
+                  <li key={i} className="text-sm">
+                    <p className="text-muted-foreground">
+                      {i + 1}. {q}
+                    </p>
+                    <p className="text-foreground font-medium">
+                      {ROSENBERG_OPTIONS.find(
+                        (o) =>
+                          o.value ===
+                          selected[`q${i + 1}` as keyof SelfEsteemAssessment]
+                      )?.label ?? '—'}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -607,24 +635,38 @@ function SelfEsteemTab() {
         )}
 
         {!(submitted && aiParsed) && (
-          <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div
+            key="history"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-1 flex-col"
+          >
             {history?.results?.length === 0 ? (
-              <EmptyState
-                icon={<Star />}
-                title="Nenhuma avaliação ainda"
-                description="Faça sua primeira avaliação de autoestima para começar a acompanhar sua evolução."
-              />
+              <EmptyState icon={<Star />} title="Nenhuma avaliação ainda" />
             ) : (
               <PaginatedSlide
                 items={history?.results ?? []}
-                pageSize={LIST_PAGE_SIZE}
+                pageSize={5}
+                centerList
                 className="space-y-3"
               >
                 {(pageItems) =>
                   pageItems.map((a) => {
                     const sl = scoreLabel(a.score);
                     return (
-                      <Card key={a.id}>
+                      <Card
+                        key={a.id}
+                        role="button"
+                        tabIndex={0}
+                        className="hover:border-primary/50 cursor-pointer transition-colors"
+                        onClick={() => setSelected(a)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelected(a);
+                          }
+                        }}
+                      >
                         <CardContent className="px-md py-md pt-md">
                           <div className="gap-md flex items-center">
                             <div>
@@ -637,9 +679,6 @@ function SelfEsteemTab() {
                                   /30
                                 </span>
                               </p>
-                              <Badge variant="outline" className="mt-xs text-xs">
-                                {sl.label}
-                              </Badge>
                             </div>
                             <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
                               <div
@@ -647,41 +686,7 @@ function SelfEsteemTab() {
                                 style={{ width: `${(a.score / 30) * 100}%` }}
                               />
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              aria-expanded={expandedId === a.id}
-                              onClick={() =>
-                                setExpandedId(expandedId === a.id ? null : a.id)
-                              }
-                            >
-                              Ver detalhes
-                              <ChevronDown
-                                className={cn(
-                                  'h-4 w-4 transition-transform',
-                                  expandedId === a.id && 'rotate-180'
-                                )}
-                              />
-                            </Button>
                           </div>
-                          <Collapse open={expandedId === a.id}>
-                            <ol className="space-y-sm border-border/50 mt-md pt-md border-t">
-                              {ROSENBERG_QUESTIONS.map((q, i) => (
-                                <li key={i} className="text-sm">
-                                  <p className="text-muted-foreground">
-                                    {i + 1}. {q}
-                                  </p>
-                                  <p className="text-foreground font-medium">
-                                    {ROSENBERG_OPTIONS.find(
-                                      (o) =>
-                                        o.value ===
-                                        a[`q${i + 1}` as keyof SelfEsteemAssessment]
-                                    )?.label ?? '—'}
-                                  </p>
-                                </li>
-                              ))}
-                            </ol>
-                          </Collapse>
                         </CardContent>
                       </Card>
                     );
@@ -733,13 +738,27 @@ const CHECKIN_INITIAL = {
   occupying_thoughts: '',
 };
 
-function CheckinTab() {
+function CheckinTab({
+  showForm,
+  setShowForm,
+}: {
+  showForm: boolean;
+  setShowForm: (open: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState(CHECKIN_INITIAL);
-  const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(0);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<EmotionalCheckin | null>(null);
+  // Reinicia o formulário a cada abertura (padrão "estado da renderização anterior").
+  const [wasOpen, setWasOpen] = useState(showForm);
+  if (wasOpen !== showForm) {
+    setWasOpen(showForm);
+    if (showForm) {
+      setForm(CHECKIN_INITIAL);
+      setStep(0);
+    }
+  }
 
   const { data: history, isLoading } = useQuery({
     queryKey: ['wellness', 'checkins', 30],
@@ -770,23 +789,7 @@ function CheckinTab() {
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-foreground font-semibold">Como você está agora?</h2>
-        </div>
-        <Button
-          onClick={() => {
-            setForm(CHECKIN_INITIAL);
-            setStep(0);
-            setShowForm(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Registrar
-        </Button>
-      </div>
-
+    <div className="flex flex-1 flex-col space-y-5">
       <Dialog open={showForm} onOpenChange={setShowForm}>
         {/* altura fixa: o modal não varia entre os passos de escala e de texto */}
         <DialogContent size="sm" className="flex h-[22rem] flex-col">
@@ -833,27 +836,76 @@ function CheckinTab() {
                 {mutation.isPending ? 'Salvando...' : 'Registrar'}
               </Button>
             ) : (
-              <Button onClick={() => setStep((s) => s + 1)}>Confirmar</Button>
+              <Button onClick={() => setStep((s) => s + 1)}>
+                Confirmar
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent size="sm">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  Check-in de {format(new Date(selected.checked_at), 'dd/MM/yyyy')}
+                </DialogTitle>
+                <VisuallyHidden>
+                  <DialogDescription>Detalhes do check-in</DialogDescription>
+                </VisuallyHidden>
+              </DialogHeader>
+              <div className="space-y-md text-sm">
+                <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
+                  {CHECKIN_SCALES.map((s) => (
+                    <div key={s.key}>
+                      <dt className="text-muted-foreground">{s.label}</dt>
+                      <dd className="text-foreground font-medium">
+                        {selected[s.key]}/10
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {CHECKIN_TEXTS.map((t) => (
+                  <div key={t.key}>
+                    <p className="text-muted-foreground">{t.label}</p>
+                    <p className="text-foreground font-medium whitespace-pre-wrap">
+                      {selected[t.key] || '—'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {history?.results?.length === 0 ? (
-        <EmptyState
-          icon={<Heart />}
-          title="Nenhum check-in ainda"
-          description="Registre seu primeiro check-in para começar a acompanhar como você se sente."
-        />
+        <EmptyState icon={<Heart />} title="Nenhum check-in ainda" />
       ) : (
         <PaginatedSlide
           items={history?.results ?? []}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={7}
+          centerList
           className="space-y-3"
         >
           {(pageItems) =>
             pageItems.map((c) => (
-              <Card key={c.id}>
+              <Card
+                key={c.id}
+                role="button"
+                tabIndex={0}
+                className="hover:border-primary/50 cursor-pointer transition-colors"
+                onClick={() => setSelected(c)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelected(c);
+                  }
+                }}
+              >
                 <CardContent className="px-md py-md pt-md">
                   <div className="gap-md flex items-center">
                     <p className="text-muted-foreground text-xs">
@@ -873,43 +925,7 @@ function CheckinTab() {
                         {c.motivation}
                       </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-expanded={expandedId === c.id}
-                      onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                    >
-                      Ver detalhes
-                      <ChevronDown
-                        className={cn(
-                          'h-4 w-4 transition-transform',
-                          expandedId === c.id && 'rotate-180'
-                        )}
-                      />
-                    </Button>
                   </div>
-                  <Collapse open={expandedId === c.id}>
-                    <div className="space-y-md border-border/50 mt-md pt-md border-t text-sm">
-                      <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
-                        {CHECKIN_SCALES.map((s) => (
-                          <div key={s.key}>
-                            <dt className="text-muted-foreground">{s.label}</dt>
-                            <dd className="text-foreground font-medium">
-                              {c[s.key]}/10
-                            </dd>
-                          </div>
-                        ))}
-                      </dl>
-                      {CHECKIN_TEXTS.map((t) => (
-                        <div key={t.key}>
-                          <p className="text-muted-foreground">{t.label}</p>
-                          <p className="text-foreground font-medium whitespace-pre-wrap">
-                            {c[t.key] || '—'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </Collapse>
                 </CardContent>
               </Card>
             ))
@@ -922,23 +938,78 @@ function CheckinTab() {
 
 // ─── Crisis tab ───────────────────────────────────────────────────────────────
 
-function CrisisTab() {
+type CrisisAiResponse = {
+  validation: string;
+  explanation: string;
+  action_plan: { '5min': string[]; '10min': string[]; '20min': string[] };
+  affirmation: string;
+};
+
+const CRISIS_STEPS = 3;
+
+function ChoiceGrid<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T | null;
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          aria-pressed={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cn(
+            'py-sm rounded-lg border px-3 text-left text-sm font-medium transition',
+            value === o.value
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CrisisTab({
+  showForm,
+  setShowForm,
+}: {
+  showForm: boolean;
+  setShowForm: (open: boolean) => void;
+}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [step, setStep] = useState<'idle' | 'form' | 'result'>('idle');
+  const [step, setStep] = useState(0);
   const [emotionalState, setEmotionalState] = useState<EmotionalState | null>(null);
   const [otherEmotion, setOtherEmotion] = useState('');
   const [impulseType, setImpulseType] = useState<ImpulseType | null>(null);
   const [otherImpulse, setOtherImpulse] = useState('');
   const [result, setResult] = useState<CrisisImpulseLog | null>(null);
-  const [aiParsed, setAiParsed] = useState<{
-    validation: string;
-    explanation: string;
-    action_plan: { '5min': string[]; '10min': string[]; '20min': string[] };
-    affirmation: string;
-  } | null>(null);
+  const [aiParsed, setAiParsed] = useState<CrisisAiResponse | null>(null);
+  // Reinicia o registro a cada abertura (padrão "estado da renderização anterior").
+  const [wasOpen, setWasOpen] = useState(showForm);
+  if (wasOpen !== showForm) {
+    setWasOpen(showForm);
+    if (showForm) {
+      setStep(0);
+      setEmotionalState(null);
+      setOtherEmotion('');
+      setImpulseType(null);
+      setOtherImpulse('');
+      setResult(null);
+      setAiParsed(null);
+    }
+  }
 
-  const { data: logs } = useQuery({
+  const { data: logs, isLoading } = useQuery({
     queryKey: ['wellness', 'crisis'],
     queryFn: () => wellnessService.getCrisisLogs(),
   });
@@ -950,19 +1021,12 @@ function CrisisTab() {
       setResult(r);
       if (r.ai_response) {
         try {
-          setAiParsed(
-            JSON.parse(r.ai_response) as {
-              validation: string;
-              explanation: string;
-              action_plan: { '5min': string[]; '10min': string[]; '20min': string[] };
-              affirmation: string;
-            }
-          );
+          setAiParsed(JSON.parse(r.ai_response) as CrisisAiResponse);
         } catch {
           /* noop */
         }
       }
-      setStep('result');
+      setStep(2);
     },
     onError: () => toast({ title: 'Erro ao processar', variant: 'destructive' }),
   });
@@ -972,9 +1036,7 @@ function CrisisTab() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['wellness'] });
       toast({ title: 'Impulso superado! Parabéns.' });
-      setStep('idle');
-      setResult(null);
-      setAiParsed(null);
+      setShowForm(false);
     },
   });
 
@@ -988,30 +1050,162 @@ function CrisisTab() {
     });
   }
 
-  if (step === 'idle') {
-    return (
-      <div className="space-y-lg">
-        <div className="space-y-md py-lg text-center">
-          <div className="border-destructive/20 bg-destructive/10 mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border">
-            <Shield className="text-destructive h-10 w-10" />
-          </div>
-          <h2 className="text-lg font-semibold">Modo Crise</h2>
-          <Button
-            size="lg"
-            variant="destructive"
-            className="w-full max-w-xs"
-            onClick={() => setStep('form')}
-          >
-            Estou com um impulso agora
-          </Button>
-        </div>
+  if (isLoading) return <LoadingState />;
 
-        {logs && logs.results.length > 0 && (
-          <div className="space-y-sm border-border/50 pt-md border-t">
-            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              Histórico
-            </p>
-            {logs.results.slice(0, 5).map((log) => (
+  return (
+    <div className="flex flex-1 flex-col">
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent size="md">
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              {step === 2 && (
+                <ListChecks
+                  className="text-primary h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+              )}
+              {step === 0
+                ? 'O que você está sentindo?'
+                : step === 1
+                  ? 'Qual impulso você está tentando evitar?'
+                  : 'Seu plano de ação'}
+            </DialogTitle>
+            <DialogDescription>
+              Etapa {step + 1} de {CRISIS_STEPS}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div key={step} className="animate-fade-in space-y-md">
+            {step === 0 && (
+              <>
+                <ChoiceGrid
+                  options={EMOTIONAL_STATES}
+                  value={emotionalState}
+                  onChange={setEmotionalState}
+                />
+                {emotionalState === 'other' && (
+                  <Input
+                    placeholder="Descreva o que está sentindo"
+                    value={otherEmotion}
+                    onChange={(e) => setOtherEmotion(e.target.value)}
+                  />
+                )}
+              </>
+            )}
+
+            {step === 1 && (
+              <>
+                <ChoiceGrid
+                  options={IMPULSE_TYPES}
+                  value={impulseType}
+                  onChange={setImpulseType}
+                />
+                {impulseType === 'other' && (
+                  <Input
+                    placeholder="Descreva o impulso"
+                    value={otherImpulse}
+                    onChange={(e) => setOtherImpulse(e.target.value)}
+                  />
+                )}
+              </>
+            )}
+
+            {step === 2 &&
+              (aiParsed ? (
+                <>
+                  <div className="space-y-xs">
+                    <p className="text-primary text-xs font-medium tracking-wider uppercase">
+                      Validação
+                    </p>
+                    <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
+                  </div>
+                  <div className="space-y-xs">
+                    <p className="text-warning text-xs font-medium tracking-wider uppercase">
+                      Contexto
+                    </p>
+                    <p className="text-sm leading-relaxed">{aiParsed.explanation}</p>
+                  </div>
+                  <div className="space-y-sm">
+                    <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                      Plano de ação imediato
+                    </p>
+                    {(['5min', '10min', '20min'] as const).map((duration) => (
+                      <Card key={duration}>
+                        <CardHeader className="px-md pb-sm pt-3">
+                          <CardTitle className="gap-xs text-muted-foreground flex items-center text-xs">
+                            <Clock className="h-3.5 w-3.5" /> {duration}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-xs px-md pb-3">
+                          {aiParsed.action_plan[duration]?.map((action, i) => (
+                            <div key={i} className="gap-sm flex items-start">
+                              <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <p className="text-sm">{action}</p>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <p className="text-success text-center text-sm italic">
+                    "{aiParsed.affirmation}"
+                  </p>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Impulso registrado. A análise da IA estará disponível em breve.
+                </p>
+              ))}
+          </div>
+
+          <DialogFooter>
+            {step === 0 && (
+              <Button onClick={() => setStep(1)} disabled={!emotionalState}>
+                Confirmar
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+            {step === 1 && (
+              <Button
+                onClick={handleSubmit}
+                disabled={!impulseType || createMutation.isPending}
+              >
+                <Send className="h-4 w-4" />
+                {createMutation.isPending ? 'Buscando suporte...' : 'Quero ajuda agora'}
+              </Button>
+            )}
+            {step === 2 && (
+              <>
+                <Button variant="outline" onClick={() => setShowForm(false)}>
+                  <X className="h-4 w-4" />
+                  Fechar
+                </Button>
+                {result && !result.resolved && (
+                  <Button
+                    onClick={() => resolveMutation.mutate(result.id)}
+                    disabled={resolveMutation.isPending}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Superei o impulso
+                  </Button>
+                )}
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {logs?.results?.length === 0 ? (
+        <EmptyState icon={<Shield />} title="Nenhum registro ainda" />
+      ) : (
+        <PaginatedSlide
+          items={logs?.results ?? []}
+          pageSize={6}
+          centerList
+          className="space-y-3"
+        >
+          {(pageItems) =>
+            pageItems.map((log) => (
               <Card key={log.id}>
                 <CardContent className="flex items-center justify-between p-3 pt-3">
                   <div>
@@ -1032,191 +1226,11 @@ function CrisisTab() {
                   )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (step === 'form') {
-    return (
-      <div className="space-y-5">
-        <div className="flex items-center gap-3">
-          <Button
-            aria-label="Fechar"
-            variant="ghost"
-            size="sm"
-            onClick={() => setStep('idle')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <h2 className="font-semibold">O que você está sentindo?</h2>
-        </div>
-
-        <div>
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Estado emocional
-          </p>
-          <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
-            {EMOTIONAL_STATES.map((e) => (
-              <button
-                key={e.value}
-                onClick={() => setEmotionalState(e.value)}
-                className={cn(
-                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition',
-                  emotionalState === e.value
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
-                )}
-              >
-                {e.label}
-              </button>
-            ))}
-          </div>
-          {emotionalState === 'other' && (
-            <Input
-              className="mt-sm"
-              placeholder="Descreva o que está sentindo"
-              value={otherEmotion}
-              onChange={(e) => setOtherEmotion(e.target.value)}
-            />
-          )}
-        </div>
-
-        <div>
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Qual impulso você está tentando evitar?
-          </p>
-          <div className="gap-sm grid grid-cols-2 sm:grid-cols-3">
-            {IMPULSE_TYPES.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setImpulseType(t.value)}
-                className={cn(
-                  'py-sm.5 rounded-lg border px-3 text-left text-sm font-medium transition',
-                  impulseType === t.value
-                    ? 'border-destructive bg-destructive text-destructive-foreground'
-                    : 'border-border text-muted-foreground hover:border-destructive/50 hover:text-foreground'
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          {impulseType === 'other' && (
-            <Input
-              className="mt-sm"
-              placeholder="Descreva o impulso"
-              value={otherImpulse}
-              onChange={(e) => setOtherImpulse(e.target.value)}
-            />
-          )}
-        </div>
-
-        <Button
-          className="w-full"
-          onClick={handleSubmit}
-          disabled={!emotionalState || !impulseType || createMutation.isPending}
-        >
-          {createMutation.isPending ? 'Buscando suporte...' : 'Quero ajuda agora'}
-        </Button>
-      </div>
-    );
-  }
-
-  // step === 'result'
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-md"
-    >
-      {aiParsed ? (
-        <>
-          <Card>
-            <CardContent className="space-y-xs px-md py-md pt-md">
-              <p className="text-primary text-xs font-medium tracking-wider uppercase">
-                Validação
-              </p>
-              <p className="text-sm leading-relaxed">{aiParsed.validation}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="space-y-xs px-md py-md pt-md">
-              <p className="text-warning text-xs font-medium tracking-wider uppercase">
-                Contexto
-              </p>
-              <p className="text-sm leading-relaxed">{aiParsed.explanation}</p>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-sm">
-            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              Plano de ação imediato
-            </p>
-            {(['5min', '10min', '20min'] as const).map((duration) => (
-              <Card key={duration}>
-                <CardHeader className="px-md pb-sm pt-3">
-                  <CardTitle className="gap-xs.5 text-muted-foreground flex items-center text-xs">
-                    <Clock className="h-3.5 w-3.5" /> {duration}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-xs.5 px-md pb-3">
-                  {aiParsed.action_plan[duration]?.map((action, i) => (
-                    <div key={i} className="gap-sm flex items-start">
-                      <ChevronRight className="text-primary mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      <p className="text-sm">{action}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card>
-            <CardContent className="px-md py-md pt-md">
-              <p className="text-success text-center text-sm italic">
-                "{aiParsed.affirmation}"
-              </p>
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        <Card>
-          <CardContent className="px-md py-md pt-md">
-            <p className="text-muted-foreground text-sm">
-              Impulso registrado. A análise da IA estará disponível em breve.
-            </p>
-          </CardContent>
-        </Card>
+            ))
+          }
+        </PaginatedSlide>
       )}
-
-      <div className="gap-sm pt-sm flex">
-        <Button
-          className="flex-1"
-          variant="outline"
-          onClick={() => {
-            setStep('idle');
-            setResult(null);
-            setAiParsed(null);
-          }}
-        >
-          Voltar
-        </Button>
-        {result && !result.resolved && (
-          <Button
-            className="flex-1"
-            onClick={() => resolveMutation.mutate(result.id)}
-            disabled={resolveMutation.isPending}
-          >
-            <CheckCircle2 className="mr-xs.5 h-4 w-4" />
-            Superei o impulso
-          </Button>
-        )}
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1294,16 +1308,13 @@ function LibraryTab() {
       {isLoading ? (
         <LoadingState />
       ) : data?.results?.length === 0 ? (
-        <EmptyState
-          icon={<BookOpen />}
-          title="Nenhuma intervenção"
-          description="Selecione outra categoria."
-        />
+        <EmptyState icon={<BookOpen />} title="Nenhuma intervenção" />
       ) : (
         <PaginatedSlide
           key={String(selectedCategory)}
           items={data?.results ?? []}
-          pageSize={LIST_PAGE_SIZE}
+          pageSize={3}
+          centerList
           className="space-y-3"
         >
           {(pageItems) =>
@@ -1366,7 +1377,10 @@ function LibraryTab() {
                         ) : completeMutation.isPending && completingId === item.id ? (
                           'Salvando...'
                         ) : (
-                          'Fazer agora'
+                          <>
+                            <Play className="h-3 w-3" />
+                            Fazer agora
+                          </>
                         )}
                       </Button>
                     </div>
@@ -1381,139 +1395,42 @@ function LibraryTab() {
   );
 }
 
-// ─── Report tab ───────────────────────────────────────────────────────────────
-
-function ReportTab() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const { data: reports, isLoading } = useQuery({
-    queryKey: ['wellness', 'weekly-reports'],
-    queryFn: () => wellnessService.getWeeklyReports(),
-  });
-
-  const generateMutation = useMutation({
-    mutationFn: () => wellnessService.generateWeeklyReport(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['wellness', 'weekly-reports'] });
-      toast({ title: 'Relatório gerado!' });
-    },
-    onError: () => toast({ title: 'Erro ao gerar relatório', variant: 'destructive' }),
-  });
-
-  const latest = reports?.results?.[0];
-
-  return (
-    <div className="space-y-md">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold">Relatório Semanal</h2>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => generateMutation.mutate()}
-          disabled={generateMutation.isPending}
-        >
-          <RefreshCw
-            className={cn(
-              'mr-xs.5 h-3.5 w-3.5',
-              generateMutation.isPending && 'animate-spin'
-            )}
-          />
-          {generateMutation.isPending ? 'Gerando...' : 'Gerar agora'}
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <LoadingState />
-      ) : !latest ? (
-        <EmptyState
-          icon={<Sparkles />}
-          title="Nenhum relatório ainda"
-          description="Clique em 'Gerar agora' para obter uma análise semanal personalizada da IA."
-        />
-      ) : (
-        <div className="space-y-md">
-          <Card>
-            <CardHeader className="px-md pb-sm pt-md">
-              <CardTitle className="text-muted-foreground text-xs">
-                Semana {format(new Date(latest.week_start), 'dd/MM')} –{' '}
-                {format(new Date(latest.week_end), 'dd/MM/yyyy')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-md pb-md">
-              <p className="text-sm leading-relaxed">{latest.ai_summary}</p>
-            </CardContent>
-          </Card>
-
-          {latest.attention_points?.length > 0 && (
-            <Card>
-              <CardHeader className="px-md pb-sm pt-md">
-                <CardTitle className="text-warning text-sm">
-                  Pontos de atenção
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-sm px-md pb-md">
-                {latest.attention_points.map((p, i) => (
-                  <div key={i} className="gap-sm flex items-start">
-                    <AlertCircle className="text-warning mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="text-sm">{p}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {latest.suggestions?.length > 0 && (
-            <Card>
-              <CardHeader className="px-md pb-sm pt-md">
-                <CardTitle className="text-primary text-sm">
-                  Sugestões para a próxima semana
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-sm px-md pb-md">
-                {latest.suggestions.map((s, i) => (
-                  <div key={i} className="gap-sm flex items-start">
-                    <ChevronRight className="text-primary mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="text-sm">{s}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="gap-sm grid grid-cols-3">
-            {[
-              { label: 'Solidão', value: latest.avg_loneliness },
-              { label: 'Ansiedade', value: latest.avg_anxiety },
-              { label: 'Motivação', value: latest.avg_motivation },
-            ].map(({ label, value }) => (
-              <Card key={label}>
-                <CardContent className="p-3 pt-3 text-center">
-                  <p className="text-muted-foreground text-xs">{label}</p>
-                  <p className="text-foreground text-xl font-bold">
-                    {value ? Number(value).toFixed(1) : '—'}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function EmotionalWellness() {
+  const [tab, setTab] = useState<string>('dashboard');
+  const [selfEsteemFormOpen, setSelfEsteemFormOpen] = useState(false);
+  const [checkinFormOpen, setCheckinFormOpen] = useState(false);
+  const [crisisFormOpen, setCrisisFormOpen] = useState(false);
   return (
     <AnimatedPage>
       <PageContainer>
-        <PageHeader title="Centro de Bem-Estar" icon={<Heart />} />
+        <PageHeader
+          title="Bem-Estar Emocional"
+          icon={<Heart />}
+          actions={
+            tab === 'self-esteem' ? (
+              <Button onClick={() => setSelfEsteemFormOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Nova avaliação
+              </Button>
+            ) : tab === 'checkin' ? (
+              <Button onClick={() => setCheckinFormOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Registrar
+              </Button>
+            ) : (
+              tab === 'crisis' && (
+                <Button onClick={() => setCrisisFormOpen(true)}>
+                  <Shield className="h-4 w-4" />
+                  Modo Crise
+                </Button>
+              )
+            )
+          }
+        />
 
-        <Tabs defaultValue="dashboard">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-lg w-full overflow-x-auto">
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -1530,19 +1447,19 @@ export default function EmotionalWellness() {
             <DashboardTab />
           </TabsContent>
           <TabsContent value="self-esteem">
-            <SelfEsteemTab />
+            <SelfEsteemTab
+              showForm={selfEsteemFormOpen}
+              setShowForm={setSelfEsteemFormOpen}
+            />
           </TabsContent>
           <TabsContent value="checkin">
-            <CheckinTab />
+            <CheckinTab showForm={checkinFormOpen} setShowForm={setCheckinFormOpen} />
           </TabsContent>
           <TabsContent value="crisis">
-            <CrisisTab />
+            <CrisisTab showForm={crisisFormOpen} setShowForm={setCrisisFormOpen} />
           </TabsContent>
           <TabsContent value="library">
             <LibraryTab />
-          </TabsContent>
-          <TabsContent value="report">
-            <ReportTab />
           </TabsContent>
         </Tabs>
       </PageContainer>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import type { TaskCard, KanbanStatus } from '@/types';
 
 import { KanbanCard } from './KanbanCard';
@@ -95,7 +96,7 @@ export function KanbanColumn({ status, title, cards, totalCards }: KanbanColumnP
                   exit={{ opacity: 0 }}
                   className="py-xl text-center"
                 >
-                  <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
+                  <EmptyState title={t('pages.todayTasks.emptyColumn')} />
                 </motion.div>
               ) : (
                 cards.map((card) => <KanbanCard key={card.id} card={card} />)

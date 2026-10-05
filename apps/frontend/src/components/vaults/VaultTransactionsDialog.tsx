@@ -3,6 +3,7 @@ import { Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
@@ -241,7 +242,7 @@ export function VaultTransactionsDialog({
                       colSpan={6}
                       className="py-xl text-muted-foreground text-center"
                     >
-                      {t('pages.vaults.noTransactions')}
+                      <EmptyState title={t('pages.vaults.noTransactions')} />
                     </TableCell>
                   </TableRow>
                 ) : (

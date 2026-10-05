@@ -170,7 +170,6 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
         />
         <EmptyState
           title={t('spendingInsights.unavailable')}
-          description={t('spendingInsights.unavailableDesc')}
           icon={<BarChart3 className="h-8 w-8" />}
         />
       </Wrapper>
@@ -285,9 +284,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
           </CardHeader>
           <CardContent>
             {top_categories.length === 0 ? (
-              <p className="py-lg text-muted-foreground text-center text-sm">
-                {t('spendingInsights.noCategories')}
-              </p>
+              <EmptyState title={t('spendingInsights.noCategories')} />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
@@ -339,9 +336,7 @@ export default function SpendingInsights({ embedded = false }: { embedded?: bool
           </CardHeader>
           <CardContent>
             {monthly_breakdown.length === 0 ? (
-              <p className="py-lg text-muted-foreground text-center text-sm">
-                {t('spendingInsights.noHistoryData')}
-              </p>
+              <EmptyState title={t('spendingInsights.noHistoryData')} />
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart

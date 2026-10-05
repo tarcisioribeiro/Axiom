@@ -321,7 +321,6 @@ export default function Flashcards() {
               ) : (
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
-                  description={t('pages.flashcards.emptyReview.description')}
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               )}
@@ -344,7 +343,6 @@ export default function Flashcards() {
               {cards.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.empty.title')}
-                  description={t('pages.flashcards.empty.description')}
                   icon={<Brain className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
@@ -402,7 +400,6 @@ export default function Flashcards() {
               {due.length === 0 ? (
                 <EmptyState
                   title={t('pages.flashcards.emptyReview.title')}
-                  description={t('pages.flashcards.emptyReview.description')}
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (

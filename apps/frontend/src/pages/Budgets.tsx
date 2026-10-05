@@ -409,7 +409,7 @@ export default function Budgets() {
       {filteredBudgets.length === 0 ? (
         <EmptyState
           icon={<PiggyBank className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm ? t('pages.budgets.emptySearch') : t('pages.budgets.emptyState')
           }
         />

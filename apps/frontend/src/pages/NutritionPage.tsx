@@ -741,13 +741,7 @@ export default function NutritionPage() {
                 ) : mealTypes.length === 0 ? (
                   <EmptyState
                     title={t('pages.nutritionMealTypes.emptyMealTypes')}
-                    description={t('pages.nutritionMealTypes.emptyMealTypesDesc')}
                     icon={<UtensilsCrossed className="h-8 w-8" />}
-                    action={{
-                      label: t('pages.nutritionMealTypes.newMealTypeBtn'),
-                      icon: <Plus className="h-4 w-4" />,
-                      onClick: () => setDialog({ type: 'new-meal-type' }),
-                    }}
                   />
                 ) : (
                   <div className="space-y-sm">
@@ -810,13 +804,7 @@ export default function NutritionPage() {
             ) : filteredFoods.length === 0 ? (
               <EmptyState
                 title={t('pages.nutritionFoods.emptyFoods')}
-                description={t('pages.nutritionFoods.emptyFoodsDesc')}
                 icon={<Salad className="h-8 w-8" />}
-                action={{
-                  label: t('pages.nutritionFoods.newFoodBtn'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-food' }),
-                }}
               />
             ) : (
               <PaginatedSlide
@@ -1077,9 +1065,7 @@ function MealTypeCard({
                 </Button>
               </div>
               {mealType.options.length === 0 ? (
-                <p className="py-sm text-muted-foreground text-center text-xs">
-                  {t('pages.nutritionMealTypes.noIngredients')}
-                </p>
+                <EmptyState title={t('pages.nutritionMealTypes.noIngredients')} />
               ) : (
                 <div className="space-y-sm">
                   {mealType.options.map((opt) => (
@@ -1175,7 +1161,6 @@ function MealTimeline({
     return (
       <EmptyState
         title={t('pages.nutritionLog.emptyLog')}
-        description={t('pages.nutritionLog.emptyLogDesc')}
         icon={<UtensilsCrossed className="h-8 w-8" />}
       />
     );

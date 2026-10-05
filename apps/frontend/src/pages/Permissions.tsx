@@ -191,9 +191,7 @@ export default function Permissions() {
                 </Button>
               ))}
               {members.length === 0 && (
-                <p className="py-md text-center text-sm">
-                  {t('pages.permissions.noMembers')}
-                </p>
+                <EmptyState title={t('pages.permissions.noMembers')} />
               )}
             </div>
           </CardContent>
@@ -277,7 +275,7 @@ export default function Permissions() {
             ) : (
               <EmptyState
                 icon={<Shield className="text-muted-foreground h-12 w-12" />}
-                message={t('pages.permissions.selectMemberStart')}
+                title={t('pages.permissions.selectMemberStart')}
               />
             )}
           </CardContent>

@@ -12,6 +12,7 @@ import {
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -363,9 +364,7 @@ export default function PasswordImport() {
               </CardHeader>
               <CardContent>
                 {preview.entries.length === 0 ? (
-                  <p className="py-xl text-muted-foreground text-center">
-                    {t('pages.passwordImport.emptyFile')}
-                  </p>
+                  <EmptyState title={t('pages.passwordImport.emptyFile')} />
                 ) : (
                   <div className="rounded-md border">
                     <Table>

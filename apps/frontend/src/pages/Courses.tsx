@@ -493,17 +493,7 @@ export default function Courses() {
             title={
               search ? t('pages.courses.emptySearch') : t('pages.courses.emptyState')
             }
-            message={!search ? t('pages.courses.emptyStateDesc') : undefined}
             icon={<GraduationCap className="text-muted-foreground h-10 w-10" />}
-            action={
-              !search
-                ? {
-                    label: t('pages.courses.newBtn'),
-                    icon: <Plus className="h-4 w-4" />,
-                    onClick: openNew,
-                  }
-                : undefined
-            }
           />
         ) : (
           <AnimatePresence>

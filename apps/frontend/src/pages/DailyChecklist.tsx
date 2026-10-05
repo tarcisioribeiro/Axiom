@@ -863,7 +863,6 @@ export default function DailyChecklist({
               <EmptyState
                 icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
                 title={t('pages.dailyChecklist.noTasks')}
-                message={t('pages.dailyChecklist.noTasksDesc')}
               />
             ) : (
               <PaginatedSlide
@@ -947,7 +946,6 @@ export default function DailyChecklist({
               <EmptyState
                 icon={<CheckCircle2 className="text-muted-foreground h-12 w-12" />}
                 title={t('pages.dailyChecklist.noTasks')}
-                message={t('pages.dailyChecklist.noTasksDesc')}
               />
             ) : (
               <DndContext

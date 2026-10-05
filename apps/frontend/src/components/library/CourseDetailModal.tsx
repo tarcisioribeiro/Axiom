@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -997,15 +998,10 @@ export function CourseDetailModal({
 
             <TabsContent value="modules" className="mt-md space-y-sm">
               {modules.length === 0 && !showAddModule && (
-                <div className="border-border bg-card p-lg rounded-lg border border-dashed text-center">
-                  <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
-                  <p className="text-foreground text-sm font-medium">
-                    {t('pages.courses.modules.emptyTitle')}
-                  </p>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.courses.modules.emptyHint')}
-                  </p>
-                </div>
+                <EmptyState
+                  title={t('pages.courses.modules.emptyTitle')}
+                  icon={<Layers />}
+                />
               )}
 
               {modules.map((mod) => (
@@ -1158,9 +1154,7 @@ export function CourseDetailModal({
               )}
 
               {sessions.length === 0 && !showAddSession ? (
-                <p className="py-md text-muted-foreground text-center text-sm">
-                  {t('pages.courses.sessions.emptyState')}
-                </p>
+                <EmptyState title={t('pages.courses.sessions.emptyState')} />
               ) : (
                 sessions.map((s) => (
                   <SessionItem

@@ -641,12 +641,6 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
         <EmptyState
           icon={<Trophy className="h-12 w-12" />}
           title={t('pages.goals.emptyState')}
-          message={t('pages.goals.emptyStateDesc')}
-          action={{
-            label: t('pages.goals.emptyStateAction'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
         />
       ) : (
         <PaginatedSlide

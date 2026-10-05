@@ -1056,7 +1056,7 @@ export default function CreditCardExpenses({
             className="space-y-lg"
           >
             {installmentsByBill.length === 0 ? (
-              <EmptyState message={t('pages.creditCardExpenses.emptyState')} />
+              <EmptyState title={t('pages.creditCardExpenses.emptyState')} />
             ) : (
               installmentsByBill.map(
                 ({
@@ -1165,7 +1165,7 @@ export default function CreditCardExpenses({
                           icon: (
                             <ShoppingCart className="text-muted-foreground h-12 w-12" />
                           ),
-                          message: t('pages.creditCardExpenses.noInstallments'),
+                          title: t('pages.creditCardExpenses.noInstallments'),
                         }}
                         actions={(installment) => {
                           const purchase = purchases.find(
@@ -1272,7 +1272,7 @@ export default function CreditCardExpenses({
               isLoading={isLoading}
               emptyState={{
                 icon: <ShoppingCart className="text-muted-foreground h-12 w-12" />,
-                message: t('pages.creditCardExpenses.emptyPurchasesState'),
+                title: t('pages.creditCardExpenses.emptyPurchasesState'),
               }}
               pagination={{
                 page: purchasesCurrentPage,

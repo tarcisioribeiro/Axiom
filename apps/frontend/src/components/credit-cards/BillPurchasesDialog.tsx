@@ -66,7 +66,7 @@ export function BillPurchasesDialog({
         ) : sorted.length === 0 ? (
           <EmptyState
             icon={<ShoppingCart className="text-muted-foreground h-10 w-10" />}
-            message={t('pages.creditCardBills.purchases.empty')}
+            title={t('pages.creditCardBills.purchases.empty')}
           />
         ) : (
           <Table>

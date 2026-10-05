@@ -3,6 +3,7 @@ import { LayoutList } from 'lucide-react';
 import { useImperativeHandle, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
@@ -172,12 +173,10 @@ export function RoutineFocusBlocksSection({
   return (
     <div className="space-y-sm">
       {blocks.length === 0 ? (
-        <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
-          <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />
-          <p className="text-muted-foreground text-xs">
-            {t('pages.routineTasks.focusBlocks.emptyStateDesc')}
-          </p>
-        </div>
+        <EmptyState
+          title={t('pages.routineTasks.focusBlocks.emptyStateDesc')}
+          icon={<LayoutList />}
+        />
       ) : (
         <PaginatedSlide
           items={blocks}

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { FolderOpen, Search, PlusCircle } from 'lucide-react';
+import { FolderOpen } from 'lucide-react';
 
 import { EmptyState } from './EmptyState';
 
@@ -8,7 +8,7 @@ const meta: Meta<typeof EmptyState> = {
   component: EmptyState,
   tags: ['autodocs'],
   args: {
-    message: 'Nenhum item encontrado.',
+    title: 'Nenhum item encontrado',
   },
 };
 
@@ -17,41 +17,9 @@ type Story = StoryObj<typeof EmptyState>;
 
 export const Default: Story = {};
 
-export const WithTitle: Story = {
-  args: {
-    title: 'Nada por aqui',
-    message: 'Comece adicionando seu primeiro item.',
-  },
-};
-
 export const WithIcon: Story = {
   args: {
-    icon: <FolderOpen className="h-12 w-12" />,
+    icon: <FolderOpen />,
     title: 'Pasta vazia',
-    message: 'Não há arquivos nesta pasta.',
-  },
-};
-
-export const WithAction: Story = {
-  args: {
-    icon: <Search className="h-12 w-12" />,
-    title: 'Sem resultados',
-    message: 'Nenhum resultado foi encontrado para sua busca.',
-    action: {
-      label: 'Limpar filtros',
-      onClick: () => alert('Filtros limpos'),
-    },
-  },
-};
-
-export const FullFeatured: Story = {
-  args: {
-    icon: <PlusCircle className="h-12 w-12" />,
-    title: 'Nenhuma despesa',
-    message: 'Você ainda não cadastrou nenhuma despesa. Comece agora!',
-    action: {
-      label: 'Adicionar despesa',
-      onClick: () => alert('Abrir formulário'),
-    },
   },
 };

@@ -12,6 +12,7 @@ import {
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -328,9 +329,7 @@ export function PasswordImportContent() {
             </CardHeader>
             <CardContent>
               {preview.entries.length === 0 ? (
-                <p className="py-xl text-muted-foreground text-center">
-                  {t('pages.passwordImport.emptyFile')}
-                </p>
+                <EmptyState title={t('pages.passwordImport.emptyFile')} />
               ) : (
                 <div className="rounded-md border">
                   <Table>
@@ -419,9 +418,7 @@ export function PasswordImportContent() {
             </CardHeader>
             <CardContent className="space-y-md">
               {Object.keys(categoryMapping).length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t('pages.passwordImport.noCategoriesToMap')}
-                </p>
+                <EmptyState title={t('pages.passwordImport.noCategoriesToMap')} />
               ) : (
                 Object.entries(categoryMapping).map(
                   ([sourceCategory, targetCategory]) => (

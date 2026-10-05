@@ -23,6 +23,7 @@ import {
 } from 'recharts';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -421,9 +422,7 @@ export default function PersonalAnalytics() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">
-                  {t('pages.personalAnalytics.noInsights')}
-                </p>
+                <EmptyState title={t('pages.personalAnalytics.noInsights')} />
               )}
             </div>
 

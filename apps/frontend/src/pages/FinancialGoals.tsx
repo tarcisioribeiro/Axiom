@@ -629,7 +629,7 @@ export default function FinancialGoals() {
       ) : goals.length === 0 ? (
         <EmptyState
           icon={<Target className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.financialGoals.emptyState')}
+          title={t('pages.financialGoals.emptyState')}
         />
       ) : (
         <PaginatedSlide

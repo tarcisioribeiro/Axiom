@@ -324,7 +324,6 @@ export default function CreditCards({
         <EmptyState
           icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
           title={t('pages.creditCards.emptyTitle')}
-          message={t('pages.creditCards.emptyState')}
         />
       ) : (
         <PaginatedSlide

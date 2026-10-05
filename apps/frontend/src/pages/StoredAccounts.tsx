@@ -351,7 +351,7 @@ export default function StoredAccounts() {
         {!isLoading && filteredAccounts.length === 0 ? (
           <EmptyState
             icon={<Building2 className="text-muted-foreground h-12 w-12" />}
-            message={
+            title={
               searchTerm
                 ? t('pages.storedAccounts.emptySearch')
                 : t('pages.storedAccounts.emptySearch')

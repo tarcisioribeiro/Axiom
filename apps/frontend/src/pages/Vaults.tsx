@@ -219,7 +219,7 @@ export default function Vaults() {
       ) : vaults.length === 0 ? (
         <EmptyState
           icon={<Vault className="text-muted-foreground h-12 w-12" />}
-          message={t('pages.vaults.emptyState')}
+          title={t('pages.vaults.emptyState')}
         />
       ) : (
         <PaginatedSlide

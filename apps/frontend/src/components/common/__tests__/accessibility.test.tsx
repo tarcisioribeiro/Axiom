@@ -57,14 +57,7 @@ const axe = configureAxe();
 
 describe('Accessibility (axe)', () => {
   it('EmptyState — no violations', async () => {
-    const { container } = render(<EmptyState message="Nenhum item encontrado" />);
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it('EmptyState with title — no violations', async () => {
-    const { container } = render(
-      <EmptyState title="Lista vazia" message="Adicione um item para começar" />
-    );
+    const { container } = render(<EmptyState title="Nenhum item encontrado" />);
     expect(await axe(container)).toHaveNoViolations();
   });
 

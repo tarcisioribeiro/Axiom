@@ -138,7 +138,7 @@ export function BudgetPurchasesDialog({
         ) : rows.length === 0 ? (
           <EmptyState
             icon={<ShoppingCart className="text-muted-foreground h-10 w-10" />}
-            message={t('pages.budgets.purchases.empty')}
+            title={t('pages.budgets.purchases.empty')}
           />
         ) : (
           <Table>

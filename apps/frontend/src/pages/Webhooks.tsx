@@ -210,17 +210,7 @@ export default function Webhooks() {
       {isLoading ? (
         <LoadingState />
       ) : !webhooks?.length ? (
-        <EmptyState
-          icon={<Zap className="h-10 w-10" />}
-          title={t('webhooks.empty')}
-          description={t('webhooks.emptyDesc')}
-          action={
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              {t('webhooks.createBtn')}
-            </Button>
-          }
-        />
+        <EmptyState icon={<Zap className="h-10 w-10" />} title={t('webhooks.empty')} />
       ) : (
         <PaginatedSlide
           items={webhooks}
@@ -318,9 +308,7 @@ export default function Webhooks() {
                       <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
                     </div>
                   ) : !deliveries?.length ? (
-                    <p className="text-muted-foreground text-sm">
-                      {t('webhooks.noDeliveries')}
-                    </p>
+                    <EmptyState title={t('webhooks.noDeliveries')} />
                   ) : (
                     <div className="space-y-sm">
                       {deliveries.map((d) => (

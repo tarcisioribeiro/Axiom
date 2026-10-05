@@ -22,9 +22,9 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -1068,41 +1068,14 @@ export default function KnowledgeGraph() {
                 <p className="text-sm">{t('pages.knowledgeGraph.loading')}</p>
               </div>
             ) : filteredGraphData.nodes.length === 0 ? (
-              <div className="gap-md px-xl text-muted-foreground flex h-full flex-col items-center justify-center text-center">
-                <div className="bg-primary/10 ring-primary/20 flex h-16 w-16 items-center justify-center rounded-2xl ring-1 ring-inset">
-                  <Sparkles className="text-primary h-8 w-8" />
-                </div>
-                <div className="space-y-xs">
-                  <p className="text-foreground text-base font-semibold">
-                    {search
-                      ? t('pages.knowledgeGraph.emptySearch')
-                      : t('pages.knowledgeGraph.empty')}
-                  </p>
-                  {!search && (
-                    <p className="max-w-xs text-sm">
-                      {t('pages.knowledgeGraph.emptyHint')}
-                    </p>
-                  )}
-                </div>
-                {!search && (
-                  <div className="gap-sm flex items-center">
-                    <Link
-                      to="/library/books"
-                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      {t('pages.knowledgeGraph.emptyCtaBooks')}
-                    </Link>
-                    <Link
-                      to="/library/courses"
-                      className="gap-xs border-border bg-card px-md py-xs text-foreground hover:bg-muted flex items-center rounded-md border text-xs font-medium transition-colors"
-                    >
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      {t('pages.knowledgeGraph.emptyCtaCourses')}
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <EmptyState
+                icon={<Sparkles />}
+                title={
+                  search
+                    ? t('pages.knowledgeGraph.emptySearch')
+                    : t('pages.knowledgeGraph.empty')
+                }
+              />
             ) : (
               <ForceGraph2D
                 ref={graphRef as never}
@@ -1150,9 +1123,7 @@ export default function KnowledgeGraph() {
                       {t('pages.knowledgeGraph.loadingSuggestions')}
                     </p>
                   ) : !suggestData?.suggestions?.length ? (
-                    <p className="py-md text-muted-foreground text-center text-xs">
-                      {t('pages.knowledgeGraph.noSuggestions')}
-                    </p>
+                    <EmptyState title={t('pages.knowledgeGraph.noSuggestions')} />
                   ) : (
                     <div className="space-y-xs">
                       {suggestData.suggestions.map((s, i) => (

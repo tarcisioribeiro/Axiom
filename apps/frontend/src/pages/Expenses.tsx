@@ -342,7 +342,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         rowClassName={(expense) => (expense.payed ? 'opacity-60' : '')}
         emptyState={{
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.expenses.emptyState'),
+          title: t('pages.expenses.emptyState'),
         }}
         pagination={{
           page,

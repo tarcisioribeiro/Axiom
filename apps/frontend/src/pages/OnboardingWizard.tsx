@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -511,9 +512,7 @@ function StepRoutine({
       </Card>
 
       {suggestedTemplates.length === 0 ? (
-        <p className="text-muted-foreground text-center text-sm">
-          Nenhum template encontrado para as áreas selecionadas.
-        </p>
+        <EmptyState title={'Nenhum template encontrado para as áreas selecionadas.'} />
       ) : (
         <div className="space-y-sm">
           {suggestedTemplates.map((template) => {

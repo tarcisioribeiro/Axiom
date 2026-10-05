@@ -16,6 +16,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -228,9 +229,7 @@ export function WorkoutCalendar({ plans }: { plans: WorkoutPlan[] }) {
           </CardHeader>
           <CardContent>
             {selectedEvents.length === 0 ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {t('workoutCalendar.noEvents')}
-              </p>
+              <EmptyState title={t('workoutCalendar.noEvents')} />
             ) : (
               <div className="space-y-sm">
                 {selectedEvents.map((ev) => (

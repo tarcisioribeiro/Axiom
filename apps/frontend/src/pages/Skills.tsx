@@ -503,9 +503,7 @@ export default function Skills() {
             {historyLoading ? (
               <LoadingState />
             ) : !historyData?.results?.length ? (
-              <p className="py-lg text-muted-foreground text-center text-sm">
-                {t('pages.skills.history.noHistory')}
-              </p>
+              <EmptyState title={t('pages.skills.history.noHistory')} />
             ) : (
               <div className="relative space-y-0 pl-5">
                 <div className="bg-border absolute top-0 left-2 h-full w-px" />

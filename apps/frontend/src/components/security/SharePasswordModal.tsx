@@ -14,6 +14,7 @@ import {
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -510,9 +511,7 @@ export function SharePasswordModal({
               <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
             </div>
           ) : tokens.length === 0 ? (
-            <p className="py-sm text-muted-foreground text-center text-sm">
-              {t('pages.sharePassword.noLinks')}
-            </p>
+            <EmptyState title={t('pages.sharePassword.noLinks')} />
           ) : (
             <div className="space-y-sm max-h-48 overflow-y-auto">
               {tokens.map((token) => (

@@ -376,7 +376,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       {filtered.length === 0 ? (
         <EmptyState
           icon={<BookMarked className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.highlights.emptySearch')
               : t('pages.highlights.emptyState')

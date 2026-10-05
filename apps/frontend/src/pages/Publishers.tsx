@@ -190,7 +190,7 @@ export default function Publishers() {
       {filteredPublishers.length === 0 ? (
         <EmptyState
           icon={<Building2 className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.publishers.emptySearch')
               : t('pages.publishers.emptyState')

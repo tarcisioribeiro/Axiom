@@ -185,9 +185,6 @@ export const API_CONFIG = {
     WELLNESS_INTERVENTIONS: '/api/v1/personal-planning/wellness/interventions/',
     WELLNESS_INTERVENTION_COMPLETIONS:
       '/api/v1/personal-planning/wellness/intervention-completions/',
-    WELLNESS_WEEKLY_REPORTS: '/api/v1/personal-planning/wellness/weekly-reports/',
-    WELLNESS_WEEKLY_REPORTS_GENERATE:
-      '/api/v1/personal-planning/wellness/weekly-reports/generate/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',

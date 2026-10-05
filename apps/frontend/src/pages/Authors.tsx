@@ -314,7 +314,7 @@ export default function Authors() {
       {filteredAuthors.length === 0 ? (
         <EmptyState
           icon={<User className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm ? t('pages.authors.emptySearch') : t('pages.authors.emptyState')
           }
         />

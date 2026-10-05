@@ -615,7 +615,7 @@ export default function CreditCardBills({
         isLoading={isLoading}
         emptyState={{
           icon: <Receipt className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.creditCardBills.emptyState'),
+          title: t('pages.creditCardBills.emptyState'),
         }}
         rowClassName={(bill) => {
           if (bill.status === 'overdue')

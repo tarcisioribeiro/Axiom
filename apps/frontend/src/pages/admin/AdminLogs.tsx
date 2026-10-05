@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -158,7 +159,7 @@ export default function AdminLogs() {
                 ) : data?.results.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                      {t('pages.adminLogs.noLogs')}
+                      <EmptyState title={t('pages.adminLogs.noLogs')} />
                     </td>
                   </tr>
                 ) : (

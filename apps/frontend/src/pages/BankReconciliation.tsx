@@ -380,12 +380,7 @@ export default function BankReconciliation() {
       {imports.length === 0 ? (
         <EmptyState
           title={t('pages.bankReconciliation.emptyTitle')}
-          message={t('pages.bankReconciliation.emptyGuide')}
           icon={<ArrowLeftRight className="h-8 w-8" />}
-          action={{
-            label: t('pages.bankReconciliation.flowStep1'),
-            onClick: () => void navigate('/bank-reconciliation/import'),
-          }}
         />
       ) : (
         <PaginatedSlide items={imports} pageSize={LIST_PAGE_SIZE} className="space-y-3">

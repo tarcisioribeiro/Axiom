@@ -20,6 +20,7 @@ import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -472,9 +473,7 @@ export default function FinancialCalendar({
           </CardHeader>
           <CardContent>
             {selectedDayEvents.length === 0 ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {t('financialCalendar.noEvents')}
-              </p>
+              <EmptyState title={t('financialCalendar.noEvents')} />
             ) : (
               <div className="space-y-sm">
                 {selectedDayEvents.map((ev) => (

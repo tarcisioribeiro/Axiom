@@ -36,6 +36,7 @@ interface BookReaderProps {
   onClose?: () => void;
 }
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1055,11 +1056,10 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
               )}
 
               {annotations.length === 0 && !showAnnotationForm && (
-                <div className="gap-sm py-xl flex flex-col items-center text-center text-sm opacity-50">
-                  <Highlighter className="h-8 w-8" />
-                  <p>{t('pages.bookReader.noAnnotations')}</p>
-                  <p className="text-xs">Clique em + para adicionar.</p>
-                </div>
+                <EmptyState
+                  title={t('pages.bookReader.noAnnotations')}
+                  icon={<Highlighter />}
+                />
               )}
 
               {annotations.map((a) => (

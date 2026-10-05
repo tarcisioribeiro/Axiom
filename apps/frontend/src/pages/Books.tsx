@@ -710,7 +710,7 @@ export default function Books() {
               {filteredBooks.length === 0 ? (
                 <EmptyState
                   icon={<Library className="text-muted-foreground h-12 w-12" />}
-                  message={
+                  title={
                     searchTerm
                       ? t('pages.books.emptySearch')
                       : t('pages.books.emptyState')

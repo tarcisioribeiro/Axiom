@@ -358,14 +358,12 @@ function DetailPanel({
                 <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
               </div>
             ) : !historyEntries || historyEntries.length === 0 ? (
-              <div className="gap-sm py-lg flex flex-col items-center text-center">
-                <History className="text-muted-foreground/40 h-10 w-10" />
-                <p className="text-muted-foreground text-sm">
-                  {t('pages.passwords.noHistory', {
-                    defaultValue: 'Nenhuma alteração de senha registrada.',
-                  })}
-                </p>
-              </div>
+              <EmptyState
+                title={t('pages.passwords.noHistory', {
+                  defaultValue: 'Nenhuma alteração de senha registrada.',
+                })}
+                icon={<History />}
+              />
             ) : (
               historyEntries.map((entry, idx) => (
                 <div
@@ -1223,7 +1221,7 @@ export default function Passwords() {
             {filteredPasswords.length === 0 && (
               <EmptyState
                 icon={<Key className="text-muted-foreground h-12 w-12" />}
-                message={
+                title={
                   searchTerm
                     ? t('pages.passwords.emptySearch')
                     : t('pages.passwords.emptyState')

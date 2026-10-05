@@ -169,15 +169,6 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
         <EmptyState
           icon={<TagIcon className="h-10 w-10" />}
           title={t('pages.tags.emptyState')}
-          action={
-            !search
-              ? {
-                  label: t('pages.tags.newBtn'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: handleCreate,
-                }
-              : undefined
-          }
         />
       ) : (
         <PaginatedSlide

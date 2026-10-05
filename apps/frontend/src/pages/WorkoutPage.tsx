@@ -927,12 +927,7 @@ export default function WorkoutPage() {
 
           {/* ── Hoje ──────────────────────────────────────────────────── */}
           <TabsContent value="today" className="mt-0 flex-1">
-            <TodayPlanTab
-              activePlans={activePlans}
-              plansLoading={plansLoading}
-              onStartSession={() => setDialog({ type: 'new-session' })}
-              t={t}
-            />
+            <TodayPlanTab activePlans={activePlans} plansLoading={plansLoading} t={t} />
           </TabsContent>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
@@ -942,13 +937,7 @@ export default function WorkoutPage() {
             ) : sessions.length === 0 ? (
               <EmptyState
                 title={t('pages.workoutSessions.emptySessions')}
-                description={t('pages.workoutSessions.emptySessionsDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.workoutSessions.emptyAction'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-session' }),
-                }}
               />
             ) : (
               <PaginatedSlide
@@ -988,13 +977,7 @@ export default function WorkoutPage() {
             ) : plans.length === 0 ? (
               <EmptyState
                 title={t('pages.workoutPlans.emptyPlans')}
-                description={t('pages.workoutPlans.emptyPlansDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.workoutPlans.emptyPlansAction'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-plan' }),
-                }}
               />
             ) : (
               <PaginatedSlide
@@ -1024,13 +1007,7 @@ export default function WorkoutPage() {
             {catalogExercises.length === 0 ? (
               <EmptyState
                 title={t('pages.exercises.empty')}
-                description={t('pages.exercises.emptyDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
-                action={{
-                  label: t('pages.exercises.emptyAction'),
-                  icon: <Plus className="h-4 w-4" />,
-                  onClick: () => setDialog({ type: 'new-catalog-exercise' }),
-                }}
               />
             ) : (
               <>
@@ -1155,7 +1132,6 @@ export default function WorkoutPage() {
                 {filteredCatalogExercises.length === 0 ? (
                   <EmptyState
                     title={t('pages.exercises.noResults')}
-                    description={t('pages.exercises.noResultsDesc')}
                     icon={<Dumbbell className="h-8 w-8" />}
                   />
                 ) : (
@@ -2061,11 +2037,7 @@ function PlanDaysList({ plan, onOpenDay, t }: PlanDaysListProps) {
   const days = [...(plan.days ?? [])].sort((a, b) => a.order - b.order || a.id - b.id);
 
   if (days.length === 0) {
-    return (
-      <p className="py-lg text-muted-foreground text-center text-sm">
-        {t('pages.workoutHub.emptyDays')}
-      </p>
-    );
+    return <EmptyState title={t('pages.workoutHub.emptyDays')} />;
   }
 
   return (
@@ -2357,16 +2329,10 @@ function SessionDetails({
 interface TodayPlanTabProps {
   activePlans: WorkoutPlan[];
   plansLoading: boolean;
-  onStartSession: () => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function TodayPlanTab({
-  activePlans,
-  plansLoading,
-  onStartSession,
-  t,
-}: TodayPlanTabProps) {
+function TodayPlanTab({ activePlans, plansLoading, t }: TodayPlanTabProps) {
   // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
   const jsDay = new Date().getDay();
   const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
@@ -2389,13 +2355,7 @@ function TodayPlanTab({
           return (
             <EmptyState
               title={t('pages.workoutHub.noActivePlan')}
-              description={t('pages.workoutHub.createPlan')}
               icon={<Dumbbell className="h-8 w-8" />}
-              action={{
-                label: t('pages.workoutSessions.newSessionBtn'),
-                icon: <Plus className="h-4 w-4" />,
-                onClick: onStartSession,
-              }}
             />
           );
         }
@@ -2404,7 +2364,6 @@ function TodayPlanTab({
           return (
             <EmptyState
               title={t('pages.workoutHub.noTrainingToday')}
-              description={t('pages.workoutHub.noTrainingTodayDesc')}
               icon={<Dumbbell className="h-8 w-8" />}
             />
           );
@@ -2420,9 +2379,7 @@ function TodayPlanTab({
             </div>
 
             {plan.days.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                {t('pages.workoutPlans.emptyDays')}
-              </p>
+              <EmptyState title={t('pages.workoutPlans.emptyDays')} />
             ) : (
               <div className="space-y-sm">
                 {plan.days

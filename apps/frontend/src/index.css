@@ -1892,18 +1892,21 @@
 
 /* Área que ocupa a altura restante da página (.page-fill): cada ancestral até o
    <main> vira coluna flex e cresce. Usado pelo PaginatedSlide (navegação na
-   mesma altura em todas as telas) e por conteúdos centralizados na vertical.
-   Grid e flex em linha ficam de fora para não quebrar layouts; nesses casos o
-   conteúdo só fica na altura natural. */
-main:has(.page-fill),
-main :has(.page-fill):not(.grid, .flex) {
+   mesma altura em todas as telas), pelo EmptyState e por conteúdos centralizados
+   na vertical. Grid e flex em linha ficam de fora para não quebrar layouts; nesses
+   casos o conteúdo só fica na altura natural. Um EmptyState dentro de card
+   (.bg-card) não estica a página. */
+main:has(.page-fill:not(.bg-card [data-empty-state])),
+main :has(.page-fill:not(.bg-card [data-empty-state])):not(.grid, .flex) {
   display: flex;
   flex-direction: column;
 }
 
-main > :has(.page-fill),
-main :has(.page-fill):not(.grid, .flex) > :has(.page-fill),
-main .flex-col > :has(.page-fill) {
+main > :has(.page-fill:not(.bg-card [data-empty-state])),
+main
+  :has(.page-fill:not(.bg-card [data-empty-state])):not(.grid, .flex)
+  > :has(.page-fill:not(.bg-card [data-empty-state])),
+main .flex-col > :has(.page-fill:not(.bg-card [data-empty-state])) {
   flex-grow: 1;
 }
 

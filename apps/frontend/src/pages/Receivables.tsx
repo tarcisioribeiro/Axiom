@@ -282,7 +282,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       {filteredReceivables.length === 0 ? (
         <EmptyState
           icon={<TrendingUp className="text-muted-foreground h-12 w-12" />}
-          message={
+          title={
             searchTerm
               ? t('pages.receivables.emptySearch')
               : t('pages.receivables.emptyState')

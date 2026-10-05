@@ -102,6 +102,13 @@ else
       echo "⚠️  index_library falhou ou expirou — RAG da biblioteca fica pendente até a próxima subida do container."
   ) &
 
+  # Catálogo de intervenções de bem-estar (aba "Intervenções"). Idempotente
+  # (get_or_create por título) e serializado por advisory lock entre réplicas.
+  # Só na API, não no worker/queue, para não disputar com eles na subida.
+  echo "🌱 Populando catálogo de intervenções de bem-estar..."
+  python manage.py seed_wellness_interventions || \
+    echo "⚠️  seed_wellness_interventions falhou — aba Intervenções pode ficar vazia até a próxima subida do container."
+
   echo "🚀 Iniciando servidor com Gunicorn..."
   # Com múltiplos workers, cada processo Gunicorn mantém seu próprio registro
   # Prometheus em memória — sem o modo multiprocess, cada scrape em /metrics

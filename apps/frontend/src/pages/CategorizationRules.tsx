@@ -371,7 +371,6 @@ export default function CategorizationRules({
         <EmptyState
           icon={<Tag className="h-12 w-12" />}
           title={t('pages.categorizationRules.emptyTitle')}
-          message={t('pages.categorizationRules.emptyMessage')}
         />
       ) : (
         <PaginatedSlide items={rules} pageSize={LIST_PAGE_SIZE} className="space-y-3">

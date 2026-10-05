@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1051,9 +1052,7 @@ export function BookDetailModal({
                     {t('pages.books.detail.loadingHighlights')}
                   </p>
                 ) : highlights.length === 0 && !showAddForm ? (
-                  <p className="py-lg text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.noHighlights')}
-                  </p>
+                  <EmptyState title={t('pages.books.detail.noHighlights')} />
                 ) : (
                   <div className="space-y-sm">
                     {highlights.map((h) =>
@@ -1146,9 +1145,7 @@ export function BookDetailModal({
                     {t('pages.books.detail.loadingReadings')}
                   </p>
                 ) : readings.length === 0 ? (
-                  <p className="py-lg text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.noReadings')}
-                  </p>
+                  <EmptyState title={t('pages.books.detail.noReadings')} />
                 ) : (
                   <div className="space-y-sm">
                     {readings.map((r) => (
@@ -1269,9 +1266,7 @@ export function BookDetailModal({
                     {t('pages.books.detail.loadingSummaries')}
                   </p>
                 ) : summaries.length === 0 ? (
-                  <p className="py-lg text-muted-foreground text-center text-sm">
-                    {t('pages.books.detail.noSummaries')}
-                  </p>
+                  <EmptyState title={t('pages.books.detail.noSummaries')} />
                 ) : (
                   <div className="space-y-sm">
                     {summaries.map((s) => (

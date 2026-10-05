@@ -41,6 +41,7 @@ vi.mock('@/lib/animations', () => ({
   containerVariants: {},
   itemVariants: {},
   cardVariants: {},
+  emptyStateVariants: {},
   useCounter: (end: number) => end,
   DURATION: { fast: 0.2, normal: 0.3, medium: 0.4, slow: 0.6 },
 }));

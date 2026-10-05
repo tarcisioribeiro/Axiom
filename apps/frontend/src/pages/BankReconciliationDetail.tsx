@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -575,7 +576,6 @@ export default function BankReconciliationDetail() {
         emptyState={{
           icon: <ArrowLeftRight className="h-12 w-12" />,
           title: t('pages.bankReconciliation.detail.emptyTitle'),
-          message: t('pages.bankReconciliation.detail.emptyMessage'),
         }}
         rowClassName={(entry) => {
           if (entry.status === 'matched')
@@ -642,11 +642,13 @@ export default function BankReconciliationDetail() {
                 {t('common.actions.loading')}
               </p>
             ) : candidates.length === 0 ? (
-              <p className="py-md text-muted-foreground text-center text-sm">
-                {candidateLabel === 'despesas'
-                  ? t('pages.bankReconciliation.detail.noExpensesFound')
-                  : t('pages.bankReconciliation.detail.noRevenuesFound')}
-              </p>
+              <EmptyState
+                title={
+                  candidateLabel === 'despesas'
+                    ? t('pages.bankReconciliation.detail.noExpensesFound')
+                    : t('pages.bankReconciliation.detail.noRevenuesFound')
+                }
+              />
             ) : (
               candidates.map((c) => (
                 <div

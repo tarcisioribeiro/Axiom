@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -64,9 +65,7 @@ export function LoanAmortizationDialog({
             {t('pages.loans.amortization.loading')}
           </div>
         ) : !amortization ? (
-          <div className="py-xl text-muted-foreground text-center text-sm">
-            {t('pages.loans.amortization.noData')}
-          </div>
+          <EmptyState title={t('pages.loans.amortization.noData')} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

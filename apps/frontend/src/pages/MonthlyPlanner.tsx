@@ -21,6 +21,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -540,9 +541,7 @@ function ActualItemsSection({
       <Collapse open={expanded}>
         <div className="space-y-xs">
           {items.length === 0 ? (
-            <p className="py-sm text-muted-foreground text-center text-xs">
-              {emptyText}
-            </p>
+            <EmptyState title={emptyText} />
           ) : (
             items.map((item, idx) => renderItem(item, idx))
           )}
@@ -1141,9 +1140,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="revenue"
               >
                 {(data?.fixed_revenues.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noFixedRevenues')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noFixedRevenues')} />
                 )}
                 {data?.fixed_revenues.map((r) => (
                   <EditableFixedItem
@@ -1245,9 +1242,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
             </CardHeader>
             <CardContent>
               {allCategories.length === 0 && (
-                <p className="py-sm text-muted-foreground text-center text-xs">
-                  {t('monthlyPlanner.noBudgetSuggestions')}
-                </p>
+                <EmptyState title={t('monthlyPlanner.noBudgetSuggestions')} />
               )}
               <div className="gap-sm grid grid-cols-1 sm:grid-cols-2">
                 {allCategories.map((cat) => {
@@ -1362,9 +1357,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="expense"
               >
                 {(data?.fixed_expenses.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noFixedExpenses')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noFixedExpenses')} />
                 )}
                 {data?.fixed_expenses.map((e) => (
                   <EditableFixedItem
@@ -1399,9 +1392,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
                 variant="bill"
               >
                 {(data?.credit_card_bills.length ?? 0) === 0 && (
-                  <p className="py-sm text-muted-foreground text-center text-xs">
-                    {t('monthlyPlanner.noBills')}
-                  </p>
+                  <EmptyState title={t('monthlyPlanner.noBills')} />
                 )}
                 {data?.credit_card_bills.map((b) => (
                   <BillItem

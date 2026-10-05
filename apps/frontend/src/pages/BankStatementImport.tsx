@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -355,7 +356,9 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
                       colSpan={5}
                       className="py-xl text-muted-foreground text-center"
                     >
-                      {t('pages.bankStatementImport.preview.noTransactions')}
+                      <EmptyState
+                        title={t('pages.bankStatementImport.preview.noTransactions')}
+                      />
                     </TableCell>
                   </TableRow>
                 )}

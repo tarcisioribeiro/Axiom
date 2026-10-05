@@ -13,6 +13,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
@@ -367,7 +368,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         isLoading={isLoading}
         emptyState={{
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
-          message: t('pages.fixedExpenses.emptyState'),
+          title: t('pages.fixedExpenses.emptyState'),
         }}
         rowClassName={(item) =>
           item.is_active
@@ -424,9 +425,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
             {t('common.actions.loading')}
           </p>
         ) : !generationLogQuery.data?.length ? (
-          <p className="py-sm text-muted-foreground text-center text-sm">
-            {t('pages.fixedExpenses.generationLog.emptyState')}
-          </p>
+          <EmptyState title={t('pages.fixedExpenses.generationLog.emptyState')} />
         ) : (
           <table className="w-full text-sm">
             <thead>

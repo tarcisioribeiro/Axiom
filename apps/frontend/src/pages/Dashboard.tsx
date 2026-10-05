@@ -44,6 +44,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -1149,9 +1150,7 @@ export default function Dashboard() {
                           </Table>
                         </div>
                       ) : (
-                        <div className="py-xl text-center">
-                          {t('pages.dashboard.noAccounts')}
-                        </div>
+                        <EmptyState title={t('pages.dashboard.noAccounts')} />
                       )}
                     </CardContent>
                   </Card>

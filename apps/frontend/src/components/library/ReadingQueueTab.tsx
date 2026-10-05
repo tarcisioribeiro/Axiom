@@ -171,7 +171,6 @@ export function ReadingQueueTab() {
       <EmptyState
         icon={<BookOpen className="text-muted-foreground h-12 w-12" />}
         title={t('pages.readingQueue.emptyTitle')}
-        message={t('pages.readingQueue.emptyDesc')}
       />
     );
   }

@@ -3,6 +3,7 @@ import { LayoutList } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   Dialog,
   DialogContent,
@@ -150,14 +151,14 @@ export function DailyFocusBlocks({
   return (
     <div className="space-y-sm">
       {visibleBlocks.length === 0 ? (
-        <div className="bg-muted/20 px-md py-md rounded-lg border border-dashed text-center">
-          <LayoutList className="mb-xs text-muted-foreground/40 mx-auto h-5 w-5" />
-          <p className="text-muted-foreground text-xs">
-            {blocks.length === 0
+        <EmptyState
+          title={
+            blocks.length === 0
               ? t('pages.routineTasks.focusBlocks.emptyStateDesc')
-              : t('pages.todayTasks.focusBlocksNoneTodayDesc')}
-          </p>
-        </div>
+              : t('pages.todayTasks.focusBlocksNoneTodayDesc')
+          }
+          icon={<LayoutList />}
+        />
       ) : (
         <div className="gap-sm grid lg:auto-cols-fr lg:grid-flow-col">
           {visibleBlocks.map(({ block, tasks }) => (

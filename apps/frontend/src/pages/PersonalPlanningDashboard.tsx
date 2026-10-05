@@ -26,6 +26,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -275,7 +276,7 @@ export default function PersonalPlanningDashboard() {
     return (
       <PageContainer>
         <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
-        <p className="text-center">{t('pages.planningDashboard.noData')}</p>
+        <EmptyState title={t('pages.planningDashboard.noData')} />
       </PageContainer>
     );
   }
@@ -863,7 +864,6 @@ export default function PersonalPlanningDashboard() {
               </CardContent>
             </Card>
           </div>
-
         </div>
       </Collapse>
     </PageContainer>

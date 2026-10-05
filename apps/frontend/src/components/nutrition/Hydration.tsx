@@ -4,6 +4,7 @@ import { Droplets, Link2, Loader2, Plus, Save, Sparkles, Trash2 } from 'lucide-r
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { DecimalInput } from '@/components/ui/decimal-input';
 import { Label } from '@/components/ui/label';
@@ -165,9 +166,7 @@ export function WaterLogPanel({ date }: { date: string }) {
       </div>
 
       {!isLoading && logs.length === 0 ? (
-        <p className="text-muted-foreground text-xs">
-          {t('pages.nutritionHydration.noLogs')}
-        </p>
+        <EmptyState title={t('pages.nutritionHydration.noLogs')} />
       ) : (
         <ul className="divide-border divide-y">
           {logs.map((log) => (

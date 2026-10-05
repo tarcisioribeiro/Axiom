@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { ChartContainer } from '@/components/charts';
+import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -361,7 +362,7 @@ function EmptyRows() {
         colSpan={99}
         className="px-lg py-xl text-muted-foreground text-center text-sm"
       >
-        Nenhum registro encontrado
+        <EmptyState title={'Nenhum registro encontrado'} />
       </td>
     </tr>
   );
