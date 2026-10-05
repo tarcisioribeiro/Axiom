@@ -97,7 +97,7 @@ export function WaterLogPanel({ date }: { date: string }) {
   const custom = parseInt(customMl, 10);
 
   return (
-    <div className="border-border bg-card p-md space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-md space-y-md rounded-lg border">
       <div className="gap-sm flex items-center justify-between">
         <div className="gap-xs flex items-center">
           <Droplets className="h-5 w-5 text-sky-500" />
@@ -155,10 +155,11 @@ export function WaterLogPanel({ date }: { date: string }) {
             disabled={!(custom > 0) || addMutation.isPending}
           >
             {addMutation.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
             ) : (
-              t('pages.nutritionHydration.add')
+              <Plus className="mr-xs h-3.5 w-3.5" />
             )}
+            {t('pages.nutritionHydration.add')}
           </Button>
         </form>
       </div>
@@ -239,7 +240,7 @@ export function HydrationGoalCard() {
   if (isLoading) return null;
 
   return (
-    <div className="border-border bg-card p-lg space-y-md rounded-lg border shadow-sm">
+    <div className="border-border bg-card p-lg space-y-md rounded-lg border">
       <div className="space-y-md">
         <div className="gap-sm flex items-center">
           <Droplets className="h-6 w-6 text-sky-500" />

@@ -195,7 +195,7 @@ export default function ShareCredential() {
 
         {/* Expired / revoked / exhausted (410) */}
         {state === 'expired' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
@@ -210,7 +210,7 @@ export default function ShareCredential() {
 
         {/* Not found (404) */}
         {state === 'not_found' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">
@@ -225,7 +225,7 @@ export default function ShareCredential() {
 
         {/* Generic error */}
         {state === 'error' && (
-          <Card className="border-destructive/50">
+          <Card>
             <CardContent className="flex flex-col items-center gap-3 py-10">
               <AlertTriangle className="text-destructive h-10 w-10" />
               <p className="text-center font-semibold">

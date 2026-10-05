@@ -601,104 +601,106 @@ export default function NutritionPage() {
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
-            {/* Navegação de data */}
-            <div className="mb-md gap-sm flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateDay(-1)}
-                title={t('pages.nutritionLog.prevDay')}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex-1">
-                <DatePicker
-                  value={selectedDate}
-                  onChange={(v) => setSelectedDate(v ? formatLocalDate(v) : today)}
-                  placeholder={t('pages.nutritionLog.selectDate')}
-                  maxDate={today}
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateDay(1)}
-                disabled={selectedDate >= today}
-                title={t('pages.nutritionLog.nextDay')}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Header card com aderência */}
-            <div className="mb-lg border-border bg-card overflow-hidden rounded-lg border shadow-sm">
-              <div className="gap-md px-lg py-md flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-muted-foreground text-sm font-medium capitalize">
-                    {selectedDateLabel}
-                  </p>
-                  <div className="mt-xs gap-xs flex items-baseline">
-                    <span className="text-category-nutrition text-4xl font-bold tabular-nums">
-                      {selectedLogs.length}
-                    </span>
-                    <span className="text-muted-foreground text-xl">
-                      / {activeMealTypes.length}
-                    </span>
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-sm">
-                    {t('pages.nutritionLog.mealsLogged', {
-                      logged: selectedLogs.length,
-                      total: activeMealTypes.length,
-                    })}
-                  </p>
+            <div className="mb-lg gap-md grid items-center lg:grid-cols-2">
+              {/* Navegação de data */}
+              <div className="gap-sm flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigateDay(-1)}
+                  title={t('pages.nutritionLog.prevDay')}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="flex-1">
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={(v) => setSelectedDate(v ? formatLocalDate(v) : today)}
+                    placeholder={t('pages.nutritionLog.selectDate')}
+                    maxDate={today}
+                  />
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigateDay(1)}
+                  disabled={selectedDate >= today}
+                  title={t('pages.nutritionLog.nextDay')}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
 
-                <div className="gap-md flex shrink-0 items-center">
-                  <div className="text-right">
-                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
-                      <Flame className="h-5 w-5" />
-                      {dayCalories}
-                    </span>
-                    <p className="text-muted-foreground text-xs">kcal</p>
-                  </div>
-                  <WaterTotal date={selectedDate} />
-
-                  {/* Circular progress */}
-                  {activeMealTypes.length > 0 && (
-                    <div className="relative shrink-0">
-                      <svg
-                        width="80"
-                        height="80"
-                        viewBox="0 0 80 80"
-                        className="-rotate-90"
-                      >
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={RADIUS}
-                          fill="none"
-                          strokeWidth="7"
-                          className="stroke-muted"
-                        />
-                        <circle
-                          cx="40"
-                          cy="40"
-                          r={RADIUS}
-                          fill="none"
-                          strokeWidth="7"
-                          strokeLinecap="round"
-                          className="stroke-category-nutrition duration-slow transition"
-                          strokeDasharray={CIRC}
-                          strokeDashoffset={dashOffset}
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-category-nutrition text-sm font-bold">
-                          {adherencePct}%
-                        </span>
-                      </div>
+              {/* Header card com aderência */}
+              <div className="border-border bg-card overflow-hidden rounded-lg border">
+                <div className="gap-md px-lg py-md flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-sm font-medium capitalize">
+                      {selectedDateLabel}
+                    </p>
+                    <div className="mt-xs gap-xs flex items-baseline">
+                      <span className="text-category-nutrition text-4xl font-bold tabular-nums">
+                        {selectedLogs.length}
+                      </span>
+                      <span className="text-muted-foreground text-xl">
+                        / {activeMealTypes.length}
+                      </span>
                     </div>
-                  )}
+                    <p className="mt-xs text-muted-foreground text-sm">
+                      {t('pages.nutritionLog.mealsLogged', {
+                        logged: selectedLogs.length,
+                        total: activeMealTypes.length,
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="gap-md flex shrink-0 items-center">
+                    <div className="text-right">
+                      <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
+                        <Flame className="h-5 w-5" />
+                        {dayCalories}
+                      </span>
+                      <p className="text-muted-foreground text-xs">kcal</p>
+                    </div>
+                    <WaterTotal date={selectedDate} />
+
+                    {/* Circular progress */}
+                    {activeMealTypes.length > 0 && (
+                      <div className="relative shrink-0">
+                        <svg
+                          width="80"
+                          height="80"
+                          viewBox="0 0 80 80"
+                          className="-rotate-90"
+                        >
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r={RADIUS}
+                            fill="none"
+                            strokeWidth="7"
+                            className="stroke-muted"
+                          />
+                          <circle
+                            cx="40"
+                            cy="40"
+                            r={RADIUS}
+                            fill="none"
+                            strokeWidth="7"
+                            strokeLinecap="round"
+                            className="stroke-category-nutrition duration-slow transition"
+                            strokeDasharray={CIRC}
+                            strokeDashoffset={dashOffset}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-category-nutrition text-sm font-bold">
+                            {adherencePct}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1312,6 +1314,7 @@ function MealTimeline({
                       className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
+                      <Plus className="mr-xs h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')}
                     </Button>
                   ) : (
@@ -1321,6 +1324,7 @@ function MealTimeline({
                       className="text-muted-foreground hover:text-foreground h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
+                      <Plus className="mr-xs h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')} →
                     </Button>
                   )}
@@ -1344,7 +1348,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
   const { t } = useTranslation();
   const initial = food.name.charAt(0).toUpperCase();
   return (
-    <div className="group gap-sm border-border bg-card p-md hover:border-category-nutrition/40 flex items-center rounded-lg border transition hover:shadow-sm">
+    <div className="group gap-sm border-border bg-card p-md hover:border-primary/40 flex items-center rounded-lg border transition">
       <div className="bg-category-nutrition/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
         <span className="text-category-nutrition text-base font-bold">{initial}</span>
       </div>

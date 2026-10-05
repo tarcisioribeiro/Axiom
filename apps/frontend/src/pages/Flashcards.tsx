@@ -413,7 +413,7 @@ export default function Flashcards() {
                 >
                   {(pageItems) =>
                     pageItems.map((card) => (
-                      <Card key={card.id} className="border-warning/30">
+                      <Card key={card.id}>
                         <CardContent className="space-y-sm pt-md">
                           <p className="text-sm font-medium">{card.front}</p>
                           <p className="text-muted-foreground text-xs">{card.back}</p>

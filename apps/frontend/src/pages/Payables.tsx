@@ -295,7 +295,7 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
                 <div
                   key={payable.id}
                   className={cn(
-                    'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
+                    'bg-card p-md space-y-3 rounded-lg border transition-colors',
                     urgencyClass
                   )}
                 >

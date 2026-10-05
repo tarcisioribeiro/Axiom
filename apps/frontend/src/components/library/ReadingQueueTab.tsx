@@ -60,7 +60,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="gap-md bg-card p-md flex items-center rounded-lg border shadow-sm"
+      className="gap-md bg-card p-md flex items-center rounded-lg border"
     >
       <PlainButton
         {...attributes}

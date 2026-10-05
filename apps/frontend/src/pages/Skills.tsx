@@ -91,7 +91,7 @@ function SkillCard({
       animate="visible"
       exit="exit"
       layout
-      className="group gap-sm border-border bg-card p-md flex flex-col rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+      className="group gap-sm border-border bg-card p-md flex flex-col rounded-lg border transition-colors"
     >
       <div className="gap-sm flex items-start justify-between">
         <div className="gap-sm flex min-w-0 flex-1 items-center">

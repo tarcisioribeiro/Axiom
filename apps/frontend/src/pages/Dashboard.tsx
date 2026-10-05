@@ -883,7 +883,7 @@ export default function Dashboard() {
       {/* 8. Insight Semanal do Assistente */}
       {weeklyInsightQuery.data && (
         <motion.div variants={itemVariants} initial="hidden" animate="visible">
-          <Card className="border-primary/20 bg-primary/5">
+          <Card>
             <CardHeader className="pb-sm">
               <div className="gap-sm flex items-center justify-between">
                 <div className="gap-sm flex items-center">

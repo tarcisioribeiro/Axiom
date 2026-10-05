@@ -463,7 +463,7 @@ export default function LibraryDashboard() {
 
       {/* Study Timer Panel */}
       {timerOpen && (
-        <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border shadow-sm">
+        <div className="border-border bg-card px-lg py-md flex items-center justify-between rounded-lg border">
           <div className="gap-md flex items-center">
             <div className="text-center">
               <p className="text-foreground font-mono text-4xl font-bold tabular-nums">

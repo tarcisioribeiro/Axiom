@@ -298,7 +298,7 @@ export default function Loans() {
               return (
                 <div
                   key={loan.id}
-                  className="bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md"
+                  className="bg-card p-md space-y-3 rounded-lg border transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

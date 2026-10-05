@@ -165,7 +165,7 @@ function GoalCard({
 
   return (
     <Card
-      className={`overflow-hidden transition-shadow hover:shadow-md ${
+      className={`overflow-hidden transition-colors ${
         goal.is_completed ? 'border-success/50 bg-success/[0.03]' : ''
       }`}
     >

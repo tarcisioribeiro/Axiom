@@ -241,7 +241,7 @@ export function MealLogForm({
                     'p-sm rounded-lg border-2 text-left transition',
                     isSelected
                       ? 'bg-category-nutrition/8 border-category-nutrition/50 ring-category-nutrition/20 ring-1'
-                      : 'border-border bg-card hover:border-category-nutrition/30 hover:bg-category-nutrition/5'
+                      : 'border-border bg-card hover:border-primary/40'
                   )}
                 >
                   <div className="mb-xs gap-xs flex items-center">

@@ -96,7 +96,7 @@ export default function Register() {
   return (
     <div className="from-primary/10 via-background to-accent/10 p-md flex min-h-screen items-center justify-center bg-gradient-to-br">
       <div className="w-full max-w-md">
-        <div className="bg-card p-xl rounded-2xl border shadow-2xl">
+        <div className="bg-card p-xl rounded-2xl border">
           <div className="mb-xl text-center">
             <div className="mx-auto flex items-center justify-center">
               <img src={logo} alt="Axiom" className="h-auto w-48" />

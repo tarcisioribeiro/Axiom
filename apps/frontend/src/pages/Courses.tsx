@@ -108,7 +108,7 @@ function CourseCard({
       animate="visible"
       exit="exit"
       layout
-      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+      className="group border-border bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border transition-colors"
       onClick={() => onOpen(course)}
       role="button"
       tabIndex={0}

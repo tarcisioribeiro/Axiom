@@ -190,7 +190,7 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
             pageItems.map((tag) => (
               <div
                 key={tag.id}
-                className="gap-sm border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+                className="gap-sm border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border transition-colors"
               >
                 <div className="gap-sm flex min-w-0 flex-1 items-center">
                   <span

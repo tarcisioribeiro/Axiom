@@ -470,7 +470,7 @@ export default function Accounts() {
               return (
                 <Card
                   key={account.id}
-                  className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
+                  className={`overflow-hidden transition-colors ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
                 >
                   <CardHeader className="pb-sm">
                     <div className="gap-sm flex items-start justify-between">

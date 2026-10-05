@@ -739,7 +739,7 @@ function BudgetCard({
   return (
     <div
       className={cn(
-        'bg-card overflow-hidden rounded-lg border-l-4 transition-shadow hover:shadow-md',
+        'bg-card overflow-hidden rounded-lg border-l-4 transition-colors',
         pct > 100
           ? 'border-l-destructive shadow-destructive/20 shadow-sm'
           : pct >= 70

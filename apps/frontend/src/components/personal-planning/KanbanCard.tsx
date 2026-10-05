@@ -117,7 +117,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
         boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
       }}
       className={cn(
-        'border-border bg-card p-md cursor-grab rounded-lg border border-l-4 shadow-sm active:cursor-grabbing',
+        'border-border bg-card p-md cursor-grab rounded-lg border border-l-4 active:cursor-grabbing',
         getCategoryBorderColor(card.category)
       )}
     >

@@ -352,7 +352,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
                 <div
                   key={receivable.id}
                   className={cn(
-                    'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
+                    'bg-card p-md space-y-3 rounded-lg border transition-colors',
                     urgencyClass
                   )}
                 >

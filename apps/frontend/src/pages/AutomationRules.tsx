@@ -542,7 +542,7 @@ function RuleCard({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border-border/60 bg-card p-md rounded-lg border transition hover:shadow-sm">
+    <div className="border-border bg-card p-md rounded-lg border transition">
       <div className="gap-sm flex items-start justify-between">
         <div className="flex-1">
           <div className="gap-sm flex items-center">

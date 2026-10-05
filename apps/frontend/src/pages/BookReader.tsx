@@ -251,7 +251,7 @@ function AnnotationForm({
   };
 
   return (
-    <div className="bg-background space-y-3 rounded-lg border p-3 shadow-sm">
+    <div className="bg-background space-y-3 rounded-lg border p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">
           {t('pages.bookReader.newAnnotation')}

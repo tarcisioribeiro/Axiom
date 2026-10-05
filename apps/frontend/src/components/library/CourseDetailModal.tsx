@@ -574,7 +574,7 @@ export function AddSessionForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-md border-category-intellect/20 bg-category-intellect/5 p-md rounded-lg border"
+      className="space-y-md border-border bg-card p-md rounded-lg border"
     >
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-xs">
@@ -997,7 +997,7 @@ export function CourseDetailModal({
 
             <TabsContent value="modules" className="mt-md space-y-sm">
               {modules.length === 0 && !showAddModule && (
-                <div className="border-category-intellect/30 bg-category-intellect/5 p-lg rounded-lg border border-dashed text-center">
+                <div className="border-border bg-card p-lg rounded-lg border border-dashed text-center">
                   <Layers className="mb-sm text-category-intellect/40 mx-auto h-8 w-8" />
                   <p className="text-foreground text-sm font-medium">
                     {t('pages.courses.modules.emptyTitle')}
@@ -1175,7 +1175,7 @@ export function CourseDetailModal({
             <TabsContent value="certificate" className="mt-md space-y-md">
               {displayCourse.completion_certificate ? (
                 <div className="space-y-md">
-                  <div className="gap-md border-category-intellect/20 bg-category-intellect/5 p-md flex items-center rounded-lg border">
+                  <div className="gap-md border-border bg-card p-md flex items-center rounded-lg border">
                     <Award className="text-category-intellect h-8 w-8 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">
@@ -1229,7 +1229,7 @@ export function CourseDetailModal({
                   )}
                 </div>
               ) : canAttachCertificate ? (
-                <label className="gap-md border-category-intellect/30 bg-category-intellect/5 p-xl hover:bg-category-intellect/10 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
+                <label className="gap-md border-border bg-card p-xl hover:bg-muted/30 flex cursor-pointer flex-col items-center rounded-lg border border-dashed text-center transition-colors">
                   {uploadingCert ? (
                     <Loader2 className="text-category-intellect/50 h-10 w-10 animate-spin" />
                   ) : (

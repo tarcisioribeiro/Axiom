@@ -203,7 +203,7 @@ function WellnessStatCard({
         : 'text-muted-foreground';
 
   return (
-    <Card className="border-border/50 relative overflow-hidden">
+    <Card className="relative overflow-hidden">
       <CardContent className="p-5 pt-5">
         <div className="flex items-start justify-between">
           <div className="space-y-xs">
@@ -317,7 +317,7 @@ function DashboardTab() {
 
       {/* History chart placeholder */}
       {history.length > 0 && (
-        <Card className="border-border/50">
+        <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium">
               Histórico de Autoestima
@@ -531,7 +531,7 @@ function SelfEsteemTab() {
               </p>
             </div>
 
-            <Card className="border-border/50">
+            <Card>
               <CardContent className="px-md py-md pt-md space-y-3">
                 <p className="text-foreground text-sm leading-relaxed">
                   {aiParsed.analysis}
@@ -540,7 +540,7 @@ function SelfEsteemTab() {
             </Card>
 
             {aiParsed.strengths?.length > 0 && (
-              <Card className="border-success/20">
+              <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-success text-sm">
                     Pontos fortes identificados
@@ -558,7 +558,7 @@ function SelfEsteemTab() {
             )}
 
             {aiParsed.limiting_beliefs?.length > 0 && (
-              <Card className="border-warning/20">
+              <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-warning text-sm">
                     Crenças para trabalhar
@@ -576,7 +576,7 @@ function SelfEsteemTab() {
             )}
 
             {aiParsed.weekly_suggestions?.length > 0 && (
-              <Card className="border-primary/20">
+              <Card>
                 <CardHeader className="px-md pb-sm pt-md">
                   <CardTitle className="text-primary text-sm">
                     Sugestões para esta semana
@@ -624,7 +624,7 @@ function SelfEsteemTab() {
                   pageItems.map((a) => {
                     const sl = scoreLabel(a.score);
                     return (
-                      <Card key={a.id} className="border-border/50">
+                      <Card key={a.id}>
                         <CardContent className="px-md py-md pt-md">
                           <div className="gap-md flex items-center">
                             <div>
@@ -853,7 +853,7 @@ function CheckinTab() {
         >
           {(pageItems) =>
             pageItems.map((c) => (
-              <Card key={c.id} className="border-border/50">
+              <Card key={c.id}>
                 <CardContent className="px-md py-md pt-md">
                   <div className="gap-md flex items-center">
                     <p className="text-muted-foreground text-xs">
@@ -1012,7 +1012,7 @@ function CrisisTab() {
               Histórico
             </p>
             {logs.results.slice(0, 5).map((log) => (
-              <Card key={log.id} className="border-border/50">
+              <Card key={log.id}>
                 <CardContent className="flex items-center justify-between p-3 pt-3">
                   <div>
                     <p className="text-sm font-medium">{log.impulse_type_display}</p>
@@ -1134,7 +1134,7 @@ function CrisisTab() {
     >
       {aiParsed ? (
         <>
-          <Card className="border-primary/20">
+          <Card>
             <CardContent className="space-y-xs px-md py-md pt-md">
               <p className="text-primary text-xs font-medium tracking-wider uppercase">
                 Validação
@@ -1143,7 +1143,7 @@ function CrisisTab() {
             </CardContent>
           </Card>
 
-          <Card className="border-warning/20">
+          <Card>
             <CardContent className="space-y-xs px-md py-md pt-md">
               <p className="text-warning text-xs font-medium tracking-wider uppercase">
                 Contexto
@@ -1157,7 +1157,7 @@ function CrisisTab() {
               Plano de ação imediato
             </p>
             {(['5min', '10min', '20min'] as const).map((duration) => (
-              <Card key={duration} className="border-border/50">
+              <Card key={duration}>
                 <CardHeader className="px-md pb-sm pt-3">
                   <CardTitle className="gap-xs.5 text-muted-foreground flex items-center text-xs">
                     <Clock className="h-3.5 w-3.5" /> {duration}
@@ -1175,7 +1175,7 @@ function CrisisTab() {
             ))}
           </div>
 
-          <Card className="border-success/20">
+          <Card>
             <CardContent className="px-md py-md pt-md">
               <p className="text-success text-center text-sm italic">
                 "{aiParsed.affirmation}"
@@ -1184,7 +1184,7 @@ function CrisisTab() {
           </Card>
         </>
       ) : (
-        <Card className="border-border/50">
+        <Card>
           <CardContent className="px-md py-md pt-md">
             <p className="text-muted-foreground text-sm">
               Impulso registrado. A análise da IA estará disponível em breve.
@@ -1310,10 +1310,7 @@ function LibraryTab() {
             pageItems.map((item: WellnessIntervention) => {
               const done = completedIds.has(item.id);
               return (
-                <Card
-                  key={item.id}
-                  className={cn('border-border/50 transition', done && 'opacity-70')}
-                >
+                <Card key={item.id} className={cn('transition', done && 'opacity-70')}>
                   <CardContent className="px-md py-md pt-md space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-xs flex-1">
@@ -1438,7 +1435,7 @@ function ReportTab() {
         />
       ) : (
         <div className="space-y-md">
-          <Card className="border-border/50">
+          <Card>
             <CardHeader className="px-md pb-sm pt-md">
               <CardTitle className="text-muted-foreground text-xs">
                 Semana {format(new Date(latest.week_start), 'dd/MM')} –{' '}
@@ -1451,7 +1448,7 @@ function ReportTab() {
           </Card>
 
           {latest.attention_points?.length > 0 && (
-            <Card className="border-warning/20">
+            <Card>
               <CardHeader className="px-md pb-sm pt-md">
                 <CardTitle className="text-warning text-sm">
                   Pontos de atenção
@@ -1469,7 +1466,7 @@ function ReportTab() {
           )}
 
           {latest.suggestions?.length > 0 && (
-            <Card className="border-primary/20">
+            <Card>
               <CardHeader className="px-md pb-sm pt-md">
                 <CardTitle className="text-primary text-sm">
                   Sugestões para a próxima semana
@@ -1492,7 +1489,7 @@ function ReportTab() {
               { label: 'Ansiedade', value: latest.avg_anxiety },
               { label: 'Motivação', value: latest.avg_motivation },
             ].map(({ label, value }) => (
-              <Card key={label} className="border-border/50">
+              <Card key={label}>
                 <CardContent className="p-3 pt-3 text-center">
                   <p className="text-muted-foreground text-xs">{label}</p>
                   <p className="text-foreground text-xl font-bold">

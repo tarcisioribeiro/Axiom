@@ -1527,7 +1527,7 @@ function ExerciseCatalogCard({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-shadow hover:shadow-md">
+    <div className="group border-border bg-card p-md relative flex flex-col rounded-lg border transition-colors">
       <div className="mb-sm gap-sm flex items-start justify-between">
         <ExerciseThumbnail
           gifUrl={exercise.gif_url}
@@ -2126,7 +2126,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           onView();
         }
       }}
-      className="group gap-md border-border bg-card p-md hover:border-primary/30 focus-visible:ring-ring flex cursor-pointer rounded-lg border transition hover:shadow-sm focus-visible:ring-2 focus-visible:outline-none"
+      className="group gap-md border-border bg-card p-md hover:border-primary/30 focus-visible:ring-ring flex cursor-pointer rounded-lg border transition focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Date block */}
       <div className="bg-primary/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
@@ -2375,7 +2375,7 @@ function TodayPlanTab({
   if (plansLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-lg">
+    <div className="page-fill space-y-lg flex flex-1 flex-col justify-center">
       {/* Plano ativo */}
       {(() => {
         const plansForToday = activePlans.filter((plan) =>

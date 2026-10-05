@@ -193,7 +193,7 @@ function BookGridCard({
     <div
       role="button"
       tabIndex={0}
-      className="group bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+      className="group bg-card flex cursor-pointer flex-col overflow-hidden rounded-lg border transition-colors"
       onClick={() => onOpenDetail(book)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onOpenDetail(book);

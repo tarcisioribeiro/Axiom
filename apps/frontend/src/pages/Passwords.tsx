@@ -1241,7 +1241,7 @@ export default function Passwords() {
                 exit={{ opacity: 0, x: 40 }}
                 className="hidden lg:block lg:w-[60%] lg:shrink-0"
               >
-                <div className="bg-card sticky top-4 rounded-lg border shadow-lg">
+                <div className="bg-card sticky top-4 rounded-lg border">
                   <DetailPanel
                     password={detailPassword}
                     revealedPassword={revealedPasswords.get(detailPassword.id)}

@@ -308,7 +308,7 @@ export default function Members() {
                 <Card
                   key={member.id}
                   className={cn(
-                    'overflow-hidden transition-shadow hover:shadow-md',
+                    'overflow-hidden transition-colors',
                     isCurrentUser && 'ring-primary/40 ring-2',
                     !member.active && 'opacity-60'
                   )}

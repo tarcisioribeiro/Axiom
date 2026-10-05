@@ -1009,7 +1009,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
 
       {/* Summary stats */}
       <div className="mb-lg gap-md grid grid-cols-2 lg:grid-cols-4">
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -1033,7 +1033,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/20 bg-destructive/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <TrendingDown className="text-destructive h-4 w-4" />
@@ -1057,13 +1057,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card
-          className={cn(
-            projectedBalance >= 0
-              ? 'border-primary/20 bg-primary/5'
-              : 'border-destructive/20 bg-destructive/5'
-          )}
-        >
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <Wallet className="text-primary h-4 w-4" />
@@ -1097,7 +1091,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-primary/5">
+        <Card>
           <CardContent className="pt-md">
             <div className="gap-sm flex items-center">
               <Landmark className="text-primary h-4 w-4" />

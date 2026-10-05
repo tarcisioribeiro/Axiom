@@ -286,7 +286,7 @@ export function MenuOptionForm({
       >
         <div className="space-y-sm">
           {fields.length === 0 ? (
-            <div className="border-category-nutrition/20 py-md rounded-lg border-2 border-dashed text-center">
+            <div className="border-border py-md rounded-lg border-2 border-dashed text-center">
               <Salad className="mb-xs text-category-nutrition/30 mx-auto h-8 w-8" />
               <p className="text-muted-foreground text-sm">
                 {t('pages.nutritionMealTypes.noIngredients')}
@@ -314,9 +314,9 @@ export function MenuOptionForm({
                   // ── Grupo de alternativas ────────────────────────────────────
                   <div
                     key={`group-${group.groupId}`}
-                    className="border-category-nutrition/30 bg-category-nutrition/5 rounded-lg border"
+                    className="border-border bg-card rounded-lg border"
                   >
-                    <div className="border-category-nutrition/20 px-sm py-xs flex items-center justify-between border-b">
+                    <div className="border-border px-sm py-xs flex items-center justify-between border-b">
                       <span className="text-category-nutrition text-xs font-semibold tracking-wider uppercase">
                         {t(
                           'pages.nutritionMealTypes.altGroupLabel',
@@ -424,7 +424,7 @@ function IngredientRow({
   t,
 }: IngredientRowProps) {
   return (
-    <div className="group border-border bg-card p-sm hover:border-category-nutrition/30 relative rounded-lg border transition">
+    <div className="group border-border bg-card p-sm hover:border-primary/40 relative rounded-lg border transition">
       {/* Row header */}
       <div className="mb-sm gap-xs flex items-center">
         <GripVertical className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
