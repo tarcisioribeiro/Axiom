@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { VaultCard } from '@/components/vaults/VaultCard';
@@ -221,39 +222,45 @@ export default function Vaults() {
           message={t('pages.vaults.emptyState')}
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {vaults.map((vault, index) => (
-            <VaultCard
-              key={vault.id}
-              vault={vault}
-              index={index}
-              totalBalance={totalBalance}
-              onDeposit={(v) => {
-                setSelectedVault(v);
-                setIsDepositOpen(true);
-              }}
-              onWithdraw={(v) => {
-                setSelectedVault(v);
-                setIsWithdrawOpen(true);
-              }}
-              onApplyYield={(v) => void handleApplyYield(v)}
-              onTransactions={(v) => {
-                setSelectedVault(v);
-                setIsTransactionsOpen(true);
-              }}
-              onContributions={(v) => {
-                setSelectedVault(v);
-                setIsContributionsOpen(true);
-              }}
-              onSimulator={(v) => {
-                setSelectedVault(v);
-                setIsSimulatorOpen(true);
-              }}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          items={vaults}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((vault, index) => (
+              <VaultCard
+                key={vault.id}
+                vault={vault}
+                index={index}
+                totalBalance={totalBalance}
+                onDeposit={(v) => {
+                  setSelectedVault(v);
+                  setIsDepositOpen(true);
+                }}
+                onWithdraw={(v) => {
+                  setSelectedVault(v);
+                  setIsWithdrawOpen(true);
+                }}
+                onApplyYield={(v) => void handleApplyYield(v)}
+                onTransactions={(v) => {
+                  setSelectedVault(v);
+                  setIsTransactionsOpen(true);
+                }}
+                onContributions={(v) => {
+                  setSelectedVault(v);
+                  setIsContributionsOpen(true);
+                }}
+                onSimulator={(v) => {
+                  setSelectedVault(v);
+                  setIsSimulatorOpen(true);
+                }}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <VaultFormDialog

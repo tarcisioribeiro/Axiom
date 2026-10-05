@@ -19,7 +19,7 @@ import {
   Share2,
   Activity,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import type { ElementType } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -27,6 +27,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -145,9 +146,10 @@ export default function ActivityLogs() {
     },
   });
 
-  const groupedLogs = useMemo(() => {
+  // Agrupa por dia só os logs da página atual.
+  const groupByDay = (pageLogs: ActivityLog[]) => {
     const map = new Map<string, ActivityLog[]>();
-    for (const log of logs) {
+    for (const log of pageLogs) {
       const key = format(new Date(log.created_at), 'yyyy-MM-dd');
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(log);
@@ -161,8 +163,7 @@ export default function ActivityLogs() {
       ),
       items,
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logs, dateFnsLocale]);
+  };
 
   const handleExport = async () => {
     try {
@@ -209,63 +210,65 @@ export default function ActivityLogs() {
           message={t('pages.activityLogs.emptyState')}
         />
       ) : (
-        <div className="space-y-lg">
-          {groupedLogs.map(({ dateKey, dateLabel, items }) => (
-            <div key={dateKey} className="space-y-xs">
-              <div className="mb-sm gap-sm px-xs flex items-center">
-                <Calendar className="text-muted-foreground h-4 w-4 shrink-0" />
-                <span className="text-muted-foreground text-sm font-medium capitalize">
-                  {dateLabel}
-                </span>
-                <div className="border-border/50 flex-1 border-t" />
-              </div>
+        <PaginatedSlide items={logs} pageSize={LIST_PAGE_SIZE} className="space-y-lg">
+          {(pageItems) =>
+            groupByDay(pageItems).map(({ dateKey, dateLabel, items }) => (
+              <div key={dateKey} className="space-y-xs">
+                <div className="mb-sm gap-sm px-xs flex items-center">
+                  <Calendar className="text-muted-foreground h-4 w-4 shrink-0" />
+                  <span className="text-muted-foreground text-sm font-medium capitalize">
+                    {dateLabel}
+                  </span>
+                  <div className="border-border/50 flex-1 border-t" />
+                </div>
 
-              <div className="divide-border/40 bg-card divide-y rounded-lg border">
-                {items.map((log) => {
-                  const config = ACTION_CONFIG[log.action] ?? ACTION_CONFIG.other;
-                  const Icon = config.Icon;
-                  return (
-                    <div key={log.id} className="px-md flex items-start gap-3 py-3">
-                      <div
-                        className={cn(
-                          'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-                          config.dot
-                        )}
-                      >
-                        <Icon className={cn('h-3.5 w-3.5', config.iconColor)} />
-                      </div>
-                      <div className="space-y-xs min-w-0 flex-1">
-                        <div className="gap-sm flex flex-wrap items-center">
-                          <Badge variant="outline" className={config.badge}>
-                            {t(`pages.adminLogs.actions.${log.action}`, {
-                              defaultValue: log.action_display,
-                            })}
-                          </Badge>
-                          <span className="text-foreground text-sm">
-                            {log.description_key
-                              ? t(`activityDescriptions.${log.description_key}`, {
-                                  ...(log.description_params ?? {}),
-                                  defaultValue: log.description,
-                                })
-                              : log.description}
-                          </span>
+                <div className="divide-border/40 bg-card divide-y rounded-lg border">
+                  {items.map((log) => {
+                    const config = ACTION_CONFIG[log.action] ?? ACTION_CONFIG.other;
+                    const Icon = config.Icon;
+                    return (
+                      <div key={log.id} className="px-md flex items-start gap-3 py-3">
+                        <div
+                          className={cn(
+                            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                            config.dot
+                          )}
+                        >
+                          <Icon className={cn('h-3.5 w-3.5', config.iconColor)} />
                         </div>
-                        <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
-                          <span>
-                            {format(new Date(log.created_at), 'HH:mm:ss', {
-                              locale: dateFnsLocale,
-                            })}
-                          </span>
-                          {log.ip_address && <span>· {log.ip_address}</span>}
+                        <div className="space-y-xs min-w-0 flex-1">
+                          <div className="gap-sm flex flex-wrap items-center">
+                            <Badge variant="outline" className={config.badge}>
+                              {t(`pages.adminLogs.actions.${log.action}`, {
+                                defaultValue: log.action_display,
+                              })}
+                            </Badge>
+                            <span className="text-foreground text-sm">
+                              {log.description_key
+                                ? t(`activityDescriptions.${log.description_key}`, {
+                                    ...(log.description_params ?? {}),
+                                    defaultValue: log.description,
+                                  })
+                                : log.description}
+                            </span>
+                          </div>
+                          <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
+                            <span>
+                              {format(new Date(log.created_at), 'HH:mm:ss', {
+                                locale: dateFnsLocale,
+                              })}
+                            </span>
+                            {log.ip_address && <span>· {log.ip_address}</span>}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
     </PageContainer>
   );

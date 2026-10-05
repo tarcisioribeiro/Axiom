@@ -23,6 +23,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ArchiveForm } from '@/components/security/ArchiveForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
@@ -374,161 +375,171 @@ export default function Archives() {
             }
           />
         ) : (
-          <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-            {filteredArchives.map((arc) => {
-              const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
-                icon: 'bg-muted text-muted-foreground',
-                border: 'border-l-border',
-              };
-              return (
-                <Card
-                  key={arc.id}
-                  className={cn('overflow-hidden border-l-2', typeConfig.border)}
-                >
-                  <CardHeader className="pb-sm">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-xs gap-sm flex items-center">
-                          <div
-                            className={cn(
-                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
-                              typeConfig.icon
-                            )}
-                          >
-                            {arc.archive_type === 'text' ? (
-                              <FileText className="h-4 w-4" />
-                            ) : (
-                              <File className="h-4 w-4" />
-                            )}
+          <PaginatedSlide
+            key={searchTerm}
+            items={filteredArchives}
+            pageSize={GRID_PAGE_SIZE}
+            className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+          >
+            {(pageItems) =>
+              pageItems.map((arc) => {
+                const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
+                  icon: 'bg-muted text-muted-foreground',
+                  border: 'border-l-border',
+                };
+                return (
+                  <Card
+                    key={arc.id}
+                    className={cn('overflow-hidden border-l-2', typeConfig.border)}
+                  >
+                    <CardHeader className="pb-sm">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-xs gap-sm flex items-center">
+                            <div
+                              className={cn(
+                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
+                                typeConfig.icon
+                              )}
+                            >
+                              {arc.archive_type === 'text' ? (
+                                <FileText className="h-4 w-4" />
+                              ) : (
+                                <File className="h-4 w-4" />
+                              )}
+                            </div>
+                            <CardTitle className="truncate text-base">
+                              {arc.title}
+                            </CardTitle>
                           </div>
-                          <CardTitle className="truncate text-base">
-                            {arc.title}
-                          </CardTitle>
+                          <div className="gap-sm flex flex-wrap items-center">
+                            <Badge>
+                              {t(`pages.archives.categories.${arc.category}`)}
+                            </Badge>
+                            <Badge variant="outline">
+                              {t(`pages.archives.types.${arc.archive_type}`)}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="gap-sm flex flex-wrap items-center">
-                          <Badge>
-                            {t(`pages.archives.categories.${arc.category}`)}
-                          </Badge>
-                          <Badge variant="outline">
-                            {t(`pages.archives.types.${arc.archive_type}`)}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="gap-xs flex flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            arc.archive_type === 'text'
-                              ? handleRevealContent(arc)
-                              : handleDownload(arc)
-                          }
-                          disabled={isRevealing}
-                          aria-label={
-                            arc.archive_type === 'text'
-                              ? t('pages.archives.viewContent')
-                              : t('pages.archives.downloadFile')
-                          }
-                          title={
-                            arc.archive_type === 'text'
-                              ? t('pages.archives.viewContent')
-                              : t('pages.archives.downloadFile')
-                          }
-                        >
-                          {arc.archive_type === 'text' ? (
-                            <Eye className="h-4 w-4" aria-hidden="true" />
-                          ) : (
-                            <Download className="h-4 w-4" aria-hidden="true" />
-                          )}
-                        </Button>
-                        {(arc.archive_type === 'image' ||
-                          arc.archive_type === 'pdf') && (
+                        <div className="gap-xs flex flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => void handlePreview(arc)}
-                            disabled={isPreviewLoading}
-                            aria-label={t('pages.archives.preview', {
-                              defaultValue: 'Pré-visualizar',
-                            })}
-                            title={t('pages.archives.preview', {
-                              defaultValue: 'Pré-visualizar',
-                            })}
+                            onClick={() =>
+                              arc.archive_type === 'text'
+                                ? handleRevealContent(arc)
+                                : handleDownload(arc)
+                            }
+                            disabled={isRevealing}
+                            aria-label={
+                              arc.archive_type === 'text'
+                                ? t('pages.archives.viewContent')
+                                : t('pages.archives.downloadFile')
+                            }
+                            title={
+                              arc.archive_type === 'text'
+                                ? t('pages.archives.viewContent')
+                                : t('pages.archives.downloadFile')
+                            }
                           >
-                            <Eye className="h-4 w-4" aria-hidden="true" />
+                            {arc.archive_type === 'text' ? (
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            ) : (
+                              <Download className="h-4 w-4" aria-hidden="true" />
+                            )}
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn('h-8 w-8', arc.is_favorite && 'text-warning')}
-                          onClick={() => void handleToggleFavorite(arc.id)}
-                          aria-label={t('common.actions.favorite')}
-                          title={t('common.actions.favorite')}
-                        >
-                          <Star
-                            className={cn('h-4 w-4', arc.is_favorite && 'fill-current')}
-                            aria-hidden="true"
-                          />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleEdit(arc)}
-                          aria-label={t('common.actions.edit')}
-                          title={t('common.actions.edit')}
-                        >
-                          <Pencil className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => handleDelete(arc.id)}
-                          aria-label={t('common.actions.delete')}
-                          title={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="text-destructive h-4 w-4"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-sm">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="gap-sm flex items-center">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
-                      </div>
-                      <span>{formatFileSize(arc.file_size)}</span>
-                    </div>
-                    {arc.tags && arc.tags.length > 0 && (
-                      <div className="gap-sm flex items-center">
-                        <Tag className="h-4 w-4 flex-shrink-0" />
-                        <div className="gap-xs flex flex-wrap">
-                          {arc.tags.slice(0, 3).map((tag, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {arc.tags.length > 3 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{arc.tags.length - 3}
-                            </Badge>
+                          {(arc.archive_type === 'image' ||
+                            arc.archive_type === 'pdf') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => void handlePreview(arc)}
+                              disabled={isPreviewLoading}
+                              aria-label={t('pages.archives.preview', {
+                                defaultValue: 'Pré-visualizar',
+                              })}
+                              title={t('pages.archives.preview', {
+                                defaultValue: 'Pré-visualizar',
+                              })}
+                            >
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            </Button>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn('h-8 w-8', arc.is_favorite && 'text-warning')}
+                            onClick={() => void handleToggleFavorite(arc.id)}
+                            aria-label={t('common.actions.favorite')}
+                            title={t('common.actions.favorite')}
+                          >
+                            <Star
+                              className={cn(
+                                'h-4 w-4',
+                                arc.is_favorite && 'fill-current'
+                              )}
+                              aria-hidden="true"
+                            />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleEdit(arc)}
+                            aria-label={t('common.actions.edit')}
+                            title={t('common.actions.edit')}
+                          >
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDelete(arc.id)}
+                            aria-label={t('common.actions.delete')}
+                            title={t('common.actions.delete')}
+                          >
+                            <Trash2
+                              className="text-destructive h-4 w-4"
+                              aria-hidden="true"
+                            />
+                          </Button>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardHeader>
+                    <CardContent className="space-y-sm">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="gap-sm flex items-center">
+                          <Calendar className="h-4 w-4" />
+                          <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
+                        </div>
+                        <span>{formatFileSize(arc.file_size)}</span>
+                      </div>
+                      {arc.tags && arc.tags.length > 0 && (
+                        <div className="gap-sm flex items-center">
+                          <Tag className="h-4 w-4 flex-shrink-0" />
+                          <div className="gap-xs flex flex-wrap">
+                            {arc.tags.slice(0, 3).map((tag, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {arc.tags.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{arc.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            }
+          </PaginatedSlide>
         )}
 
         {/* Dialog para criar/editar arquivo */}

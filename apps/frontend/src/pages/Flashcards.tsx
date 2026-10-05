@@ -21,6 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -347,47 +348,53 @@ export default function Flashcards() {
                   icon={<Brain className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                  {cards.map((card) => (
-                    <Card key={card.id}>
-                      <CardHeader className="pb-xs">
-                        <div className="gap-sm flex items-start justify-between">
-                          <Badge
-                            variant={STATUS_BADGE_VARIANT[card.status]}
-                            className="text-xs"
-                          >
-                            {t(`pages.flashcards.status.${card.status}`)}
-                          </Badge>
-                          {card.book_title && (
-                            <span className="text-muted-foreground max-w-[120px] truncate text-xs">
-                              {card.book_title}
-                            </span>
+                <PaginatedSlide
+                  items={cards}
+                  pageSize={GRID_PAGE_SIZE}
+                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pageItems) =>
+                    pageItems.map((card) => (
+                      <Card key={card.id}>
+                        <CardHeader className="pb-xs">
+                          <div className="gap-sm flex items-start justify-between">
+                            <Badge
+                              variant={STATUS_BADGE_VARIANT[card.status]}
+                              className="text-xs"
+                            >
+                              {t(`pages.flashcards.status.${card.status}`)}
+                            </Badge>
+                            {card.book_title && (
+                              <span className="text-muted-foreground max-w-[120px] truncate text-xs">
+                                {card.book_title}
+                              </span>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-sm">
+                          <div>
+                            <p className="mb-xs text-muted-foreground text-xs font-medium">
+                              {t('pages.flashcards.front')}
+                            </p>
+                            <p className="text-sm">{card.front}</p>
+                          </div>
+                          <div className="pt-sm border-t">
+                            <p className="mb-xs text-muted-foreground text-xs font-medium">
+                              {t('pages.flashcards.back')}
+                            </p>
+                            <p className="text-muted-foreground text-sm">{card.back}</p>
+                          </div>
+                          {card.next_review && (
+                            <p className="text-muted-foreground text-xs">
+                              {t('pages.flashcards.nextReview')}:{' '}
+                              {new Date(card.next_review).toLocaleDateString('pt-BR')}
+                            </p>
                           )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-sm">
-                        <div>
-                          <p className="mb-xs text-muted-foreground text-xs font-medium">
-                            {t('pages.flashcards.front')}
-                          </p>
-                          <p className="text-sm">{card.front}</p>
-                        </div>
-                        <div className="pt-sm border-t">
-                          <p className="mb-xs text-muted-foreground text-xs font-medium">
-                            {t('pages.flashcards.back')}
-                          </p>
-                          <p className="text-muted-foreground text-sm">{card.back}</p>
-                        </div>
-                        {card.next_review && (
-                          <p className="text-muted-foreground text-xs">
-                            {t('pages.flashcards.nextReview')}:{' '}
-                            {new Date(card.next_review).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
               )}
             </TabsContent>
 
@@ -399,16 +406,22 @@ export default function Flashcards() {
                   icon={<Star className="text-muted-foreground h-10 w-10" />}
                 />
               ) : (
-                <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                  {due.map((card) => (
-                    <Card key={card.id} className="border-warning/30">
-                      <CardContent className="space-y-sm pt-md">
-                        <p className="text-sm font-medium">{card.front}</p>
-                        <p className="text-muted-foreground text-xs">{card.back}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <PaginatedSlide
+                  items={due}
+                  pageSize={GRID_PAGE_SIZE}
+                  className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pageItems) =>
+                    pageItems.map((card) => (
+                      <Card key={card.id} className="border-warning/30">
+                        <CardContent className="space-y-sm pt-md">
+                          <p className="text-sm font-medium">{card.front}</p>
+                          <p className="text-muted-foreground text-xs">{card.back}</p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  }
+                </PaginatedSlide>
               )}
             </TabsContent>
           </Tabs>

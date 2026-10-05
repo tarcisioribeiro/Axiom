@@ -93,7 +93,7 @@ function CounterInput({
           aria-label={t('common.actions.increase')}
           type="button"
           onClick={() => onChange(value + 1)}
-          className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-t-lg border-b transition-colors"
+          className="border-border text-muted-foreground hover:bg-primary/10 hover:text-primary flex h-8 w-10 items-center justify-center rounded-t-lg border-b transition-colors"
         >
           <ChevronUp className="h-3.5 w-3.5" />
         </PlainButton>
@@ -104,7 +104,7 @@ function CounterInput({
           aria-label={t('common.actions.decrease')}
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
-          className="border-border text-muted-foreground hover:bg-category-exercise/10 hover:text-category-exercise flex h-8 w-10 items-center justify-center rounded-b-lg border-t transition-colors"
+          className="border-border text-muted-foreground hover:bg-primary/10 hover:text-primary flex h-8 w-10 items-center justify-center rounded-b-lg border-t transition-colors"
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </PlainButton>
@@ -278,8 +278,8 @@ export function WorkoutExerciseModal({
                   className={cn(
                     'px-sm py-xs rounded-lg border text-xs font-semibold transition',
                     restSeconds === preset
-                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
+                      ? 'border-primary bg-primary/15 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
                   )}
                 >
                   {preset}s
@@ -320,8 +320,8 @@ export function WorkoutExerciseModal({
                     className={cn(
                       'px-sm py-xs rounded-lg border text-xs font-semibold transition',
                       loadUnit === unit.value
-                        ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                        : 'border-border bg-background text-muted-foreground hover:border-category-exercise/30 hover:bg-category-exercise/5'
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
                     )}
                   >
                     {unit.label}

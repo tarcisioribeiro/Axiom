@@ -21,6 +21,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { AuthorForm } from '@/components/library/AuthorForm';
 import { Badge } from '@/components/ui/badge';
@@ -318,16 +319,23 @@ export default function Authors() {
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredAuthors.map((author) => (
-            <AuthorCard
-              key={author.id}
-              author={author}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          key={searchTerm}
+          items={filteredAuthors}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((author) => (
+              <AuthorCard
+                key={author.id}
+                author={author}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

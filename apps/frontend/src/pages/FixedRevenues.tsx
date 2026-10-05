@@ -468,6 +468,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
 
       {/* Table */}
       <DataTable
+        pinNav={false}
         data={fixedRevenues}
         columns={columns}
         keyExtractor={(item) => item.id}

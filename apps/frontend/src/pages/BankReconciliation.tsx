@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -387,95 +388,97 @@ export default function BankReconciliation() {
           }}
         />
       ) : (
-        <div className="space-y-3">
-          {imports.map((imp) => {
-            const matchPct =
-              imp.total_entries > 0
-                ? Math.round((imp.matched_count / imp.total_entries) * 100)
-                : 0;
-            return (
-              <div key={imp.id} className="bg-card p-md rounded-lg border">
-                <div className="gap-md flex items-start justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-xs gap-sm flex items-center">
-                      <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
-                      <ImportStatusBadge status={imp.status} />
-                    </div>
-                    <p className="truncate font-medium">{imp.original_filename}</p>
-                    <p className="mt-xs text-muted-foreground text-xs">
-                      {imp.total_entries}{' '}
-                      {t('pages.bankReconciliation.transactionsLabel', {
-                        defaultValue: 'transações',
-                      })}{' '}
-                      ·{' '}
-                      {t('pages.bankReconciliation.importedAtLabel', {
-                        defaultValue: 'importado em',
-                      })}{' '}
-                      {formatDate(imp.created_at)}
-                    </p>
+        <PaginatedSlide items={imports} pageSize={LIST_PAGE_SIZE} className="space-y-3">
+          {(pageItems) =>
+            pageItems.map((imp) => {
+              const matchPct =
+                imp.total_entries > 0
+                  ? Math.round((imp.matched_count / imp.total_entries) * 100)
+                  : 0;
+              return (
+                <div key={imp.id} className="bg-card p-md rounded-lg border">
+                  <div className="gap-md flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-xs gap-sm flex items-center">
+                        <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
+                        <ImportStatusBadge status={imp.status} />
+                      </div>
+                      <p className="truncate font-medium">{imp.original_filename}</p>
+                      <p className="mt-xs text-muted-foreground text-xs">
+                        {imp.total_entries}{' '}
+                        {t('pages.bankReconciliation.transactionsLabel', {
+                          defaultValue: 'transações',
+                        })}{' '}
+                        ·{' '}
+                        {t('pages.bankReconciliation.importedAtLabel', {
+                          defaultValue: 'importado em',
+                        })}{' '}
+                        {formatDate(imp.created_at)}
+                      </p>
 
-                    {/* Barra de progresso de conciliação */}
-                    <div className="space-y-xs mt-3">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">
-                          {t('pages.bankReconciliation.reconciliationLabel', {
-                            defaultValue: 'Conciliação',
-                          })}
-                        </span>
-                        <span
-                          className={
-                            matchPct === 100
-                              ? 'text-success font-semibold'
-                              : 'text-muted-foreground'
-                          }
-                        >
-                          {matchPct}%
-                        </span>
-                      </div>
-                      <div className="bg-muted h-2 overflow-hidden rounded-full">
-                        <div
-                          className={cn(
-                            'h-full rounded-full transition',
-                            matchPct === 100
-                              ? 'bg-success'
-                              : matchPct >= 70
-                                ? 'bg-info'
-                                : 'bg-warning'
-                          )}
-                          style={{ width: `${matchPct}%` }}
-                        />
-                      </div>
-                      <div className="text-muted-foreground flex gap-3 text-xs">
-                        <span className="text-success">
-                          {imp.matched_count}{' '}
-                          {t('pages.bankReconciliation.matchedLabel', {
-                            defaultValue: 'conciliados',
-                          })}
-                        </span>
-                        {imp.unmatched_count > 0 && (
-                          <span className="text-destructive">
-                            {imp.unmatched_count}{' '}
-                            {t('pages.bankReconciliation.divergencesLabel', {
-                              defaultValue: 'divergências',
+                      {/* Barra de progresso de conciliação */}
+                      <div className="space-y-xs mt-3">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            {t('pages.bankReconciliation.reconciliationLabel', {
+                              defaultValue: 'Conciliação',
                             })}
                           </span>
-                        )}
+                          <span
+                            className={
+                              matchPct === 100
+                                ? 'text-success font-semibold'
+                                : 'text-muted-foreground'
+                            }
+                          >
+                            {matchPct}%
+                          </span>
+                        </div>
+                        <div className="bg-muted h-2 overflow-hidden rounded-full">
+                          <div
+                            className={cn(
+                              'h-full rounded-full transition',
+                              matchPct === 100
+                                ? 'bg-success'
+                                : matchPct >= 70
+                                  ? 'bg-info'
+                                  : 'bg-warning'
+                            )}
+                            style={{ width: `${matchPct}%` }}
+                          />
+                        </div>
+                        <div className="text-muted-foreground flex gap-3 text-xs">
+                          <span className="text-success">
+                            {imp.matched_count}{' '}
+                            {t('pages.bankReconciliation.matchedLabel', {
+                              defaultValue: 'conciliados',
+                            })}
+                          </span>
+                          {imp.unmatched_count > 0 && (
+                            <span className="text-destructive">
+                              {imp.unmatched_count}{' '}
+                              {t('pages.bankReconciliation.divergencesLabel', {
+                                defaultValue: 'divergências',
+                              })}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void navigate(`/bank-reconciliation/${imp.id}`)}
-                  >
-                    {t('pages.bankReconciliation.viewBtn')}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void navigate(`/bank-reconciliation/${imp.id}`)}
+                    >
+                      {t('pages.bankReconciliation.viewBtn')}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <UploadDialog

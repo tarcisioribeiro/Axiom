@@ -155,7 +155,7 @@ function ReflectionCard({
           </div>
 
           {/* Ações */}
-          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -367,6 +367,7 @@ export default function DailyReflections() {
           key={`${moodFilter}-${startDate?.getTime()}-${endDate?.getTime()}`}
           items={filtered}
           pageSize={REFLECTIONS_PAGE_SIZE}
+          centerList
           className="space-y-3"
         >
           {(pageReflections) =>

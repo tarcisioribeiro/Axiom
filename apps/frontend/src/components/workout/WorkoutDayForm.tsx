@@ -223,8 +223,8 @@ export function WorkoutDayForm({
                   className={cn(
                     'px-sm rounded-full border py-1 text-xs font-medium transition',
                     selected
-                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                      ? 'border-primary bg-primary/15 text-primary'
+                      : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
                   )}
                 >
                   {t(`pages.workoutPlans.weekdays.${wd}`)}
@@ -248,8 +248,8 @@ export function WorkoutDayForm({
                     className={cn(
                       'px-sm rounded-full border py-1 text-xs font-medium transition',
                       selectedChips.includes(label)
-                        ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                        : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
                     )}
                   >
                     {label}

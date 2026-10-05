@@ -22,6 +22,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
@@ -294,147 +295,154 @@ export default function Members() {
           }
         />
       ) : (
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredMembers.map((member) => {
-            const isCurrentUser = currentUserMemberId === member.id;
-            return (
-              <Card
-                key={member.id}
-                className={cn(
-                  'overflow-hidden transition-shadow hover:shadow-md',
-                  isCurrentUser && 'ring-primary/40 ring-2',
-                  !member.active && 'opacity-60'
-                )}
-              >
-                {/* Header com avatar e nome */}
-                <div className="from-muted/50 p-md flex items-start gap-3 bg-gradient-to-r to-transparent">
-                  <MemberInitials name={member.name} sex={member.sex} />
-                  <div className="min-w-0 flex-1">
-                    <div className="gap-sm flex items-center">
-                      <p className="truncate leading-tight font-semibold">
-                        {member.name}
+        <PaginatedSlide
+          key={searchTerm}
+          items={filteredMembers}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {(pageItems) =>
+            pageItems.map((member) => {
+              const isCurrentUser = currentUserMemberId === member.id;
+              return (
+                <Card
+                  key={member.id}
+                  className={cn(
+                    'overflow-hidden transition-shadow hover:shadow-md',
+                    isCurrentUser && 'ring-primary/40 ring-2',
+                    !member.active && 'opacity-60'
+                  )}
+                >
+                  {/* Header com avatar e nome */}
+                  <div className="from-muted/50 p-md flex items-start gap-3 bg-gradient-to-r to-transparent">
+                    <MemberInitials name={member.name} sex={member.sex} />
+                    <div className="min-w-0 flex-1">
+                      <div className="gap-sm flex items-center">
+                        <p className="truncate leading-tight font-semibold">
+                          {member.name}
+                        </p>
+                        {isCurrentUser && (
+                          <Badge
+                            variant="secondary"
+                            className="px-sm text-2xs shrink-0 py-0"
+                          >
+                            Você
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {format(new Date(member.created_at), 'dd/MM/yyyy')}
                       </p>
-                      {isCurrentUser && (
-                        <Badge
-                          variant="secondary"
-                          className="px-sm text-2xs shrink-0 py-0"
-                        >
-                          Você
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      {format(new Date(member.created_at), 'dd/MM/yyyy')}
-                    </p>
-                    {/* Papéis */}
-                    <div className="mt-sm gap-xs flex flex-wrap">
-                      {member.is_creditor && (
-                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-blue-500/10 py-0.5 font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
-                          <Banknote className="h-2.5 w-2.5" />
-                          {t('pages.members.form.isCreditor')}
-                        </span>
-                      )}
-                      {member.is_benefited && (
-                        <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
-                          <HandCoins className="h-2.5 w-2.5" />
-                          {t('pages.members.form.isBenefited')}
-                        </span>
-                      )}
-                      {!member.is_creditor && !member.is_benefited && (
-                        <span className="text-muted-foreground text-2xs">
-                          {t('pages.members.noRole')}
-                        </span>
-                      )}
+                      {/* Papéis */}
+                      <div className="mt-sm gap-xs flex flex-wrap">
+                        {member.is_creditor && (
+                          <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-blue-500/10 py-0.5 font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                            <Banknote className="h-2.5 w-2.5" />
+                            {t('pages.members.form.isCreditor')}
+                          </span>
+                        )}
+                        {member.is_benefited && (
+                          <span className="gap-xs px-sm text-2xs inline-flex items-center rounded-full bg-emerald-500/10 py-0.5 font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                            <HandCoins className="h-2.5 w-2.5" />
+                            {t('pages.members.form.isBenefited')}
+                          </span>
+                        )}
+                        {!member.is_creditor && !member.is_benefited && (
+                          <span className="text-muted-foreground text-2xs">
+                            {t('pages.members.noRole')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Dados de contato */}
-                <CardContent className="space-y-sm py-3">
-                  {member.phone && (
-                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                      <Phone className="h-3 w-3 shrink-0" />
-                      <span>{member.phone}</span>
-                    </div>
-                  )}
-                  {member.email && (
-                    <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{member.email}</span>
-                    </div>
-                  )}
-                  {member.document && (
-                    <p className="text-muted-foreground font-mono text-xs">
-                      {member.document}
-                    </p>
-                  )}
-                  {member.monthly_income && (
-                    <div className="bg-muted/50 px-sm py-xs rounded text-xs">
-                      <span className="text-muted-foreground">
-                        {t('pages.members.stats.income')}{' '}
-                      </span>
-                      <span className="font-medium">
-                        {formatCurrency(parseFloat(member.monthly_income))}
-                      </span>
-                    </div>
-                  )}
+                  {/* Dados de contato */}
+                  <CardContent className="space-y-sm py-3">
+                    {member.phone && (
+                      <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        <span>{member.phone}</span>
+                      </div>
+                    )}
+                    {member.email && (
+                      <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                    )}
+                    {member.document && (
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {member.document}
+                      </p>
+                    )}
+                    {member.monthly_income && (
+                      <div className="bg-muted/50 px-sm py-xs rounded text-xs">
+                        <span className="text-muted-foreground">
+                          {t('pages.members.stats.income')}{' '}
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(parseFloat(member.monthly_income))}
+                        </span>
+                      </div>
+                    )}
 
-                  {/* Actions */}
-                  <div className="pt-sm flex items-center justify-between border-t">
-                    <Badge
-                      variant={member.active ? 'success' : 'outline'}
-                      className="text-xs"
-                    >
-                      {member.active
-                        ? t('common.status.active')
-                        : t('common.status.inactive')}
-                    </Badge>
-                    <div className="gap-xs flex">
-                      {isCurrentUser && (
+                    {/* Actions */}
+                    <div className="pt-sm flex items-center justify-between border-t">
+                      <Badge
+                        variant={member.active ? 'success' : 'outline'}
+                        className="text-xs"
+                      >
+                        {member.active
+                          ? t('common.status.active')
+                          : t('common.status.inactive')}
+                      </Badge>
+                      <div className="gap-xs flex">
+                        {isCurrentUser && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => navigate(`/members/${member.id}/report`)}
+                            aria-label={t('pages.members.viewReport')}
+                            title={t('pages.members.viewReport')}
+                          >
+                            <BarChart3 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
-                          onClick={() => navigate(`/members/${member.id}/report`)}
-                          aria-label={t('pages.members.viewReport')}
-                          title={t('pages.members.viewReport')}
+                          onClick={() => {
+                            setSelectedMember(member);
+                            setIsDialogOpen(true);
+                          }}
+                          aria-label={t('common.actions.edit')}
+                          title={t('common.actions.edit')}
                         >
-                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setIsDialogOpen(true);
-                        }}
-                        aria-label={t('common.actions.edit')}
-                        title={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleDelete(member.id)}
-                        aria-label={t('common.actions.delete')}
-                        title={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="text-destructive h-4 w-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleDelete(member.id)}
+                          aria-label={t('common.actions.delete')}
+                          title={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="text-destructive h-4 w-4"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

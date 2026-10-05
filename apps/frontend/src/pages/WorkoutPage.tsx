@@ -80,6 +80,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { ExerciseDatasetPicker } from '@/components/workout/ExerciseDatasetPicker';
 import { ExerciseThumbnail } from '@/components/workout/ExerciseThumbnail';
 import { WorkoutCalendar } from '@/components/workout/WorkoutCalendar';
@@ -875,7 +876,7 @@ export default function WorkoutPage() {
       <PageContainer>
         <PageHeader
           title={t('pages.workoutPlans.title')}
-          icon={<Dumbbell className="text-category-exercise h-6 w-6" />}
+          icon={<Dumbbell className="text-primary h-6 w-6" />}
           actions={
             activeTab === 'sessions' ? (
               <Button onClick={() => setDialog({ type: 'new-session' })}>
@@ -1247,7 +1248,7 @@ export default function WorkoutPage() {
                   <div className="gap-sm flex items-start justify-between">
                     <div className="min-w-0">
                       <DialogTitle className="gap-sm flex items-center">
-                        <span className="text-category-exercise">
+                        <span className="text-primary">
                           {getMuscleIcon(viewedDay.muscle_groups)}
                         </span>
                         {viewedDay.name}
@@ -1335,7 +1336,8 @@ export default function WorkoutPage() {
                       : // Divisão: altura justa para o formulário, sem sobra embaixo
                         dialog?.type === 'new-day' || dialog?.type === 'edit-day'
                         ? 'h-[min(85vh,40rem)] max-w-2xl'
-                        : 'h-[85vh] max-w-xl'
+                        : // Plano/catálogo: altura do conteúdo, sem sobra embaixo
+                          'max-h-[85vh] max-w-xl'
                   )
                 : isSessionDialog
                   ? // Modal não rola: só a lista de exercícios encolhe/rola (ver
@@ -1361,7 +1363,7 @@ export default function WorkoutPage() {
                 )}
               >
                 {dialog?.type === 'view-session' && (
-                  <Dumbbell className="text-category-exercise h-5 w-5" />
+                  <Dumbbell className="text-primary h-5 w-5" />
                 )}
                 {dialogTitle()}
               </DialogTitle>
@@ -1532,7 +1534,7 @@ function ExerciseCatalogCard({
           thumbnailUrl={exercise.thumbnail_url}
           size="lg"
         />
-        <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="gap-xs flex">
           <Button
             variant="ghost"
             size="icon"
@@ -1707,8 +1709,8 @@ function ExerciseCatalogForm({
                 className={cn(
                   'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
                   values.category === key
-                    ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
-                    : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:border-primary/40'
                 )}
               >
                 {t(`pages.workoutPlans.categories.${key}`)}
@@ -1731,8 +1733,8 @@ function ExerciseCatalogForm({
                     className={cn(
                       'px-sm py-xs rounded-full border text-xs font-medium transition',
                       selectedChips.includes(label)
-                        ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                        : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                        ? 'border-primary bg-primary/15 text-primary'
+                        : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary'
                     )}
                   >
                     {label}
@@ -1824,7 +1826,7 @@ function SortableExerciseItem({
       >
         <GripVertical className="h-3.5 w-3.5" />
       </PlainButton>
-      <span className="bg-category-exercise/20 text-category-exercise flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+      <span className="bg-primary/20 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
         {idx + 1}
       </span>
       <ExerciseThumbnail thumbnailUrl={ex.thumbnail_url} size="sm" />
@@ -1847,7 +1849,7 @@ function SortableExerciseItem({
           )}
           {ex.sets > 0 ? (
             <>
-              <span className="bg-category-exercise/15 px-xs text-category-exercise rounded-full py-px text-xs font-semibold">
+              <span className="bg-primary/15 px-xs text-primary rounded-full py-px text-xs font-semibold">
                 {ex.sets}×
               </span>
               <span className="bg-muted px-xs text-muted-foreground rounded-full py-px text-xs">
@@ -1868,13 +1870,13 @@ function SortableExerciseItem({
         </div>
       </div>
       {(onEdit || onDelete) && (
-        <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div className="gap-xs flex shrink-0">
           {onEdit && (
             <PlainButton
               aria-label={t('common.actions.edit')}
               type="button"
               onClick={() => onEdit(ex)}
-              className="p-xs text-muted-foreground hover:text-foreground rounded"
+              className="p-xs hover:bg-muted rounded"
             >
               <Edit className="h-3 w-3" />
             </PlainButton>
@@ -1884,7 +1886,7 @@ function SortableExerciseItem({
               aria-label={t('common.actions.delete')}
               type="button"
               onClick={() => onDelete(ex)}
-              className="p-xs text-muted-foreground hover:text-destructive rounded"
+              className="p-xs text-destructive hover:bg-destructive/10 rounded"
             >
               <Trash2 className="h-3 w-3" />
             </PlainButton>
@@ -1983,8 +1985,8 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
       className={cn(
         'bg-card flex flex-col overflow-hidden rounded-lg border transition-colors',
         plan.is_active
-          ? 'border-category-exercise/40 hover:border-category-exercise/70'
-          : 'border-border hover:border-category-exercise/40'
+          ? 'border-primary/40 hover:border-primary/70'
+          : 'border-border hover:border-primary/40'
       )}
     >
       <button
@@ -1996,7 +1998,7 @@ function PlanCard({ plan, onOpen, onEdit, onDelete, t }: PlanCardProps) {
           className={cn(
             'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
             plan.is_active
-              ? 'bg-category-exercise/15 text-category-exercise'
+              ? 'bg-primary/15 text-primary'
               : 'bg-muted text-muted-foreground'
           )}
         >
@@ -2074,9 +2076,9 @@ function PlanDaysList({ plan, onOpenDay, t }: PlanDaysListProps) {
           type="button"
           onClick={() => onOpenDay(day)}
           // Larguras = colunas do antigo grid (2/3/5), descontando o gap; flex centraliza a última linha
-          className="p-sm border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5 flex w-[calc((100%-var(--spacing-sm))/2)] flex-col items-start rounded-lg border-2 text-left transition sm:w-[calc((100%-2*var(--spacing-sm))/3)] lg:w-[calc((100%-4*var(--spacing-sm))/5)]"
+          className="p-sm border-border bg-background hover:border-primary/40 hover:bg-primary/5 flex w-[calc((100%-var(--spacing-sm))/2)] flex-col items-start rounded-lg border-2 text-left transition sm:w-[calc((100%-2*var(--spacing-sm))/3)] lg:w-[calc((100%-4*var(--spacing-sm))/5)]"
         >
-          <div className="mb-sm bg-category-exercise/15 text-category-exercise flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="mb-sm bg-primary/15 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
             {getMuscleIcon(day.muscle_groups)}
           </div>
           <span className="text-foreground text-sm leading-tight font-semibold">
@@ -2124,14 +2126,12 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
           onView();
         }
       }}
-      className="group gap-md border-border bg-card p-md hover:border-category-exercise/30 focus-visible:ring-ring flex cursor-pointer rounded-lg border transition hover:shadow-sm focus-visible:ring-2 focus-visible:outline-none"
+      className="group gap-md border-border bg-card p-md hover:border-primary/30 focus-visible:ring-ring flex cursor-pointer rounded-lg border transition hover:shadow-sm focus-visible:ring-2 focus-visible:outline-none"
     >
       {/* Date block */}
-      <div className="bg-category-exercise/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
-        <span className="text-category-exercise text-2xl leading-none font-bold">
-          {dayNum}
-        </span>
-        <span className="text-category-exercise/70 text-2xs mt-0.5 font-semibold tracking-wide uppercase">
+      <div className="bg-primary/10 py-sm flex w-14 shrink-0 flex-col items-center justify-center rounded-lg text-center">
+        <span className="text-primary text-2xl leading-none font-bold">{dayNum}</span>
+        <span className="text-primary/70 text-2xs mt-0.5 font-semibold tracking-wide uppercase">
           {monthLabel}
         </span>
       </div>
@@ -2149,7 +2149,7 @@ function SessionCard({ session, onView, onEdit, onDelete, t }: SessionCardProps)
               </p>
             )}
           </div>
-          <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="gap-xs flex shrink-0">
             <Button
               aria-label={t('common.actions.edit')}
               variant="ghost"
@@ -2370,6 +2370,7 @@ function TodayPlanTab({
   // JS getDay(): 0=Sun,1=Mon,...,6=Sat → convert to Python convention 0=Mon,6=Sun
   const jsDay = new Date().getDay();
   const todayWeekday = jsDay === 0 ? 6 : jsDay - 1;
+  const [openDay, setOpenDay] = useState<WorkoutDay | null>(null);
 
   if (plansLoading) return <LoadingState />;
 
@@ -2412,15 +2413,10 @@ function TodayPlanTab({
         return plansForToday.map((plan) => (
           <div key={plan.id} className="space-y-sm">
             <div className="gap-sm flex items-center">
-              <div className="bg-category-exercise/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-                <ClipboardList className="text-category-exercise h-4 w-4" />
+              <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                <ClipboardList className="text-primary h-4 w-4" />
               </div>
-              <div>
-                <p className="text-foreground text-sm font-semibold">{plan.name}</p>
-                {plan.description && (
-                  <p className="text-muted-foreground text-xs">{plan.description}</p>
-                )}
-              </div>
+              <p className="text-foreground text-sm font-semibold">{plan.name}</p>
             </div>
 
             {plan.days.length === 0 ? (
@@ -2436,13 +2432,17 @@ function TodayPlanTab({
                       day.days_of_week.includes(todayWeekday)
                   )
                   .map((day) => (
-                    <div
+                    <button
+                      type="button"
                       key={day.id}
-                      className="border-border bg-card overflow-hidden rounded-lg border"
+                      onClick={() => setOpenDay(day)}
+                      className="border-border bg-card hover:bg-muted/30 w-full overflow-hidden rounded-lg border text-left transition-colors"
                     >
-                      <div className="border-border/60 bg-muted/30 px-md py-sm flex items-center justify-between border-b">
+                      <div className="px-md py-sm flex items-center justify-between">
                         <div className="gap-sm flex items-center">
-                          {getMuscleIcon(day.muscle_groups)}
+                          <span className="text-primary">
+                            {getMuscleIcon(day.muscle_groups)}
+                          </span>
                           <div>
                             <p className="text-sm font-semibold">{day.name}</p>
                             {day.muscle_groups && (
@@ -2459,52 +2459,73 @@ function TodayPlanTab({
                             : t('pages.workoutPlans.exercisePlural')}
                         </Badge>
                       </div>
-                      {day.exercises.length > 0 && (
-                        <div className="divide-border/40 divide-y">
-                          {day.exercises.map((ex) => (
-                            <div
-                              key={ex.id}
-                              className="px-md py-xs flex items-center justify-between"
-                            >
-                              <div className="gap-sm flex items-center">
-                                <Dumbbell className="text-category-exercise/60 h-3.5 w-3.5 shrink-0" />
-                                <span className="text-sm">{ex.name}</span>
-                              </div>
-                              <div className="gap-sm text-muted-foreground flex items-center text-xs">
-                                {ex.sets > 0 ? (
-                                  <span>
-                                    {ex.sets}×
-                                    {ex.reps_min === ex.reps_max
-                                      ? ex.reps_min
-                                      : `${ex.reps_min}–${ex.reps_max}`}
-                                  </span>
-                                ) : (
-                                  <span>{t('pages.workoutPlans.noSets')}</span>
-                                )}
-                                {(formatSetTargets(ex) ??
-                                  formatExerciseLoad(ex, t)) && (
-                                  <span className="text-foreground font-medium">
-                                    {formatSetTargets(ex) ?? formatExerciseLoad(ex, t)}
-                                  </span>
-                                )}
-                                {ex.rest_seconds != null && ex.rest_seconds > 0 && (
-                                  <span className="flex items-center gap-0.5">
-                                    <Clock className="h-3 w-3" />
-                                    {ex.rest_seconds}s
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    </button>
                   ))}
               </div>
             )}
           </div>
         ));
       })()}
+
+      {/* Modal exercícios da divisão */}
+      <Dialog open={!!openDay} onOpenChange={(open) => !open && setOpenDay(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="gap-sm flex items-center">
+              <span className="text-primary shrink-0" aria-hidden="true">
+                {getMuscleIcon(openDay?.muscle_groups)}
+              </span>
+              {openDay?.name}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{openDay?.muscle_groups}</DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {openDay?.exercises.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              {t('pages.workoutPlans.noExercises')}
+            </p>
+          ) : (
+            <div className="divide-border/40 max-h-[60vh] divide-y overflow-y-auto rounded-lg border">
+              {openDay?.exercises.map((ex) => (
+                <div
+                  key={ex.id}
+                  className="gap-sm px-md py-xs flex items-center justify-between"
+                >
+                  <div className="gap-sm flex items-center">
+                    <Dumbbell className="text-primary h-3.5 w-3.5 shrink-0" />
+                    <span className="text-sm">{ex.name}</span>
+                  </div>
+                  <div className="gap-sm text-muted-foreground flex items-center text-xs">
+                    {ex.sets > 0 ? (
+                      <span>
+                        {ex.sets}×
+                        {ex.reps_min === ex.reps_max
+                          ? ex.reps_min
+                          : `${ex.reps_min}–${ex.reps_max}`}
+                      </span>
+                    ) : (
+                      <span>{t('pages.workoutPlans.noSets')}</span>
+                    )}
+                    {(formatSetTargets(ex) ?? formatExerciseLoad(ex, t)) && (
+                      <span className="text-foreground font-medium">
+                        {formatSetTargets(ex) ?? formatExerciseLoad(ex, t)}
+                      </span>
+                    )}
+                    {ex.rest_seconds != null && ex.rest_seconds > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <Clock className="h-3 w-3" />
+                        {ex.rest_seconds}s
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogCloseFooter />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

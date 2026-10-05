@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -631,20 +632,26 @@ export default function FinancialGoals() {
           message={t('pages.financialGoals.emptyState')}
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {goals.map((goal) => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              todayTimestamp={todayTimestamp}
-              t={t}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onManageVaults={handleManageVaults}
-              onCheckCompletion={handleCheckCompletion}
-            />
-          ))}
-        </div>
+        <PaginatedSlide
+          items={goals}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                todayTimestamp={todayTimestamp}
+                t={t}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onManageVaults={handleManageVaults}
+                onCheckCompletion={handleCheckCompletion}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       {/* Create/Edit Dialog */}

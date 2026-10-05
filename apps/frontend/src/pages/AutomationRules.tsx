@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapse } from '@/components/ui/collapsible-section';
@@ -863,18 +864,20 @@ export default function AutomationRules({ embedded = false }: { embedded?: boole
           }}
         />
       ) : (
-        <div className="space-y-sm">
-          {rules.map((rule) => (
-            <RuleCard
-              key={rule.id}
-              rule={rule}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-              onToggle={handleToggle}
-              onViewLogs={handleViewLogs}
-            />
-          ))}
-        </div>
+        <PaginatedSlide items={rules} pageSize={LIST_PAGE_SIZE} className="space-y-sm">
+          {(pageItems) =>
+            pageItems.map((rule) => (
+              <RuleCard
+                key={rule.id}
+                rule={rule}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+                onToggle={handleToggle}
+                onViewLogs={handleViewLogs}
+              />
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <RuleFormDialog

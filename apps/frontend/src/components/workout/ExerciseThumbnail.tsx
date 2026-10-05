@@ -22,7 +22,7 @@ export function ExerciseThumbnail({
   return (
     <div
       className={cn(
-        'bg-category-exercise/10 flex shrink-0 items-center justify-center overflow-hidden rounded-lg',
+        'bg-primary/10 flex shrink-0 items-center justify-center overflow-hidden rounded-lg',
         dimClass,
         className
       )}
@@ -30,7 +30,7 @@ export function ExerciseThumbnail({
       {src ? (
         <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
       ) : (
-        <Dumbbell className="text-category-exercise h-5 w-5" />
+        <Dumbbell className="text-primary h-5 w-5" />
       )}
     </div>
   );

@@ -24,6 +24,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -444,135 +445,142 @@ export default function Accounts() {
           message={t('pages.accounts.emptyState')}
         />
       ) : (
-        <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredAccounts.map((account) => {
-            const balance = parseFloat(account.balance);
-            const overdraft = parseFloat(account.overdraft_limit ?? '0');
-            const available = balance + overdraft;
-            const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
-            const availableForSpending = parseFloat(
-              account.available_balance ?? account.balance
-            );
-            const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
-            const initials = account.account_name
-              .split(' ')
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join('')
-              .toUpperCase();
-            return (
-              <Card
-                key={account.id}
-                className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
-              >
-                <CardHeader className="pb-sm">
-                  <div className="gap-sm flex items-start justify-between">
-                    <div className="gap-sm flex items-center">
-                      <div
-                        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
-                      >
-                        {initials}
+        <PaginatedSlide
+          key={searchTerm}
+          items={filteredAccounts}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {(pageItems) =>
+            pageItems.map((account) => {
+              const balance = parseFloat(account.balance);
+              const overdraft = parseFloat(account.overdraft_limit ?? '0');
+              const available = balance + overdraft;
+              const reservedInVaults = parseFloat(account.deposited_in_vaults ?? '0');
+              const availableForSpending = parseFloat(
+                account.available_balance ?? account.balance
+              );
+              const typeColors = ACCOUNT_TYPE_COLORS[account.account_type];
+              const initials = account.account_name
+                .split(' ')
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase();
+              return (
+                <Card
+                  key={account.id}
+                  className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
+                >
+                  <CardHeader className="pb-sm">
+                    <div className="gap-sm flex items-start justify-between">
+                      <div className="gap-sm flex items-center">
+                        <div
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
+                        >
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate leading-tight font-semibold">
+                            {account.account_name}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {translate('institutions', account.institution)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="truncate leading-tight font-semibold">
-                          {account.account_name}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {translate('institutions', account.institution)}
-                        </p>
-                      </div>
+                      <Badge variant="secondary" className="shrink-0 text-xs">
+                        {translate('accountTypes', account.account_type)}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="shrink-0 text-xs">
-                      {translate('accountTypes', account.account_type)}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {account.account_number_masked && (
-                    <p className="text-muted-foreground font-mono text-xs">
-                      {account.account_number_masked}
-                    </p>
-                  )}
-                  <div className="bg-muted/30 rounded-lg p-3 text-center">
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.accounts.columns.balance')}
-                    </p>
-                    <p
-                      className={`text-xl font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
-                    >
-                      {formatCurrency(account.balance)}
-                    </p>
-                    {overdraft > 0 && (
-                      <p
-                        className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
-                      >
-                        {t('pages.accounts.available', {
-                          value: formatCurrency(String(available)),
-                        })}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {account.account_number_masked && (
+                      <p className="text-muted-foreground font-mono text-xs">
+                        {account.account_number_masked}
                       </p>
                     )}
-                    {reservedInVaults > 0 && (
-                      <div className="mt-xs border-border/60 pt-xs space-y-0.5 border-t">
-                        <p className="text-muted-foreground text-xs">
-                          {t('pages.accounts.reservedInVaults', {
-                            value: formatCurrency(String(reservedInVaults)),
-                          })}
-                        </p>
+                    <div className="bg-muted/30 rounded-lg p-3 text-center">
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.accounts.columns.balance')}
+                      </p>
+                      <p
+                        className={`text-xl font-bold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
+                      >
+                        {formatCurrency(account.balance)}
+                      </p>
+                      {overdraft > 0 && (
                         <p
-                          className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                          className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
                         >
-                          {t('pages.accounts.availableForSpending', {
-                            value: formatCurrency(String(availableForSpending)),
+                          {t('pages.accounts.available', {
+                            value: formatCurrency(String(available)),
                           })}
                         </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="pt-sm flex items-center justify-between border-t">
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(account.created_at)}
-                    </span>
-                    <div className="gap-xs flex">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => void openReconciliation(account)}
-                        title={t('pages.accounts.bankReconciliation')}
-                        aria-label={t('pages.accounts.bankReconciliation')}
-                      >
-                        <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleEdit(account)}
-                        title={t('common.actions.edit')}
-                        aria-label={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => handleDelete(account.id)}
-                        title={t('common.actions.delete')}
-                        aria-label={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="text-destructive h-4 w-4"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                      )}
+                      {reservedInVaults > 0 && (
+                        <div className="mt-xs border-border/60 pt-xs space-y-0.5 border-t">
+                          <p className="text-muted-foreground text-xs">
+                            {t('pages.accounts.reservedInVaults', {
+                              value: formatCurrency(String(reservedInVaults)),
+                            })}
+                          </p>
+                          <p
+                            className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                          >
+                            {t('pages.accounts.availableForSpending', {
+                              value: formatCurrency(String(availableForSpending)),
+                            })}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                    <div className="pt-sm flex items-center justify-between border-t">
+                      <span className="text-muted-foreground text-xs">
+                        {formatDate(account.created_at)}
+                      </span>
+                      <div className="gap-xs flex">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => void openReconciliation(account)}
+                          title={t('pages.accounts.bankReconciliation')}
+                          aria-label={t('pages.accounts.bankReconciliation')}
+                        >
+                          <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleEdit(account)}
+                          title={t('common.actions.edit')}
+                          aria-label={t('common.actions.edit')}
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleDelete(account.id)}
+                          title={t('common.actions.delete')}
+                          aria-label={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="text-destructive h-4 w-4"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

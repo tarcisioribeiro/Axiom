@@ -19,13 +19,13 @@ import {
   Loader2,
   TrendingUp,
   TrendingDown,
-  Download,
   CheckCircle2,
   Clock,
   Save,
   X,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -97,40 +97,24 @@ const GOAL_TYPE_META: Record<
   },
 };
 
-function GoalCard({
+const getDisplayValue = (goal: Goal) =>
+  goal.calculated_current_value !== undefined
+    ? goal.calculated_current_value
+    : goal.current_value;
+
+const BADGE_CLASS = 'gap-xs px-sm flex items-center rounded py-0.5 text-xs font-medium';
+
+/** Badges de ritmo, prazo, sequência e datas — exibidos no modal de detalhes. */
+function GoalDetails({
   goal,
-  onEdit,
-  onDelete,
-  onRecalculate,
-  onRegisterFailure,
-  onRestart,
   onViewFailures,
 }: {
   goal: Goal;
-  onEdit: (g: Goal) => void;
-  onDelete: (id: number) => void;
-  onRecalculate: (g: Goal) => void;
-  onRegisterFailure: (g: Goal) => void;
-  onRestart: (g: Goal) => void;
   onViewFailures: (g: Goal) => void;
 }) {
   const { t } = useTranslation();
   const pct = goal.progress_percentage;
-  const typeMeta = GOAL_TYPE_META[goal.goal_type] ?? GOAL_TYPE_META.custom;
-  const TypeIcon = typeMeta.icon;
   const isAutoType = AUTO_GOAL_TYPES.includes(goal.goal_type);
-  const isCompleted = goal.status === 'completed';
-
-  const ringColor = isCompleted
-    ? 'hsl(var(--chart-2))'
-    : pct >= 80
-      ? 'hsl(var(--chart-2))'
-      : 'hsl(var(--primary))';
-
-  const displayValue =
-    goal.calculated_current_value !== undefined
-      ? goal.calculated_current_value
-      : goal.current_value;
 
   // Pace indicator and days remaining
   const today = new Date();
@@ -168,7 +152,121 @@ function GoalCard({
   };
 
   return (
-    <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
+    <div className="gap-xs flex flex-col items-start">
+      {paceStatus && (
+        <span className={cn(BADGE_CLASS, paceConfig[paceStatus].className)}>
+          {paceStatus === 'on_track' ? (
+            <CheckCircle2 className="h-3 w-3" />
+          ) : (
+            <AlertTriangle className="h-3 w-3" />
+          )}
+          {paceConfig[paceStatus].label}
+        </span>
+      )}
+      {daysRemaining !== null && (
+        <span
+          className={cn(
+            BADGE_CLASS,
+            daysRemaining < 7
+              ? 'bg-destructive/10 text-destructive'
+              : daysRemaining < 14
+                ? 'bg-warning/10 text-warning'
+                : 'bg-muted text-muted-foreground'
+          )}
+        >
+          <Clock className="h-3 w-3" />
+          {daysRemaining > 0
+            ? t('pages.goals.daysRemaining', { count: daysRemaining })
+            : t('pages.goals.overdue')}
+        </span>
+      )}
+      {isAutoType && (
+        <>
+          <span className={cn(BADGE_CLASS, 'bg-orange-500/10 text-orange-500')}>
+            <Flame className="h-3 w-3" />
+            {t('pages.goals.currentStreakLabel')}: {getDisplayValue(goal)}
+          </span>
+          <span className={cn(BADGE_CLASS, 'bg-primary/10 text-primary')}>
+            <Award className="h-3 w-3" />
+            {t('pages.goals.bestStreakLabel')}: {goal.best_streak}
+          </span>
+        </>
+      )}
+      <span className={cn(BADGE_CLASS, 'text-muted-foreground bg-muted/60')}>
+        <Calendar className="h-3 w-3" />
+        {t('pages.goals.startDateLabelShort')}: {formatDate(goal.start_date)}
+      </span>
+      {goal.end_date && (
+        <span className={cn(BADGE_CLASS, 'text-muted-foreground bg-muted/60')}>
+          <Calendar className="h-3 w-3" />
+          {t('pages.goals.endDateLabelShort')}: {formatDate(goal.end_date)}
+        </span>
+      )}
+      {isAutoType && goal.failures.length > 0 && (
+        <button
+          type="button"
+          onClick={() => onViewFailures(goal)}
+          className={cn(
+            BADGE_CLASS,
+            'bg-muted/60 text-muted-foreground hover:bg-muted transition-colors'
+          )}
+        >
+          <History className="h-3 w-3" />
+          {t('pages.goals.failuresCount', { count: goal.failures.length })}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+  onRecalculate,
+  onRegisterFailure,
+  onRestart,
+  onOpenDetails,
+}: {
+  goal: Goal;
+  onEdit: (g: Goal) => void;
+  onDelete: (id: number) => void;
+  onRecalculate: (g: Goal) => void;
+  onRegisterFailure: (g: Goal) => void;
+  onRestart: (g: Goal) => void;
+  onOpenDetails: (g: Goal) => void;
+}) {
+  const { t } = useTranslation();
+  const pct = goal.progress_percentage;
+  const typeMeta = GOAL_TYPE_META[goal.goal_type] ?? GOAL_TYPE_META.custom;
+  const TypeIcon = typeMeta.icon;
+  const isAutoType = AUTO_GOAL_TYPES.includes(goal.goal_type);
+  const isCompleted = goal.status === 'completed';
+
+  const ringColor = isCompleted
+    ? 'hsl(var(--chart-2))'
+    : pct >= 80
+      ? 'hsl(var(--chart-2))'
+      : 'hsl(var(--primary))';
+
+  const displayValue = getDisplayValue(goal);
+
+  return (
+    <Card
+      role="button"
+      tabIndex={0}
+      // Cliques/teclas vindos dos botões de ação não abrem os detalhes.
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest('button')) onOpenDetails(goal);
+      }}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onOpenDetails(goal);
+        }
+      }}
+      className="focus-visible:ring-ring relative cursor-pointer overflow-hidden transition-shadow hover:shadow-md focus-visible:ring-2 focus-visible:outline-none"
+    >
       {/* Completion glow animation */}
       <AnimatePresence>
         {isCompleted && (
@@ -242,91 +340,6 @@ function GoalCard({
           </div>
         </div>
 
-        {/* Pace indicator + days remaining */}
-        {(paceStatus || daysRemaining !== null) && (
-          <div className="gap-xs mb-3 flex flex-wrap items-center">
-            {paceStatus && (
-              <span
-                className={cn(
-                  'gap-xs px-sm flex items-center rounded py-0.5 text-xs font-medium',
-                  paceConfig[paceStatus].className
-                )}
-              >
-                {paceStatus === 'on_track' ? (
-                  <CheckCircle2 className="h-3 w-3" />
-                ) : (
-                  <AlertTriangle className="h-3 w-3" />
-                )}
-                {paceConfig[paceStatus].label}
-              </span>
-            )}
-            {daysRemaining !== null && (
-              <span
-                className={cn(
-                  'gap-xs px-sm flex items-center rounded py-0.5 text-xs font-medium',
-                  daysRemaining < 7
-                    ? 'bg-destructive/10 text-destructive'
-                    : daysRemaining < 14
-                      ? 'bg-warning/10 text-warning'
-                      : 'bg-muted text-muted-foreground'
-                )}
-              >
-                <Clock className="h-3 w-3" />
-                {daysRemaining > 0
-                  ? t('pages.goals.daysRemaining', { count: daysRemaining })
-                  : t('pages.goals.overdue')}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Sequência atual / melhor sequência / histórico de falhas */}
-        {isAutoType && (
-          <div className="gap-xs mb-3 flex flex-wrap items-center text-xs">
-            <span className="gap-xs px-sm flex items-center rounded bg-orange-500/10 py-0.5 font-medium text-orange-500">
-              <Flame className="h-3 w-3" />
-              {t('pages.goals.currentStreakLabel')}: {displayValue}
-            </span>
-            <span className="bg-primary/10 gap-xs px-sm text-primary flex items-center rounded py-0.5 font-medium">
-              <Award className="h-3 w-3" />
-              {t('pages.goals.bestStreakLabel')}: {goal.best_streak}
-            </span>
-            <span className="text-muted-foreground gap-xs px-sm bg-muted/60 flex items-center rounded py-0.5 font-medium">
-              <Calendar className="h-3 w-3" />
-              {t('pages.goals.startDateLabelShort')}: {formatDate(goal.start_date)}
-            </span>
-            {goal.end_date && (
-              <span className="text-muted-foreground gap-xs px-sm bg-muted/60 flex items-center rounded py-0.5 font-medium">
-                <Calendar className="h-3 w-3" />
-                {t('pages.goals.endDateLabelShort')}: {formatDate(goal.end_date)}
-              </span>
-            )}
-            {goal.failures.length > 0 && (
-              <button
-                type="button"
-                onClick={() => onViewFailures(goal)}
-                className="gap-xs px-sm bg-muted/60 text-muted-foreground hover:bg-muted flex items-center rounded py-0.5 font-medium transition-colors"
-              >
-                <History className="h-3 w-3" />
-                {t('pages.goals.failuresCount', { count: goal.failures.length })}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Completion badge */}
-        {isCompleted && (
-          <motion.div
-            className="gap-sm text-success mb-3 flex items-center"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          >
-            <Trophy className="h-4 w-4" />
-            <span className="text-sm font-semibold">{t('pages.goals.completed')}</span>
-          </motion.div>
-        )}
-
         <div className="flex items-center justify-between border-t pt-3">
           <Badge variant={GOAL_STATUS_BADGE[goal.status] ?? 'secondary'}>
             {t(`pages.goals.form.statusOptions.${goal.status}`)}
@@ -392,11 +405,13 @@ function GoalCard({
 
 interface GoalsProps {
   embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
 }
 
 const EMPTY_GOALS: Goal[] = [];
-// Uma linha do grid (3 colunas em lg+).
-const GOALS_PAGE_SIZE = 3;
+// Duas linhas do grid (3 colunas em lg+).
+const GOALS_PAGE_SIZE = 6;
 const EMPTY_TASKS: RoutineTask[] = [];
 
 function Wrapper({
@@ -413,7 +428,7 @@ function Wrapper({
   );
 }
 
-export default function Goals({ embedded = false }: GoalsProps) {
+export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedGoal, setSelectedGoal] = useState<Goal | undefined>();
@@ -423,6 +438,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
   const [failureDate, setFailureDate] = useState<string>('');
   const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const [viewingFailuresGoal, setViewingFailuresGoal] = useState<Goal | undefined>();
+  const [detailsGoal, setDetailsGoal] = useState<Goal | undefined>();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -589,37 +605,6 @@ export default function Goals({ embedded = false }: GoalsProps) {
     }
   };
 
-  const exportGoalsCSV = () => {
-    const headers = [
-      'Nome',
-      'Tipo',
-      'Status',
-      'Progresso (%)',
-      'Dias Ativos',
-      'Data Início',
-      'Data Fim',
-    ];
-    const rows: string[][] = goals.map((g): string[] => [
-      g.title,
-      g.goal_type,
-      g.status,
-      String(g.progress_percentage),
-      String(g.days_active),
-      g.start_date,
-      g.end_date ?? '',
-    ]);
-    const csv = [headers, ...rows]
-      .map((r) => r.map((c) => `"${c}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `objetivos_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   if (isLoading) return <LoadingState />;
 
   // Ativos primeiro, depois concluídos, depois os demais (ordem estável).
@@ -633,31 +618,24 @@ export default function Goals({ embedded = false }: GoalsProps) {
     onRecalculate: (g: Goal) => void handleRecalculate(g),
     onRegisterFailure: handleRegisterFailure,
     onRestart: (g: Goal) => void handleRestart(g),
-    onViewFailures: setViewingFailuresGoal,
+    onOpenDetails: setDetailsGoal,
   };
+
+  const header = (
+    <PageHeader
+      title={t('pages.goals.title')}
+      icon={<Trophy />}
+      action={{
+        label: t('pages.goals.newBtn'),
+        icon: <Plus className="h-4 w-4" />,
+        onClick: handleCreate,
+      }}
+    />
+  );
 
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader
-        title={t('pages.goals.title')}
-        icon={<Trophy />}
-        action={{
-          label: t('pages.goals.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      >
-        {goals.length > 0 && (
-          <button
-            onClick={exportGoalsCSV}
-            className="gap-xs border-border px-sm py-xs text-muted-foreground hover:bg-muted flex items-center rounded-md border text-xs transition-colors"
-            title={t('common.actions.exportCSV')}
-          >
-            <Download className="h-3.5 w-3.5" />
-            {t('common.actions.exportCSV')}
-          </button>
-        )}
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {goals.length === 0 ? (
         <EmptyState
@@ -674,6 +652,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
         <PaginatedSlide
           items={sortedGoals}
           pageSize={GOALS_PAGE_SIZE}
+          centerList
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3"
         >
           {(pageGoals) =>
@@ -765,6 +744,37 @@ export default function Goals({ embedded = false }: GoalsProps) {
               {isRegisteringFailure
                 ? t('common.actions.saving')
                 : t('pages.goals.registerFailureConfirmBtn')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal detalhes do objetivo */}
+      <Dialog
+        open={!!detailsGoal}
+        onOpenChange={(open) => {
+          if (!open) setDetailsGoal(undefined);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{detailsGoal?.title}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {detailsGoal &&
+                  t(`pages.goals.goalTypes.${detailsGoal.goal_type}`, {
+                    defaultValue: detailsGoal.goal_type_display,
+                  })}
+              </DialogDescription>
+            </VisuallyHidden>
+          </DialogHeader>
+          {detailsGoal && (
+            <GoalDetails goal={detailsGoal} onViewFailures={setViewingFailuresGoal} />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsGoal(undefined)}>
+              <X className="mr-sm h-4 w-4" />
+              {t('common.actions.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

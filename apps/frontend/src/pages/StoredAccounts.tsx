@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { StoredAccountForm } from '@/components/security/StoredAccountForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
@@ -357,251 +358,258 @@ export default function StoredAccounts() {
             }
           />
         ) : (
-          <div className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-            {filteredAccounts.map((acc) => {
-              const typeCfg =
-                ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
-              const revealed = revealedData.get(acc.id);
-              const initials = getInstitutionInitials(acc.institution_name);
+          <PaginatedSlide
+            key={searchTerm}
+            items={filteredAccounts}
+            pageSize={GRID_PAGE_SIZE}
+            className="gap-md grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {(pageItems) =>
+              pageItems.map((acc) => {
+                const typeCfg =
+                  ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
+                const revealed = revealedData.get(acc.id);
+                const initials = getInstitutionInitials(acc.institution_name);
 
-              return (
-                <Card
-                  key={acc.id}
-                  className={cn('overflow-hidden border-l-2', typeCfg.border)}
-                >
-                  <CardHeader className="pb-3">
-                    {/* Institution row */}
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
-                          typeCfg.avatar
-                        )}
-                      >
-                        {initials}
+                return (
+                  <Card
+                    key={acc.id}
+                    className={cn('overflow-hidden border-l-2', typeCfg.border)}
+                  >
+                    <CardHeader className="pb-3">
+                      {/* Institution row */}
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
+                            typeCfg.avatar
+                          )}
+                        >
+                          {initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate leading-tight font-semibold">
+                            {acc.name}
+                          </p>
+                          <p className="text-muted-foreground truncate text-sm">
+                            {translate('institutions', acc.institution_name)}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn('shrink-0 text-xs', typeCfg.badge)}
+                        >
+                          {translate('accountTypes', acc.account_type)}
+                        </Badge>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate leading-tight font-semibold">
-                          {acc.name}
-                        </p>
-                        <p className="text-muted-foreground truncate text-sm">
-                          {translate('institutions', acc.institution_name)}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn('shrink-0 text-xs', typeCfg.badge)}
-                      >
-                        {translate('accountTypes', acc.account_type)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                    </CardHeader>
 
-                  <CardContent className="space-y-3 pt-0">
-                    {/* Account details */}
-                    <div className="space-y-sm bg-muted/40 py-sm rounded-lg px-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                          {t('pages.storedAccounts.columns.number')}
-                        </span>
-                        <span className="font-mono">
-                          {revealed?.account_number ?? acc.account_number_masked}
-                        </span>
-                      </div>
-                      {acc.agency && (
+                    <CardContent className="space-y-3 pt-0">
+                      {/* Account details */}
+                      <div className="space-y-sm bg-muted/40 py-sm rounded-lg px-3">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.columns.agency')}
+                            {t('pages.storedAccounts.columns.number')}
                           </span>
-                          <span className="font-mono">{acc.agency}</span>
+                          <span className="font-mono">
+                            {revealed?.account_number ?? acc.account_number_masked}
+                          </span>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Passwords section */}
-                    {revealed ? (
-                      <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
-                        <div className="gap-sm flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.password1')}
-                          </span>
-                          <div className="gap-xs flex items-center">
-                            <span className="font-mono">
-                              {revealed.password ||
-                                t('pages.storedAccounts.noPassword')}
+                        {acc.agency && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.columns.agency')}
                             </span>
-                            {revealed.password && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
-                                onClick={() =>
-                                  handleCopy(
-                                    revealed.password!,
-                                    t('pages.storedAccounts.password1')
-                                  )
-                                }
-                                aria-label={t('common.actions.copy')}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            )}
+                            <span className="font-mono">{acc.agency}</span>
                           </div>
-                        </div>
-                        <div className="gap-sm flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                            {t('pages.storedAccounts.password2')}
-                          </span>
-                          <div className="gap-xs flex items-center">
-                            <span className="font-mono">
-                              {revealed.password2 ||
-                                t('pages.storedAccounts.noPassword')}
-                            </span>
-                            {revealed.password2 && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
-                                onClick={() =>
-                                  handleCopy(
-                                    revealed.password2!,
-                                    t('pages.storedAccounts.password2')
-                                  )
-                                }
-                                aria-label={t('common.actions.copy')}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-muted/40 py-sm rounded-lg px-3">
-                        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                          {t('pages.storedAccounts.columns.passwords')}
-                        </p>
-                        <p className="text-muted-foreground mt-0.5 font-mono text-sm">
-                          ••••••••
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Footer: finance link + actions */}
-                    <div className="gap-sm pt-xs flex items-center justify-between">
-                      <div className="min-w-0">
-                        {acc.finance_account_name && (
-                          <button
-                            className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void navigate('/accounts');
-                            }}
-                          >
-                            <ExternalLink className="h-2.5 w-2.5 shrink-0" />
-                            {acc.finance_account_name}
-                          </button>
                         )}
                       </div>
-                      <div className="flex shrink-0 items-center gap-0.5">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleReveal(acc.id)}
-                          disabled={revealingId === acc.id}
-                          title={
-                            revealed
-                              ? t('common.actions.hide')
-                              : t('common.actions.reveal')
-                          }
-                          aria-label={
-                            revealed
-                              ? t('common.actions.hide')
-                              : t('common.actions.reveal')
-                          }
-                        >
-                          {revealingId === acc.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : revealed ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
+
+                      {/* Passwords section */}
+                      {revealed ? (
+                        <div className="space-y-sm border-primary/20 bg-primary/5 py-sm rounded-lg border px-3">
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.password1')}
+                            </span>
+                            <div className="gap-xs flex items-center">
+                              <span className="font-mono">
+                                {revealed.password ||
+                                  t('pages.storedAccounts.noPassword')}
+                              </span>
+                              {revealed.password && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                  onClick={() =>
+                                    handleCopy(
+                                      revealed.password!,
+                                      t('pages.storedAccounts.password1')
+                                    )
+                                  }
+                                  aria-label={t('common.actions.copy')}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="gap-sm flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                              {t('pages.storedAccounts.password2')}
+                            </span>
+                            <div className="gap-xs flex items-center">
+                              <span className="font-mono">
+                                {revealed.password2 ||
+                                  t('pages.storedAccounts.noPassword')}
+                              </span>
+                              {revealed.password2 && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                  onClick={() =>
+                                    handleCopy(
+                                      revealed.password2!,
+                                      t('pages.storedAccounts.password2')
+                                    )
+                                  }
+                                  aria-label={t('common.actions.copy')}
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-muted/40 py-sm rounded-lg px-3">
+                          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                            {t('pages.storedAccounts.columns.passwords')}
+                          </p>
+                          <p className="text-muted-foreground mt-0.5 font-mono text-sm">
+                            ••••••••
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Footer: finance link + actions */}
+                      <div className="gap-sm pt-xs flex items-center justify-between">
+                        <div className="min-w-0">
+                          {acc.finance_account_name && (
+                            <button
+                              className="text-primary flex items-center gap-0.5 truncate text-xs hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void navigate('/accounts');
+                              }}
+                            >
+                              <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                              {acc.finance_account_name}
+                            </button>
                           )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                            'h-8 w-8 p-0',
-                            copiedId === acc.id && 'text-success'
-                          )}
-                          onClick={() => void handleCopyAccountNumber(acc.id)}
-                          disabled={copyingId === acc.id}
-                          title={
-                            copiedId === acc.id
-                              ? t('common.messages.copied')
-                              : t('pages.storedAccounts.copyAccountNumber')
-                          }
-                          aria-label={t('pages.storedAccounts.copyAccountNumber')}
-                        >
-                          {copyingId === acc.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : copiedId === acc.id ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={cn(
-                            'h-8 w-8 p-0',
-                            acc.is_favorite && 'text-warning'
-                          )}
-                          onClick={() => void handleToggleFavorite(acc.id)}
-                          title={t('common.actions.favorite')}
-                          aria-label={t('common.actions.favorite')}
-                        >
-                          <Star
-                            className={cn(
-                              'h-3.5 w-3.5',
-                              acc.is_favorite && 'fill-current'
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleReveal(acc.id)}
+                            disabled={revealingId === acc.id}
+                            title={
+                              revealed
+                                ? t('common.actions.hide')
+                                : t('common.actions.reveal')
+                            }
+                            aria-label={
+                              revealed
+                                ? t('common.actions.hide')
+                                : t('common.actions.reveal')
+                            }
+                          >
+                            {revealingId === acc.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : revealed ? (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            ) : (
+                              <Eye className="h-3.5 w-3.5" />
                             )}
-                            aria-hidden="true"
-                          />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleEdit(acc)}
-                          title={t('common.actions.edit')}
-                          aria-label={t('common.actions.edit')}
-                        >
-                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleDelete(acc.id)}
-                          title={t('common.actions.delete')}
-                          aria-label={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="text-destructive h-3.5 w-3.5"
-                            aria-hidden="true"
-                          />
-                        </Button>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              'h-8 w-8 p-0',
+                              copiedId === acc.id && 'text-success'
+                            )}
+                            onClick={() => void handleCopyAccountNumber(acc.id)}
+                            disabled={copyingId === acc.id}
+                            title={
+                              copiedId === acc.id
+                                ? t('common.messages.copied')
+                                : t('pages.storedAccounts.copyAccountNumber')
+                            }
+                            aria-label={t('pages.storedAccounts.copyAccountNumber')}
+                          >
+                            {copyingId === acc.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : copiedId === acc.id ? (
+                              <Check className="h-3.5 w-3.5" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              'h-8 w-8 p-0',
+                              acc.is_favorite && 'text-warning'
+                            )}
+                            onClick={() => void handleToggleFavorite(acc.id)}
+                            title={t('common.actions.favorite')}
+                            aria-label={t('common.actions.favorite')}
+                          >
+                            <Star
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                acc.is_favorite && 'fill-current'
+                              )}
+                              aria-hidden="true"
+                            />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEdit(acc)}
+                            title={t('common.actions.edit')}
+                            aria-label={t('common.actions.edit')}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleDelete(acc.id)}
+                            title={t('common.actions.delete')}
+                            aria-label={t('common.actions.delete')}
+                          >
+                            <Trash2
+                              className="text-destructive h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            }
+          </PaginatedSlide>
         )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

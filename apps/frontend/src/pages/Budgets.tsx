@@ -24,6 +24,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -481,18 +482,25 @@ export default function Budgets() {
                   </div>
                 </div>
 
-                <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-                  {enriched.map(({ budget, status }) => (
-                    <BudgetCard
-                      key={budget.id}
-                      budget={budget}
-                      status={status}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onViewPurchases={setPurchasesBudget}
-                    />
-                  ))}
-                </div>
+                <PaginatedSlide
+                  key={`${searchTerm}-${filterMonth}-${filterYear}`}
+                  items={enriched}
+                  pageSize={GRID_PAGE_SIZE}
+                  className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+                >
+                  {(pageItems) =>
+                    pageItems.map(({ budget, status }) => (
+                      <BudgetCard
+                        key={budget.id}
+                        budget={budget}
+                        status={status}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onViewPurchases={setPurchasesBudget}
+                      />
+                    ))
+                  }
+                </PaginatedSlide>
               </>
             );
           })()}

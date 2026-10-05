@@ -40,6 +40,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -238,13 +239,18 @@ const mapKanbanToInstance = (status: KanbanStatus): InstanceStatus => {
 
 interface DailyChecklistProps {
   embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
 }
 
 function EmbeddedWrapper({ children }: { children: ReactNode }) {
   return <div className="space-y-lg">{children}</div>;
 }
 
-export default function DailyChecklist({ embedded = false }: DailyChecklistProps) {
+export default function DailyChecklist({
+  embedded = false,
+  headerTarget,
+}: DailyChecklistProps) {
   const { t, i18n } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>(() =>
     formatLocalDate(new Date())
@@ -690,6 +696,11 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
 
   const GreetIcon = greeting.Icon;
   const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+  const header = (
+    <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
+      {viewToggle}
+    </PageHeader>
+  );
 
   return (
     <Wrapper>
@@ -702,9 +713,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
         className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
       />
 
-      <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />}>
-        {viewToggle}
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       {/* Modo Foco + saudação + nível/XP + controles lado a lado em telas largas */}
       <div className="gap-lg flex flex-col 2xl:flex-row 2xl:items-center">
@@ -861,6 +870,7 @@ export default function DailyChecklist({ embedded = false }: DailyChecklistProps
                 key={selectedDate}
                 items={instances}
                 pageSize={LIST_PAGE_SIZE}
+                centerList
                 className="space-y-sm"
               >
                 {(pageTasks) =>

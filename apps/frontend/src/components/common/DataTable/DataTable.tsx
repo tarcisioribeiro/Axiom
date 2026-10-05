@@ -9,34 +9,18 @@
  * - Estados integrados (loading, empty)
  * - Coluna de ações customizável
  * - Alinhamento de texto por coluna
- * - Suporte a paginação com navegação Anterior/Próximo
- *
- * @example
- * ```tsx
- * const columns: Column<Account>[] = [
- *   { key: 'name', label: 'Nome', render: (item) => <div>{item.name}</div> },
- *   { key: 'balance', label: 'Saldo', align: 'right', render: (item) => formatCurrency(item.balance) },
- * ];
- *
- * <DataTable
- *   data={accounts}
- *   columns={columns}
- *   keyExtractor={(item) => item.id}
- *   isLoading={isLoading}
- *   emptyState={{ message: 'Nenhuma conta encontrada' }}
- *   actions={(item) => <EditButton onClick={() => handleEdit(item)} />}
- * />
- * ```
+ * - Sempre paginado: no servidor (`pagination`) ou no cliente (`pageSize`),
+ *   com a navegação e a transição padrão do app (PageSlide)
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
-import { PaginationNav } from '../PaginatedSlide';
+import { PageSlide } from '../PaginatedSlide';
 
 export interface Column<T> {
   key: string;
@@ -64,12 +48,19 @@ export interface DataTableProps<T> {
       onClick: () => void;
     };
   };
+  /** Paginação no servidor (`data` já é a página atual). Sem ela, o
+   * DataTable pagina `data` no cliente com `pageSize` itens por página. */
   pagination?: {
     page: number;
     pageSize: number;
     total: number;
     onPageChange: (page: number) => void;
   };
+  pageSize?: number;
+  /** Ver PaginatedSlide: fixa a navegação no rodapé da página (padrão). */
+  pinNav?: boolean;
+  /** Ver PaginatedSlide: centraliza a tabela na vertical acima da navegação. */
+  centerList?: boolean;
   sorting?: {
     column: string | null;
     direction: 'asc' | 'desc' | null;
@@ -86,6 +77,10 @@ export interface DataTableProps<T> {
   mobileCard?: (item: T) => React.ReactNode;
 }
 
+const DEFAULT_PAGE_SIZE = 10;
+
+const getAlignClass = (align: Column<unknown>['align'] = 'left') => `text-${align}`;
+
 export function DataTable<T>({
   data,
   columns,
@@ -94,6 +89,9 @@ export function DataTable<T>({
   density = 'comfortable',
   emptyState,
   pagination,
+  pageSize = DEFAULT_PAGE_SIZE,
+  pinNav,
+  centerList,
   sorting,
   actions,
   rowClassName,
@@ -104,17 +102,30 @@ export function DataTable<T>({
   const { t } = useTranslation();
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
+  const [clientPage, setClientPage] = useState(1);
+  const clientTotalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  // Clampa caso a lista encolha (ex.: após excluir ou filtrar).
+  const currentClientPage = Math.min(clientPage, clientTotalPages);
+  const page = pagination?.page ?? currentClientPage;
+  const totalPages = pagination
+    ? Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
+    : clientTotalPages;
+  const onPageChange = pagination?.onPageChange ?? setClientPage;
+  const rows = pagination
+    ? data
+    : data.slice((currentClientPage - 1) * pageSize, currentClientPage * pageSize);
+
   const handleRowKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTableRowElement>, index: number) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        rowRefs.current[Math.min(index + 1, data.length - 1)]?.focus();
+        rowRefs.current[Math.min(index + 1, rows.length - 1)]?.focus();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         rowRefs.current[Math.max(index - 1, 0)]?.focus();
       }
     },
-    [data.length]
+    [rows.length]
   );
 
   const getAriaSortValue = (columnKey: string): React.AriaAttributes['aria-sort'] => {
@@ -143,9 +154,7 @@ export function DataTable<T>({
 
   // Empty state
   if (data.length === 0) {
-    if (emptyState) {
-      return <EmptyState {...emptyState} />;
-    }
+    if (emptyState) return <EmptyState {...emptyState} />;
     return (
       <div className="bg-card rounded-lg border p-12 text-center">
         <p>{t('common.table.noData')}</p>
@@ -154,31 +163,22 @@ export function DataTable<T>({
   }
 
   // Render column content
-  const renderColumnContent = (item: T, column: Column<T>) => {
-    if (column.render) {
-      return column.render(item);
-    }
-    return String(item[column.key as keyof T] || '');
-  };
-
-  // Get alignment class
-  const getAlignClass = (align?: 'left' | 'center' | 'right') => {
-    switch (align) {
-      case 'center':
-        return 'text-center';
-      case 'right':
-        return 'text-right';
-      default:
-        return 'text-left';
-    }
-  };
+  const renderColumnContent = (item: T, column: Column<T>) =>
+    column.render ? column.render(item) : String(item[column.key as keyof T] || '');
 
   return (
-    <div className="space-y-md">
+    <PageSlide
+      page={page}
+      totalPages={totalPages}
+      onPageChange={onPageChange}
+      pinNav={pinNav}
+      centerList={centerList}
+      className="space-y-md"
+    >
       {/* Mobile card list */}
       <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
         <div className="divide-y">
-          {data.map((item) => (
+          {rows.map((item) => (
             <div key={keyExtractor(item)}>
               {mobileCard ? (
                 mobileCard(item)
@@ -250,7 +250,7 @@ export function DataTable<T>({
             </thead>
             <tbody className="divide-y">
               <AnimatePresence initial={false}>
-                {data.map((item, index) => {
+                {rows.map((item, index) => {
                   const key = keyExtractor(item);
                   const isDeleting = deletingKeys?.has(key);
                   return (
@@ -291,14 +291,6 @@ export function DataTable<T>({
           </table>
         </div>
       </div>
-
-      {pagination && (
-        <PaginationNav
-          page={pagination.page}
-          totalPages={Math.ceil(pagination.total / pagination.pageSize)}
-          onPageChange={pagination.onPageChange}
-        />
-      )}
-    </div>
+    </PageSlide>
   );
 }

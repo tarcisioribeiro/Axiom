@@ -20,6 +20,10 @@ interface PaginatedSlideProps<T> {
   children: (pageItems: T[]) => ReactNode;
 }
 
+/** Tamanhos padrão: grades de cards (divisível por 2, 3 e 4 colunas) e listas. */
+export const GRID_PAGE_SIZE = 12;
+export const LIST_PAGE_SIZE = 10;
+
 const slideVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
   center: { opacity: 1, x: 0 },
@@ -30,25 +34,68 @@ const slideVariants = {
  * Lista paginada no cliente com navegação ‹ › centralizada e transição de
  * deslize na direção da navegação. Para voltar à primeira página (ex.: troca
  * de filtro), remonte com `key`.
+ */
+export function PaginatedSlide<T>({
+  items,
+  pageSize,
+  children,
+  ...rest
+}: PaginatedSlideProps<T>) {
+  const [pageIndex, setPageIndex] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  // Clampa caso a lista encolha (ex.: após excluir) e a página atual suma.
+  const index = Math.min(pageIndex, totalPages - 1);
+  return (
+    <PageSlide
+      page={index + 1}
+      totalPages={totalPages}
+      onPageChange={(next) => setPageIndex(next - 1)}
+      resetKey={items.length === 0}
+      {...rest}
+    >
+      {children(items.slice(index * pageSize, (index + 1) * pageSize))}
+    </PageSlide>
+  );
+}
+
+interface PageSlideProps extends Omit<
+  PaginatedSlideProps<never>,
+  'items' | 'pageSize' | 'children'
+> {
+  /** Página atual, começando em 1. */
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  /** Muda quando a altura travada da lista deve ser recalculada. */
+  resetKey?: unknown;
+  children: ReactNode;
+}
+
+/**
+ * Versão controlada do PaginatedSlide, para listas paginadas no servidor
+ * (DataTable, logs): mesma posição da navegação e mesma transição.
  *
  * Com `pinNav`, a classe `page-fill` faz os ancestrais até o <main>
  * ocuparem a altura restante (ver index.css), e a lista cresce empurrando a navegação:
  * fica na mesma altura em todas as telas.
  */
-export function PaginatedSlide<T>({
-  items,
-  pageSize,
+export function PageSlide({
+  page,
+  totalPages,
+  onPageChange,
+  resetKey,
   className,
   pinNav = true,
   centerList = false,
   children,
-}: PaginatedSlideProps<T>) {
-  const [page, setPage] = useState({ index: 0, direction: 1 });
+}: PageSlideProps) {
+  // Direção derivada da página anterior (padrão "estado da renderização anterior").
+  const [last, setLast] = useState({ page, direction: 1 });
+  if (last.page !== page) setLast({ page, direction: page > last.page ? 1 : -1 });
 
   // Mantém a altura da lista na maior já vista (página cheia), para os botões
   // de navegação não pularem durante a transição nem na última página.
   const listRef = useRef<HTMLDivElement>(null);
-  const isEmpty = items.length === 0;
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -59,14 +106,7 @@ export function PaginatedSlide<T>({
     });
     observer.observe(list);
     return () => observer.disconnect();
-  }, [isEmpty]);
-
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-  // Clampa caso a lista encolha (ex.: após excluir) e a página atual suma.
-  const pageIndex = Math.min(page.index, totalPages - 1);
-  const pageItems = items.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
-  const goTo = (direction: 1 | -1) =>
-    setPage({ index: pageIndex + direction, direction });
+  }, [resetKey]);
 
   return (
     <div className={cn('gap-md flex flex-1 flex-col', pinNav && 'page-fill')}>
@@ -74,26 +114,22 @@ export function PaginatedSlide<T>({
           próprio conteúdo, para a altura travada não crescer com a janela. */}
       <div className={cn('flex flex-1 flex-col', centerList && 'justify-center')}>
         <div ref={listRef} className="overflow-hidden">
-          <AnimatePresence mode="wait" initial={false} custom={page.direction}>
+          <AnimatePresence mode="wait" initial={false} custom={last.direction}>
             <motion.div
-              key={pageIndex}
-              custom={page.direction}
+              key={page}
+              custom={last.direction}
               variants={slideVariants}
               initial="enter"
               animate="center"
               exit="exit"
               className={className}
             >
-              {children(pageItems)}
+              {children}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
-      <PaginationNav
-        page={pageIndex + 1}
-        totalPages={totalPages}
-        onPageChange={(next) => goTo(next > pageIndex + 1 ? 1 : -1)}
-      />
+      <PaginationNav page={page} totalPages={totalPages} onPageChange={onPageChange} />
     </div>
   );
 }

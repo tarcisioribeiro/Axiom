@@ -435,7 +435,7 @@ function IngredientRow({
           aria-label={t('common.actions.remove')}
           type="button"
           onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+          className="text-muted-foreground hover:text-destructive rounded p-0.5"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </PlainButton>

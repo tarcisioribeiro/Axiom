@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { RefreshCw, ScrollText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginationNav } from '@/components/common/PaginatedSlide';
+import { PageSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,6 +52,7 @@ export default function AdminLogs() {
         date_to: appliedFilters.dateTo || undefined,
       }),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 
   const applyFilters = () => {
@@ -120,60 +121,54 @@ export default function AdminLogs() {
         </Button>
       </FilterBar>
 
-      {/* Table */}
-      <div className="border-border bg-card overflow-hidden rounded-lg border">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-border bg-secondary/50 border-b">
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.datetime')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.user')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.action')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.model')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.description')}
-                </th>
-                <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
-                  {t('pages.adminLogs.columns.ip')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                    <RefreshCw className="mb-sm mx-auto h-6 w-6 animate-spin" />
-                    {t('pages.adminLogs.loadingLogs')}
-                  </td>
+      <PageSlide page={page} totalPages={totalPages} onPageChange={setPage}>
+        <div className="border-border bg-card overflow-hidden rounded-lg border">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-border bg-secondary/50 border-b">
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.datetime')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.user')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.action')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.model')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.description')}
+                  </th>
+                  <th className="px-md text-muted-foreground py-3 text-left text-xs font-medium tracking-wide uppercase">
+                    {t('pages.adminLogs.columns.ip')}
+                  </th>
                 </tr>
-              ) : data?.results.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-muted-foreground py-12 text-center">
-                    {t('pages.adminLogs.noLogs')}
-                  </td>
-                </tr>
-              ) : (
-                data?.results.map((log) => <LogRow key={log.id} log={log} />)
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
+                      <RefreshCw className="mb-sm mx-auto h-6 w-6 animate-spin" />
+                      {t('pages.adminLogs.loadingLogs')}
+                    </td>
+                  </tr>
+                ) : data?.results.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-muted-foreground py-12 text-center">
+                      {t('pages.adminLogs.noLogs')}
+                    </td>
+                  </tr>
+                ) : (
+                  data?.results.map((log) => <LogRow key={log.id} log={log} />)
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        <PaginationNav
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          className="border-border border-t py-3"
-        />
-      </div>
+      </PageSlide>
     </PageContainer>
   );
 }

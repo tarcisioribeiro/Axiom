@@ -21,6 +21,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { SkillForm } from '@/components/library/SkillForm';
 import { SkillsRadarChart } from '@/components/library/SkillsRadarChart';
@@ -158,7 +159,7 @@ function SkillCard({
         </div>
       )}
 
-      <div className="gap-xs flex opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs flex">
         <Button
           size="sm"
           variant="ghost"
@@ -413,17 +414,24 @@ export default function Skills() {
           />
         ) : (
           <AnimatePresence>
-            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {skills.map((skill) => (
-                <SkillCard
-                  key={skill.id}
-                  skill={skill}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onViewHistory={(s) => setHistorySkill(s)}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={search}
+              items={skills}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {(pageItems) =>
+                pageItems.map((skill) => (
+                  <SkillCard
+                    key={skill.id}
+                    skill={skill}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onViewHistory={(s) => setHistorySkill(s)}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           </AnimatePresence>
         )}
 

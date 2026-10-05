@@ -19,6 +19,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ReceivableForm } from '@/components/receivables/ReceivableForm';
 import { ReceivableReceiptDialog } from '@/components/receivables/ReceivableReceiptDialog';
@@ -288,175 +289,192 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredReceivables.map((receivable) => {
-            const getDueBadge = () => {
-              if (receivable.status === 'overdue')
-                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
-              if (receivable.status === 'received') return null;
-              if (!receivable.due_date) return null;
-              const days = Math.ceil(
-                (new Date(receivable.due_date).getTime() - Date.now()) / 86400000
-              );
-              if (days < 0)
-                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
-              if (days === 0)
-                return {
-                  label: 'Vence hoje',
-                  cls: 'bg-destructive/10 text-destructive',
-                };
-              if (days <= 7)
-                return { label: `${days}d`, cls: 'bg-warning/10 text-warning' };
-              return null;
-            };
-            const dueBadge = getDueBadge();
-            const urgencyClass =
-              receivable.status === 'overdue'
-                ? 'border-l-4 border-l-destructive'
-                : receivable.status === 'received'
-                  ? 'border-l-4 border-l-success'
-                  : receivable.status === 'cancelled'
-                    ? 'border-l-4 border-l-muted-foreground'
-                    : (() => {
-                        if (!receivable.due_date) return 'border-l-4 border-l-warning';
-                        const d = Math.ceil(
-                          (new Date(receivable.due_date).getTime() - Date.now()) /
-                            86400000
-                        );
-                        if (d <= 0) return 'border-l-4 border-l-destructive';
-                        if (d <= 7) return 'border-l-4 border-l-warning';
-                        return 'border-l-4 border-l-info';
-                      })();
+        <PaginatedSlide
+          key={searchTerm}
+          items={filteredReceivables}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((receivable) => {
+              const getDueBadge = () => {
+                if (receivable.status === 'overdue')
+                  return {
+                    label: 'Vencido',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (receivable.status === 'received') return null;
+                if (!receivable.due_date) return null;
+                const days = Math.ceil(
+                  (new Date(receivable.due_date).getTime() - Date.now()) / 86400000
+                );
+                if (days < 0)
+                  return {
+                    label: 'Vencido',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (days === 0)
+                  return {
+                    label: 'Vence hoje',
+                    cls: 'bg-destructive/10 text-destructive',
+                  };
+                if (days <= 7)
+                  return { label: `${days}d`, cls: 'bg-warning/10 text-warning' };
+                return null;
+              };
+              const dueBadge = getDueBadge();
+              const urgencyClass =
+                receivable.status === 'overdue'
+                  ? 'border-l-4 border-l-destructive'
+                  : receivable.status === 'received'
+                    ? 'border-l-4 border-l-success'
+                    : receivable.status === 'cancelled'
+                      ? 'border-l-4 border-l-muted-foreground'
+                      : (() => {
+                          if (!receivable.due_date)
+                            return 'border-l-4 border-l-warning';
+                          const d = Math.ceil(
+                            (new Date(receivable.due_date).getTime() - Date.now()) /
+                              86400000
+                          );
+                          if (d <= 0) return 'border-l-4 border-l-destructive';
+                          if (d <= 7) return 'border-l-4 border-l-warning';
+                          return 'border-l-4 border-l-info';
+                        })();
 
-            const total = parseFloat(receivable.value);
-            const received = parseFloat(receivable.received_value);
-            const pct = total > 0 ? Math.min((received / total) * 100, 100) : 0;
-            const barColor =
-              pct >= 100 ? 'bg-success' : pct >= 50 ? 'bg-warning' : 'bg-info';
+              const total = parseFloat(receivable.value);
+              const received = parseFloat(receivable.received_value);
+              const pct = total > 0 ? Math.min((received / total) * 100, 100) : 0;
+              const barColor =
+                pct >= 100 ? 'bg-success' : pct >= 50 ? 'bg-warning' : 'bg-info';
 
-            return (
-              <div
-                key={receivable.id}
-                className={cn(
-                  'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
-                  urgencyClass
-                )}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="gap-sm flex items-center">
-                      <h3 className="font-semibold">{receivable.description}</h3>
-                      {dueBadge && (
-                        <span
-                          className={cn(
-                            'px-xs rounded-full py-0.5 text-xs font-medium',
-                            dueBadge.cls
-                          )}
-                        >
-                          {dueBadge.label}
-                        </span>
-                      )}
+              return (
+                <div
+                  key={receivable.id}
+                  className={cn(
+                    'bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md',
+                    urgencyClass
+                  )}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="gap-sm flex items-center">
+                        <h3 className="font-semibold">{receivable.description}</h3>
+                        {dueBadge && (
+                          <span
+                            className={cn(
+                              'px-xs rounded-full py-0.5 text-xs font-medium',
+                              dueBadge.cls
+                            )}
+                          >
+                            {dueBadge.label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {TRANSLATIONS.revenueCategories[
+                          receivable.category as keyof typeof TRANSLATIONS.revenueCategories
+                        ] ?? receivable.category}
+                      </p>
                     </div>
-                    <p className="text-muted-foreground text-sm">
-                      {TRANSLATIONS.revenueCategories[
-                        receivable.category as keyof typeof TRANSLATIONS.revenueCategories
-                      ] ?? receivable.category}
-                    </p>
+                    <Badge variant={STATUS_VARIANTS[receivable.status] ?? 'default'}>
+                      {t(`pages.receivables.status.${receivable.status}`)}
+                    </Badge>
                   </div>
-                  <Badge variant={STATUS_VARIANTS[receivable.status] ?? 'default'}>
-                    {t(`pages.receivables.status.${receivable.status}`)}
-                  </Badge>
-                </div>
 
-                <div className="space-y-xs">
-                  <div className="bg-muted h-2 overflow-hidden rounded-full">
-                    <div
-                      className={cn('h-full rounded-full transition-[width]', barColor)}
-                      style={{ width: `${pct}%` }}
-                    />
+                  <div className="space-y-xs">
+                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-[width]',
+                          barColor
+                        )}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="text-muted-foreground flex justify-between text-xs">
+                      <span>
+                        {t('pages.receivables.receivedAmount', {
+                          value: formatCurrency(received),
+                        })}
+                      </span>
+                      <span>{pct.toFixed(0)}%</span>
+                    </div>
                   </div>
-                  <div className="text-muted-foreground flex justify-between text-xs">
-                    <span>
-                      {t('pages.receivables.receivedAmount', {
-                        value: formatCurrency(received),
-                      })}
-                    </span>
-                    <span>{pct.toFixed(0)}%</span>
-                  </div>
-                </div>
 
-                <div className="space-y-xs text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.receivables.totalValue')}
-                    </span>
-                    <span className="font-medium">
-                      {formatCurrency(receivable.value)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.receivables.remainingBalance')}
-                    </span>
-                    <span className="text-success font-medium">
-                      {formatCurrency(total - received)}
-                    </span>
-                  </div>
-                  {receivable.due_date && (
+                  <div className="space-y-xs text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {t('pages.receivables.dueDate')}
+                        {t('pages.receivables.totalValue')}
                       </span>
                       <span className="font-medium">
-                        {formatDate(receivable.due_date, 'dd/MM/yyyy')}
+                        {formatCurrency(receivable.value)}
                       </span>
                     </div>
-                  )}
-                  {receivable.member_name && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
-                        {t('pages.receivables.debtor')}
+                        {t('pages.receivables.remainingBalance')}
                       </span>
-                      <span className="font-medium">{receivable.member_name}</span>
+                      <span className="text-success font-medium">
+                        {formatCurrency(total - received)}
+                      </span>
                     </div>
-                  )}
-                </div>
-
-                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                  {receivable.status !== 'received' &&
-                    receivable.status !== 'cancelled' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setReceiptReceivable(receivable)}
-                        title={t('pages.receivables.receipt.title')}
-                        className="gap-xs text-success text-xs"
-                      >
-                        <Wallet className="h-3 w-3" />
-                        {t('pages.receivables.receiveBtn')}
-                      </Button>
+                    {receivable.due_date && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.receivables.dueDate')}
+                        </span>
+                        <span className="font-medium">
+                          {formatDate(receivable.due_date, 'dd/MM/yyyy')}
+                        </span>
+                      </div>
                     )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(receivable)}
-                    title={t('common.actions.edit')}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => void handleDelete(receivable)}
-                    title={t('common.actions.delete')}
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" />
-                  </Button>
+                    {receivable.member_name && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.receivables.debtor')}
+                        </span>
+                        <span className="font-medium">{receivable.member_name}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
+                    {receivable.status !== 'received' &&
+                      receivable.status !== 'cancelled' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReceiptReceivable(receivable)}
+                          title={t('pages.receivables.receipt.title')}
+                          className="gap-xs text-success text-xs"
+                        >
+                          <Wallet className="h-3 w-3" />
+                          {t('pages.receivables.receiveBtn')}
+                        </Button>
+                      )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(receivable)}
+                      title={t('common.actions.edit')}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => void handleDelete(receivable)}
+                      title={t('common.actions.delete')}
+                    >
+                      <Trash2 className="text-destructive h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

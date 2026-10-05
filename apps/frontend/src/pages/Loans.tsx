@@ -24,6 +24,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialog';
 import { LoanForm } from '@/components/loans/LoanForm';
@@ -282,218 +283,225 @@ export default function Loans() {
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {roleFilteredLoans.map((loan) => {
-            const total = parseFloat(loan.value);
-            const paid = parseFloat(loan.payed_value);
-            const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
-            const isCreditor = loan.creditor === currentUserMemberId;
-            return (
-              <div
-                key={loan.id}
-                className="bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{loan.description}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {translate('expenseCategories', loan.category)}
-                    </p>
+        <PaginatedSlide
+          key={`${roleFilter}-${searchTerm}`}
+          items={roleFilteredLoans}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((loan) => {
+              const total = parseFloat(loan.value);
+              const paid = parseFloat(loan.payed_value);
+              const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+              const isCreditor = loan.creditor === currentUserMemberId;
+              return (
+                <div
+                  key={loan.id}
+                  className="bg-card p-md space-y-3 rounded-lg border transition-shadow hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{loan.description}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {translate('expenseCategories', loan.category)}
+                      </p>
+                    </div>
+                    <Badge variant={STATUS_VARIANTS[loan.status] ?? 'default'}>
+                      {getLoanStatusLabel(loan.status, isCreditor)}
+                    </Badge>
                   </div>
-                  <Badge variant={STATUS_VARIANTS[loan.status] ?? 'default'}>
-                    {getLoanStatusLabel(loan.status, isCreditor)}
-                  </Badge>
-                </div>
 
-                {/* Amortization progress */}
-                <div className="space-y-xs">
-                  <div className="text-muted-foreground flex justify-between text-xs">
-                    <span>{t('pages.loans.payoff')}</span>
-                    <span className="font-medium">{Math.round(pct)}%</span>
-                  </div>
-                  <div className="bg-muted h-2 overflow-hidden rounded-full">
-                    <div
-                      className={cn(
-                        'h-full rounded-full transition',
-                        pct >= 100
-                          ? 'bg-success'
-                          : loan.status === 'defaulted'
-                            ? 'bg-destructive'
-                            : 'bg-primary'
-                      )}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-success">
-                      {t(
-                        isCreditor
-                          ? 'pages.loans.receivedAmount'
-                          : 'pages.loans.paidAmount',
-                        {
-                          value: formatCurrency(loan.payed_value),
-                        }
-                      )}
-                    </span>
-                    <span className="text-destructive">
-                      {t(
-                        isCreditor
-                          ? 'pages.loans.toReceiveAmount'
-                          : 'pages.loans.remainingAmount',
-                        {
-                          value: formatCurrency(total - paid),
-                        }
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-xs text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.loans.totalValue')}
-                    </span>
-                    <span className="font-medium">{formatCurrency(loan.value)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.loans.beneficiary')}
-                    </span>
-                    <span className="font-medium">{loan.benefited_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.loans.creditor')}
-                    </span>
-                    <span className="font-medium">{loan.creditor_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.loans.installmentsLabel')}
-                    </span>
-                    <span className="font-medium">{loan.installments}x</span>
-                  </div>
-                  {loan.due_date && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('pages.loans.dueDate')}
+                  {/* Amortization progress */}
+                  <div className="space-y-xs">
+                    <div className="text-muted-foreground flex justify-between text-xs">
+                      <span>{t('pages.loans.payoff')}</span>
+                      <span className="font-medium">{Math.round(pct)}%</span>
+                    </div>
+                    <div className="bg-muted h-2 overflow-hidden rounded-full">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition',
+                          pct >= 100
+                            ? 'bg-success'
+                            : loan.status === 'defaulted'
+                              ? 'bg-destructive'
+                              : 'bg-primary'
+                        )}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-success">
+                        {t(
+                          isCreditor
+                            ? 'pages.loans.receivedAmount'
+                            : 'pages.loans.paidAmount',
+                          {
+                            value: formatCurrency(loan.payed_value),
+                          }
+                        )}
                       </span>
-                      <span className="font-medium">
-                        {formatDate(loan.due_date, 'dd/MM/yyyy')}
+                      <span className="text-destructive">
+                        {t(
+                          isCreditor
+                            ? 'pages.loans.toReceiveAmount'
+                            : 'pages.loans.remainingAmount',
+                          {
+                            value: formatCurrency(total - paid),
+                          }
+                        )}
                       </span>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
-                  {loan.status !== 'paid' &&
-                    loan.status !== 'cancelled' &&
-                    (Number(loan.creditor) === currentUserMemberId ? (
+                  <div className="space-y-xs text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.loans.totalValue')}
+                      </span>
+                      <span className="font-medium">{formatCurrency(loan.value)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.loans.beneficiary')}
+                      </span>
+                      <span className="font-medium">{loan.benefited_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.loans.creditor')}
+                      </span>
+                      <span className="font-medium">{loan.creditor_name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.loans.installmentsLabel')}
+                      </span>
+                      <span className="font-medium">{loan.installments}x</span>
+                    </div>
+                    {loan.due_date && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {t('pages.loans.dueDate')}
+                        </span>
+                        <span className="font-medium">
+                          {formatDate(loan.due_date, 'dd/MM/yyyy')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="gap-xs pt-sm flex flex-wrap items-center justify-end border-t">
+                    {loan.status !== 'paid' &&
+                      loan.status !== 'cancelled' &&
+                      (Number(loan.creditor) === currentUserMemberId ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReceiptLoan(loan)}
+                          title={t('pages.loans.receipt.title')}
+                          className="gap-xs text-success text-xs"
+                        >
+                          <CreditCard className="h-3 w-3" />
+                          {t('pages.loans.receiveBtn')}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPaymentLoan(loan)}
+                          disabled={Number(loan.benefited) !== currentUserMemberId}
+                          title={t('pages.loans.payment.title')}
+                          className="gap-xs text-xs"
+                        >
+                          <CreditCard className="h-3 w-3" />
+                          {t('pages.loans.payBtn')}
+                        </Button>
+                      ))}
+                    {loan.installments > 1 ? (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setReceiptLoan(loan)}
-                        title={t('pages.loans.receipt.title')}
-                        className="gap-xs text-success text-xs"
-                      >
-                        <CreditCard className="h-3 w-3" />
-                        {t('pages.loans.receiveBtn')}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPaymentLoan(loan)}
-                        disabled={Number(loan.benefited) !== currentUserMemberId}
-                        title={t('pages.loans.payment.title')}
+                        onClick={() => void handleOpenInstallments(loan)}
+                        title={t('pages.loans.installments.title')}
                         className="gap-xs text-xs"
                       >
-                        <CreditCard className="h-3 w-3" />
-                        {t('pages.loans.payBtn')}
+                        <List className="h-3 w-3" />
+                        {t('pages.loans.installments.title')}
                       </Button>
-                    ))}
-                  {loan.installments > 1 ? (
+                    ) : (
+                      loan.status !== 'paid' &&
+                      loan.status !== 'cancelled' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPaymentPlanLoan(loan)}
+                          title={t('pages.loans.paymentPlan.title')}
+                          className="gap-xs text-xs"
+                        >
+                          <CalendarRange className="h-3 w-3" />
+                          {t('pages.loans.paymentPlan.createBtn')}
+                        </Button>
+                      )
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => void handleOpenInstallments(loan)}
-                      title={t('pages.loans.installments.title')}
+                      onClick={() => setProgressLoan(loan)}
+                      title={t('pages.loans.progress.progressBtn')}
                       className="gap-xs text-xs"
                     >
-                      <List className="h-3 w-3" />
-                      {t('pages.loans.installments.title')}
+                      <CheckCircle2 className="h-3 w-3" />
+                      {t('pages.loans.progress.progressBtn')}
                     </Button>
-                  ) : (
-                    loan.status !== 'paid' &&
-                    loan.status !== 'cancelled' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPaymentPlanLoan(loan)}
-                        title={t('pages.loans.paymentPlan.title')}
-                        className="gap-xs text-xs"
-                      >
-                        <CalendarRange className="h-3 w-3" />
-                        {t('pages.loans.paymentPlan.createBtn')}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleOpenAmortization(loan)}
+                      title={t('pages.loans.amortization.title')}
+                      className="gap-xs text-xs"
+                    >
+                      <TableProperties className="h-3 w-3" />
+                      {t('pages.loans.amortizationBtn')}
+                    </Button>
+                    <ReceiptButton
+                      source={{ type: 'loan', data: loan }}
+                      memberName={getMemberDisplayName(loan.benefited_name, user)}
+                      variant="ghost"
+                      size="icon"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(loan)}
+                      title={t('common.actions.edit')}
+                      aria-label={t('common.actions.edit')}
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(loan)}
+                      title={t('common.actions.delete')}
+                      aria-label={t('common.actions.delete')}
+                    >
+                      <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    {loan.contract_document && (
+                      <Button variant="ghost" size="icon" title="Download" asChild>
+                        <a href={loan.contract_document} download aria-label="Download">
+                          <Download className="h-4 w-4" aria-hidden="true" />
+                        </a>
                       </Button>
-                    )
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setProgressLoan(loan)}
-                    title={t('pages.loans.progress.progressBtn')}
-                    className="gap-xs text-xs"
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    {t('pages.loans.progress.progressBtn')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void handleOpenAmortization(loan)}
-                    title={t('pages.loans.amortization.title')}
-                    className="gap-xs text-xs"
-                  >
-                    <TableProperties className="h-3 w-3" />
-                    {t('pages.loans.amortizationBtn')}
-                  </Button>
-                  <ReceiptButton
-                    source={{ type: 'loan', data: loan }}
-                    memberName={getMemberDisplayName(loan.benefited_name, user)}
-                    variant="ghost"
-                    size="icon"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(loan)}
-                    title={t('common.actions.edit')}
-                    aria-label={t('common.actions.edit')}
-                  >
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(loan)}
-                    title={t('common.actions.delete')}
-                    aria-label={t('common.actions.delete')}
-                  >
-                    <Trash2 className="text-destructive h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  {loan.contract_document && (
-                    <Button variant="ghost" size="icon" title="Download" asChild>
-                      <a href={loan.contract_document} download aria-label="Download">
-                        <Download className="h-4 w-4" aria-hidden="true" />
-                      </a>
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
 
       {/* Create/Edit Dialog */}

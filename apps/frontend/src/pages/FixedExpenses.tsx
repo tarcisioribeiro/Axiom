@@ -360,6 +360,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
 
       {/* Table */}
       <DataTable
+        pinNav={false}
         data={fixedExpenses}
         columns={columns}
         keyExtractor={(item) => item.id}

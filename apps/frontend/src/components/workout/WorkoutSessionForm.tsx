@@ -558,7 +558,7 @@ function ExerciseBlock({
   });
 
   return (
-    <div className="space-y-sm border-category-exercise/40 border-l-category-exercise bg-card p-sm rounded-md border border-l-2">
+    <div className="space-y-sm border-primary/40 border-l-primary bg-card p-sm rounded-md border border-l-2">
       <div className="gap-sm flex items-center">
         <ExerciseThumbnail
           gifUrl={watch(`exercises.${exIdx}.gif_url`)}

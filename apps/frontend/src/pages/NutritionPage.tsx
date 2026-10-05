@@ -1369,7 +1369,7 @@ function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
           </p>
         )}
       </div>
-      <div className="gap-xs flex shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs flex shrink-0">
         <Button
           aria-label={t('common.actions.edit')}
           variant="ghost"

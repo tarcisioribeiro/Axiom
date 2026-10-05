@@ -10,6 +10,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PublisherForm } from '@/components/library/PublisherForm';
 import { Badge } from '@/components/ui/badge';
@@ -196,97 +197,104 @@ export default function Publishers() {
           }
         />
       ) : (
-        <div className="gap-md grid md:grid-cols-2 lg:grid-cols-3">
-          {filteredPublishers.map((publisher) => (
-            <Card key={publisher.id} className="flex flex-col">
-              <CardHeader className="pb-3">
-                <div className="gap-sm flex items-start justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <PublisherInitials name={publisher.name} />
-                    <div className="min-w-0">
-                      <CardTitle className="text-base leading-tight">
-                        {publisher.name}
-                      </CardTitle>
-                      <CardDescription className="mt-0.5">
-                        {publisher.country
-                          ? t('pages.publishers.countries.' + publisher.country, {
-                              defaultValue: publisher.country_display,
-                            })
-                          : publisher.country_display}
-                      </CardDescription>
+        <PaginatedSlide
+          key={searchTerm}
+          items={filteredPublishers}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+        >
+          {(pageItems) =>
+            pageItems.map((publisher) => (
+              <Card key={publisher.id} className="flex flex-col">
+                <CardHeader className="pb-3">
+                  <div className="gap-sm flex items-start justify-between">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <PublisherInitials name={publisher.name} />
+                      <div className="min-w-0">
+                        <CardTitle className="text-base leading-tight">
+                          {publisher.name}
+                        </CardTitle>
+                        <CardDescription className="mt-0.5">
+                          {publisher.country
+                            ? t('pages.publishers.countries.' + publisher.country, {
+                                defaultValue: publisher.country_display,
+                              })
+                            : publisher.country_display}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="gap-xs flex shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(publisher)}
+                        aria-label={t('common.actions.edit')}
+                        title={t('common.actions.edit')}
+                      >
+                        <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive h-8 w-8"
+                        onClick={() => void handleDelete(publisher.id)}
+                        aria-label={t('common.actions.delete')}
+                        title={t('common.actions.delete')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="gap-xs flex shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEdit(publisher)}
-                      aria-label={t('common.actions.edit')}
-                      title={t('common.actions.edit')}
-                    >
-                      <Edit className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive h-8 w-8"
-                      onClick={() => void handleDelete(publisher.id)}
-                      aria-label={t('common.actions.delete')}
-                      title={t('common.actions.delete')}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="flex flex-1 flex-col gap-3">
-                {publisher.founded_year && (
-                  <div className="gap-sm flex items-center">
-                    <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                    <Badge variant="outline" className="text-xs font-normal">
-                      {t('pages.publishers.foundedYear', {
-                        year: publisher.founded_year,
-                      })}
-                    </Badge>
-                  </div>
-                )}
-                {publisher.website && (
-                  <div className="gap-sm flex items-center">
-                    <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
-                    <a
-                      href={publisher.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary truncate text-sm hover:underline"
-                      onClick={(e) => e.stopPropagation()}
+                <CardContent className="flex flex-1 flex-col gap-3">
+                  {publisher.founded_year && (
+                    <div className="gap-sm flex items-center">
+                      <Calendar className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                      <Badge variant="outline" className="text-xs font-normal">
+                        {t('pages.publishers.foundedYear', {
+                          year: publisher.founded_year,
+                        })}
+                      </Badge>
+                    </div>
+                  )}
+                  {publisher.website && (
+                    <div className="gap-sm flex items-center">
+                      <Globe className="text-muted-foreground h-3.5 w-3.5 shrink-0" />
+                      <a
+                        href={publisher.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary truncate text-sm hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {publisher.website.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  )}
+                  <div className="pt-sm mt-auto">
+                    <Link
+                      to={`/library/books?search=${encodeURIComponent(publisher.name)}`}
                     >
-                      {publisher.website.replace(/^https?:\/\//, '')}
-                    </a>
+                      <Badge
+                        variant="secondary"
+                        className="gap-sm hover:bg-secondary/70 flex w-fit items-center text-xs"
+                      >
+                        <BookOpen className="h-3 w-3" />
+                        {publisher.books_count === 0
+                          ? t('pages.publishers.booksCountZero')
+                          : t('pages.publishers.booksCount', {
+                              count: publisher.books_count,
+                            })}
+                      </Badge>
+                    </Link>
                   </div>
-                )}
-                <div className="pt-sm mt-auto">
-                  <Link
-                    to={`/library/books?search=${encodeURIComponent(publisher.name)}`}
-                  >
-                    <Badge
-                      variant="secondary"
-                      className="gap-sm hover:bg-secondary/70 flex w-fit items-center text-xs"
-                    >
-                      <BookOpen className="h-3 w-3" />
-                      {publisher.books_count === 0
-                        ? t('pages.publishers.booksCountZero')
-                        : t('pages.publishers.booksCount', {
-                            count: publisher.books_count,
-                          })}
-                    </Badge>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -221,137 +222,149 @@ export default function Webhooks() {
           }
         />
       ) : (
-        <div className="gap-md grid">
-          {webhooks.map((w) => (
-            <div
-              key={w.id}
-              className="gap-md bg-card p-md flex items-start justify-between rounded-lg border"
-            >
-              <div className="gap-sm flex min-w-0 items-start">
-                <div className="mt-xs bg-primary/10 p-sm rounded-md">
-                  <Globe className="h-md text-primary w-md" />
-                </div>
-                <div className="min-w-0">
-                  <div className="gap-sm flex flex-wrap items-center">
-                    <span className="font-medium">{w.name}</span>
-                    {!w.is_active && (
-                      <Badge variant="secondary">{t('webhooks.inactive')}</Badge>
-                    )}
-                    {statusBadge(w.last_delivery_status, t)}
-                  </div>
-                  <p className="text-muted-foreground max-w-xs truncate text-sm">
-                    {w.url}
-                  </p>
-                  <div className="mt-xs gap-xs flex flex-wrap">
-                    {w.events.slice(0, 4).map((ev) => (
-                      <Badge key={ev} variant="outline" className="text-xs">
-                        {ev}
-                      </Badge>
-                    ))}
-                    {w.events.length > 4 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{w.events.length - 4}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('webhooks.deliveries', { count: w.delivery_count })}
-                  </p>
-                </div>
-              </div>
-
-              <div className="gap-xs flex shrink-0 items-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={t('webhooks.viewDeliveries')}
-                  onClick={() =>
-                    setDeliveriesWebhookId(w.id === deliveriesWebhookId ? null : w.id)
-                  }
+        <PaginatedSlide
+          items={webhooks}
+          pageSize={LIST_PAGE_SIZE}
+          className="gap-md grid"
+        >
+          {(pageItems) => (
+            <>
+              {pageItems.map((w) => (
+                <div
+                  key={w.id}
+                  className="gap-md bg-card p-md flex items-start justify-between rounded-lg border"
                 >
-                  <Activity className="h-md w-md" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={t('webhooks.testBtn')}
-                  onClick={() => testMutation.mutate(w.id)}
-                  disabled={testMutation.isPending}
-                >
-                  <Send className="h-md w-md" />
-                </Button>
-                <Button
-                  aria-label={t('common.actions.edit')}
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => openEdit(w)}
-                >
-                  <Pencil className="h-md w-md" />
-                </Button>
-                <Button
-                  aria-label={t('common.actions.delete')}
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive"
-                  onClick={() => handleDelete(w)}
-                >
-                  <Trash2 className="h-md w-md" />
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          {deliveriesWebhookId && (
-            <div className="bg-card p-md rounded-lg border">
-              <h3 className="mb-sm font-medium">{t('webhooks.deliveryHistory')}</h3>
-              {loadingDeliveries ? (
-                <div className="py-md flex justify-center">
-                  <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-                </div>
-              ) : !deliveries?.length ? (
-                <p className="text-muted-foreground text-sm">
-                  {t('webhooks.noDeliveries')}
-                </p>
-              ) : (
-                <div className="space-y-sm">
-                  {deliveries.map((d) => (
-                    <div key={d.id} className="gap-sm flex items-center text-sm">
-                      {d.status === 'success' ? (
-                        <CheckCircle2 className="h-md w-md shrink-0 text-green-500" />
-                      ) : d.status === 'failed' ? (
-                        <XCircle className="h-md text-destructive w-md shrink-0" />
-                      ) : (
-                        <Clock className="h-md text-muted-foreground w-md shrink-0" />
-                      )}
-                      <span className="bg-muted px-xs rounded font-mono text-xs">
-                        {d.event}
-                      </span>
-                      {d.response_status_code && (
-                        <span className="text-muted-foreground">
-                          HTTP {d.response_status_code}
-                        </span>
-                      )}
-                      {d.duration_ms && (
-                        <span className="text-muted-foreground">{d.duration_ms}ms</span>
-                      )}
-                      <span className="text-muted-foreground ml-auto">
-                        {new Date(d.created_at).toLocaleString('pt-BR')}
-                      </span>
-                      {d.error_message && (
-                        <span
-                          className="text-destructive max-w-xs truncate text-xs"
-                          title={d.error_message}
-                        >
-                          {d.error_message}
-                        </span>
-                      )}
+                  <div className="gap-sm flex min-w-0 items-start">
+                    <div className="mt-xs bg-primary/10 p-sm rounded-md">
+                      <Globe className="h-md text-primary w-md" />
                     </div>
-                  ))}
+                    <div className="min-w-0">
+                      <div className="gap-sm flex flex-wrap items-center">
+                        <span className="font-medium">{w.name}</span>
+                        {!w.is_active && (
+                          <Badge variant="secondary">{t('webhooks.inactive')}</Badge>
+                        )}
+                        {statusBadge(w.last_delivery_status, t)}
+                      </div>
+                      <p className="text-muted-foreground max-w-xs truncate text-sm">
+                        {w.url}
+                      </p>
+                      <div className="mt-xs gap-xs flex flex-wrap">
+                        {w.events.slice(0, 4).map((ev) => (
+                          <Badge key={ev} variant="outline" className="text-xs">
+                            {ev}
+                          </Badge>
+                        ))}
+                        {w.events.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{w.events.length - 4}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-xs text-muted-foreground text-xs">
+                        {t('webhooks.deliveries', { count: w.delivery_count })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="gap-xs flex shrink-0 items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t('webhooks.viewDeliveries')}
+                      onClick={() =>
+                        setDeliveriesWebhookId(
+                          w.id === deliveriesWebhookId ? null : w.id
+                        )
+                      }
+                    >
+                      <Activity className="h-md w-md" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t('webhooks.testBtn')}
+                      onClick={() => testMutation.mutate(w.id)}
+                      disabled={testMutation.isPending}
+                    >
+                      <Send className="h-md w-md" />
+                    </Button>
+                    <Button
+                      aria-label={t('common.actions.edit')}
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEdit(w)}
+                    >
+                      <Pencil className="h-md w-md" />
+                    </Button>
+                    <Button
+                      aria-label={t('common.actions.delete')}
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => handleDelete(w)}
+                    >
+                      <Trash2 className="h-md w-md" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              {deliveriesWebhookId && (
+                <div className="bg-card p-md rounded-lg border">
+                  <h3 className="mb-sm font-medium">{t('webhooks.deliveryHistory')}</h3>
+                  {loadingDeliveries ? (
+                    <div className="py-md flex justify-center">
+                      <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+                    </div>
+                  ) : !deliveries?.length ? (
+                    <p className="text-muted-foreground text-sm">
+                      {t('webhooks.noDeliveries')}
+                    </p>
+                  ) : (
+                    <div className="space-y-sm">
+                      {deliveries.map((d) => (
+                        <div key={d.id} className="gap-sm flex items-center text-sm">
+                          {d.status === 'success' ? (
+                            <CheckCircle2 className="h-md w-md shrink-0 text-green-500" />
+                          ) : d.status === 'failed' ? (
+                            <XCircle className="h-md text-destructive w-md shrink-0" />
+                          ) : (
+                            <Clock className="h-md text-muted-foreground w-md shrink-0" />
+                          )}
+                          <span className="bg-muted px-xs rounded font-mono text-xs">
+                            {d.event}
+                          </span>
+                          {d.response_status_code && (
+                            <span className="text-muted-foreground">
+                              HTTP {d.response_status_code}
+                            </span>
+                          )}
+                          {d.duration_ms && (
+                            <span className="text-muted-foreground">
+                              {d.duration_ms}ms
+                            </span>
+                          )}
+                          <span className="text-muted-foreground ml-auto">
+                            {new Date(d.created_at).toLocaleString('pt-BR')}
+                          </span>
+                          {d.error_message && (
+                            <span
+                              className="text-destructive max-w-xs truncate text-xs"
+                              title={d.error_message}
+                            >
+                              {d.error_message}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
-        </div>
+        </PaginatedSlide>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

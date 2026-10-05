@@ -1,22 +1,9 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Plus,
-  CheckSquare,
-  Edit,
-  Trash2,
-  BarChart2,
-  Library,
-  Download,
-  FileText,
-  Sheet,
-  Save,
-  Bookmark,
-  LayoutList,
-  X,
-} from 'lucide-react';
+import { Plus, CheckSquare, Edit, Trash2, BarChart2, LayoutList } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -24,14 +11,12 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import {
   RoutineFocusBlocksSection,
   type RoutineFocusBlocksSectionHandle,
 } from '@/components/personal-planning/RoutineFocusBlocksSection';
 import { RoutineTaskForm } from '@/components/personal-planning/RoutineTaskForm';
-import { RoutineTemplateModal } from '@/components/personal-planning/RoutineTemplateModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,24 +24,14 @@ import {
   DialogCloseFooter,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { getIconByName } from '@/components/ui/icon-picker';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -72,6 +47,8 @@ const LIST_PAGE_SIZE = 5;
 
 interface RoutineTasksProps {
   embedded?: boolean;
+  /** Quando informado, o cabeçalho é renderizado nesse elemento (acima das abas do pai). */
+  headerTarget?: HTMLElement | null;
 }
 
 function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNode }) {
@@ -82,25 +59,20 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
+export default function RoutineTasks({
+  embedded = false,
+  headerTarget,
+}: RoutineTasksProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<RoutineTask | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [saveTemplateTask, setSaveTemplateTask] = useState<RoutineTask | 'all' | null>(
-    null
-  );
-  const [templateName, setTemplateName] = useState('');
-  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
-  const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
   const [activeTab, setActiveTab] = useState<'tasks' | 'focusBlocks'>('tasks');
   const focusBlocksRef = useRef<RoutineFocusBlocksSectionHandle>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
-  const { isExporting, exportPDF, exportExcel } = useRoutineExport();
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -122,12 +94,6 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     },
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
-
-  const handleSaveAsTemplate = () => {
-    if (tasks.length === 0) return;
-    setSaveTemplateTask('all');
-    setTemplateName(`Rotina ${new Date().toLocaleDateString('pt-BR')}`);
-  };
 
   const handleCreate = () => {
     setSelectedTask(undefined);
@@ -199,78 +165,6 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleExport = async (format: 'pdf' | 'excel') => {
-    try {
-      if (format === 'pdf') {
-        await exportPDF(tasks);
-      } else {
-        await exportExcel(tasks);
-      }
-    } catch {
-      toast({
-        title: t('pages.routineTasks.export.errorTitle'),
-        description: t('pages.routineTasks.export.errorDesc'),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleImported = async (createdIds: number[]) => {
-    await queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
-    const idSet = new Set(createdIds);
-    setHighlightedIds(idSet);
-    setTimeout(() => setHighlightedIds(new Set()), 5000);
-  };
-
-  const mapTaskToTemplatePayload = (task: RoutineTask) => ({
-    name: task.name,
-    description: task.description,
-    category: task.category,
-    icon: task.icon,
-    periodicity: task.periodicity,
-    weekday: task.weekday,
-    day_of_month: task.day_of_month,
-    custom_weekdays: task.custom_weekdays,
-    target_quantity: task.target_quantity,
-    unit: task.unit,
-    default_time: task.default_time,
-    daily_occurrences: task.daily_occurrences,
-    is_active: true,
-  });
-
-  const handleSaveTemplate = async () => {
-    if (!saveTemplateTask || !templateName.trim()) return;
-    setIsSavingTemplate(true);
-    try {
-      const { userRoutineTemplatesService } =
-        await import('@/services/user-routine-templates-service');
-      const name = templateName.trim();
-      const isAllTasks = saveTemplateTask === 'all';
-      const sourceTasks = isAllTasks ? tasks : [saveTemplateTask];
-      await userRoutineTemplatesService.create({
-        name,
-        description: isAllTasks ? '' : saveTemplateTask.description || '',
-        icon: isAllTasks ? '' : saveTemplateTask.icon || '',
-        tasks: sourceTasks.map(mapTaskToTemplatePayload),
-        owner: ownerId,
-      });
-      setSaveTemplateTask(null);
-      setTemplateName('');
-      toast({
-        title: t('pages.routineTasks.templates.saveSuccess'),
-        description: t('pages.routineTasks.templates.saveSuccessDesc', { name }),
-      });
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSavingTemplate(false);
     }
   };
 
@@ -452,18 +346,6 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setSaveTemplateTask(task);
-              setTemplateName(task.name);
-            }}
-            aria-label={t('pages.routineTasks.templates.saveAsTemplate')}
-            title={t('pages.routineTasks.templates.saveAsTemplate')}
-          >
-            <Save className="text-muted-foreground h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
             onClick={() => handleEdit(task)}
             aria-label={t('common.actions.edit')}
             title={t('common.actions.edit')}
@@ -488,72 +370,25 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
     return <LoadingState />;
   }
 
+  const header = (
+    <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
+      <Button
+        onClick={
+          activeTab === 'tasks' ? handleCreate : () => focusBlocksRef.current?.create()
+        }
+        className="gap-sm"
+      >
+        <Plus className="h-4 w-4" />
+        {activeTab === 'tasks'
+          ? t('pages.routineTasks.newBtn')
+          : t('pages.routineTasks.focusBlocks.newBlock')}
+      </Button>
+    </PageHeader>
+  );
+
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-        <div className="gap-sm flex items-center">
-          {activeTab === 'tasks' && (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isExporting || tasks.length === 0}
-                  >
-                    <Download className="mr-sm h-4 w-4" />
-                    {isExporting
-                      ? t('pages.routineTasks.export.exporting')
-                      : t('pages.routineTasks.export.btn')}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => void handleExport('pdf')}>
-                    <FileText className="mr-sm h-4 w-4" />
-                    {t('pages.routineTasks.export.pdf')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => void handleExport('excel')}>
-                    <Sheet className="mr-sm h-4 w-4" />
-                    {t('pages.routineTasks.export.excel')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsTemplateModalOpen(true)}
-              >
-                <Library className="mr-sm h-4 w-4" />
-                {t('pages.routineTasks.templates.importBtn')}
-              </Button>
-              {tasks.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSaveAsTemplate}
-                  title={t('pages.routineTasks.templates.saveAsTemplate')}
-                >
-                  <Bookmark className="mr-sm h-4 w-4" />
-                  {t('pages.routineTasks.templates.saveAsTemplate')}
-                </Button>
-              )}
-            </>
-          )}
-          <Button
-            onClick={
-              activeTab === 'tasks'
-                ? handleCreate
-                : () => focusBlocksRef.current?.create()
-            }
-            className="gap-sm"
-          >
-            <Plus className="h-4 w-4" />
-            {activeTab === 'tasks'
-              ? t('pages.routineTasks.newBtn')
-              : t('pages.routineTasks.focusBlocks.newBlock')}
-          </Button>
-        </div>
-      </PageHeader>
+      {headerTarget ? createPortal(header, headerTarget) : header}
 
       <Tabs
         value={activeTab}
@@ -571,30 +406,23 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
         </TabsList>
 
         <TabsContent value="tasks" className="mt-0">
-          <PaginatedSlide items={tasks} pageSize={LIST_PAGE_SIZE}>
-            {(pageTasks) => (
-              <DataTable
-                data={pageTasks}
-                columns={columns}
-                keyExtractor={(task) => task.id}
-                isLoading={isLoading}
-                emptyState={{
-                  icon: <CheckSquare className="h-12 w-12" />,
-                  title: t('pages.routineTasks.emptyState'),
-                  message: t('pages.routineTasks.emptyStateDesc'),
-                  action: {
-                    label: t('pages.routineTasks.emptyStateAction'),
-                    onClick: handleCreate,
-                  },
-                }}
-                rowClassName={(task) =>
-                  highlightedIds.has(task.id)
-                    ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
-                    : ''
-                }
-              />
-            )}
-          </PaginatedSlide>
+          <DataTable
+            data={tasks}
+            pageSize={LIST_PAGE_SIZE}
+            centerList
+            columns={columns}
+            keyExtractor={(task) => task.id}
+            isLoading={isLoading}
+            emptyState={{
+              icon: <CheckSquare className="h-12 w-12" />,
+              title: t('pages.routineTasks.emptyState'),
+              message: t('pages.routineTasks.emptyStateDesc'),
+              action: {
+                label: t('pages.routineTasks.emptyStateAction'),
+                onClick: handleCreate,
+              },
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="focusBlocks" className="mt-0">
@@ -628,67 +456,6 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
-        </DialogContent>
-      </Dialog>
-
-      <RoutineTemplateModal
-        open={isTemplateModalOpen}
-        onOpenChange={setIsTemplateModalOpen}
-        onImported={(ids) => void handleImported(ids)}
-      />
-
-      <Dialog
-        open={!!saveTemplateTask}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSaveTemplateTask(null);
-            setTemplateName('');
-          }
-        }}
-      >
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>
-              {t('pages.routineTasks.templates.saveAsTemplateTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.routineTasks.templates.saveAsTemplateDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-sm">
-            <Label htmlFor="template-name">
-              {t('pages.routineTasks.templates.templateNameLabel')}
-            </Label>
-            <Input
-              id="template-name"
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              placeholder={t('pages.routineTasks.templates.templateNamePlaceholder')}
-              className="mt-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleSaveTemplate();
-              }}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSaveTemplateTask(null);
-                setTemplateName('');
-              }}
-            >
-              <X className="mr-sm h-4 w-4" />
-              {t('common.actions.cancel')}
-            </Button>
-            <Button
-              onClick={() => void handleSaveTemplate()}
-              disabled={!templateName.trim() || isSavingTemplate}
-            >
-              <Save className="mr-sm h-4 w-4" />
-              {t('pages.routineTasks.templates.saveBtn')}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

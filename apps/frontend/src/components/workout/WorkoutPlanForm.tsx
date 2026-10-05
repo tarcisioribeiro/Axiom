@@ -128,8 +128,8 @@ export function WorkoutPlanForm({
                 className={cn(
                   'px-sm py-sm rounded-lg border-2 text-sm font-medium transition',
                   category === key
-                    ? 'border-category-exercise bg-category-exercise/10 text-category-exercise'
-                    : 'border-border bg-card text-muted-foreground hover:border-category-exercise/40'
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-card text-muted-foreground hover:border-primary/40'
                 )}
               >
                 {t(`pages.workoutPlans.categories.${key}`)}

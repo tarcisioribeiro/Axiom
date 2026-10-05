@@ -8,6 +8,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { TagFormDialog } from '@/components/tags/TagFormDialog';
 import { Button } from '@/components/ui/button';
@@ -179,53 +180,61 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
           }
         />
       ) : (
-        <div className="gap-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {tags.map((tag) => (
-            <div
-              key={tag.id}
-              className="gap-sm border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div className="gap-sm flex min-w-0 flex-1 items-center">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: tag.color }}
-                />
-                <span
-                  className="px-sm truncate rounded-full py-0.5 text-xs font-medium"
-                  style={{
-                    backgroundColor: `${tag.color}22`,
-                    color: tag.color,
-                  }}
-                >
-                  {tag.name}
-                </span>
-                <span className="text-muted-foreground ml-auto shrink-0 text-xs">
-                  {(tag as Tag & { expense_count?: number }).expense_count
-                    ? t('pages.tags.expenseCount', {
-                        count: (tag as Tag & { expense_count?: number }).expense_count,
-                      })
-                    : t('pages.tags.noExpenses')}
-                </span>
+        <PaginatedSlide
+          key={search}
+          items={tags}
+          pageSize={GRID_PAGE_SIZE}
+          className="gap-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        >
+          {(pageItems) =>
+            pageItems.map((tag) => (
+              <div
+                key={tag.id}
+                className="gap-sm border-border bg-card px-md py-sm flex items-center justify-between rounded-lg border shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="gap-sm flex min-w-0 flex-1 items-center">
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  <span
+                    className="px-sm truncate rounded-full py-0.5 text-xs font-medium"
+                    style={{
+                      backgroundColor: `${tag.color}22`,
+                      color: tag.color,
+                    }}
+                  >
+                    {tag.name}
+                  </span>
+                  <span className="text-muted-foreground ml-auto shrink-0 text-xs">
+                    {(tag as Tag & { expense_count?: number }).expense_count
+                      ? t('pages.tags.expenseCount', {
+                          count: (tag as Tag & { expense_count?: number })
+                            .expense_count,
+                        })
+                      : t('pages.tags.noExpenses')}
+                  </span>
+                </div>
+                <div className="gap-xs flex shrink-0">
+                  <PlainButton
+                    aria-label={t('common.actions.edit')}
+                    onClick={() => handleEdit(tag)}
+                    className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </PlainButton>
+                  <PlainButton
+                    aria-label={t('common.actions.delete')}
+                    onClick={() => void handleDelete(tag)}
+                    className="p-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </PlainButton>
+                </div>
               </div>
-              <div className="gap-xs flex shrink-0">
-                <PlainButton
-                  aria-label={t('common.actions.edit')}
-                  onClick={() => handleEdit(tag)}
-                  className="p-xs text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </PlainButton>
-                <PlainButton
-                  aria-label={t('common.actions.delete')}
-                  onClick={() => void handleDelete(tag)}
-                  className="p-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </PlainButton>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <TagFormDialog

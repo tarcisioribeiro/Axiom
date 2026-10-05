@@ -19,6 +19,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -373,109 +374,111 @@ export default function CategorizationRules({
           message={t('pages.categorizationRules.emptyMessage')}
         />
       ) : (
-        <div className="space-y-3">
-          {rules.map((rule) => (
-            <div
-              key={rule.id}
-              className={cn(
-                'bg-card p-md flex items-center gap-3 rounded-lg border',
-                !rule.is_active && 'opacity-50'
-              )}
-            >
-              {/* Left: merchant pattern → category flow */}
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-                {/* Merchant pattern chip */}
-                <div className="gap-sm bg-muted py-sm flex flex-shrink-0 items-center rounded-md px-3">
-                  <Tag className="text-muted-foreground h-4 w-4" />
-                  <div>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.categorizationRules.contains')}
-                    </p>
-                    <p className="font-mono text-sm font-semibold">
-                      &ldquo;{rule.merchant_contains}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                {/* Arrow */}
-                <div className="gap-xs text-muted-foreground flex flex-shrink-0 items-center">
-                  <div className="bg-border h-px w-6" />
-                  <svg
-                    width="8"
-                    height="12"
-                    viewBox="0 0 8 12"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M1 1l6 5-6 5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-
-                {/* Target category chip */}
-                <div
-                  className={cn(
-                    'gap-sm py-sm flex flex-shrink-0 items-center rounded-md px-3',
-                    getCategoryBg(rule.category)
-                  )}
-                >
-                  {(() => {
-                    const CatIcon =
-                      EXPENSE_CATEGORY_ICONS[rule.category] ??
-                      EXPENSE_CATEGORY_ICONS['others'];
-                    return CatIcon ? (
-                      <CatIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    ) : null;
-                  })()}
-                  <div>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.categorizationRules.categorizeAs')}
-                    </p>
-                    <p className="text-sm font-semibold">
-                      {translate('expenseCategories', rule.category)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: priority + status badges + actions */}
-              <div className="gap-sm flex flex-shrink-0 items-center">
-                <Badge variant="outline" className="text-xs">
-                  #{rule.priority}
-                </Badge>
-                {!rule.is_active && (
-                  <Badge variant="secondary">
-                    {t('pages.categorizationRules.form.statusInactive')}
-                  </Badge>
+        <PaginatedSlide items={rules} pageSize={LIST_PAGE_SIZE} className="space-y-3">
+          {(pageItems) =>
+            pageItems.map((rule) => (
+              <div
+                key={rule.id}
+                className={cn(
+                  'bg-card p-md flex items-center gap-3 rounded-lg border',
+                  !rule.is_active && 'opacity-50'
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEdit(rule)}
-                  title={t('common.actions.edit')}
-                  aria-label={t('common.actions.edit')}
-                >
-                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void handleDelete(rule.id)}
-                  title={t('common.actions.delete')}
-                  aria-label={t('common.actions.delete')}
-                  className="text-destructive hover:text-destructive"
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </Button>
+              >
+                {/* Left: merchant pattern → category flow */}
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                  {/* Merchant pattern chip */}
+                  <div className="gap-sm bg-muted py-sm flex flex-shrink-0 items-center rounded-md px-3">
+                    <Tag className="text-muted-foreground h-4 w-4" />
+                    <div>
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.categorizationRules.contains')}
+                      </p>
+                      <p className="font-mono text-sm font-semibold">
+                        &ldquo;{rule.merchant_contains}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="gap-xs text-muted-foreground flex flex-shrink-0 items-center">
+                    <div className="bg-border h-px w-6" />
+                    <svg
+                      width="8"
+                      height="12"
+                      viewBox="0 0 8 12"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M1 1l6 5-6 5"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Target category chip */}
+                  <div
+                    className={cn(
+                      'gap-sm py-sm flex flex-shrink-0 items-center rounded-md px-3',
+                      getCategoryBg(rule.category)
+                    )}
+                  >
+                    {(() => {
+                      const CatIcon =
+                        EXPENSE_CATEGORY_ICONS[rule.category] ??
+                        EXPENSE_CATEGORY_ICONS['others'];
+                      return CatIcon ? (
+                        <CatIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                      ) : null;
+                    })()}
+                    <div>
+                      <p className="text-muted-foreground text-xs">
+                        {t('pages.categorizationRules.categorizeAs')}
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {translate('expenseCategories', rule.category)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: priority + status badges + actions */}
+                <div className="gap-sm flex flex-shrink-0 items-center">
+                  <Badge variant="outline" className="text-xs">
+                    #{rule.priority}
+                  </Badge>
+                  {!rule.is_active && (
+                    <Badge variant="secondary">
+                      {t('pages.categorizationRules.form.statusInactive')}
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(rule)}
+                    title={t('common.actions.edit')}
+                    aria-label={t('common.actions.edit')}
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void handleDelete(rule.id)}
+                    title={t('common.actions.delete')}
+                    aria-label={t('common.actions.delete')}
+                    className="text-destructive hover:text-destructive"
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))
+          }
+        </PaginatedSlide>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

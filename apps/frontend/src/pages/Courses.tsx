@@ -34,6 +34,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
@@ -170,7 +171,7 @@ function CourseCard({
       </div>
 
       {/* Actions */}
-      <div className="gap-xs border-border/50 px-md py-sm flex border-t opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="gap-xs border-border/50 px-md py-sm flex border-t">
         <Button
           size="sm"
           variant="ghost"
@@ -506,21 +507,28 @@ export default function Courses() {
           />
         ) : (
           <AnimatePresence>
-            <div className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onOpen={(c) => {
-                    setDetailCourse(c);
-                    setDetailOpen(true);
-                  }}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAskIntellect={handleAskIntellect}
-                />
-              ))}
-            </div>
+            <PaginatedSlide
+              key={`${statusFilter}-${search}`}
+              items={courses}
+              pageSize={GRID_PAGE_SIZE}
+              className="gap-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {(pageItems) =>
+                pageItems.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onOpen={(c) => {
+                      setDetailCourse(c);
+                      setDetailOpen(true);
+                    }}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onAskIntellect={handleAskIntellect}
+                  />
+                ))
+              }
+            </PaginatedSlide>
           </AnimatePresence>
         )}
 

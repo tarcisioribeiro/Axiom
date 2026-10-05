@@ -31,6 +31,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide, LIST_PAGE_SIZE } from '@/components/common/PaginatedSlide';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -614,73 +615,79 @@ function SelfEsteemTab() {
                 description="Faça sua primeira avaliação de autoestima para começar a acompanhar sua evolução."
               />
             ) : (
-              <div className="space-y-3">
-                {history?.results?.map((a) => {
-                  const sl = scoreLabel(a.score);
-                  return (
-                    <Card key={a.id} className="border-border/50">
-                      <CardContent className="px-md py-md pt-md">
-                        <div className="gap-md flex items-center">
-                          <div>
-                            <p className="text-muted-foreground text-xs">
-                              {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
-                            </p>
-                            <p className={cn('text-2xl font-bold', sl.color)}>
-                              {a.score}
-                              <span className="text-muted-foreground text-sm font-normal">
-                                /30
-                              </span>
-                            </p>
-                            <Badge variant="outline" className="mt-xs text-xs">
-                              {sl.label}
-                            </Badge>
+              <PaginatedSlide
+                items={history?.results ?? []}
+                pageSize={LIST_PAGE_SIZE}
+                className="space-y-3"
+              >
+                {(pageItems) =>
+                  pageItems.map((a) => {
+                    const sl = scoreLabel(a.score);
+                    return (
+                      <Card key={a.id} className="border-border/50">
+                        <CardContent className="px-md py-md pt-md">
+                          <div className="gap-md flex items-center">
+                            <div>
+                              <p className="text-muted-foreground text-xs">
+                                {format(new Date(a.assessed_at), 'dd/MM/yyyy')}
+                              </p>
+                              <p className={cn('text-2xl font-bold', sl.color)}>
+                                {a.score}
+                                <span className="text-muted-foreground text-sm font-normal">
+                                  /30
+                                </span>
+                              </p>
+                              <Badge variant="outline" className="mt-xs text-xs">
+                                {sl.label}
+                              </Badge>
+                            </div>
+                            <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
+                              <div
+                                className="bg-primary h-full rounded-full"
+                                style={{ width: `${(a.score / 30) * 100}%` }}
+                              />
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-expanded={expandedId === a.id}
+                              onClick={() =>
+                                setExpandedId(expandedId === a.id ? null : a.id)
+                              }
+                            >
+                              Ver detalhes
+                              <ChevronDown
+                                className={cn(
+                                  'h-4 w-4 transition-transform',
+                                  expandedId === a.id && 'rotate-180'
+                                )}
+                              />
+                            </Button>
                           </div>
-                          <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
-                            <div
-                              className="bg-primary h-full rounded-full"
-                              style={{ width: `${(a.score / 30) * 100}%` }}
-                            />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-expanded={expandedId === a.id}
-                            onClick={() =>
-                              setExpandedId(expandedId === a.id ? null : a.id)
-                            }
-                          >
-                            Ver detalhes
-                            <ChevronDown
-                              className={cn(
-                                'h-4 w-4 transition-transform',
-                                expandedId === a.id && 'rotate-180'
-                              )}
-                            />
-                          </Button>
-                        </div>
-                        <Collapse open={expandedId === a.id}>
-                          <ol className="space-y-sm border-border/50 mt-md pt-md border-t">
-                            {ROSENBERG_QUESTIONS.map((q, i) => (
-                              <li key={i} className="text-sm">
-                                <p className="text-muted-foreground">
-                                  {i + 1}. {q}
-                                </p>
-                                <p className="text-foreground font-medium">
-                                  {ROSENBERG_OPTIONS.find(
-                                    (o) =>
-                                      o.value ===
-                                      a[`q${i + 1}` as keyof SelfEsteemAssessment]
-                                  )?.label ?? '—'}
-                                </p>
-                              </li>
-                            ))}
-                          </ol>
-                        </Collapse>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                          <Collapse open={expandedId === a.id}>
+                            <ol className="space-y-sm border-border/50 mt-md pt-md border-t">
+                              {ROSENBERG_QUESTIONS.map((q, i) => (
+                                <li key={i} className="text-sm">
+                                  <p className="text-muted-foreground">
+                                    {i + 1}. {q}
+                                  </p>
+                                  <p className="text-foreground font-medium">
+                                    {ROSENBERG_OPTIONS.find(
+                                      (o) =>
+                                        o.value ===
+                                        a[`q${i + 1}` as keyof SelfEsteemAssessment]
+                                    )?.label ?? '—'}
+                                  </p>
+                                </li>
+                              ))}
+                            </ol>
+                          </Collapse>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                }
+              </PaginatedSlide>
             )}
           </motion.div>
         )}
@@ -839,67 +846,75 @@ function CheckinTab() {
           description="Registre seu primeiro check-in para começar a acompanhar como você se sente."
         />
       ) : (
-        <div className="space-y-3">
-          {history?.results?.map((c) => (
-            <Card key={c.id} className="border-border/50">
-              <CardContent className="px-md py-md pt-md">
-                <div className="gap-md flex items-center">
-                  <p className="text-muted-foreground text-xs">
-                    {format(new Date(c.checked_at), 'dd/MM/yyyy')}
-                  </p>
-                  <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
-                    <span className="gap-xs flex items-center">
-                      <Heart className="text-info h-3 w-3" />
-                      {c.loneliness}
-                    </span>
-                    <span className="gap-xs flex items-center">
-                      <Brain className="text-warning h-3 w-3" />
-                      {c.anxiety}
-                    </span>
-                    <span className="gap-xs flex items-center">
-                      <Zap className="text-success h-3 w-3" />
-                      {c.motivation}
-                    </span>
+        <PaginatedSlide
+          items={history?.results ?? []}
+          pageSize={LIST_PAGE_SIZE}
+          className="space-y-3"
+        >
+          {(pageItems) =>
+            pageItems.map((c) => (
+              <Card key={c.id} className="border-border/50">
+                <CardContent className="px-md py-md pt-md">
+                  <div className="gap-md flex items-center">
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(c.checked_at), 'dd/MM/yyyy')}
+                    </p>
+                    <div className="text-muted-foreground flex flex-1 gap-3 text-xs">
+                      <span className="gap-xs flex items-center">
+                        <Heart className="text-info h-3 w-3" />
+                        {c.loneliness}
+                      </span>
+                      <span className="gap-xs flex items-center">
+                        <Brain className="text-warning h-3 w-3" />
+                        {c.anxiety}
+                      </span>
+                      <span className="gap-xs flex items-center">
+                        <Zap className="text-success h-3 w-3" />
+                        {c.motivation}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-expanded={expandedId === c.id}
+                      onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                    >
+                      Ver detalhes
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 transition-transform',
+                          expandedId === c.id && 'rotate-180'
+                        )}
+                      />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-expanded={expandedId === c.id}
-                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
-                  >
-                    Ver detalhes
-                    <ChevronDown
-                      className={cn(
-                        'h-4 w-4 transition-transform',
-                        expandedId === c.id && 'rotate-180'
-                      )}
-                    />
-                  </Button>
-                </div>
-                <Collapse open={expandedId === c.id}>
-                  <div className="space-y-md border-border/50 mt-md pt-md border-t text-sm">
-                    <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
-                      {CHECKIN_SCALES.map((s) => (
-                        <div key={s.key}>
-                          <dt className="text-muted-foreground">{s.label}</dt>
-                          <dd className="text-foreground font-medium">{c[s.key]}/10</dd>
+                  <Collapse open={expandedId === c.id}>
+                    <div className="space-y-md border-border/50 mt-md pt-md border-t text-sm">
+                      <dl className="gap-sm grid grid-cols-2 sm:grid-cols-3">
+                        {CHECKIN_SCALES.map((s) => (
+                          <div key={s.key}>
+                            <dt className="text-muted-foreground">{s.label}</dt>
+                            <dd className="text-foreground font-medium">
+                              {c[s.key]}/10
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                      {CHECKIN_TEXTS.map((t) => (
+                        <div key={t.key}>
+                          <p className="text-muted-foreground">{t.label}</p>
+                          <p className="text-foreground font-medium whitespace-pre-wrap">
+                            {c[t.key] || '—'}
+                          </p>
                         </div>
                       ))}
-                    </dl>
-                    {CHECKIN_TEXTS.map((t) => (
-                      <div key={t.key}>
-                        <p className="text-muted-foreground">{t.label}</p>
-                        <p className="text-foreground font-medium whitespace-pre-wrap">
-                          {c[t.key] || '—'}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </Collapse>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    </div>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            ))
+          }
+        </PaginatedSlide>
       )}
     </div>
   );
@@ -1285,75 +1300,85 @@ function LibraryTab() {
           description="Selecione outra categoria."
         />
       ) : (
-        <div className="space-y-3">
-          {data?.results?.map((item: WellnessIntervention) => {
-            const done = completedIds.has(item.id);
-            return (
-              <Card
-                key={item.id}
-                className={cn('border-border/50 transition', done && 'opacity-70')}
-              >
-                <CardContent className="px-md py-md pt-md space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-xs flex-1">
-                      <div className="gap-sm flex flex-wrap items-center">
-                        <span
-                          className={cn(
-                            'px-sm rounded-full border py-0.5 text-xs font-medium',
-                            CATEGORY_COLORS[item.category]
-                          )}
-                        >
-                          {CATEGORY_LABELS[item.category]}
-                        </span>
-                        <span className="gap-xs text-muted-foreground flex items-center text-xs">
-                          <Clock className="h-3 w-3" /> {item.duration_minutes}min
-                        </span>
-                        <span
-                          className={cn(
-                            'text-xs font-medium',
-                            difficultyColor[item.difficulty]
-                          )}
-                        >
-                          {item.difficulty_display}
-                        </span>
+        <PaginatedSlide
+          key={String(selectedCategory)}
+          items={data?.results ?? []}
+          pageSize={LIST_PAGE_SIZE}
+          className="space-y-3"
+        >
+          {(pageItems) =>
+            pageItems.map((item: WellnessIntervention) => {
+              const done = completedIds.has(item.id);
+              return (
+                <Card
+                  key={item.id}
+                  className={cn('border-border/50 transition', done && 'opacity-70')}
+                >
+                  <CardContent className="px-md py-md pt-md space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-xs flex-1">
+                        <div className="gap-sm flex flex-wrap items-center">
+                          <span
+                            className={cn(
+                              'px-sm rounded-full border py-0.5 text-xs font-medium',
+                              CATEGORY_COLORS[item.category]
+                            )}
+                          >
+                            {CATEGORY_LABELS[item.category]}
+                          </span>
+                          <span className="gap-xs text-muted-foreground flex items-center text-xs">
+                            <Clock className="h-3 w-3" /> {item.duration_minutes}min
+                          </span>
+                          <span
+                            className={cn(
+                              'text-xs font-medium',
+                              difficultyColor[item.difficulty]
+                            )}
+                          >
+                            {item.difficulty_display}
+                          </span>
+                        </div>
+                        <h3 className="text-foreground font-medium">{item.title}</h3>
+                        <p className="text-muted-foreground text-xs leading-relaxed">
+                          {item.description}
+                        </p>
                       </div>
-                      <h3 className="text-foreground font-medium">{item.title}</h3>
-                      <p className="text-muted-foreground text-xs leading-relaxed">
-                        {item.description}
-                      </p>
                     </div>
-                  </div>
-                  <div className="border-border/50 pt-xs flex items-center justify-between border-t">
-                    <p className="gap-xs text-muted-foreground flex items-center text-xs">
-                      <TrendingUp className="h-3 w-3" /> {item.expected_benefit}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant={done ? 'outline' : 'default'}
-                      className="h-7 text-xs"
-                      disabled={completeMutation.isPending && completingId === item.id}
-                      onClick={() => {
-                        if (done) return;
-                        setCompletingId(item.id);
-                        completeMutation.mutate(item.id);
-                      }}
-                    >
-                      {done ? (
-                        <>
-                          <CheckCircle2 className="mr-xs text-success h-3 w-3" /> Feito
-                        </>
-                      ) : completeMutation.isPending && completingId === item.id ? (
-                        'Salvando...'
-                      ) : (
-                        'Fazer agora'
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                    <div className="border-border/50 pt-xs flex items-center justify-between border-t">
+                      <p className="gap-xs text-muted-foreground flex items-center text-xs">
+                        <TrendingUp className="h-3 w-3" /> {item.expected_benefit}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant={done ? 'outline' : 'default'}
+                        className="h-7 text-xs"
+                        disabled={
+                          completeMutation.isPending && completingId === item.id
+                        }
+                        onClick={() => {
+                          if (done) return;
+                          setCompletingId(item.id);
+                          completeMutation.mutate(item.id);
+                        }}
+                      >
+                        {done ? (
+                          <>
+                            <CheckCircle2 className="mr-xs text-success h-3 w-3" />{' '}
+                            Feito
+                          </>
+                        ) : completeMutation.isPending && completingId === item.id ? (
+                          'Salvando...'
+                        ) : (
+                          'Fazer agora'
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          }
+        </PaginatedSlide>
       )}
     </div>
   );

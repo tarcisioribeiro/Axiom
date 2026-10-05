@@ -1,4 +1,5 @@
 import { CheckCircle2, Calendar, Trophy } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -13,6 +14,9 @@ const TAB_KEY = 'tasksGoals.activeTab';
 export default function TasksAndGoals() {
   const { t } = useTranslation();
 
+  // Cada aba renderiza seu cabeçalho (título + ações) aqui, acima das abas.
+  const [headerTarget, setHeaderTarget] = useState<HTMLDivElement | null>(null);
+
   const defaultTab = localStorage.getItem(TAB_KEY) ?? 'daily';
 
   const handleTabChange = (value: string) => {
@@ -26,6 +30,7 @@ export default function TasksAndGoals() {
         onValueChange={handleTabChange}
         className="flex flex-1 flex-col"
       >
+        <div ref={setHeaderTarget} className="mb-lg empty:hidden" />
         <TabsList className="mb-lg w-full">
           <TabsTrigger value="daily" className="gap-xs flex-1">
             <CheckCircle2 className="h-4 w-4" />
@@ -42,15 +47,15 @@ export default function TasksAndGoals() {
         </TabsList>
 
         <TabsContent value="daily" className="mt-0 flex-1">
-          <DailyChecklist embedded />
+          <DailyChecklist embedded headerTarget={headerTarget} />
         </TabsContent>
 
         <TabsContent value="routine" className="mt-0 flex-1">
-          <RoutineTasks embedded />
+          <RoutineTasks embedded headerTarget={headerTarget} />
         </TabsContent>
 
         <TabsContent value="goals" className="mt-0 flex-1">
-          <Goals embedded />
+          <Goals embedded headerTarget={headerTarget} />
         </TabsContent>
       </Tabs>
     </PageContainer>
