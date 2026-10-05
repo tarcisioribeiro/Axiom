@@ -82,8 +82,7 @@ export function ReceivableReceiptDialog({
     if (!receivable) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.receivables.receipt.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -99,9 +98,6 @@ export function ReceivableReceiptDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.receivables.receipt.scheduledSuccess')
-          : t('pages.receivables.receipt.success'),
-        description: scheduled
           ? t('pages.receivables.receipt.scheduledSuccessDesc', { date: form.date })
           : t('pages.receivables.receipt.successDesc'),
       });
@@ -109,8 +105,7 @@ export function ReceivableReceiptDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

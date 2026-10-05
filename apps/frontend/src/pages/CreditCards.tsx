@@ -142,8 +142,7 @@ export default function CreditCards({
         return { creditCards: cardsData, accounts: accountsData, allBills: billsData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -164,14 +163,12 @@ export default function CreditCards({
       await creditCardsService.create(data);
       toast({
         title: t('pages.creditCards.created'),
-        description: t('pages.creditCards.createdDesc'),
       });
       setIsDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -182,8 +179,7 @@ export default function CreditCards({
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.creditCards.noAccountMsg'),
+        title: t('pages.creditCards.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -198,8 +194,7 @@ export default function CreditCards({
       bills = await creditCardBillsService.getAll({ credit_card: card.id });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
       return;

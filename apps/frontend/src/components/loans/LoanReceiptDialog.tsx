@@ -80,8 +80,7 @@ export function LoanReceiptDialog({
     if (!loan) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.loans.receipt.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -97,9 +96,6 @@ export function LoanReceiptDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.loans.receipt.scheduledSuccess')
-          : t('pages.loans.receipt.success'),
-        description: scheduled
           ? t('pages.loans.receipt.scheduledSuccessDesc', { date: form.date })
           : t('pages.loans.receipt.successDesc'),
       });
@@ -107,8 +103,7 @@ export function LoanReceiptDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

@@ -98,8 +98,7 @@ export default function Members() {
         return { members: data, currentUserMemberId };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { members: EMPTY_MEMBERS, currentUserMemberId: null };
@@ -125,21 +124,18 @@ export default function Members() {
         await membersService.update(selectedMember.id, data);
         toast({
           title: t('pages.members.updated'),
-          description: t('pages.members.updatedDesc'),
         });
       } else {
         await membersService.create(data);
         toast({
           title: t('pages.members.created'),
-          description: t('pages.members.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -160,13 +156,11 @@ export default function Members() {
       await membersService.delete(id);
       toast({
         title: t('pages.members.deleted'),
-        description: t('pages.members.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

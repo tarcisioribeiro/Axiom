@@ -24,8 +24,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.twoFactor.wrongPassword'),
-        description: getErrorMessage(error),
+        title: t('pages.twoFactor.disableError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -39,7 +38,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
       }}
       className="gap-md flex flex-1 flex-col"
     >
-      {/* No modal (altura fixa) o campo fica no centro e o botão no rodapé. */}
+      {/* Campo centralizado no espaço restante; botão logo abaixo. */}
       <div className="relative m-auto w-full max-w-xs">
         <Input
           type={show ? 'text' : 'password'}

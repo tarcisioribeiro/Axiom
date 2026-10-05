@@ -196,12 +196,12 @@ export default function SecurityDashboard() {
       await vaultConfigService.exportVaultZip();
       toast({
         title: t('pages.securityDashboard.exportVaultSuccess'),
-        description: t('pages.securityDashboard.exportVaultSuccessDesc'),
       });
     } catch (err) {
       toast({
-        title: t('pages.securityDashboard.exportVaultError'),
-        description: getErrorMessage(err),
+        title: t('pages.securityDashboard.exportVaultError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {

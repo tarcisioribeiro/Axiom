@@ -291,14 +291,12 @@ export default function Dashboard() {
     mutationFn: () => dashboardService.requestLGPDExport(),
     onSuccess: () => {
       toast({
-        title: t('pages.dashboard.lgpdExport.successTitle'),
-        description: t('pages.dashboard.lgpdExport.successDesc'),
+        title: t('pages.dashboard.lgpdExport.successDesc'),
       });
     },
     onError: () => {
       toast({
-        title: t('pages.dashboard.lgpdExport.errorTitle'),
-        description: t('pages.dashboard.lgpdExport.errorDesc'),
+        title: t('pages.dashboard.lgpdExport.errorDesc'),
         variant: 'destructive',
       });
     },
@@ -311,8 +309,7 @@ export default function Dashboard() {
       setShowIrReport(true);
     } catch {
       toast({
-        title: t('pages.dashboard.lgpdExport.errorTitle'),
-        description: t('pages.dashboard.irReport.errorDesc'),
+        title: t('pages.dashboard.irReport.errorDesc'),
         variant: 'destructive',
       });
     }
@@ -380,7 +377,6 @@ export default function Dashboard() {
         title: t('pages.dashboard.financialAlerts.proactiveTitle', {
           count: critical.length,
         }),
-        description: t('pages.dashboard.financialAlerts.proactiveDesc'),
         variant: 'destructive',
       });
     }

@@ -50,8 +50,7 @@ export function RestartModal({
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminConfig.restartError'),
-        description: err.message,
+        title: t('pages.adminConfig.restartError', { reason: err.message }),
         variant: 'destructive',
       });
     },

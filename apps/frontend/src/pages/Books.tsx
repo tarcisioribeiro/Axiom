@@ -378,8 +378,7 @@ export default function Books() {
         return { books: booksData, authors: authorsData, publishers: publishersData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -412,8 +411,7 @@ export default function Books() {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -435,8 +433,7 @@ export default function Books() {
   const handleCreate = () => {
     if (authors.length === 0 || publishers.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.books.noPrerequisitesMsg'),
+        title: t('pages.books.noPrerequisitesMsg'),
         variant: 'destructive',
       });
       return;
@@ -464,13 +461,11 @@ export default function Books() {
       await booksService.delete(id);
       toast({
         title: t('pages.books.deleted'),
-        description: t('pages.books.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -491,13 +486,11 @@ export default function Books() {
         saved = await booksService.update(editingBook.id, data);
         toast({
           title: t('pages.books.updated'),
-          description: t('pages.books.updatedDesc'),
         });
       } else {
         saved = await booksService.create(data);
         toast({
           title: t('pages.books.created'),
-          description: t('pages.books.createdDesc'),
         });
       }
       if (coverFile) {
@@ -509,8 +502,7 @@ export default function Books() {
       if (alreadyRead && startDate && endDate) {
         const result = await booksService.markAsRead(saved.id, startDate, endDate);
         toast({
-          title: t('pages.books.readingRegistered'),
-          description: t('pages.books.sessionsCreated', {
+          title: t('pages.books.sessionsCreated', {
             count: result.sessions_created,
           }),
         });
@@ -519,8 +511,7 @@ export default function Books() {
       void queryClient.invalidateQueries({ queryKey: ['books'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -538,8 +529,7 @@ export default function Books() {
       a.click();
     } catch (error: unknown) {
       toast({
-        title: t('pages.books.downloadError'),
-        description: getErrorMessage(error),
+        title: t('pages.books.downloadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

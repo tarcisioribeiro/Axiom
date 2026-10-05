@@ -114,38 +114,37 @@ export function PayablePaymentDialog({
     if (!payable) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.payables.payment.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
     }
     if (isValueExceedsRemaining) {
       toast({
-        title: t('pages.payables.payment.title'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(remaining.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
     }
     if (balanceInfo && !balanceInfo.canPay) {
       toast({
-        title: t('common.balance.insufficient'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(balanceInfo.available.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
     }
     if (futureBalanceInfo && !futureBalanceInfo.canPay) {
       toast({
-        title: t('common.balance.insufficient'),
-        description: t('common.balance.insufficientEvenWithOverdraft', {
+        title: t('common.balance.insufficientEvenWithOverdraft', {
           available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
         }),
+
         variant: 'destructive',
       });
       return;
@@ -161,9 +160,6 @@ export function PayablePaymentDialog({
       });
       toast({
         title: scheduled
-          ? t('pages.payables.payment.scheduledSuccess')
-          : t('pages.payables.payment.success'),
-        description: scheduled
           ? t('pages.payables.payment.scheduledSuccessDesc', { date: form.date })
           : t('pages.payables.payment.successDesc'),
       });
@@ -171,8 +167,7 @@ export function PayablePaymentDialog({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

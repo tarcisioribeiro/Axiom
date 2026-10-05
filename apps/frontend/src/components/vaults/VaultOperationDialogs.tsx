@@ -44,8 +44,7 @@ export function VaultDepositDialog({
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) {
       toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('pages.vaults.invalidDepositDesc'),
+        title: t('pages.vaults.invalidDepositDesc'),
         variant: 'destructive',
       });
       return;
@@ -57,8 +56,7 @@ export function VaultDepositDialog({
         description: description || undefined,
       });
       toast({
-        title: t('pages.vaults.depositSuccess'),
-        description: t('pages.vaults.depositSuccessDesc', {
+        title: t('pages.vaults.depositSuccessDesc', {
           amount: formatCurrency(parsed),
         }),
       });
@@ -68,8 +66,7 @@ export function VaultDepositDialog({
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -166,8 +163,7 @@ export function VaultWithdrawDialog({
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) {
       toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('pages.vaults.invalidWithdrawDesc'),
+        title: t('pages.vaults.invalidWithdrawDesc'),
         variant: 'destructive',
       });
       return;
@@ -179,8 +175,7 @@ export function VaultWithdrawDialog({
         description: description || undefined,
       });
       toast({
-        title: t('pages.vaults.withdrawSuccess'),
-        description: t('pages.vaults.withdrawSuccessDesc', {
+        title: t('pages.vaults.withdrawSuccessDesc', {
           amount: formatCurrency(parsed),
         }),
       });
@@ -190,8 +185,7 @@ export function VaultWithdrawDialog({
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

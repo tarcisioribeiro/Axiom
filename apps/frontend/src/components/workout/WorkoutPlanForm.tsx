@@ -87,8 +87,7 @@ export function WorkoutPlanForm({
         return;
       }
       toast({
-        title: t('pages.workoutPlans.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutPlans.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     }

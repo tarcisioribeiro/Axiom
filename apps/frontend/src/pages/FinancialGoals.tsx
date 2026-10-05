@@ -343,8 +343,7 @@ export default function FinancialGoals() {
         return { goals: goalsData, vaults: vaultsData, accounts: accountsData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { goals: EMPTY_GOALS, vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
@@ -392,8 +391,7 @@ export default function FinancialGoals() {
       setIsDialogOpen(true);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -410,13 +408,11 @@ export default function FinancialGoals() {
         await financialGoalsService.delete(id);
         toast({
           title: t('pages.financialGoals.deleted'),
-          description: t('pages.financialGoals.deletedDesc'),
         });
         void refresh();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.deleteError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
       }
@@ -426,8 +422,7 @@ export default function FinancialGoals() {
   const handleSubmit = async () => {
     if (!formData.description || formData.target_value <= 0) {
       toast({
-        title: t('common.messages.invalidData'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -440,21 +435,18 @@ export default function FinancialGoals() {
         await financialGoalsService.update(selectedGoal.id, formData);
         toast({
           title: t('pages.financialGoals.updated'),
-          description: t('pages.financialGoals.updatedDesc'),
         });
       } else {
         await financialGoalsService.create(formData);
         toast({
           title: t('pages.financialGoals.created'),
-          description: t('pages.financialGoals.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -470,8 +462,7 @@ export default function FinancialGoals() {
       setIsVaultsDialogOpen(true);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -501,15 +492,13 @@ export default function FinancialGoals() {
       }
 
       toast({
-        title: t('pages.financialGoals.vaultsUpdated'),
-        description: t('pages.financialGoals.vaultsUpdatedDesc'),
+        title: t('pages.financialGoals.vaultsUpdatedDesc'),
       });
       setIsVaultsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -522,20 +511,17 @@ export default function FinancialGoals() {
       const response = await financialGoalsService.checkCompletion(goal.id);
       if (response.is_completed) {
         toast({
-          title: t('pages.financialGoals.goalCompleted'),
-          description: t('pages.financialGoals.goalCompletedDesc'),
+          title: t('pages.financialGoals.goalCompletedDesc'),
         });
       } else {
         toast({
-          title: t('pages.financialGoals.goalInProgress'),
-          description: `${response.progress_percentage.toFixed(1)}% (${formatCurrency(response.current_value)} / ${formatCurrency(response.target_value)})`,
+          title: `Meta em andamento com ${response.progress_percentage.toFixed(1)}% concluído (${formatCurrency(response.current_value)} de ${formatCurrency(response.target_value)}).`,
         });
       }
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

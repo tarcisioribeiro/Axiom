@@ -151,15 +151,13 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.created'),
-        description: t('pages.budgets.createdDesc'),
       });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -171,15 +169,13 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.updated'),
-        description: t('pages.budgets.updatedDesc'),
       });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -190,14 +186,12 @@ export default function Budgets() {
     onSuccess: () => {
       toast({
         title: t('pages.budgets.deleted'),
-        description: t('pages.budgets.deletedDesc'),
       });
       invalidateBudgets();
     },
     onError: (error) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },

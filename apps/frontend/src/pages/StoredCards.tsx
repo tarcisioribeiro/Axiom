@@ -121,8 +121,7 @@ export default function StoredCards() {
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -164,13 +163,11 @@ export default function StoredCards() {
       await storedCardsService.delete(id);
       toast({
         title: t('pages.storedCards.deleted'),
-        description: t('pages.storedCards.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -192,12 +189,10 @@ export default function StoredCards() {
       setRevealedData(newMap);
       toast({
         title: t('pages.storedCards.revealed'),
-        description: t('pages.storedCards.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.revealError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.revealError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -208,8 +203,7 @@ export default function StoredCards() {
   const handleCopy = async (text: string, label: string) => {
     await copyToClipboard(text);
     toast({
-      title: t('common.messages.copied'),
-      description: t('common.messages.copiedDesc', { label }),
+      title: t('common.messages.copiedDesc', { label }),
     });
   };
 
@@ -223,8 +217,7 @@ export default function StoredCards() {
       setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.copyError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.copyError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -242,21 +235,18 @@ export default function StoredCards() {
         await storedCardsService.update(selectedCard.id, updateData);
         toast({
           title: t('pages.storedCards.updated'),
-          description: t('pages.storedCards.updatedDesc'),
         });
       } else {
         await storedCardsService.create(data);
         toast({
           title: t('pages.storedCards.created'),
-          description: t('pages.storedCards.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -274,8 +264,7 @@ export default function StoredCards() {
       );
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

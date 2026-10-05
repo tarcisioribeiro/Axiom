@@ -157,8 +157,7 @@ export default function CreditCardExpenses({
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -397,13 +396,11 @@ export default function CreditCardExpenses({
         await creditCardPurchasesService.update(selectedPurchase.id, data);
         toast({
           title: t('pages.creditCardExpenses.updated'),
-          description: t('pages.creditCardExpenses.updatedDesc'),
         });
       } else {
         await creditCardPurchasesService.create(data);
         toast({
-          title: t('pages.creditCardExpenses.created'),
-          description:
+          title:
             data.total_installments > 1
               ? t('pages.creditCardExpenses.createdWithInstallments', {
                   count: data.total_installments,
@@ -416,8 +413,7 @@ export default function CreditCardExpenses({
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -428,8 +424,7 @@ export default function CreditCardExpenses({
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.creditCardExpenses.noCardMsg'),
+        title: t('pages.creditCardExpenses.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -464,14 +459,12 @@ export default function CreditCardExpenses({
     try {
       await creditCardPurchasesService.delete(purchaseId);
       toast({
-        title: t('pages.creditCardExpenses.deleted'),
-        description: t('pages.creditCardExpenses.deletedDesc'),
+        title: t('pages.creditCardExpenses.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -486,13 +479,11 @@ export default function CreditCardExpenses({
         title: installment.payed
           ? t('pages.creditCardExpenses.installmentUnpaid')
           : t('pages.creditCardExpenses.installmentPaid'),
-        description: t('pages.creditCardExpenses.installmentStatusDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.updateError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.updateError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -511,14 +502,12 @@ export default function CreditCardExpenses({
       await creditCardInstallmentsService.update(selectedInstallment.id, data);
       toast({
         title: t('pages.creditCardExpenses.installmentUpdated'),
-        description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -551,14 +540,12 @@ export default function CreditCardExpenses({
       });
       toast({
         title: t('pages.creditCardExpenses.installmentLinked'),
-        description: t('pages.creditCardExpenses.installmentLinkedDesc'),
       });
       setIsAssignBillDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-expenses'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

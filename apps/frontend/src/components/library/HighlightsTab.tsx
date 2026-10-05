@@ -247,8 +247,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
         return { highlights: highlightsData, books: booksData, ownerId: member.id };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { highlights: EMPTY_HIGHLIGHTS, books: EMPTY_BOOKS, ownerId: 0 };
@@ -281,8 +280,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -303,8 +301,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -324,8 +321,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: t('pages.highlights.exportError'),
-        description: getErrorMessage(error),
+        title: t('pages.highlights.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

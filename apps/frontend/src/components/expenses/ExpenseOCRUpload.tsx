@@ -74,8 +74,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
         toast({ title: t(msgKey), variant: 'destructive' });
       } else {
         toast({
-          title: t('pages.expenseOCR.success'),
-          description: t('pages.expenseOCR.successDesc'),
+          title: t('pages.expenseOCR.successDesc'),
         });
         onResult(result);
         setOpen(false);

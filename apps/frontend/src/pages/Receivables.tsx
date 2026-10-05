@@ -94,14 +94,12 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.created'),
-        description: t('pages.receivables.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -114,14 +112,12 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.updated'),
-        description: t('pages.receivables.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -133,13 +129,11 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
       void queryClient.invalidateQueries({ queryKey: ['receivables'] });
       toast({
         title: t('pages.receivables.deleted'),
-        description: t('pages.receivables.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },

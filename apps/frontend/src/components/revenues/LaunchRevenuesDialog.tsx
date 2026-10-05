@@ -150,15 +150,15 @@ export function LaunchRevenuesDialog({
             })}`
           : '';
       toast({
-        title: t('pages.fixedRevenues.launchDialog.success'),
-        description: `${createdDesc}${skippedNotice}`,
+        title: `${createdDesc}${skippedNotice}`,
       });
       onSuccess();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('pages.fixedRevenues.launchDialog.error'),
-        description: getErrorMessage(error),
+        title: t('pages.fixedRevenues.launchDialog.error', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {

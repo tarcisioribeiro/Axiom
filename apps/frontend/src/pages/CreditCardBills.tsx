@@ -114,8 +114,7 @@ export default function CreditCardBills({
         return { bills: billsData, creditCards: cardsData, accounts: accountsData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -163,21 +162,18 @@ export default function CreditCardBills({
         await creditCardBillsService.update(selectedBill.id, data);
         toast({
           title: t('pages.creditCardBills.updated'),
-          description: t('pages.creditCardBills.updatedDesc'),
         });
       } else {
         await creditCardBillsService.create(data);
         toast({
           title: t('pages.creditCardBills.created'),
-          description: t('pages.creditCardBills.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -188,8 +184,7 @@ export default function CreditCardBills({
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.creditCardBills.noCardMsg'),
+        title: t('pages.creditCardBills.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -211,13 +206,11 @@ export default function CreditCardBills({
       await creditCardBillsService.delete(id);
       toast({
         title: t('pages.creditCardBills.deleted'),
-        description: t('pages.creditCardBills.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -241,8 +234,7 @@ export default function CreditCardBills({
       setIsPaymentSubmitting(true);
       const response = await creditCardBillsService.payBill(selectedBill.id, data);
       toast({
-        title: t('pages.creditCardBills.paySuccess'),
-        description: t('pages.creditCardBills.paySuccessDesc', {
+        title: t('pages.creditCardBills.paySuccessDesc', {
           amount: formatCurrency(response.payment.amount),
           limit: formatCurrency(response.card.credit_limit),
         }),
@@ -251,8 +243,7 @@ export default function CreditCardBills({
       void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
-        title: t('pages.creditCardBills.payError'),
-        description: getErrorMessage(error),
+        title: t('pages.creditCardBills.payError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -274,8 +265,7 @@ export default function CreditCardBills({
         data
       );
       toast({
-        title: t('pages.creditCardBills.renegotiateSuccess'),
-        description: t('pages.creditCardBills.renegotiateSuccessDesc', {
+        title: t('pages.creditCardBills.renegotiateSuccessDesc', {
           count: response.renegotiation.installments,
           value: formatCurrency(response.renegotiation.installment_value),
         }),
@@ -303,8 +293,9 @@ export default function CreditCardBills({
       }
     } catch (error: unknown) {
       toast({
-        title: t('pages.creditCardBills.renegotiateError'),
-        description: getErrorMessage(error),
+        title: t('pages.creditCardBills.renegotiateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -326,13 +317,13 @@ export default function CreditCardBills({
       await creditCardBillsService.reopenBill(bill.id);
       toast({
         title: t('pages.creditCardBills.reopened'),
-        description: t('pages.creditCardBills.reopenedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['credit-card-bills'] });
     } catch (error: unknown) {
       toast({
-        title: t('pages.creditCardBills.reopenError'),
-        description: getErrorMessage(error),
+        title: t('pages.creditCardBills.reopenError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }

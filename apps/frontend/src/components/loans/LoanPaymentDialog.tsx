@@ -58,8 +58,7 @@ export function LoanPaymentDialog({
     if (!loan) return;
     if (!form.value || !form.account || !form.date) {
       toast({
-        title: t('pages.loans.payment.title'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -73,15 +72,13 @@ export function LoanPaymentDialog({
         notes: form.notes,
       });
       toast({
-        title: t('pages.loans.payment.success'),
-        description: t('pages.loans.payment.successDesc'),
+        title: t('pages.loans.payment.successDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

@@ -45,8 +45,7 @@ export function StatementExportModal({
 
     if (!from || !to) {
       toast({
-        title: t('pages.dashboard.statementModal.invalidPeriodTitle'),
-        description: t('pages.dashboard.statementModal.invalidPeriodDesc'),
+        title: t('pages.dashboard.statementModal.invalidPeriodDesc'),
         variant: 'destructive',
       });
       return;
@@ -54,8 +53,7 @@ export function StatementExportModal({
 
     if (from > to) {
       toast({
-        title: t('pages.dashboard.statementModal.invalidPeriodTitle'),
-        description: t('pages.dashboard.statementModal.invalidRangeDesc'),
+        title: t('pages.dashboard.statementModal.invalidRangeDesc'),
         variant: 'destructive',
       });
       return;
@@ -66,12 +64,10 @@ export function StatementExportModal({
       onOpenChange(false);
       toast({
         title: t('pages.dashboard.statementModal.successTitle'),
-        description: t('pages.dashboard.statementModal.successDesc'),
       });
     } catch {
       toast({
-        title: t('pages.dashboard.statementModal.errorTitle'),
-        description: t('pages.dashboard.statementModal.errorDesc'),
+        title: t('pages.dashboard.statementModal.errorDesc'),
         variant: 'destructive',
       });
     }

@@ -46,8 +46,7 @@ export function CreditLimitAdjustDialog({
     },
     onError: (error: unknown) =>
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       }),
   });

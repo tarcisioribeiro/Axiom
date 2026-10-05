@@ -68,8 +68,7 @@ export function VaultGenerateDialog({
       setIsGenerating(true);
       const result = await vaultsService.generateContributions(generateMonth);
       toast({
-        title: t('pages.vaults.recurringContributions.generateSuccess'),
-        description: t('pages.vaults.recurringContributions.generateSuccessDesc', {
+        title: t('pages.vaults.recurringContributions.generateSuccessDesc', {
           count: result.generated_count,
         }),
       });
@@ -77,8 +76,9 @@ export function VaultGenerateDialog({
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('pages.vaults.recurringContributions.generateError'),
-        description: getErrorMessage(error),
+        title: t('pages.vaults.recurringContributions.generateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {

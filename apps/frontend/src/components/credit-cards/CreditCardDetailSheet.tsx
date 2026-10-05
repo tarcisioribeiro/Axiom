@@ -73,14 +73,12 @@ export function CreditCardDetailSheet({
     onSuccess: () => {
       toast({
         title: t('pages.creditCards.updated'),
-        description: t('pages.creditCards.updatedDesc'),
       });
       onCardUpdated();
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },

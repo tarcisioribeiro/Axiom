@@ -272,14 +272,14 @@ export default function CategorizationRules({
       void invalidate();
       toast({
         title: t('pages.categorizationRules.created'),
-        description: t('pages.categorizationRules.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.categorizationRules.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.categorizationRules.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     },
@@ -292,14 +292,14 @@ export default function CategorizationRules({
       void invalidate();
       toast({
         title: t('pages.categorizationRules.updated'),
-        description: t('pages.categorizationRules.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.categorizationRules.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.categorizationRules.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     },
@@ -311,13 +311,13 @@ export default function CategorizationRules({
       void invalidate();
       toast({
         title: t('pages.categorizationRules.deleted'),
-        description: t('pages.categorizationRules.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.categorizationRules.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.categorizationRules.deleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     },

@@ -95,8 +95,7 @@ export function PasswordImportContent() {
       setStep('preview');
     } catch (err) {
       toast({
-        title: t('pages.passwordImport.parseError'),
-        description: getErrorMessage(err),
+        title: t('pages.passwordImport.parseError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -164,8 +163,7 @@ export function PasswordImportContent() {
       setSummary(result);
       setStep('summary');
       toast({
-        title: t('pages.passwordImport.importSuccess'),
-        description: t('pages.passwordImport.importSuccessDesc', {
+        title: t('pages.passwordImport.importSuccessDesc', {
           imported: result.imported,
           duplicates: result.duplicates_skipped,
           errors: result.errors,
@@ -173,8 +171,7 @@ export function PasswordImportContent() {
       });
     } catch (err) {
       toast({
-        title: t('pages.passwordImport.importError'),
-        description: getErrorMessage(err),
+        title: t('pages.passwordImport.importError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {

@@ -104,8 +104,7 @@ export function SharePasswordModal({
         return await credentialShareService.getTokens(password.id);
       } catch (error: unknown) {
         toast({
-          title: t('pages.sharePassword.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.sharePassword.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return EMPTY_TOKENS;
@@ -187,8 +186,7 @@ export function SharePasswordModal({
       void refreshTokens();
     } catch (error: unknown) {
       toast({
-        title: t('pages.sharePassword.createError'),
-        description: getErrorMessage(error),
+        title: t('pages.sharePassword.createError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -201,13 +199,11 @@ export function SharePasswordModal({
       await credentialShareService.revokeToken(tokenId);
       toast({
         title: t('pages.sharePassword.revoked'),
-        description: t('pages.sharePassword.revokedDesc'),
       });
       void refreshTokens();
     } catch (error: unknown) {
       toast({
-        title: t('pages.sharePassword.revokeError'),
-        description: getErrorMessage(error),
+        title: t('pages.sharePassword.revokeError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -218,7 +214,6 @@ export function SharePasswordModal({
     await copyToClipboard(newShareUrl);
     toast({
       title: t('common.messages.copied'),
-      description: t('pages.sharePassword.linkCopied'),
     });
   };
 

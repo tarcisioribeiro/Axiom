@@ -61,15 +61,13 @@ export function LoanPaymentPlanDialog({
         firstDueDate || undefined
       );
       toast({
-        title: t('pages.loans.paymentPlan.created'),
-        description: t('pages.loans.paymentPlan.createdDesc'),
+        title: t('pages.loans.paymentPlan.createdDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

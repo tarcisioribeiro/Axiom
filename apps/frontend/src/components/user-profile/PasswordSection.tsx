@@ -14,10 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
+import { getPasswordScore, useStrengthScorer } from '@/lib/password-strength';
 import { cn } from '@/lib/utils';
 import { ValidationError } from '@/services/api-errors';
 import { authService } from '@/services/auth-service';
 import { getErrorMessage } from '@/utils/error-utils';
+
+import { PasswordStrength } from './PasswordStrength';
 
 function PasswordField({
   id,
@@ -69,6 +72,24 @@ function PasswordField({
   );
 }
 
+/** Linha do formulário: campo à esquerda, avisos à direita (centralizados). */
+function FieldRow({
+  field,
+  aside,
+}: {
+  field: React.ReactNode;
+  aside?: React.ReactNode;
+}) {
+  return (
+    <div className="gap-md grid sm:grid-cols-2 sm:items-center">
+      {field}
+      {aside && (
+        <div className="gap-xs flex flex-col items-center justify-center">{aside}</div>
+      )}
+    </div>
+  );
+}
+
 function Rule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
     <li
@@ -95,10 +116,12 @@ export function PasswordSection() {
       </Button>
       {/* Fechar desmonta o formulário, o que já zera os campos. */}
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* Mesma altura fixa do modal de 2FA; avisos e erro não o redimensionam. */}
-        <DialogContent size="sm" className="h-[32rem] max-w-lg grid-rows-[auto_1fr]">
+        <DialogContent size="sm" className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{t('userProfile.security.changePassword')}</DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              <KeyRound className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+              {t('userProfile.security.changePassword')}
+            </DialogTitle>
           </DialogHeader>
           <PasswordForm onClose={() => setOpen(false)} />
         </DialogContent>
@@ -110,6 +133,7 @@ export function PasswordSection() {
 function PasswordForm({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const scorer = useStrengthScorer();
   const [current, setCurrent] = useState('');
   const [currentError, setCurrentError] = useState('');
   const [next, setNext] = useState('');
@@ -120,6 +144,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
   const hasMinLength = next.length >= 8;
   const notOnlyNumbers = next.length > 0 && !/^\d+$/.test(next);
   const matches = confirm.length > 0 && confirm === next;
+  const strengthScore = getPasswordScore(next, scorer);
 
   const mutation = useMutation({
     mutationFn: () => authService.changePassword(current, next, confirm),
@@ -138,8 +163,9 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
         return;
       }
       toast({
-        title: t('userProfile.security.passwordError'),
-        description: details || getErrorMessage(err),
+        title: t('userProfile.security.passwordError', {
+          reason: details || getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     },
@@ -153,44 +179,68 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
         mutation.mutate();
       }}
     >
-      <PasswordField
-        id="current-pw"
-        label={t('userProfile.security.currentPassword')}
-        value={current}
-        onChange={(value) => {
-          setCurrent(value);
-          setCurrentError('');
-        }}
-        autoComplete="current-password"
-        error={currentError}
+      <FieldRow
+        field={
+          <PasswordField
+            id="current-pw"
+            label={t('userProfile.security.currentPassword')}
+            value={current}
+            onChange={(value) => {
+              setCurrent(value);
+              setCurrentError('');
+            }}
+            autoComplete="current-password"
+            error={currentError}
+          />
+        }
       />
-      <PasswordField
-        id="new-pw"
-        label={t('userProfile.security.newPassword')}
-        value={next}
-        onChange={setNext}
-        autoComplete="new-password"
+      <FieldRow
+        field={
+          <PasswordField
+            id="new-pw"
+            label={t('userProfile.security.newPassword')}
+            value={next}
+            onChange={setNext}
+            autoComplete="new-password"
+          />
+        }
+        aside={
+          next && (
+            <>
+              <PasswordStrength score={strengthScore} />
+              <ul className="space-y-xs">
+                <Rule ok={hasMinLength}>
+                  {t('userProfile.security.rules.minLength')}
+                </Rule>
+                <Rule ok={notOnlyNumbers}>
+                  {t('userProfile.security.rules.notNumeric')}
+                </Rule>
+              </ul>
+            </>
+          )
+        }
       />
-      {next && (
-        <ul className="space-y-xs">
-          <Rule ok={hasMinLength}>{t('userProfile.security.rules.minLength')}</Rule>
-          <Rule ok={notOnlyNumbers}>{t('userProfile.security.rules.notNumeric')}</Rule>
-        </ul>
-      )}
-      <PasswordField
-        id="confirm-pw"
-        label={t('userProfile.security.confirmPassword')}
-        value={confirm}
-        onChange={setConfirm}
-        autoComplete="new-password"
+      <FieldRow
+        field={
+          <PasswordField
+            id="confirm-pw"
+            label={t('userProfile.security.confirmPassword')}
+            value={confirm}
+            onChange={setConfirm}
+            autoComplete="new-password"
+          />
+        }
+        aside={
+          confirm && (
+            <ul>
+              <Rule ok={matches}>{t('userProfile.security.rules.matches')}</Rule>
+            </ul>
+          )
+        }
       />
-      {confirm && (
-        <ul>
-          <Rule ok={matches}>{t('userProfile.security.rules.matches')}</Rule>
-        </ul>
-      )}
       <div className="gap-sm mt-auto flex justify-end">
-        <Button type="button" variant="ghost" onClick={onClose}>
+        <Button type="button" variant="outline" onClick={onClose}>
+          <X />
           {t('common.actions.cancel')}
         </Button>
         <Button

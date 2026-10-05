@@ -292,8 +292,7 @@ function DetailPanel({
       });
     } catch {
       toast({
-        title: t('pages.passwords.hibp.errorTitle'),
-        description: t('pages.passwords.hibp.errorDesc'),
+        title: t('pages.passwords.hibp.errorDesc'),
         variant: 'destructive',
       });
       setHibpState({ status: 'idle', count: 0 });
@@ -645,8 +644,7 @@ export default function Passwords() {
         return { passwords: passwordsData, currentUserMember: memberData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { passwords: EMPTY_PASSWORDS, currentUserMember: null as Member | null };
@@ -721,8 +719,7 @@ export default function Passwords() {
   const handleCreate = () => {
     if (!currentUserMember) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.passwords.noMemberMsg'),
+        title: t('pages.passwords.noMemberMsg'),
         variant: 'destructive',
       });
       return;
@@ -771,7 +768,6 @@ export default function Passwords() {
       await passwordsService.delete(id);
       toast({
         title: t('pages.passwords.deleted'),
-        description: t('pages.passwords.deletedDesc'),
       });
       if (detailPassword?.id === id) {
         setDetailPassword(null);
@@ -779,8 +775,7 @@ export default function Passwords() {
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -819,8 +814,7 @@ export default function Passwords() {
       }
     } catch (error: unknown) {
       toast({
-        title: t('pages.passwords.revealError'),
-        description: getErrorMessage(error),
+        title: t('pages.passwords.revealError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -837,8 +831,7 @@ export default function Passwords() {
       setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
     } catch (error: unknown) {
       toast({
-        title: t('pages.passwords.copyError'),
-        description: getErrorMessage(error),
+        title: t('pages.passwords.copyError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -861,21 +854,18 @@ export default function Passwords() {
         await passwordsService.update(selectedPassword.id, updateData);
         toast({
           title: t('pages.passwords.updated'),
-          description: t('pages.passwords.updatedDesc'),
         });
       } else {
         await passwordsService.create(data);
         toast({
           title: t('pages.passwords.created'),
-          description: t('pages.passwords.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -900,8 +890,7 @@ export default function Passwords() {
       );
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

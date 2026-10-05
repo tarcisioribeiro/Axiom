@@ -110,14 +110,12 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.created'),
-        description: t('pages.accounts.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -130,14 +128,12 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.updated'),
-        description: t('pages.accounts.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -149,13 +145,11 @@ export default function Accounts() {
       void invalidateAccounts();
       toast({
         title: t('pages.accounts.deleted'),
-        description: t('pages.accounts.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -258,8 +252,7 @@ export default function Accounts() {
       setImports(all.filter((imp) => imp.account === account.id));
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

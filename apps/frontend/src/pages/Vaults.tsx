@@ -59,8 +59,7 @@ export default function Vaults() {
         return { vaults: vaultsData, accounts: accountsData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { vaults: EMPTY_VAULTS, accounts: EMPTY_ACCOUNTS };
@@ -75,8 +74,7 @@ export default function Vaults() {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.vaults.noAccountMsg'),
+        title: t('pages.vaults.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -94,8 +92,7 @@ export default function Vaults() {
     const vault = vaults.find((v) => v.id === id);
     if (vault && parseFloat(vault.current_balance) > 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.vaults.cannotDeleteWithBalance'),
+        title: t('pages.vaults.cannotDeleteWithBalance'),
         variant: 'destructive',
       });
       return;
@@ -109,13 +106,11 @@ export default function Vaults() {
       await vaultsService.delete(id);
       toast({
         title: t('pages.vaults.deleted'),
-        description: t('pages.vaults.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -140,8 +135,7 @@ export default function Vaults() {
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

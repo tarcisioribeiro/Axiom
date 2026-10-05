@@ -137,8 +137,7 @@ export default function ActivityLogs() {
         return await activityLogsService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return [] as ActivityLog[];
@@ -172,8 +171,7 @@ export default function ActivityLogs() {
       toast({ title: t('pages.activityLogs.exportSuccess') });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

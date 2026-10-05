@@ -56,8 +56,7 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormData) => {
     if (data.password !== data.confirmPassword) {
       toast({
-        title: t('auth.register.errorTitle'),
-        description: t('auth.register.passwordsMismatch'),
+        title: t('auth.register.passwordsMismatch'),
         variant: 'destructive',
       });
       return;
@@ -75,8 +74,7 @@ export default function Register() {
       });
 
       toast({
-        title: t('auth.register.successTitle'),
-        description: t('auth.register.successDesc'),
+        title: t('auth.register.successDesc'),
       });
 
       void navigate('/login');
@@ -84,8 +82,7 @@ export default function Register() {
       const errorMessage =
         error instanceof Error ? error.message : t('auth.register.errorDesc');
       toast({
-        title: t('auth.register.errorTitle'),
-        description: errorMessage,
+        title: errorMessage,
         variant: 'destructive',
       });
     } finally {

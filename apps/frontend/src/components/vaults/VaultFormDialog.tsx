@@ -147,21 +147,18 @@ export function VaultFormDialog({
         await vaultsService.update(selectedVault.id, data);
         toast({
           title: t('pages.vaults.updated'),
-          description: t('pages.vaults.updatedDesc'),
         });
       } else {
         await vaultsService.create(data);
         toast({
           title: t('pages.vaults.created'),
-          description: t('pages.vaults.createdDesc'),
         });
       }
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

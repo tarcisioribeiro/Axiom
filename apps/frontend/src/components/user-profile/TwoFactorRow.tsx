@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Settings, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Settings, Shield, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -51,10 +51,12 @@ export function TwoFactorRow() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* Altura fixa: igual em todas as etapas e cabe a mais alta (QR Code). */}
-        <DialogContent size="sm" className="h-[32rem] max-w-lg grid-rows-[auto_1fr]">
+        <DialogContent size="sm" className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t('pages.twoFactor.title')}</DialogTitle>
+            <DialogTitle className="gap-sm flex items-center">
+              <Shield className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+              {t('pages.twoFactor.title')}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col">
             <TwoFactorManager onDisabled={() => setOpen(false)} />

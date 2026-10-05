@@ -415,8 +415,7 @@ function SelfEsteemTab({
         }
       }
       toast({
-        title: 'Avaliação registrada!',
-        description: `Pontuação: ${result.score}/30`,
+        title: `Avaliação registrada com pontuação ${result.score}/30.`,
       });
     },
     onError: () => toast({ title: 'Erro ao salvar', variant: 'destructive' }),

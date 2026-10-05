@@ -71,8 +71,7 @@ export function VaultContributionsDialog({
       setContributions(await vaultsService.getContributions(vault.id));
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -130,13 +129,11 @@ export function VaultContributionsDialog({
         await vaultsService.updateContribution(editing.id, formData);
         toast({
           title: t('pages.vaults.recurringContributions.updated'),
-          description: t('pages.vaults.recurringContributions.updatedDesc'),
         });
       } else {
         await vaultsService.createContribution(vault.id, formData);
         toast({
           title: t('pages.vaults.recurringContributions.created'),
-          description: t('pages.vaults.recurringContributions.createdDesc'),
         });
       }
       setIsFormOpen(false);
@@ -144,8 +141,7 @@ export function VaultContributionsDialog({
       await loadContributions();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -163,13 +159,11 @@ export function VaultContributionsDialog({
       await vaultsService.deleteContribution(c.id);
       toast({
         title: t('pages.vaults.recurringContributions.deleted'),
-        description: t('pages.vaults.recurringContributions.deletedDesc'),
       });
       await loadContributions();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

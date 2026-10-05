@@ -208,8 +208,9 @@ export default function DailyReflections() {
         return await dailyReflectionsService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('pages.dailyReflections.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.dailyReflections.loadError', {
+            reason: getErrorMessage(error),
+          }),
           variant: 'destructive',
         });
         return EMPTY_REFLECTIONS;
@@ -251,13 +252,13 @@ export default function DailyReflections() {
       await dailyReflectionsService.delete(id);
       toast({
         title: t('pages.dailyReflections.deleted'),
-        description: t('pages.dailyReflections.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyReflections.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyReflections.deleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -270,21 +271,20 @@ export default function DailyReflections() {
         await dailyReflectionsService.update(selected.id, data);
         toast({
           title: t('pages.dailyReflections.updated'),
-          description: t('pages.dailyReflections.updatedDesc'),
         });
       } else {
         await dailyReflectionsService.create(data);
         toast({
           title: t('pages.dailyReflections.created'),
-          description: t('pages.dailyReflections.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyReflections.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyReflections.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {

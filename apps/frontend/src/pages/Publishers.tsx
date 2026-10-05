@@ -82,8 +82,7 @@ export default function Publishers() {
         return await publishersService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return EMPTY_PUBLISHERS;
@@ -118,13 +117,11 @@ export default function Publishers() {
       await publishersService.delete(id);
       toast({
         title: t('pages.publishers.deleted'),
-        description: t('pages.publishers.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -137,21 +134,18 @@ export default function Publishers() {
         await publishersService.update(selectedPublisher.id, data);
         toast({
           title: t('pages.publishers.updated'),
-          description: t('pages.publishers.updatedDesc'),
         });
       } else {
         await publishersService.create(data);
         toast({
           title: t('pages.publishers.created'),
-          description: t('pages.publishers.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

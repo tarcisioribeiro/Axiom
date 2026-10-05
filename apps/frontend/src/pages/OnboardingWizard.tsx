@@ -154,8 +154,7 @@ export default function OnboardingWizard() {
       void queryClient.invalidateQueries({ queryKey: ['daily-checklist'] });
       void queryClient.invalidateQueries({ queryKey: ['routine-templates'] });
       toast({
-        title: 'Rotina criada com sucesso!',
-        description: 'Redirecionando para a tela Hoje...',
+        title: 'Rotina criada. Redirecionando para a tela Hoje...',
       });
       setTimeout(() => void navigate('/planning/today'), 1500);
     },

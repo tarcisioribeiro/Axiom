@@ -82,8 +82,7 @@ export default function Archives() {
         return { archives: archivesData, members: membersData };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { archives: [] as Archive[], members: [] as Member[] };
@@ -105,8 +104,7 @@ export default function Archives() {
         const data = await archivesService.reveal(archive.id);
         if (data.error) {
           toast({
-            title: t('pages.archives.loadContentError'),
-            description: data.error,
+            title: t('pages.archives.loadContentError', { reason: data.error }),
             variant: 'destructive',
           });
           setSelectedArchive(archive);
@@ -118,8 +116,9 @@ export default function Archives() {
         }
       } catch (error: unknown) {
         toast({
-          title: t('pages.archives.loadContentError'),
-          description: getErrorMessage(error),
+          title: t('pages.archives.loadContentError', {
+            reason: getErrorMessage(error),
+          }),
           variant: 'destructive',
         });
         setSelectedArchive(archive);
@@ -145,13 +144,11 @@ export default function Archives() {
       await archivesService.delete(id);
       toast({
         title: t('pages.archives.deleted'),
-        description: t('pages.archives.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['archives'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -171,8 +168,7 @@ export default function Archives() {
       setPreviewType(type);
     } catch (error: unknown) {
       toast({
-        title: t('pages.archives.downloadError'),
-        description: getErrorMessage(error),
+        title: t('pages.archives.downloadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -183,8 +179,7 @@ export default function Archives() {
   const handleRevealContent = async (archive: Archive) => {
     if (archive.archive_type !== 'text') {
       toast({
-        title: t('pages.archives.actionNotAvailable'),
-        description: t('pages.archives.onlyTextViewable'),
+        title: t('pages.archives.onlyTextViewable'),
         variant: 'destructive',
       });
       return;
@@ -196,13 +191,8 @@ export default function Archives() {
       const data = await archivesService.reveal(archive.id);
 
       if (data.error) {
-        const title =
-          data.error_type === 'decryption_failed'
-            ? t('pages.archives.decryptionError')
-            : t('pages.archives.contentUnavailable');
         toast({
-          title,
-          description: data.error,
+          title: data.error,
           variant: 'destructive',
         });
         return;
@@ -210,8 +200,7 @@ export default function Archives() {
 
       if (data.text_content == null) {
         toast({
-          title: t('pages.archives.emptyContentTitle'),
-          description: t('pages.archives.emptyContent'),
+          title: t('pages.archives.emptyContent'),
           variant: 'destructive',
         });
         return;
@@ -221,12 +210,12 @@ export default function Archives() {
       setIsContentDialogOpen(true);
       toast({
         title: t('pages.archives.contentRevealed'),
-        description: t('pages.archives.contentRevealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.archives.revealContentError'),
-        description: getErrorMessage(error),
+        title: t('pages.archives.revealContentError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -253,12 +242,10 @@ export default function Archives() {
       document.body.removeChild(link);
       toast({
         title: t('pages.archives.downloadStarted'),
-        description: t('pages.archives.downloadDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.archives.downloadError'),
-        description: getErrorMessage(error),
+        title: t('pages.archives.downloadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -271,21 +258,18 @@ export default function Archives() {
         await archivesService.update(selectedArchive.id, data);
         toast({
           title: t('pages.archives.updated'),
-          description: t('pages.archives.updatedDesc'),
         });
       } else {
         await archivesService.create(data);
         toast({
-          title: t('pages.archives.created'),
-          description: t('pages.archives.createdDesc'),
+          title: t('pages.archives.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['archives'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -303,8 +287,7 @@ export default function Archives() {
       );
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -595,7 +578,6 @@ export default function Archives() {
                     void copyToClipboard(revealedContent);
                     toast({
                       title: t('common.messages.copied'),
-                      description: t('pages.archives.copiedDesc'),
                     });
                   }}
                 >

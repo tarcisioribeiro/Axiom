@@ -51,13 +51,13 @@ export function EmailVerificationBanner() {
     try {
       await authService.sendEmailVerification();
       toast({
-        title: t('common.emailVerificationBanner.sentTitle'),
-        description: t('common.emailVerificationBanner.sentDesc'),
+        title: t('common.emailVerificationBanner.sentDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.emailVerificationBanner.errorTitle'),
-        description: getErrorMessage(error),
+        title: t('common.emailVerificationBanner.errorTitle', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {

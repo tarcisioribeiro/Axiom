@@ -238,7 +238,6 @@ export function useExpensesPage(opts?: {
       void invalidateExpenses();
       toast({
         title: t('pages.expenses.created'),
-        description: t('pages.expenses.createdDesc'),
       });
       setIsDialogOpen(false);
       if (splitAfterCreate.current) {
@@ -248,8 +247,7 @@ export function useExpensesPage(opts?: {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -262,14 +260,12 @@ export function useExpensesPage(opts?: {
       void invalidateExpenses();
       toast({
         title: t('pages.expenses.updated'),
-        description: t('pages.expenses.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -284,7 +280,6 @@ export function useExpensesPage(opts?: {
       onSuccess: () => {
         toast({
           title: t('pages.expenses.deleted'),
-          description: t('pages.expenses.deletedDesc'),
         });
       },
     });
@@ -298,8 +293,7 @@ export function useExpensesPage(opts?: {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.expenses.noAccountMsg'),
+        title: t('pages.expenses.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -343,7 +337,6 @@ export function useExpensesPage(opts?: {
     void invalidateExpenses();
     toast({
       title: t('pages.expenses.created'),
-      description: t('pages.expenses.createdDesc'),
     });
     setIsDialogOpen(false);
   };
@@ -371,12 +364,10 @@ export function useExpensesPage(opts?: {
       await expensesService.exportExpenses(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
-        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

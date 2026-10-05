@@ -192,8 +192,7 @@ export const LaunchExpensesDialog = ({
           : '';
 
       toast({
-        title: t('pages.fixedExpenses.launchDialog.success'),
-        description: `${createdDesc}${skippedNotice}`,
+        title: `${createdDesc}${skippedNotice}`,
       });
 
       if (response.blocked_cards.length > 0) {
@@ -215,8 +214,9 @@ export const LaunchExpensesDialog = ({
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('pages.fixedExpenses.launchDialog.error'),
-        description: getErrorMessage(error),
+        title: t('pages.fixedExpenses.launchDialog.error', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {

@@ -246,7 +246,6 @@ export default function NutritionPage() {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodCreated'),
-        description: t('pages.nutritionFoods.foodCreatedDesc'),
       });
       setDialog(null);
     },
@@ -259,7 +258,6 @@ export default function NutritionPage() {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodUpdated'),
-        description: t('pages.nutritionFoods.foodUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -271,7 +269,6 @@ export default function NutritionPage() {
       void invalidateFoods();
       toast({
         title: t('pages.nutritionFoods.foodDeleted'),
-        description: t('pages.nutritionFoods.foodDeletedDesc'),
       });
     },
   });
@@ -282,7 +279,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeCreated'),
-        description: t('pages.nutritionMealTypes.mealTypeCreatedDesc'),
       });
       setDialog(null);
     },
@@ -295,7 +291,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeUpdated'),
-        description: t('pages.nutritionMealTypes.mealTypeUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -307,7 +302,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.mealTypeDeleted'),
-        description: t('pages.nutritionMealTypes.mealTypeDeletedDesc'),
       });
     },
   });
@@ -352,7 +346,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionCreated'),
-        description: t('pages.nutritionMealTypes.optionCreatedDesc'),
       });
       setDialog(null);
     },
@@ -419,7 +412,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionUpdated'),
-        description: t('pages.nutritionMealTypes.optionUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -431,7 +423,6 @@ export default function NutritionPage() {
       void invalidateMealTypes();
       toast({
         title: t('pages.nutritionMealTypes.optionDeleted'),
-        description: t('pages.nutritionMealTypes.optionDeletedDesc'),
       });
     },
   });
@@ -442,14 +433,12 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logCreated'),
-        description: t('pages.nutritionLog.logCreatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.nutritionLog.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.nutritionLog.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -462,7 +451,6 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logUpdated'),
-        description: t('pages.nutritionLog.logUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -474,13 +462,11 @@ export default function NutritionPage() {
       void invalidateLogs();
       toast({
         title: t('pages.nutritionLog.logDeleted'),
-        description: t('pages.nutritionLog.logDeletedDesc'),
       });
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.nutritionLog.deleteError'),
-        description: getErrorMessage(err),
+        title: t('pages.nutritionLog.deleteError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },

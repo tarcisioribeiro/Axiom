@@ -59,8 +59,9 @@ export default function VaultSimulator() {
       setResults(data.scenarios);
     } catch (err) {
       toast({
-        title: t('pages.vaultSimulator.simulationError'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultSimulator.simulationError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {

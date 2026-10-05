@@ -59,8 +59,7 @@ export function PasswordGenerator({
   const handleGenerate = async () => {
     if (!uppercase && !lowercase && !numbers && !specialCharacters) {
       toast({
-        title: t('common.passwordStrength.invalidConfig'),
-        description: t('common.passwordStrength.selectCharType'),
+        title: t('common.passwordStrength.selectCharType'),
         variant: 'destructive',
       });
       return;
@@ -81,8 +80,9 @@ export function PasswordGenerator({
       onPasswordGenerated?.(result.password);
     } catch (error: unknown) {
       toast({
-        title: t('pages.passwords.generator.generateError'),
-        description: getErrorMessage(error),
+        title: t('pages.passwords.generator.generateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -96,7 +96,6 @@ export function PasswordGenerator({
     setCopied(true);
     toast({
       title: t('common.messages.copied'),
-      description: t('pages.passwords.copiedDesc'),
     });
     setTimeout(() => setCopied(false), 2000);
   };

@@ -98,13 +98,13 @@ export function DailyFocusBlocks({
       setSelectedBlock(updated);
       toast({
         title: t('pages.routineTasks.focusBlocks.updated'),
-        description: t('pages.routineTasks.focusBlocks.updatedDesc'),
       });
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -125,8 +125,9 @@ export function DailyFocusBlocks({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.addTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.addTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -141,8 +142,9 @@ export function DailyFocusBlocks({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.removeTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.removeTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }

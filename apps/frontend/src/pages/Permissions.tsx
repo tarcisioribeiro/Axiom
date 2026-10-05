@@ -51,8 +51,7 @@ export default function Permissions() {
         return { members: membersData, availableApps: apps };
       } catch (error: unknown) {
         toast({
-          title: t('pages.permissions.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.permissions.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { members: EMPTY_MEMBERS, availableApps: EMPTY_APPS };
@@ -69,8 +68,7 @@ export default function Permissions() {
     // Se o membro não tem usuário associado, não pode ter permissões
     if (!member.user) {
       toast({
-        title: t('pages.permissions.noUserWarning'),
-        description: t('pages.permissions.noUserDesc'),
+        title: t('pages.permissions.noUserDesc'),
         variant: 'default',
       });
       return;
@@ -82,8 +80,9 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
     } catch (error: unknown) {
       toast({
-        title: t('pages.permissions.loadPermissionsError'),
-        description: getErrorMessage(error),
+        title: t('pages.permissions.loadPermissionsError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -106,8 +105,7 @@ export default function Permissions() {
 
     if (!selectedMember.user) {
       toast({
-        title: t('pages.permissions.saveErrorTitle'),
-        description: t('pages.permissions.noUserDesc'),
+        title: t('pages.permissions.noUserDesc'),
         variant: 'destructive',
       });
       return;
@@ -128,13 +126,11 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
 
       toast({
-        title: t('pages.permissions.saved'),
-        description: t('pages.permissions.savedDesc', { name: selectedMember.name }),
+        title: t('pages.permissions.savedDesc', { name: selectedMember.name }),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.permissions.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.permissions.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

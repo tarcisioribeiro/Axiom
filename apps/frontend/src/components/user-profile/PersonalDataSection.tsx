@@ -77,8 +77,7 @@ function PersonalDataForm({
     },
     onError: (err) => {
       toast({
-        title: t('userProfile.personalData.error'),
-        description: getErrorMessage(err),
+        title: t('userProfile.personalData.error', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -123,26 +122,28 @@ function PersonalDataForm({
           mutation.mutate();
         }}
       >
-        <FormField
-          id="name"
-          label={t('userProfile.personalData.name')}
-          error={nameError}
-        >
-          <Input
-            autoComplete="name"
-            maxLength={200}
-            disabled={!editing}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </FormField>
         <div className="gap-md grid sm:grid-cols-2">
+          <FormField
+            id="name"
+            label={t('userProfile.personalData.name')}
+            error={nameError}
+          >
+            <Input
+              autoComplete="name"
+              maxLength={200}
+              disabled={!editing}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormField>
           <DocumentField
             value={document}
             onChange={setDocument}
             editing={editing}
             error={documentError}
           />
+        </div>
+        <div className="gap-md grid sm:grid-cols-2">
           <FormField
             id="email"
             label={t('userProfile.personalData.email')}
@@ -156,21 +157,21 @@ function PersonalDataForm({
               onChange={(e) => setEmail(e.target.value.trim())}
             />
           </FormField>
+          <FormField
+            id="phone"
+            label={t('userProfile.personalData.phone')}
+            error={phoneError}
+          >
+            <Input
+              type="tel"
+              autoComplete="tel"
+              placeholder="+55 (00) 00000-0000"
+              disabled={!editing}
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value, phone))}
+            />
+          </FormField>
         </div>
-        <FormField
-          id="phone"
-          label={t('userProfile.personalData.phone')}
-          error={phoneError}
-        >
-          <Input
-            type="tel"
-            autoComplete="tel"
-            placeholder="+55 (00) 00000-0000"
-            disabled={!editing}
-            value={phone}
-            onChange={(e) => setPhone(formatPhone(e.target.value, phone))}
-          />
-        </FormField>
         <div className="gap-md grid sm:grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="sex">{t('userProfile.personalData.sex')}</Label>

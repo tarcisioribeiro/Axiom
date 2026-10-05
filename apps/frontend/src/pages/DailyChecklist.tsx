@@ -373,8 +373,9 @@ export default function DailyChecklist({
       setOwnerId(member.id);
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyChecklist.loadUserError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.loadUserError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -421,8 +422,7 @@ export default function DailyChecklist({
       loadedDateRef.current = selectedDate;
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyChecklist.loadError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -449,8 +449,9 @@ export default function DailyChecklist({
           prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t))
         );
         toast({
-          title: t('pages.dailyChecklist.saveError'),
-          description: getErrorMessage(error),
+          title: t('pages.dailyChecklist.saveError', {
+            reason: getErrorMessage(error),
+          }),
           variant: 'destructive',
         });
       } finally {
@@ -512,8 +513,7 @@ export default function DailyChecklist({
     } catch (error: unknown) {
       setCardStatus(card.id, origin);
       toast({
-        title: t('pages.dailyChecklist.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -568,13 +568,11 @@ export default function DailyChecklist({
       await loadData(true);
       void queryClient.invalidateQueries({ queryKey: ['daily-checklist', 'data'] });
       toast({
-        title: t('pages.dailyChecklist.synced'),
-        description: t('pages.dailyChecklist.syncedDesc'),
+        title: t('pages.dailyChecklist.syncedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('pages.dailyChecklist.syncError'),
-        description: getErrorMessage(error),
+        title: t('pages.dailyChecklist.syncError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

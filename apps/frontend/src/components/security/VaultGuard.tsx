@@ -40,6 +40,11 @@ import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
 import { useVaultKeyboardShortcuts } from '@/hooks/use-vault-keyboard-shortcuts';
 import { useVaultStatus } from '@/hooks/use-vault-status';
+import {
+  getPasswordScore,
+  useStrengthScorer,
+  type StrengthScorer,
+} from '@/lib/password-strength';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { vaultConfigService } from '@/services/security-vault-service';
@@ -76,30 +81,6 @@ function CapsLockWarning() {
 // Password Strength Indicator
 // ============================================================================
 
-type StrengthScorer = (password: string) => number;
-
-// zxcvbn (~800KB) carregado sob demanda: mesmo algoritmo do backend (score 0-4)
-function useStrengthScorer(): StrengthScorer | null {
-  const [scorer, setScorer] = useState<StrengthScorer | null>(null);
-  useEffect(() => {
-    let active = true;
-    void import('zxcvbn').then(({ default: zxcvbn }) => {
-      // zxcvbn rejeita entradas acima de 72 caracteres no backend; mantém paridade
-      if (active) setScorer(() => (pw: string) => zxcvbn(pw.slice(0, 72)).score);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-  return scorer;
-}
-
-// Escala 1-5 da UI = score zxcvbn + 1 (1 enquanto o zxcvbn carrega)
-function getStrengthScore(password: string, scorer: StrengthScorer | null): number {
-  if (!password) return 0;
-  return scorer ? scorer(password) + 1 : 1;
-}
-
 function getStrengthLabel(score: number, t: (key: string) => string): string {
   switch (score) {
     case 1:
@@ -126,7 +107,7 @@ function getStrength(
   label: string;
   color: string;
 } {
-  const score = getStrengthScore(password, scorer);
+  const score = getPasswordScore(password, scorer);
   if (!password) return { score: 0, label: '', color: '' };
   const colors = [
     '',
@@ -243,15 +224,15 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
       await vaultConfigService.unlock({ master_password: masterPassword });
       toast({
         title: t('pages.vaultGuard.expiry.renewSuccess'),
-        description: t('pages.vaultGuard.expiry.renewSuccessDesc'),
       });
       setIsRenewOpen(false);
       setMasterPassword('');
       if (onRenew) await onRenew();
     } catch (error: unknown) {
       toast({
-        title: t('pages.vaultGuard.expiry.renewError'),
-        description: getErrorMessage(error),
+        title: t('pages.vaultGuard.expiry.renewError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -390,8 +371,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
     e.preventDefault();
     if (masterPassword !== confirmPassword) {
       toast({
-        title: t('common.messages.invalidData'),
-        description: t('pages.vaultGuard.setup.passwordsMismatch'),
+        title: t('pages.vaultGuard.setup.passwordsMismatch'),
         variant: 'destructive',
       });
       return;
@@ -403,14 +383,12 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         confirm_master_password: confirmPassword,
       });
       toast({
-        title: t('pages.vaultGuard.setup.successTitle'),
-        description: t('pages.vaultGuard.setup.successDesc'),
+        title: t('pages.vaultGuard.setup.successDesc'),
       });
       await onSuccess();
     } catch (err) {
       toast({
-        title: t('pages.vaultGuard.setup.errorTitle'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultGuard.setup.errorTitle', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -563,8 +541,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
         setFailedAttempts((prev) => prev + 1);
       }
       toast({
-        title: t('pages.vaultGuard.locked.failTitle'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultGuard.locked.failTitle', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -687,8 +664,9 @@ function VaultRecoveryKeyModalInline({
       onClose();
     } catch (err) {
       toast({
-        title: t('pages.vaultGuard.recoveryKey.unlockError'),
-        description: getErrorMessage(err),
+        title: t('pages.vaultGuard.recoveryKey.unlockError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {

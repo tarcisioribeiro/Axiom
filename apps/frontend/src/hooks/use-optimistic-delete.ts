@@ -57,8 +57,7 @@ export function useOptimisticDelete<T>({
           queryClient.setQueryData<T[]>(queryKey, snapshot);
         }
         toast({
-          title: `Erro ao excluir ${resourceName}`,
-          description: 'A alteração foi revertida.',
+          title: `Não foi possível excluir ${resourceName}, e a alteração foi revertida.`,
           variant: 'destructive',
         });
       } finally {

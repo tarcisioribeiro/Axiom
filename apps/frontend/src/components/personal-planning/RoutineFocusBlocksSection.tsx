@@ -81,21 +81,20 @@ export function RoutineFocusBlocksSection({
         setSelectedBlock(updated);
         toast({
           title: t('pages.routineTasks.focusBlocks.updated'),
-          description: t('pages.routineTasks.focusBlocks.updatedDesc'),
         });
       } else {
         const created = await focusBlocksService.create(data);
         setSelectedBlock(created);
         toast({
           title: t('pages.routineTasks.focusBlocks.created'),
-          description: t('pages.routineTasks.focusBlocks.createdDesc'),
         });
       }
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.saveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -117,13 +116,13 @@ export function RoutineFocusBlocksSection({
       await focusBlocksService.delete(block.id);
       toast({
         title: t('pages.routineTasks.focusBlocks.deleted'),
-        description: t('pages.routineTasks.focusBlocks.deletedDesc'),
       });
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.deleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -149,8 +148,9 @@ export function RoutineFocusBlocksSection({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.addTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.addTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -163,8 +163,9 @@ export function RoutineFocusBlocksSection({
       void invalidate();
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.focusBlocks.removeTaskError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.focusBlocks.removeTaskError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }

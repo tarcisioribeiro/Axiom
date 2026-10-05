@@ -141,8 +141,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         };
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return {
@@ -213,21 +212,18 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         await fixedRevenuesService.update(selectedRevenue.id, formData);
         toast({
           title: t('pages.fixedRevenues.updated'),
-          description: t('pages.fixedRevenues.updatedDesc'),
         });
       } else {
         await fixedRevenuesService.create(formData);
         toast({
           title: t('pages.fixedRevenues.created'),
-          description: t('pages.fixedRevenues.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -248,13 +244,11 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       await fixedRevenuesService.delete(id);
       toast({
         title: t('pages.fixedRevenues.deleted'),
-        description: t('pages.fixedRevenues.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

@@ -122,8 +122,7 @@ export function ReadingQueueTab() {
         return await booksService.getReadingQueue();
       } catch (err) {
         toast({
-          title: t('pages.readingQueue.errorLoad'),
-          description: getErrorMessage(err),
+          title: t('pages.readingQueue.errorLoad', { reason: getErrorMessage(err) }),
           variant: 'destructive',
         });
         return EMPTY_QUEUE;
@@ -141,8 +140,7 @@ export function ReadingQueueTab() {
         }));
         void booksService.reorderQueue(items).catch((err: unknown) => {
           toast({
-            title: t('pages.readingQueue.errorSave'),
-            description: getErrorMessage(err),
+            title: t('pages.readingQueue.errorSave', { reason: getErrorMessage(err) }),
             variant: 'destructive',
           });
         });

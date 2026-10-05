@@ -69,8 +69,7 @@ export function ExpenseSplitsModal({
     },
     onError: (e) =>
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(e),
+        title: t('common.messages.saveError', { reason: getErrorMessage(e) }),
         variant: 'destructive',
       }),
   });
@@ -89,8 +88,7 @@ export function ExpenseSplitsModal({
     },
     onError: (e) =>
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(e),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(e) }),
         variant: 'destructive',
       }),
   });

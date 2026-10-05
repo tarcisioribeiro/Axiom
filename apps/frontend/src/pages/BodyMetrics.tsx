@@ -334,7 +334,6 @@ export default function BodyMetrics() {
       setDialogOpen(false);
       toast({
         title: t('pages.bodyMetrics.created'),
-        description: t('pages.bodyMetrics.createdDesc'),
       });
     },
     onError: () => {

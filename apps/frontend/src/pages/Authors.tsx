@@ -202,8 +202,7 @@ export default function Authors() {
         return await authorsService.getAll();
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return [] as Author[];
@@ -238,13 +237,11 @@ export default function Authors() {
       await authorsService.delete(id);
       toast({
         title: t('pages.authors.deleted'),
-        description: t('pages.authors.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -258,13 +255,11 @@ export default function Authors() {
         author = await authorsService.update(selectedAuthor.id, data);
         toast({
           title: t('pages.authors.updated'),
-          description: t('pages.authors.updatedDesc'),
         });
       } else {
         author = await authorsService.create(data);
         toast({
           title: t('pages.authors.created'),
-          description: t('pages.authors.createdDesc'),
         });
       }
       if (pendingPhotoFile) {
@@ -274,8 +269,7 @@ export default function Authors() {
       void queryClient.invalidateQueries({ queryKey: ['authors'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

@@ -58,8 +58,9 @@ export function VaultRecoveryKeyModal({
       setGeneratedKey(res.recovery_key);
     } catch (e) {
       toast({
-        title: t('userProfile.security.recoveryKey.generateError'),
-        description: getErrorMessage(e),
+        title: t('userProfile.security.recoveryKey.generateError', {
+          reason: getErrorMessage(e),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -87,8 +88,9 @@ export function VaultRecoveryKeyModal({
       onUnlocked?.();
     } catch (e) {
       toast({
-        title: t('userProfile.security.recoveryKey.unlockError'),
-        description: getErrorMessage(e),
+        title: t('userProfile.security.recoveryKey.unlockError', {
+          reason: getErrorMessage(e),
+        }),
         variant: 'destructive',
       });
     } finally {

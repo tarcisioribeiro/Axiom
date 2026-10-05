@@ -222,8 +222,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
       finish();
     } catch (err) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(err),
+        title: t('common.messages.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {

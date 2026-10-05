@@ -43,8 +43,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
     mutationFn: (val: string) => adminService.updateConfig(config.key, val),
     onSuccess: () => {
       toast({
-        title: t('pages.adminConfig.configSaved'),
-        description: t('pages.adminConfig.configSavedDesc', { label: config.label }),
+        title: t('pages.adminConfig.configSavedDesc', { label: config.label }),
       });
       setEditing(false);
       setValue('');
@@ -52,8 +51,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminConfig.configError'),
-        description: err.message,
+        title: t('pages.adminConfig.configError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -67,8 +65,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
   const handleSave = () => {
     if (value === '') {
       toast({
-        title: t('pages.adminConfig.emptyValue'),
-        description: t('pages.adminConfig.emptyValueDesc'),
+        title: t('pages.adminConfig.emptyValueDesc'),
         variant: 'destructive',
       });
       return;

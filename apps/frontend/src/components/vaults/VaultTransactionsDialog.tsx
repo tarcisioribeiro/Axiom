@@ -77,8 +77,7 @@ export function VaultTransactionsDialog({
       setTransactions(data);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -129,8 +128,7 @@ export function VaultTransactionsDialog({
     const amount = parseFloat(editAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('common.messages.fillRequired'),
+        title: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -143,15 +141,13 @@ export function VaultTransactionsDialog({
       });
       toast({
         title: t('pages.vaults.transactionUpdated'),
-        description: t('pages.vaults.transactionUpdatedDesc'),
       });
       cancelEdit();
       void loadTransactions();
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.updateError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.updateError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -168,15 +164,13 @@ export function VaultTransactionsDialog({
     try {
       await vaultsService.deleteTransaction(tx.id);
       toast({
-        title: t('pages.vaults.transactionDeleted'),
-        description: t('pages.vaults.transactionDeletedDesc'),
+        title: t('pages.vaults.transactionDeletedDesc'),
       });
       void loadTransactions();
       onSuccess();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

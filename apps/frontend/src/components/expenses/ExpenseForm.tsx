@@ -382,8 +382,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setRedistributePreview(preview);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -412,8 +411,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       onRedistributedSuccess?.();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

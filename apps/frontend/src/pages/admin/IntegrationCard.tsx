@@ -145,16 +145,16 @@ export function OllamaRestartPanel() {
           .map(([pod, result]) => `${pod}: ${result}`)
           .join('\n');
         toast({
-          title: t('pages.adminIntegrations.restartError'),
-          description: details || data.message,
+          title: t('pages.adminIntegrations.restartError', {
+            reason: details || data.message,
+          }),
           variant: 'destructive',
         });
         return;
       }
       setRedirecting(true);
       toast({
-        title: t('pages.adminIntegrations.restartingToast'),
-        description: t('pages.adminIntegrations.restartingDesc'),
+        title: t('pages.adminIntegrations.restartingDesc'),
       });
       setTimeout(() => {
         logout();
@@ -163,8 +163,7 @@ export function OllamaRestartPanel() {
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminIntegrations.restartError'),
-        description: err.message,
+        title: t('pages.adminIntegrations.restartError', { reason: err.message }),
         variant: 'destructive',
       });
     },
@@ -199,15 +198,13 @@ export function EmailTestPanel() {
     mutationFn: (to: string) => adminService.sendTestEmail(to),
     onSuccess: (data) => {
       toast({
-        title: t('pages.adminIntegrations.emailSent'),
-        description: data.message,
+        title: data.message,
       });
       setEmail('');
     },
     onError: (err: Error) => {
       toast({
-        title: t('pages.adminIntegrations.emailError'),
-        description: err.message,
+        title: t('pages.adminIntegrations.emailError', { reason: err.message }),
         variant: 'destructive',
       });
     },

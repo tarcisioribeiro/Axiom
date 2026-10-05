@@ -53,8 +53,7 @@ export function IncreaseValueDialog({
       setPreview(result);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -67,15 +66,13 @@ export function IncreaseValueDialog({
     try {
       await payableInstallmentsService.increaseValue(payable.id, newValue, false);
       toast({
-        title: t('pages.payables.form.valueIncreased'),
-        description: t('pages.payables.form.valueIncreasedDesc'),
+        title: t('pages.payables.form.valueIncreasedDesc'),
       });
       onSuccess?.();
       handleClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

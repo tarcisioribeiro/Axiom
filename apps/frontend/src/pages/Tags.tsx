@@ -61,15 +61,13 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
     onSuccess: () => {
       toast({
         title: t('pages.tags.created'),
-        description: t('pages.tags.createdDesc'),
       });
       setDialogOpen(false);
       invalidate();
     },
     onError: (e) =>
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(e),
+        title: t('common.messages.saveError', { reason: getErrorMessage(e) }),
         variant: 'destructive',
       }),
   });
@@ -80,15 +78,13 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
     onSuccess: () => {
       toast({
         title: t('pages.tags.updated'),
-        description: t('pages.tags.updatedDesc'),
       });
       setDialogOpen(false);
       invalidate();
     },
     onError: (e) =>
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(e),
+        title: t('common.messages.saveError', { reason: getErrorMessage(e) }),
         variant: 'destructive',
       }),
   });
@@ -98,14 +94,12 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
     onSuccess: () => {
       toast({
         title: t('pages.tags.deleted'),
-        description: t('pages.tags.deletedDesc'),
       });
       invalidate();
     },
     onError: (e) =>
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(e),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(e) }),
         variant: 'destructive',
       }),
   });

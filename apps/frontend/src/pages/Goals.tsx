@@ -453,8 +453,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
         return { goals: goalsData, tasks: tasksData };
       } catch (error: unknown) {
         toast({
-          title: t('pages.goals.loadError'),
-          description: getErrorMessage(error),
+          title: t('pages.goals.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return { goals: EMPTY_GOALS, tasks: EMPTY_TASKS };
@@ -489,13 +488,11 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       await goalsService.delete(id);
       toast({
         title: t('pages.goals.deleted'),
-        description: t('pages.goals.deletedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.goals.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -505,14 +502,12 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
     try {
       await goalsService.recalculate(goal.id);
       toast({
-        title: t('pages.goals.recalculated'),
-        description: t('pages.goals.recalculatedDesc'),
+        title: t('pages.goals.recalculatedDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.recalculateError'),
-        description: getErrorMessage(error),
+        title: t('pages.goals.recalculateError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -529,16 +524,14 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
       setIsRegisteringFailure(true);
       await goalsService.registerFailure(failureGoal.id, failureDate);
       toast({
-        title: t('pages.goals.failureRegistered'),
-        description: t('pages.goals.failureRegisteredDesc'),
+        title: t('pages.goals.failureRegisteredDesc'),
       });
       setFailureGoal(undefined);
       setFailureDate('');
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.failureError'),
-        description: getErrorMessage(error),
+        title: t('pages.goals.failureError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -558,14 +551,12 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
     try {
       await goalsService.restart(goal.id);
       toast({
-        title: t('pages.goals.restartSuccess'),
-        description: t('pages.goals.restartSuccessDesc'),
+        title: t('pages.goals.restartSuccessDesc'),
       });
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.restartError'),
-        description: getErrorMessage(error),
+        title: t('pages.goals.restartError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -583,21 +574,18 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
         await goalsService.update(selectedGoal.id, apiData as GoalApiFormData);
         toast({
           title: t('pages.goals.updated'),
-          description: t('pages.goals.updatedDesc'),
         });
       } else {
         await goalsService.create(apiData as GoalApiFormData);
         toast({
           title: t('pages.goals.created'),
-          description: t('pages.goals.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void refresh();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.goals.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

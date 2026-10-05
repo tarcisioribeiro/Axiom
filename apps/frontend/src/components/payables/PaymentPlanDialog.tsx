@@ -83,15 +83,13 @@ export function PaymentPlanDialog({
         first_due_date: firstDueDate || undefined,
       });
       toast({
-        title: t('pages.payables.form.paymentPlanCreated'),
-        description: t('pages.payables.form.paymentPlanCreatedDesc'),
+        title: t('pages.payables.form.paymentPlanCreatedDesc'),
       });
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

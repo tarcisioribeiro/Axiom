@@ -147,8 +147,9 @@ function HighlightInlineForm({
       onSaved();
     } catch (error: unknown) {
       toast({
-        title: t('pages.books.detail.highlightSaveError'),
-        description: getErrorMessage(error),
+        title: t('pages.books.detail.highlightSaveError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -563,13 +564,11 @@ export function BookDetailModal({
         await readingsService.update(editingReading.id, data);
         toast({
           title: t('pages.readings.updated'),
-          description: t('pages.readings.updatedDesc'),
         });
       } else {
         await readingsService.create({ ...data, book: book.id });
         toast({
           title: t('pages.readings.created'),
-          description: t('pages.readings.createdDesc'),
         });
       }
       setIsReadingFormOpen(false);
@@ -577,8 +576,7 @@ export function BookDetailModal({
       void refreshReadings();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -599,13 +597,11 @@ export function BookDetailModal({
       await readingsService.delete(id);
       toast({
         title: t('pages.readings.deleted'),
-        description: t('pages.readings.deletedDesc'),
       });
       void refreshReadings();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -633,8 +629,9 @@ export function BookDetailModal({
       setIsSummaryFormOpen(true);
     } catch (error: unknown) {
       toast({
-        title: t('pages.books.detail.aiSummaryError'),
-        description: getErrorMessage(error),
+        title: t('pages.books.detail.aiSummaryError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -662,13 +659,11 @@ export function BookDetailModal({
         await summariesService.update(editingSummary.id, summaryFormData);
         toast({
           title: t('pages.summaries.updated'),
-          description: t('pages.summaries.updatedDesc'),
         });
       } else {
         await summariesService.create(summaryFormData);
         toast({
           title: t('pages.summaries.created'),
-          description: t('pages.summaries.createdDesc'),
         });
       }
       setIsSummaryFormOpen(false);
@@ -676,8 +671,7 @@ export function BookDetailModal({
       void refreshSummaries();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {
@@ -698,13 +692,11 @@ export function BookDetailModal({
       await summariesService.delete(id);
       toast({
         title: t('pages.summaries.deleted'),
-        description: t('pages.summaries.deletedDesc'),
       });
       void refreshSummaries();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -724,8 +716,9 @@ export function BookDetailModal({
       void refreshHighlights();
     } catch (error: unknown) {
       toast({
-        title: t('pages.books.detail.highlightDeleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.books.detail.highlightDeleteError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     }
@@ -744,8 +737,7 @@ export function BookDetailModal({
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

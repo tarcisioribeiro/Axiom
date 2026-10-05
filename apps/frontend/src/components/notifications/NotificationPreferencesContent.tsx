@@ -83,8 +83,9 @@ export function NotificationPreferencesContent({
         return await notificationPreferencesService.getAll();
       } catch (err) {
         toast({
-          title: t('pages.notificationPreferences.loadError'),
-          description: getErrorMessage(err),
+          title: t('pages.notificationPreferences.loadError', {
+            reason: getErrorMessage(err),
+          }),
           variant: 'destructive',
         });
         return EMPTY_PREFERENCES;
@@ -110,8 +111,7 @@ export function NotificationPreferencesContent({
   async function handleSave() {
     if (Object.keys(pendingChanges).length === 0) {
       toast({
-        title: t('pages.notificationPreferences.noChanges'),
-        description: t('pages.notificationPreferences.noChangesDesc'),
+        title: t('pages.notificationPreferences.noChangesDesc'),
       });
       return;
     }
@@ -143,13 +143,13 @@ export function NotificationPreferencesContent({
       }
       setPendingChanges({} as Record<NotificationType, NotificationChannel>);
       toast({
-        title: t('pages.notificationPreferences.savedSuccess'),
-        description: t('pages.notificationPreferences.savedSuccessDesc'),
+        title: t('pages.notificationPreferences.savedSuccessDesc'),
       });
     } catch (err) {
       toast({
-        title: t('pages.notificationPreferences.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.notificationPreferences.saveError', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     } finally {
@@ -159,8 +159,7 @@ export function NotificationPreferencesContent({
 
   function handleTest() {
     toast({
-      title: t('pages.notificationPreferences.testSuccess'),
-      description: t('pages.notificationPreferences.testSuccessDesc'),
+      title: t('pages.notificationPreferences.testSuccessDesc'),
     });
   }
 

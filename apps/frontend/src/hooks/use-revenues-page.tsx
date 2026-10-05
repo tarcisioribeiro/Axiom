@@ -171,14 +171,12 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.created'),
-        description: t('pages.revenues.createdDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -191,14 +189,12 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.updated'),
-        description: t('pages.revenues.updatedDesc'),
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -210,13 +206,11 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       void invalidateRevenues();
       toast({
         title: t('pages.revenues.deleted'),
-        description: t('pages.revenues.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -245,8 +239,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.revenues.noAccountMsg'),
+        title: t('pages.revenues.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -303,12 +296,10 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       await revenuesService.exportRevenues(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
-        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.exportError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }

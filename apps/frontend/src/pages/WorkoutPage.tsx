@@ -336,7 +336,6 @@ export default function WorkoutPage() {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planCreated'),
-        description: t('pages.workoutPlans.planCreatedDesc'),
       });
       setDialog(null);
     },
@@ -349,7 +348,6 @@ export default function WorkoutPage() {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planUpdated'),
-        description: t('pages.workoutPlans.planUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -361,7 +359,6 @@ export default function WorkoutPage() {
       void invalidatePlans();
       toast({
         title: t('pages.workoutPlans.planDeleted'),
-        description: t('pages.workoutPlans.planDeletedDesc'),
       });
     },
   });
@@ -373,7 +370,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayCreated'),
-        description: t('pages.workoutPlans.dayCreatedDesc'),
       });
       setDialog(null);
     },
@@ -387,7 +383,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayUpdated'),
-        description: t('pages.workoutPlans.dayUpdatedDesc'),
       });
       setDialog(null);
     },
@@ -423,8 +418,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.workoutPlans.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutPlans.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -465,8 +459,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.workoutPlans.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutPlans.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -487,7 +480,6 @@ export default function WorkoutPage() {
       void invalidateDays();
       toast({
         title: t('pages.workoutPlans.dayDeleted'),
-        description: t('pages.workoutPlans.dayDeletedDesc'),
       });
     },
   });
@@ -642,14 +634,12 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionCreated'),
-        description: t('pages.workoutSessions.sessionCreatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.workoutSessions.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutSessions.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -683,14 +673,12 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionUpdated'),
-        description: t('pages.workoutSessions.sessionUpdatedDesc'),
       });
       setDialog(null);
     },
     onError: (err: unknown) => {
       toast({
-        title: t('pages.workoutSessions.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.workoutSessions.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     },
@@ -702,7 +690,6 @@ export default function WorkoutPage() {
       void invalidateSessions();
       toast({
         title: t('pages.workoutSessions.sessionDeleted'),
-        description: t('pages.workoutSessions.sessionDeletedDesc'),
       });
     },
   });
@@ -720,8 +707,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.exercises.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.exercises.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });
@@ -736,8 +722,7 @@ export default function WorkoutPage() {
     },
     onError: (err: unknown) =>
       toast({
-        title: t('pages.exercises.saveError'),
-        description: getErrorMessage(err),
+        title: t('pages.exercises.saveError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       }),
   });

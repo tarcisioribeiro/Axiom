@@ -123,11 +123,6 @@ export function useLoansPage(): UseLoansPageReturn {
       toast({
         title: hasExtra
           ? loan_type === 'borrowed'
-            ? t('pages.loans.loanCreatedWithRevenue')
-            : t('pages.loans.loanCreatedWithExpense')
-          : t('pages.loans.created'),
-        description: hasExtra
-          ? loan_type === 'borrowed'
             ? t('pages.loans.loanCreatedWithRevenueDesc')
             : t('pages.loans.loanCreatedWithExpenseDesc')
           : t('pages.loans.createdDesc', {
@@ -138,8 +133,7 @@ export function useLoansPage(): UseLoansPageReturn {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -157,14 +151,12 @@ export function useLoansPage(): UseLoansPageReturn {
       void invalidateLoans();
       toast({
         title: t('pages.loans.updated'),
-        description: 'O empréstimo foi atualizado com sucesso.',
       });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -176,13 +168,11 @@ export function useLoansPage(): UseLoansPageReturn {
       void invalidateLoans();
       toast({
         title: t('pages.loans.deleted'),
-        description: t('pages.loans.deletedDesc'),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
@@ -197,10 +187,10 @@ export function useLoansPage(): UseLoansPageReturn {
       if (accounts.length === 0) missing.push('contas');
       if (members.length === 0) missing.push('membros');
       toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.loans.noPrerequisitesMsg', {
+        title: t('pages.loans.noPrerequisitesMsg', {
           missing: missing.join(' e '),
         }),
+
         variant: 'destructive',
       });
       return;

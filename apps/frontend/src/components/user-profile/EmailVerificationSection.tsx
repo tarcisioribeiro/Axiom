@@ -25,8 +25,9 @@ export function EmailVerificationSection({
     },
     onError: (err) => {
       toast({
-        title: 'Erro',
-        description: getErrorMessage(err),
+        title: t('common.emailVerificationBanner.errorTitle', {
+          reason: getErrorMessage(err),
+        }),
         variant: 'destructive',
       });
     },

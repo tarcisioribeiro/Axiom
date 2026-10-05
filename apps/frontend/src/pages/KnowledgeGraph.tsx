@@ -662,8 +662,9 @@ export default function KnowledgeGraph() {
     },
     onError: (error) => {
       toast({
-        title: t('pages.knowledgeGraph.toasts.linkCreateError'),
-        description: getErrorMessage(error),
+        title: t('pages.knowledgeGraph.toasts.linkCreateError', {
+          reason: getErrorMessage(error),
+        }),
         variant: 'destructive',
       });
     },

@@ -120,13 +120,11 @@ export default function RoutineTasks({
       await routineTasksService.delete(id);
       toast({
         title: t('pages.routineTasks.deleted'),
-        description: t('pages.routineTasks.deletedDesc'),
       });
       void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.deleteError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     }
@@ -146,21 +144,18 @@ export default function RoutineTasks({
         await routineTasksService.update(selectedTask.id, apiData);
         toast({
           title: t('pages.routineTasks.updated'),
-          description: t('pages.routineTasks.updatedDesc'),
         });
       } else {
         await routineTasksService.create(apiData);
         toast({
           title: t('pages.routineTasks.created'),
-          description: t('pages.routineTasks.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['routine-tasks'] });
     } catch (error: unknown) {
       toast({
-        title: t('pages.routineTasks.saveError'),
-        description: getErrorMessage(error),
+        title: t('pages.routineTasks.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

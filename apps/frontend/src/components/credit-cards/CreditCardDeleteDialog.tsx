@@ -73,14 +73,12 @@ export function CreditCardDeleteDialog({
       });
       toast({
         title: t('pages.creditCards.deleted'),
-        description: t('pages.creditCards.deletedDesc'),
       });
       close();
       onDeleted();
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

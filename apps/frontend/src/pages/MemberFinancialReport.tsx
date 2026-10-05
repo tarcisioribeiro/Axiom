@@ -74,8 +74,7 @@ export default function MemberFinancialReportPage() {
         });
       } catch (error: unknown) {
         toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
           variant: 'destructive',
         });
         return null;
@@ -94,8 +93,7 @@ export default function MemberFinancialReportPage() {
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
-        description: getErrorMessage(error),
+        title: t('common.messages.exportError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     } finally {

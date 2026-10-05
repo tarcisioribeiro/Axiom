@@ -242,8 +242,7 @@ function AnnotationForm({
       toast({ title: t('pages.bookReader.annotationSaved') });
     } catch (err) {
       toast({
-        title: t('pages.bookReader.annotationError'),
-        description: getErrorMessage(err),
+        title: t('pages.bookReader.annotationError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     } finally {
@@ -671,8 +670,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
         };
       } catch (err) {
         toast({
-          title: 'Erro ao carregar livro',
-          description: getErrorMessage(err),
+          title: t('common.messages.loadError', { reason: getErrorMessage(err) }),
           variant: 'destructive',
         });
         return null;
@@ -782,8 +780,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
       setAnnotations((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       toast({
-        title: 'Erro ao remover',
-        description: getErrorMessage(err),
+        title: t('common.messages.deleteError', { reason: getErrorMessage(err) }),
         variant: 'destructive',
       });
     }

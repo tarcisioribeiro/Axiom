@@ -27,8 +27,7 @@ export function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.twoFactor.invalidCode'),
-        description: getErrorMessage(error),
+        title: t('pages.twoFactor.setupError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
     },
