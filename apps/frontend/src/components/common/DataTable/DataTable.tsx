@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * DataTable Component
  *
@@ -31,21 +30,13 @@
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  ChevronsUpDown,
-} from 'lucide-react';
-import React, { useCallback, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { Button } from '@/components/ui/button';
-import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
+import { PaginationNav } from '../PaginatedSlide';
 
 export interface Column<T> {
   key: string;
@@ -112,8 +103,6 @@ export function DataTable<T>({
   const cellPad = density === 'compact' ? 'px-md py-sm' : 'px-lg py-md';
   const { t } = useTranslation();
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
-  const setAgentWidgetHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
-  useEffect(() => () => setAgentWidgetHiddenByNav(false), [setAgentWidgetHiddenByNav]);
 
   const handleRowKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTableRowElement>, index: number) => {
@@ -303,53 +292,13 @@ export function DataTable<T>({
         </div>
       </div>
 
-      {pagination &&
-        (() => {
-          const totalPages = Math.ceil(pagination.total / pagination.pageSize);
-          const isFirst = pagination.page <= 1;
-          const isLast = pagination.page >= totalPages;
-          const currentCount = Math.min(
-            pagination.pageSize,
-            pagination.total - (pagination.page - 1) * pagination.pageSize
-          );
-          return (
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-sm">
-                {t('common.table.showing', {
-                  count: currentCount,
-                  total: pagination.total,
-                })}
-              </p>
-              <div
-                className="gap-sm flex items-center"
-                onMouseEnter={() => setAgentWidgetHiddenByNav(true)}
-                onMouseLeave={() => setAgentWidgetHiddenByNav(false)}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t('common.table.previousPage')}
-                  disabled={isFirst}
-                  onClick={() => pagination.onPageChange(pagination.page - 1)}
-                >
-                  <ChevronLeft />
-                </Button>
-                <span className="text-muted-foreground text-sm" aria-live="polite">
-                  {t('common.table.pageOf', { page: pagination.page, totalPages })}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t('common.table.nextPage')}
-                  disabled={isLast}
-                  onClick={() => pagination.onPageChange(pagination.page + 1)}
-                >
-                  <ChevronRight />
-                </Button>
-              </div>
-            </div>
-          );
-        })()}
+      {pagination && (
+        <PaginationNav
+          page={pagination.page}
+          totalPages={Math.ceil(pagination.total / pagination.pageSize)}
+          onPageChange={pagination.onPageChange}
+        />
+      )}
     </div>
   );
 }

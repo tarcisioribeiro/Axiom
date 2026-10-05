@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { bookHighlightsService } from '@/services/book-highlights-service';
@@ -175,13 +177,13 @@ function HighlightForm({
       <div className="gap-md grid grid-cols-2">
         <div className="space-y-sm">
           <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
-          <Input
+          <NumberStepper
             id="hl-page"
-            type="number"
             min={1}
-            value={pageNumber}
-            onChange={(e) => setPageNumber(e.target.value)}
+            optional
             placeholder={t('pages.highlights.form.pagePlaceholder')}
+            value={pageNumber === '' ? null : Number(pageNumber)}
+            onChange={(v) => setPageNumber(v === null ? '' : String(v))}
           />
         </div>
         <div className="space-y-sm">
@@ -439,9 +441,11 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
         }}
       >
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('pages.highlights.newTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
+          <DialogHeader sticky>
+            <DialogTitle mode="create">{t('pages.highlights.newTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <HighlightForm
             books={books}
@@ -456,9 +460,11 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       {/* Edit dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('pages.highlights.editTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>
+          <DialogHeader sticky>
+            <DialogTitle mode="edit">{t('pages.highlights.editTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <HighlightForm
             highlight={editingHighlight}

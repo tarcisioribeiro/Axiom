@@ -2,7 +2,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BookOpen, Loader2, Plus, Tag, Target, Trash2, Save, X } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ export function ReadingGoalModal({
   const currentYear = new Date().getFullYear();
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -145,8 +147,8 @@ export function ReadingGoalModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
+        <DialogHeader sticky>
+          <DialogTitle mode={goal ? 'edit' : 'create'}>
             {goal
               ? t('pages.libraryDashboard.readingGoals.editTitle')
               : t('pages.libraryDashboard.readingGoals.newTitle')}
@@ -164,15 +166,19 @@ export function ReadingGoalModal({
                   <Target className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formYear')}
                 </Label>
-                <Input
-                  id="year"
-                  type="number"
-                  min={2000}
-                  max={2100}
-                  {...register('year', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="year"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="year"
+                      disabled={isLoading}
+                      min={2000}
+                      max={2100}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 {errors.year && (
                   <p className="text-destructive text-sm">{errors.year.message}</p>
@@ -192,9 +198,7 @@ export function ReadingGoalModal({
                   )}
                   disabled={isLoading}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formNameHint')}
-                </p>
+
                 {errors.name && (
                   <p className="text-destructive text-sm">{errors.name.message}</p>
                 )}
@@ -212,21 +216,21 @@ export function ReadingGoalModal({
                   <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formBooksGoal')}
                 </Label>
-                <Input
-                  id="books_goal"
-                  type="number"
-                  min={1}
-                  max={365}
-                  {...register('books_goal', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="books_goal"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="books_goal"
+                      disabled={isLoading}
+                      min={1}
+                      max={365}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formBooksGoalHint', {
-                    year: currentYear,
-                  })}
-                </p>
+
                 {errors.books_goal && (
                   <p className="text-destructive text-sm">
                     {errors.books_goal.message}
@@ -239,22 +243,24 @@ export function ReadingGoalModal({
                   <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.libraryDashboard.readingGoals.formPagesGoal')}
                 </Label>
-                <Input
-                  id="pages_goal"
-                  type="number"
-                  min={0}
-                  max={100000}
-                  {...register('pages_goal', {
-                    setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
-                  })}
-                  placeholder={t(
-                    'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+                <Controller
+                  control={control}
+                  name="pages_goal"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="pages_goal"
+                      disabled={isLoading}
+                      placeholder={t(
+                        'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+                      )}
+                      min={0}
+                      max={100000}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   )}
-                  disabled={isLoading}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formPagesGoalHint')}
-                </p>
+
                 {errors.pages_goal && (
                   <p className="text-destructive text-sm">
                     {errors.pages_goal.message}
@@ -270,9 +276,6 @@ export function ReadingGoalModal({
           >
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.libraryDashboard.readingGoals.formLiteraryTypesHint')}
-                </p>
                 {availableValues.length > 0 && (
                   <Button
                     type="button"
@@ -325,19 +328,14 @@ export function ReadingGoalModal({
                           })}
                         </SelectContent>
                       </Select>
-                      <Input
-                        type="number"
+                      <NumberStepper
                         min={1}
                         max={500}
-                        className="w-24"
+                        aria-label={t(
+                          'pages.libraryDashboard.readingGoals.formBooksGoal'
+                        )}
                         value={draft.goal_count}
-                        onChange={(e) =>
-                          updateLtg(
-                            index,
-                            'goal_count',
-                            e.target.value === '' ? 1 : parseInt(e.target.value)
-                          )
-                        }
+                        onChange={(v) => updateLtg(index, 'goal_count', v ?? 1)}
                       />
                       <Button
                         aria-label={t('common.actions.remove')}

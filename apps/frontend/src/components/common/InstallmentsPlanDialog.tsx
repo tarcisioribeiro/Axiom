@@ -15,8 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -275,13 +275,13 @@ export function InstallmentsPlanDialog({
                 <div className="space-y-xs">
                   <Label>{tr('recalcCountLabel')}</Label>
                   <div className="gap-sm flex items-center">
-                    <Input
-                      type="number"
+                    <NumberStepper
                       min={1}
-                      className="w-24"
-                      value={recalcCount}
-                      onChange={(e) => {
-                        setRecalcCount(e.target.value);
+                      optional
+                      aria-label={tr('recalcCountLabel')}
+                      value={recalcCount === '' ? null : Number(recalcCount)}
+                      onChange={(v) => {
+                        setRecalcCount(v === null ? '' : String(v));
                         setRecalcPreview(null);
                       }}
                     />

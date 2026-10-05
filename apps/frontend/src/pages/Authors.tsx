@@ -39,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
@@ -331,17 +332,19 @@ export default function Authors() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedAuthor ? 'edit' : 'create'}>
               {selectedAuthor
                 ? t('pages.authors.editTitle')
                 : t('pages.authors.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedAuthor
-                ? t('pages.authors.editDesc')
-                : t('pages.authors.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedAuthor
+                  ? t('pages.authors.editDesc')
+                  : t('pages.authors.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <AuthorForm
             author={selectedAuthor}

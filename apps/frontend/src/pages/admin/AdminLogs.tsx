@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, RefreshCw, ScrollText } from 'lucide-react';
+import { RefreshCw, ScrollText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,9 +7,9 @@ import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginationNav } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Button } from '@/components/ui/button';
-import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
   SelectContent,
@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import i18n from '@/i18n';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 
@@ -168,36 +167,12 @@ export default function AdminLogs() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="border-border px-md flex items-center justify-between border-t py-3">
-            <p className="text-muted-foreground text-sm">
-              {t('pages.adminLogs.page', {
-                page,
-                total: totalPages,
-                records: data?.count.toLocaleString(i18n.language),
-              })}
-            </p>
-            <div className="gap-sm flex items-center">
-              <PlainButton
-                aria-label={t('common.table.previousPage')}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </PlainButton>
-              <PlainButton
-                aria-label={t('common.table.nextPage')}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="border-border p-sm text-muted-foreground hover:bg-accent rounded-lg border disabled:opacity-40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </PlainButton>
-            </div>
-          </div>
-        )}
+        <PaginationNav
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          className="border-border border-t py-3"
+        />
       </div>
     </PageContainer>
   );

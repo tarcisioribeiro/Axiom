@@ -16,12 +16,13 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -106,6 +107,7 @@ export function CourseForm({
   const { t } = useTranslation();
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -283,12 +285,19 @@ export function CourseForm({
                 {t('pages.courses.form.estimatedHoursLabel')}
               </div>
             </Label>
-            <Input
-              id="estimated_hours"
-              type="number"
-              min={0}
-              step={0.5}
-              {...register('estimated_hours', { valueAsNumber: true })}
+            <Controller
+              control={control}
+              name="estimated_hours"
+              render={({ field }) => (
+                <DecimalInput
+                  id="estimated_hours"
+                  decimals={1}
+                  step={0.5}
+                  unit="h"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
         </div>
@@ -316,11 +325,7 @@ export function CourseForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-intellect hover:bg-category-intellect/90 text-white"
-        >
+        <Button type="submit" disabled={isLoading}>
           <Save className="mr-sm h-4 w-4" />
           {t('common.actions.save')}
         </Button>

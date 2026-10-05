@@ -499,9 +499,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               placeholder={t('pages.expenses.form.merchantPlaceholder')}
               disabled={isLoading}
             />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.expenses.form.merchantHint')}
-            </p>
           </div>
         </div>
       </FormSection>
@@ -744,9 +741,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedLoanHint')}
-                  </p>
                 </div>
               )}
 
@@ -780,9 +774,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedPayableHint')}
-                  </p>
                 </div>
               )}
 
@@ -822,9 +813,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.expenses.form.relatedFixedExpenseHint')}
-                  </p>
                 </div>
               )}
             </div>
@@ -893,14 +881,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {!expense && (
         <div className="gap-sm border-border px-md py-sm flex items-center rounded-md border border-dashed">
           <GitFork className="text-muted-foreground h-4 w-4 shrink-0" />
-          <div className="flex flex-1 flex-col gap-0.5">
-            <span className="text-sm font-medium">
-              {t('pages.expenses.form.splitToggle')}
-            </span>
-            <span className="text-muted-foreground text-xs">
-              {t('pages.expenses.form.splitToggleHint')}
-            </span>
-          </div>
+          <span className="flex-1 text-sm font-medium">
+            {t('pages.expenses.form.splitToggle')}
+          </span>
           <PlainButton
             type="button"
             role="switch"

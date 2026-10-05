@@ -10,6 +10,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -371,18 +372,24 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           <Label htmlFor="total_installments">
             {t('pages.creditCardExpenses.form.installmentsLabel')}
           </Label>
-          <Input
-            id="total_installments"
-            type="number"
-            min="1"
-            max="48"
-            {...register('total_installments', {
+          <Controller
+            control={control}
+            name="total_installments"
+            rules={{
               required: true,
-              valueAsNumber: true,
               min: 1,
               max: 48,
-            })}
-            disabled={isLoading || isEditMode}
+            }}
+            render={({ field }) => (
+              <NumberStepper
+                id="total_installments"
+                disabled={isLoading || isEditMode}
+                min={1}
+                max={48}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
           <div className="bg-muted p-sm rounded-md">
             {watchedTotalInstallments > 1 ? (

@@ -12,14 +12,16 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { useFieldArray, useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -187,7 +189,6 @@ export function MenuOptionForm({
     }
   }, [option, reset]);
 
-  const nameValue = watch('name');
   const allIngredients = watch('ingredients');
   const visualGroups = buildVisualGroups(allIngredients);
 
@@ -250,23 +251,6 @@ export function MenuOptionForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <ListChecks className="text-category-nutrition h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {option
-              ? t('pages.nutritionMealTypes.editOptionTitle')
-              : t('pages.nutritionMealTypes.newOptionTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {nameValue || t('pages.nutritionMealTypes.newOptionDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Nome e ordem */}
       <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
         <div className="gap-sm grid grid-cols-[1fr_80px]">
@@ -280,12 +264,17 @@ export function MenuOptionForm({
               <p className="mt-xs text-destructive text-xs">{t('common.required')}</p>
             )}
           </div>
-          <Input
-            type="number"
-            min={0}
-            aria-label={t('pages.nutritionMealTypes.optionOrder')}
-            {...register('order', { valueAsNumber: true })}
-            className="text-center"
+          <Controller
+            control={control}
+            name="order"
+            render={({ field }) => (
+              <NumberStepper
+                aria-label={t('pages.nutritionMealTypes.optionOrder')}
+                min={0}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
       </FormSection>
@@ -397,11 +386,7 @@ export function MenuOptionForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (
@@ -484,13 +469,16 @@ function IngredientRow({
           <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
-          <Input
-            type="number"
-            step="0.01"
-            min={0}
+          <DecimalInput
             placeholder="0"
-            {...register(`ingredients.${idx}.quantity`)}
-            className="h-8 text-center text-sm"
+            aria-label={t('pages.nutritionMealTypes.quantity')}
+            value={watch(`ingredients.${idx}.quantity`)}
+            onChange={(v) =>
+              setValue(`ingredients.${idx}.quantity`, v === null ? '' : String(v), {
+                shouldDirty: true,
+              })
+            }
+            className="h-8"
           />
         </div>
         <div className="space-y-xs">

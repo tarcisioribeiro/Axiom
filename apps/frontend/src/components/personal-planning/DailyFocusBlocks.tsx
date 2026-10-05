@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getPythonWeekday } from '@/lib/routine-export';
@@ -173,13 +174,15 @@ export function DailyFocusBlocks({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode="edit">
               {t('pages.routineTasks.focusBlocks.editBlockTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.routineTasks.focusBlocks.editBlockDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.routineTasks.focusBlocks.editBlockDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RoutineFocusBlockForm
             block={selectedBlock}

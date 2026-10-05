@@ -133,23 +133,6 @@ export function MealLogForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <CheckCircle2 className="text-category-nutrition h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {log
-              ? t('pages.nutritionLog.editLogTitle')
-              : t('pages.nutritionLog.newLogTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {selectedMealType?.name ?? t('pages.nutritionLog.newLogDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Data e hora */}
       <FormSection title="Data & Hora" icon={CalendarDays}>
         <div className="gap-sm grid grid-cols-2">
@@ -238,9 +221,6 @@ export function MealLogForm({
             <Zap className="text-primary h-3.5 w-3.5" />
             {t('pages.nutritionLog.isFreeMeal')}
           </Label>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.nutritionLog.isFreeMealDesc')}
-          </p>
         </div>
       </div>
 
@@ -337,11 +317,7 @@ export function MealLogForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (

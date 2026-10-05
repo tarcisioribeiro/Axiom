@@ -10,11 +10,13 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -135,7 +137,7 @@ export function WorkoutExerciseModal({
     existing ? (exercises.find((e) => e.id === existing.exercise) ?? null) : null
   );
 
-  const { register, handleSubmit, setValue, watch, control } = useForm<FormValues>({
+  const { handleSubmit, setValue, watch, control } = useForm<FormValues>({
     defaultValues: {
       exercise_id: existing?.exercise ?? 0,
       sets: existing?.sets ?? 3,
@@ -294,13 +296,20 @@ export function WorkoutExerciseModal({
             contentClassName="flex flex-1 items-center justify-center"
           >
             <div className="gap-sm flex items-center">
-              <input
-                type="number"
-                min={0}
-                step="0.5"
-                placeholder="0"
-                {...register('load')}
-                className="border-input bg-background px-sm focus:ring-ring w-24 rounded-lg border py-2 text-center text-sm font-semibold outline-none focus:ring-2"
+              <Controller
+                control={control}
+                name="load"
+                render={({ field }) => (
+                  <DecimalInput
+                    decimals={1}
+                    step={0.5}
+                    placeholder="0"
+                    aria-label={t('pages.workoutPlans.load')}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                    className="w-36"
+                  />
+                )}
               />
               <div className="gap-xs flex">
                 {LOAD_UNITS.map((unit) => (
@@ -340,18 +349,13 @@ export function WorkoutExerciseModal({
                   <span className="text-muted-foreground text-center text-xs font-medium">
                     {i + 1}
                   </span>
-                  <input
-                    type="number"
-                    min={0}
+                  <NumberStepper
+                    optional
                     aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.repsShort')}`}
                     placeholder={String(degradedReps(i, sets, repsMin, repsMax))}
-                    value={setTargets[i]?.reps ?? ''}
-                    onChange={(e) =>
-                      updateSetTarget(i, {
-                        reps: e.target.value === '' ? null : Number(e.target.value),
-                      })
-                    }
-                    className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
+                    value={setTargets[i]?.reps ?? null}
+                    onChange={(v) => updateSetTarget(i, { reps: v })}
+                    className="w-full"
                   />
                   {loadUnit === 'bw' ? (
                     <span className="text-muted-foreground text-center text-xs">
@@ -360,17 +364,14 @@ export function WorkoutExerciseModal({
                         ` - ${Number(bodyWeightKg).toLocaleString(i18n.language)} kg`}
                     </span>
                   ) : (
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.5"
+                    <DecimalInput
+                      decimals={1}
                       aria-label={`${t('pages.workoutPlans.setLabel')} ${i + 1} — ${t('pages.workoutPlans.load')}`}
                       placeholder={watch('load') || '0'}
-                      value={setTargets[i]?.load ?? ''}
-                      onChange={(e) =>
-                        updateSetTarget(i, { load: e.target.value || null })
+                      value={setTargets[i]?.load}
+                      onChange={(v) =>
+                        updateSetTarget(i, { load: v === null ? null : String(v) })
                       }
-                      className="border-input bg-background px-sm focus:ring-ring rounded-lg border py-1.5 text-center text-sm outline-none focus:ring-2"
                     />
                   )}
                 </div>

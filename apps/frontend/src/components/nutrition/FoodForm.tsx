@@ -1,10 +1,10 @@
-/* eslint-disable react-hooks/incompatible-library */
 import { FileText, Flame, Loader2, Salad, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import {
@@ -54,7 +54,6 @@ export function FoodForm({
     control,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<FoodFormData>({
     defaultValues: {
@@ -79,9 +78,6 @@ export function FoodForm({
       });
   }, [food, ownerId, reset]);
 
-  const nameValue = watch('name');
-  const initial = nameValue?.charAt(0)?.toUpperCase() || '?';
-
   const handleFormSubmit = async (data: FoodFormData) => {
     try {
       await onSubmit({
@@ -97,27 +93,6 @@ export function FoodForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header visual com avatar */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/25 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg">
-          {nameValue ? (
-            <span className="text-category-nutrition text-xl font-bold">{initial}</span>
-          ) : (
-            <Salad className="text-category-nutrition h-6 w-6" />
-          )}
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {food
-              ? t('pages.nutritionFoods.editFoodTitle')
-              : t('pages.nutritionFoods.newFoodTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {nameValue || t('pages.nutritionFoods.newFoodDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Nome */}
       <FormSection title={t('pages.nutritionFoods.foodName')} icon={Salad}>
         <Input
@@ -146,23 +121,26 @@ export function FoodForm({
         icon={Flame}
       >
         <div className="space-y-sm">
-          <p className="text-muted-foreground text-xs">
-            {t(
-              'pages.nutritionFoods.caloriesHelp',
-              t('pages.nutritionFoods.caloriesHelp')
-            )}
-          </p>
           <div className="gap-sm grid grid-cols-2">
             <div className="space-y-xs">
               <label className="text-foreground text-xs font-medium">
                 {t('pages.nutritionFoods.servingSize', 'Tamanho da Porção')}
               </label>
-              <Input
-                type="number"
-                min={0}
-                step="0.1"
-                placeholder="100"
-                {...register('serving_size')}
+              <Controller
+                control={control}
+                name="serving_size"
+                render={({ field }) => (
+                  <DecimalInput
+                    decimals={1}
+                    placeholder="100"
+                    aria-label={t(
+                      'pages.nutritionFoods.servingSize',
+                      'Tamanho da Porção'
+                    )}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                  />
+                )}
               />
             </div>
             <div className="space-y-xs">
@@ -196,12 +174,22 @@ export function FoodForm({
                 'Calorias (kcal) por Porção'
               )}
             </label>
-            <Input
-              type="number"
-              min={0}
-              step="0.1"
-              placeholder="ex: 70"
-              {...register('calories_per_serving')}
+            <Controller
+              control={control}
+              name="calories_per_serving"
+              render={({ field }) => (
+                <DecimalInput
+                  decimals={1}
+                  unit="kcal"
+                  placeholder="ex: 70"
+                  aria-label={t(
+                    'pages.nutritionFoods.caloriesPerServing',
+                    'Calorias (kcal) por Porção'
+                  )}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                />
+              )}
             />
           </div>
         </div>
@@ -212,11 +200,7 @@ export function FoodForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (

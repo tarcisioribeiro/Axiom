@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
@@ -435,17 +436,19 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedRevenue ? 'edit' : 'create'}>
               {selectedRevenue
                 ? t('pages.revenues.editTitle')
                 : t('pages.revenues.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedRevenue
-                ? t('pages.revenues.editDesc')
-                : t('pages.revenues.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedRevenue
+                  ? t('pages.revenues.editDesc')
+                  : t('pages.revenues.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RevenueForm
             revenue={selectedRevenue}

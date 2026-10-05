@@ -11,13 +11,14 @@ import {
   Save,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -56,6 +57,7 @@ export function AuthorForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -221,12 +223,21 @@ export function AuthorForm({
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.birthYearLabel')}
             </Label>
-            <Input
-              id="birth_year"
-              type="number"
-              {...register('birth_year', { valueAsNumber: true })}
-              placeholder={t('pages.authors.form.birthYearPlaceholder')}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="birth_year"
+              render={({ field }) => (
+                <NumberStepper
+                  id="birth_year"
+                  disabled={isLoading}
+                  placeholder={t('pages.authors.form.birthYearPlaceholder')}
+                  min={1}
+                  max={new Date().getFullYear()}
+                  optional
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.birth_year && (
               <p className="mt-xs text-destructive text-sm">
@@ -270,12 +281,20 @@ export function AuthorForm({
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.authors.form.deathYearLabel')}
             </Label>
-            <Input
-              id="death_year"
-              type="number"
-              {...register('death_year', { valueAsNumber: true })}
-              placeholder={t('pages.authors.form.deathYearPlaceholder')}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="death_year"
+              render={({ field }) => (
+                <NumberStepper
+                  id="death_year"
+                  disabled={isLoading}
+                  placeholder={t('pages.authors.form.deathYearPlaceholder')}
+                  min={1}
+                  optional
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.death_year && (
               <p className="mt-xs text-destructive text-sm">

@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { API_CONFIG } from '@/config/api-config';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
@@ -506,13 +507,15 @@ export default function Budgets() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedBudget ? 'edit' : 'create'}>
               {selectedBudget
                 ? t('pages.budgets.editTitle')
                 : t('pages.budgets.newTitle')}
             </DialogTitle>
-            <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-lg">
             {/* Seção: Classificação */}
@@ -641,9 +644,6 @@ export default function Budgets() {
                     >
                       {t('pages.budgets.rollover.enabled')}
                     </Label>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.budgets.rollover.description')}
-                    </p>
                   </div>
                 </div>
 

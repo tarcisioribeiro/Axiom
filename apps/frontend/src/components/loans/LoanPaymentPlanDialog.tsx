@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { nextDueDateOnOrAfterToday } from '@/lib/debt-schedule';
 import { formatCurrency } from '@/lib/formatters';
@@ -89,11 +89,12 @@ export function LoanPaymentPlanDialog({
         <div className="space-y-md">
           <div className="space-y-xs">
             <Label>{t('pages.loans.paymentPlan.installmentsCountLabel')} *</Label>
-            <Input
-              type="number"
+            <NumberStepper
               min={2}
-              value={installments}
-              onChange={(e) => setInstallments(e.target.value)}
+              optional
+              aria-label={t('pages.loans.paymentPlan.installmentsCountLabel')}
+              value={installments === '' ? null : Number(installments)}
+              onChange={(v) => setInstallments(v === null ? '' : String(v))}
             />
           </div>
           <div className="space-y-xs">

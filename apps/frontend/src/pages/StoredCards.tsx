@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -541,17 +542,19 @@ export default function StoredCards() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader sticky>
+              <DialogTitle mode={selectedCard ? 'edit' : 'create'}>
                 {selectedCard
                   ? t('pages.storedCards.editTitle')
                   : t('pages.storedCards.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {selectedCard
-                  ? t('pages.storedCards.editDesc')
-                  : t('pages.storedCards.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {selectedCard
+                    ? t('pages.storedCards.editDesc')
+                    : t('pages.storedCards.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <StoredCardForm
               card={selectedCard}

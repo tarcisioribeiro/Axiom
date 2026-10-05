@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { publishersService } from '@/services/publishers-service';
@@ -290,17 +291,19 @@ export default function Publishers() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedPublisher ? 'edit' : 'create'}>
               {selectedPublisher
                 ? t('pages.publishers.editTitle')
                 : t('pages.publishers.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedPublisher
-                ? t('pages.publishers.editDesc')
-                : t('pages.publishers.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedPublisher
+                  ? t('pages.publishers.editDesc')
+                  : t('pages.publishers.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <PublisherForm
             publisher={selectedPublisher}

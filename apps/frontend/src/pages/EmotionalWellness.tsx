@@ -43,7 +43,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -130,6 +133,12 @@ function scoreLabel(score: number | null) {
 
 // ─── Scale slider ─────────────────────────────────────────────────────────────
 
+const INTENSITY_TEXT = {
+  success: 'text-success',
+  warning: 'text-warning',
+  destructive: 'text-destructive',
+} as const;
+
 function ScaleInput({
   label,
   value,
@@ -141,17 +150,10 @@ function ScaleInput({
   onChange: (v: number) => void;
   colorHigh?: boolean;
 }) {
-  const color = colorHigh
-    ? value >= 7
-      ? 'text-success'
-      : value >= 4
-        ? 'text-warning'
-        : 'text-destructive'
-    : value >= 7
-      ? 'text-destructive'
-      : value >= 4
-        ? 'text-warning'
-        : 'text-success';
+  const good = colorHigh ? value >= 7 : value < 4;
+  const bad = colorHigh ? value < 4 : value >= 7;
+  const tone = good ? 'success' : bad ? 'destructive' : 'warning';
+  const color = INTENSITY_TEXT[tone];
 
   return (
     <div className="space-y-sm">
@@ -159,14 +161,13 @@ function ScaleInput({
         <span className="text-foreground text-sm font-medium">{label}</span>
         <span className={cn('text-lg font-bold tabular-nums', color)}>{value}</span>
       </div>
-      <input
-        type="range"
+      <Slider
         min={0}
         max={10}
+        tone={tone}
         aria-label={label}
         value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="bg-muted accent-primary h-2 w-full cursor-pointer appearance-none rounded-full"
+        onChange={onChange}
       />
       <div className="text-muted-foreground flex justify-between text-xs">
         <span>0</span>
@@ -805,13 +806,13 @@ function CheckinTab() {
                 >
                   {text.label}
                 </label>
-                <textarea
+                <Textarea
                   id={text.key}
                   value={form[text.key]}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, [text.key]: e.target.value }))
                   }
-                  className="border-border bg-background py-sm text-foreground placeholder:text-muted-foreground focus:ring-primary w-full flex-1 resize-none rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
+                  className="flex-1 resize-none"
                   placeholder={text.placeholder}
                 />
               </div>
@@ -1059,8 +1060,8 @@ function CrisisTab() {
             ))}
           </div>
           {emotionalState === 'other' && (
-            <input
-              className="mt-sm border-border bg-background py-sm focus:ring-primary w-full rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
+            <Input
+              className="mt-sm"
               placeholder="Descreva o que está sentindo"
               value={otherEmotion}
               onChange={(e) => setOtherEmotion(e.target.value)}
@@ -1089,8 +1090,8 @@ function CrisisTab() {
             ))}
           </div>
           {impulseType === 'other' && (
-            <input
-              className="mt-sm border-border bg-background py-sm focus:ring-primary w-full rounded-lg border px-3 text-sm focus:ring-1 focus:outline-none"
+            <Input
+              className="mt-sm"
               placeholder="Descreva o impulso"
               value={otherImpulse}
               onChange={(e) => setOtherImpulse(e.target.value)}

@@ -29,6 +29,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { FoodForm } from '@/components/nutrition/FoodForm';
 import {
@@ -73,6 +74,9 @@ import type {
   MenuOptionIngredient,
 } from '@/types/nutrition';
 import { getErrorMessage } from '@/utils/error-utils';
+
+// 5 cards por linha × 5 linhas
+const FOODS_PAGE_SIZE = 25;
 
 type DialogMode =
   | { type: 'new-food' }
@@ -173,6 +177,7 @@ export default function NutritionPage() {
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
   const [foodSearch, setFoodSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('log');
   const today = formatLocalDate(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(today);
 
@@ -202,20 +207,12 @@ export default function NutritionPage() {
     queryFn: () => mealLogService.getByDate(selectedDate),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
-  const { data: todayLogs = [], isLoading: todayLogsLoading } = useQuery({
-    queryKey: ['meal-logs', 'date', today],
-    queryFn: () => mealLogService.getByDate(today),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
 
   const foods = foodsData ?? [];
   const mealTypes = mealTypesData ?? [];
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
   const dayCalories = Math.round(
     selectedLogs.reduce((acc, log) => acc + log.calories, 0)
-  );
-  const todayCalories = Math.round(
-    todayLogs.reduce((acc, log) => acc + log.calories, 0)
   );
   const adherencePct =
     activeMealTypes.length > 0
@@ -567,14 +564,27 @@ export default function NutritionPage() {
         <PageHeader
           title={t('pages.nutritionFoods.title')}
           icon={<UtensilsCrossed className="text-category-nutrition h-6 w-6" />}
+          actions={
+            activeTab === 'meal-types' ? (
+              <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionMealTypes.newMealTypeBtn')}
+              </Button>
+            ) : activeTab === 'foods' ? (
+              <Button onClick={() => setDialog({ type: 'new-food' })}>
+                <Plus className="h-4 w-4" />
+                {t('pages.nutritionFoods.newFoodBtn')}
+              </Button>
+            ) : undefined
+          }
         />
 
-        <Tabs defaultValue="today" className="flex flex-1 flex-col">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex flex-1 flex-col"
+        >
           <TabsList className="mb-lg w-full">
-            <TabsTrigger value="today" className="gap-xs flex-1">
-              <Sun className="h-4 w-4" />
-              {t('pages.nutritionHub.todayMeals')}
-            </TabsTrigger>
             <TabsTrigger value="log" className="gap-xs flex-1">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
@@ -588,84 +598,6 @@ export default function NutritionPage() {
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
           </TabsList>
-
-          {/* ── Hoje ─────────────────────────────────────────────────────── */}
-          <TabsContent value="today" className="mt-0 flex-1">
-            <div className="space-y-md">
-              <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-sm font-medium">
-                  {t('pages.nutritionHub.subtitle')}
-                </p>
-                <div className="gap-md flex items-center">
-                  <div className="text-right">
-                    <span className="inline-flex items-center gap-0.5 text-2xl font-bold text-orange-500 tabular-nums">
-                      <Flame className="h-5 w-5" />
-                      {todayCalories}
-                    </span>
-                    <p className="text-muted-foreground text-xs">kcal</p>
-                  </div>
-                  <WaterTotal date={today} />
-                </div>
-              </div>
-              {(() => {
-                if (todayLogsLoading) return <LoadingState />;
-                if (todayLogs.length === 0)
-                  return (
-                    <EmptyState
-                      title={t('pages.nutritionHub.noMealsToday')}
-                      description={t('pages.nutritionHub.registerInLog')}
-                      icon={<UtensilsCrossed className="h-8 w-8" />}
-                    />
-                  );
-                return (
-                  <div className="space-y-sm">
-                    {todayLogs.map((log) => {
-                      const totalCal = Math.round(log.calories);
-                      return (
-                        <div
-                          key={log.id}
-                          className="border-border p-sm flex items-center justify-between rounded-md border"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">
-                              {log.meal_type_name ?? log.meal_type}
-                            </p>
-                            <div className="gap-xs mt-0.5 flex flex-wrap items-center">
-                              {log.menu_option_name && (
-                                <p className="text-muted-foreground text-xs">
-                                  {log.menu_option_name}
-                                </p>
-                              )}
-                              {totalCal > 0 && (
-                                <span className="inline-flex items-center gap-0.5 text-xs text-orange-500">
-                                  <Flame className="h-3 w-3" />
-                                  {totalCal} kcal
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="gap-sm flex items-center">
-                            <span className="text-muted-foreground text-xs">
-                              {log.time?.slice(0, 5) ?? ''}
-                            </span>
-                            <Button
-                              aria-label={t('common.actions.delete')}
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive h-7 w-7 p-0"
-                              onClick={() => deleteLogMutation.mutate(log.id)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
-          </TabsContent>
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
@@ -799,13 +731,6 @@ export default function NutritionPage() {
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end">
-              <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.nutritionMealTypes.newMealTypeBtn')}
-              </Button>
-            </div>
-
             <div className="gap-lg grid items-start lg:grid-cols-2">
               <HydrationGoalCard />
               <div>
@@ -866,23 +791,17 @@ export default function NutritionPage() {
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods" className="mt-0 flex-1">
-            <div className="mb-md gap-sm flex items-center">
-              <FilterBar
-                className="flex-1"
-                hasActiveFilters={!!foodSearch}
-                onClear={() => setFoodSearch('')}
-              >
-                <SearchInput
-                  placeholder={t('pages.nutritionFoods.searchPlaceholder')}
-                  value={foodSearch}
-                  onValueChange={setFoodSearch}
-                />
-              </FilterBar>
-              <Button onClick={() => setDialog({ type: 'new-food' })}>
-                <Plus className="h-4 w-4" />
-                {t('pages.nutritionFoods.newFoodBtn')}
-              </Button>
-            </div>
+            <FilterBar
+              className="mb-md"
+              hasActiveFilters={!!foodSearch}
+              onClear={() => setFoodSearch('')}
+            >
+              <SearchInput
+                placeholder={t('pages.nutritionFoods.searchPlaceholder')}
+                value={foodSearch}
+                onValueChange={setFoodSearch}
+              />
+            </FilterBar>
 
             {foodsLoading ? (
               <LoadingState />
@@ -898,22 +817,30 @@ export default function NutritionPage() {
                 }}
               />
             ) : (
-              <div className="gap-sm grid sm:grid-cols-2 lg:grid-cols-3">
-                {filteredFoods.map((food) => (
-                  <FoodCard
-                    key={food.id}
-                    food={food}
-                    onEdit={() => setDialog({ type: 'edit-food', food })}
-                    onDelete={async () => {
-                      const ok = await showConfirm({
-                        title: t('pages.nutritionFoods.deleteFoodTitle'),
-                        description: t('pages.nutritionFoods.deleteFoodDesc'),
-                      });
-                      if (ok) deleteFoodMutation.mutate(food.id);
-                    }}
-                  />
-                ))}
-              </div>
+              <PaginatedSlide
+                key={foodSearch}
+                items={filteredFoods}
+                pageSize={FOODS_PAGE_SIZE}
+                centerList
+                className="gap-sm grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+              >
+                {(pageFoods) =>
+                  pageFoods.map((food) => (
+                    <FoodCard
+                      key={food.id}
+                      food={food}
+                      onEdit={() => setDialog({ type: 'edit-food', food })}
+                      onDelete={async () => {
+                        const ok = await showConfirm({
+                          title: t('pages.nutritionFoods.deleteFoodTitle'),
+                          description: t('pages.nutritionFoods.deleteFoodDesc'),
+                        });
+                        if (ok) deleteFoodMutation.mutate(food.id);
+                      }}
+                    />
+                  ))
+                }
+              </PaginatedSlide>
             )}
           </TabsContent>
         </Tabs>
@@ -921,9 +848,11 @@ export default function NutritionPage() {
         {/* ── Dialog ────────────────────────────────────────────────────── */}
         <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
           <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>{dialogTitle()}</DialogTitle>
-              <DialogDescription>{dialogDesc()}</DialogDescription>
+            <DialogHeader sticky>
+              <DialogTitle mode={dialog?.type.startsWith('edit') ? 'edit' : 'create'}>
+                {dialogTitle()}
+              </DialogTitle>
+              <DialogDescription className="sr-only">{dialogDesc()}</DialogDescription>
             </DialogHeader>
 
             {(dialog?.type === 'new-food' || dialog?.type === 'edit-food') && (

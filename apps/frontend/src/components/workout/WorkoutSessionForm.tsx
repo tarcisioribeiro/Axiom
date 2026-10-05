@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -617,10 +618,18 @@ function ExerciseBlock({
                   ))}
                 </SelectContent>
               </Select>
-              <Input
-                type="number"
-                min={0}
-                {...register(`exercises.${exIdx}.sets.${sIdx}.reps_done`)}
+              <Controller
+                control={control}
+                name={`exercises.${exIdx}.sets.${sIdx}.reps_done`}
+                render={({ field }) => (
+                  <NumberStepper
+                    optional
+                    aria-label={t('pages.workoutSessions.repsDone')}
+                    value={field.value === '' ? null : Number(field.value)}
+                    onChange={(v) => field.onChange(v === null ? '' : String(v))}
+                    className="w-full"
+                  />
+                )}
               />
               <Button
                 aria-label={t('common.actions.remove')}

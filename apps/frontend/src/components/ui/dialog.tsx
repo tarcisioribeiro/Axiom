@@ -1,6 +1,6 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { X } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -122,16 +122,31 @@ const DialogCloseFooter = () => {
   );
 };
 
+/** `mode`: modal de formulário — ícone padrão de inclusão (+) ou edição (lápis). */
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn('heading-2 leading-none', className)}
-    {...props}
-  />
-));
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title> & {
+    mode?: 'create' | 'edit';
+  }
+>(({ className, mode, children, ...props }, ref) => {
+  const ModeIcon = mode === 'edit' ? Pencil : mode === 'create' ? Plus : null;
+  return (
+    <DialogPrimitive.Title
+      ref={ref}
+      className={cn(
+        'heading-2 leading-none',
+        ModeIcon && 'gap-sm flex items-center',
+        className
+      )}
+      {...props}
+    >
+      {ModeIcon && (
+        <ModeIcon className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+      )}
+      {children}
+    </DialogPrimitive.Title>
+  );
+});
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
 const DialogDescription = React.forwardRef<

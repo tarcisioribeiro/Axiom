@@ -697,12 +697,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader sticky>
-            <DialogTitle className="gap-sm flex items-center">
-              {selectedGoal ? (
-                <Edit className="text-primary h-4 w-4" />
-              ) : (
-                <Trophy className="text-primary h-4 w-4" />
-              )}
+            <DialogTitle mode={selectedGoal ? 'edit' : 'create'}>
               {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}
             </DialogTitle>
             <VisuallyHidden>

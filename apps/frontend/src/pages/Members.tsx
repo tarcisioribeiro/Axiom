@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -438,17 +439,19 @@ export default function Members() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedMember ? 'edit' : 'create'}>
               {selectedMember
                 ? t('pages.members.editTitle')
                 : t('pages.members.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedMember
-                ? t('pages.members.editDesc')
-                : t('pages.members.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedMember
+                  ? t('pages.members.editDesc')
+                  : t('pages.members.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <MemberForm
             member={selectedMember}

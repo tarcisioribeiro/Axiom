@@ -20,6 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -151,13 +152,12 @@ export function PayableForm({
             <Wallet className="text-muted-foreground h-3.5 w-3.5" />
             {t('pages.payables.form.descriptionLabel')}
           </Label>
-          <input
+          <Input
             id="description"
             value={formData.description}
             onChange={(e) => set({ description: e.target.value })}
             required
             placeholder={t('pages.payables.form.descriptionPlaceholder')}
-            className="border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
           />
         </div>
       </FormSection>

@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 
 export interface ScenarioForm {
   id: string;
@@ -82,26 +84,29 @@ export function ScenarioCard({
         </div>
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
-          <Input
-            type="number"
-            min="0"
-            max="10000"
-            step="0.01"
-            value={scenario.annual_rate}
-            onChange={(e) => onUpdate(scenario.id, 'annual_rate', e.target.value)}
+          <DecimalInput
+            max={10000}
+            unit="%"
             placeholder="12,00"
+            aria-label={t('pages.vaultSimulator.annualRate')}
+            value={scenario.annual_rate}
+            onChange={(v) =>
+              onUpdate(scenario.id, 'annual_rate', v === null ? '' : String(v))
+            }
           />
         </div>
         <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
-          <Input
-            type="number"
-            min="1"
-            max="600"
-            step="1"
-            value={scenario.months}
-            onChange={(e) => onUpdate(scenario.id, 'months', e.target.value)}
+          <NumberStepper
+            min={1}
+            max={600}
+            optional
             placeholder="12"
+            aria-label={t('pages.vaultSimulator.termMonths')}
+            value={scenario.months === '' ? null : Number(scenario.months)}
+            onChange={(v) =>
+              onUpdate(scenario.id, 'months', v === null ? '' : String(v))
+            }
           />
         </div>
       </CardContent>

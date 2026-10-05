@@ -3,6 +3,7 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import {
   Dialog,
   DialogContent,
@@ -13,21 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlainButton } from '@/components/ui/plain-button';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import type { Tag, TagFormData } from '@/types';
-
-const DEFAULT_COLORS = [
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#ef4444',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#14b8a6',
-  '#06b6d4',
-  '#3b82f6',
-];
 
 interface TagFormDialogProps {
   open: boolean;
@@ -53,13 +41,15 @@ export function TagFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>
+        <DialogHeader sticky>
+          <DialogTitle mode={selected ? 'edit' : 'create'}>
             {selected ? t('pages.tags.editTitle') : t('pages.tags.newTitle')}
           </DialogTitle>
-          <DialogDescription>
-            {selected ? t('pages.tags.editDesc') : t('pages.tags.newDesc')}
-          </DialogDescription>
+          <VisuallyHidden>
+            <DialogDescription>
+              {selected ? t('pages.tags.editDesc') : t('pages.tags.newDesc')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-md">
           <div className="space-y-sm">
@@ -73,29 +63,12 @@ export function TagFormDialog({
             />
           </div>
           <div className="space-y-sm">
-            <Label>{t('pages.tags.color')}</Label>
-            <div className="gap-sm flex flex-wrap">
-              {DEFAULT_COLORS.map((c) => (
-                <PlainButton
-                  key={c}
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, color: c }))}
-                  className="hoverable:hover:scale-110 h-7 w-7 rounded-full transition-transform"
-                  style={{
-                    backgroundColor: c,
-                    outline: form.color === c ? `3px solid ${c}` : 'none',
-                    outlineOffset: '2px',
-                  }}
-                />
-              ))}
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
-                className="h-7 w-7 cursor-pointer rounded-full border-0 bg-transparent p-0"
-                title={t('pages.tags.color')}
-              />
-            </div>
+            <Label htmlFor="tag-color">{t('pages.tags.color')}</Label>
+            <ColorPicker
+              id="tag-color"
+              value={form.color}
+              onChange={(color) => setForm((p) => ({ ...p, color }))}
+            />
             {form.color && (
               <span
                 className="px-sm inline-block rounded-full py-0.5 text-xs font-medium"

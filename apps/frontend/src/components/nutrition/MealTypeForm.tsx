@@ -13,12 +13,13 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -93,6 +94,7 @@ export function MealTypeForm({
   const { toast } = useToast();
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -137,23 +139,6 @@ export function MealTypeForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-      {/* Header visual */}
-      <div className="gap-md bg-category-nutrition/10 px-md py-sm ring-category-nutrition/20 flex items-center rounded-lg ring-1">
-        <div className="bg-category-nutrition/20 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-          <UtensilsCrossed className="text-category-nutrition h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-category-nutrition text-sm font-semibold">
-            {mealType
-              ? t('pages.nutritionMealTypes.editMealTypeTitle')
-              : t('pages.nutritionMealTypes.newMealTypeTitle')}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {t('pages.nutritionMealTypes.newMealTypeDesc')}
-          </p>
-        </div>
-      </div>
-
       {/* Nome */}
       <FormSection
         title={t('pages.nutritionMealTypes.mealTypeName')}
@@ -215,9 +200,6 @@ export function MealTypeForm({
               ))}
             </SelectContent>
           </Select>
-          <p className="mt-xs text-muted-foreground text-xs">
-            {t('pages.nutritionMealTypes.defaultOptionHint')}
-          </p>
         </FormSection>
       )}
 
@@ -260,11 +242,17 @@ export function MealTypeForm({
           <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
             {t('pages.nutritionMealTypes.mealTypeOrder')}
           </span>
-          <Input
-            type="number"
-            min={0}
-            {...register('order', { valueAsNumber: true })}
-            className="w-20 text-center"
+          <Controller
+            control={control}
+            name="order"
+            render={({ field }) => (
+              <NumberStepper
+                min={0}
+                aria-label={t('pages.nutritionMealTypes.mealTypeOrder')}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
       </div>
@@ -274,11 +262,7 @@ export function MealTypeForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-nutrition hover:bg-category-nutrition/90"
-        >
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-sm h-4 w-4 animate-spin" />
           ) : (

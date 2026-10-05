@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -702,13 +703,17 @@ export default function CreditCardBills({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-h-[98vh] max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedBill ? 'edit' : 'create'}>
               {selectedBill
                 ? t('pages.creditCardBills.editTitle')
                 : t('pages.creditCardBills.newTitle')}
             </DialogTitle>
-            <DialogDescription>{t('pages.creditCardBills.editDesc')}</DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.creditCardBills.editDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <CreditCardBillForm
             key={selectedBill?.id ?? 'new'}

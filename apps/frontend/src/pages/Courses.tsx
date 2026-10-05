@@ -55,6 +55,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { PLATFORM_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -534,22 +535,24 @@ export default function Courses() {
           }}
         >
           <DialogContent className="max-w-lg">
-            <DialogHeader>
+            <DialogHeader sticky>
               <div className="gap-sm flex items-center">
                 <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
                   <GraduationCap className="text-primary h-4 w-4" />
                 </div>
                 <div>
-                  <DialogTitle>
+                  <DialogTitle mode={editingCourse ? 'edit' : 'create'}>
                     {editingCourse
                       ? t('pages.courses.editTitle')
                       : t('pages.courses.newTitle')}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingCourse
-                      ? t('pages.courses.editDesc')
-                      : t('pages.courses.newDesc')}
-                  </DialogDescription>
+                  <VisuallyHidden>
+                    <DialogDescription>
+                      {editingCourse
+                        ? t('pages.courses.editDesc')
+                        : t('pages.courses.newDesc')}
+                    </DialogDescription>
+                  </VisuallyHidden>
                 </div>
               </div>
             </DialogHeader>

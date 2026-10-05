@@ -14,16 +14,18 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { BRAND_COLORS, BRAND_ICONS } from '@/components/credit-cards/card-brands';
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -62,38 +64,39 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'card' | 'settings'>('card');
 
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardFormData>({
-    defaultValues: creditCard
-      ? {
-          name: creditCard.name,
-          on_card_name: creditCard.on_card_name,
-          card_number: '',
-          flag: creditCard.flag,
-          security_code: '',
-          validation_date: creditCard.validation_date,
-          credit_limit: parseFloat(creditCard.credit_limit),
-          max_limit: parseFloat(creditCard.max_limit),
-          due_day: creditCard.due_day,
-          closing_day: creditCard.closing_day,
-          associated_account: creditCard.associated_account,
-          is_active: creditCard.is_active,
-          interest_rate: creditCard.interest_rate
-            ? parseFloat(creditCard.interest_rate)
-            : undefined,
-          annual_fee: creditCard.annual_fee
-            ? parseFloat(creditCard.annual_fee)
-            : undefined,
-          owner: creditCard.owner,
-          notes: creditCard.notes,
-        }
-      : {
-          credit_limit: 0,
-          max_limit: 0,
-          due_day: 10,
-          closing_day: 5,
-          is_active: true,
-        },
-  });
+  const { control, register, handleSubmit, setValue, watch } =
+    useForm<CreditCardFormData>({
+      defaultValues: creditCard
+        ? {
+            name: creditCard.name,
+            on_card_name: creditCard.on_card_name,
+            card_number: '',
+            flag: creditCard.flag,
+            security_code: '',
+            validation_date: creditCard.validation_date,
+            credit_limit: parseFloat(creditCard.credit_limit),
+            max_limit: parseFloat(creditCard.max_limit),
+            due_day: creditCard.due_day,
+            closing_day: creditCard.closing_day,
+            associated_account: creditCard.associated_account,
+            is_active: creditCard.is_active,
+            interest_rate: creditCard.interest_rate
+              ? parseFloat(creditCard.interest_rate)
+              : undefined,
+            annual_fee: creditCard.annual_fee
+              ? parseFloat(creditCard.annual_fee)
+              : undefined,
+            owner: creditCard.owner,
+            notes: creditCard.notes,
+          }
+        : {
+            credit_limit: 0,
+            max_limit: 0,
+            due_day: 10,
+            closing_day: 5,
+            is_active: true,
+          },
+    });
 
   const watchedFlag = watch('flag') || '';
   const watchedName = watch('name') || '';
@@ -261,11 +264,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   maxLength={16}
                   disabled={isLoading}
                 />
-                {creditCard && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.creditCards.form.cardNumberHiddenHint')}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -361,12 +359,20 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.dueDayLabel')}
                 </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  {...register('due_day', { required: true, valueAsNumber: true })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="due_day"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <NumberStepper
+                      disabled={isLoading}
+                      min={1}
+                      max={31}
+                      aria-label={t('pages.creditCards.form.dueDayLabel')}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
@@ -375,12 +381,20 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.closingDayLabel')}
                 </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  {...register('closing_day', { required: true, valueAsNumber: true })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="closing_day"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <NumberStepper
+                      disabled={isLoading}
+                      min={1}
+                      max={31}
+                      aria-label={t('pages.creditCards.form.closingDayLabel')}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
@@ -389,12 +403,19 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.interestRateLabel')}
                 </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  {...register('interest_rate', { valueAsNumber: true })}
-                  placeholder="0.00"
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="interest_rate"
+                  render={({ field }) => (
+                    <DecimalInput
+                      unit="%"
+                      placeholder="0,00"
+                      disabled={isLoading}
+                      aria-label={t('pages.creditCards.form.interestRateLabel')}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 

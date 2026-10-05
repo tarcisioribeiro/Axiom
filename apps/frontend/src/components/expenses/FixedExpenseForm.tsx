@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -62,32 +63,33 @@ export const FixedExpenseForm = ({
 
   // Valores iniciais direto no useForm: setValue em useEffect pós-montagem não
   // refletia nos Selects (Categoria/Cartão ficavam vazios na edição).
-  const { register, handleSubmit, setValue, watch } = useForm<FixedExpenseFormData>({
-    defaultValues: fixedExpense
-      ? {
-          description: fixedExpense.description,
-          default_value: parseFloat(fixedExpense.default_value),
-          due_day: fixedExpense.due_day,
-          category: fixedExpense.category,
-          account: fixedExpense.credit_card ? undefined : fixedExpense.account,
-          credit_card: fixedExpense.credit_card,
-          merchant: fixedExpense.merchant,
-          notes: fixedExpense.notes,
-          member: fixedExpense.member,
-          is_active: fixedExpense.is_active,
-          allow_value_edit: fixedExpense.allow_value_edit,
-        }
-      : {
-          description: '',
-          default_value: 0,
-          due_day: 1,
-          category: '',
-          account: accounts[0]?.id,
-          credit_card: undefined,
-          is_active: true,
-          allow_value_edit: true,
-        },
-  });
+  const { control, register, handleSubmit, setValue, watch } =
+    useForm<FixedExpenseFormData>({
+      defaultValues: fixedExpense
+        ? {
+            description: fixedExpense.description,
+            default_value: parseFloat(fixedExpense.default_value),
+            due_day: fixedExpense.due_day,
+            category: fixedExpense.category,
+            account: fixedExpense.credit_card ? undefined : fixedExpense.account,
+            credit_card: fixedExpense.credit_card,
+            merchant: fixedExpense.merchant,
+            notes: fixedExpense.notes,
+            member: fixedExpense.member,
+            is_active: fixedExpense.is_active,
+            allow_value_edit: fixedExpense.allow_value_edit,
+          }
+        : {
+            description: '',
+            default_value: 0,
+            due_day: 1,
+            category: '',
+            account: accounts[0]?.id,
+            credit_card: undefined,
+            is_active: true,
+            allow_value_edit: true,
+          },
+    });
 
   useEffect(() => {
     if (fixedExpense) return;
@@ -202,13 +204,20 @@ export const FixedExpenseForm = ({
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.dueDayLabel')}
             </Label>
-            <Input
-              id="due_day"
-              type="number"
-              min="1"
-              max="31"
-              {...register('due_day', { required: true, valueAsNumber: true })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="due_day"
+              rules={{ required: true }}
+              render={({ field }) => (
+                <NumberStepper
+                  id="due_day"
+                  disabled={isLoading}
+                  min={1}
+                  max={31}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
         </div>
@@ -243,9 +252,6 @@ export const FixedExpenseForm = ({
                 );
               })}
             </div>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.fixedExpenses.form.paymentTypeHint')}
-            </p>
           </div>
 
           {paymentType === 'account' ? (
@@ -297,9 +303,6 @@ export const FixedExpenseForm = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.fixedExpenses.form.creditCardHint')}
-              </p>
             </div>
           )}
         </div>
@@ -333,9 +336,6 @@ export const FixedExpenseForm = ({
                 {t('pages.fixedExpenses.form.isActiveLabel')}
               </Label>
             </div>
-            <p className="text-muted-foreground ml-6 text-xs">
-              {t('pages.fixedExpenses.form.isActiveHint')}
-            </p>
           </div>
 
           <div className="space-y-sm">
@@ -350,9 +350,6 @@ export const FixedExpenseForm = ({
                 {t('pages.fixedExpenses.form.allowValueEditLabel')}
               </Label>
             </div>
-            <p className="text-muted-foreground ml-6 text-xs">
-              {t('pages.fixedExpenses.form.allowValueEditHint')}
-            </p>
           </div>
         </div>
       </FormSection>

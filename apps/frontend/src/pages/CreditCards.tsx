@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -518,9 +519,11 @@ export default function CreditCards({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('pages.creditCards.newTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.creditCards.newDesc')}</DialogDescription>
+          <DialogHeader sticky>
+            <DialogTitle mode="create">{t('pages.creditCards.newTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.creditCards.newDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <CreditCardForm
             accounts={accounts}

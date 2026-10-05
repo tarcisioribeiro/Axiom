@@ -56,6 +56,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import {
   Dialog,
   DialogContent,
@@ -64,7 +65,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormSection } from '@/components/ui/form-section';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -75,6 +75,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useChartGradientId, useSemanticColors } from '@/lib/chart-colors';
@@ -727,6 +728,11 @@ export default function BodyMetrics() {
   function setField(field: keyof MetricFormState) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((f) => ({ ...f, [field]: e.target.value }));
+  }
+
+  function setNumber(field: NumericFieldKey) {
+    return (v: number | null) =>
+      setForm((f) => ({ ...f, [field]: v === null ? '' : String(v) }));
   }
 
   function placeholderFor(key: NumericFieldKey, fallback?: string): string | undefined {
@@ -1508,21 +1514,23 @@ export default function BodyMetrics() {
         {/* ── Dialog de formulário ── */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader sticky>
+              <DialogTitle mode={editing && !recalcMode ? 'edit' : 'create'}>
                 {recalcMode
                   ? t('pages.bodyMetrics.recalcTitle')
                   : editing
                     ? t('pages.bodyMetrics.editTitle')
                     : t('pages.bodyMetrics.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {recalcMode
-                  ? t('pages.bodyMetrics.recalcDesc')
-                  : editing
-                    ? t('pages.bodyMetrics.editDesc')
-                    : t('pages.bodyMetrics.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {recalcMode
+                    ? t('pages.bodyMetrics.recalcDesc')
+                    : editing
+                      ? t('pages.bodyMetrics.editDesc')
+                      : t('pages.bodyMetrics.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-md">
@@ -1549,25 +1557,25 @@ export default function BodyMetrics() {
               <FormSection title={t('pages.bodyMetrics.sectionWeightHeight')}>
                 <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.weight')} (kg)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder={placeholderFor('weight_kg', 'Ex: 75.5')}
+                    <Label>{t('pages.bodyMetrics.weight')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="kg"
+                      aria-label={t('pages.bodyMetrics.weight')}
+                      placeholder={placeholderFor('weight_kg', 'Ex: 75,5')}
                       value={form.weight_kg}
-                      onChange={setField('weight_kg')}
+                      onChange={setNumber('weight_kg')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.height')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.height')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.height')}
                       placeholder={placeholderFor('height_cm', 'Ex: 175')}
                       value={form.height_cm}
-                      onChange={setField('height_cm')}
+                      onChange={setNumber('height_cm')}
                     />
                   </div>
                 </div>
@@ -1589,145 +1597,142 @@ export default function BodyMetrics() {
 
               {/* ── Perimetria (circunferências) ── */}
               <FormSection title={t('pages.bodyMetrics.sectionPerimetry')} icon={Ruler}>
-                <p className="mb-sm text-muted-foreground text-xs">
-                  {t('pages.bodyMetrics.perimetryHint')}
-                </p>
                 <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.neck')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.neck')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.neck')}
                       placeholder={placeholderFor('neck_cm', 'Ex: 38')}
                       value={form.neck_cm}
-                      onChange={setField('neck_cm')}
+                      onChange={setNumber('neck_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.shoulders')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.shoulders')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.shoulders')}
                       placeholder={placeholderFor('shoulders_cm')}
                       value={form.shoulders_cm}
-                      onChange={setField('shoulders_cm')}
+                      onChange={setNumber('shoulders_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.chest')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.chest')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.chest')}
                       placeholder={placeholderFor('chest_cm')}
                       value={form.chest_cm}
-                      onChange={setField('chest_cm')}
+                      onChange={setNumber('chest_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.abdomen')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.abdomen')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.abdomen')}
                       placeholder={placeholderFor('abdomen_cm')}
                       value={form.abdomen_cm}
-                      onChange={setField('abdomen_cm')}
+                      onChange={setNumber('abdomen_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.waist')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.waist')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.waist')}
                       placeholder={placeholderFor('waist_cm', 'Ex: 80')}
                       value={form.waist_cm}
-                      onChange={setField('waist_cm')}
+                      onChange={setNumber('waist_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
                     <Label>
-                      {t('pages.bodyMetrics.hip')} (cm)
+                      {t('pages.bodyMetrics.hip')}
                       {sex === 'F' && (
                         <span className="ml-xs text-muted-foreground text-xs">*</span>
                       )}
                     </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.hip')}
                       placeholder={placeholderFor('hip_cm', 'Ex: 95')}
                       value={form.hip_cm}
-                      onChange={setField('hip_cm')}
+                      onChange={setNumber('hip_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.armLeft')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.armLeft')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.armLeft')}
                       placeholder={placeholderFor('arm_left_cm')}
                       value={form.arm_left_cm}
-                      onChange={setField('arm_left_cm')}
+                      onChange={setNumber('arm_left_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.armRight')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.armRight')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.armRight')}
                       placeholder={placeholderFor('arm_right_cm')}
                       value={form.arm_right_cm}
-                      onChange={setField('arm_right_cm')}
+                      onChange={setNumber('arm_right_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.thighLeft')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.thighLeft')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.thighLeft')}
                       placeholder={placeholderFor('thigh_left_cm')}
                       value={form.thigh_left_cm}
-                      onChange={setField('thigh_left_cm')}
+                      onChange={setNumber('thigh_left_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.thighRight')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.thighRight')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.thighRight')}
                       placeholder={placeholderFor('thigh_right_cm')}
                       value={form.thigh_right_cm}
-                      onChange={setField('thigh_right_cm')}
+                      onChange={setNumber('thigh_right_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.calfLeft')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.calfLeft')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.calfLeft')}
                       placeholder={placeholderFor('calf_left_cm')}
                       value={form.calf_left_cm}
-                      onChange={setField('calf_left_cm')}
+                      onChange={setNumber('calf_left_cm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.calfRight')} (cm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.calfRight')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="cm"
+                      aria-label={t('pages.bodyMetrics.calfRight')}
                       placeholder={placeholderFor('calf_right_cm')}
                       value={form.calf_right_cm}
-                      onChange={setField('calf_right_cm')}
+                      onChange={setNumber('calf_right_cm')}
                     />
                   </div>
                 </div>
@@ -1738,85 +1743,82 @@ export default function BodyMetrics() {
                 title={t('pages.bodyMetrics.sectionSkinfolds')}
                 icon={Layers}
               >
-                <p className="mb-sm text-muted-foreground text-xs">
-                  {t('pages.bodyMetrics.pollockMethodHint')}
-                </p>
                 <div className="gap-md grid grid-cols-2">
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldTriceps')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldTriceps')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldTriceps')}
                       placeholder={placeholderFor('skinfold_triceps_mm')}
                       value={form.skinfold_triceps_mm}
-                      onChange={setField('skinfold_triceps_mm')}
+                      onChange={setNumber('skinfold_triceps_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldSubscapular')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldSubscapular')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldSubscapular')}
                       placeholder={placeholderFor('skinfold_subscapular_mm')}
                       value={form.skinfold_subscapular_mm}
-                      onChange={setField('skinfold_subscapular_mm')}
+                      onChange={setNumber('skinfold_subscapular_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldSuprailiac')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldSuprailiac')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldSuprailiac')}
                       placeholder={placeholderFor('skinfold_suprailiac_mm')}
                       value={form.skinfold_suprailiac_mm}
-                      onChange={setField('skinfold_suprailiac_mm')}
+                      onChange={setNumber('skinfold_suprailiac_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldChest')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldChest')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldChest')}
                       placeholder={placeholderFor('skinfold_chest_mm')}
                       value={form.skinfold_chest_mm}
-                      onChange={setField('skinfold_chest_mm')}
+                      onChange={setNumber('skinfold_chest_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldMidaxillary')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldMidaxillary')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldMidaxillary')}
                       placeholder={placeholderFor('skinfold_midaxillary_mm')}
                       value={form.skinfold_midaxillary_mm}
-                      onChange={setField('skinfold_midaxillary_mm')}
+                      onChange={setNumber('skinfold_midaxillary_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldAbdominal')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldAbdominal')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldAbdominal')}
                       placeholder={placeholderFor('skinfold_abdominal_mm')}
                       value={form.skinfold_abdominal_mm}
-                      onChange={setField('skinfold_abdominal_mm')}
+                      onChange={setNumber('skinfold_abdominal_mm')}
                     />
                   </div>
                   <div className="space-y-xs">
-                    <Label>{t('pages.bodyMetrics.skinfoldThigh')} (mm)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
+                    <Label>{t('pages.bodyMetrics.skinfoldThigh')}</Label>
+                    <DecimalInput
+                      decimals={1}
+                      unit="mm"
+                      aria-label={t('pages.bodyMetrics.skinfoldThigh')}
                       placeholder={placeholderFor('skinfold_thigh_mm')}
                       value={form.skinfold_thigh_mm}
-                      onChange={setField('skinfold_thigh_mm')}
+                      onChange={setNumber('skinfold_thigh_mm')}
                     />
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import {
   Dialog,
   DialogCloseFooter,
@@ -12,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
@@ -114,25 +115,24 @@ export function VaultSimulatorDialog({
           </div>
           <div className="space-y-xs">
             <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={annualRate}
-              onChange={(e) => setAnnualRate(e.target.value)}
+            <DecimalInput
+              unit="%"
               placeholder="12,00"
+              aria-label={t('pages.vaultSimulator.annualRate')}
+              value={annualRate}
+              onChange={(v) => setAnnualRate(v === null ? '' : String(v))}
             />
           </div>
           <div className="space-y-xs">
             <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
-            <Input
-              type="number"
-              min="1"
-              max="600"
-              step="1"
-              value={months}
-              onChange={(e) => setMonths(e.target.value)}
+            <NumberStepper
+              min={1}
+              max={600}
+              optional
               placeholder="12"
+              aria-label={t('pages.vaultSimulator.termMonths')}
+              value={months === '' ? null : Number(months)}
+              onChange={(v) => setMonths(v === null ? '' : String(v))}
             />
           </div>
         </div>

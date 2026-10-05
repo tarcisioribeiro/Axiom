@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -56,6 +57,7 @@ import {
 } from '@/components/ui/select';
 import { TabTransition } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -215,13 +217,14 @@ function HighlightInlineForm({
         </div>
       </div>
       <div className="gap-sm grid grid-cols-2">
-        <Input
-          type="number"
+        <NumberStepper
           min={1}
+          optional
           placeholder={t('pages.books.detail.hlPagePlaceholder')}
-          value={pageNumber}
-          onChange={(e) => setPageNumber(e.target.value)}
-          className="h-8 text-xs"
+          aria-label={t('pages.books.detail.hlPagePlaceholder')}
+          value={pageNumber === '' ? null : Number(pageNumber)}
+          onChange={(v) => setPageNumber(v === null ? '' : String(v))}
+          className="h-8 w-full"
         />
         <Input
           placeholder={t('pages.books.detail.hlChapterPlaceholder')}
@@ -362,7 +365,7 @@ function BookChat({ book }: { book: Book }) {
         <div ref={messagesEndRef} />
       </div>
       <div className="flex gap-2">
-        <input
+        <Input
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyDown={(e) => {
@@ -373,7 +376,7 @@ function BookChat({ book }: { book: Book }) {
           }}
           placeholder={t('pages.books.detail.chat.placeholder')}
           disabled={isStreaming}
-          className="border-border bg-background placeholder:text-muted-foreground focus:ring-primary/40 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
+          className="flex-1"
         />
         <Button
           aria-label={t('common.actions.send')}
@@ -1345,17 +1348,19 @@ export function BookDetailModal({
           {/* Reading form dialog */}
           <Dialog open={isReadingFormOpen} onOpenChange={setIsReadingFormOpen}>
             <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
+              <DialogHeader sticky>
+                <DialogTitle mode={editingReading ? 'edit' : 'create'}>
                   {editingReading
                     ? t('pages.readings.editTitle')
                     : t('pages.readings.newTitle')}
                 </DialogTitle>
-                <DialogDescription>
-                  {editingReading
-                    ? t('pages.readings.editDesc')
-                    : t('pages.readings.newDesc', { title: book.title })}
-                </DialogDescription>
+                <VisuallyHidden>
+                  <DialogDescription>
+                    {editingReading
+                      ? t('pages.readings.editDesc')
+                      : t('pages.readings.newDesc', { title: book.title })}
+                  </DialogDescription>
+                </VisuallyHidden>
               </DialogHeader>
               <ReadingForm
                 reading={editingReading}
@@ -1371,17 +1376,19 @@ export function BookDetailModal({
           <Dialog open={isSummaryFormOpen} onOpenChange={setIsSummaryFormOpen}>
             <DialogContent className="max-w-2xl">
               <form onSubmit={(e) => void handleSummarySubmit(e)}>
-                <DialogHeader>
-                  <DialogTitle>
+                <DialogHeader sticky>
+                  <DialogTitle mode={editingSummary ? 'edit' : 'create'}>
                     {editingSummary
                       ? t('pages.summaries.editTitle')
                       : t('pages.summaries.createTitle')}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingSummary
-                      ? t('pages.summaries.editDesc')
-                      : t('pages.summaries.createDesc')}
-                  </DialogDescription>
+                  <VisuallyHidden>
+                    <DialogDescription>
+                      {editingSummary
+                        ? t('pages.summaries.editDesc')
+                        : t('pages.summaries.createDesc')}
+                    </DialogDescription>
+                  </VisuallyHidden>
                 </DialogHeader>
                 <div className="gap-md py-md grid">
                   <div className="space-y-sm">

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -19,14 +20,6 @@ import type { CreditCard } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const STEP = 10;
-const THUMB_CLASSES =
-  'absolute inset-0 w-full cursor-pointer appearance-none bg-transparent ' +
-  '[&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none ' +
-  '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background ' +
-  '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow ' +
-  '[&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full ' +
-  '[&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-background [&::-moz-range-thumb]:bg-primary';
-
 interface CreditLimitAdjustDialogProps {
   card?: CreditCard;
   onOpenChange: (open: boolean) => void;
@@ -60,7 +53,6 @@ export function CreditLimitAdjustDialog({
   });
 
   const pct = maxLimit > 0 ? (value / maxLimit) * 100 : 0;
-  const usedPct = maxLimit > 0 ? (used / maxLimit) * 100 : 0;
 
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
@@ -79,28 +71,15 @@ export function CreditLimitAdjustDialog({
               {formatCurrency(value)}
             </span>
             {/* Trilho: parte já utilizada (bloqueada) + parte ajustável */}
-            <div className="bg-muted absolute top-1/2 h-2 w-full -translate-y-1/2 rounded-full" />
-            <div
-              className="bg-primary/60 absolute top-1/2 h-2 -translate-y-1/2 rounded-full"
-              style={{ width: `${pct}%` }}
-            />
-            <div
-              className="bg-destructive/70 absolute top-1/2 h-2 -translate-y-1/2 rounded-full"
-              style={{ width: `${usedPct}%` }}
-            />
-            <input
-              type="range"
+            <Slider
               min={0}
               max={maxLimit}
               step={STEP}
+              floor={used}
               value={value}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                // step não alcança um máximo fora do múltiplo de 10 — encaixa no topo
-                setValue(v + STEP > maxLimit ? maxLimit : Math.max(used, v));
-              }}
+              onChange={setValue}
               aria-label={t('pages.creditCards.adjustLimit.title')}
-              className={THUMB_CLASSES}
+              className="absolute inset-x-0 top-1/2 -translate-y-1/2"
             />
           </div>
           <div className="mt-sm text-muted-foreground flex justify-between text-xs">

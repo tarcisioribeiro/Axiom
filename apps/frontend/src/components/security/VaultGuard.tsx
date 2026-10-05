@@ -24,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogCloseFooter,
@@ -437,11 +438,10 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                 <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
               </div>
               <label className="mt-sm gap-sm flex cursor-pointer items-start">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={acknowledged}
-                  onChange={(e) => setAcknowledged(e.target.checked)}
-                  className="accent-warning mt-0.5 h-3.5 w-3.5"
+                  onCheckedChange={(v) => setAcknowledged(v === true)}
+                  className="border-warning data-[state=checked]:bg-warning data-[state=checked]:text-warning-foreground mt-0.5"
                 />
                 <span className="select-none">
                   {t('pages.vaultGuard.setup.irreversibleAck')}

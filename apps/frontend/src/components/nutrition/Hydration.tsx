@@ -5,8 +5,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -138,15 +139,14 @@ export function WaterLogPanel({ date }: { date: string }) {
             if (custom > 0) addMutation.mutate(custom);
           }}
         >
-          <Input
-            type="number"
+          <NumberStepper
             min={1}
             max={5000}
-            inputMode="numeric"
+            optional
             placeholder="ml"
-            value={customMl}
-            onChange={(e) => setCustomMl(e.target.value)}
-            className="h-8 w-24"
+            value={customMl === '' ? null : Number(customMl)}
+            onChange={(v) => setCustomMl(v === null ? '' : String(v))}
+            className="h-8"
             aria-label={t('pages.nutritionHydration.customAmount')}
           />
           <Button
@@ -266,15 +266,14 @@ export function HydrationGoalCard() {
             <Label htmlFor="hydration-liters">
               {t('pages.nutritionHydration.litersLabel')}
             </Label>
-            <Input
+            <DecimalInput
               id="hydration-liters"
-              type="number"
-              step="0.05"
               min={0.5}
               max={10}
-              inputMode="decimal"
+              step={0.25}
+              unit="L"
               value={value}
-              onChange={(e) => setLiters(e.target.value)}
+              onChange={(v) => setLiters(v === null ? '' : String(v))}
             />
           </div>
           <Button type="submit" disabled={!(ml > 0) || saveMutation.isPending}>

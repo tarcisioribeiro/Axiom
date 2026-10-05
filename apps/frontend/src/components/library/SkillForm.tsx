@@ -361,11 +361,7 @@ export function SkillForm({
           <X className="mr-sm h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="bg-category-intellect hover:bg-category-intellect/90 text-white"
-        >
+        <Button type="submit" disabled={isLoading}>
           <Save className="mr-sm h-4 w-4" />
           {t('common.actions.save')}
         </Button>

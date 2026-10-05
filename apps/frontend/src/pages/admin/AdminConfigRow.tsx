@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Collapse } from '@/components/ui/collapsible-section';
+import { Input } from '@/components/ui/input';
 import { PlainButton } from '@/components/ui/plain-button';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
@@ -115,7 +116,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
           {editing ? (
             <div className="gap-sm mt-3 flex items-center">
               <div className="relative flex-1">
-                <input
+                <Input
                   ref={inputRef}
                   type={config.is_secret && !showValue ? 'password' : 'text'}
                   value={value}
@@ -125,7 +126,7 @@ export function ConfigRow({ config }: { config: SystemConfig }) {
                       ? t('pages.adminConfig.newSecretPlaceholder')
                       : t('pages.adminConfig.newValuePlaceholder')
                   }
-                  className="border-border bg-background py-sm text-foreground focus:ring-primary w-full rounded-lg border px-3 pr-10 font-mono text-sm focus:ring-2 focus:outline-none"
+                  className="pr-10 font-mono"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
                     if (e.key === 'Escape') setEditing(false);

@@ -36,6 +36,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { API_CONFIG } from '@/config/api-config';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -354,13 +356,15 @@ export default function Webhooks() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={editingWebhook ? 'edit' : 'create'}>
               {editingWebhook
                 ? t('webhooks.form.editTitle')
                 : t('webhooks.form.newTitle')}
             </DialogTitle>
-            <DialogDescription>{t('webhooks.form.dialogDesc')}</DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>{t('webhooks.form.dialogDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
 
           <div className="space-y-md py-sm">
@@ -397,26 +401,22 @@ export default function Webhooks() {
             <div className="gap-sm grid grid-cols-2">
               <div className="space-y-xs">
                 <Label>{t('webhooks.form.timeoutLabel')}</Label>
-                <Input
-                  type="number"
+                <NumberStepper
                   min={1}
                   max={60}
+                  aria-label={t('webhooks.form.timeoutLabel')}
                   value={form.timeout_seconds}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, timeout_seconds: +e.target.value }))
-                  }
+                  onChange={(v) => setForm((p) => ({ ...p, timeout_seconds: v ?? 1 }))}
                 />
               </div>
               <div className="space-y-xs">
                 <Label>{t('webhooks.form.maxRetriesLabel')}</Label>
-                <Input
-                  type="number"
+                <NumberStepper
                   min={0}
                   max={10}
+                  aria-label={t('webhooks.form.maxRetriesLabel')}
                   value={form.max_retries}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, max_retries: +e.target.value }))
-                  }
+                  onChange={(v) => setForm((p) => ({ ...p, max_retries: v ?? 0 }))}
                 />
               </div>
             </div>

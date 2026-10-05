@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -28,6 +28,7 @@ import { FormSection } from '@/components/ui/form-section';
 import { IconPicker } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -78,6 +79,7 @@ export function RoutineTaskForm({
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -508,17 +510,21 @@ export function RoutineTaskForm({
                 <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.dayOfMonthLabel')}
               </Label>
-              <Input
-                id="day_of_month"
-                type="number"
-                min="1"
-                max="31"
-                {...register('day_of_month', {
-                  setValueAs: (value: string) =>
-                    value === '' ? undefined : parseInt(value),
-                })}
-                placeholder="1-31"
-                disabled={isLoading}
+              <Controller
+                control={control}
+                name="day_of_month"
+                render={({ field }) => (
+                  <NumberStepper
+                    id="day_of_month"
+                    disabled={isLoading}
+                    placeholder="1-31"
+                    min={1}
+                    max={31}
+                    optional
+                    value={field.value}
+                    onChange={(v) => field.onChange(v ?? undefined)}
+                  />
+                )}
               />
               {errors.day_of_month && (
                 <p className="mt-xs text-destructive text-sm">
@@ -594,34 +600,42 @@ export function RoutineTaskForm({
                   <Label htmlFor="times_per_week" className="text-sm">
                     {t('pages.routineTasks.form.timesPerWeekLabel')}
                   </Label>
-                  <Input
-                    id="times_per_week"
-                    type="number"
-                    min="1"
-                    max="7"
-                    {...register('times_per_week', {
-                      setValueAs: (value: string) =>
-                        value === '' ? null : parseInt(value),
-                    })}
-                    placeholder="1-7"
-                    disabled={isLoading}
+                  <Controller
+                    control={control}
+                    name="times_per_week"
+                    render={({ field }) => (
+                      <NumberStepper
+                        id="times_per_week"
+                        disabled={isLoading}
+                        placeholder="1-7"
+                        min={1}
+                        max={7}
+                        optional
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
                 <div>
                   <Label htmlFor="times_per_month" className="text-sm">
                     {t('pages.routineTasks.form.timesPerMonthLabel')}
                   </Label>
-                  <Input
-                    id="times_per_month"
-                    type="number"
-                    min="1"
-                    max="31"
-                    {...register('times_per_month', {
-                      setValueAs: (value: string) =>
-                        value === '' ? null : parseInt(value),
-                    })}
-                    placeholder="1-31"
-                    disabled={isLoading}
+                  <Controller
+                    control={control}
+                    name="times_per_month"
+                    render={({ field }) => (
+                      <NumberStepper
+                        id="times_per_month"
+                        disabled={isLoading}
+                        placeholder="1-31"
+                        min={1}
+                        max={31}
+                        optional
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -631,16 +645,20 @@ export function RoutineTaskForm({
                   <Label htmlFor="interval_days" className="text-sm">
                     {t('pages.routineTasks.form.intervalDaysLabel')}
                   </Label>
-                  <Input
-                    id="interval_days"
-                    type="number"
-                    min="1"
-                    {...register('interval_days', {
-                      setValueAs: (value: string) =>
-                        value === '' ? null : parseInt(value),
-                    })}
-                    placeholder="Ex: 3"
-                    disabled={isLoading}
+                  <Controller
+                    control={control}
+                    name="interval_days"
+                    render={({ field }) => (
+                      <NumberStepper
+                        id="interval_days"
+                        disabled={isLoading}
+                        placeholder="Ex: 3"
+                        min={1}
+                        optional
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
                 <div>
@@ -686,14 +704,18 @@ export function RoutineTaskForm({
                 <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
               </Tooltip>
             </Label>
-            <Input
-              id="target_quantity"
-              type="number"
-              min="1"
-              {...register('target_quantity', {
-                setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="target_quantity"
+              render={({ field }) => (
+                <NumberStepper
+                  id="target_quantity"
+                  disabled={isLoading}
+                  min={1}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.target_quantity && (
               <p className="mt-xs text-destructive text-sm">
@@ -873,15 +895,19 @@ export function RoutineTaskForm({
                     <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
-                <Input
-                  id="daily_occurrences"
-                  type="number"
-                  min="1"
-                  max="24"
-                  {...register('daily_occurrences', {
-                    setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="daily_occurrences"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="daily_occurrences"
+                      disabled={isLoading}
+                      min={1}
+                      max={24}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
 
@@ -896,18 +922,13 @@ export function RoutineTaskForm({
                     <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
-                <Input
+                <NumberStepper
                   id="interval_hours"
-                  type="number"
-                  min="1"
-                  max="23"
-                  value={watch('interval_hours') || ''}
-                  onChange={(e) =>
-                    setValue(
-                      'interval_hours',
-                      e.target.value ? parseInt(e.target.value) : null
-                    )
-                  }
+                  min={1}
+                  max={23}
+                  optional
+                  value={watch('interval_hours') || null}
+                  onChange={(v) => setValue('interval_hours', v)}
                   placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
                   disabled={isLoading}
                 />
@@ -957,15 +978,19 @@ export function RoutineTaskForm({
                     <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
-                <Input
-                  id="allowed_skips_per_month"
-                  type="number"
-                  min="0"
-                  max="31"
-                  {...register('allowed_skips_per_month', {
-                    setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-                  })}
-                  disabled={isLoading}
+                <Controller
+                  control={control}
+                  name="allowed_skips_per_month"
+                  render={({ field }) => (
+                    <NumberStepper
+                      id="allowed_skips_per_month"
+                      disabled={isLoading}
+                      min={0}
+                      max={31}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 {errors.allowed_skips_per_month && (
                   <p className="mt-xs text-destructive text-sm">
@@ -1066,9 +1091,6 @@ export function RoutineTaskForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.routineTasks.form.linkedFinancialGoalHint')}
-                  </p>
                 </div>
               )}
 
@@ -1104,9 +1126,6 @@ export function RoutineTaskForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.routineTasks.form.linkedBookHint')}
-                  </p>
                 </div>
               )}
 
@@ -1154,9 +1173,6 @@ export function RoutineTaskForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.routineTasks.form.linkedMealTypeHint')}
-                  </p>
                 </div>
               )}
 
@@ -1200,9 +1216,6 @@ export function RoutineTaskForm({
                       {t('pages.routineTasks.form.linkedHydrationLabel')}
                     </Label>
                   </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.routineTasks.form.linkedHydrationHint')}
-                  </p>
                 </div>
               )}
             </div>

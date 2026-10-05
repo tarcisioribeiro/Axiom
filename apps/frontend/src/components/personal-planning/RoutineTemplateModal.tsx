@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
@@ -19,6 +20,7 @@ import {
 import { getIconByName } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -622,11 +624,15 @@ export function RoutineTemplateModal({
       {/* Create template dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('pages.routineTasks.templates.createTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('pages.routineTasks.templates.createDesc')}
-            </DialogDescription>
+          <DialogHeader sticky>
+            <DialogTitle mode="create">
+              {t('pages.routineTasks.templates.createTitle')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.routineTasks.templates.createDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
 
           <div className="gap-md flex flex-col">
@@ -690,11 +696,9 @@ export function RoutineTemplateModal({
                           key={task.id}
                           className="gap-sm px-sm py-xs hover:bg-accent/20 flex cursor-pointer items-center rounded-md transition-colors"
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedTaskIds.has(task.id)}
-                            onChange={() => toggleTaskSelection(task.id)}
-                            className="border-input accent-primary h-4 w-4 rounded"
+                            onCheckedChange={() => toggleTaskSelection(task.id)}
                           />
                           {TaskIcon ? (
                             <TaskIcon className="text-muted-foreground h-4 w-4 shrink-0" />

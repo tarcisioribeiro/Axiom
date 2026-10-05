@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -466,17 +467,19 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.fixedExpenses.editTitle')
                 : t('pages.fixedExpenses.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedExpense
-                ? t('pages.fixedExpenses.editDesc')
-                : t('pages.fixedExpenses.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedExpense
+                  ? t('pages.fixedExpenses.editDesc')
+                  : t('pages.fixedExpenses.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <FixedExpenseForm
             fixedExpense={selectedExpense}

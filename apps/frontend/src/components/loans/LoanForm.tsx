@@ -22,12 +22,15 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { DecimalInput } from '@/components/ui/decimal-input';
 import { FileInput } from '@/components/ui/file-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -325,11 +328,6 @@ export function LoanForm({
                 disabled={!!loan}
                 className={loan ? 'bg-muted cursor-not-allowed' : ''}
               />
-              {loan && (
-                <p className="mt-xs text-muted-foreground text-xs">
-                  {t('pages.loans.form.paidValueNote')}
-                </p>
-              )}
             </div>
 
             <div>
@@ -529,11 +527,11 @@ export function LoanForm({
                 <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.installmentsLabel')}
               </Label>
-              <Input
+              <NumberStepper
                 id="installments"
-                type="number"
+                min={1}
                 value={formData.installments}
-                onChange={(e) => set({ installments: parseInt(e.target.value) })}
+                onChange={(v) => set({ installments: v ?? 1 })}
               />
             </div>
 
@@ -542,12 +540,11 @@ export function LoanForm({
                 <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.loans.form.interestRateLabel')}
               </Label>
-              <Input
+              <DecimalInput
                 id="interest_rate"
-                type="number"
-                step="0.01"
-                value={formData.interest_rate ?? ''}
-                onChange={(e) => set({ interest_rate: parseFloat(e.target.value) })}
+                unit="%"
+                value={formData.interest_rate}
+                onChange={(v) => set({ interest_rate: v ?? undefined })}
               />
             </div>
 
@@ -651,12 +648,10 @@ export function LoanForm({
             </div>
 
             <div className="gap-sm col-span-2 flex items-center">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="payed"
                 checked={formData.payed}
-                onChange={(e) => set({ payed: e.target.checked })}
-                className="rounded"
+                onCheckedChange={(v) => set({ payed: v === true })}
               />
               <Label htmlFor="payed" className="cursor-pointer">
                 {t('pages.loans.form.loanPaidLabel')}
@@ -666,44 +661,30 @@ export function LoanForm({
             {!isEditing && formData.loan_type === 'borrowed' && (
               <div className="space-y-xs p-sm col-span-2 rounded-md border">
                 <div className="gap-sm flex items-center">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="generate_revenue"
                     checked={formData.generate_revenue ?? false}
-                    onChange={(e) => set({ generate_revenue: e.target.checked })}
-                    className="rounded"
+                    onCheckedChange={(v) => set({ generate_revenue: v === true })}
                   />
                   <Label htmlFor="generate_revenue" className="cursor-pointer">
                     {t('pages.loans.form.generateRevenueLabel')}
                   </Label>
                 </div>
-                {formData.generate_revenue && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.loans.form.generateRevenueHint')}
-                  </p>
-                )}
               </div>
             )}
 
             {!isEditing && formData.loan_type === 'lent' && (
               <div className="space-y-xs p-sm col-span-2 rounded-md border">
                 <div className="gap-sm flex items-center">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="generate_expense"
                     checked={formData.generate_expense ?? false}
-                    onChange={(e) => set({ generate_expense: e.target.checked })}
-                    className="rounded"
+                    onCheckedChange={(v) => set({ generate_expense: v === true })}
                   />
                   <Label htmlFor="generate_expense" className="cursor-pointer">
                     {t('pages.loans.form.generateExpenseLabel')}
                   </Label>
                 </div>
-                {formData.generate_expense && (
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.loans.form.generateExpenseHint')}
-                  </p>
-                )}
               </div>
             )}
           </div>

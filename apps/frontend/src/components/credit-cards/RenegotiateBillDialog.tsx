@@ -11,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { translate } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import type { CreditCardBill, RenegotiateBillFormData } from '@/types';
@@ -36,7 +36,6 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
   const remaining = parseFloat(bill.total_amount) - parseFloat(bill.paid_amount);
 
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors },
@@ -156,23 +155,29 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
               <Label htmlFor="installments">
                 {t('pages.creditCardBills.renegotiateForm.installmentsLabel')}
               </Label>
-              <Input
-                id="installments"
-                type="number"
-                min="1"
-                max="48"
-                placeholder={t(
-                  'pages.creditCardBills.renegotiateForm.installmentsPlaceholder'
-                )}
-                {...register('installments', {
-                  valueAsNumber: true,
+              <Controller
+                control={control}
+                name="installments"
+                rules={{
                   required: t(
                     'pages.creditCardBills.renegotiateForm.installmentsRequired'
                   ),
                   min: { value: 1, message: '' },
                   max: { value: 48, message: '' },
-                })}
-                disabled={isLoading}
+                }}
+                render={({ field }) => (
+                  <NumberStepper
+                    id="installments"
+                    disabled={isLoading}
+                    placeholder={t(
+                      'pages.creditCardBills.renegotiateForm.installmentsPlaceholder'
+                    )}
+                    min={1}
+                    max={48}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.installments && (
                 <p className="text-destructive text-xs">

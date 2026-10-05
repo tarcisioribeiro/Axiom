@@ -2,13 +2,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, CalendarDays, Globe, Loader2, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ export function PublisherForm({
 }: PublisherFormProps) {
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -157,16 +159,20 @@ export function PublisherForm({
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.publishers.form.foundedYearLabel')}
             </Label>
-            <Input
-              id="founded_year"
-              type="number"
-              min="1000"
-              max={new Date().getFullYear()}
-              {...register('founded_year', {
-                setValueAs: (value: string) =>
-                  value === '' ? undefined : parseInt(value),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="founded_year"
+              render={({ field }) => (
+                <NumberStepper
+                  id="founded_year"
+                  disabled={isLoading}
+                  min={1000}
+                  max={new Date().getFullYear()}
+                  optional
+                  value={field.value}
+                  onChange={(v) => field.onChange(v ?? undefined)}
+                />
+              )}
             />
             {errors.founded_year && (
               <p className="mt-xs text-destructive text-sm">

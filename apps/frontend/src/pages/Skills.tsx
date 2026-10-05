@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PlainButton } from '@/components/ui/plain-button';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -437,22 +438,24 @@ export default function Skills() {
           }}
         >
           <DialogContent className="max-w-md">
-            <DialogHeader>
+            <DialogHeader sticky>
               <div className="gap-sm flex items-center">
                 <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-lg">
                   <Brain className="text-primary h-4 w-4" />
                 </div>
                 <div>
-                  <DialogTitle>
+                  <DialogTitle mode={editingSkill ? 'edit' : 'create'}>
                     {editingSkill
                       ? t('pages.skills.editTitle')
                       : t('pages.skills.newTitle')}
                   </DialogTitle>
-                  <DialogDescription>
-                    {editingSkill
-                      ? t('pages.skills.editDesc')
-                      : t('pages.skills.newDesc')}
-                  </DialogDescription>
+                  <VisuallyHidden>
+                    <DialogDescription>
+                      {editingSkill
+                        ? t('pages.skills.editDesc')
+                        : t('pages.skills.newDesc')}
+                    </DialogDescription>
+                  </VisuallyHidden>
                 </div>
               </div>
             </DialogHeader>

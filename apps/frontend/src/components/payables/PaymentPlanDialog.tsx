@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -111,11 +111,12 @@ export function PaymentPlanDialog({
         <div className="space-y-md">
           <div className="space-y-xs">
             <Label>{t('pages.payables.form.installmentsCountLabel')} *</Label>
-            <Input
-              type="number"
+            <NumberStepper
               min={2}
-              value={installments}
-              onChange={(e) => setInstallments(e.target.value)}
+              optional
+              aria-label={t('pages.payables.form.installmentsCountLabel')}
+              value={installments === '' ? null : Number(installments)}
+              onChange={(v) => setInstallments(v === null ? '' : String(v))}
             />
           </div>
           <div className="space-y-xs">

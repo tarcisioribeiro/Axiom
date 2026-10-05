@@ -43,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { getLoanStatusLabel, translate } from '@/config/constants';
 import { useLoansPage } from '@/hooks/use-loans-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -498,13 +499,15 @@ export default function Loans() {
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedLoan ? 'edit' : 'create'}>
               {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedLoan ? t('pages.loans.editDesc') : t('pages.loans.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedLoan ? t('pages.loans.editDesc') : t('pages.loans.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <LoanForm
             loan={selectedLoan}

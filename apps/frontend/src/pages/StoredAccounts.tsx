@@ -35,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -605,17 +606,19 @@ export default function StoredAccounts() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader sticky>
+              <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
                 {selectedAccount
                   ? t('pages.storedAccounts.editTitle')
                   : t('pages.storedAccounts.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {selectedAccount
-                  ? t('pages.storedAccounts.editDesc')
-                  : t('pages.storedAccounts.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {selectedAccount
+                    ? t('pages.storedAccounts.editDesc')
+                    : t('pages.storedAccounts.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <StoredAccountForm
               account={selectedAccount}

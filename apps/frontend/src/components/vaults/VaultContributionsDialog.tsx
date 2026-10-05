@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -237,18 +238,12 @@ export function VaultContributionsDialog({
                   <Label htmlFor="contrib_day">
                     {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
                   </Label>
-                  <Input
+                  <NumberStepper
                     id="contrib_day"
-                    type="number"
-                    min="1"
-                    max="31"
+                    min={1}
+                    max={31}
                     value={formData.day_of_month}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        day_of_month: parseInt(e.target.value) || 1,
-                      })
-                    }
+                    onChange={(v) => setFormData({ ...formData, day_of_month: v ?? 1 })}
                   />
                 </div>
                 <div>

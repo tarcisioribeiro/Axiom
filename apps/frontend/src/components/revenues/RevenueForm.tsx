@@ -375,9 +375,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-muted-foreground text-xs">
-                {t('pages.revenues.form.relatedLoanHint')}
-              </p>
 
               {eligibleFixedRevenues.length > 0 && (
                 <div className="space-y-sm">
@@ -411,9 +408,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-muted-foreground text-xs">
-                    {t('pages.revenues.form.relatedFixedRevenueHint')}
-                  </p>
                 </div>
               )}
             </div>

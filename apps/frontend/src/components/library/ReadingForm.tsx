@@ -12,14 +12,14 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -64,6 +64,7 @@ export function ReadingForm({
 }: ReadingFormProps) {
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -125,7 +126,6 @@ export function ReadingForm({
   const previousPages = previousReadings.reduce((sum, r) => sum + r.pages_read, 0);
   // Mínimo 1; máximo = páginas restantes da obra.
   const maxPages = Math.max(1, (progressBook?.pages ?? 1) - previousPages);
-  const clampPages = (value: number) => Math.min(maxPages, Math.max(1, value || 1));
 
   const submit = (data: ReadingFormData) => {
     if (data.pages_read > maxPages) {
@@ -185,19 +185,19 @@ export function ReadingForm({
                 <Hash className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.readings.form.pagesReadLabel')}
               </Label>
-              <Input
-                id="pages_read"
-                type="number"
-                min="1"
-                max={maxPages}
-                {...register('pages_read', {
-                  setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-                  onBlur: (e: React.FocusEvent<HTMLInputElement>) =>
-                    setValue('pages_read', clampPages(parseInt(e.target.value)), {
-                      shouldValidate: true,
-                    }),
-                })}
-                disabled={isLoading}
+              <Controller
+                control={control}
+                name="pages_read"
+                render={({ field }) => (
+                  <NumberStepper
+                    id="pages_read"
+                    disabled={isLoading}
+                    min={1}
+                    max={maxPages}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.pages_read && (
                 <p className="mt-xs text-destructive text-sm">
@@ -243,18 +243,18 @@ export function ReadingForm({
               <Clock className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.readings.form.readingTimeLabel')}
             </Label>
-            <Input
-              id="reading_time"
-              type="number"
-              min="0"
-              {...register('reading_time', {
-                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-              })}
-              // readOnly (não disabled): RHF envia campos disabled como undefined.
-              readOnly={lockSession}
-              aria-disabled={lockSession}
-              className={lockSession ? 'cursor-not-allowed opacity-50' : undefined}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="reading_time"
+              render={({ field }) => (
+                <NumberStepper
+                  id="reading_time"
+                  disabled={isLoading || lockSession}
+                  min={0}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.reading_time && (
               <p className="mt-xs text-destructive text-sm">

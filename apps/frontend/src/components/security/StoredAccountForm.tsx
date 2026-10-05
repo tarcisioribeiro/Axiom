@@ -449,9 +449,6 @@ export function StoredAccountForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.storedAccounts.form.financeAccountHint')}
-            </p>
           </div>
         </FormSection>
       )}

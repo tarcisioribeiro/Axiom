@@ -38,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { usePayablesPage } from '@/hooks/use-payables-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -451,17 +452,19 @@ export default function Payables({ embedded = false }: { embedded?: boolean }) {
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedPayable ? 'edit' : 'create'}>
               {selectedPayable
                 ? t('pages.payables.editTitle')
                 : t('pages.payables.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedPayable
-                ? t('pages.payables.editDesc')
-                : t('pages.payables.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedPayable
+                  ? t('pages.payables.editDesc')
+                  : t('pages.payables.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <PayableForm
             payable={selectedPayable}

@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -302,11 +304,13 @@ function RuleFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
+        <DialogHeader sticky>
+          <DialogTitle mode={rule ? 'edit' : 'create'}>
             {rule ? t('common.actions.edit') : t('pages.automationRules.newRule')}
           </DialogTitle>
-          <DialogDescription>{t('pages.automationRules.subtitle')}</DialogDescription>
+          <VisuallyHidden>
+            <DialogDescription>{t('pages.automationRules.subtitle')}</DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-lg">
@@ -341,13 +345,12 @@ function RuleFormDialog({
               <Label htmlFor="rule-priority">
                 {t('pages.automationRules.form.priorityLabel')}
               </Label>
-              <Input
+              <NumberStepper
                 id="rule-priority"
-                type="number"
                 min={1}
                 max={9999}
                 value={priority}
-                onChange={(e) => setPriority(parseInt(e.target.value) || 100)}
+                onChange={(v) => setPriority(v ?? 100)}
               />
             </div>
 

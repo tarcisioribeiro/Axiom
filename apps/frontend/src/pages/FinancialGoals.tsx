@@ -51,6 +51,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { FINANCIAL_GOAL_CATEGORY_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
@@ -649,17 +650,19 @@ export default function FinancialGoals() {
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedGoal ? 'edit' : 'create'}>
               {selectedGoal
                 ? t('pages.financialGoals.editTitle')
                 : t('pages.financialGoals.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedGoal
-                ? t('pages.financialGoals.editDesc')
-                : t('pages.financialGoals.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedGoal
+                  ? t('pages.financialGoals.editDesc')
+                  : t('pages.financialGoals.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <div className="space-y-lg">
             {/* Seção: Identificação */}
@@ -919,11 +922,6 @@ export default function FinancialGoals() {
                   <div>
                     <p className="text-sm font-medium">
                       {t('pages.financialGoals.activeGoal')}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5 text-xs">
-                      {formData.is_active
-                        ? t('pages.financialGoals.activeGoalDesc')
-                        : t('pages.financialGoals.inactiveGoalDesc')}
                     </p>
                   </div>
                 </button>

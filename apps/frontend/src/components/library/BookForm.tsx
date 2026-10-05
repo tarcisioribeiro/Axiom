@@ -14,7 +14,7 @@ import {
   Save,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import {
   Select,
@@ -99,6 +100,7 @@ export function BookForm({
   const bookFileInputRef = useRef<HTMLInputElement>(null);
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -262,9 +264,6 @@ export function BookForm({
                 ? t('pages.books.form.coverChangeBtn')
                 : t('pages.books.form.coverSelectBtn')}
             </Button>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.books.form.coverHint')}
-            </p>
           </div>
         </div>
       </div>
@@ -328,15 +327,20 @@ export function BookForm({
                 <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.books.form.seriesOrderLabel')}
               </Label>
-              <Input
-                id="series_order"
-                type="number"
-                min="1"
-                {...register('series_order', {
-                  setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
-                })}
-                placeholder={t('pages.books.form.seriesOrderPlaceholder')}
-                disabled={isLoading}
+              <Controller
+                control={control}
+                name="series_order"
+                render={({ field }) => (
+                  <NumberStepper
+                    id="series_order"
+                    disabled={isLoading}
+                    placeholder={t('pages.books.form.seriesOrderPlaceholder')}
+                    min={1}
+                    optional
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.series_order && (
                 <p className="mt-xs text-destructive text-sm">
@@ -562,14 +566,18 @@ export function BookForm({
               <BookOpen className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.pagesLabel')}
             </Label>
-            <Input
-              id="pages"
-              type="number"
-              min="1"
-              {...register('pages', {
-                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="pages"
+              render={({ field }) => (
+                <NumberStepper
+                  id="pages"
+                  disabled={isLoading}
+                  min={1}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.pages && (
               <p className="mt-xs text-destructive text-sm">{errors.pages.message}</p>
@@ -659,9 +667,6 @@ export function BookForm({
                 : t('pages.books.form.bookFileSelectBtn')}
             </Button>
           </div>
-          <p className="mt-xs text-muted-foreground text-xs">
-            {t('pages.books.form.bookFileHint')}
-          </p>
         </div>
       )}
 

@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { ReadingFormData } from '@/lib/validations';
@@ -386,9 +387,11 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
       {/* Registro da leitura (reaproveita ReadingForm) */}
       <Dialog open={!!confirmBook} onOpenChange={(open) => !open && closeConfirm()}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('pages.readings.newTitle')}</DialogTitle>
-            <DialogDescription>{confirmBook?.title}</DialogDescription>
+          <DialogHeader sticky>
+            <DialogTitle mode="create">{t('pages.readings.newTitle')}</DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>{confirmBook?.title}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {confirmBook && (
             <ReadingForm

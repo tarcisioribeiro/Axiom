@@ -25,7 +25,7 @@ import {
 // (same setup as BookReader.tsx — safe to register more than once).
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { PlainButton } from '@/components/ui/plain-button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -513,7 +514,7 @@ export function AddSessionForm({
   const queryClient = useQueryClient();
   const [moduleId, setModuleId] = useState('');
   const [lessonId, setLessonId] = useState('');
-  const { register, handleSubmit, setValue, watch } = useForm<{
+  const { control, register, handleSubmit, setValue, watch } = useForm<{
     session_date: string;
     duration_minutes: number;
     notes: string;
@@ -592,12 +593,18 @@ export function AddSessionForm({
           <Label className="text-xs" htmlFor="duration_minutes">
             {t('pages.courses.sessions.durationLabel')}
           </Label>
-          <Input
-            id="duration_minutes"
-            type="number"
-            min={1}
-            placeholder={t('pages.courses.sessions.durationPlaceholder')}
-            {...register('duration_minutes')}
+          <Controller
+            control={control}
+            name="duration_minutes"
+            render={({ field }) => (
+              <NumberStepper
+                id="duration_minutes"
+                placeholder={t('pages.courses.sessions.durationPlaceholder')}
+                min={1}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
       </div>

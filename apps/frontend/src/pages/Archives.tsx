@@ -37,6 +37,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
@@ -533,17 +534,19 @@ export default function Archives() {
         {/* Dialog para criar/editar arquivo */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader sticky>
+              <DialogTitle mode={selectedArchive ? 'edit' : 'create'}>
                 {selectedArchive
                   ? t('pages.archives.editTitle')
                   : t('pages.archives.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {selectedArchive
-                  ? t('pages.archives.editDesc')
-                  : t('pages.archives.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {selectedArchive
+                    ? t('pages.archives.editDesc')
+                    : t('pages.archives.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <ArchiveForm
               archive={selectedArchive}

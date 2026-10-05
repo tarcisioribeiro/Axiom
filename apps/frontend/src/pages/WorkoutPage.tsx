@@ -29,7 +29,6 @@ import {
   ImagePlus,
   Layers,
   ListChecks,
-  ListPlus,
   NotebookPen,
   Timer,
   Loader2,
@@ -1350,48 +1349,24 @@ export default function WorkoutPage() {
           >
             <DialogHeader>
               <DialogTitle
+                mode={
+                  dialog?.type.startsWith('edit')
+                    ? 'edit'
+                    : dialog?.type.startsWith('new') || dialog?.type === 'add-exercise'
+                      ? 'create'
+                      : undefined
+                }
                 className={cn(
-                  (isSessionDialog ||
-                    isFixedFormDialog ||
-                    isExerciseDialog ||
-                    dialog?.type === 'view-session') &&
-                    'gap-sm flex items-center'
+                  dialog?.type === 'view-session' && 'gap-sm flex items-center'
                 )}
               >
-                {dialog?.type === 'new-catalog-exercise' && (
-                  <Dumbbell className="text-category-exercise h-5 w-5" />
-                )}
-                {dialog?.type === 'new-plan' && (
-                  <ClipboardList className="text-category-exercise h-5 w-5" />
-                )}
-                {dialog?.type === 'add-exercise' && (
-                  <ListPlus className="text-category-exercise h-5 w-5" />
-                )}
-                {dialog?.type === 'new-day' && (
-                  <Layers className="text-category-exercise h-5 w-5" />
-                )}
-                {(dialog?.type === 'edit-day' ||
-                  dialog?.type === 'edit-plan' ||
-                  dialog?.type === 'edit-catalog-exercise' ||
-                  dialog?.type === 'edit-exercise') && (
-                  <Edit className="text-category-exercise h-5 w-5" />
-                )}
-                {dialog?.type === 'new-session' && (
-                  <Dumbbell className="text-category-exercise h-5 w-5" />
-                )}
-                {dialog?.type === 'edit-session' && (
-                  <Edit className="text-category-exercise h-5 w-5" />
-                )}
                 {dialog?.type === 'view-session' && (
                   <Dumbbell className="text-category-exercise h-5 w-5" />
                 )}
                 {dialogTitle()}
               </DialogTitle>
               <DialogDescription
-                className={cn(
-                  (isSessionDialog || isFixedFormDialog || isExerciseDialog) &&
-                    'sr-only'
-                )}
+                className={cn(dialog?.type !== 'view-session' && 'sr-only')}
               >
                 {dialogDesc()}
               </DialogDescription>

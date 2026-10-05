@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,7 @@ export function WorkoutDayForm({
   });
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -196,7 +197,7 @@ export function WorkoutDayForm({
             </div>
             <NumberStepper
               value={watch('order')}
-              onChange={(v) => setValue('order', v)}
+              onChange={(v) => setValue('order', v ?? 0)}
               aria-label={t('pages.workoutPlans.order')}
             />
           </div>
@@ -283,13 +284,19 @@ export function WorkoutDayForm({
             </div>
             <div className="space-y-sm">
               <Label>{t('pages.workoutPlans.defaultDurationMinutes')}</Label>
-              <Input
-                type="number"
-                min={0}
-                placeholder="45"
-                {...register('default_duration_minutes', {
-                  setValueAs: (v) => (v === '' ? '' : Number(v)),
-                })}
+              <Controller
+                control={control}
+                name="default_duration_minutes"
+                render={({ field }) => (
+                  <NumberStepper
+                    placeholder="45"
+                    min={0}
+                    optional
+                    aria-label={t('pages.workoutPlans.defaultDurationMinutes')}
+                    value={field.value === '' ? null : field.value}
+                    onChange={(v) => field.onChange(v ?? '')}
+                  />
+                )}
               />
             </div>
           </div>

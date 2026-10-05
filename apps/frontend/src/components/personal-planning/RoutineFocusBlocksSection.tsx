@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -205,17 +206,19 @@ export function RoutineFocusBlocksSection({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedBlock ? 'edit' : 'create'}>
               {selectedBlock
                 ? t('pages.routineTasks.focusBlocks.editBlockTitle')
                 : t('pages.routineTasks.focusBlocks.newBlockTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedBlock
-                ? t('pages.routineTasks.focusBlocks.editBlockDesc')
-                : t('pages.routineTasks.focusBlocks.newBlockDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedBlock
+                  ? t('pages.routineTasks.focusBlocks.editBlockDesc')
+                  : t('pages.routineTasks.focusBlocks.newBlockDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RoutineFocusBlockForm
             block={selectedBlock}

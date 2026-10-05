@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -218,12 +219,12 @@ export function EmailTestPanel() {
         {t('pages.adminIntegrations.sendTestEmail')}
       </p>
       <div className="gap-sm flex">
-        <input
+        <Input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('pages.adminIntegrations.emailPlaceholder')}
-          className="border-border bg-background py-sm text-foreground focus:ring-primary flex-1 rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+          className="flex-1"
           onKeyDown={(e) => e.key === 'Enter' && email && mutation.mutate(email)}
         />
         <button

@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -21,6 +21,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -64,6 +65,7 @@ export function GoalForm({
 }: GoalFormProps) {
   const { t } = useTranslation();
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -289,14 +291,18 @@ export function GoalForm({
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.goals.form.targetValueLabel')}
             </Label>
-            <Input
-              id="target_value"
-              type="number"
-              min="1"
-              {...register('target_value', {
-                setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-              })}
-              disabled={isLoading}
+            <Controller
+              control={control}
+              name="target_value"
+              render={({ field }) => (
+                <NumberStepper
+                  id="target_value"
+                  disabled={isLoading}
+                  min={1}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             {errors.target_value && (
               <p className="mt-xs text-destructive text-sm">
@@ -311,14 +317,18 @@ export function GoalForm({
                 <Target className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.goals.form.currentValueLabel')}
               </Label>
-              <Input
-                id="current_value"
-                type="number"
-                min="0"
-                {...register('current_value', {
-                  setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-                })}
-                disabled={isLoading}
+              <Controller
+                control={control}
+                name="current_value"
+                render={({ field }) => (
+                  <NumberStepper
+                    id="current_value"
+                    disabled={isLoading}
+                    min={0}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
               {errors.current_value && (
                 <p className="mt-xs text-destructive text-sm">

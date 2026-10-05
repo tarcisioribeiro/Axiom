@@ -32,6 +32,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -138,9 +140,6 @@ function RuleForm({
               onChange={(e) => setMerchantContains(e.target.value)}
               required
             />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.categorizationRules.form.merchantContainsHint')}
-            </p>
           </div>
 
           <div className="space-y-sm">
@@ -180,17 +179,12 @@ function RuleForm({
               <Hash className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.categorizationRules.form.priority')}
             </Label>
-            <Input
+            <NumberStepper
               id="priority"
-              type="number"
               min={1}
-              step={1}
               value={priority}
-              onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
+              onChange={(v) => setPriority(v ?? 1)}
             />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.categorizationRules.form.priorityHint')}
-            </p>
           </div>
 
           <button
@@ -214,11 +208,6 @@ function RuleForm({
             <div>
               <p className="text-sm font-medium">
                 {t('pages.categorizationRules.form.isActive')}
-              </p>
-              <p className="text-muted-foreground mt-0.5 text-xs">
-                {isActive
-                  ? t('pages.categorizationRules.form.statusActive')
-                  : t('pages.categorizationRules.form.statusInactive')}
               </p>
             </div>
           </button>
@@ -491,17 +480,19 @@ export default function CategorizationRules({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedItem ? 'edit' : 'create'}>
               {selectedItem
                 ? t('pages.categorizationRules.editTitle')
                 : t('pages.categorizationRules.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedItem
-                ? t('pages.categorizationRules.editDesc')
-                : t('pages.categorizationRules.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedItem
+                  ? t('pages.categorizationRules.editDesc')
+                  : t('pages.categorizationRules.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <RuleForm
             rule={selectedItem}

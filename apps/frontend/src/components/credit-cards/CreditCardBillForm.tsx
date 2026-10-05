@@ -98,7 +98,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const watchedInvoiceEndingDate = useWatch({ control, name: 'invoice_ending_date' });
   const watchedDueDate = useWatch({ control, name: 'due_date' });
   const watchedPaymentDate = useWatch({ control, name: 'payment_date' });
-  const [autoFilledFromPrevious, setAutoFilledFromPrevious] = useState(false);
 
   // Preenchimento rápido: quando cartão + ano + mês são selecionados numa fatura
   // nova e a fatura do mês imediatamente anterior já existe, deriva início/fim/
@@ -115,8 +114,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     ],
     enabled: !bill && !!watchedCreditCard && watchedCreditCard > 0 && !!watchedYear,
     queryFn: async () => {
-      setAutoFilledFromPrevious(false);
-
       const monthIndex = MONTH_KEYS.indexOf(
         watchedMonth as (typeof MONTH_KEYS)[number]
       );
@@ -164,7 +161,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
       setValue('invoice_beginning_date', formatLocalDate(newStart));
       setValue('invoice_ending_date', formatLocalDate(newEnd));
       setValue('due_date', formatLocalDate(newDue));
-      setAutoFilledFromPrevious(true);
 
       return true;
     },
@@ -378,12 +374,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
             </Select>
           </div>
 
-          {autoFilledFromPrevious && (
-            <p className="text-success text-xs md:col-span-2">
-              {t('pages.creditCardBills.form.autoFilledHint')}
-            </p>
-          )}
-
           <div className="space-y-sm">
             <Label htmlFor="invoice_beginning_date">
               {t('pages.creditCardBills.form.startDateLabel')}
@@ -453,9 +443,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                     />
                   )}
                 />
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.creditCardBills.form.totalAmountHint')}
-                </p>
               </div>
 
               <div className="space-y-sm">
@@ -477,9 +464,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                     />
                   )}
                 />
-                <p className="text-xs">
-                  {t('pages.creditCardBills.form.minPaymentHint')}
-                </p>
               </div>
 
               <div className="space-y-sm">
@@ -501,9 +485,6 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                     />
                   )}
                 />
-                <p className="text-xs">
-                  {t('pages.creditCardBills.form.paidAmountHint')}
-                </p>
               </div>
 
               <div className="space-y-sm">

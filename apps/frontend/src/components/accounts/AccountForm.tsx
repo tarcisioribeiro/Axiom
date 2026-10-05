@@ -241,11 +241,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               }
               disabled={isLoading}
             />
-            {account && (
-              <p className="text-muted-foreground text-xs">
-                {t('pages.accounts.form.numberHiddenPlaceholder')}
-              </p>
-            )}
+
             {errors.account_number && (
               <p className="text-destructive text-sm">
                 {errors.account_number.message}

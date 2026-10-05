@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -460,17 +461,19 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedReceivable ? 'edit' : 'create'}>
               {selectedReceivable
                 ? t('pages.receivables.editTitle')
                 : t('pages.receivables.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedReceivable
-                ? t('pages.receivables.editDesc')
-                : t('pages.receivables.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedReceivable
+                  ? t('pages.receivables.editDesc')
+                  : t('pages.receivables.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <ReceivableForm
             receivable={selectedReceivable}

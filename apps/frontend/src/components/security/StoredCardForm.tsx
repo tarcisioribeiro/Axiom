@@ -197,11 +197,7 @@ export function StoredCardForm({
                 {errors.card_number.message}
               </p>
             )}
-            {!card && (
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.storedCards.form.numberHint')}
-              </p>
-            )}
+
             {card && (
               <p className="mt-xs text-warning text-xs">
                 {t('pages.storedCards.form.keepCurrentNumber')}
@@ -328,9 +324,6 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-xs">
-              {t('pages.storedCards.form.financeCardHint')}
-            </p>
           </div>
         </FormSection>
       )}

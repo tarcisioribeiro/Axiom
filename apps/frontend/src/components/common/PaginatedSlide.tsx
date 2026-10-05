@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAgentWidgetStore } from '@/stores/agent-widget-store';
 
 interface PaginatedSlideProps<T> {
   items: T[];
@@ -42,7 +43,6 @@ export function PaginatedSlide<T>({
   centerList = false,
   children,
 }: PaginatedSlideProps<T>) {
-  const { t } = useTranslation();
   const [page, setPage] = useState({ index: 0, direction: 1 });
 
   // Mantém a altura da lista na maior já vista (página cheia), para os botões
@@ -89,36 +89,71 @@ export function PaginatedSlide<T>({
           </AnimatePresence>
         </div>
       </div>
-      {totalPages > 1 && (
-        <div className="gap-sm flex items-center justify-center">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => goTo(-1)}
-            disabled={pageIndex === 0}
-            aria-label={t('common.actions.previous')}
-            title={t('common.actions.previous')}
-          >
-            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <span
-            className="text-muted-foreground min-w-32 text-center text-sm tabular-nums"
-            aria-live="polite"
-          >
-            {t('common.table.pageOf', { page: pageIndex + 1, totalPages })}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => goTo(1)}
-            disabled={pageIndex >= totalPages - 1}
-            aria-label={t('common.actions.next')}
-            title={t('common.actions.next')}
-          >
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
-      )}
+      <PaginationNav
+        page={pageIndex + 1}
+        totalPages={totalPages}
+        onPageChange={(next) => goTo(next > pageIndex + 1 ? 1 : -1)}
+      />
+    </div>
+  );
+}
+
+interface PaginationNavProps {
+  /** Página atual, começando em 1. */
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
+
+/**
+ * Navegação ‹ Página X de Y › padrão do app. Usada pelo PaginatedSlide e por
+ * listas paginadas no servidor (DataTable, logs). Some com uma página só.
+ */
+export function PaginationNav({
+  page,
+  totalPages,
+  onPageChange,
+  className,
+}: PaginationNavProps) {
+  const { t } = useTranslation();
+  // O widget do agente fica no canto inferior e pode cobrir a navegação.
+  const setAgentWidgetHidden = useAgentWidgetStore((s) => s.setHiddenByNav);
+  useEffect(() => () => setAgentWidgetHidden(false), [setAgentWidgetHidden]);
+
+  if (totalPages <= 1) return null;
+  return (
+    <div
+      className={cn('gap-sm flex items-center justify-center', className)}
+      onMouseEnter={() => setAgentWidgetHidden(true)}
+      onMouseLeave={() => setAgentWidgetHidden(false)}
+    >
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(page - 1)}
+        disabled={page <= 1}
+        aria-label={t('common.table.previousPage')}
+        title={t('common.table.previousPage')}
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+      </Button>
+      <span
+        className="text-muted-foreground min-w-32 text-center text-sm tabular-nums"
+        aria-live="polite"
+      >
+        {t('common.table.pageOf', { page, totalPages })}
+      </span>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(page + 1)}
+        disabled={page >= totalPages}
+        aria-label={t('common.table.nextPage')}
+        title={t('common.table.nextPage')}
+      >
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+      </Button>
     </div>
   );
 }

@@ -297,23 +297,6 @@ describe('DataTable', () => {
   });
 
   describe('pagination', () => {
-    it('renders pagination info when pagination prop is provided', () => {
-      render(
-        <DataTable
-          data={items}
-          columns={columns}
-          keyExtractor={keyExtractor}
-          pagination={{
-            page: 1,
-            pageSize: 10,
-            total: 25,
-            onPageChange: vi.fn(),
-          }}
-        />
-      );
-      expect(screen.getByText(/25 registros/)).toBeInTheDocument();
-    });
-
     it('renders previous and next buttons', () => {
       render(
         <DataTable

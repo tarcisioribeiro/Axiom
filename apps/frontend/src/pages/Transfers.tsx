@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useTransfersData } from '@/hooks/use-transfers-data';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -141,17 +142,19 @@ export default function Transfers() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedTransfer ? 'edit' : 'create'}>
               {selectedTransfer
                 ? t('pages.transfers.editTitle')
                 : t('pages.transfers.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedTransfer
-                ? t('pages.transfers.editDesc')
-                : t('pages.transfers.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedTransfer
+                  ? t('pages.transfers.editDesc')
+                  : t('pages.transfers.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <TransferForm
             transfer={selectedTransfer}

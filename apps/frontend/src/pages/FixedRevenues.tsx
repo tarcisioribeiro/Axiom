@@ -43,6 +43,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import {
   isRevenueCategoryAllowed,
   REVENUE_CATEGORIES_CANONICAL,
@@ -568,17 +570,19 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedRevenue ? 'edit' : 'create'}>
               {selectedRevenue
                 ? t('pages.fixedRevenues.editTitle')
                 : t('pages.fixedRevenues.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedRevenue
-                ? t('pages.fixedRevenues.editDesc')
-                : t('pages.fixedRevenues.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedRevenue
+                  ? t('pages.fixedRevenues.editDesc')
+                  : t('pages.fixedRevenues.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-lg">
             {/* Seção: Informações Básicas */}
@@ -659,19 +663,12 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                     <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.dueDayLabel')}
                   </Label>
-                  <Input
+                  <NumberStepper
                     id="due_day"
-                    type="number"
                     min={1}
                     max={31}
-                    required
                     value={formData.due_day}
-                    onChange={(e) =>
-                      setFormData((p) => ({
-                        ...p,
-                        due_day: parseInt(e.target.value) || 1,
-                      }))
-                    }
+                    onChange={(v) => setFormData((p) => ({ ...p, due_day: v ?? 1 }))}
                   />
                 </div>
               </div>

@@ -30,7 +30,7 @@ import {
   Save,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -53,6 +53,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Collapse } from '@/components/ui/collapsible-section';
 import {
   Dialog,
@@ -73,6 +74,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -1308,17 +1310,19 @@ export default function Passwords() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>
+            <DialogHeader sticky>
+              <DialogTitle mode={selectedPassword ? 'edit' : 'create'}>
                 {selectedPassword
                   ? t('pages.passwords.editTitle')
                   : t('pages.passwords.newTitle')}
               </DialogTitle>
-              <DialogDescription>
-                {selectedPassword
-                  ? t('pages.passwords.editDesc')
-                  : t('pages.passwords.newDesc')}
-              </DialogDescription>
+              <VisuallyHidden>
+                <DialogDescription>
+                  {selectedPassword
+                    ? t('pages.passwords.editDesc')
+                    : t('pages.passwords.newDesc')}
+                </DialogDescription>
+              </VisuallyHidden>
             </DialogHeader>
             <form onSubmit={rhfHandleSubmit(onFormSubmit)} className="space-y-md">
               <div className="space-y-sm">
@@ -1453,11 +1457,17 @@ export default function Passwords() {
                       })}
                     </Label>
                   </div>
-                  <input
-                    id="totp_enabled"
-                    type="checkbox"
-                    {...register('totp_enabled')}
-                    className="accent-primary h-4 w-4 rounded border"
+                  <Controller
+                    control={control}
+                    name="totp_enabled"
+                    render={({ field }) => (
+                      <Checkbox
+                        id="totp_enabled"
+                        checked={!!field.value}
+                        onCheckedChange={(v) => field.onChange(v === true)}
+                        onBlur={field.onBlur}
+                      />
+                    )}
                   />
                 </div>
                 {watchedTotpEnabled && (
@@ -1473,12 +1483,6 @@ export default function Passwords() {
                       placeholder="JBSWY3DPEHPK3PXP"
                       className="font-mono"
                     />
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.passwords.totpSecretHint', {
-                        defaultValue:
-                          'Cole o segredo base32 do serviço para gerar códigos TOTP.',
-                      })}
-                    </p>
                   </div>
                 )}
               </div>

@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import {
   translate,
   TRANSLATIONS,
@@ -1312,17 +1313,19 @@ export default function CreditCardExpenses({
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedPurchase ? 'edit' : 'create'}>
               {selectedPurchase
                 ? t('pages.creditCardExpenses.editPurchaseTitle')
                 : t('pages.creditCardExpenses.newPurchaseTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedPurchase
-                ? t('pages.creditCardExpenses.editPurchaseDesc')
-                : t('pages.creditCardExpenses.newPurchaseDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedPurchase
+                  ? t('pages.creditCardExpenses.editPurchaseDesc')
+                  : t('pages.creditCardExpenses.newPurchaseDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <CreditCardPurchaseForm
             purchase={selectedPurchase}
@@ -1336,13 +1339,15 @@ export default function CreditCardExpenses({
 
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode="edit">
               {t('pages.creditCardExpenses.editInstallmentTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.creditCardExpenses.editInstallmentDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.creditCardExpenses.editInstallmentDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {selectedInstallment && (
             <CreditCardInstallmentForm

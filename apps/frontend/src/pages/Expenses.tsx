@@ -40,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
@@ -459,17 +460,19 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedExpense ? 'edit' : 'create'}>
               {selectedExpense
                 ? t('pages.expenses.editTitle')
                 : t('pages.expenses.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedExpense
-                ? t('pages.expenses.editDesc')
-                : t('pages.expenses.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedExpense
+                  ? t('pages.expenses.editDesc')
+                  : t('pages.expenses.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <ExpenseForm
             expense={selectedExpense}

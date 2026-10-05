@@ -273,9 +273,6 @@ export function ArchiveForm({
                   {errors.text_content.message}
                 </p>
               )}
-              <p className="text-muted-foreground text-xs">
-                {t('pages.archives.form.textContentHint')}
-              </p>
             </div>
           ) : (
             <div className="space-y-sm">
@@ -285,15 +282,6 @@ export function ArchiveForm({
                 {!archive && ' *'}
               </Label>
               <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
-              {archive ? (
-                <p className="text-warning text-xs">
-                  {t('pages.archives.form.fileHintEdit')}
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  {t('pages.archives.form.fileHintNew')}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -315,9 +303,6 @@ export function ArchiveForm({
             {errors.tags && (
               <p className="mt-xs text-destructive text-sm">{errors.tags.message}</p>
             )}
-            <p className="text-muted-foreground text-xs">
-              {t('pages.archives.form.tagsHint')}
-            </p>
           </div>
 
           <div className="space-y-sm">

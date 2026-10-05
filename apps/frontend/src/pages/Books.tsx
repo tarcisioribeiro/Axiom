@@ -13,8 +13,6 @@ import {
   MoreHorizontal,
   Download,
   BookText,
-  ChevronLeft,
-  ChevronRight,
   LayoutGrid,
   List,
   BookOpen,
@@ -23,7 +21,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -34,6 +32,7 @@ import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { BookDetailModal } from '@/components/library/BookDetailModal';
 import { BookForm } from '@/components/library/BookForm';
@@ -55,8 +54,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -74,6 +73,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -328,7 +328,6 @@ export default function Books() {
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') ?? '');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [activeTab, setActiveTab] = useState<'books' | 'reading-queue' | 'highlights'>(
     'books'
@@ -359,8 +358,6 @@ export default function Books() {
   const queryClient = useQueryClient();
 
   const hiddenByNav = useAgentWidgetStore((s) => s.hiddenByNav);
-  const setHiddenByNav = useAgentWidgetStore((s) => s.setHiddenByNav);
-  useEffect(() => () => setHiddenByNav(false), [setHiddenByNav]);
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -583,15 +580,6 @@ export default function Books() {
       return a.reading_priority - b.reading_priority;
     });
 
-  const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pagedBooks = filteredBooks.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  );
-
-  const handleFilterChange = () => setCurrentPage(1);
-
   return (
     <PageContainer>
       <PageHeader title={t('pages.books.title')} icon={<Library />}>
@@ -665,7 +653,6 @@ export default function Books() {
                   setSearchTerm('');
                   setFilterStatus('');
                   setFilterGenre('');
-                  handleFilterChange();
                 }}
               >
                 <SearchInput
@@ -673,7 +660,6 @@ export default function Books() {
                   value={searchTerm}
                   onValueChange={(v) => {
                     setSearchTerm(v);
-                    handleFilterChange();
                   }}
                   className="w-44 flex-none"
                 />
@@ -681,7 +667,6 @@ export default function Books() {
                   value={filterStatus || 'all'}
                   onValueChange={(v) => {
                     setFilterStatus(v === 'all' ? '' : v);
-                    handleFilterChange();
                   }}
                 >
                   <SelectTrigger
@@ -703,7 +688,6 @@ export default function Books() {
                   value={filterGenre || 'all'}
                   onValueChange={(v) => {
                     setFilterGenre(v === 'all' ? '' : v);
-                    handleFilterChange();
                   }}
                 >
                   <SelectTrigger
@@ -732,284 +716,271 @@ export default function Books() {
                       : t('pages.books.emptyState')
                   }
                 />
-              ) : viewMode === 'grid' ? (
-                <div className="gap-md grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {pagedBooks.map((book) => (
-                    <BookGridCard
-                      key={book.id}
-                      book={book}
-                      onOpen={openDetail}
-                      onEdit={handleEdit}
-                      onDelete={(id) => void handleDelete(id)}
-                      onOpenDetail={(b) => openDetail(b, 'info')}
-                      onOpenReader={handleOpenReader}
-                      onAskIntellect={handleAskIntellect}
-                    />
-                  ))}
-                </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-14">
-                          {t('pages.books.colCover')}
-                        </TableHead>
-                        <TableHead>{t('pages.books.colTitle')}</TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('pages.books.colAuthors')}
-                        </TableHead>
-                        <TableHead className="hidden lg:table-cell">
-                          {t('pages.books.colPublisher')}
-                        </TableHead>
-                        <TableHead className="hidden sm:table-cell">
-                          {t('pages.books.colGenre')}
-                        </TableHead>
-                        <TableHead>{t('pages.books.colStatus')}</TableHead>
-                        <TableHead className="hidden text-right lg:table-cell">
-                          {t('pages.books.colPages')}
-                        </TableHead>
-                        <TableHead className="hidden md:table-cell">
-                          {t('pages.books.colRating')}
-                        </TableHead>
-                        <TableHead className="hidden sm:table-cell">
-                          {t('pages.books.colProgress')}
-                        </TableHead>
-                        <TableHead className="w-24" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pagedBooks.map((book) => {
-                        const pb = priorityBadge(book.reading_priority, t);
-                        return (
-                          <TableRow
-                            key={book.id}
-                            className="hover:bg-muted/50 cursor-pointer"
-                            onClick={() => openDetail(book, 'info')}
-                          >
-                            {/* Cover — compact in table view */}
-                            <TableCell className="py-sm">
-                              <div className="h-20 w-14 overflow-hidden rounded-md shadow-sm">
-                                {book.cover ? (
-                                  <img
-                                    src={book.cover}
-                                    alt={t('pages.books.coverAlt', {
-                                      title: book.title,
-                                    })}
-                                    className="h-full w-full object-cover"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : (
-                                  <BookCoverPlaceholder
-                                    title={book.title}
-                                    genre={book.genre}
-                                  />
-                                )}
-                              </div>
-                            </TableCell>
-
-                            {/* Title + priority */}
-                            <TableCell>
-                              <p className="leading-tight font-semibold">
-                                {book.title}
-                              </p>
-                              {pb && (
-                                <Badge variant={pb.variant} className="mt-xs text-xs">
-                                  {pb.label}
-                                </Badge>
-                              )}
-                            </TableCell>
-
-                            {/* Authors */}
-                            <TableCell className="text-muted-foreground hidden max-w-[160px] truncate text-sm md:table-cell">
-                              {book.authors_names.join(', ')}
-                            </TableCell>
-
-                            {/* Publisher */}
-                            <TableCell className="text-muted-foreground hidden max-w-[120px] truncate text-sm lg:table-cell">
-                              {book.publisher_name}
-                            </TableCell>
-
-                            {/* Genre */}
-                            <TableCell className="hidden sm:table-cell">
-                              <Badge variant="secondary" className="text-xs">
-                                {t('pages.books.genres.' + book.genre, {
-                                  defaultValue: book.genre_display,
-                                })}
-                              </Badge>
-                            </TableCell>
-
-                            {/* Status */}
-                            <TableCell>
-                              <Badge
-                                variant={statusVariant(book.read_status)}
-                                className="text-xs"
-                              >
-                                {t('pages.books.readStatuses.' + book.read_status, {
-                                  defaultValue: book.read_status_display,
-                                })}
-                              </Badge>
-                            </TableCell>
-
-                            {/* Pages */}
-                            <TableCell className="text-muted-foreground hidden text-right text-sm lg:table-cell">
-                              {book.pages}p
-                            </TableCell>
-
-                            {/* Rating */}
-                            <TableCell className="hidden md:table-cell">
-                              <StarRow rating={book.rating} />
-                            </TableCell>
-
-                            {/* Progress */}
-                            <TableCell className="hidden sm:table-cell">
-                              {book.reading_progress > 0 ? (
-                                <div className="gap-sm flex items-center">
-                                  <Progress
-                                    value={book.reading_progress}
-                                    className="h-2 w-28"
-                                  />
-                                  <span className="text-muted-foreground text-xs">
-                                    {book.reading_progress}%
-                                  </span>
-                                </div>
-                              ) : null}
-                            </TableCell>
-
-                            {/* Actions */}
-                            <TableCell
-                              onClick={(e) => e.stopPropagation()}
-                              className="py-sm"
-                            >
-                              <div className="gap-xs flex">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      title={t('pages.books.moreOptions')}
-                                      aria-label={t('pages.books.moreOptions')}
-                                    >
-                                      <MoreHorizontal
-                                        className="h-4 w-4"
-                                        aria-hidden="true"
-                                      />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    {book.media_type === 'Dig' && book.book_file && (
-                                      <DropdownMenuItem
-                                        onClick={() => handleOpenReader(book)}
-                                      >
-                                        <BookText className="mr-sm h-4 w-4" />
-                                        {t('pages.books.openReader')}
-                                      </DropdownMenuItem>
-                                    )}
-                                    {book.media_type === 'Dig' && book.book_file && (
-                                      <DropdownMenuItem
-                                        onClick={() => void handleDownloadFile(book)}
-                                      >
-                                        <Download className="mr-sm h-4 w-4" />
-                                        {t('pages.books.downloadFile')}
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                      onClick={() => openDetail(book, 'readings')}
-                                    >
-                                      <BookMarked className="mr-sm h-4 w-4" />
-                                      {t('pages.readings.title')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => openDetail(book, 'summaries')}
-                                      disabled={book.read_status !== 'read'}
-                                    >
-                                      <FileText className="mr-sm h-4 w-4" />
-                                      {t('pages.summaries.title')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => openDetail(book, 'highlights')}
-                                    >
-                                      <Highlighter className="mr-sm h-4 w-4" />
-                                      {t('pages.highlights.title')}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => handleAskIntellect(book)}
-                                    >
-                                      <Brain className="mr-sm h-4 w-4" />
-                                      {t('pages.books.askIntellect')}
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEdit(book)}
-                                  title={t('common.actions.edit')}
-                                  aria-label={t('common.actions.edit')}
-                                >
-                                  <Edit className="h-4 w-4" aria-hidden="true" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => void handleDelete(book.id)}
-                                  title={t('common.actions.delete')}
-                                  aria-label={t('common.actions.delete')}
-                                >
-                                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div
-                  className="text-muted-foreground flex items-center justify-between text-sm"
-                  onMouseEnter={() => setHiddenByNav(true)}
-                  onMouseLeave={() => setHiddenByNav(false)}
+                <PaginatedSlide
+                  key={`${searchTerm}-${filterStatus}-${filterGenre}-${viewMode}`}
+                  items={filteredBooks}
+                  pageSize={PAGE_SIZE}
                 >
-                  <span>
-                    {t('pages.books.paginationInfo', {
-                      count: filteredBooks.length,
-                      total: filteredBooks.length,
-                      page: safePage,
-                      totalPages,
-                    })}
-                  </span>
-                  <div className="gap-xs flex items-center">
-                    <Button
-                      aria-label={t('common.table.previousPage')}
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={safePage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      aria-label={t('common.table.nextPage')}
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={safePage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                  {(pagedBooks) =>
+                    viewMode === 'grid' ? (
+                      <div className="gap-md grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {pagedBooks.map((book) => (
+                          <BookGridCard
+                            key={book.id}
+                            book={book}
+                            onOpen={openDetail}
+                            onEdit={handleEdit}
+                            onDelete={(id) => void handleDelete(id)}
+                            onOpenDetail={(b) => openDetail(b, 'info')}
+                            onOpenReader={handleOpenReader}
+                            onAskIntellect={handleAskIntellect}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-14">
+                                {t('pages.books.colCover')}
+                              </TableHead>
+                              <TableHead>{t('pages.books.colTitle')}</TableHead>
+                              <TableHead className="hidden md:table-cell">
+                                {t('pages.books.colAuthors')}
+                              </TableHead>
+                              <TableHead className="hidden lg:table-cell">
+                                {t('pages.books.colPublisher')}
+                              </TableHead>
+                              <TableHead className="hidden sm:table-cell">
+                                {t('pages.books.colGenre')}
+                              </TableHead>
+                              <TableHead>{t('pages.books.colStatus')}</TableHead>
+                              <TableHead className="hidden text-right lg:table-cell">
+                                {t('pages.books.colPages')}
+                              </TableHead>
+                              <TableHead className="hidden md:table-cell">
+                                {t('pages.books.colRating')}
+                              </TableHead>
+                              <TableHead className="hidden sm:table-cell">
+                                {t('pages.books.colProgress')}
+                              </TableHead>
+                              <TableHead className="w-24" />
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {pagedBooks.map((book) => {
+                              const pb = priorityBadge(book.reading_priority, t);
+                              return (
+                                <TableRow
+                                  key={book.id}
+                                  className="hover:bg-muted/50 cursor-pointer"
+                                  onClick={() => openDetail(book, 'info')}
+                                >
+                                  {/* Cover — compact in table view */}
+                                  <TableCell className="py-sm">
+                                    <div className="h-20 w-14 overflow-hidden rounded-md shadow-sm">
+                                      {book.cover ? (
+                                        <img
+                                          src={book.cover}
+                                          alt={t('pages.books.coverAlt', {
+                                            title: book.title,
+                                          })}
+                                          className="h-full w-full object-cover"
+                                          loading="lazy"
+                                          decoding="async"
+                                        />
+                                      ) : (
+                                        <BookCoverPlaceholder
+                                          title={book.title}
+                                          genre={book.genre}
+                                        />
+                                      )}
+                                    </div>
+                                  </TableCell>
+
+                                  {/* Title + priority */}
+                                  <TableCell>
+                                    <p className="leading-tight font-semibold">
+                                      {book.title}
+                                    </p>
+                                    {pb && (
+                                      <Badge
+                                        variant={pb.variant}
+                                        className="mt-xs text-xs"
+                                      >
+                                        {pb.label}
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+
+                                  {/* Authors */}
+                                  <TableCell className="text-muted-foreground hidden max-w-[160px] truncate text-sm md:table-cell">
+                                    {book.authors_names.join(', ')}
+                                  </TableCell>
+
+                                  {/* Publisher */}
+                                  <TableCell className="text-muted-foreground hidden max-w-[120px] truncate text-sm lg:table-cell">
+                                    {book.publisher_name}
+                                  </TableCell>
+
+                                  {/* Genre */}
+                                  <TableCell className="hidden sm:table-cell">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {t('pages.books.genres.' + book.genre, {
+                                        defaultValue: book.genre_display,
+                                      })}
+                                    </Badge>
+                                  </TableCell>
+
+                                  {/* Status */}
+                                  <TableCell>
+                                    <Badge
+                                      variant={statusVariant(book.read_status)}
+                                      className="text-xs"
+                                    >
+                                      {t(
+                                        'pages.books.readStatuses.' + book.read_status,
+                                        {
+                                          defaultValue: book.read_status_display,
+                                        }
+                                      )}
+                                    </Badge>
+                                  </TableCell>
+
+                                  {/* Pages */}
+                                  <TableCell className="text-muted-foreground hidden text-right text-sm lg:table-cell">
+                                    {book.pages}p
+                                  </TableCell>
+
+                                  {/* Rating */}
+                                  <TableCell className="hidden md:table-cell">
+                                    <StarRow rating={book.rating} />
+                                  </TableCell>
+
+                                  {/* Progress */}
+                                  <TableCell className="hidden sm:table-cell">
+                                    {book.reading_progress > 0 ? (
+                                      <div className="gap-sm flex items-center">
+                                        <Progress
+                                          value={book.reading_progress}
+                                          className="h-2 w-28"
+                                        />
+                                        <span className="text-muted-foreground text-xs">
+                                          {book.reading_progress}%
+                                        </span>
+                                      </div>
+                                    ) : null}
+                                  </TableCell>
+
+                                  {/* Actions */}
+                                  <TableCell
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="py-sm"
+                                  >
+                                    <div className="gap-xs flex">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            title={t('pages.books.moreOptions')}
+                                            aria-label={t('pages.books.moreOptions')}
+                                          >
+                                            <MoreHorizontal
+                                              className="h-4 w-4"
+                                              aria-hidden="true"
+                                            />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          {book.media_type === 'Dig' &&
+                                            book.book_file && (
+                                              <DropdownMenuItem
+                                                onClick={() => handleOpenReader(book)}
+                                              >
+                                                <BookText className="mr-sm h-4 w-4" />
+                                                {t('pages.books.openReader')}
+                                              </DropdownMenuItem>
+                                            )}
+                                          {book.media_type === 'Dig' &&
+                                            book.book_file && (
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  void handleDownloadFile(book)
+                                                }
+                                              >
+                                                <Download className="mr-sm h-4 w-4" />
+                                                {t('pages.books.downloadFile')}
+                                              </DropdownMenuItem>
+                                            )}
+                                          <DropdownMenuItem
+                                            onClick={() => openDetail(book, 'readings')}
+                                          >
+                                            <BookMarked className="mr-sm h-4 w-4" />
+                                            {t('pages.readings.title')}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              openDetail(book, 'summaries')
+                                            }
+                                            disabled={book.read_status !== 'read'}
+                                          >
+                                            <FileText className="mr-sm h-4 w-4" />
+                                            {t('pages.summaries.title')}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              openDetail(book, 'highlights')
+                                            }
+                                          >
+                                            <Highlighter className="mr-sm h-4 w-4" />
+                                            {t('pages.highlights.title')}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => handleAskIntellect(book)}
+                                          >
+                                            <Brain className="mr-sm h-4 w-4" />
+                                            {t('pages.books.askIntellect')}
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => handleEdit(book)}
+                                        title={t('common.actions.edit')}
+                                        aria-label={t('common.actions.edit')}
+                                      >
+                                        <Edit className="h-4 w-4" aria-hidden="true" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => void handleDelete(book.id)}
+                                        title={t('common.actions.delete')}
+                                        aria-label={t('common.actions.delete')}
+                                      >
+                                        <Trash2
+                                          className="h-4 w-4"
+                                          aria-hidden="true"
+                                        />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )
+                  }
+                </PaginatedSlide>
               )}
             </>
           )}
@@ -1050,13 +1021,15 @@ export default function Books() {
       {/* Create / Edit form dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={editingBook ? 'edit' : 'create'}>
               {editingBook ? t('pages.books.editTitle') : t('pages.books.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {editingBook ? t('pages.books.editDesc') : t('pages.books.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {editingBook ? t('pages.books.editDesc') : t('pages.books.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <BookForm
             book={editingBook}
@@ -1129,13 +1102,13 @@ export default function Books() {
               <Label htmlFor="qc-pages">
                 {t('pages.books.quickCapture.pagesRead')}
               </Label>
-              <Input
+              <NumberStepper
                 id="qc-pages"
-                type="number"
                 min={1}
-                value={quickCapturePages}
-                onChange={(e) => setQuickCapturePages(e.target.value)}
+                optional
                 placeholder={t('pages.books.quickCapture.pagesPlaceholder')}
+                value={quickCapturePages === '' ? null : Number(quickCapturePages)}
+                onChange={(v) => setQuickCapturePages(v === null ? '' : String(v))}
               />
             </div>
           </div>

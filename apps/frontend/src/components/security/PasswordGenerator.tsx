@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordsService } from '@/services/passwords-service';
@@ -100,13 +101,6 @@ export function PasswordGenerator({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLengthChange = (value: string) => {
-    const num = parseInt(value, 10);
-    if (!isNaN(num)) {
-      setLength(Math.min(128, Math.max(8, num)));
-    }
-  };
-
   const strengthInfo = strength
     ? strengthConfig[strength as keyof typeof strengthConfig]
     : null;
@@ -119,22 +113,20 @@ export function PasswordGenerator({
           {t('pages.passwords.generator.length', { count: length })}
         </Label>
         <div className="flex items-center gap-3">
-          <input
-            type="range"
+          <Slider
             id="gen-length"
             min={8}
             max={128}
             value={length}
-            onChange={(e) => setLength(parseInt(e.target.value, 10))}
-            className="bg-muted accent-primary h-2 flex-1 cursor-pointer appearance-none rounded-lg"
+            onChange={setLength}
+            className="flex-1"
           />
-          <Input
-            type="number"
-            value={length}
-            onChange={(e) => handleLengthChange(e.target.value)}
-            className="w-20"
+          <NumberStepper
             min={8}
             max={128}
+            aria-label={t('pages.passwords.generator.length', { count: length })}
+            value={length}
+            onChange={(v) => v !== null && setLength(v)}
           />
         </div>
       </div>

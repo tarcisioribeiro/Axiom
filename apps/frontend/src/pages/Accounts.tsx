@@ -36,7 +36,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FileInput } from '@/components/ui/file-input';
 import { Label } from '@/components/ui/label';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -575,17 +577,19 @@ export default function Accounts() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader sticky>
+            <DialogTitle mode={selectedAccount ? 'edit' : 'create'}>
               {selectedAccount
                 ? t('pages.accounts.editTitle')
                 : t('pages.accounts.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              {selectedAccount
-                ? t('pages.accounts.editDesc')
-                : t('pages.accounts.newDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedAccount
+                  ? t('pages.accounts.editDesc')
+                  : t('pages.accounts.newDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <AccountForm
             account={selectedAccount}
@@ -701,13 +705,7 @@ export default function Accounts() {
           <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
             <div className="space-y-sm">
               <Label htmlFor="upload-file">Arquivo (.ofx ou .csv)</Label>
-              <input
-                id="upload-file"
-                type="file"
-                accept=".ofx,.csv"
-                className="text-muted-foreground file:mr-md file:bg-primary/10 file:px-md file:py-sm file:text-primary hover:file:bg-primary/20 block w-full text-sm file:rounded-md file:border-0 file:text-sm file:font-semibold"
-                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-              />
+              <FileInput id="upload-file" accept=".ofx,.csv" onChange={setUploadFile} />
               {uploadFile && (
                 <p className="text-muted-foreground text-xs">
                   {uploadFile.name} — formato:{' '}
