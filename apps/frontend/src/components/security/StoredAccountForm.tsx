@@ -197,7 +197,7 @@ export function StoredAccountForm({
                   <div className="gap-xs border-border p-sm flex items-center border-b">
                     <Search className="text-muted-foreground h-3.5 w-3.5" />
                     <input
-                      className="placeholder:text-muted-foreground flex-1 bg-transparent text-sm outline-none"
+                      className="placeholder:text-muted-foreground flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
                       placeholder={t('pages.storedAccounts.form.bankSearchPlaceholder')}
                       value={bankSearch}
                       onChange={(e) => setBankSearch(e.target.value)}

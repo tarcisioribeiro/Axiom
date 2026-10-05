@@ -241,7 +241,7 @@ export function AgentChatWidget() {
                   onKeyDown={handleKeyDown}
                   placeholder={t('agentWidget.inputPlaceholder')}
                   disabled={isStreaming}
-                  className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none disabled:opacity-60"
+                  className="placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0 disabled:opacity-60"
                 />
                 {isStreaming ? (
                   <PlainButton

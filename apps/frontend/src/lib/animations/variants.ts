@@ -45,13 +45,6 @@ export const cardVariants: Variants = {
     y: 0,
     transition: transitions.normal,
   },
-  hover: {
-    scale: 1.012,
-    y: -2,
-    boxShadow: 'var(--shadow-card-hover)',
-    transition: transitions.fast,
-  },
-  tap: { scale: 0.98 },
 };
 
 // Toast notification — consumido por components/ui/toast.tsx (importado

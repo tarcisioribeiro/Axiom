@@ -112,7 +112,7 @@ export function NumberStepper({
         }
         onBlur={commit}
         onKeyDown={handleKeyDown}
-        className="text-foreground placeholder:text-muted-foreground w-16 min-w-0 flex-1 bg-transparent text-center text-sm font-semibold tabular-nums focus-visible:outline-none"
+        className="text-foreground placeholder:text-muted-foreground w-16 min-w-0 flex-1 border-0 bg-transparent py-0 text-center text-sm font-semibold tabular-nums focus:ring-0 focus-visible:outline-none"
       />
       <PlainButton
         type="button"

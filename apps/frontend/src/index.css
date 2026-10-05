@@ -231,7 +231,6 @@
     --spacing-xl: 2rem; /* 32px */
 
     /* Card hover elevation shadow */
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
 
     /* Shadow opacity tokens — theme-aware, used by .shadow-* utilities */
     --shadow-opacity-soft: 0.08;
@@ -337,7 +336,6 @@
     --heatmap-medium: hsl(var(--success) / 0.55);
 
     /* Card hover elevation shadow */
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
 
     /* Shadow opacity tokens — dark theme overrides */
     --shadow-opacity-soft: 0.4;
@@ -420,7 +418,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.4;
     --shadow-opacity-medium: 0.5;
     --shadow-opacity-strong: 0.6;
@@ -500,7 +497,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.65);
     --shadow-opacity-soft: 0.4;
     --shadow-opacity-medium: 0.5;
     --shadow-opacity-strong: 0.65;
@@ -580,7 +576,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.7);
     --shadow-opacity-soft: 0.45;
     --shadow-opacity-medium: 0.55;
     --shadow-opacity-strong: 0.7;
@@ -660,7 +655,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.8);
     --shadow-opacity-soft: 0.5;
     --shadow-opacity-medium: 0.6;
     --shadow-opacity-strong: 0.75;
@@ -747,7 +741,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.65);
     --shadow-opacity-soft: 0.4;
     --shadow-opacity-medium: 0.5;
     --shadow-opacity-strong: 0.65;
@@ -828,7 +821,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.35;
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.55;
@@ -912,7 +904,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.7);
     --shadow-opacity-soft: 0.45;
     --shadow-opacity-medium: 0.55;
     --shadow-opacity-strong: 0.7;
@@ -994,7 +985,6 @@
     --heatmap-medium-low: hsl(var(--success) / 0.3);
     --heatmap-medium: hsl(var(--success) / 0.55);
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     --shadow-opacity-soft: 0.35;
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.6;
@@ -1072,7 +1062,6 @@
     --border-subtle: 307 11% 90%;
     --star: 49 100% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.14;
@@ -1149,7 +1138,6 @@
     --border-subtle: 240 5% 90%;
     --star: 36 100% 45%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.14;
@@ -1224,7 +1212,6 @@
     --border-subtle: 220 14% 91%;
     --star: 35 78% 42%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.08;
     --shadow-opacity-strong: 0.12;
@@ -1299,7 +1286,6 @@
     --border-subtle: 12 8% 90%;
     --star: 35 81% 45%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.08;
     --shadow-opacity-strong: 0.12;
@@ -1374,7 +1360,6 @@
     --border-subtle: 48 27% 87%;
     --star: 43 100% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.09;
     --shadow-opacity-strong: 0.13;
@@ -1449,7 +1434,6 @@
     --border-subtle: 41 38% 80%;
     --star: 40 74% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
     --shadow-opacity-soft: 0.07;
     --shadow-opacity-medium: 0.1;
     --shadow-opacity-strong: 0.15;
@@ -1524,7 +1508,6 @@
     --border-subtle: 44 47% 90%;
     --star: 45 100% 35%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
     --shadow-opacity-soft: 0.06;
     --shadow-opacity-medium: 0.08;
     --shadow-opacity-strong: 0.12;
@@ -1599,7 +1582,6 @@
     --border-subtle: 219 26% 88%;
     --star: 40 55% 38%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.08);
     --shadow-opacity-soft: 0.05;
     --shadow-opacity-medium: 0.07;
     --shadow-opacity-strong: 0.1;
@@ -1655,10 +1637,6 @@
 
 @utility shadow-strong {
   box-shadow: 0 8px 24px rgba(0, 0, 0, var(--shadow-opacity-strong));
-}
-
-@utility shadow-card-hover {
-  box-shadow: var(--shadow-card-hover);
 }
 
 @layer utilities {
@@ -1755,10 +1733,6 @@
 
   /* Hover effects — gateados por (hover: hover) and (pointer: fine) para não
      "grudar" em telas de toque (tap dispara :hover sem um mouse para sair dele) */
-  .hover-lift {
-    @apply duration-fast hoverable:hover:-translate-y-1 transition-transform;
-  }
-
   .hover-glow {
     @apply hoverable:hover:shadow-medium duration-normal transition-shadow;
   }
@@ -2033,10 +2007,6 @@ main .flex-col > :has(.page-fill) {
      aqui não teria efeito sobre ela. */
 
   /* Mantem funcionalidade de hover sem animacao */
-  .hover-lift:hover {
-    transform: none;
-  }
-
   .hover-glow:hover {
     box-shadow: var(--shadow-medium);
   }

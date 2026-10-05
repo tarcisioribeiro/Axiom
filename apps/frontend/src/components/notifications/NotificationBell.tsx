@@ -35,7 +35,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           tooltipSide="bottom"
-          className="hover-lift hover:bg-secondary relative transition"
+          className="relative"
           aria-label={t('layout.notifications.ariaLabel')}
         >
           <Bell className="h-5 w-5" aria-hidden="true" />

@@ -142,16 +142,10 @@ export const StatCard: React.FC<StatCardProps> = ({
   const valueClass = accentColor ? accentValueClasses[accentColor] : '';
 
   return (
-    <motion.div
-      variants={cardVariants}
-      initial="initial"
-      animate="animate"
-      whileHover="hover"
-      whileTap="tap"
-    >
+    <motion.div variants={cardVariants} initial="initial" animate="animate">
       <Card
         className={cn(
-          `h-full transition-shadow ${cardClass}`,
+          `h-full ${cardClass}`,
           onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
         )}
         onClick={onClick}
@@ -159,15 +153,14 @@ export const StatCard: React.FC<StatCardProps> = ({
         <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 4 }}
+            <div
               className={cn(
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
                 iconClass
               )}
             >
               {icon}
-            </motion.div>
+            </div>
           )}
         </CardHeader>
         <CardContent>
