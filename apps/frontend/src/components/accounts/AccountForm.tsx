@@ -45,6 +45,8 @@ interface AccountFormProps {
   onSubmit: (data: AccountFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  /** Erros por campo devolvidos pelo servidor após o último envio. */
+  fieldErrors?: Record<string, string[]>;
 }
 
 export const AccountForm: React.FC<AccountFormProps> = ({
@@ -52,12 +54,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  fieldErrors,
 }) => {
   const { t } = useTranslation();
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
     watch,
     formState: { errors },
   } = useForm<AccountFormData>({
@@ -84,6 +88,11 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           owner: 0,
         },
   });
+
+  useEffect(() => {
+    const message = fieldErrors?.account_number?.[0];
+    if (message) setError('account_number', { type: 'server', message });
+  }, [fieldErrors, setError]);
 
   useEffect(() => {
     const loadCurrentUserMember = async () => {

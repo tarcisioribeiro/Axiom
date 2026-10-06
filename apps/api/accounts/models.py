@@ -1,8 +1,17 @@
+import hashlib
+import hmac as hmac_lib
+import os
+import re
 from decimal import Decimal
+from typing import Any
 
 from django.db import models
 
-from app.encryption import EncryptedField, MaskedEncryptedField
+from app.encryption import (
+    EncryptedField,
+    FieldEncryption,
+    MaskedEncryptedField,
+)
 from app.models import BaseModel
 
 ACCOUNT_TYPES = (
@@ -22,6 +31,17 @@ ACCOUNT_NAMES = (
     ("IFB", "Ifood Benefícios"),
     ("CEF", "Caixa Econômica Federal"),
 )
+
+
+def compute_account_number_hash(account_number: str, key: str) -> str:
+    """
+    HMAC-SHA256 do número da conta normalizado (sem espaços, pontos, traços
+    e em maiúsculas), para checar duplicidade sem expor o valor.
+    """
+    normalized = re.sub(r"[\s.\-]", "", account_number).upper()
+    return hmac_lib.new(
+        key.encode(), normalized.encode(), hashlib.sha256
+    ).hexdigest()
 
 
 class Account(BaseModel):
@@ -95,6 +115,13 @@ class Account(BaseModel):
         blank=True,
     )
 
+    account_number_hash = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        verbose_name="Hash do Número da Conta",
+    )
+
     account_number = EncryptedField("_account_number")
     account_number_masked = MaskedEncryptedField("_account_number")
 
@@ -107,11 +134,44 @@ class Account(BaseModel):
                 fields=["created_by"],
                 condition=models.Q(account_type="CM", is_deleted=False),
                 name="unique_wallet_account_per_user",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "created_by",
+                    "institution_name",
+                    "account_number_hash",
+                ],
+                condition=models.Q(
+                    is_deleted=False, account_number_hash__isnull=False
+                ),
+                name="unique_account_number_per_institution_per_user",
+            ),
         ]
 
     def __str__(self) -> str:
         return self.account_name
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        update_fields = kwargs.get("update_fields")
+        if not update_fields or "_account_number" in update_fields:
+            plain = (
+                FieldEncryption.decrypt_data(self._account_number)
+                if self._account_number
+                else None
+            )
+            self.account_number_hash = (
+                compute_account_number_hash(
+                    plain, os.getenv("ENCRYPTION_KEY", "")
+                )
+                if plain
+                else None
+            )
+            if update_fields:
+                kwargs["update_fields"] = {
+                    *update_fields,
+                    "account_number_hash",
+                }
+        super().save(*args, **kwargs)
 
     @property
     def deposited_in_vaults(self) -> Decimal:

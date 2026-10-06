@@ -595,15 +595,6 @@
       "deletedDesc": "A conta foi excluída com sucesso.",
       "emptyState": "Nenhuma conta cadastrada. Clique em \"Nova Conta\" para começar.",
       "searchPlaceholder": "Buscar por nome ou instituição...",
-      "stats": {
-        "totalBalance": "Saldo Consolidado",
-        "availableBalance": "Disponível Total",
-        "count": "Contas Ativas",
-        "institutionsSubtitle": "instituições",
-        "accountsCount": "{{count}} contas",
-        "overdraftIncluded": "incluindo cheque especial",
-        "reservedInVaults": "descontado {{amount}} reservado em cofres"
-      },
       "columns": {
         "name": "Conta",
         "type": "Tipo",
@@ -657,8 +648,7 @@
       "importStatement": "Importar Extrato",
       "noImports": "Nenhum extrato importado",
       "noImportsDesc": "Clique em 'Importar Extrato' para começar.",
-      "invalidFormat": "Formato inválido. Use OFX ou CSV.",
-      "balanceDistribution": "Distribuição de saldo"
+      "invalidFormat": "Formato inválido. Use OFX ou CSV."
     },
     "expenses": {
       "title": "Despesas",

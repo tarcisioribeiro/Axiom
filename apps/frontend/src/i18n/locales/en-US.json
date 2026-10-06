@@ -595,15 +595,6 @@
       "deletedDesc": "The account was deleted successfully.",
       "emptyState": "No accounts registered. Click \"New Account\" to get started.",
       "searchPlaceholder": "Search by name or institution...",
-      "stats": {
-        "totalBalance": "Consolidated Balance",
-        "availableBalance": "Total Available",
-        "count": "Active Accounts",
-        "institutionsSubtitle": "institutions",
-        "accountsCount": "{{count}} accounts",
-        "overdraftIncluded": "including overdraft",
-        "reservedInVaults": "minus {{amount}} reserved in vaults"
-      },
       "columns": {
         "name": "Account",
         "type": "Type",
@@ -657,8 +648,7 @@
       "importStatement": "Import Statement",
       "noImports": "No statements imported",
       "noImportsDesc": "Click 'Import Statement' to get started.",
-      "invalidFormat": "Invalid format. Use OFX or CSV.",
-      "balanceDistribution": "Balance distribution"
+      "invalidFormat": "Invalid format. Use OFX or CSV."
     },
     "expenses": {
       "title": "Expenses",

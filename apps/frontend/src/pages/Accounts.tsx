@@ -8,9 +8,6 @@ import {
   ArrowLeftRight,
   FileUp,
   RefreshCw,
-  Banknote,
-  ShieldCheck,
-  Building2,
   Loader2,
   Upload,
   X,
@@ -24,7 +21,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,6 +44,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { getErrorMessage } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import { ValidationError } from '@/services/api-errors';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import type { Account, AccountFormData, BankStatementImport } from '@/types';
 
@@ -71,6 +69,9 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   );
 }
 
+/** 4 cards por linha × 2 linhas por página. */
+const ACCOUNTS_PAGE_SIZE = 8;
+
 export default function Accounts() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -92,6 +93,9 @@ export default function Accounts() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Record<string, string[]> | undefined
+  >();
 
   // ── Query ──────────────────────────────────────────────────────────────────
   const { data: accounts = [], isLoading } = useQuery({
@@ -114,6 +118,7 @@ export default function Accounts() {
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
+      setFieldErrors(error instanceof ValidationError ? error.errors : undefined);
       toast({
         title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
@@ -132,6 +137,7 @@ export default function Accounts() {
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
+      setFieldErrors(error instanceof ValidationError ? error.errors : undefined);
       toast({
         title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
@@ -180,51 +186,15 @@ export default function Accounts() {
     CP: { border: 'border-l-primary', icon: 'text-primary', bg: 'bg-primary/5' },
   };
 
-  const BALANCE_DIST_COLORS = [
-    'bg-info',
-    'bg-success',
-    'bg-primary',
-    'bg-warning',
-    'bg-accent',
-    'bg-destructive',
-  ] as const;
-
-  const { totalBalance, totalAvailable, totalReserved } = useMemo(() => {
-    const balance = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
-    const reserved = accounts.reduce(
-      (s, a) => s + parseFloat(a.deposited_in_vaults ?? '0'),
-      0
-    );
-    const available = accounts.reduce(
-      (s, a) =>
-        s +
-        parseFloat(a.available_balance ?? a.balance) +
-        parseFloat(a.overdraft_limit ?? '0'),
-      0
-    );
-    return {
-      totalBalance: balance,
-      totalAvailable: available,
-      totalReserved: reserved,
-    };
-  }, [accounts]);
-
-  const balanceDistribution = useMemo(() => {
-    const positiveAccounts = accounts.filter((a) => parseFloat(a.balance) > 0);
-    const totalPositive = positiveAccounts.reduce(
-      (s, a) => s + parseFloat(a.balance),
-      0
-    );
-    return { positiveAccounts, totalPositive };
-  }, [accounts]);
-
   const handleCreate = () => {
     setSelectedAccount(undefined);
+    setFieldErrors(undefined);
     setIsDialogOpen(true);
   };
 
   const handleEdit = (account: Account) => {
     setSelectedAccount(account);
+    setFieldErrors(undefined);
     setIsDialogOpen(true);
   };
 
@@ -319,113 +289,6 @@ export default function Accounts() {
         />
       </FilterBar>
 
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card
-          className={`overflow-hidden border-t-2 ${totalBalance >= 0 ? 'border-t-success/60' : 'border-t-destructive/60'}`}
-        >
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.accounts.stats.totalBalance')}
-            </p>
-            <div
-              className={`p-sm rounded-lg ring-1 ${totalBalance >= 0 ? 'bg-success/10 ring-success/20' : 'bg-destructive/10 ring-destructive/20'}`}
-            >
-              <Banknote
-                className={`h-4 w-4 ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
-            >
-              {formatCurrency(totalBalance)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.accounts.stats.accountsCount', { count: accounts.length })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={`overflow-hidden border-t-2 ${totalAvailable >= 0 ? 'border-t-info/60' : 'border-t-destructive/60'}`}
-        >
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.accounts.stats.availableBalance')}
-            </p>
-            <div
-              className={`p-sm rounded-lg ring-1 ${totalAvailable >= 0 ? 'bg-info/10 ring-info/20' : 'bg-destructive/10 ring-destructive/20'}`}
-            >
-              <ShieldCheck
-                className={`h-4 w-4 ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className={`text-2xl font-bold ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
-            >
-              {formatCurrency(totalAvailable)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {totalReserved > 0
-                ? t('pages.accounts.stats.reservedInVaults', {
-                    amount: formatCurrency(totalReserved),
-                  })
-                : t('pages.accounts.stats.overdraftIncluded')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">{t('pages.accounts.stats.count')}</p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <Building2 className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{accounts.length}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.accounts.stats.institutionsSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {balanceDistribution.positiveAccounts.length > 1 && (
-        <div className="bg-card p-md rounded-lg border">
-          <p className="mb-sm text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            {t('pages.accounts.balanceDistribution')}
-          </p>
-          <div className="bg-muted flex h-2 overflow-hidden rounded-full">
-            {balanceDistribution.positiveAccounts.map((acc, i) => (
-              <div
-                key={acc.id}
-                className={`h-full transition-[width] ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
-                style={{
-                  width: `${(parseFloat(acc.balance) / balanceDistribution.totalPositive) * 100}%`,
-                }}
-                title={`${acc.account_name}: ${formatCurrency(acc.balance)}`}
-              />
-            ))}
-          </div>
-          <div className="mt-sm gap-md flex flex-wrap">
-            {balanceDistribution.positiveAccounts.map((acc, i) => (
-              <div key={acc.id} className="gap-xs flex items-center">
-                <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
-                />
-                <span className="text-muted-foreground text-xs">
-                  {acc.account_name} · {formatCurrency(acc.balance)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {isLoading ? (
         <div className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -441,7 +304,7 @@ export default function Accounts() {
         <PaginatedSlide
           key={searchTerm}
           items={filteredAccounts}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={ACCOUNTS_PAGE_SIZE}
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {(pageItems) =>
@@ -463,7 +326,7 @@ export default function Accounts() {
               return (
                 <Card
                   key={account.id}
-                  className={`overflow-hidden transition-colors ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
+                  className={`flex flex-col overflow-hidden transition-colors ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
                 >
                   <CardHeader className="pb-sm">
                     <div className="gap-sm flex items-start justify-between">
@@ -487,13 +350,13 @@ export default function Accounts() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="gap-md flex flex-1 flex-col">
                     {account.account_number_masked && (
                       <p className="text-muted-foreground font-mono text-xs">
                         {account.account_number_masked}
                       </p>
                     )}
-                    <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="bg-muted/30 my-auto rounded-lg p-3 text-center">
                       <p className="text-muted-foreground text-xs">
                         {t('pages.accounts.columns.balance')}
                       </p>
@@ -502,33 +365,54 @@ export default function Accounts() {
                       >
                         {formatCurrency(account.balance)}
                       </p>
-                      {overdraft > 0 && (
-                        <p
-                          className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
-                        >
-                          {t('pages.accounts.available', {
-                            value: formatCurrency(String(available)),
-                          })}
-                        </p>
-                      )}
-                      {reservedInVaults > 0 && (
-                        <div className="mt-xs border-border/60 pt-xs space-y-0.5 border-t">
-                          <p className="text-muted-foreground text-xs">
-                            {t('pages.accounts.reservedInVaults', {
-                              value: formatCurrency(String(reservedInVaults)),
-                            })}
-                          </p>
+                      {/* Sempre 2 linhas (reserva ou cheque especial, ou espaço
+                          invisível), para todos os cards terem a altura do maior. */}
+                      <div
+                        className={`mt-xs pt-xs space-y-0.5 border-t ${reservedInVaults > 0 ? 'border-border/60' : 'border-transparent'}`}
+                      >
+                        {overdraft > 0 && (
                           <p
-                            className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                            className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
                           >
-                            {t('pages.accounts.availableForSpending', {
-                              value: formatCurrency(String(availableForSpending)),
+                            {t('pages.accounts.available', {
+                              value: formatCurrency(String(available)),
                             })}
                           </p>
-                        </div>
-                      )}
+                        )}
+                        {reservedInVaults > 0 && (
+                          <>
+                            <p className="text-muted-foreground text-xs">
+                              {t('pages.accounts.reservedInVaults', {
+                                value: formatCurrency(String(reservedInVaults)),
+                              })}
+                            </p>
+                            <p
+                              className={`text-xs font-medium ${availableForSpending >= 0 ? 'text-info' : 'text-destructive'}`}
+                            >
+                              {t('pages.accounts.availableForSpending', {
+                                value: formatCurrency(String(availableForSpending)),
+                              })}
+                            </p>
+                          </>
+                        )}
+                        {Array.from(
+                          {
+                            length: Math.max(
+                              0,
+                              2 -
+                                (overdraft > 0 ? 1 : 0) -
+                                (reservedInVaults > 0 ? 2 : 0)
+                            ),
+                          },
+                          (_, i) => (
+                            <p key={i} aria-hidden="true" className="invisible text-xs">
+                              &nbsp;
+                            </p>
+                          )
+                        )}
+                      </div>
                     </div>
-                    <div className="pt-sm flex items-center justify-between border-t">
+                    <div className="pt-sm mt-auto flex items-center justify-between border-t">
                       <span className="text-muted-foreground text-xs">
                         {formatDate(account.created_at)}
                       </span>
@@ -597,6 +481,7 @@ export default function Accounts() {
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
+            fieldErrors={fieldErrors}
           />
         </DialogContent>
       </Dialog>
