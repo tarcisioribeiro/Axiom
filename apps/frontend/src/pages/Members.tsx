@@ -2,20 +2,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
-  BarChart3,
   Pencil,
   Plus,
   Trash2,
   Users,
   Banknote,
   HandCoins,
-  UserCheck,
   Phone,
   Mail,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -27,7 +24,7 @@ import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -73,9 +70,29 @@ function MemberInitials({ name, sex }: { name: string; sex: string }) {
 
 const EMPTY_MEMBERS: Member[] = [];
 
+/** Desktop (lg+): 8 cards por página; demais telas mantêm o padrão da grade. */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 8;
+
+function useMembersPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
+
 export default function Members() {
+  const membersPageSize = useMembersPageSize();
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
@@ -178,10 +195,6 @@ export default function Members() {
     );
   }, [members, searchTerm]);
 
-  const creditorCount = members.filter((m) => m.is_creditor).length;
-  const beneficiaryCount = members.filter((m) => m.is_benefited).length;
-  const activeCount = members.filter((m) => m.active).length;
-
   if (isLoading) return <LoadingState />;
 
   return (
@@ -208,79 +221,6 @@ export default function Members() {
         />
       </FilterBar>
 
-      {/* Stat cards */}
-      {members.length > 0 && (
-        <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
-          <Card className="border-t-primary/60 overflow-hidden border-t-2">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">{t('pages.members.title')}</p>
-              <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-                <Users className="text-primary h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-primary text-2xl font-bold">{members.length}</div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.registeredSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-t-success/60 overflow-hidden border-t-2">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">{t('pages.members.stats.active')}</p>
-              <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-                <UserCheck className="text-success h-4 w-4" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-success text-2xl font-bold">{activeCount}</div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.activeSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-t-2 border-t-blue-500/60">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">
-                {t('pages.members.stats.creditors')}
-              </p>
-              <div className="p-sm rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-                <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {creditorCount}
-              </div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.creditorsSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-t-2 border-t-emerald-500/60">
-            <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-              <p className="text-sm font-medium">
-                {t('pages.members.stats.beneficiaries')}
-              </p>
-              <div className="p-sm rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
-                <HandCoins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {beneficiaryCount}
-              </div>
-              <p className="mt-xs text-muted-foreground text-xs">
-                {t('pages.members.stats.beneficiariesSubtitle')}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {filteredMembers.length === 0 ? (
         <EmptyState
           icon={<Users className="text-muted-foreground h-12 w-12" />}
@@ -292,7 +232,8 @@ export default function Members() {
         <PaginatedSlide
           key={searchTerm}
           items={filteredMembers}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={membersPageSize}
+          centerList
           className="gap-md grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {(pageItems) =>
@@ -302,7 +243,7 @@ export default function Members() {
                 <Card
                   key={member.id}
                   className={cn(
-                    'overflow-hidden transition-colors',
+                    'flex flex-col overflow-hidden transition-colors',
                     isCurrentUser && 'ring-primary/40 ring-2',
                     !member.active && 'opacity-60'
                   )}
@@ -351,7 +292,7 @@ export default function Members() {
                   </div>
 
                   {/* Dados de contato */}
-                  <CardContent className="space-y-sm py-3">
+                  <CardContent className="space-y-sm flex flex-1 flex-col py-3">
                     {member.phone && (
                       <div className="gap-sm text-muted-foreground flex items-center text-xs">
                         <Phone className="h-3 w-3 shrink-0" />
@@ -381,7 +322,7 @@ export default function Members() {
                     )}
 
                     {/* Actions */}
-                    <div className="pt-sm flex items-center justify-between border-t">
+                    <div className="pt-sm mt-auto flex items-center justify-between border-t">
                       <Badge
                         variant={member.active ? 'success' : 'outline'}
                         className="text-xs"
@@ -391,18 +332,6 @@ export default function Members() {
                           : t('common.status.inactive')}
                       </Badge>
                       <div className="gap-xs flex">
-                        {isCurrentUser && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => navigate(`/members/${member.id}/report`)}
-                            aria-label={t('pages.members.viewReport')}
-                            title={t('pages.members.viewReport')}
-                          >
-                            <BarChart3 className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"

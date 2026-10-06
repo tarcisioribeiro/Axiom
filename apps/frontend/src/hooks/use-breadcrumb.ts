@@ -28,7 +28,6 @@ import {
   ClipboardList,
   ShoppingCart,
   Tag,
-  BarChart3,
   FileInput,
   Dumbbell,
   UtensilsCrossed,
@@ -339,19 +338,7 @@ interface RoutePattern {
   config: RouteConfig;
 }
 
-const routePatterns: RoutePattern[] = [
-  {
-    pattern: /^\/members\/\d+\/report$/,
-    config: {
-      labelKey: 'breadcrumb.memberFinancialReport',
-      icon: BarChart3,
-      moduleKey: 'breadcrumb.finance',
-      moduleIcon: Wallet,
-      subModuleKey: 'breadcrumb.members',
-      subModuleIcon: Users,
-    },
-  },
-];
+const routePatterns: RoutePattern[] = [];
 
 /**
  * Hook para gerar breadcrumbs de navegação baseado na rota atual.

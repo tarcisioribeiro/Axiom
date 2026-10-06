@@ -174,16 +174,13 @@ export default function Accounts() {
     );
   }, [accounts, searchTerm]);
 
-  const ACCOUNT_TYPE_COLORS: Record<
-    string,
-    { border: string; icon: string; bg: string }
-  > = {
-    CC: { border: 'border-l-info', icon: 'text-info', bg: 'bg-info/5' },
-    CS: { border: 'border-l-success', icon: 'text-success', bg: 'bg-success/5' },
-    FG: { border: 'border-l-warning', icon: 'text-warning', bg: 'bg-warning/5' },
-    VA: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
-    VR: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
-    CP: { border: 'border-l-primary', icon: 'text-primary', bg: 'bg-primary/5' },
+  const ACCOUNT_TYPE_COLORS: Record<string, { icon: string; bg: string }> = {
+    CC: { icon: 'text-info', bg: 'bg-info/5' },
+    CS: { icon: 'text-success', bg: 'bg-success/5' },
+    FG: { icon: 'text-warning', bg: 'bg-warning/5' },
+    VA: { icon: 'text-accent', bg: 'bg-accent/5' },
+    VR: { icon: 'text-accent', bg: 'bg-accent/5' },
+    CP: { icon: 'text-primary', bg: 'bg-primary/5' },
   };
 
   const handleCreate = () => {
@@ -326,7 +323,7 @@ export default function Accounts() {
               return (
                 <Card
                   key={account.id}
-                  className={`flex flex-col overflow-hidden transition-colors ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
+                  className="flex flex-col overflow-hidden transition-colors"
                 >
                   <CardHeader className="pb-sm">
                     <div className="gap-sm flex items-start justify-between">
@@ -496,9 +493,11 @@ export default function Accounts() {
                 account: reconciliationAccount?.account_name,
               })}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.accounts.bankReconciliationDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.accounts.bankReconciliationDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
 
           <div className="flex justify-end">
@@ -578,6 +577,13 @@ export default function Accounts() {
               </table>
             </div>
           )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReconciliationOpen(false)}>
+              <X className="mr-sm h-4 w-4" />
+              {t('common.actions.cancel')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -73,7 +73,6 @@ const EXACT: Record<string, string> = {
 };
 
 const PATTERNS: [RegExp, string][] = [
-  [/^\/members\/[^/]+\/report$/, 'memberReport'],
   [/^\/bank-reconciliation\/[^/]+$/, 'bankReconciliationDetail'],
 ];
 

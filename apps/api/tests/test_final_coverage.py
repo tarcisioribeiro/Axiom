@@ -1,5 +1,5 @@
 """
-Final coverage push — member permissions, financial report, and remaining
+Final coverage push — member permissions and remaining
 areas.
 """
 
@@ -92,62 +92,6 @@ class MemberPermissionsViewTest(BaseFinalTestCase):
         self.assertIn(
             response.status_code,
             [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN],
-        )
-
-
-# ---------------------------------------------------------------------------
-# Member financial report
-# ---------------------------------------------------------------------------
-
-
-class MemberFinancialReportViewTest(BaseFinalTestCase):
-    def setUp(self):
-        super().setUp()
-        # Create expenses and revenues for the member
-        from expenses.models import Expense
-        from revenues.models import Revenue
-
-        Revenue.objects.create(
-            description="Salary",
-            value=Decimal("5000.00"),
-            date=date.today(),
-            horary="09:00:00",
-            category="salary",
-            account=self.account,
-            received=True,
-            created_by=self.user,
-        )
-        Expense.objects.create(
-            description="Rent",
-            value=Decimal("1500.00"),
-            date=date.today(),
-            horary="10:00:00",
-            category="bills and services",
-            account=self.account,
-            payed=True,
-            created_by=self.user,
-        )
-
-    def test_member_financial_report(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-
-    def test_member_financial_report_with_date_range(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(
-            url,
-            {
-                "start_date": str(date(2026, 1, 1)),
-                "end_date": str(date(2026, 12, 31)),
-            },
-        )
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
         )
 
 

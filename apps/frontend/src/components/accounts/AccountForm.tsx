@@ -152,36 +152,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
       {/* Seção: Identificação */}
       <FormSection title={t('common.form.sections.basicInfo')} icon={Landmark}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
-            <Label className="gap-xs flex items-center">
-              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.accounts.form.typeLabel')}
-            </Label>
-            <div className="gap-xs grid grid-cols-3">
-              {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() =>
-                    setValue('account_type', key as AccountFormData['account_type'])
-                  }
-                  disabled={isLoading}
-                  className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition ${
-                    accountType === key
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                  } ${errors.account_type ? 'border-destructive ring-destructive/50 ring-2' : ''}`}
-                >
-                  {(() => {
-                    const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
-                    return <TypeIcon className="h-4 w-4 shrink-0" />;
-                  })()}
-                  <span className="truncate">{translate('accountTypes', key)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="space-y-sm">
             <Label htmlFor="institution" className="gap-xs flex items-center">
               <Building2 className="text-muted-foreground h-3.5 w-3.5" />
@@ -205,6 +175,37 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                       {(() => {
                         const InstIcon = INSTITUTION_ICONS_CONFIG[key] ?? Building2;
                         return <InstIcon className="h-4 w-4" />;
+                      })()}
+                      {value}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="account_type" className="gap-xs flex items-center">
+              <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.accounts.form.typeLabel')}
+            </Label>
+            <Select
+              value={accountType}
+              onValueChange={(value) =>
+                setValue('account_type', value as AccountFormData['account_type'])
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger id="account_type" aria-invalid={!!errors.account_type}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TRANSLATIONS.accountTypes).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>
+                    <span className="flex items-center gap-2">
+                      {(() => {
+                        const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
+                        return <TypeIcon className="h-4 w-4" />;
                       })()}
                       {value}
                     </span>

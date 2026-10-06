@@ -413,7 +413,6 @@
     "security": "Security",
     "library": "Intellect",
     "bankReconciliation": "Bank Reconciliation",
-    "memberFinancialReport": "Financial Report",
     "workout": "Workout",
     "nutrition": "Diet",
     "bodyMetrics": "Body Measurements",
@@ -1084,7 +1083,6 @@
         "role": "Role",
         "createdAt": "Created at"
       },
-      "viewReport": "View financial report",
       "form": {
         "nameLabel": "Name *",
         "namePlaceholder": "Ex: John Smith",
@@ -4877,22 +4875,6 @@
         "agent_insight_label": "Weekly Assistant Insight"
       }
     },
-    "memberFinancialReport": {
-      "subtitle": "Financial report",
-      "revenues": "Revenues",
-      "expenses": "Expenses",
-      "payables": "Payables",
-      "loansReceived": "Received Loans",
-      "loansGranted": "Granted Loans",
-      "transfers": "Transfers",
-      "expensesByCategory": "Expenses by Category",
-      "noExpensesByCategory": "No expenses by category",
-      "creditor": "Creditor",
-      "benefited": "Benefited",
-      "paidAmount": "Paid Amount",
-      "totalAmount": "Total Amount",
-      "dueDate": "Due Date"
-    },
     "adminLogs": {
       "title": "Activity Logs",
       "refresh": "Refresh",
@@ -6529,12 +6511,7 @@
       "members": {
         "title": "Members",
         "desc": "Register people (family, dependents, others) to link to entries and reports.",
-        "tip": "Open a member to see their financial report."
-      },
-      "memberReport": {
-        "title": "Member report",
-        "desc": "A financial summary for one member: what was spent, received and owed.",
-        "tip": "Use the period filters to analyze different ranges."
+        "tip": "Use the edit icon to update a member's details."
       },
       "budgets": {
         "title": "Budgets",

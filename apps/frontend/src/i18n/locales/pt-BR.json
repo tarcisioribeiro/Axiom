@@ -413,7 +413,6 @@
     "security": "Segurança",
     "library": "Intelecto",
     "bankReconciliation": "Conciliação Bancária",
-    "memberFinancialReport": "Relatório Financeiro",
     "workout": "Treino",
     "nutrition": "Dieta",
     "bodyMetrics": "Medidas Corporais",
@@ -1084,7 +1083,6 @@
         "role": "Papel",
         "createdAt": "Criado em"
       },
-      "viewReport": "Ver relatório financeiro",
       "form": {
         "nameLabel": "Nome *",
         "namePlaceholder": "Ex: João Silva",
@@ -4943,22 +4941,6 @@
         "agent_insight_label": "Insight Semanal do Assistente"
       }
     },
-    "memberFinancialReport": {
-      "subtitle": "Relatório financeiro",
-      "revenues": "Receitas",
-      "expenses": "Despesas",
-      "payables": "Valores a Pagar",
-      "loansReceived": "Empréstimos Recebidos",
-      "loansGranted": "Empréstimos Concedidos",
-      "transfers": "Transferências",
-      "expensesByCategory": "Despesas por Categoria",
-      "noExpensesByCategory": "Sem despesas por categoria",
-      "creditor": "Credor",
-      "benefited": "Beneficiado",
-      "paidAmount": "Valor Pago",
-      "totalAmount": "Valor Total",
-      "dueDate": "Vencimento"
-    },
     "adminLogs": {
       "title": "Logs de Atividade",
       "refresh": "Atualizar",
@@ -6574,12 +6556,7 @@
       "members": {
         "title": "Membros",
         "desc": "Cadastre pessoas (família, dependentes, terceiros) para associar a lançamentos e relatórios.",
-        "tip": "Abra um membro para ver o relatório financeiro dele."
-      },
-      "memberReport": {
-        "title": "Relatório do membro",
-        "desc": "Resumo financeiro de um membro: o que foi gasto, recebido e devido.",
-        "tip": "Use os filtros de período para analisar diferentes intervalos."
+        "tip": "Use o ícone de edição para atualizar os dados de um membro."
       },
       "budgets": {
         "title": "Orçamentos",

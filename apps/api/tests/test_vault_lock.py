@@ -104,19 +104,6 @@ class MemberPermissionsViewTest(BaseFinalPushTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Member Financial Report CSV export
-# ---------------------------------------------------------------------------
-
-
-class MemberReportViewTest(BaseFinalPushTestCase):
-    def test_member_financial_report_json(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, dict)
-
-
-# ---------------------------------------------------------------------------
 # Loan update and delete
 # ---------------------------------------------------------------------------
 

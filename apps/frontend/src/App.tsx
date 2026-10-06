@@ -38,7 +38,6 @@ const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Members = lazy(() => import('./pages/Members'));
-const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
 // Security Module
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
@@ -293,16 +292,6 @@ function AnimatedRoutes() {
             </PageWrapper>
           }
         />
-        <Route
-          path="/members/:id/report"
-          element={
-            <PageWrapper>
-              <MemberFinancialReport />
-            </PageWrapper>
-          }
-        />
-
-        {/* Security Module routes */}
         <Route
           path="/security/dashboard"
           element={

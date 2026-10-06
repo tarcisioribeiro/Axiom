@@ -485,154 +485,111 @@ export const Sidebar = () => {
         )}
       </nav>
 
-      {/* User profile — dropdown with Settings + Logout */}
-      {user && (
+      {/* Rodapé: foto (menu de Configurações/Sair), versão, recolher e atalho */}
+      <div
+        className={cn(
+          'mt-sm border-border/40 gap-xs flex items-center border-t pt-3',
+          isCollapsed && !isMobile ? 'flex-col justify-center' : 'justify-between'
+        )}
+      >
         <div
           className={cn(
-            'mt-sm border-border/40 pt-sm border-t',
-            isCollapsed && !isMobile ? 'flex justify-center' : ''
+            'gap-xs flex items-center',
+            isCollapsed && !isMobile && 'flex-col'
           )}
         >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {isCollapsed && !isMobile ? (
-                <Tooltip
-                  content={
-                    `${user.first_name} ${user.last_name}`.trim() || user.username
-                  }
-                  side="right"
-                >
-                  <button
-                    className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
-                    aria-label={t('layout.userMenu')}
-                  >
-                    {user.profile_photo ? (
-                      <img
-                        src={user.profile_photo}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span className="text-primary text-xs font-semibold">
-                        {(
-                          user.first_name?.[0] ??
-                          user.username?.[0] ??
-                          '?'
-                        ).toUpperCase()}
-                      </span>
-                    )}
-                  </button>
-                </Tooltip>
-              ) : (
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  className="gap-sm px-sm py-xs hover:bg-muted/60 flex w-full items-center rounded-lg transition-colors"
+                  className="bg-primary/10 ring-border/50 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 transition-opacity hover:opacity-80"
                   aria-label={t('layout.userMenu')}
                 >
-                  <div className="bg-primary/10 ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1">
-                    {user.profile_photo ? (
-                      <img
-                        src={user.profile_photo}
-                        alt=""
-                        className="h-full w-full object-cover"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span className="text-primary text-xs font-semibold">
-                        {(
-                          user.first_name?.[0] ??
-                          user.username?.[0] ??
-                          '?'
-                        ).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="text-foreground truncate text-sm font-medium">
-                      {`${user.first_name} ${user.last_name}`.trim() || user.username}
-                    </p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {user.username}
-                    </p>
-                  </div>
+                  {user.profile_photo ? (
+                    <img
+                      src={user.profile_photo}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <span className="text-primary text-xs font-semibold">
+                      {(
+                        user.first_name?.[0] ??
+                        user.username?.[0] ??
+                        '?'
+                      ).toUpperCase()}
+                    </span>
+                  )}
                 </button>
-              )}
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-52">
-              <DropdownMenuItem
-                onClick={() => void navigate('/settings/profile')}
-                className="gap-sm"
-              >
-                <Settings className="h-4 w-4" aria-hidden="true" />
-                {t('layout.userSettings')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="gap-sm text-destructive focus:text-destructive"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                {t('layout.logout')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-52">
+                <DropdownMenuItem
+                  onClick={() => void navigate('/settings/profile')}
+                  className="gap-sm"
+                >
+                  <Settings className="h-4 w-4" aria-hidden="true" />
+                  {t('layout.userSettings')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="gap-sm text-destructive focus:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" aria-hidden="true" />
+                  {t('layout.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-      {/* Version info (desktop expanded only) */}
-      {!isMobile && !isCollapsed && (
-        <div className="mt-sm gap-xs flex items-center justify-center">
-          <span className="text-muted-foreground/40 text-2xs font-mono select-none">
-            v{APP_VERSION}
-          </span>
-          {!IS_PRODUCTION && (
-            <span
-              className={cn(
-                'px-xs text-2xs rounded py-px font-bold tracking-wide uppercase select-none',
-                APP_ENV === 'staging'
-                  ? 'bg-orange-500/10 text-orange-500'
-                  : 'bg-sky-500/10 text-sky-500'
+          {!isMobile && !isCollapsed && (
+            <>
+              <span className="text-muted-foreground/40 text-2xs font-mono select-none">
+                v{APP_VERSION}
+              </span>
+              {!IS_PRODUCTION && (
+                <span
+                  className={cn(
+                    'px-xs text-2xs rounded py-px font-bold tracking-wide uppercase select-none',
+                    APP_ENV === 'staging'
+                      ? 'bg-orange-500/10 text-orange-500'
+                      : 'bg-sky-500/10 text-sky-500'
+                  )}
+                >
+                  {APP_ENV}
+                </span>
               )}
-            >
-              {APP_ENV}
-            </span>
+            </>
           )}
         </div>
-      )}
 
-      {/* Collapse toggle (desktop only) */}
-      {!isMobile && (
-        <div
-          className={cn(
-            'mt-sm border-border/40 border-t pt-3',
-            isCollapsed ? 'flex justify-center' : ''
-          )}
-        >
-          <Tooltip
-            content={
-              isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
-            }
-            side="right"
-          >
-            <PlainButton
-              onClick={toggleCollapsed}
-              aria-label={
+        {!isMobile && (
+          <div className={cn('gap-xs flex items-center', isCollapsed && 'flex-col')}>
+            <Tooltip
+              content={
                 isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
               }
-              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              side="right"
             >
-              {isCollapsed ? (
-                <PanelLeft className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
-              )}
-            </PlainButton>
-          </Tooltip>
-          {!isCollapsed && (
-            <p className="mt-xs text-muted-foreground/60 text-center text-xs">⌘B</p>
-          )}
-        </div>
-      )}
+              <PlainButton
+                onClick={toggleCollapsed}
+                aria-label={
+                  isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+                }
+                className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              >
+                {isCollapsed ? (
+                  <PanelLeft className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+                )}
+              </PlainButton>
+            </Tooltip>
+            {!isCollapsed && <p className="text-muted-foreground/60 text-xs">⌘B</p>}
+          </div>
+        )}
+      </div>
     </>
   );
 
