@@ -97,7 +97,7 @@ export function CreditCardDetailSheet({
   return (
     <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0">
-        <div className="px-lg pt-lg heading-2 gap-sm flex items-center leading-none">
+        <div className="px-lg heading-2 gap-sm flex items-center leading-none">
           <Pencil className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
           {t('pages.creditCards.editTitle')}
         </div>
@@ -196,7 +196,7 @@ export function CreditCardDetailSheet({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="px-lg pb-lg pt-md">
+          <div className="px-lg pt-md">
             <CreditCardForm
               creditCard={card}
               hidePreview

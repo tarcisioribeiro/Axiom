@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Lock,
   Shield,
@@ -630,12 +631,14 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
         </CardContent>
       </Card>
 
-      {showRecovery && (
-        <VaultRecoveryKeyModalInline
-          onClose={() => setShowRecovery(false)}
-          onSuccess={onSuccess}
-        />
-      )}
+      <AnimatePresence>
+        {showRecovery && (
+          <VaultRecoveryKeyModalInline
+            onClose={() => setShowRecovery(false)}
+            onSuccess={onSuccess}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -675,7 +678,10 @@ function VaultRecoveryKeyModalInline({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <motion.div
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+    >
       <Card className="mx-md w-full max-w-sm">
         <CardHeader>
           <CardTitle className="gap-sm flex items-center text-base">
@@ -710,7 +716,7 @@ function VaultRecoveryKeyModalInline({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }
 

@@ -85,7 +85,10 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
   const TOTAL_STEPS = 3;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <motion.div
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    >
       <motion.div
         key={step}
         initial={{ scale: 0.92, opacity: 0 }}
@@ -308,6 +311,6 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
           )}
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,7 +1,8 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -369,32 +370,60 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     </div>
   );
 
-  if (isExpanded) {
-    return createPortal(
-      <div className="bg-background/95 p-lg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm">
-        <div className="border-border bg-card p-lg w-full max-w-5xl rounded-lg border shadow-2xl">
-          <div className="mb-md flex items-center justify-between">
-            <span className="text-foreground text-sm font-semibold">
-              {t('pages.planningDashboard.habitHeatmapTitle', {
-                defaultValue: 'Mapa de Hábitos',
-              })}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setIsExpanded(false)}
-              title={t('common.actions.close')}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          {heatmapContent}
-        </div>
-      </div>,
-      document.body
-    );
-  }
+  return (
+    <>
+      {!isExpanded && heatmapContent}
+      <AnimatePresence>
+        {isExpanded && (
+          <HeatmapExpanded
+            key="heatmap-expanded"
+            title={t('pages.planningDashboard.habitHeatmapTitle', {
+              defaultValue: 'Mapa de Hábitos',
+            })}
+            closeLabel={t('common.actions.close')}
+            onClose={() => setIsExpanded(false)}
+          >
+            {heatmapContent}
+          </HeatmapExpanded>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
 
-  return heatmapContent;
+// Overlay em portal: fica montado durante o fade-out (AnimatePresence)
+function HeatmapExpanded({
+  title,
+  closeLabel,
+  onClose,
+  children,
+}: {
+  title: string;
+  closeLabel: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  return createPortal(
+    <motion.div
+      exit={{ opacity: 0 }}
+      className="bg-background/95 p-lg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm"
+    >
+      <div className="border-border bg-card p-lg w-full max-w-5xl rounded-lg border shadow-2xl">
+        <div className="mb-md flex items-center justify-between">
+          <span className="text-foreground text-sm font-semibold">{title}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+            title={closeLabel}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {children}
+      </div>
+    </motion.div>,
+    document.body
+  );
 }

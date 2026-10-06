@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { format, getISODay, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { AnimatePresence } from 'framer-motion';
 import {
   Target,
   CheckCircle2,
@@ -252,9 +253,11 @@ export default function PersonalPlanningDashboard() {
 
   return (
     <PageContainer>
-      {showOnboarding && !onboardingDone && (
-        <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
-      )}
+      <AnimatePresence>
+        {showOnboarding && !onboardingDone && (
+          <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
+        )}
+      </AnimatePresence>
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* ── Seção Visão Geral (colapsável, aberta por padrão) ─────────────── */}
