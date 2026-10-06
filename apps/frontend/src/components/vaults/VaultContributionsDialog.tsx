@@ -36,7 +36,7 @@ const DEFAULT_FORM: VaultRecurringContributionFormData = {
   amount: 0,
   day_of_month: 10,
   is_active: true,
-  start_date: new Date().toISOString().slice(0, 10),
+  start_date: formatLocalDate(new Date()),
   end_date: undefined,
   description: '',
 };

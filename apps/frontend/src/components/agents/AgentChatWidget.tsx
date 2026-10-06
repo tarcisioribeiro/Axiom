@@ -247,7 +247,7 @@ export function AgentChatWidget() {
                   <PlainButton
                     onClick={cancel}
                     aria-label={t('agentWidget.cancelLabel')}
-                    className="p-xs text-muted-foreground hover:text-destructive shrink-0 rounded-lg transition-colors"
+                    className="p-xs text-destructive hover:text-destructive shrink-0 rounded-lg transition-colors"
                   >
                     <Square className="h-4 w-4 fill-current" />
                   </PlainButton>

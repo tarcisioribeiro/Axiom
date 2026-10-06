@@ -102,7 +102,7 @@ export function WaterLogPanel({ date }: { date: string }) {
       <div className="gap-sm flex items-center justify-between">
         <div className="gap-xs flex items-center">
           <Droplets className="h-5 w-5 text-sky-500" />
-          <span className="text-sm font-semibold">
+          <span className="text-sm font-medium">
             {t('pages.nutritionHydration.dayWater')}
           </span>
         </div>
@@ -315,8 +315,10 @@ export function HydrationGoalCard() {
             </ul>
             <Button
               variant="outline"
+              className="gap-sm"
               onClick={() => setLiters(String(suggestion.suggested_ml! / 1000))}
             >
+              <Sparkles className="h-4 w-4" />
               {t('pages.nutritionHydration.useSuggestion')}
             </Button>
           </>

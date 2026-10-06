@@ -53,7 +53,7 @@ export default function Home() {
 
   return (
     // ponytail: 5rem ≈ altura do Header; ajustar se o Header mudar de altura
-    <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col justify-center">
+    <PageContainer className="flex min-h-[calc(100dvh-5rem)] flex-col">
       <div className="space-y-lg">
         <PageHeader title={t('pages.home.modulesTitle')} icon={<LayoutGrid />} />
         <motion.div

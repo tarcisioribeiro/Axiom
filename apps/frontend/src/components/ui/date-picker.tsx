@@ -205,7 +205,7 @@ export function DatePicker({
   }, [dateValue]);
 
   return (
-    <div ref={containerRef} className={cn('relative w-full', className)}>
+    <div ref={containerRef} className={cn('relative isolate w-full', className)}>
       {/* Ícone do calendário */}
       <CalendarIcon className="text-primary/70 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2" />
 

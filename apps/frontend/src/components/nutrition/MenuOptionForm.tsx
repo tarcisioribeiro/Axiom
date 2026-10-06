@@ -1,4 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
+import { motion } from 'framer-motion';
 import type { TFunction } from 'i18next';
 import {
   GripVertical,
@@ -253,7 +254,7 @@ export function MenuOptionForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Nome e ordem */}
       <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
-        <div className="gap-sm grid grid-cols-[1fr_80px]">
+        <div className="gap-sm grid grid-cols-[minmax(0,1fr)_auto]">
           <div>
             <Input
               placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
@@ -312,8 +313,10 @@ export function MenuOptionForm({
                   ))
                 ) : (
                   // ── Grupo de alternativas ────────────────────────────────────
-                  <div
+                  <motion.div
                     key={`group-${group.groupId}`}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className="border-border bg-card rounded-lg border"
                   >
                     <div className="border-border px-sm py-xs flex items-center justify-between border-b">
@@ -329,7 +332,7 @@ export function MenuOptionForm({
                         className="gap-xs px-xs text-category-nutrition hover:bg-category-nutrition/10 flex items-center rounded py-0.5 text-xs font-medium"
                       >
                         <Plus className="h-3 w-3" />
-                        {t('pages.nutritionMealTypes.addVariant', '+ Variante')}
+                        {t('pages.nutritionMealTypes.addVariant', 'Variante')}
                       </button>
                     </div>
                     <div className="p-sm space-y-0">
@@ -353,7 +356,7 @@ export function MenuOptionForm({
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 )
               )}
             </div>
@@ -375,7 +378,7 @@ export function MenuOptionForm({
               className="gap-sm border-category-nutrition/20 py-sm text-category-nutrition/70 hover:border-category-nutrition/40 hover:bg-category-nutrition/5 flex flex-1 items-center justify-center rounded-lg border-2 border-dashed text-sm font-medium transition"
             >
               <Plus className="h-4 w-4" />
-              {t('pages.nutritionMealTypes.addAltGroup', '+ Alternativas')}
+              {t('pages.nutritionMealTypes.addAltGroup', 'Alternativas')}
             </button>
           </div>
         </div>
@@ -423,8 +426,23 @@ function IngredientRow({
   onRemove,
   t,
 }: IngredientRowProps) {
+  const quantityValue =
+    parseFloat(String(watch(`ingredients.${idx}.quantity`) ?? '').replace(',', '.')) ||
+    0;
+  const unitKey = watch(`ingredients.${idx}.unit`);
+  // Plural (chave `_other`) quando a quantidade é maior que 1
+  const unitLabel = (u: string) => {
+    const otherKey = `units.${u}_other`;
+    const otherText = t(otherKey);
+    return quantityValue > 1 && otherText !== otherKey ? otherText : t(`units.${u}`);
+  };
+
   return (
-    <div className="group border-border bg-card p-sm hover:border-primary/40 relative rounded-lg border transition">
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group border-border bg-card p-sm hover:border-primary/40 relative rounded-lg border transition"
+    >
       {/* Row header */}
       <div className="mb-sm gap-xs flex items-center">
         <GripVertical className="text-muted-foreground/40 h-3.5 w-3.5 shrink-0" />
@@ -435,16 +453,16 @@ function IngredientRow({
           aria-label={t('common.actions.remove')}
           type="button"
           onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive rounded p-0.5"
+          className="text-destructive hover:text-destructive rounded p-0.5"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </PlainButton>
       </div>
 
-      {/* Food + Quantity + Unit */}
-      <div className="gap-xs grid grid-cols-[1fr_80px_100px]">
+      {/* Alimento, quantidade, unidade, opcional e observação */}
+      <div className="gap-xs grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_9rem_8rem_auto_minmax(0,1fr)]">
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.food')}
           </Label>
           <Select
@@ -466,11 +484,13 @@ function IngredientRow({
           </Select>
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.quantity')}
           </Label>
           <DecimalInput
             placeholder="0"
+            min={0}
+            step={1}
             aria-label={t('pages.nutritionMealTypes.quantity')}
             value={watch(`ingredients.${idx}.quantity`)}
             onChange={(v) =>
@@ -482,7 +502,7 @@ function IngredientRow({
           />
         </div>
         <div className="space-y-xs">
-          <Label className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
+          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.unit')}
           </Label>
           <Select
@@ -490,7 +510,11 @@ function IngredientRow({
             onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
           >
             <SelectTrigger className="h-8 text-sm">
-              <SelectValue />
+              {unitKey ? (
+                <SelectValue>{unitLabel(unitKey)}</SelectValue>
+              ) : (
+                <SelectValue />
+              )}
             </SelectTrigger>
             <SelectContent>
               {UNIT_KEYS.map((u) => (
@@ -501,30 +525,34 @@ function IngredientRow({
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Optional + Notes */}
-      <div className="mt-xs gap-sm flex items-center">
-        <label className="gap-xs flex cursor-pointer items-center">
-          <Checkbox
-            checked={watch(`ingredients.${idx}.is_optional`)}
-            onCheckedChange={(v) =>
-              setValue(`ingredients.${idx}.is_optional`, Boolean(v))
-            }
-          />
-          <span className="text-muted-foreground text-xs">
+        <div className="space-y-xs">
+          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
             {t('pages.nutritionMealTypes.optional')}
-          </span>
-        </label>
-        <div className="relative flex-1">
-          <StickyNote className="left-xs text-muted-foreground/50 absolute top-1/2 h-3 w-3 -translate-y-1/2" />
-          <Input
-            placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
-            {...register(`ingredients.${idx}.notes`)}
-            className="h-7 pl-6 text-xs"
-          />
+          </Label>
+          <div className="flex h-8 items-center justify-center">
+            <Checkbox
+              aria-label={t('pages.nutritionMealTypes.optional')}
+              checked={watch(`ingredients.${idx}.is_optional`)}
+              onCheckedChange={(v) =>
+                setValue(`ingredients.${idx}.is_optional`, Boolean(v))
+              }
+            />
+          </div>
+        </div>
+        <div className="space-y-xs">
+          <Label className="text-muted-foreground text-2xs block w-full text-center font-medium tracking-wider uppercase">
+            {t('pages.nutritionMealTypes.ingredientNotes')}
+          </Label>
+          <div className="relative">
+            <StickyNote className="left-xs text-muted-foreground/50 absolute top-1/2 h-3 w-3 -translate-y-1/2" />
+            <Input
+              placeholder={t('pages.nutritionMealTypes.ingredientNotesPlaceholder')}
+              {...register(`ingredients.${idx}.notes`)}
+              className="h-8 pl-6 text-xs"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

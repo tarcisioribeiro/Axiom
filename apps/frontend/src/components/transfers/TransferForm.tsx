@@ -291,7 +291,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               title={t('pages.transfers.form.swapAccounts')}
               onClick={handleSwapAccounts}
               disabled={isWithdrawal}
-              className="border-border/70 bg-background text-muted-foreground hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors disabled:pointer-events-none disabled:opacity-50"
+              className="border-border/70 bg-background text-primary hover:border-primary/50 hover:text-primary rounded-full border p-1.5 transition-colors disabled:pointer-events-none disabled:opacity-50"
             >
               <ArrowLeftRight className="h-4 w-4" />
             </PlainButton>

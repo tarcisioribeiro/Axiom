@@ -107,7 +107,7 @@ export const AdminLayout = () => {
           </div>
           <button
             onClick={logout}
-            className="py-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
+            className="py-sm text-destructive hover:bg-destructive/10 hover:text-destructive flex w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors"
           >
             <LogOut className="h-4 w-4" />
             {t('layout.logout')}

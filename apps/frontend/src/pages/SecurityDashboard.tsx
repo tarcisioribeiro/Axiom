@@ -244,6 +244,7 @@ export default function SecurityDashboard() {
         {/* Itens do Cofre */}
         <div className="gap-md grid grid-cols-2 lg:grid-cols-4">
           <StatCard
+            centered
             title={t('pages.securityDashboard.passwords')}
             value={stats?.total_passwords || 0}
             icon={<Key className="h-4 w-4" />}
@@ -251,6 +252,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/passwords')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.storedCards')}
             value={stats?.total_stored_cards || 0}
             icon={<CreditCard className="h-4 w-4" />}
@@ -258,6 +260,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/stored-cards')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.storedAccounts')}
             value={stats?.total_stored_accounts || 0}
             icon={<Wallet className="h-4 w-4" />}
@@ -265,6 +268,7 @@ export default function SecurityDashboard() {
             onClick={() => void navigate('/security/stored-accounts')}
           />
           <StatCard
+            centered
             title={t('pages.securityDashboard.archives')}
             value={stats?.total_archives || 0}
             icon={<Archive className="h-4 w-4" />}

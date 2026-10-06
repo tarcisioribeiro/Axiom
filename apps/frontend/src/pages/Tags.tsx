@@ -211,7 +211,7 @@ export default function Tags({ embedded = false }: { embedded?: boolean }) {
                   <PlainButton
                     aria-label={t('common.actions.delete')}
                     onClick={() => void handleDelete(tag)}
-                    className="p-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                    className="p-xs text-destructive hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </PlainButton>

@@ -115,6 +115,7 @@ export function LoanForm({
           payed_value: 0,
           date: formatLocalDate(new Date()),
           horary: new Date().toTimeString().slice(0, 5),
+          due_date: formatLocalDate(new Date()),
           category: 'loans',
           account: accounts[0]?.id ?? 0,
           benefited: currentUserMemberId ?? members[0]?.id ?? 0,

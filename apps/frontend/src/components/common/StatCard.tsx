@@ -24,6 +24,10 @@ interface StatCardProps {
   accentColor?: 'green' | 'red' | 'blue' | 'orange' | 'purple';
   /** If true, renders the value in a larger text size to emphasize importance */
   prominent?: boolean;
+  /** Densidade reduzida: cabeçalho, padding, ícone e valor menores */
+  compact?: boolean;
+  /** Centraliza o conteúdo (valor, descrição, tendência) na vertical e horizontal do card */
+  centered?: boolean;
   /** Optional click handler — adds cursor-pointer and hover ring */
   onClick?: () => void;
   /** Inline progress bar shown below the value */
@@ -85,6 +89,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   variant = 'default',
   accentColor,
   prominent = false,
+  compact = false,
+  centered = false,
   onClick,
   progressBar,
 }) => {
@@ -146,16 +152,23 @@ export const StatCard: React.FC<StatCardProps> = ({
       <Card
         className={cn(
           `h-full ${cardClass}`,
+          centered && 'flex flex-col',
           onClick && 'hover:ring-primary/30 cursor-pointer hover:ring-2'
         )}
         onClick={onClick}
       >
-        <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
+        <CardHeader
+          className={cn(
+            'flex flex-row items-center justify-between space-y-0',
+            compact ? 'py-sm pb-0' : 'pb-sm'
+          )}
+        >
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
             <div
               className={cn(
-                'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
+                'flex shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
+                compact ? 'h-7 w-7' : 'h-9 w-9',
                 iconClass
               )}
             >
@@ -163,11 +176,16 @@ export const StatCard: React.FC<StatCardProps> = ({
             </div>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent
+          className={cn(
+            compact && 'px-md pb-md',
+            centered && 'flex flex-1 flex-col items-center justify-center text-center'
+          )}
+        >
           <div
             className={cn(
               'numeric font-bold tracking-tight',
-              prominent ? 'text-3xl' : 'text-2xl',
+              compact ? 'text-lg' : prominent ? 'text-3xl' : 'text-2xl',
               valueClass
             )}
           >

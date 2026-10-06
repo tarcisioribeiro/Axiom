@@ -484,7 +484,7 @@ function ExtraItemRow({
         variant="ghost"
         size="sm"
         onClick={() => onRemove(index)}
-        className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+        className="text-destructive hover:text-destructive h-8 w-8 p-0"
         aria-label={removeLabel}
       >
         <Trash2 className="h-3.5 w-3.5" />

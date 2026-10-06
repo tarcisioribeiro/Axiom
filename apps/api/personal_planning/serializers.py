@@ -1407,6 +1407,36 @@ class MealTypeSerializer(serializers.ModelSerializer):
     def validate_default_menu_option(self, value):
         return _validate_default_menu_option(self.instance, value)
 
+    def validate(self, attrs):
+        owner = attrs.get("owner", getattr(self.instance, "owner", None))
+        name = attrs.get("name", getattr(self.instance, "name", ""))
+        suggested_time = attrs.get(
+            "suggested_time", getattr(self.instance, "suggested_time", None)
+        )
+        if owner is None:
+            return attrs
+        key = _meal_type_name_key(name)
+        others = MealType.objects.filter(owner=owner, deleted_at__isnull=True)
+        if self.instance is not None:
+            others = others.exclude(pk=self.instance.pk)
+        for mt in others:
+            if (
+                _meal_type_name_key(mt.name) == key
+                and mt.suggested_time == suggested_time
+            ):
+                raise serializers.ValidationError(
+                    {
+                        "detail": (
+                            "Já existe uma refeição com este nome e horário."
+                        )
+                    }
+                )
+        return attrs
+
+
+def _meal_type_name_key(name):
+    return " ".join((name or "").split()).casefold()
+
 
 def _validate_default_menu_option(meal_type, option):
     if option and (meal_type is None or option.meal_type_id != meal_type.id):

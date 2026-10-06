@@ -47,7 +47,7 @@ export function LoanPaymentDialog({
   const [form, setForm] = useState({
     value: '',
     account: '',
-    date: new Date().toISOString().split('T')[0],
+    date: formatLocalDate(new Date()),
     notes: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);

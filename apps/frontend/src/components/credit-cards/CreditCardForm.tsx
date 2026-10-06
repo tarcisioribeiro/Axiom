@@ -95,6 +95,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             due_day: 10,
             closing_day: 5,
             is_active: true,
+            validation_date: formatLocalDate(new Date()),
           },
     });
 

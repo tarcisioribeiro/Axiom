@@ -365,7 +365,7 @@ function ModuleItem({
               aria-label={t('common.actions.delete')}
               size="icon"
               variant="ghost"
-              className="text-muted-foreground hover:text-destructive h-5 w-5 shrink-0"
+              className="text-destructive hover:text-destructive h-5 w-5 shrink-0"
               onClick={() => {
                 void showConfirm({
                   title: t('common.messages.confirmDeleteTitle'),
@@ -479,7 +479,7 @@ function SessionItem({
           aria-label={t('common.actions.delete')}
           size="icon"
           variant="ghost"
-          className="text-muted-foreground hover:text-destructive h-6 w-6"
+          className="text-destructive hover:text-destructive h-6 w-6"
           onClick={() => {
             void showConfirm({
               title: t('common.messages.confirmDeleteTitle'),

@@ -564,7 +564,7 @@ export default function BodyMetrics() {
           <>
             <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
               <Card>
-                <CardHeader className="gap-md pb-sm flex flex-row items-center justify-between">
+                <CardHeader className="gap-md py-md pb-sm flex flex-row items-center justify-between">
                   <CardTitle className="text-base">
                     {t('pages.bodyMetrics.chartTitle')}
                   </CardTitle>
@@ -636,7 +636,7 @@ export default function BodyMetrics() {
                       icon={<Activity />}
                     />
                   ) : (
-                    <ResponsiveContainer width="100%" height={360}>
+                    <ResponsiveContainer width="100%" height={280}>
                       <AreaChart
                         data={chartDataNormalized}
                         margin={{ top: 8, right: 8, left: -10, bottom: 4 }}
@@ -785,7 +785,7 @@ export default function BodyMetrics() {
 
                 return (
                   <Card>
-                    <CardHeader className="pb-sm">
+                    <CardHeader className="py-md pb-sm">
                       <CardTitle className="gap-xs flex items-center text-base">
                         <PieChart className="text-muted-foreground h-4 w-4" />
                         {t('pages.bodyMetrics.massChartTitle')}
@@ -820,7 +820,7 @@ export default function BodyMetrics() {
                             formatter={(v) => `${Number(v).toFixed(1)}%`}
                             showLegend={false}
                             showSliceLabels
-                            height={320}
+                            height={250}
                           />
                         </>
                       ) : (
@@ -837,7 +837,7 @@ export default function BodyMetrics() {
 
             {latest && (
               <Card className="mt-md">
-                <CardHeader className="pb-sm">
+                <CardHeader className="py-md pb-sm">
                   <CardTitle className="text-base">
                     {t('pages.bodyMetrics.resultsTitle')}
                   </CardTitle>

@@ -94,7 +94,9 @@ export function BookForm({
     }
   });
   const [alreadyRead, setAlreadyRead] = useState(false);
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(() =>
+    book ? '' : formatLocalDate(new Date())
+  );
   const [endDate, setEndDate] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bookFileInputRef = useRef<HTMLInputElement>(null);

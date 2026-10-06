@@ -20,7 +20,7 @@ import {
   Zap,
   Star,
   Trophy,
-  ChevronDown,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +39,7 @@ import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
-import { Collapse } from '@/components/ui/collapsible-section';
+import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { Progress } from '@/components/ui/progress';
 import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
@@ -53,37 +53,6 @@ import { personalPlanningDashboardService } from '@/services/personal-planning-d
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
 
 type Section = 'overview' | 'workout-nutrition' | 'detailed-analysis';
-
-function SectionToggle({
-  label,
-  open,
-  onToggle,
-}: {
-  label: string;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="py-sm flex w-full items-center gap-3 text-left"
-      aria-expanded={open}
-    >
-      <div className="bg-border h-px flex-1" />
-      <span className="gap-xs text-muted-foreground flex items-center text-xs font-medium tracking-wider uppercase">
-        {label}
-        <ChevronDown
-          className={cn(
-            'duration-normal h-3.5 w-3.5 transition-transform',
-            open && 'rotate-180'
-          )}
-        />
-      </span>
-      <div className="bg-border h-px flex-1" />
-    </button>
-  );
-}
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
@@ -289,13 +258,12 @@ export default function PersonalPlanningDashboard() {
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* ── Seção Visão Geral (colapsável, aberta por padrão) ─────────────── */}
-      <SectionToggle
-        label={t('pages.planningDashboard.sectionOverview')}
+      <CollapsibleSection
+        title={t('pages.planningDashboard.sectionOverview')}
+        icon={<LayoutDashboard className="h-4 w-4" />}
         open={openSection === 'overview'}
         onToggle={() => toggleSection('overview')}
-      />
-
-      <Collapse open={openSection === 'overview'}>
+      >
         <div className="space-y-lg">
           {/* Nível/Gamificação (+ objetivos e sequências) | Progresso Semanal (+ tarefas) */}
           <div className="gap-md grid grid-cols-1 lg:grid-cols-2">
@@ -524,16 +492,15 @@ export default function PersonalPlanningDashboard() {
             </Card>
           </div>
         </div>
-      </Collapse>
+      </CollapsibleSection>
 
       {/* ── Seção Treinos & Nutrição (colapsável) ─────────────────────────── */}
-      <SectionToggle
-        label={t('pages.planningDashboard.sectionWorkoutNutrition')}
+      <CollapsibleSection
+        title={t('pages.planningDashboard.sectionWorkoutNutrition')}
+        icon={<Dumbbell className="h-4 w-4" />}
         open={openSection === 'workout-nutrition'}
         onToggle={() => toggleSection('workout-nutrition')}
-      />
-
-      <Collapse open={openSection === 'workout-nutrition'}>
+      >
         {/* Resumo Calórico | Treinos | Nutrição | Treinos por dia (30d) */}
         <div
           className={cn(
@@ -546,14 +513,14 @@ export default function PersonalPlanningDashboard() {
             isLoading={caloricSummaryLoading}
           />
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader className="pb-sm">
               <CardTitle className="gap-sm flex items-center text-sm">
                 <Dumbbell className="text-category-health h-4 w-4" />
                 {t('pages.planningDashboard.workoutsTitle')}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
               <div className="gap-md grid grid-cols-2">
                 <div className="gap-xs flex flex-col">
                   <div className="gap-sm text-muted-foreground flex items-center">
@@ -629,14 +596,14 @@ export default function PersonalPlanningDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader className="pb-sm">
               <CardTitle className="gap-sm flex items-center text-sm">
                 <UtensilsCrossed className="text-category-health h-4 w-4" />
                 {t('pages.planningDashboard.nutritionTitle')}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
               <div className="gap-md grid grid-cols-3">
                 <div className="gap-xs flex flex-col">
                   <div className="gap-sm text-muted-foreground flex items-center">
@@ -732,16 +699,15 @@ export default function PersonalPlanningDashboard() {
             </Card>
           )}
         </div>
-      </Collapse>
+      </CollapsibleSection>
 
       {/* ── Seção Análise Detalhada (colapsável, lazy) ──────────────────────── */}
-      <SectionToggle
-        label={t('pages.planningDashboard.sectionDetailedAnalysis')}
+      <CollapsibleSection
+        title={t('pages.planningDashboard.sectionDetailedAnalysis')}
+        icon={<BarChart3 className="h-4 w-4" />}
         open={openSection === 'detailed-analysis'}
         onToggle={() => toggleSection('detailed-analysis')}
-      />
-
-      <Collapse open={openSection === 'detailed-analysis'}>
+      >
         <div className="space-y-lg">
           <div className="gap-lg grid grid-cols-1 lg:grid-cols-2">
             {/* Tarefas por categoria | Desempenho por dia da semana */}
@@ -865,7 +831,7 @@ export default function PersonalPlanningDashboard() {
             </Card>
           </div>
         </div>
-      </Collapse>
+      </CollapsibleSection>
     </PageContainer>
   );
 }

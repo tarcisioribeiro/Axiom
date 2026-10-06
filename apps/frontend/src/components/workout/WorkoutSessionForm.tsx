@@ -636,7 +636,7 @@ function ExerciseBlock({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive h-7 w-7"
+                className="text-destructive hover:text-destructive h-7 w-7"
                 onClick={() => removeSet(sIdx)}
               >
                 <Trash2 className="h-3 w-3" />

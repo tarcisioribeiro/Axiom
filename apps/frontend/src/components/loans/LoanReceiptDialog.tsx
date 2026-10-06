@@ -48,7 +48,7 @@ export function LoanReceiptDialog({
   const { t } = useTranslation();
   const { toast } = useToast();
   const now = useNow();
-  const today = new Date().toISOString().split('T')[0];
+  const today = formatLocalDate(new Date());
   const [form, setForm] = useState({
     value: '',
     account: '',

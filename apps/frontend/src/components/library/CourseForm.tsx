@@ -124,7 +124,7 @@ export function CourseForm({
       url: null,
       estimated_hours: null,
       status: 'not_started',
-      start_date: null,
+      start_date: course ? null : formatLocalDate(new Date()),
       end_date: null,
       owner: ownerId,
     },

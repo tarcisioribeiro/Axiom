@@ -84,6 +84,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           month: 'Jan',
           invoice_beginning_date: formatLocalDate(new Date()),
           invoice_ending_date: formatLocalDate(new Date()),
+          due_date: formatLocalDate(new Date()),
           closed: false,
         },
   });

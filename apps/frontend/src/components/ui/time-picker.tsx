@@ -109,7 +109,7 @@ export function TimePicker({
   };
 
   return (
-    <div className={cn('relative w-full', className)}>
+    <div className={cn('relative isolate w-full', className)}>
       <Clock className="text-primary/70 pointer-events-none absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2" />
 
       <input

@@ -59,7 +59,7 @@ export function ScenarioCard({
             variant="ghost"
             size="icon"
             onClick={() => onRemove(scenario.id)}
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
+            className="text-destructive hover:text-destructive h-7 w-7"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

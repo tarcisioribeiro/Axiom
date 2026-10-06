@@ -98,7 +98,7 @@ export function DailyFocusBlockCard({
             <PlainButton
               type="button"
               onClick={() => onToggleTaskComplete(task)}
-              className="text-muted-foreground hover:text-primary shrink-0 transition-colors"
+              className="text-primary hover:text-primary shrink-0 transition-colors"
             >
               {task.status === 'completed' ? (
                 <CheckCircle2 className="text-success h-4 w-4" />

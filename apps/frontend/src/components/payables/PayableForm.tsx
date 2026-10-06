@@ -118,6 +118,7 @@ export function PayableForm({
           value: 0,
           paid_value: 0,
           date: formatLocalDate(new Date()),
+          due_date: formatLocalDate(new Date()),
           category: 'others',
           status: 'active',
           is_cumulative: false,

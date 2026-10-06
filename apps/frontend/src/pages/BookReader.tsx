@@ -53,6 +53,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
 import { useTheme } from '@/hooks/use-theme';
 import { useToast } from '@/hooks/use-toast';
+import { formatLocalDate } from '@/lib/utils';
 import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
@@ -722,7 +723,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
           } else {
             const created = await readingsService.create({
               book: parseInt(bookId),
-              reading_date: new Date().toISOString().split('T')[0],
+              reading_date: formatLocalDate(new Date()),
               reading_time: 0,
               pages_read: 0,
               current_page: page,
@@ -1077,7 +1078,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
                     </div>
                     <PlainButton
                       onClick={() => void handleDeleteAnnotation(a.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0 rounded p-0.5"
+                      className="text-destructive hover:text-destructive shrink-0 rounded p-0.5"
                       aria-label={t('pages.bookReader.removeAnnotation')}
                     >
                       <X className="h-3 w-3" />

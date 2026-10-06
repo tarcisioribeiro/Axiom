@@ -77,7 +77,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { authorsService } from '@/services/authors-service';
 import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
@@ -397,7 +397,7 @@ export default function Books() {
     mutationFn: (data: { book: number; pages_read: number }) =>
       readingsService.create({
         book: data.book,
-        reading_date: new Date().toISOString().split('T')[0],
+        reading_date: formatLocalDate(new Date()),
         reading_time: 0,
         pages_read: data.pages_read,
         owner: ownerId,

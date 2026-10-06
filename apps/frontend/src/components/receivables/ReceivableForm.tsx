@@ -94,7 +94,7 @@ export function ReceivableForm({
     value: receivable ? parseFloat(receivable.value) : 0,
     received_value: receivable ? parseFloat(receivable.received_value) : 0,
     date: receivable?.date ?? formatLocalDate(new Date()),
-    due_date: receivable?.due_date ?? '',
+    due_date: receivable ? (receivable.due_date ?? '') : formatLocalDate(new Date()),
     category: receivable?.category ?? 'deposit',
     notes: receivable?.notes ?? '',
     status: receivable?.status ?? 'active',

@@ -164,7 +164,7 @@ function ConditionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="text-muted-foreground hover:text-destructive h-8 w-8"
+        className="text-destructive hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeCondition')}
       >
@@ -234,7 +234,7 @@ function ActionRow({
         type="button"
         variant="ghost"
         size="icon"
-        className="text-muted-foreground hover:text-destructive h-8 w-8"
+        className="text-destructive hover:text-destructive h-8 w-8"
         onClick={() => onRemove(index)}
         title={t('pages.automationRules.removeAction')}
       >
@@ -619,7 +619,7 @@ function RuleCard({
             aria-label={t('common.actions.delete')}
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-destructive h-7 w-7"
+            className="text-destructive hover:text-destructive h-7 w-7"
             onClick={() => onDelete(rule.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />

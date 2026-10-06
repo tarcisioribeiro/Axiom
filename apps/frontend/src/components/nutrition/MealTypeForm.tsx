@@ -93,6 +93,7 @@ export function MealTypeForm({
   const { t } = useTranslation();
   const { toast } = useToast();
 
+  const nowTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
   const {
     control,
     register,
@@ -104,7 +105,7 @@ export function MealTypeForm({
   } = useForm<MealTypeFormData>({
     defaultValues: {
       name: mealType?.name ?? '',
-      suggested_time: mealType?.suggested_time ?? '',
+      suggested_time: mealType ? (mealType.suggested_time ?? '') : nowTime,
       order: mealType?.order ?? 0,
       is_active: mealType?.is_active ?? true,
       default_menu_option: mealType?.default_menu_option ?? null,

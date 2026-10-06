@@ -112,6 +112,7 @@ export function WorkoutDayForm({
       .filter(Boolean);
   });
 
+  const nowTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
   const {
     control,
     register,
@@ -126,7 +127,7 @@ export function WorkoutDayForm({
       muscle_groups: day?.muscle_groups ?? '',
       days_of_week: day?.days_of_week ?? [],
       order: day?.order ?? 0,
-      default_start_time: toHHMM(day?.default_start_time),
+      default_start_time: day ? toHHMM(day.default_start_time) : nowTime,
       default_duration_minutes: day?.default_duration_minutes ?? '',
     },
   });

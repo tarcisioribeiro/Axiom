@@ -159,7 +159,7 @@ export function ExpenseSplitsModal({
                     <PlainButton
                       aria-label={t('common.actions.delete')}
                       onClick={() => void handleDelete(split.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </PlainButton>

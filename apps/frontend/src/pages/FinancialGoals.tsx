@@ -364,7 +364,7 @@ export default function FinancialGoals() {
       category: 'savings',
       target_value: 0,
       vaults: [],
-      target_date: '',
+      target_date: formatLocalDate(new Date()),
       is_active: true,
       notes: '',
       linked_expense_category: '',

@@ -2433,9 +2433,29 @@ class FoodRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         return Food.objects.filter(owner=member, deleted_at__isnull=True)
 
 
+MAX_MEAL_TYPES_PER_USER = 6
+
+
 class MealTypeListCreateView(BaseListCreateView):
     serializer_class = MealTypeSerializer
     create_serializer_class = MealTypeCreateUpdateSerializer
+
+    def perform_create(self, serializer):
+        member = Member.objects.get(user=self.request.user)
+        total = MealType.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).count()
+        if total >= MAX_MEAL_TYPES_PER_USER:
+            raise ValidationError(
+                {
+                    "detail": (
+                        f"Limite de {MAX_MEAL_TYPES_PER_USER} refeições atingido."
+                    )
+                }
+            )
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)

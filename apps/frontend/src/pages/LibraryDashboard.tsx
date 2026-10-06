@@ -540,13 +540,13 @@ export default function LibraryDashboard() {
         >
           <div className="gap-md flex flex-col">
             {/* Métricas Principais */}
-            <Card>
+            <Card className="flex flex-col">
               <CardHeader className="pb-sm">
                 <CardTitle className="text-sm font-medium">
                   {t('pages.libraryDashboard.overview')}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
                 <div className="gap-md grid grid-cols-2 sm:grid-cols-5">
                   <div className="gap-xs flex flex-col">
                     <div className="gap-sm text-muted-foreground flex items-center">
@@ -682,14 +682,14 @@ export default function LibraryDashboard() {
 
       {/* Análise do Mês */}
       {stats?.monthly_comparison && (
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-sm">
             <CardTitle className="gap-sm flex items-center text-sm font-medium">
               <TrendingUp className="text-primary h-4 w-4" />
               {t('pages.libraryDashboard.monthAnalysis.title')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
               <div className="gap-xs flex flex-col">
                 <div className="gap-sm text-muted-foreground flex items-center">
@@ -1092,13 +1092,13 @@ export default function LibraryDashboard() {
       </Card>
 
       {/* Block 2: Estatísticas Gerais */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader className="pb-sm">
           <CardTitle className="text-sm font-medium">
             {t('pages.libraryDashboard.generalStats')}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <div className="gap-xs flex flex-col">
               <div className="gap-sm text-muted-foreground flex items-center">
@@ -1372,13 +1372,13 @@ export default function LibraryDashboard() {
         open={sections.stats}
         onToggle={() => toggle('stats')}
       >
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader className="pb-sm">
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.generalStats')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
               <div className="gap-xs flex flex-col">
                 <div className="gap-sm text-muted-foreground flex items-center">
