@@ -1,4 +1,5 @@
 /* eslint-disable max-lines, react-hooks/incompatible-library */
+import { useReducedMotion } from 'framer-motion';
 import {
   BadgePercent,
   CalendarDays,
@@ -34,7 +35,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TabTransition } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATIONS } from '@/config/constants';
 import { formatLocalDate } from '@/lib/utils';
 import type {
@@ -63,6 +63,15 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'card' | 'settings'>('card');
+  // 1 = aba Configurações (entra pela direita), -1 = Dados do cartão (entra pela esquerda)
+  const [tabDirection, setTabDirection] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  const selectTab = (id: 'card' | 'settings') => {
+    if (id === activeTab) return;
+    setTabDirection(id === 'settings' ? 1 : -1);
+    setActiveTab(id);
+  };
 
   const { control, register, handleSubmit, setValue, watch } =
     useForm<CreditCardFormData>({
@@ -182,7 +191,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           <button
             key={id}
             type="button"
-            onClick={() => setActiveTab(id)}
+            onClick={() => selectTab(id)}
             className={`gap-xs duration-fast flex flex-1 items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition ${
               activeTab === id
                 ? 'bg-background text-foreground shadow-sm'
@@ -197,7 +206,13 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 
       {/* Tab: Dados do Cartão */}
       {activeTab === 'card' && (
-        <TabTransition key="card">
+        <TabTransition
+          key="card"
+          {...(!reducedMotion && {
+            initial: { opacity: 0, x: -24 * tabDirection },
+            animate: { opacity: 1, x: 0 },
+          })}
+        >
           <FormSection
             title={t('pages.creditCards.form.tabCardData')}
             icon={CreditCard}
@@ -232,22 +247,22 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   <CreditCard className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.creditCards.form.flagLabel')}
                 </Label>
-                <div className="gap-xs grid grid-cols-3">
-                  {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => setValue('flag', k)}
-                      className={`p-xs rounded border text-xs font-semibold transition ${
-                        watchedFlag === k
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
+                <Select
+                  value={watchedFlag || undefined}
+                  onValueChange={(v) => setValue('flag', v)}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-label={t('pages.creditCards.form.flagLabel')}>
+                    <SelectValue placeholder={t('common.actions.select')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>
+                        {v}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-sm">
@@ -302,7 +317,13 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
 
       {/* Tab: Configurações */}
       {activeTab === 'settings' && (
-        <TabTransition key="settings">
+        <TabTransition
+          key="settings"
+          {...(!reducedMotion && {
+            initial: { opacity: 0, x: 24 * tabDirection },
+            animate: { opacity: 1, x: 0 },
+          })}
+        >
           <FormSection title={t('pages.creditCards.form.tabSettings')} icon={Settings}>
             <div className="gap-md grid grid-cols-1 md:grid-cols-2">
               <div className="space-y-sm">
@@ -318,7 +339,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   disabled={isLoading}
                 />
               </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
@@ -332,7 +352,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   disabled={isLoading}
                 />
               </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <Wallet className="text-muted-foreground h-3.5 w-3.5" />
@@ -354,51 +373,6 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.dueDayLabel')}
-                </Label>
-                <Controller
-                  control={control}
-                  name="due_day"
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <NumberStepper
-                      disabled={isLoading}
-                      min={1}
-                      max={31}
-                      aria-label={t('pages.creditCards.form.dueDayLabel')}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.closingDayLabel')}
-                </Label>
-                <Controller
-                  control={control}
-                  name="closing_day"
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <NumberStepper
-                      disabled={isLoading}
-                      min={1}
-                      max={31}
-                      aria-label={t('pages.creditCards.form.closingDayLabel')}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
-
               <div className="space-y-sm">
                 <Label className="gap-xs flex items-center">
                   <BadgePercent className="text-muted-foreground h-3.5 w-3.5" />
@@ -420,31 +394,62 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
                 />
               </div>
 
-              <div className="space-y-sm">
-                <Label className="gap-xs flex items-center">
-                  <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.annualFeeLabel')}
-                </Label>
-                <CurrencyInput
-                  value={watch('annual_fee') ?? 0}
-                  onChange={(e) =>
-                    setValue('annual_fee', parseFloat(e.target.value) || 0)
-                  }
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-sm md:col-span-2">
-                <Label className="gap-xs flex items-center">
-                  <Settings className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.creditCards.form.notesLabel')}
-                </Label>
-                <Textarea
-                  {...register('notes')}
-                  placeholder={t('pages.creditCards.form.notesPlaceholder')}
-                  disabled={isLoading}
-                  rows={3}
-                />
+              <div className="gap-md grid grid-cols-1 md:col-span-2 md:grid-cols-3">
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.closingDayLabel')}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="closing_day"
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <NumberStepper
+                        disabled={isLoading}
+                        min={1}
+                        max={31}
+                        aria-label={t('pages.creditCards.form.closingDayLabel')}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.dueDayLabel')}
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="due_day"
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <NumberStepper
+                        disabled={isLoading}
+                        min={1}
+                        max={31}
+                        aria-label={t('pages.creditCards.form.dueDayLabel')}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <DollarSign className="text-muted-foreground h-3.5 w-3.5" />
+                    {t('pages.creditCards.form.annualFeeLabel')}
+                  </Label>
+                  <CurrencyInput
+                    value={watch('annual_fee') ?? 0}
+                    onChange={(e) =>
+                      setValue('annual_fee', parseFloat(e.target.value) || 0)
+                    }
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
             </div>
           </FormSection>

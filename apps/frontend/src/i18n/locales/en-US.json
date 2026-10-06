@@ -1222,6 +1222,8 @@
     "creditCards": {
       "title": "Credit Cards",
       "newBtn": "New Card",
+      "editTitle": "Edit Card",
+      "editDesc": "Update the card information",
       "newTitle": "New Card",
       "newDesc": "Add a new card to the system",
       "deleteTitle": "Delete card",

@@ -1179,7 +1179,7 @@ export default function WorkoutPage() {
                     />
                   </div>
                 </div>
-                <DialogFooter className="gap-sm">
+                <DialogFooter className="gap-sm sm:justify-start">
                   <DialogClose asChild>
                     <Button variant="outline">
                       <X className="mr-sm h-4 w-4" />
@@ -1262,7 +1262,7 @@ export default function WorkoutPage() {
                     )}
                   </div>
                 </div>
-                <DialogFooter className="gap-sm">
+                <DialogFooter className="gap-sm sm:justify-start">
                   <DialogClose asChild>
                     <Button variant="outline">
                       <X className="mr-sm h-4 w-4" />

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, X } from 'lucide-react';
+import { Save, SlidersHorizontal, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -57,7 +57,13 @@ export function CreditLimitAdjustDialog({
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('pages.creditCards.adjustLimit.title')}</DialogTitle>
+          <DialogTitle className="gap-sm flex items-center">
+            <SlidersHorizontal
+              className="text-primary h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
+            {t('pages.creditCards.adjustLimit.title')}
+          </DialogTitle>
           <DialogDescription>{card?.name}</DialogDescription>
         </DialogHeader>
 

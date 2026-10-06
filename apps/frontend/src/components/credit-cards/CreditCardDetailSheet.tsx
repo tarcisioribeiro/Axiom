@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { CreditCard as CreditCardIcon, CalendarDays } from 'lucide-react';
+import { CreditCard as CreditCardIcon, CalendarDays, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { BRAND_COLORS, BRAND_ICONS } from '@/components/credit-cards/card-brands';
@@ -97,6 +97,11 @@ export function CreditCardDetailSheet({
   return (
     <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="flex max-h-[90vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0">
+        <div className="px-lg pt-lg heading-2 gap-sm flex items-center leading-none">
+          <Pencil className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+          {t('pages.creditCards.editTitle')}
+        </div>
+
         {/* Cartão: identidade + uso do limite */}
         <div className="p-lg pb-0">
           <div
@@ -190,15 +195,17 @@ export function CreditCardDetailSheet({
           </div>
         </div>
 
-        <div className="px-lg py-lg flex-1 overflow-y-auto">
-          <CreditCardForm
-            creditCard={card}
-            hidePreview
-            accounts={accounts}
-            onSubmit={(data) => saveMutation.mutate(data)}
-            onCancel={onClose}
-            isLoading={saveMutation.isPending}
-          />
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-lg pb-lg pt-md">
+            <CreditCardForm
+              creditCard={card}
+              hidePreview
+              accounts={accounts}
+              onSubmit={(data) => saveMutation.mutate(data)}
+              onCancel={onClose}
+              isLoading={saveMutation.isPending}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

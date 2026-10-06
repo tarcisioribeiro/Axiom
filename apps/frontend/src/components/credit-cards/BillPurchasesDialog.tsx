@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
+import { LIST_PAGE_SIZE, PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
   DialogCloseFooter,
@@ -21,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { translate } from '@/config/constants';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -49,16 +51,26 @@ export function BillPurchasesDialog({
   const sorted = [...installments].sort((a, b) =>
     (a.purchase_date ?? a.due_date).localeCompare(b.purchase_date ?? b.due_date)
   );
+  // Total da fatura: soma todas as compras, não só a página visível.
   const total = sorted.reduce((sum, i) => sum + Number(i.value), 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('pages.creditCardBills.purchases.title')}</DialogTitle>
-          <DialogDescription>
-            {bill && `${translate('months', bill.month)}/${bill.year}`}
-          </DialogDescription>
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
+        <DialogHeader sticky>
+          <DialogTitle className="gap-sm flex items-center">
+            <ShoppingCart
+              className="text-primary h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
+            {t('pages.creditCardBills.purchases.title')}
+            {bill && ` - ${translate('months', bill.month)}/${bill.year}`}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              {t('pages.creditCardBills.purchases.title')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         {isLoading ? (
@@ -69,52 +81,67 @@ export function BillPurchasesDialog({
             title={t('pages.creditCardBills.purchases.empty')}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('pages.creditCardBills.purchases.date')}</TableHead>
-                <TableHead>
-                  {t('pages.creditCardBills.purchases.description')}
-                </TableHead>
-                <TableHead>{t('pages.creditCardBills.purchases.category')}</TableHead>
-                <TableHead>
-                  {t('pages.creditCardBills.purchases.installment')}
-                </TableHead>
-                <TableHead className="text-right">
-                  {t('pages.creditCardBills.purchases.value')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((i) => (
-                <TableRow key={i.id}>
-                  <TableCell className="text-sm">
-                    {formatDate(i.purchase_date ?? i.due_date)}
-                  </TableCell>
-                  <TableCell className="font-medium">{i.description || '—'}</TableCell>
-                  <TableCell className="text-sm">
-                    {i.category ? translateCategory(i.category, 'expense') : '—'}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {i.installment_number}/{i.total_installments ?? 1}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatCurrency(i.value)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={4}>
-                  {t('pages.creditCardBills.purchases.total')}
-                </TableCell>
-                <TableCell className="text-right font-bold">
-                  {formatCurrency(total)}
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+          <div className="min-h-[24rem]">
+            <PaginatedSlide
+              items={sorted}
+              pageSize={LIST_PAGE_SIZE}
+              pinNav={false}
+              centerList
+            >
+              {(pageItems) => (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('pages.creditCardBills.purchases.date')}</TableHead>
+                      <TableHead>
+                        {t('pages.creditCardBills.purchases.description')}
+                      </TableHead>
+                      <TableHead>
+                        {t('pages.creditCardBills.purchases.category')}
+                      </TableHead>
+                      <TableHead>
+                        {t('pages.creditCardBills.purchases.installment')}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t('pages.creditCardBills.purchases.value')}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pageItems.map((i) => (
+                      <TableRow key={i.id}>
+                        <TableCell className="text-sm">
+                          {formatDate(i.purchase_date ?? i.due_date)}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {i.description || '—'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {i.category ? translateCategory(i.category, 'expense') : '—'}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {i.installment_number}/{i.total_installments ?? 1}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(i.value)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        {t('pages.creditCardBills.purchases.total')}
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        {formatCurrency(total)}
+                      </TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              )}
+            </PaginatedSlide>
+          </div>
         )}
         <DialogCloseFooter />
       </DialogContent>

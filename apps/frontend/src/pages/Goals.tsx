@@ -753,7 +753,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
           {detailsGoal && (
             <GoalDetails goal={detailsGoal} onViewFailures={setViewingFailuresGoal} />
           )}
-          <DialogFooter>
+          <DialogFooter className="sm:justify-start">
             <Button variant="outline" onClick={() => setDetailsGoal(undefined)}>
               <X className="mr-sm h-4 w-4" />
               {t('common.actions.close')}
@@ -791,7 +791,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               </li>
             ))}
           </ul>
-          <DialogFooter>
+          <DialogFooter className="sm:justify-start">
             <Button variant="outline" onClick={() => setViewingFailuresGoal(undefined)}>
               <X className="mr-sm h-4 w-4" />
               {t('common.actions.close')}

@@ -972,7 +972,11 @@ export default function NutritionPage() {
               />
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOptionsMealTypeId(null)}>
+              <Button
+                variant="outline"
+                onClick={() => setOptionsMealTypeId(null)}
+                className="sm:mr-auto"
+              >
                 <X className="mr-xs h-3 w-3" />
                 {t('common.actions.close')}
               </Button>

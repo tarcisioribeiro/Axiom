@@ -363,7 +363,7 @@ export function MealLogForm({
               {t('pages.nutritionMealTypes.noIngredients')}
             </p>
           )}
-          <DialogFooter>
+          <DialogFooter className="sm:justify-start">
             <Button
               type="button"
               variant="outline"

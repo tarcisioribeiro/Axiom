@@ -382,7 +382,7 @@ export function VaultContributionsDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-start">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="mr-sm h-4 w-4" />
             {t('common.actions.close')}

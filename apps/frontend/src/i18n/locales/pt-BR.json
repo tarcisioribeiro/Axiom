@@ -1222,6 +1222,8 @@
     "creditCards": {
       "title": "Cartões de Crédito",
       "newBtn": "Novo Cartão",
+      "editTitle": "Editar Cartão",
+      "editDesc": "Atualize as informações do cartão",
       "newTitle": "Novo Cartão",
       "newDesc": "Adicione um novo cartão ao sistema",
       "deleteTitle": "Excluir cartão",

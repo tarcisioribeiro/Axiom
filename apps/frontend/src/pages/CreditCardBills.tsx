@@ -1,26 +1,21 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
   Pencil,
   Trash2,
   CreditCard as CreditCardIcon,
   Receipt,
   Wallet,
   RotateCcw,
-  AlertTriangle,
-  CheckCircle2,
   CircleDot,
   RefreshCw,
-  Eye,
 } from 'lucide-react';
-import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
 import { BillPurchasesDialog } from '@/components/credit-cards/BillPurchasesDialog';
 import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
@@ -28,7 +23,6 @@ import { RenegotiateBillDialog } from '@/components/credit-cards/RenegotiateBill
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -80,9 +74,12 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
 export default function CreditCardBills({
   embedded = false,
   initialCardFilter = 'all',
+  createRef,
 }: {
   embedded?: boolean;
   initialCardFilter?: string;
+  /** Recebe a função de criar fatura, para o botão "Nova Fatura" do cabeçalho acima das abas. */
+  createRef?: RefObject<(() => void) | undefined>;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -192,6 +189,10 @@ export default function CreditCardBills({
     setSelectedBill(undefined);
     setIsDialogOpen(true);
   };
+
+  useEffect(() => {
+    if (createRef) createRef.current = handleCreate;
+  });
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
@@ -447,13 +448,6 @@ export default function CreditCardBills({
 
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
-        <Button onClick={handleCreate} className="gap-sm">
-          <Plus className="h-4 w-4" />
-          {t('pages.creditCardBills.newBtn')}
-        </Button>
-      </PageHeader>
-
       <FilterBar
         hasActiveFilters={
           cardFilter !== 'all' || statusFilter !== 'all' || yearFilter !== 'all'
@@ -516,119 +510,22 @@ export default function CreditCardBills({
         </Select>
       </FilterBar>
 
-      {/* Summary cards */}
-      {filteredBills.length > 0 &&
-        (() => {
-          const openBills = filteredBills.filter(
-            (b) => b.status === 'open' || b.status === 'overdue'
-          );
-          const totalOpen = openBills.reduce(
-            (sum, b) => sum + parseFloat(b.total_amount),
-            0
-          );
-          const totalPaid = filteredBills
-            .filter((b) => b.status === 'paid')
-            .reduce((sum, b) => sum + parseFloat(b.paid_amount), 0);
-          const totalMinimum = openBills.reduce(
-            (sum, b) => sum + parseFloat(b.minimum_payment),
-            0
-          );
-          return (
-            <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-              <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-                  <p className="text-sm font-medium">
-                    {t('pages.creditCardBills.stats.open')}
-                  </p>
-                  <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-                    <AlertTriangle className="text-destructive h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-destructive text-2xl font-bold">
-                    {formatCurrency(totalOpen)}
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.creditCardBills.stats.openCount', {
-                      count: openBills.length,
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-t-success/60 overflow-hidden border-t-2">
-                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-                  <p className="text-sm font-medium">
-                    {t('pages.creditCardBills.stats.paid')}
-                  </p>
-                  <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-                    <CheckCircle2 className="text-success h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-success text-2xl font-bold">
-                    {formatCurrency(totalPaid)}
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.creditCardBills.stats.paidCount', {
-                      count: filteredBills.filter((b) => b.status === 'paid').length,
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-t-warning/60 overflow-hidden border-t-2">
-                <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-                  <p className="text-sm font-medium">
-                    {t('pages.creditCardBills.stats.minPending')}
-                  </p>
-                  <div className="bg-warning/10 p-sm ring-warning/20 rounded-lg ring-1">
-                    <Wallet className="text-warning h-4 w-4" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-warning text-2xl font-bold">
-                    {formatCurrency(totalMinimum)}
-                  </div>
-                  <p className="mt-xs text-muted-foreground text-xs">
-                    {t('pages.creditCardBills.stats.minPaymentNote')}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          );
-        })()}
-
       <DataTable
         data={filteredBills}
         columns={columns}
         keyExtractor={(bill) => bill.id}
+        pageSize={6}
         isLoading={isLoading}
         emptyState={{
           icon: <Receipt className="text-muted-foreground h-12 w-12" />,
           title: t('pages.creditCardBills.emptyState'),
         }}
-        rowClassName={(bill) => {
-          if (bill.status === 'overdue')
-            return 'border-l-4 border-l-destructive bg-destructive/3';
-          if (bill.status === 'paid') return 'border-l-4 border-l-success bg-success/3';
-          if (bill.status === 'open') return 'border-l-4 border-l-warning';
-          return '';
+        onRowClick={(bill) => {
+          setSelectedBill(bill);
+          setIsPurchasesDialogOpen(true);
         }}
         actions={(bill) => (
           <div className="gap-sm flex items-center justify-end">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setSelectedBill(bill);
-                setIsPurchasesDialogOpen(true);
-              }}
-              aria-label={t('pages.creditCardBills.viewPurchasesLabel')}
-              title={t('pages.creditCardBills.viewPurchasesLabel')}
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-            </Button>
             {bill.status === 'paid' && (
               <ReceiptButton
                 source={{ type: 'credit_card_bill', data: bill }}
@@ -718,10 +615,17 @@ export default function CreditCardBills({
       </Dialog>
 
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('pages.creditCardBills.payTitle')}</DialogTitle>
-            <DialogDescription>{t('pages.creditCardBills.payDesc')}</DialogDescription>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader sticky>
+            <DialogTitle className="gap-sm flex items-center">
+              <Wallet className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+              {t('pages.creditCardBills.payTitle')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.creditCardBills.payDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {selectedBill && (
             <BillPaymentForm

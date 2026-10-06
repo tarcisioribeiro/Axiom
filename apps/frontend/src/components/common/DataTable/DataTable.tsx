@@ -60,6 +60,8 @@ export interface DataTableProps<T> {
   };
   actions?: (item: T) => React.ReactNode;
   rowClassName?: (item: T) => string;
+  /** Abre ao clicar na linha (ou Enter). Cliques em botões, links e campos não disparam. */
+  onRowClick?: (item: T) => void;
   /** Row keys that are currently being deleted (fade + collapse animation) */
   deletingKeys?: Set<string | number>;
   /**
@@ -70,6 +72,9 @@ export interface DataTableProps<T> {
 }
 
 const DEFAULT_PAGE_SIZE = 10;
+
+const INTERACTIVE_SELECTOR =
+  'button, a, input, select, textarea, label, [role="menuitem"], [role="checkbox"], [role="switch"]';
 
 const getAlignClass = (align: Column<unknown>['align'] = 'left') => `text-${align}`;
 
@@ -87,6 +92,7 @@ export function DataTable<T>({
   sorting,
   actions,
   rowClassName,
+  onRowClick,
   deletingKeys,
   mobileCard,
 }: DataTableProps<T>) {
@@ -119,6 +125,11 @@ export function DataTable<T>({
     },
     [rows.length]
   );
+
+  const handleClick = (e: React.MouseEvent, item: T) => {
+    if (!onRowClick || (e.target as HTMLElement).closest(INTERACTIVE_SELECTOR)) return;
+    onRowClick(item);
+  };
 
   const getAriaSortValue = (columnKey: string): React.AriaAttributes['aria-sort'] => {
     if (sorting?.column !== columnKey) return 'none';
@@ -166,7 +177,18 @@ export function DataTable<T>({
       <div className="bg-card block overflow-hidden rounded-lg border md:hidden">
         <div className="divide-y">
           {rows.map((item) => (
-            <div key={keyExtractor(item)}>
+            <div
+              key={keyExtractor(item)}
+              className={onRowClick ? 'cursor-pointer' : undefined}
+              role={onRowClick ? 'button' : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={(e) => handleClick(e, item)}
+              onKeyDown={(e) => {
+                if (onRowClick && e.key === 'Enter' && e.target === e.currentTarget) {
+                  onRowClick(item);
+                }
+              }}
+            >
               {mobileCard ? (
                 mobileCard(item)
               ) : (
@@ -247,8 +269,18 @@ export function DataTable<T>({
                         rowRefs.current[index] = el;
                       }}
                       tabIndex={0}
-                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
-                      onKeyDown={(e) => handleRowKeyDown(e, index)}
+                      className={`hover:bg-muted/30 focus:bg-muted/40 transition-colors focus:outline-none ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName ? rowClassName(item) : ''}`}
+                      onClick={(e: React.MouseEvent) => handleClick(e, item)}
+                      onKeyDown={(e) => {
+                        handleRowKeyDown(e, index);
+                        if (
+                          onRowClick &&
+                          e.key === 'Enter' &&
+                          e.target === e.currentTarget
+                        ) {
+                          onRowClick(item);
+                        }
+                      }}
                       animate={
                         isDeleting
                           ? { opacity: 0.4, scale: 0.99 }

@@ -574,6 +574,14 @@ export default function Archives() {
               <div className="dialog-footer gap-sm flex justify-end">
                 <Button
                   variant="outline"
+                  onClick={() => setIsContentDialogOpen(false)}
+                  className="sm:mr-auto"
+                >
+                  <X className="mr-sm h-4 w-4" />
+                  {t('common.actions.close')}
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => {
                     void copyToClipboard(revealedContent);
                     toast({
@@ -583,10 +591,6 @@ export default function Archives() {
                 >
                   <Copy className="mr-sm h-4 w-4" />
                   {t('common.actions.copy')}
-                </Button>
-                <Button onClick={() => setIsContentDialogOpen(false)}>
-                  <X className="mr-sm h-4 w-4" />
-                  {t('common.actions.close')}
                 </Button>
               </div>
             </div>
@@ -629,7 +633,7 @@ export default function Archives() {
                 title="PDF Preview"
               />
             ) : null}
-            <div className="dialog-footer flex justify-end">
+            <div className="dialog-footer flex justify-start">
               <Button
                 variant="outline"
                 onClick={() => {

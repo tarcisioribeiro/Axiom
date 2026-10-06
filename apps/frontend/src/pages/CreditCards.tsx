@@ -1,14 +1,12 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import type { TFunction } from 'i18next';
 import {
-  Plus,
   Pencil,
   Trash2,
   CreditCard as CreditCardIcon,
   Calendar,
-  Wallet,
-  TrendingDown,
   SlidersHorizontal,
 } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
@@ -17,15 +15,14 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { CreditCardDeleteDialog } from '@/components/credit-cards/CreditCardDeleteDialog';
 import { CreditCardDetailSheet } from '@/components/credit-cards/CreditCardDetailSheet';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
 import { CreditLimitAdjustDialog } from '@/components/credit-cards/CreditLimitAdjustDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -39,22 +36,15 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { DURATION } from '@/lib/animations';
 import { formatCurrency } from '@/lib/formatters';
-import { getCurrentCreditCardBill, sumByProperty } from '@/lib/helpers';
+import { getCurrentCreditCardBill } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import { ValidationError } from '@/services/api-errors';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { useBreadcrumbExtraStore } from '@/stores/breadcrumb-extra-store';
 import type { CreditCard, CreditCardFormData, Account, CreditCardBill } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-const CARD_BRAND_GRADIENTS: Record<string, string> = {
-  visa: 'from-blue-600/30 via-blue-500/15 to-indigo-500/10',
-  mastercard: 'from-red-600/30 via-orange-500/15 to-yellow-500/10',
-  elo: 'from-yellow-500/30 via-blue-500/15 to-blue-700/10',
-  amex: 'from-green-600/30 via-teal-500/15 to-emerald-500/10',
-  hipercard: 'from-red-700/30 via-red-500/15 to-pink-500/10',
-};
 
 function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
   const r = (size - 6) / 2;
@@ -91,6 +81,24 @@ function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
   );
 }
 
+/** Duas linhas da grade de cards: 4 no tablet (2 colunas), 6 no desktop (3 colunas). */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
+function useCardsPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? 6 : 4
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) => setPageSize(e.matches ? 6 : 4);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
+
 const EMPTY_CREDIT_CARDS: CreditCard[] = [];
 const EMPTY_ACCOUNTS: Account[] = [];
 const EMPTY_BILLS: CreditCardBill[] = [];
@@ -103,18 +111,61 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
+/** Rótulos (sem " *") dos campos do formulário, para mensagens de erro da API. */
+const CARD_FIELD_LABEL_KEYS: Record<string, string> = {
+  name: 'nameLabel',
+  on_card_name: 'onCardNameLabel',
+  flag: 'flagLabel',
+  card_number: 'cardNumberLabel',
+  security_code: 'cvvLabel',
+  validation_date: 'validationDateLabel',
+  credit_limit: 'creditLimitLabel',
+  max_limit: 'maxLimitLabel',
+  associated_account: 'associatedAccountLabel',
+  due_day: 'dueDayLabel',
+  billing_due_day: 'dueDayLabel',
+  closing_day: 'closingDayLabel',
+  interest_rate: 'interestRateLabel',
+  annual_fee: 'annualFeeLabel',
+  notes: 'notesLabel',
+};
+
+/** Junta os erros de validação da API em uma linha, com rótulos traduzidos. */
+function formatCardSaveError(error: unknown, t: TFunction): string {
+  if (!(error instanceof ValidationError)) return getErrorMessage(error);
+
+  const messages = Object.entries(error.errors).flatMap(([field, fieldMessages]) => {
+    const labelKey = CARD_FIELD_LABEL_KEYS[field];
+    const label = labelKey
+      ? t(`pages.creditCards.form.${labelKey}`).replace(/ \*$/, '')
+      : null;
+    return fieldMessages.map((message) => {
+      if (!label) return message;
+      if (message === 'Este campo é obrigatório.') return `Preencha o campo ${label}`;
+      return `${label}: ${message}`;
+    });
+  });
+
+  return messages.length > 0 ? messages.join('; ') : getErrorMessage(error);
+}
+
 export default function CreditCards({
   embedded = false,
   onShowBills,
+  isCreateOpen,
+  onCreateOpenChange,
 }: {
   embedded?: boolean;
   /** Leva à aba de faturas filtrada pelo cartão (usado quando há pendências). */
   onShowBills?: (cardId: number) => void;
+  /** Controlado pelo pai, que tem o botão "Novo cartão" acima das abas. */
+  isCreateOpen: boolean;
+  onCreateOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const cardsPageSize = useCardsPageSize();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -164,27 +215,18 @@ export default function CreditCards({
       toast({
         title: t('pages.creditCards.created'),
       });
-      setIsDialogOpen(false);
+      onCreateOpenChange(false);
       void queryClient.invalidateQueries({ queryKey: ['credit-cards'] });
     } catch (error: unknown) {
       toast({
-        title: t('common.messages.saveError', { reason: getErrorMessage(error) }),
+        title: t('common.messages.saveError', {
+          reason: formatCardSaveError(error, t),
+        }),
         variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleCreate = () => {
-    if (accounts.length === 0) {
-      toast({
-        title: t('pages.creditCards.noAccountMsg'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    setIsDialogOpen(true);
   };
 
   const handleDelete = async (card: CreditCard) => {
@@ -213,16 +255,6 @@ export default function CreditCards({
     setDeleteState({ card, pendingBills: pending });
   };
 
-  const totalLimit = sumByProperty(
-    creditCards.map((c) => ({ value: parseFloat(c.credit_limit) })),
-    'value'
-  );
-
-  const totalAvailable = sumByProperty(
-    creditCards.map((c) => ({ value: c.available_credit || 0 })),
-    'value'
-  );
-
   const getCardNumber = (card: CreditCard) => {
     const masked = card.card_number_masked || '****';
     if (masked === '****' || masked.replace(/\*/g, '') === '') {
@@ -241,80 +273,6 @@ export default function CreditCards({
 
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader
-        title={t('pages.creditCards.title')}
-        icon={<CreditCardIcon />}
-        action={{
-          label: t('pages.creditCards.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="gap-md grid grid-cols-1 sm:grid-cols-3">
-        <Card className="border-t-primary/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.creditCards.cardCount', { count: creditCards.length })}
-            </p>
-            <div className="bg-primary/10 p-sm ring-primary/20 rounded-lg ring-1">
-              <CreditCardIcon className="text-primary h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-primary text-2xl font-bold">{creditCards.length}</div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.creditCards.stats.registeredSubtitle')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-success/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.creditCards.stats.availableCredit')}
-            </p>
-            <div className="bg-success/10 p-sm ring-success/20 rounded-lg ring-1">
-              <Wallet className="text-success h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalAvailable)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.creditCards.stats.ofTotalLimit', {
-                value: formatCurrency(totalLimit),
-              })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-t-destructive/60 overflow-hidden border-t-2">
-          <CardHeader className="pb-sm flex flex-row items-center justify-between space-y-0">
-            <p className="text-sm font-medium">
-              {t('pages.creditCards.stats.usedCredit')}
-            </p>
-            <div className="bg-destructive/10 p-sm ring-destructive/20 rounded-lg ring-1">
-              <TrendingDown className="text-destructive h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-destructive text-2xl font-bold">
-              {formatCurrency(totalLimit - totalAvailable)}
-            </div>
-            <p className="mt-xs text-muted-foreground text-xs">
-              {t('pages.creditCards.usedPercent', {
-                percent:
-                  totalLimit > 0
-                    ? Math.round(((totalLimit - totalAvailable) / totalLimit) * 100)
-                    : 0,
-              })}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {creditCards.length === 0 ? (
         <EmptyState
           icon={<CreditCardIcon className="text-muted-foreground h-12 w-12" />}
@@ -323,7 +281,7 @@ export default function CreditCards({
       ) : (
         <PaginatedSlide
           items={creditCards}
-          pageSize={GRID_PAGE_SIZE}
+          pageSize={cardsPageSize}
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>
@@ -333,9 +291,6 @@ export default function CreditCards({
               const available = card.available_credit ?? 0;
               const used = Math.max(0, limit - available);
               const usagePct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
-              const brandGradient =
-                CARD_BRAND_GRADIENTS[card.flag.toLowerCase()] ??
-                'from-primary/20 via-primary/10 to-transparent';
 
               const openBill = getCurrentCreditCardBill(
                 allBills.filter((b) => b.credit_card === card.id)
@@ -366,20 +321,13 @@ export default function CreditCards({
                     duration: DURATION.fast,
                     delay: creditCards.indexOf(card) * 0.05,
                   }}
-                  whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setHubCard(card)}
                   className="cursor-pointer"
                   title={t('pages.creditCardHub.openHub')}
                 >
                   <Card className={cn('overflow-hidden', urgencyBorder)}>
-                    {/* Card hero — gradient background simulating a bank card */}
-                    <div
-                      className={cn(
-                        'px-md pb-lg pt-md relative bg-gradient-to-br',
-                        brandGradient
-                      )}
-                    >
+                    <div className="px-md pb-lg pt-md relative">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <p className="text-muted-foreground text-xs">
@@ -523,7 +471,7 @@ export default function CreditCards({
         onOpenChange={(open) => !open && setLimitCard(undefined)}
       />
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isCreateOpen} onOpenChange={onCreateOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader sticky>
             <DialogTitle mode="create">{t('pages.creditCards.newTitle')}</DialogTitle>
@@ -534,7 +482,7 @@ export default function CreditCards({
           <CreditCardForm
             accounts={accounts}
             onSubmit={handleSubmit}
-            onCancel={() => setIsDialogOpen(false)}
+            onCancel={() => onCreateOpenChange(false)}
             isLoading={isSubmitting}
           />
         </DialogContent>

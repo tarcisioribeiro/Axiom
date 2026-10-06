@@ -111,7 +111,7 @@ DialogFooter.displayName = 'DialogFooter';
 const DialogCloseFooter = () => {
   const { t } = useTranslation();
   return (
-    <DialogFooter>
+    <DialogFooter className="sm:justify-start">
       <DialogClose asChild>
         <Button variant="outline">
           <X className="mr-sm h-4 w-4" />

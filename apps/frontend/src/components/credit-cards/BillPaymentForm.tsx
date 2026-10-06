@@ -276,56 +276,58 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {/* Payment Form */}
       {remaining > 0 && (
         <div className="space-y-md">
-          <div className="space-y-sm">
-            <Label htmlFor="amount">
-              {t('pages.creditCardBills.payForm.paymentAmountLabel')}
-            </Label>
-            <Controller
-              name="amount"
-              control={control}
-              rules={{
-                required: true,
-                min: { value: 0.01, message: '' },
-                max: {
-                  value: remaining,
-                  message: t('pages.creditCardBills.payForm.maxHint', {
-                    value: formatCurrency(remaining.toString()),
-                  }),
-                },
-              }}
-              render={({ field }) => (
-                <CurrencyInput
-                  id="amount"
-                  disabled={isLoading}
-                  ref={field.ref}
-                  value={field.value}
-                  onBlur={field.onBlur}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                  aria-invalid={!!errors.amount}
-                />
-              )}
-            />
-            <p className="text-muted-foreground text-xs">
-              {t('pages.creditCardBills.payForm.maxHint', {
-                value: formatCurrency(remaining.toString()),
-              })}
-            </p>
-          </div>
+          <div className="gap-md grid grid-cols-2">
+            <div className="space-y-sm">
+              <Label htmlFor="amount">
+                {t('pages.creditCardBills.payForm.paymentAmountLabel')}
+              </Label>
+              <Controller
+                name="amount"
+                control={control}
+                rules={{
+                  required: true,
+                  min: { value: 0.01, message: '' },
+                  max: {
+                    value: remaining,
+                    message: t('pages.creditCardBills.payForm.maxHint', {
+                      value: formatCurrency(remaining.toString()),
+                    }),
+                  },
+                }}
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="amount"
+                    disabled={isLoading}
+                    ref={field.ref}
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    aria-invalid={!!errors.amount}
+                  />
+                )}
+              />
+              <p className="text-muted-foreground text-xs">
+                {t('pages.creditCardBills.payForm.maxHint', {
+                  value: formatCurrency(remaining.toString()),
+                })}
+              </p>
+            </div>
 
-          <div className="space-y-sm">
-            <Label htmlFor="payment_date">
-              {scheduled
-                ? t('pages.payables.payment.scheduledDate')
-                : t('pages.creditCardBills.payForm.paymentDateLabel')}
-            </Label>
-            <DatePicker
-              value={watch('payment_date')}
-              onChange={(date) =>
-                setValue('payment_date', date ? formatLocalDate(date) : '')
-              }
-              placeholder={t('pages.creditCardBills.payForm.paymentDatePlaceholder')}
-              disabled={isLoading}
-            />
+            <div className="space-y-sm">
+              <Label htmlFor="payment_date">
+                {scheduled
+                  ? t('pages.payables.payment.scheduledDate')
+                  : t('pages.creditCardBills.payForm.paymentDateLabel')}
+              </Label>
+              <DatePicker
+                value={watch('payment_date')}
+                onChange={(date) =>
+                  setValue('payment_date', date ? formatLocalDate(date) : '')
+                }
+                placeholder={t('pages.creditCardBills.payForm.paymentDatePlaceholder')}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="space-y-sm">
