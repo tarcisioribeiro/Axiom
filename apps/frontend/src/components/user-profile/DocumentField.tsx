@@ -36,7 +36,6 @@ export function DocumentField({
           inputMode="numeric"
           disabled={!editing}
           aria-invalid={error ? true : undefined}
-          aria-describedby={error ? 'document-error' : undefined}
           value={editing || show ? formatted : masked}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 11))}
           className="pr-9"
@@ -56,15 +55,6 @@ export function DocumentField({
           </PlainButton>
         )}
       </div>
-      {error && (
-        <p
-          id="document-error"
-          className="animate-fade-in text-destructive text-sm"
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
     </div>
   );
 }

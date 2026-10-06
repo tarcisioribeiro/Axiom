@@ -59,6 +59,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { API_CONFIG } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
@@ -574,7 +575,7 @@ export function AddSessionForm({
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
       className="space-y-md border-border bg-card p-md rounded-lg border"
     >
       <div className="gap-md grid grid-cols-2">

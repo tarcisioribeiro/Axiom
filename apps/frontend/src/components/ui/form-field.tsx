@@ -26,8 +26,8 @@ interface FormFieldProps {
  * FormField wrapper que adiciona acessibilidade e feedback visual automaticamente.
  *
  * Features:
- * - aria-describedby linkando campo a mensagem de erro/descricao
- * - aria-invalid quando ha erro
+ * - aria-describedby linkando campo a descricao
+ * - aria-invalid e borda vermelha quando ha erro (a mensagem vai para toast, ver notifyFormErrors)
  * - aria-required quando campo e obrigatorio
  * - IDs consistentes para label, erro e descricao
  * - Ícone de feedback de validação (check verde / X vermelho / spinner)
@@ -58,7 +58,6 @@ export function FormField({
   validationState,
   hideValidationIcon = false,
 }: FormFieldProps) {
-  const errorId = `${id}-error`;
   const descriptionId = `${id}-description`;
 
   // Determina estado de validação
@@ -72,7 +71,6 @@ export function FormField({
 
   // Constroi aria-describedby baseado nas props presentes
   const describedByParts: string[] = [];
-  if (error) describedByParts.push(errorId);
   if (description) describedByParts.push(descriptionId);
   const ariaDescribedBy =
     describedByParts.length > 0 ? describedByParts.join(' ') : undefined;
@@ -137,16 +135,6 @@ export function FormField({
         </p>
       )}
 
-      {error && (
-        <p
-          id={errorId}
-          className="animate-fade-in text-destructive text-sm"
-          role="alert"
-          aria-live="polite"
-        >
-          {error}
-        </p>
-      )}
     </div>
   );
 }

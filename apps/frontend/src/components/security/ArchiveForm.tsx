@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
@@ -154,7 +155,7 @@ export function ArchiveForm({
     }
 
     onSubmit(submitData);
-  });
+  }, notifyFormErrors);
 
   const watchedArchiveType = watch('archive_type');
 
@@ -173,12 +174,10 @@ export function ArchiveForm({
             <Input
               id="title"
               {...register('title')}
+              aria-invalid={!!errors.title}
               placeholder={t('pages.archives.form.titlePlaceholder')}
               disabled={isLoading}
             />
-            {errors.title && (
-              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -193,7 +192,7 @@ export function ArchiveForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.category}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -210,11 +209,6 @@ export function ArchiveForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.category && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.category.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -227,7 +221,9 @@ export function ArchiveForm({
               <Upload className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.archives.form.typeLabel')}
             </Label>
-            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
+            <div
+              className={`bg-muted/30 flex rounded-md border p-0.5 ${errors.archive_type ? 'border-destructive ring-destructive/50 ring-2' : 'border-border/70'}`}
+            >
               {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
                 <button
                   key={value}
@@ -247,11 +243,6 @@ export function ArchiveForm({
                 </button>
               ))}
             </div>
-            {errors.archive_type && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.archive_type.message}
-              </p>
-            )}
           </div>
 
           {watchedArchiveType === 'text' ? (
@@ -263,16 +254,12 @@ export function ArchiveForm({
               <Textarea
                 id="text_content"
                 {...register('text_content')}
+                aria-invalid={!!errors.text_content}
                 placeholder={t('pages.archives.form.contentPlaceholder')}
                 rows={10}
                 className="font-mono text-sm"
                 disabled={isLoading}
               />
-              {errors.text_content && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.text_content.message}
-                </p>
-              )}
             </div>
           ) : (
             <div className="space-y-sm">
@@ -297,12 +284,10 @@ export function ArchiveForm({
             <Input
               id="tags"
               {...register('tags')}
+              aria-invalid={!!errors.tags}
               placeholder={t('pages.archives.form.tagsPlaceholder')}
               disabled={isLoading}
             />
-            {errors.tags && (
-              <p className="mt-xs text-destructive text-sm">{errors.tags.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -313,13 +298,11 @@ export function ArchiveForm({
             <Textarea
               id="notes"
               {...register('notes')}
+              aria-invalid={!!errors.notes}
               placeholder={t('pages.archives.form.notesPlaceholder')}
               rows={3}
               disabled={isLoading}
             />
-            {errors.notes && (
-              <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
-            )}
           </div>
         </div>
       </FormSection>

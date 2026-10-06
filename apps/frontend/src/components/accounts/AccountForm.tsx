@@ -32,6 +32,7 @@ import {
   ACCOUNT_TYPE_ICONS as ACCOUNT_TYPE_ICONS_CONFIG,
   INSTITUTION_ICONS as INSTITUTION_ICONS_CONFIG,
 } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
@@ -106,7 +107,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     balanceVal > 0 ? 'success' : balanceVal < 0 ? 'destructive' : 'default';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       {/* Mini preview da conta */}
       <div className="border-border/60 from-muted/40 to-muted/10 p-md relative overflow-hidden rounded-lg border bg-gradient-to-br">
         <div className="gap-sm flex items-center">
@@ -160,7 +161,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     accountType === key
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                  }`}
+                  } ${errors.account_type ? 'border-destructive ring-destructive/50 ring-2' : ''}`}
                 >
                   {(() => {
                     const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
@@ -170,9 +171,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 </button>
               ))}
             </div>
-            {errors.account_type && (
-              <p className="text-destructive text-sm">{errors.account_type.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -186,7 +184,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 setValue('institution', value as AccountFormData['institution'])
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.institution}>
                 <SelectValue
                   placeholder={t('pages.accounts.form.institutionPlaceholder')}
                 />
@@ -205,9 +203,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {errors.institution && (
-              <p className="text-destructive text-sm">{errors.institution.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -216,14 +211,12 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.nameLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.account_name}
               id="account_name"
               {...register('account_name')}
               placeholder={t('pages.accounts.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.account_name && (
-              <p className="text-destructive text-sm">{errors.account_name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -232,6 +225,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.numberLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.account_number}
               id="account_number"
               {...register('account_number')}
               placeholder={
@@ -241,12 +235,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               }
               disabled={isLoading}
             />
-
-            {errors.account_number && (
-              <p className="text-destructive text-sm">
-                {errors.account_number.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -260,6 +248,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               {t('pages.accounts.form.balanceLabel')}
             </Label>
             <CurrencyInput
+              aria-invalid={!!errors.balance}
               id="balance"
               accentColor={balanceAccent}
               value={balanceVal}
@@ -272,9 +261,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 {formatCurrency(-overdraftVal)}
               </p>
             )}
-            {errors.balance && (
-              <p className="text-destructive text-sm">{errors.balance.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -286,6 +272,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               </span>
             </Label>
             <CurrencyInput
+              aria-invalid={!!errors.overdraft_limit}
               id="overdraft_limit"
               value={overdraftVal}
               onChange={(e) =>
@@ -293,11 +280,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               }
               disabled={isLoading}
             />
-            {errors.overdraft_limit && (
-              <p className="text-destructive text-sm">
-                {errors.overdraft_limit.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>

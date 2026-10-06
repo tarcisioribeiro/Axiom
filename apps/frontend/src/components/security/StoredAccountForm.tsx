@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { STORED_ACCOUNT_TYPE_ICONS, INSTITUTION_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { storedAccountSchema, type StoredBankAccountFormData } from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
 
@@ -138,7 +139,7 @@ export function StoredAccountForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.storedAccounts.form.sectionIdentification')}
         icon={Building2}
@@ -152,12 +153,10 @@ export function StoredAccountForm({
             <Input
               id="name"
               {...register('name')}
+              aria-invalid={!!errors.name}
               placeholder={t('pages.storedAccounts.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -168,7 +167,7 @@ export function StoredAccountForm({
             <div className="relative">
               <button
                 type="button"
-                className="border-input bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2"
+                className={`bg-background ring-offset-background focus:ring-ring flex h-10 w-full cursor-pointer items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 ${errors.institution_name ? 'border-destructive ring-destructive/50 ring-2' : 'border-input'}`}
                 onClick={() => setShowBankDropdown((v) => !v)}
               >
                 {(() => {
@@ -237,11 +236,6 @@ export function StoredAccountForm({
                 </div>
               )}
             </div>
-            {errors.institution_name && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.institution_name.message}
-              </p>
-            )}
             <input type="hidden" {...register('institution_code')} />
           </div>
 
@@ -260,7 +254,7 @@ export function StoredAccountForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.account_type}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -277,11 +271,6 @@ export function StoredAccountForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.account_type && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.account_type.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -299,14 +288,10 @@ export function StoredAccountForm({
             <Input
               id="account_number"
               {...register('account_number')}
+              aria-invalid={!!errors.account_number}
               placeholder={t('pages.storedAccounts.form.numberPlaceholder')}
               disabled={isLoading}
             />
-            {errors.account_number && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.account_number.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -317,12 +302,10 @@ export function StoredAccountForm({
             <Input
               id="agency"
               {...register('agency')}
+              aria-invalid={!!errors.agency}
               placeholder={t('pages.storedAccounts.form.agencyPlaceholder')}
               disabled={isLoading}
             />
-            {errors.agency && (
-              <p className="mt-xs text-destructive text-sm">{errors.agency.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -339,6 +322,7 @@ export function StoredAccountForm({
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 {...register('password')}
+                aria-invalid={!!errors.password}
                 placeholder={
                   account
                     ? t('pages.storedAccounts.form.password1EditPlaceholder')
@@ -363,11 +347,6 @@ export function StoredAccountForm({
                 )}
               </Button>
             </div>
-            {errors.password && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.password.message}
-              </p>
-            )}
             {account && (
               <p className="mt-xs text-warning text-xs">
                 {t('pages.storedAccounts.form.keepCurrentPassword')}
@@ -385,6 +364,7 @@ export function StoredAccountForm({
                 id="digital_password"
                 type={showSecondPassword ? 'text' : 'password'}
                 {...register('digital_password')}
+                aria-invalid={!!errors.digital_password}
                 placeholder={
                   account
                     ? t('pages.storedAccounts.form.password2EditPlaceholder')
@@ -411,11 +391,6 @@ export function StoredAccountForm({
                 )}
               </Button>
             </div>
-            {errors.digital_password && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.digital_password.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -462,13 +437,11 @@ export function StoredAccountForm({
           <Textarea
             id="notes"
             {...register('notes')}
+            aria-invalid={!!errors.notes}
             placeholder={t('pages.storedAccounts.form.notesPlaceholder')}
             rows={3}
             disabled={isLoading}
           />
-          {errors.notes && (
-            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
-          )}
         </div>
       </FormSection>
 

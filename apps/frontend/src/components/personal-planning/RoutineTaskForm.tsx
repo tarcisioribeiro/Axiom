@@ -42,6 +42,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { Tooltip } from '@/components/ui/tooltip';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { cn, formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
@@ -327,7 +328,7 @@ export function RoutineTaskForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.routineTasks.form.sectionIdentification')}
         icon={CheckSquare}
@@ -339,14 +340,12 @@ export function RoutineTaskForm({
               {t('pages.routineTasks.form.nameLabel')}
             </Label>
             <Input
+              aria-invalid={!!errors.name}
               id="name"
               {...register('name')}
               placeholder={t('pages.routineTasks.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -355,17 +354,13 @@ export function RoutineTaskForm({
               {t('pages.routineTasks.form.descriptionLabel')}
             </Label>
             <Textarea
+              aria-invalid={!!errors.description}
               id="description"
               {...register('description')}
               placeholder={t('pages.routineTasks.form.descriptionPlaceholder')}
               rows={3}
               disabled={isLoading}
             />
-            {errors.description && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.description.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -378,7 +373,7 @@ export function RoutineTaskForm({
               onValueChange={(value) => setValue('category', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.category}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -395,11 +390,6 @@ export function RoutineTaskForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.category && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.category.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -408,12 +398,10 @@ export function RoutineTaskForm({
               {t('pages.routineTasks.form.iconLabel')}
             </Label>
             <IconPicker
+              aria-invalid={!!errors.icon}
               value={watch('icon')}
               onChange={(value) => setValue('icon', value)}
             />
-            {errors.icon && (
-              <p className="mt-xs text-destructive text-sm">{errors.icon.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -435,7 +423,12 @@ export function RoutineTaskForm({
                 <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
               </Tooltip>
             </Label>
-            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
+            <div
+              className={cn(
+                'border-border/70 bg-muted/30 flex rounded-md border p-0.5',
+                errors.periodicity && 'border-destructive ring-destructive/50 ring-2'
+              )}
+            >
               {PERIODICITY_CHOICES.map((period) => (
                 <button
                   key={period.value}
@@ -461,11 +454,6 @@ export function RoutineTaskForm({
             {frequencyPreview() && (
               <p className="text-primary text-xs font-medium">{frequencyPreview()}</p>
             )}
-            {errors.periodicity && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.periodicity.message}
-              </p>
-            )}
           </div>
 
           {periodicity === 'weekly' && (
@@ -487,7 +475,9 @@ export function RoutineTaskForm({
                         'flex-1 rounded-md border py-1.5 text-xs font-medium transition-colors',
                         isSelected
                           ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground',
+                        errors.weekday &&
+                          'border-destructive ring-destructive/50 ring-2'
                       )}
                     >
                       {t(
@@ -497,11 +487,6 @@ export function RoutineTaskForm({
                   );
                 })}
               </div>
-              {errors.weekday && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.weekday.message}
-                </p>
-              )}
             </div>
           )}
 
@@ -516,6 +501,7 @@ export function RoutineTaskForm({
                 name="day_of_month"
                 render={({ field }) => (
                   <NumberStepper
+                    aria-invalid={!!errors.day_of_month}
                     id="day_of_month"
                     disabled={isLoading}
                     placeholder="1-31"
@@ -527,11 +513,6 @@ export function RoutineTaskForm({
                   />
                 )}
               />
-              {errors.day_of_month && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.day_of_month.message}
-                </p>
-              )}
             </div>
           )}
 
@@ -667,6 +648,7 @@ export function RoutineTaskForm({
                     {t('pages.routineTasks.form.intervalStartDateLabel')}
                   </Label>
                   <DatePicker
+                    aria-invalid={!!errors.interval_start_date}
                     value={watch('interval_start_date') ?? undefined}
                     onChange={(date) =>
                       setValue(
@@ -681,12 +663,6 @@ export function RoutineTaskForm({
                   />
                 </div>
               </div>
-
-              {errors.interval_start_date && (
-                <p className="text-destructive text-sm">
-                  {errors.interval_start_date.message}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -710,6 +686,7 @@ export function RoutineTaskForm({
               name="target_quantity"
               render={({ field }) => (
                 <NumberStepper
+                  aria-invalid={!!errors.target_quantity}
                   id="target_quantity"
                   disabled={isLoading}
                   min={1}
@@ -718,11 +695,6 @@ export function RoutineTaskForm({
                 />
               )}
             />
-            {errors.target_quantity && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.target_quantity.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -737,7 +709,7 @@ export function RoutineTaskForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.unit}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -748,9 +720,6 @@ export function RoutineTaskForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.unit && (
-              <p className="mt-xs text-destructive text-sm">{errors.unit.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -764,15 +733,11 @@ export function RoutineTaskForm({
                 {t('pages.routineTasks.form.defaultTimeLabel')}
               </Label>
               <TimePicker
+                aria-invalid={!!errors.default_time}
                 value={watch('default_time') ?? undefined}
                 onChange={(t) => setValue('default_time', t ?? null)}
                 disabled={isLoading}
               />
-              {errors.default_time && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.default_time.message}
-                </p>
-              )}
             </div>
 
             <div className="space-y-sm">
@@ -787,7 +752,7 @@ export function RoutineTaskForm({
                 }
                 disabled={isLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.priority}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -804,11 +769,6 @@ export function RoutineTaskForm({
                   })}
                 </SelectContent>
               </Select>
-              {errors.priority && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.priority.message}
-                </p>
-              )}
             </div>
 
             <div className="space-y-sm md:col-span-2">
@@ -924,6 +884,7 @@ export function RoutineTaskForm({
                   </Tooltip>
                 </Label>
                 <NumberStepper
+                  aria-invalid={!!errors.interval_hours}
                   id="interval_hours"
                   min={1}
                   max={23}
@@ -933,11 +894,6 @@ export function RoutineTaskForm({
                   placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
                   disabled={isLoading}
                 />
-                {errors.interval_hours && (
-                  <p className="mt-xs text-destructive text-sm">
-                    {errors.interval_hours.message}
-                  </p>
-                )}
               </div>
 
               {(dailyOccurrences ?? 1) === 1 && (
@@ -953,15 +909,11 @@ export function RoutineTaskForm({
                     </Tooltip>
                   </Label>
                   <TimePicker
+                    aria-invalid={!!errors.closing_time}
                     value={watch('closing_time') ?? undefined}
                     onChange={(t) => setValue('closing_time', t ?? null)}
                     disabled={isLoading}
                   />
-                  {errors.closing_time && (
-                    <p className="mt-xs text-destructive text-sm">
-                      {errors.closing_time.message}
-                    </p>
-                  )}
                 </div>
               )}
 
@@ -984,6 +936,7 @@ export function RoutineTaskForm({
                   name="allowed_skips_per_month"
                   render={({ field }) => (
                     <NumberStepper
+                      aria-invalid={!!errors.allowed_skips_per_month}
                       id="allowed_skips_per_month"
                       disabled={isLoading}
                       min={0}
@@ -993,11 +946,6 @@ export function RoutineTaskForm({
                     />
                   )}
                 />
-                {errors.allowed_skips_per_month && (
-                  <p className="mt-xs text-destructive text-sm">
-                    {errors.allowed_skips_per_month.message}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-sm md:col-span-2">
@@ -1012,6 +960,7 @@ export function RoutineTaskForm({
                   </Tooltip>
                 </Label>
                 <Input
+                  aria-invalid={!!errors.scheduled_times}
                   id="scheduled_times"
                   type="text"
                   placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
@@ -1025,11 +974,6 @@ export function RoutineTaskForm({
                   }}
                   disabled={isLoading}
                 />
-                {errors.scheduled_times && (
-                  <p className="mt-xs text-destructive text-sm">
-                    {errors.scheduled_times.message}
-                  </p>
-                )}
               </div>
             </div>
           </Collapse>

@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatLocalDate, parseLocalDate } from '@/lib/utils';
 import type {
   Course,
@@ -168,7 +169,10 @@ export function CourseForm({
   const endDate = watch('end_date');
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       <FormSection title={t('pages.courses.form.sectionInfo')} icon={GraduationCap}>
         <div className="space-y-sm">
           <Label htmlFor="title">{t('pages.courses.form.titleLabel')}</Label>
@@ -176,11 +180,8 @@ export function CourseForm({
             id="title"
             placeholder={t('pages.courses.form.titlePlaceholder')}
             {...register('title')}
-            className={errors.title ? 'border-destructive' : ''}
+            aria-invalid={!!errors.title}
           />
-          {errors.title && (
-            <p className="text-destructive text-xs">{errors.title.message}</p>
-          )}
         </div>
 
         <div className="gap-md grid grid-cols-2">
@@ -240,7 +241,7 @@ export function CourseForm({
             id="url"
             placeholder={t('pages.courses.form.urlPlaceholder')}
             {...register('url')}
-            className={errors.url ? 'border-destructive' : ''}
+            aria-invalid={!!errors.url}
           />
         </div>
 

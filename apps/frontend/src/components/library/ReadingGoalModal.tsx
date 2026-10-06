@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BOOK_LITERARY_TYPE_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -155,7 +156,10 @@ export function ReadingGoalModal({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+          className="space-y-lg"
+        >
           <FormSection
             title={t('pages.libraryDashboard.readingGoals.sectionGoal')}
             icon={Target}
@@ -172,6 +176,7 @@ export function ReadingGoalModal({
                   render={({ field }) => (
                     <NumberStepper
                       id="year"
+                      aria-invalid={!!errors.year}
                       disabled={isLoading}
                       min={2000}
                       max={2100}
@@ -180,9 +185,6 @@ export function ReadingGoalModal({
                     />
                   )}
                 />
-                {errors.year && (
-                  <p className="text-destructive text-sm">{errors.year.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -193,15 +195,12 @@ export function ReadingGoalModal({
                 <Input
                   id="name"
                   {...register('name')}
+                  aria-invalid={!!errors.name}
                   placeholder={t(
                     'pages.libraryDashboard.readingGoals.formNamePlaceholder'
                   )}
                   disabled={isLoading}
                 />
-
-                {errors.name && (
-                  <p className="text-destructive text-sm">{errors.name.message}</p>
-                )}
               </div>
             </div>
           </FormSection>
@@ -222,6 +221,7 @@ export function ReadingGoalModal({
                   render={({ field }) => (
                     <NumberStepper
                       id="books_goal"
+                      aria-invalid={!!errors.books_goal}
                       disabled={isLoading}
                       min={1}
                       max={365}
@@ -230,12 +230,6 @@ export function ReadingGoalModal({
                     />
                   )}
                 />
-
-                {errors.books_goal && (
-                  <p className="text-destructive text-sm">
-                    {errors.books_goal.message}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -249,6 +243,7 @@ export function ReadingGoalModal({
                   render={({ field }) => (
                     <NumberStepper
                       id="pages_goal"
+                      aria-invalid={!!errors.pages_goal}
                       disabled={isLoading}
                       placeholder={t(
                         'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
@@ -260,12 +255,6 @@ export function ReadingGoalModal({
                     />
                   )}
                 />
-
-                {errors.pages_goal && (
-                  <p className="text-destructive text-sm">
-                    {errors.pages_goal.message}
-                  </p>
-                )}
               </div>
             </div>
           </FormSection>

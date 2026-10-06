@@ -18,6 +18,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
@@ -145,7 +146,10 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const accountName = bill.credit_card_associated_account_name || 'N/A';
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+    >
       {/* Bill Summary */}
       <div className="bg-muted/50 p-md space-y-3 rounded-lg">
         <h4 className="text-muted-foreground text-sm font-semibold">
@@ -297,12 +301,10 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
                   value={field.value}
                   onBlur={field.onBlur}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  aria-invalid={!!errors.amount}
                 />
               )}
             />
-            {errors.amount && (
-              <p className="text-destructive text-xs">{errors.amount.message}</p>
-            )}
             <p className="text-muted-foreground text-xs">
               {t('pages.creditCardBills.payForm.maxHint', {
                 value: formatCurrency(remaining.toString()),

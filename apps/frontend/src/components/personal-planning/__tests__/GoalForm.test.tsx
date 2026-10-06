@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { GoalForm } from '@/components/personal-planning/GoalForm';
+import { toast } from '@/hooks/use-toast';
 import type { Goal, RoutineTask } from '@/types';
 
 vi.mock('@/services/members-service', () => ({
@@ -11,6 +12,8 @@ vi.mock('@/services/members-service', () => ({
 }));
 
 vi.mock('@/lib/logger', () => ({ logger: { error: vi.fn() } }));
+
+vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 
 const mockRoutineTasks: RoutineTask[] = [
   {
@@ -131,8 +134,11 @@ describe('GoalForm', () => {
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/mínimo 3/i)).toBeInTheDocument();
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: expect.stringMatching(/mínimo 3/i) })
+      );
     });
+    expect(titleInput).toHaveAttribute('aria-invalid', 'true');
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

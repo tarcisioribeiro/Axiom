@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { COUNTRY_ICON } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { publisherSchema, type PublisherFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -82,7 +83,7 @@ export function PublisherForm({
   }, [publisher, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.publishers.form.sectionIdentification')}
         icon={Building2}
@@ -96,12 +97,10 @@ export function PublisherForm({
             <Input
               id="name"
               {...register('name')}
+              aria-invalid={!!errors.name}
               placeholder={t('pages.publishers.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -114,7 +113,7 @@ export function PublisherForm({
               onValueChange={(value) => setValue('country', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.country}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -128,9 +127,6 @@ export function PublisherForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.country && (
-              <p className="mt-xs text-destructive text-sm">{errors.country.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -146,12 +142,10 @@ export function PublisherForm({
               id="website"
               type="url"
               {...register('website')}
+              aria-invalid={!!errors.website}
               placeholder={t('pages.publishers.form.websitePlaceholder')}
               disabled={isLoading}
             />
-            {errors.website && (
-              <p className="mt-xs text-destructive text-sm">{errors.website.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -165,6 +159,7 @@ export function PublisherForm({
               render={({ field }) => (
                 <NumberStepper
                   id="founded_year"
+                  aria-invalid={!!errors.founded_year}
                   disabled={isLoading}
                   min={1000}
                   max={new Date().getFullYear()}
@@ -174,11 +169,6 @@ export function PublisherForm({
                 />
               )}
             />
-            {errors.founded_year && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.founded_year.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>

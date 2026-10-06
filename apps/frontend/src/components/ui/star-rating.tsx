@@ -11,6 +11,7 @@ interface StarRatingProps {
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  'aria-invalid'?: boolean;
 }
 
 const sizeClasses = {
@@ -26,6 +27,7 @@ export function StarRating({
   disabled = false,
   size = 'md',
   className,
+  'aria-invalid': ariaInvalid,
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
 
@@ -43,7 +45,11 @@ export function StarRating({
 
   return (
     <div
-      className={cn('gap-xs flex', className)}
+      aria-invalid={ariaInvalid}
+      className={cn(
+        'gap-xs aria-[invalid=true]:ring-destructive/50 flex aria-[invalid=true]:rounded-md aria-[invalid=true]:ring-2',
+        className
+      )}
       onMouseLeave={() => !disabled && setHoverValue(null)}
     >
       {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (

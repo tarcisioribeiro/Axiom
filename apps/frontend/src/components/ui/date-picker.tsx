@@ -17,6 +17,7 @@ interface DatePickerProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  'aria-invalid'?: boolean;
   minDate?: Date | string;
   maxDate?: Date | string;
   /**
@@ -84,6 +85,7 @@ export function DatePicker({
   placeholder,
   disabled = false,
   className,
+  'aria-invalid': ariaInvalid,
   floating = true,
   minDate,
   maxDate,
@@ -218,6 +220,7 @@ export function DatePicker({
           if (flatpickrRef.current) commitTypedDate(flatpickrRef.current);
         }}
         type="text"
+        aria-invalid={ariaInvalid}
         placeholder={resolvedPlaceholder}
         disabled={disabled}
         className={cn(
@@ -228,6 +231,7 @@ export function DatePicker({
           'focus-visible:border-primary focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
           'duration-normal transition-all',
           'hover:border-primary/40',
+          'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-destructive/50',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       />

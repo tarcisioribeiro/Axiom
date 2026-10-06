@@ -10,6 +10,7 @@ import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { authService } from '@/services/auth-service';
 
 const formatCpf = (value: string): string => {
@@ -101,7 +102,11 @@ export default function Register() {
             <p className="mt-sm">{t('auth.register.subtitle')}</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-md" noValidate>
+          <form
+            onSubmit={handleSubmit(onSubmit, notifyFormErrors)}
+            className="space-y-md"
+            noValidate
+          >
             <FormField
               id="name"
               label={t('auth.register.fullName')}
@@ -138,6 +143,7 @@ export default function Register() {
                     onChange={(e) => field.onChange(formatCpf(e.target.value))}
                     onBlur={field.onBlur}
                     ref={field.ref}
+                    aria-invalid={!!errors.document}
                     placeholder={t('auth.register.cpfPlaceholder')}
                     maxLength={14}
                     disabled={isLoading}
@@ -169,6 +175,7 @@ export default function Register() {
                     onChange={(e) => field.onChange(formatPhone(e.target.value))}
                     onBlur={field.onBlur}
                     ref={field.ref}
+                    aria-invalid={!!errors.phone}
                     placeholder={t('auth.register.phonePlaceholder')}
                     maxLength={15}
                     disabled={isLoading}

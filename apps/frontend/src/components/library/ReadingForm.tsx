@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TIME_OF_DAY_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { logger } from '@/lib/logger';
 import { projectReading } from '@/lib/reading-projection';
@@ -147,7 +148,7 @@ export function ReadingForm({
     : null;
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(submit, notifyFormErrors)} className="space-y-lg">
       <FormSection title={t('pages.readings.form.sectionProgress')} icon={BookOpen}>
         <div className="gap-md grid">
           {books.length > 1 && (
@@ -161,7 +162,7 @@ export function ReadingForm({
                 onValueChange={(value) => setValue('book', parseInt(value))}
                 disabled={isLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.book}>
                   <SelectValue placeholder={t('pages.readings.form.bookPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,9 +174,6 @@ export function ReadingForm({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.book && (
-                <p className="mt-xs text-destructive text-sm">{errors.book.message}</p>
-              )}
             </div>
           )}
 
@@ -191,6 +189,7 @@ export function ReadingForm({
                 render={({ field }) => (
                   <NumberStepper
                     id="pages_read"
+                    aria-invalid={!!errors.pages_read}
                     disabled={isLoading}
                     min={1}
                     max={maxPages}
@@ -199,11 +198,6 @@ export function ReadingForm({
                   />
                 )}
               />
-              {errors.pages_read && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.pages_read.message}
-                </p>
-              )}
               {selectedBook > 0 && (
                 <p className="text-muted-foreground text-xs">
                   {t('pages.readings.form.pagesReadMax', {
@@ -219,6 +213,7 @@ export function ReadingForm({
                 {t('pages.readings.form.readingDateLabel')}
               </Label>
               <DatePicker
+                aria-invalid={!!errors.reading_date}
                 value={watch('reading_date')}
                 onChange={(date) =>
                   setValue('reading_date', date ? formatLocalDate(date) : '')
@@ -226,11 +221,6 @@ export function ReadingForm({
                 placeholder={t('pages.readings.form.readingDatePlaceholder')}
                 disabled={isLoading || lockSession}
               />
-              {errors.reading_date && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.reading_date.message}
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -249,6 +239,7 @@ export function ReadingForm({
               render={({ field }) => (
                 <NumberStepper
                   id="reading_time"
+                  aria-invalid={!!errors.reading_time}
                   disabled={isLoading || lockSession}
                   min={0}
                   value={field.value}
@@ -256,11 +247,6 @@ export function ReadingForm({
                 />
               )}
             />
-            {errors.reading_time && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.reading_time.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -309,13 +295,11 @@ export function ReadingForm({
           <Textarea
             id="notes"
             {...register('notes')}
+            aria-invalid={!!errors.notes}
             placeholder={t('pages.readings.form.notesPlaceholder')}
             rows={4}
             disabled={isLoading}
           />
-          {errors.notes && (
-            <p className="mt-xs text-destructive text-sm">{errors.notes.message}</p>
-          )}
         </div>
         {progressBook && projection && (
           <div className="mt-md space-y-xs">

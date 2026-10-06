@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { MOOD_ICONS } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { dailyReflectionSchema } from '@/lib/validations';
@@ -79,7 +80,7 @@ export function DailyReflectionForm({
   }, [reflection, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.dailyReflections.form.sectionReflection')}
         icon={MessageSquare}
@@ -91,14 +92,12 @@ export function DailyReflectionForm({
               {t('pages.dailyReflections.form.date')}
             </Label>
             <DatePicker
+              aria-invalid={!!errors.date}
               value={watch('date')}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
               placeholder={t('pages.dailyReflections.form.date')}
               disabled={isLoading}
             />
-            {errors.date && (
-              <p className="text-destructive text-sm">{errors.date.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -111,7 +110,7 @@ export function DailyReflectionForm({
               onValueChange={(value) => setValue('mood', value === 'none' ? '' : value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.mood}>
                 <SelectValue
                   placeholder={t('pages.dailyReflections.form.moodPlaceholder')}
                 />
@@ -133,9 +132,6 @@ export function DailyReflectionForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.mood && (
-              <p className="text-destructive text-sm">{errors.mood.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -144,15 +140,13 @@ export function DailyReflectionForm({
               {t('pages.dailyReflections.form.reflection')}
             </Label>
             <Textarea
+              aria-invalid={!!errors.reflection}
               id="reflection"
               {...register('reflection')}
               placeholder={t('pages.dailyReflections.form.reflectionPlaceholder')}
               rows={6}
               disabled={isLoading}
             />
-            {errors.reflection && (
-              <p className="text-destructive text-sm">{errors.reflection.message}</p>
-            )}
           </div>
         </div>
       </FormSection>

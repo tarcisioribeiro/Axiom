@@ -101,13 +101,13 @@ function PersonalDataForm({
     !!birthDate && birthDate > format(new Date(), 'yyyy-MM-dd'),
     'birthDateFuture'
   );
-  const hasErrors = [
+  const errorMessages = [
     nameError,
     emailError,
     phoneError,
     documentError,
     birthDateError,
-  ].some(Boolean);
+  ].filter((message): message is string => !!message);
 
   return (
     <Section
@@ -119,6 +119,10 @@ function PersonalDataForm({
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
+          if (errorMessages.length) {
+            errorMessages.forEach((title) => toast({ title, variant: 'destructive' }));
+            return;
+          }
           mutation.mutate();
         }}
       >
@@ -192,12 +196,8 @@ function PersonalDataForm({
               onChange={(d) => setBirthDate(d ? format(d, 'yyyy-MM-dd') : null)}
               maxDate={new Date()}
               disabled={!editing}
+              aria-invalid={!!birthDateError}
             />
-            {birthDateError && (
-              <p className="animate-fade-in text-destructive text-sm" role="alert">
-                {birthDateError}
-              </p>
-            )}
           </div>
         </div>
         <div className="gap-sm flex justify-end">
@@ -212,7 +212,7 @@ function PersonalDataForm({
                 <X />
                 {t('common.actions.cancel')}
               </Button>
-              <Button type="submit" loading={mutation.isPending} disabled={hasErrors}>
+              <Button type="submit" loading={mutation.isPending}>
                 {!mutation.isPending && <Save />}
                 {mutation.isPending
                   ? t('userProfile.personalData.saving')

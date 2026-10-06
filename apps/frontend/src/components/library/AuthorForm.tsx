@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { NATIONALITY_ICON } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { authorSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -119,7 +120,7 @@ export function AuthorForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+    <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       {/* Foto do autor */}
       <div className="gap-sm flex flex-col items-center">
         <div className="relative">
@@ -175,12 +176,10 @@ export function AuthorForm({
             <Input
               id="name"
               {...register('name')}
+              aria-invalid={!!errors.name}
               placeholder={t('pages.authors.form.namePlaceholder')}
               disabled={isLoading}
             />
-            {errors.name && (
-              <p className="mt-xs text-destructive text-sm">{errors.name.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -193,7 +192,7 @@ export function AuthorForm({
               onValueChange={(value) => setValue('nationality', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.nationality}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,11 +206,6 @@ export function AuthorForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.nationality && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.nationality.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -229,6 +223,7 @@ export function AuthorForm({
               render={({ field }) => (
                 <NumberStepper
                   id="birth_year"
+                  aria-invalid={!!errors.birth_year}
                   disabled={isLoading}
                   placeholder={t('pages.authors.form.birthYearPlaceholder')}
                   min={1}
@@ -239,11 +234,6 @@ export function AuthorForm({
                 />
               )}
             />
-            {errors.birth_year && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.birth_year.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -256,7 +246,7 @@ export function AuthorForm({
               onValueChange={(value) => setValue('birth_era', value as 'AC' | 'DC')}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.birth_era}>
                 <SelectValue
                   placeholder={t('pages.authors.form.birthEraPlaceholder')}
                 />
@@ -269,11 +259,6 @@ export function AuthorForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.birth_era && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.birth_era.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -287,6 +272,7 @@ export function AuthorForm({
               render={({ field }) => (
                 <NumberStepper
                   id="death_year"
+                  aria-invalid={!!errors.death_year}
                   disabled={isLoading}
                   placeholder={t('pages.authors.form.deathYearPlaceholder')}
                   min={1}
@@ -296,11 +282,6 @@ export function AuthorForm({
                 />
               )}
             />
-            {errors.death_year && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.death_year.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -315,7 +296,7 @@ export function AuthorForm({
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.death_era}>
                 <SelectValue
                   placeholder={t('pages.authors.form.deathEraPlaceholder')}
                 />
@@ -328,11 +309,6 @@ export function AuthorForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.death_era && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.death_era.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -346,13 +322,11 @@ export function AuthorForm({
           <Textarea
             id="biography"
             {...register('biography')}
+            aria-invalid={!!errors.biography}
             placeholder={t('pages.authors.form.biographyPlaceholder')}
             rows={4}
             disabled={isLoading}
           />
-          {errors.biography && (
-            <p className="mt-xs text-destructive text-sm">{errors.biography.message}</p>
-          )}
         </div>
       </FormSection>
 

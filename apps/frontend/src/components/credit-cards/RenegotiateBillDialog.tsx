@@ -14,6 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { NumberStepper } from '@/components/ui/number-stepper';
 import { translate } from '@/config/constants';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency } from '@/lib/formatters';
 import type { CreditCardBill, RenegotiateBillFormData } from '@/types';
 
@@ -70,7 +71,10 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+        <form
+          onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+          className="space-y-lg"
+        >
           {/* Resumo */}
           <div className="bg-muted/50 p-md space-y-3 rounded-lg">
             <h4 className="text-muted-foreground text-sm font-semibold">
@@ -138,14 +142,10 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                     value={field.value}
                     onBlur={field.onBlur}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    aria-invalid={!!errors.total_with_interest}
                   />
                 )}
               />
-              {errors.total_with_interest && (
-                <p className="text-destructive text-xs">
-                  {errors.total_with_interest.message}
-                </p>
-              )}
               <p className="text-muted-foreground text-xs">
                 {t('pages.creditCardBills.renegotiateForm.totalWithInterestHint')}
               </p>
@@ -176,14 +176,10 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
                     max={48}
                     value={field.value}
                     onChange={field.onChange}
+                    aria-invalid={!!errors.installments}
                   />
                 )}
               />
-              {errors.installments && (
-                <p className="text-destructive text-xs">
-                  {errors.installments.message}
-                </p>
-              )}
             </div>
           </div>
 

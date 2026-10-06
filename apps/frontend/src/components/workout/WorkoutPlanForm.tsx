@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { cn } from '@/lib/utils';
 import { ValidationError } from '@/services/api-errors';
 import { WORKOUT_CATEGORIES } from '@/types/workout';
@@ -84,6 +85,7 @@ export function WorkoutPlanForm({
       const nameError = err instanceof ValidationError ? err.errors.name?.[0] : null;
       if (nameError) {
         setError('name', { type: 'server', message: nameError });
+        toast({ title: nameError, variant: 'destructive' });
         return;
       }
       toast({
@@ -95,7 +97,7 @@ export function WorkoutPlanForm({
 
   return (
     <form
-      onSubmit={handleSubmit(handleFormSubmit)}
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
       className="gap-md flex min-h-0 flex-1 flex-col"
     >
       {/* Só os campos rolam; título (DialogHeader) e rodapé ficam fixos */}
@@ -106,13 +108,8 @@ export function WorkoutPlanForm({
             <Input
               placeholder={t('pages.workoutPlans.planNamePlaceholder')}
               {...register('name', { required: true })}
-              className={cn(errors.name && 'border-destructive')}
+              aria-invalid={!!errors.name}
             />
-            {errors.name && (
-              <p className="text-destructive text-xs">
-                {errors.name.message || t('common.required')}
-              </p>
-            )}
           </div>
         </FormSection>
 

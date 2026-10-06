@@ -46,6 +46,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
@@ -457,7 +458,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg" noValidate>
+    <form
+      onSubmit={handleSubmit(handleFormSubmit, notifyFormErrors)}
+      className="space-y-lg"
+      noValidate
+    >
       {!expense && (
         <div className="flex items-center justify-end">
           <ExpenseOCRUpload onResult={handleOCRResult} />
@@ -474,12 +479,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <Input
               id="description"
               {...register('description')}
+              aria-invalid={!!errors.description}
               placeholder={t('pages.expenses.form.descriptionPlaceholder')}
               disabled={isLoading}
             />
-            {errors.description && (
-              <p className="text-destructive text-sm">{errors.description.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm md:col-span-2">
@@ -514,11 +517,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               accentColor="destructive"
               value={watchedValue}
               onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+              aria-invalid={!!errors.value}
               disabled={isLoading}
             />
-            {errors.value && (
-              <p className="text-destructive text-sm">{errors.value.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -552,12 +553,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <DatePicker
               value={watchedDate}
               onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              aria-invalid={!!errors.date}
               placeholder={t('common.fields.selectDate')}
               disabled={isLoading}
             />
-            {errors.date && (
-              <p className="text-destructive text-sm">{errors.date.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -568,11 +567,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <TimePicker
               value={watchedHorary}
               onChange={(t) => setValue('horary', t ?? '')}
+              aria-invalid={!!errors.horary}
               disabled={isLoading}
             />
-            {errors.horary && (
-              <p className="text-destructive text-sm">{errors.horary.message}</p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -594,7 +591,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   setAiSuggestion(null);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={!!errors.category}>
                   <SelectValue placeholder={t('common.actions.select')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -646,9 +643,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 </PlainButton>
               </div>
             )}
-            {errors.category && (
-              <p className="text-destructive text-sm">{errors.category.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -660,7 +654,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               value={watchedAccount?.toString() || ''}
               onValueChange={(v) => v && setValue('account', parseInt(v))}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.account}>
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
@@ -680,9 +674,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   value: formatCurrency(selectedAccount.available_balance),
                 })}
               </p>
-            )}
-            {errors.account && (
-              <p className="text-destructive text-sm">{errors.account.message}</p>
             )}
           </div>
         </div>

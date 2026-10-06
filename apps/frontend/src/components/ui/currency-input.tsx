@@ -48,7 +48,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
         placeholder="0,00"
         ref={ref}
         className={cn(
-          'border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border pr-3 pl-9 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+          'border-border/70 bg-background py-xs placeholder:text-muted-foreground/50 focus-visible:border-ring/50 focus-visible:ring-ring flex h-9 w-full rounded-md border pr-3 pl-9 text-sm shadow-sm transition-colors aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-destructive/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
           SEMANTIC_ACCENT_INPUT_CLASS[accentColor],
           className
         )}

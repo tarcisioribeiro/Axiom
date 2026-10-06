@@ -79,6 +79,7 @@ import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
@@ -1321,17 +1322,18 @@ export default function Passwords() {
                 </DialogDescription>
               </VisuallyHidden>
             </DialogHeader>
-            <form onSubmit={rhfHandleSubmit(onFormSubmit)} className="space-y-md">
+            <form
+              onSubmit={rhfHandleSubmit(onFormSubmit, notifyFormErrors)}
+              className="space-y-md"
+            >
               <div className="space-y-sm">
                 <Label htmlFor="title">{t('common.fields.title')} *</Label>
                 <Input
                   id="title"
                   {...register('title')}
+                  aria-invalid={!!errors.title}
                   placeholder={t('pages.passwords.titlePlaceholder')}
                 />
-                {errors.title && (
-                  <p className="text-destructive text-sm">{errors.title.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -1340,11 +1342,9 @@ export default function Passwords() {
                   id="site"
                   type="url"
                   {...register('site')}
+                  aria-invalid={!!errors.site}
                   placeholder={t('pages.passwords.sitePlaceholder')}
                 />
-                {errors.site && (
-                  <p className="text-destructive text-sm">{errors.site.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -1352,11 +1352,9 @@ export default function Passwords() {
                 <Input
                   id="username"
                   {...register('username')}
+                  aria-invalid={!!errors.username}
                   placeholder={t('pages.passwords.usernamePlaceholder')}
                 />
-                {errors.username && (
-                  <p className="text-destructive text-sm">{errors.username.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -1381,13 +1379,11 @@ export default function Passwords() {
                   id="password"
                   type="password"
                   {...register('password')}
+                  aria-invalid={!!errors.password}
                   placeholder={
                     selectedPassword ? t('pages.passwords.keepCurrentPassword') : ''
                   }
                 />
-                {errors.password && (
-                  <p className="text-destructive text-sm">{errors.password.message}</p>
-                )}
                 <Collapse open={showGenerator}>
                   <div className="bg-muted/30 rounded-lg border p-3">
                     <PasswordGenerator
@@ -1404,7 +1400,7 @@ export default function Passwords() {
                   value={watchedCategory}
                   onValueChange={(value) => setValue('category', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={!!errors.category}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1425,9 +1421,6 @@ export default function Passwords() {
                     })}
                   </SelectContent>
                 </Select>
-                {errors.category && (
-                  <p className="text-destructive text-sm">{errors.category.message}</p>
-                )}
               </div>
 
               <div className="space-y-sm">
@@ -1435,12 +1428,10 @@ export default function Passwords() {
                 <Textarea
                   id="notes"
                   {...register('notes')}
+                  aria-invalid={!!errors.notes}
                   placeholder={t('pages.passwords.notesSitePlaceholder')}
                   rows={3}
                 />
-                {errors.notes && (
-                  <p className="text-destructive text-sm">{errors.notes.message}</p>
-                )}
               </div>
 
               {/* TOTP (#195) */}

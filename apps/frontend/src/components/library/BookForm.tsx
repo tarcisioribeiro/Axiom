@@ -41,6 +41,7 @@ import {
   BOOK_LANGUAGE_ICON,
   READ_STATUS_ICONS,
 } from '@/config/icons';
+import { notifyFormErrors } from '@/lib/form-errors';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { bookSchema, type BookFormData } from '@/lib/validations';
@@ -213,8 +214,9 @@ export function BookForm({
 
   return (
     <form
-      onSubmit={handleSubmit((data) =>
-        onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate)
+      onSubmit={handleSubmit(
+        (data) => onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate),
+        notifyFormErrors
       )}
       className="space-y-lg"
     >
@@ -280,12 +282,10 @@ export function BookForm({
             <Input
               id="title"
               {...register('title')}
+              aria-invalid={!!errors.title}
               placeholder={t('pages.books.form.titlePlaceholder')}
               disabled={isLoading}
             />
-            {errors.title && (
-              <p className="mt-xs text-destructive text-sm">{errors.title.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -296,13 +296,11 @@ export function BookForm({
             <Input
               id="isbn"
               {...register('isbn')}
+              aria-invalid={!!errors.isbn}
               placeholder={t('pages.books.form.isbnPlaceholder')}
               maxLength={13}
               disabled={isLoading}
             />
-            {errors.isbn && (
-              <p className="mt-xs text-destructive text-sm">{errors.isbn.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -313,14 +311,10 @@ export function BookForm({
             <Input
               id="series_name"
               {...register('series_name')}
+              aria-invalid={!!errors.series_name}
               placeholder={t('pages.books.form.seriesPlaceholder')}
               disabled={isLoading}
             />
-            {errors.series_name && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.series_name.message}
-              </p>
-            )}
           </div>
 
           {watch('series_name') && (
@@ -335,6 +329,7 @@ export function BookForm({
                 render={({ field }) => (
                   <NumberStepper
                     id="series_order"
+                    aria-invalid={!!errors.series_order}
                     disabled={isLoading}
                     placeholder={t('pages.books.form.seriesOrderPlaceholder')}
                     min={1}
@@ -344,11 +339,6 @@ export function BookForm({
                   />
                 )}
               />
-              {errors.series_order && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.series_order.message}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -362,7 +352,10 @@ export function BookForm({
               <Tag className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.books.form.mediaTypeLabel')}
             </Label>
-            <div className="border-border/70 bg-muted/30 flex rounded-md border p-0.5">
+            <div
+              aria-invalid={!!errors.media_type}
+              className="border-border/70 bg-muted/30 aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/50 flex rounded-md border p-0.5 aria-[invalid=true]:ring-2"
+            >
               {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
                 <button
                   key={value}
@@ -380,11 +373,6 @@ export function BookForm({
                 </button>
               ))}
             </div>
-            {errors.media_type && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.media_type.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -397,7 +385,7 @@ export function BookForm({
               onValueChange={(value) => setValue('genre', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.genre}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -414,9 +402,6 @@ export function BookForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.genre && (
-              <p className="mt-xs text-destructive text-sm">{errors.genre.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -429,7 +414,7 @@ export function BookForm({
               onValueChange={(value) => setValue('literarytype', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.literarytype}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -446,11 +431,6 @@ export function BookForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.literarytype && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.literarytype.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -463,7 +443,7 @@ export function BookForm({
               onValueChange={(value) => setValue('language', value)}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.language}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -477,11 +457,6 @@ export function BookForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.language && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.language.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -497,7 +472,7 @@ export function BookForm({
               onValueChange={(value) => handleAuthorToggle(parseInt(value))}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.authors}>
                 <SelectValue placeholder={t('pages.books.form.authorsPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -530,9 +505,6 @@ export function BookForm({
                 })}
               </div>
             )}
-            {errors.authors && (
-              <p className="mt-xs text-destructive text-sm">{errors.authors.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -545,7 +517,7 @@ export function BookForm({
               onValueChange={(value) => setValue('publisher', parseInt(value))}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!!errors.publisher}>
                 <SelectValue placeholder={t('pages.books.form.publisherPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -556,11 +528,6 @@ export function BookForm({
                 ))}
               </SelectContent>
             </Select>
-            {errors.publisher && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.publisher.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -574,6 +541,7 @@ export function BookForm({
               render={({ field }) => (
                 <NumberStepper
                   id="pages"
+                  aria-invalid={!!errors.pages}
                   disabled={isLoading}
                   min={1}
                   value={field.value}
@@ -581,9 +549,6 @@ export function BookForm({
                 />
               )}
             />
-            {errors.pages && (
-              <p className="mt-xs text-destructive text-sm">{errors.pages.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -594,12 +559,10 @@ export function BookForm({
             <Input
               id="edition"
               {...register('edition')}
+              aria-invalid={!!errors.edition}
               placeholder={t('pages.books.form.editionPlaceholder')}
               disabled={isLoading}
             />
-            {errors.edition && (
-              <p className="mt-xs text-destructive text-sm">{errors.edition.message}</p>
-            )}
           </div>
 
           <div className="space-y-sm">
@@ -608,6 +571,7 @@ export function BookForm({
               {t('pages.books.form.publishDateLabel')}
             </Label>
             <DatePicker
+              aria-invalid={!!errors.publish_date}
               value={watch('publish_date')}
               onChange={(date) =>
                 setValue('publish_date', date ? formatLocalDate(date) : '')
@@ -615,11 +579,6 @@ export function BookForm({
               placeholder={t('pages.books.form.publishDatePlaceholder')}
               disabled={isLoading}
             />
-            {errors.publish_date && (
-              <p className="mt-xs text-destructive text-sm">
-                {errors.publish_date.message}
-              </p>
-            )}
           </div>
         </div>
       </FormSection>
@@ -713,15 +672,11 @@ export function BookForm({
               <Textarea
                 id="pause_reason"
                 {...register('pause_reason')}
+                aria-invalid={!!errors.pause_reason}
                 placeholder={t('pages.books.form.pauseReasonPlaceholder')}
                 rows={2}
                 disabled={isLoading}
               />
-              {errors.pause_reason && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.pause_reason.message}
-                </p>
-              )}
             </div>
           )}
 
@@ -792,14 +747,10 @@ export function BookForm({
               <StarRating
                 value={watch('rating')}
                 onChange={(value) => setValue('rating', value)}
+                aria-invalid={!!errors.rating}
                 size="md"
                 className="mt-sm"
               />
-              {errors.rating && (
-                <p className="mt-xs text-destructive text-sm">
-                  {errors.rating.message}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -814,13 +765,11 @@ export function BookForm({
           <Textarea
             id="synopsis"
             {...register('synopsis')}
+            aria-invalid={!!errors.synopsis}
             placeholder={t('pages.books.form.synopsisPlaceholder')}
             rows={5}
             disabled={isLoading}
           />
-          {errors.synopsis && (
-            <p className="mt-xs text-destructive text-sm">{errors.synopsis.message}</p>
-          )}
         </div>
       </FormSection>
 
