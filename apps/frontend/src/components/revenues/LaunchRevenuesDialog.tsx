@@ -4,6 +4,7 @@ import { X, CalendarPlus, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MaskedCurrencyInput } from '@/components/ui/currency-input';
@@ -17,7 +18,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -172,12 +173,17 @@ export function LaunchRevenuesDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] max-w-4xl">
+      <DialogContent className="max-h-[90vh] max-w-6xl">
         <DialogHeader>
-          <DialogTitle>{t('pages.fixedRevenues.launchDialog.title')}</DialogTitle>
-          <DialogDescription>
-            {t('pages.fixedRevenues.launchDialog.desc')}
-          </DialogDescription>
+          <DialogTitle className="gap-sm flex items-center">
+            <CalendarPlus className="text-success h-5 w-5" aria-hidden="true" />
+            {t('pages.fixedRevenues.launchDialog.title')}
+          </DialogTitle>
+          <VisuallyHidden>
+            <DialogDescription>
+              {t('pages.fixedRevenues.launchDialog.desc')}
+            </DialogDescription>
+          </VisuallyHidden>
         </DialogHeader>
 
         {noMonthsAvailable ? (
@@ -213,72 +219,78 @@ export function LaunchRevenuesDialog({
                   total: fixedRevenues.length,
                 })}
               </Label>
-              <ScrollArea className="p-md h-[360px] rounded-md border">
-                <div className="space-y-3">
-                  {fixedRevenues.map((r) => (
-                    <div
-                      key={r.id}
-                      className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
-                        selectedIds.has(r.id)
-                          ? 'bg-background'
-                          : 'bg-muted/50 opacity-60'
-                      }`}
-                    >
-                      <Checkbox
-                        id={`rev-${r.id}`}
-                        checked={selectedIds.has(r.id)}
-                        onCheckedChange={(checked) => {
-                          setSelectedIds((prev) => {
-                            const next = new Set(prev);
-                            if (checked) next.add(r.id);
-                            else next.delete(r.id);
-                            return next;
-                          });
-                        }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{r.description}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {t('pages.fixedRevenues.launchDialog.dueDate', {
-                            day: r.due_day,
-                          })}
-                        </p>
-                      </div>
-                      <div className="w-48 shrink-0">
-                        <DatePicker
-                          value={dateFor(r)}
-                          minDate={bounds?.min}
-                          maxDate={bounds?.max}
-                          floating
-                          disabled={isSubmitting || !selectedIds.has(r.id)}
-                          onChange={(date) =>
-                            setRevenueDates((prev) => ({
-                              ...prev,
-                              [r.id]: date ? formatLocalDate(date) : '',
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="w-40 shrink-0">
-                        {r.allow_value_edit ? (
-                          <MaskedCurrencyInput
-                            accentColor="success"
-                            value={revenueValues[r.id] ?? parseFloat(r.default_value)}
-                            onValueChange={(v) =>
-                              setRevenueValues((p) => ({ ...p, [r.id]: v }))
-                            }
-                            disabled={isSubmitting || !selectedIds.has(r.id)}
+              <div className="p-md rounded-md border">
+                <PaginatedSlide items={fixedRevenues} pageSize={5} pinNav={false}>
+                  {(pageItems) => (
+                    <div className="space-y-3">
+                      {pageItems.map((r) => (
+                        <div
+                          key={r.id}
+                          className={`gap-md flex items-center rounded-lg border p-3 transition-colors ${
+                            selectedIds.has(r.id)
+                              ? 'bg-background'
+                              : 'bg-muted/50 opacity-60'
+                          }`}
+                        >
+                          <Checkbox
+                            id={`rev-${r.id}`}
+                            checked={selectedIds.has(r.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (checked) next.add(r.id);
+                                else next.delete(r.id);
+                                return next;
+                              });
+                            }}
                           />
-                        ) : (
-                          <span className="text-success block text-right text-sm font-medium">
-                            {formatCurrency(parseFloat(r.default_value))}
-                          </span>
-                        )}
-                      </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium">{r.description}</p>
+                            <p className="text-muted-foreground text-sm whitespace-nowrap">
+                              {t('pages.fixedRevenues.launchDialog.dueDate', {
+                                day: r.due_day,
+                              })}
+                            </p>
+                          </div>
+                          <div className="w-48 shrink-0">
+                            <DatePicker
+                              value={dateFor(r)}
+                              minDate={bounds?.min}
+                              maxDate={bounds?.max}
+                              floating
+                              disabled={isSubmitting || !selectedIds.has(r.id)}
+                              onChange={(date) =>
+                                setRevenueDates((prev) => ({
+                                  ...prev,
+                                  [r.id]: date ? formatLocalDate(date) : '',
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="w-40 shrink-0">
+                            {r.allow_value_edit ? (
+                              <MaskedCurrencyInput
+                                accentColor="success"
+                                value={
+                                  revenueValues[r.id] ?? parseFloat(r.default_value)
+                                }
+                                onValueChange={(v) =>
+                                  setRevenueValues((p) => ({ ...p, [r.id]: v }))
+                                }
+                                disabled={isSubmitting || !selectedIds.has(r.id)}
+                              />
+                            ) : (
+                              <span className="text-success block text-right text-sm font-medium">
+                                {formatCurrency(parseFloat(r.default_value))}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  )}
+                </PaginatedSlide>
+              </div>
             </div>
           </div>
         )}

@@ -313,7 +313,7 @@ export function StoredCardForm({
             {...register('notes')}
             aria-invalid={!!errors.notes}
             placeholder={t('pages.storedCards.form.notesPlaceholder')}
-            rows={3}
+            rows={1}
             disabled={isLoading}
           />
         </div>

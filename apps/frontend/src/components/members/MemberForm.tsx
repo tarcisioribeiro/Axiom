@@ -200,7 +200,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             {...register('notes')}
             placeholder={t('pages.members.form.notesPlaceholder')}
             disabled={isLoading}
-            rows={3}
+            rows={1}
           />
         </div>
       </FormSection>

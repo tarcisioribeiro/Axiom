@@ -1,36 +1,27 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Plus,
   Pencil,
   Trash2,
-  Calendar,
   TrendingUp,
-  TrendingDown,
-  DollarSign,
   Store,
   Tag,
   Wallet,
   CalendarDays,
   History,
-  ClipboardList,
   Loader2,
   Save,
   X,
 } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
-import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { LaunchRevenuesDialog } from '@/components/revenues/LaunchRevenuesDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
@@ -52,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import {
@@ -63,19 +55,11 @@ import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { fixedRevenuesService } from '@/services/fixed-revenues-service';
 import { revenuesService } from '@/services/revenues-service';
-import type {
-  FixedRevenue,
-  FixedRevenueFormData,
-  FixedRevenueGenerationLog,
-  Account,
-  FixedRevenueStats,
-  Revenue,
-} from '@/types';
+import type { FixedRevenue, FixedRevenueFormData, Account, Revenue } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const EMPTY_REVENUES: FixedRevenue[] = [];
@@ -89,7 +73,15 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function FixedRevenues({ embedded = false }: { embedded?: boolean }) {
+export default function FixedRevenues({
+  embedded = false,
+  newRevenueRef,
+  launchRevenuesRef,
+}: {
+  embedded?: boolean;
+  newRevenueRef?: RefObject<(() => void) | undefined>;
+  launchRevenuesRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,16 +91,8 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
   const [historyItem, setHistoryItem] = useState<FixedRevenue | null>(null);
   const [historyRevenues, setHistoryRevenues] = useState<Revenue[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [showGenerationLog, setShowGenerationLog] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
-
-  const generationLogQuery = useQuery<FixedRevenueGenerationLog[]>({
-    queryKey: ['fixedRevenues', 'generationLog'],
-    queryFn: () => fixedRevenuesService.getGenerationLog(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: showGenerationLog,
-  });
 
   const [formData, setFormData] = useState<FixedRevenueFormData>({
     description: '',
@@ -121,56 +105,6 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     member: null,
     notes: '',
   });
-
-  const { data: pageData, isLoading } = useQuery({
-    queryKey: ['fixed-revenues'],
-    queryFn: async () => {
-      try {
-        const [revenuesData, accountsData, statsData] = await Promise.all([
-          fixedRevenuesService.getAll(),
-          accountsService.getAll(),
-          fixedRevenuesService.getStats(),
-        ]);
-        const revenues: FixedRevenue[] = Array.isArray(revenuesData)
-          ? (revenuesData as FixedRevenue[])
-          : (revenuesData.results ?? []);
-        return {
-          fixedRevenues: revenues,
-          accounts: accountsData,
-          stats: statsData as FixedRevenueStats,
-        };
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
-          variant: 'destructive',
-        });
-        return {
-          fixedRevenues: EMPTY_REVENUES,
-          accounts: EMPTY_ACCOUNTS,
-          stats: null as FixedRevenueStats | null,
-        };
-      }
-    },
-  });
-  const fixedRevenues = pageData?.fixedRevenues ?? EMPTY_REVENUES;
-  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
-  const stats = pageData?.stats ?? null;
-
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
-
-  const openHistory = async (item: FixedRevenue) => {
-    setHistoryItem(item);
-    setHistoryRevenues([]);
-    setHistoryLoading(true);
-    try {
-      const results = await revenuesService.getAll({ fixed_revenue_template: item.id });
-      setHistoryRevenues(Array.isArray(results) ? results : []);
-    } catch {
-      setHistoryRevenues([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
 
   const openCreate = () => {
     setSelectedRevenue(undefined);
@@ -186,6 +120,57 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
       notes: '',
     });
     setIsDialogOpen(true);
+  };
+
+  useEffect(() => {
+    if (newRevenueRef) newRevenueRef.current = openCreate;
+    if (launchRevenuesRef) launchRevenuesRef.current = () => setIsLaunchDialogOpen(true);
+  });
+
+  const { data: pageData, isLoading } = useQuery({
+    queryKey: ['fixed-revenues'],
+    queryFn: async () => {
+      try {
+        const [revenuesData, accountsData] = await Promise.all([
+          fixedRevenuesService.getAll(),
+          accountsService.getAll(),
+        ]);
+        const revenues: FixedRevenue[] = Array.isArray(revenuesData)
+          ? (revenuesData as FixedRevenue[])
+          : (revenuesData.results ?? []);
+        return {
+          fixedRevenues: revenues,
+          accounts: accountsData,
+        };
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError', { reason: getErrorMessage(error) }),
+          variant: 'destructive',
+        });
+        return {
+          fixedRevenues: EMPTY_REVENUES,
+          accounts: EMPTY_ACCOUNTS,
+        };
+      }
+    },
+  });
+  const fixedRevenues = pageData?.fixedRevenues ?? EMPTY_REVENUES;
+  const accounts = pageData?.accounts ?? EMPTY_ACCOUNTS;
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['fixed-revenues'] });
+
+  const openHistory = async (item: FixedRevenue) => {
+    setHistoryItem(item);
+    setHistoryRevenues([]);
+    setHistoryLoading(true);
+    try {
+      const results = await revenuesService.getAll({ fixed_revenue_template: item.id });
+      setHistoryRevenues(Array.isArray(results) ? results : []);
+    } catch {
+      setHistoryRevenues([]);
+    } finally {
+      setHistoryLoading(false);
+    }
   };
 
   const openEdit = (item: FixedRevenue) => {
@@ -258,19 +243,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
     {
       key: 'description',
       label: t('pages.fixedRevenues.columns.description'),
-      render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="bg-success/10 text-success flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
-            {item.due_day}
-          </div>
-          <div>
-            <div className="font-medium">{item.description}</div>
-            <div className="text-muted-foreground text-xs">
-              {t('pages.fixedRevenues.dueDayDesc', { day: item.due_day })}
-            </div>
-          </div>
-        </div>
-      ),
+      render: (item) => <span className="font-medium">{item.description}</span>,
     },
     {
       key: 'default_value',
@@ -317,153 +290,16 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
         </Badge>
       ),
     },
-    {
-      key: 'total_generated',
-      label: t('pages.fixedRevenues.columns.generated'),
-      align: 'center',
-      render: (item) => <span className="text-sm">{item.total_generated ?? 0}x</span>,
-    },
   ];
 
   const activeRevenues = fixedRevenues.filter((r) => r.is_active);
-  const totalMonthlyFixed = activeRevenues.reduce(
-    (sum, r) => sum + parseFloat(r.default_value || '0'),
-    0
-  );
 
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader
-        title={t('pages.fixedRevenues.title')}
-        icon={<Calendar className="h-6 w-6" />}
-        action={{
-          label: t('pages.fixedRevenues.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: openCreate,
-        }}
-      />
-
-      {/* 4 stat cards: modelos ativos | total mês | recebidas/pendentes | vs mês anterior */}
-      {stats && (
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title={t('pages.fixedRevenues.stats.activeModels')}
-            value={stats.active_templates}
-            icon={<Calendar className="h-5 w-5" />}
-            variant="default"
-          />
-          <StatCard
-            title={t('pages.fixedRevenues.stats.monthTotal')}
-            value={formatCurrency(stats.current_month.total_amount)}
-            icon={<DollarSign className="h-5 w-5" />}
-            variant="success"
-          />
-          <StatCard
-            title={t('pages.fixedRevenues.stats.receivedPending')}
-            value={`${stats.current_month.received_count} / ${stats.current_month.pending_count}`}
-            icon={<TrendingUp className="h-5 w-5" />}
-            variant={stats.current_month.pending_count > 0 ? 'warning' : 'success'}
-          />
-          <StatCard
-            title={t('pages.fixedRevenues.stats.vsPreviousMonth')}
-            value={formatCurrency(
-              Math.abs(
-                stats.current_month.total_amount - stats.previous_month.total_amount
-              )
-            )}
-            icon={
-              stats.current_month.total_amount >= stats.previous_month.total_amount ? (
-                <TrendingUp className="h-5 w-5" />
-              ) : (
-                <TrendingDown className="h-5 w-5" />
-              )
-            }
-            variant={
-              stats.current_month.total_amount >= stats.previous_month.total_amount
-                ? 'success'
-                : 'warning'
-            }
-          />
-        </div>
-      )}
-
-      {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
-      <div
-        className={cn(
-          'gap-md grid',
-          activeRevenues.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
-        )}
-      >
-        {/* Card 1: Lançamento */}
-        <div className="bg-card p-md flex flex-col justify-between rounded-lg border">
-          <div>
-            <h3 className="text-base font-semibold">
-              {t('pages.fixedRevenues.launchSection')}
-            </h3>
-          </div>
-          <Button
-            onClick={() => setIsLaunchDialogOpen(true)}
-            className="mt-md bg-success hover:bg-success/90 w-full"
-          >
-            <TrendingUp className="h-4 w-4" />
-            {t('pages.fixedRevenues.launchBtn')}
-          </Button>
-        </div>
-
-        {activeRevenues.length > 0 && (
-          <>
-            {/* Card 2: Comprometimento */}
-            <div className="bg-card p-md rounded-lg border">
-              <p className="text-sm font-medium">
-                {t('pages.fixedRevenues.stats.monthlyDesc')}
-              </p>
-              <p className="mt-xs text-success text-2xl font-bold">
-                {formatCurrency(totalMonthlyFixed)}
-              </p>
-              <p className="mt-sm text-muted-foreground text-xs">
-                {t('pages.fixedRevenues.stats.activeCountDesc', {
-                  count: activeRevenues.length,
-                })}
-              </p>
-            </div>
-
-            {/* Card 3: Calendário */}
-            <div className="bg-card p-md rounded-lg border">
-              <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
-                {t('pages.fixedRevenues.stats.scheduleTitle')}
-              </p>
-              <div className="gap-sm flex flex-wrap">
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                  const revsOnDay = activeRevenues.filter((r) => r.due_day === day);
-                  const hasRevenue = revsOnDay.length > 0;
-                  return (
-                    <div
-                      key={day}
-                      title={
-                        hasRevenue
-                          ? revsOnDay.map((r) => r.description).join(', ')
-                          : undefined
-                      }
-                      className={cn(
-                        'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
-                        hasRevenue
-                          ? 'bg-success/15 text-success ring-success/30 ring-1'
-                          : 'text-muted-foreground'
-                      )}
-                    >
-                      {day}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
       {/* Table */}
       <DataTable
-        pinNav={false}
+        centerList
+        pageSize={7}
         data={fixedRevenues}
         columns={columns}
         keyExtractor={(item) => item.id}
@@ -472,11 +308,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
           icon: <TrendingUp className="text-muted-foreground h-12 w-12" />,
           title: t('pages.fixedRevenues.emptyState'),
         }}
-        rowClassName={(item) =>
-          item.is_active
-            ? 'border-l-4 border-l-success/50'
-            : 'border-l-4 border-l-muted opacity-60'
-        }
+        rowClassName={(item) => (item.is_active ? '' : 'opacity-60')}
         actions={(item) => (
           <div className="gap-sm flex items-center justify-end">
             <Button
@@ -509,57 +341,6 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
           </div>
         )}
       />
-
-      {/* Generation Log */}
-      <CollapsibleSection
-        title={t('pages.fixedRevenues.generationLog.viewLog')}
-        icon={<ClipboardList className="h-4 w-4" />}
-        open={showGenerationLog}
-        onToggle={() => setShowGenerationLog((v) => !v)}
-      >
-        {generationLogQuery.isLoading ? (
-          <p className="py-sm text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </p>
-        ) : !generationLogQuery.data?.length ? (
-          <EmptyState title={t('pages.fixedRevenues.generationLog.emptyState')} />
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-muted-foreground border-b text-left text-xs">
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedRevenues.generationLog.month')}
-                </th>
-                <th className="pb-xs pr-md text-right">
-                  {t('pages.fixedRevenues.generationLog.totalGenerated')}
-                </th>
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedRevenues.generationLog.generatedBy')}
-                </th>
-                <th className="pb-xs text-right">
-                  {t('pages.fixedRevenues.generationLog.generatedAt')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {generationLogQuery.data.map((log) => (
-                <tr key={log.id}>
-                  <td className="py-xs pr-md font-medium">
-                    {log.month.split('-').reverse().join('/')}
-                  </td>
-                  <td className="py-xs pr-md text-right">{log.total_generated}</td>
-                  <td className="py-xs pr-md text-muted-foreground">
-                    {log.generated_by_name ?? '—'}
-                  </td>
-                  <td className="py-xs text-muted-foreground text-right">
-                    {formatDate(log.created_at)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </CollapsibleSection>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -652,8 +433,11 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                     }
                   />
                 </div>
-                <div className="space-y-sm">
-                  <Label htmlFor="due_day" className="gap-xs flex items-center">
+                <div className="space-y-sm flex flex-col items-center">
+                  <Label
+                    htmlFor="due_day"
+                    className="gap-xs flex items-center justify-center"
+                  >
                     <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.dueDayLabel')}
                   </Label>
@@ -699,7 +483,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
 
             {/* Seção: Configuração */}
             <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
-              <div className="space-y-md">
+              <div className="gap-md grid grid-cols-1 items-start md:grid-cols-3">
                 <div className="space-y-sm">
                   <Label htmlFor="notes" className="gap-xs flex items-center">
                     <Tag className="text-muted-foreground h-3.5 w-3.5" />
@@ -712,32 +496,48 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                       setFormData((p) => ({ ...p, notes: e.target.value }))
                     }
                     placeholder={t('pages.fixedRevenues.form.notesPlaceholder')}
-                    rows={3}
+                    rows={1}
                   />
                 </div>
-                <div className="gap-sm flex items-center">
-                  <Checkbox
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) =>
-                      setFormData((p) => ({ ...p, is_active: !!checked }))
-                    }
-                  />
-                  <Label htmlFor="is_active" className="cursor-pointer">
+
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.isActiveLabel')}
                   </Label>
-                </div>
-                <div className="gap-sm flex items-center">
-                  <Checkbox
-                    id="allow_value_edit"
-                    checked={formData.allow_value_edit}
-                    onCheckedChange={(checked) =>
-                      setFormData((p) => ({ ...p, allow_value_edit: !!checked }))
+                  <StatusToggle
+                    value={formData.is_active ? 'true' : 'false'}
+                    options={[
+                      {
+                        value: 'true',
+                        label: t('common.status.active'),
+                        accentColor: 'success',
+                      },
+                      { value: 'false', label: t('common.status.inactive') },
+                    ]}
+                    onChange={(v) =>
+                      setFormData((p) => ({ ...p, is_active: v === 'true' }))
                     }
+                    disabled={isSubmitting}
                   />
-                  <Label htmlFor="allow_value_edit" className="cursor-pointer">
+                </div>
+
+                <div className="space-y-sm">
+                  <Label className="gap-xs flex items-center">
+                    <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.fixedRevenues.form.allowValueEditLabel')}
                   </Label>
+                  <StatusToggle
+                    value={formData.allow_value_edit ? 'true' : 'false'}
+                    options={[
+                      { value: 'true', label: t('common.actions.yes') },
+                      { value: 'false', label: t('common.actions.no') },
+                    ]}
+                    onChange={(v) =>
+                      setFormData((p) => ({ ...p, allow_value_edit: v === 'true' }))
+                    }
+                    disabled={isSubmitting}
+                  />
                 </div>
               </div>
             </FormSection>
@@ -789,9 +589,11 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
               <History className="h-4 w-4" />
               {t('pages.fixedRevenues.historyTitle')}: {historyItem?.description}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.fixedRevenues.historyDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>
+                {t('pages.fixedRevenues.historyDesc')}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {historyLoading ? (
             <p className="py-md text-muted-foreground text-center text-sm">
@@ -802,35 +604,37 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
               {t('pages.fixedRevenues.historyEmpty')}
             </p>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left text-xs">
-                    <th className="pb-xs pr-md">{t('common.fields.date')}</th>
-                    <th className="pb-xs pr-md">{t('common.fields.description')}</th>
-                    <th className="pb-xs text-right">{t('common.fields.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {historyRevenues.map((rev) => (
-                    <tr key={rev.id}>
-                      <td className="py-xs pr-md text-muted-foreground">
-                        {formatDate(rev.date)}
-                      </td>
-                      <td className="py-xs pr-md">{rev.description}</td>
-                      <td
-                        className={cn(
-                          'py-xs text-right font-medium',
-                          rev.received ? 'text-success' : 'text-muted-foreground'
-                        )}
-                      >
-                        {formatCurrency(rev.value)}
-                      </td>
+            <PaginatedSlide items={historyRevenues} pageSize={5} pinNav={false}>
+              {(pageItems) => (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-left text-xs">
+                      <th className="pb-xs pr-md">{t('common.fields.date')}</th>
+                      <th className="pb-xs pr-md">{t('common.fields.description')}</th>
+                      <th className="pb-xs text-right">{t('common.fields.amount')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {pageItems.map((rev) => (
+                      <tr key={rev.id}>
+                        <td className="py-xs pr-md text-muted-foreground">
+                          {formatDate(rev.date)}
+                        </td>
+                        <td className="py-xs pr-md">{rev.description}</td>
+                        <td
+                          className={cn(
+                            'py-xs text-right font-medium',
+                            rev.received ? 'text-success' : 'text-muted-foreground'
+                          )}
+                        >
+                          {formatCurrency(rev.value)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </PaginatedSlide>
           )}
           <DialogCloseFooter />
         </DialogContent>

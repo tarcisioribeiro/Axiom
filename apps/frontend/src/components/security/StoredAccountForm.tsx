@@ -439,7 +439,7 @@ export function StoredAccountForm({
             {...register('notes')}
             aria-invalid={!!errors.notes}
             placeholder={t('pages.storedAccounts.form.notesPlaceholder')}
-            rows={3}
+            rows={1}
             disabled={isLoading}
           />
         </div>

@@ -300,7 +300,7 @@ export function MealLogForm({
         <FormSection title={t('pages.nutritionLog.logNotes')} icon={StickyNote}>
           <Textarea
             placeholder={t('pages.nutritionLog.logNotesPlaceholder')}
-            rows={2}
+            rows={1}
             {...register('notes')}
             className="resize-none"
           />

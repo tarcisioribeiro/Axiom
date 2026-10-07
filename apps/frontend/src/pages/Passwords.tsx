@@ -1430,7 +1430,7 @@ export default function Passwords() {
                   {...register('notes')}
                   aria-invalid={!!errors.notes}
                   placeholder={t('pages.passwords.notesSitePlaceholder')}
-                  rows={3}
+                  rows={1}
                 />
               </div>
 

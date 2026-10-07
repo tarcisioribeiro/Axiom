@@ -1166,7 +1166,7 @@
         "notesLabel": "Observações",
         "notesPlaceholder": "Informações adicionais",
         "isActiveLabel": "Despesa Ativa",
-        "allowValueEditLabel": "Permitir Editar Valor"
+        "allowValueEditLabel": "Editar valor"
       },
       "stats": {
         "monthlyCommitment": "Comprometimento mensal fixo",
@@ -1827,7 +1827,7 @@
         "notesPlaceholder": "Observações opcionais...",
         "isActiveLabel": "Receita ativa",
         "isInactiveLabel": "Inativa",
-        "allowValueEditLabel": "Permitir editar valor ao lançar",
+        "allowValueEditLabel": "Editar valor",
         "monthLabel": "Mês",
         "yearLabel": "Ano"
       },

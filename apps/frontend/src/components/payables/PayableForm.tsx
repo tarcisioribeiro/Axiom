@@ -357,7 +357,7 @@ export function PayableForm({
               id="notes"
               value={formData.notes ?? ''}
               onChange={(e) => set({ notes: e.target.value })}
-              rows={3}
+              rows={1}
               placeholder={t('pages.payables.form.notesPlaceholder')}
             />
           </div>

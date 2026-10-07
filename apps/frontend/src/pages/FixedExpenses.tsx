@@ -1,27 +1,16 @@
 /* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Calendar,
-  TrendingDown,
-  History,
-  ClipboardList,
-} from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { Pencil, Trash2, TrendingDown, History } from 'lucide-react';
+import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
-import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
-import { FixedExpenseStats } from '@/components/expenses/FixedExpenseStats';
 import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import {
   Dialog,
   DialogCloseFooter,
@@ -35,7 +24,6 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -45,7 +33,6 @@ import type {
   Expense,
   FixedExpense,
   FixedExpenseFormData,
-  FixedExpenseGenerationLog,
   Account,
   CreditCard,
 } from '@/types';
@@ -63,7 +50,15 @@ function Wrapper({ embedded, children }: { embedded: boolean; children: ReactNod
   );
 }
 
-export default function FixedExpenses({ embedded = false }: { embedded?: boolean }) {
+export default function FixedExpenses({
+  embedded = false,
+  newExpenseRef,
+  launchExpensesRef,
+}: {
+  embedded?: boolean;
+  newExpenseRef?: RefObject<(() => void) | undefined>;
+  launchExpensesRef?: RefObject<(() => void) | undefined>;
+}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -72,17 +67,21 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
   const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
-  const [showGenerationLog, setShowGenerationLog] = useState(false);
-
-  const generationLogQuery = useQuery<FixedExpenseGenerationLog[]>({
-    queryKey: ['fixedExpenses', 'generationLog'],
-    queryFn: () => fixedExpensesService.getGenerationLog(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: showGenerationLog,
-  });
   const [historyLoading, setHistoryLoading] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+
+  useEffect(() => {
+    if (newExpenseRef) {
+      newExpenseRef.current = () => {
+        setSelectedExpense(undefined);
+        setIsDialogOpen(true);
+      };
+    }
+    if (launchExpensesRef) {
+      launchExpensesRef.current = () => setIsLaunchDialogOpen(true);
+    }
+  });
 
   const { data: pageData, isLoading } = useQuery({
     queryKey: ['fixed-expenses'],
@@ -185,19 +184,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
     {
       key: 'description',
       label: t('pages.fixedExpenses.columns.description'),
-      render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="bg-primary/10 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold">
-            {item.due_day}
-          </div>
-          <div>
-            <div className="font-medium">{item.description}</div>
-            <div className="text-muted-foreground text-xs">
-              {t('pages.fixedExpenses.dueDayDesc', { day: item.due_day })}
-            </div>
-          </div>
-        </div>
-      ),
+      render: (item) => <span className="font-medium">{item.description}</span>,
     },
     {
       key: 'default_value',
@@ -242,120 +229,14 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         </Badge>
       ),
     },
-    {
-      key: 'total_generated',
-      label: t('pages.fixedExpenses.columns.generated'),
-      align: 'center',
-      render: (item) => <span className="text-sm">{item.total_generated}x</span>,
-    },
   ];
 
   return (
     <Wrapper embedded={embedded}>
-      <PageHeader
-        title={t('pages.fixedExpenses.title')}
-        icon={<Calendar className="h-6 w-6" />}
-        action={{
-          label: t('pages.fixedExpenses.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            setSelectedExpense(undefined);
-            setIsDialogOpen(true);
-          },
-        }}
-      />
-
-      {/* Stats Dashboard */}
-      <FixedExpenseStats />
-
-      {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
-      {(() => {
-        const activeExpenses = fixedExpenses.filter((e) => e.is_active);
-        const totalMonthlyFixed = activeExpenses.reduce(
-          (sum, e) => sum + parseFloat(e.default_value || '0'),
-          0
-        );
-        return (
-          <div
-            className={cn(
-              'gap-md grid',
-              activeExpenses.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
-            )}
-          >
-            {/* Card 1: Lançamento */}
-            <div className="bg-card p-md flex flex-col justify-between rounded-lg border">
-              <div>
-                <h3 className="text-base font-semibold">
-                  {t('pages.fixedExpenses.launchSection')}
-                </h3>
-              </div>
-              <Button
-                onClick={() => setIsLaunchDialogOpen(true)}
-                className="mt-md w-full"
-              >
-                <TrendingDown className="h-4 w-4" />
-                {t('pages.fixedExpenses.launchBtn')}
-              </Button>
-            </div>
-
-            {activeExpenses.length > 0 && (
-              <>
-                {/* Card 2: Comprometimento */}
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="text-sm font-medium">
-                    {t('pages.fixedExpenses.stats.monthlyCommitment')}
-                  </p>
-                  <p className="mt-xs text-destructive text-2xl font-bold">
-                    {formatCurrency(totalMonthlyFixed)}
-                  </p>
-                  <p className="mt-sm text-muted-foreground text-xs">
-                    {t('pages.fixedExpenses.stats.activeCountDesc', {
-                      count: activeExpenses.length,
-                    })}
-                  </p>
-                </div>
-
-                {/* Card 3: Calendário */}
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
-                    {t('pages.fixedExpenses.scheduleTitle')}
-                  </p>
-                  <div className="gap-sm flex flex-wrap">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-                      const expensesOnDay = activeExpenses.filter(
-                        (e) => e.due_day === day
-                      );
-                      const hasExpense = expensesOnDay.length > 0;
-                      return (
-                        <div
-                          key={day}
-                          title={
-                            hasExpense
-                              ? expensesOnDay.map((e) => e.description).join(', ')
-                              : undefined
-                          }
-                          className={cn(
-                            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
-                            hasExpense
-                              ? 'bg-destructive/15 text-destructive ring-destructive/30 ring-1'
-                              : 'text-muted-foreground'
-                          )}
-                        >
-                          {day}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        );
-      })()}
-
       {/* Table */}
       <DataTable
-        pinNav={false}
+        centerList
+        pageSize={7}
         data={fixedExpenses}
         columns={columns}
         keyExtractor={(item) => item.id}
@@ -364,11 +245,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
           icon: <TrendingDown className="text-muted-foreground h-12 w-12" />,
           title: t('pages.fixedExpenses.emptyState'),
         }}
-        rowClassName={(item) =>
-          item.is_active
-            ? 'border-l-4 border-l-destructive/50'
-            : 'border-l-4 border-l-muted opacity-60'
-        }
+        rowClassName={(item) => (item.is_active ? '' : 'opacity-60')}
         actions={(item) => (
           <div className="gap-sm flex items-center justify-end">
             {item.total_generated > 0 && (
@@ -406,57 +283,6 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
           </div>
         )}
       />
-
-      {/* Generation Log */}
-      <CollapsibleSection
-        title={t('pages.fixedExpenses.generationLog.viewLog')}
-        icon={<ClipboardList className="h-4 w-4" />}
-        open={showGenerationLog}
-        onToggle={() => setShowGenerationLog((v) => !v)}
-      >
-        {generationLogQuery.isLoading ? (
-          <p className="py-sm text-muted-foreground text-center text-sm">
-            {t('common.actions.loading')}
-          </p>
-        ) : !generationLogQuery.data?.length ? (
-          <EmptyState title={t('pages.fixedExpenses.generationLog.emptyState')} />
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-muted-foreground border-b text-left text-xs">
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedExpenses.generationLog.month')}
-                </th>
-                <th className="pb-xs pr-md text-right">
-                  {t('pages.fixedExpenses.generationLog.totalGenerated')}
-                </th>
-                <th className="pb-xs pr-md">
-                  {t('pages.fixedExpenses.generationLog.generatedBy')}
-                </th>
-                <th className="pb-xs text-right">
-                  {t('pages.fixedExpenses.generationLog.generatedAt')}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {generationLogQuery.data.map((log) => (
-                <tr key={log.id}>
-                  <td className="py-xs pr-md font-medium">
-                    {log.month.split('-').reverse().join('/')}
-                  </td>
-                  <td className="py-xs pr-md text-right">{log.total_generated}</td>
-                  <td className="py-xs pr-md text-muted-foreground">
-                    {log.generated_by_name ?? '—'}
-                  </td>
-                  <td className="py-xs text-muted-foreground text-right">
-                    {formatDate(log.created_at)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </CollapsibleSection>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -507,9 +333,9 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               <History className="h-4 w-4" />
               {t('pages.fixedExpenses.historyTitle')}: {historyItem?.description}
             </DialogTitle>
-            <DialogDescription>
-              {t('pages.fixedExpenses.historyDesc')}
-            </DialogDescription>
+            <VisuallyHidden>
+              <DialogDescription>{t('pages.fixedExpenses.historyDesc')}</DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           {historyLoading ? (
             <p className="py-md text-muted-foreground text-center text-sm">
@@ -520,37 +346,39 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
               {t('pages.fixedExpenses.historyEmpty')}
             </p>
           ) : (
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b text-left text-xs">
-                    <th className="pb-xs pr-md">{t('common.fields.date')}</th>
-                    <th className="pb-xs pr-md">{t('common.fields.description')}</th>
-                    <th className="pb-xs text-right">{t('common.fields.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {historyExpenses.map((exp) => (
-                    <tr key={exp.id}>
-                      <td className="py-xs pr-md text-muted-foreground">
-                        {formatDate(exp.date)}
-                      </td>
-                      <td className="py-xs pr-md">{exp.description}</td>
-                      <td
-                        className={cn(
-                          'py-xs text-right font-medium',
-                          exp.payed
-                            ? 'text-muted-foreground line-through'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {formatCurrency(exp.value)}
-                      </td>
+            <PaginatedSlide items={historyExpenses} pageSize={5} pinNav={false}>
+              {(pageItems) => (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b text-left text-xs">
+                      <th className="pb-xs pr-md">{t('common.fields.date')}</th>
+                      <th className="pb-xs pr-md">{t('common.fields.description')}</th>
+                      <th className="pb-xs text-right">{t('common.fields.amount')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {pageItems.map((exp) => (
+                      <tr key={exp.id}>
+                        <td className="py-xs pr-md text-muted-foreground">
+                          {formatDate(exp.date)}
+                        </td>
+                        <td className="py-xs pr-md">{exp.description}</td>
+                        <td
+                          className={cn(
+                            'py-xs text-right font-medium',
+                            exp.payed
+                              ? 'text-muted-foreground line-through'
+                              : 'text-destructive'
+                          )}
+                        >
+                          {formatCurrency(exp.value)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </PaginatedSlide>
           )}
           <DialogCloseFooter />
         </DialogContent>

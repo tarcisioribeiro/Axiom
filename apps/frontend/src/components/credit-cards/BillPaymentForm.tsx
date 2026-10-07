@@ -339,7 +339,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               placeholder={t('pages.creditCardBills.payForm.notesPlaceholder')}
               {...register('notes')}
               disabled={isLoading}
-              rows={3}
+              rows={1}
             />
           </div>
         </div>

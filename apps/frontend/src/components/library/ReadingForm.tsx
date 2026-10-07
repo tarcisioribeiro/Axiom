@@ -297,7 +297,7 @@ export function ReadingForm({
             {...register('notes')}
             aria-invalid={!!errors.notes}
             placeholder={t('pages.readings.form.notesPlaceholder')}
-            rows={4}
+            rows={1}
             disabled={isLoading}
           />
         </div>

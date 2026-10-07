@@ -616,7 +616,7 @@ export function AddSessionForm({
         </Label>
         <Textarea
           id="session_notes"
-          rows={2}
+          rows={1}
           placeholder={t('pages.courses.sessions.notesPlaceholder')}
           {...register('notes')}
         />

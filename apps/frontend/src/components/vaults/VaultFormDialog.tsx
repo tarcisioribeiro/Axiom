@@ -410,7 +410,7 @@ export function VaultFormDialog({
                   value={formData.notes || ''}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder={t('pages.vaults.form.notesPlaceholder')}
-                  rows={3}
+                  rows={1}
                 />
               </div>
             </div>

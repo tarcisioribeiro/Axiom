@@ -633,7 +633,7 @@ export function LoanForm({
                 id="notes"
                 value={formData.notes ?? ''}
                 onChange={(e) => set({ notes: e.target.value })}
-                rows={3}
+                rows={1}
               />
             </div>
 

@@ -14,7 +14,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
@@ -27,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
@@ -199,8 +199,11 @@ export const FixedExpenseForm = ({
             />
           </div>
 
-          <div className="space-y-sm">
-            <Label htmlFor="due_day" className="gap-xs flex items-center">
+          <div className="space-y-sm flex flex-col items-center">
+            <Label
+              htmlFor="due_day"
+              className="gap-xs flex items-center justify-center"
+            >
               <CalendarDays className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.fixedExpenses.form.dueDayLabel')}
             </Label>
@@ -310,7 +313,7 @@ export const FixedExpenseForm = ({
 
       {/* Seção: Configuração */}
       <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
-        <div className="space-y-md">
+        <div className="gap-md grid grid-cols-1 items-start md:grid-cols-3">
           <div className="space-y-sm">
             <Label className="gap-xs flex items-center">
               <Tag className="text-muted-foreground h-3.5 w-3.5" />
@@ -320,36 +323,44 @@ export const FixedExpenseForm = ({
               {...register('notes')}
               placeholder={t('pages.fixedExpenses.form.notesPlaceholder')}
               disabled={isLoading}
-              rows={3}
+              rows={1}
             />
           </div>
 
           <div className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <Checkbox
-                id="is_active"
-                checked={watchedIsActive}
-                onCheckedChange={(checked) => setValue('is_active', !!checked)}
-                disabled={isLoading}
-              />
-              <Label htmlFor="is_active" className="cursor-pointer">
-                {t('pages.fixedExpenses.form.isActiveLabel')}
-              </Label>
-            </div>
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.fixedExpenses.form.isActiveLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedIsActive ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'true',
+                  label: t('common.status.active'),
+                  accentColor: 'success',
+                },
+                { value: 'false', label: t('common.status.inactive') },
+              ]}
+              onChange={(v) => setValue('is_active', v === 'true')}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-sm">
-            <div className="gap-sm flex items-center">
-              <Checkbox
-                id="allow_value_edit"
-                checked={watchedAllowValueEdit}
-                onCheckedChange={(checked) => setValue('allow_value_edit', !!checked)}
-                disabled={isLoading}
-              />
-              <Label htmlFor="allow_value_edit" className="cursor-pointer">
-                {t('pages.fixedExpenses.form.allowValueEditLabel')}
-              </Label>
-            </div>
+            <Label className="gap-xs flex items-center">
+              <Tag className="text-muted-foreground h-3.5 w-3.5" />
+              {t('pages.fixedExpenses.form.allowValueEditLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedAllowValueEdit ? 'true' : 'false'}
+              options={[
+                { value: 'true', label: t('common.actions.yes') },
+                { value: 'false', label: t('common.actions.no') },
+              ]}
+              onChange={(v) => setValue('allow_value_edit', v === 'true')}
+              disabled={isLoading}
+            />
           </div>
         </div>
       </FormSection>

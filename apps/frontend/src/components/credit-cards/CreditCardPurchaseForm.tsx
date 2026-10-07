@@ -429,6 +429,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           <Label htmlFor="notes">{t('pages.creditCardExpenses.form.notesLabel')}</Label>
           <Textarea
             id="notes"
+            rows={1}
             {...register('notes')}
             placeholder={t('pages.creditCardExpenses.form.notesPlaceholder')}
             disabled={isLoading}

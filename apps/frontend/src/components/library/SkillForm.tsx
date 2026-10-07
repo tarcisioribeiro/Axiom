@@ -309,7 +309,7 @@ export function SkillForm({
           <Label htmlFor="notes">{t('pages.skills.form.notesLabel')}</Label>
           <Textarea
             id="notes"
-            rows={2}
+            rows={1}
             placeholder={t('pages.skills.form.notesPlaceholder')}
             {...register('notes')}
           />

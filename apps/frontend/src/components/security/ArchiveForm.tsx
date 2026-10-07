@@ -300,7 +300,7 @@ export function ArchiveForm({
               {...register('notes')}
               aria-invalid={!!errors.notes}
               placeholder={t('pages.archives.form.notesPlaceholder')}
-              rows={3}
+              rows={1}
               disabled={isLoading}
             />
           </div>
