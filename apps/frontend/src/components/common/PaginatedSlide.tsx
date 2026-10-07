@@ -15,7 +15,7 @@ interface PaginatedSlideProps<T> {
   /** Fixa a navegação no rodapé da área da página (padrão). Use `false` em
    * listas que são só uma seção dentro de outra tela. */
   pinNav?: boolean;
-  /** Centraliza a lista na vertical no espaço acima da navegação. */
+  /** Centraliza a lista na vertical no espaço acima da navegação, só com mais de uma página. */
   centerList?: boolean;
   children: (pageItems: T[]) => ReactNode;
 }
@@ -112,7 +112,12 @@ export function PageSlide({
     <div className={cn('gap-md flex flex-1 flex-col', pinNav && 'page-fill')}>
       {/* Ocupa o espaço livre acima da navegação; a lista (listRef) mede só o
           próprio conteúdo, para a altura travada não crescer com a janela. */}
-      <div className={cn('flex flex-1 flex-col', centerList && 'justify-center')}>
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          centerList && totalPages > 1 && 'justify-center'
+        )}
+      >
         <div ref={listRef} className="overflow-hidden">
           <AnimatePresence mode="wait" initial={false} custom={last.direction}>
             <motion.div

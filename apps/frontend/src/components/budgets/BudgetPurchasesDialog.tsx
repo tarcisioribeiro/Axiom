@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
 import {
   Dialog,
   DialogCloseFooter,
@@ -52,6 +53,8 @@ interface Row {
   installment?: string;
   value: number;
 }
+
+const PURCHASES_PAGE_SIZE = 5;
 
 interface BudgetPurchasesDialogProps {
   budget?: Budget;
@@ -124,7 +127,8 @@ export function BudgetPurchasesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="gap-sm flex items-center">
+            <ShoppingCart className="text-primary h-4 w-4" />
             {t('pages.budgets.purchases.title')}
             {budget && ` — ${translate('expenseCategories', budget.category)}`}
           </DialogTitle>
@@ -141,55 +145,66 @@ export function BudgetPurchasesDialog({
             title={t('pages.budgets.purchases.empty')}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('pages.budgets.purchases.date')}</TableHead>
-                <TableHead>{t('pages.budgets.purchases.description')}</TableHead>
-                <TableHead>{t('pages.budgets.purchases.source')}</TableHead>
-                <TableHead className="text-right">
-                  {t('pages.budgets.purchases.value')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((r) => {
-                const Icon = r.source === 'card' ? CreditCard : Landmark;
-                return (
-                  <TableRow key={r.key}>
-                    <TableCell className="text-sm">{formatDate(r.date)}</TableCell>
-                    <TableCell className="font-medium">
-                      {r.description || '—'}
-                      {r.installment && (
-                        <span className="text-muted-foreground ml-xs text-xs">
-                          ({r.installment})
-                        </span>
-                      )}
+          <PaginatedSlide
+            key={`${budget?.category}-${budget?.month}-${budget?.year}`}
+            items={rows}
+            pageSize={PURCHASES_PAGE_SIZE}
+            pinNav={false}
+          >
+            {(pageRows) => (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('pages.budgets.purchases.date')}</TableHead>
+                    <TableHead>{t('pages.budgets.purchases.description')}</TableHead>
+                    <TableHead>{t('pages.budgets.purchases.source')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.budgets.purchases.value')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pageRows.map((r) => {
+                    const Icon = r.source === 'card' ? CreditCard : Landmark;
+                    return (
+                      <TableRow key={r.key}>
+                        <TableCell className="text-sm">{formatDate(r.date)}</TableCell>
+                        <TableCell className="font-medium">
+                          {r.description || '—'}
+                          {r.installment && (
+                            <span className="text-muted-foreground ml-xs text-xs">
+                              ({r.installment})
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <span className="gap-xs flex items-center">
+                            <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                            <span>
+                              {t(`pages.budgets.purchases.${r.source}`)}: {r.sourceName}
+                            </span>
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(r.value)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={3}>
+                      {t('pages.budgets.purchases.total')}
                     </TableCell>
-                    <TableCell className="text-sm">
-                      <span className="gap-xs flex items-center">
-                        <Icon className="text-muted-foreground h-4 w-4 shrink-0" />
-                        <span>
-                          {t(`pages.budgets.purchases.${r.source}`)}: {r.sourceName}
-                        </span>
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(r.value)}
+                    <TableCell className="text-right font-bold">
+                      {formatCurrency(total)}
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={3}>{t('pages.budgets.purchases.total')}</TableCell>
-                <TableCell className="text-right font-bold">
-                  {formatCurrency(total)}
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+                </TableFooter>
+              </Table>
+            )}
+          </PaginatedSlide>
         )}
         <DialogCloseFooter />
       </DialogContent>

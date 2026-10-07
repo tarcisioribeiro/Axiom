@@ -5,7 +5,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Sparkles,
   Loader2,
   Tag,
   Wallet,
@@ -15,12 +14,13 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BudgetPurchasesDialog } from '@/components/budgets/BudgetPurchasesDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
+import { IconButton } from '@/components/common/IconButton';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -32,7 +32,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
-  DialogCloseFooter,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -48,8 +47,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip } from '@/components/ui/tooltip';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
-import { API_CONFIG } from '@/config/api-config';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
@@ -58,10 +57,28 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { apiClient } from '@/services/api-client';
 import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const DESKTOP_QUERY = '(min-width: 1024px)';
+const DESKTOP_PAGE_SIZE = 9;
+
+function useBudgetsPageSize() {
+  const [pageSize, setPageSize] = useState(() =>
+    window.matchMedia(DESKTOP_QUERY).matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_QUERY);
+    const handler = (e: MediaQueryListEvent) =>
+      setPageSize(e.matches ? DESKTOP_PAGE_SIZE : GRID_PAGE_SIZE);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return pageSize;
+}
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
@@ -78,15 +95,6 @@ function getDefaultFormData(): BudgetFormData {
     rollover_amount: 0,
   };
 }
-
-type SuggestResp = {
-  suggestions?: {
-    category: string;
-    avg_monthly_spent: number;
-    suggested_limit: number;
-    reasoning: string | null;
-  }[];
-};
 
 export default function Budgets() {
   const { t } = useTranslation();
@@ -109,8 +117,8 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
-  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
   const [purchasesBudget, setPurchasesBudget] = useState<Budget | undefined>();
+  const pageSize = useBudgetsPageSize();
 
   const { data: budgets = [], isLoading } = useQuery({
     queryKey: ['budgets'],
@@ -125,21 +133,6 @@ export default function Budgets() {
     queryKey: ['budgets', 'status'],
     queryFn: () => budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
     staleTime: STALE_TIMES.DEFAULT_LIST,
-  });
-
-  const { data: suggestions = [], isFetching: isSuggestLoading } = useQuery({
-    queryKey: ['budgets', 'suggest'],
-    queryFn: async () => {
-      const resp = await apiClient.post<SuggestResp>(
-        API_CONFIG.ENDPOINTS.BUDGET_SUGGEST,
-        {
-          include_llm_reasoning: true,
-        }
-      );
-      return resp.suggestions ?? [];
-    },
-    enabled: isSuggestOpen,
-    staleTime: 5 * 60 * 1000,
   });
 
   const invalidateBudgets = () => {
@@ -194,30 +187,6 @@ export default function Budgets() {
         title: t('common.messages.deleteError', { reason: getErrorMessage(error) }),
         variant: 'destructive',
       });
-    },
-  });
-
-  const applySuggestionMutation = useMutation({
-    mutationFn: (s: { category: string; suggested_limit: number }) => {
-      const now = new Date();
-      return budgetsService.create({
-        category: s.category,
-        limit_amount: s.suggested_limit,
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
-        member: null,
-        rollover_enabled: false,
-        rollover_amount: 0,
-      });
-    },
-    onSuccess: (_, s) => {
-      toast({
-        title: `Orçamento de ${translate('expenseCategories', s.category)} criado.`,
-      });
-      invalidateBudgets();
-    },
-    onError: () => {
-      toast({ title: t('pages.budgets.createError'), variant: 'destructive' });
     },
   });
 
@@ -283,83 +252,11 @@ export default function Budgets() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
-        <Button
-          variant="outline"
-          onClick={() => setIsSuggestOpen(true)}
-          className="gap-sm"
-        >
-          <Sparkles className="h-4 w-4" />
-          Sugerir com IA
-        </Button>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
           {t('pages.budgets.newBtn')}
         </Button>
       </PageHeader>
-
-      {/* Dialog de sugestões LLM */}
-      <Dialog open={isSuggestOpen} onOpenChange={setIsSuggestOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="gap-sm flex items-center">
-              <Sparkles className="text-primary h-4 w-4" />
-              {t('pages.budgets.aiSuggestionsTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.budgets.aiSuggestionsDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          {isSuggestLoading ? (
-            <div className="gap-sm py-xl text-muted-foreground flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t('pages.budgets.analyzing')}
-            </div>
-          ) : (
-            <div className="space-y-sm pr-xs max-h-96 overflow-y-auto">
-              {suggestions.map((s) => (
-                <div
-                  key={s.category}
-                  className="flex items-center justify-between gap-3 rounded-lg border p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="gap-xs flex items-center text-sm font-medium">
-                      {(() => {
-                        const CatIcon =
-                          EXPENSE_CATEGORY_ICONS[s.category] ??
-                          EXPENSE_CATEGORY_ICONS['others'];
-                        return CatIcon ? (
-                          <CatIcon className="h-4 w-4 shrink-0" />
-                        ) : null;
-                      })()}
-                      {translate('expenseCategories', s.category)}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {t('pages.budgets.averageLabel')}:{' '}
-                      {formatCurrency(s.avg_monthly_spent)} ·{' '}
-                      {t('pages.budgets.suggestionLabel')}:{' '}
-                      {formatCurrency(s.suggested_limit)}
-                    </p>
-                    {s.reasoning && (
-                      <p className="text-muted-foreground mt-0.5 text-xs italic">
-                        {s.reasoning}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => applySuggestionMutation.mutate(s)}
-                    disabled={applySuggestionMutation.isPending}
-                  >
-                    Aplicar
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-          <DialogCloseFooter />
-        </DialogContent>
-      </Dialog>
 
       <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput
@@ -417,85 +314,27 @@ export default function Budgets() {
               budget: b,
               status: statusMap.get(`${b.month}-${b.year}-${b.category}`),
             }));
-            const exceededCount = enriched.filter(({ status }) => {
-              const pct = status ? status.percentage : 0;
-              return pct > 100;
-            }).length;
-            const warningCount = enriched.filter(({ status }) => {
-              const pct = status ? status.percentage : 0;
-              return pct >= 70 && pct <= 100;
-            }).length;
-            const okCount = filteredBudgets.length - exceededCount - warningCount;
             return (
-              <>
-                <div className="bg-card p-md rounded-lg border">
-                  <p className="mb-sm text-sm font-medium">
-                    {t('pages.budgets.health.title')}
-                  </p>
-                  <div className="bg-muted flex h-3 overflow-hidden rounded-full">
-                    {exceededCount > 0 && (
-                      <div
-                        className="bg-destructive"
-                        style={{
-                          width: `${(exceededCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                    {warningCount > 0 && (
-                      <div
-                        className="bg-warning"
-                        style={{
-                          width: `${(warningCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                    {okCount > 0 && (
-                      <div
-                        className="bg-success"
-                        style={{
-                          width: `${(okCount / filteredBudgets.length) * 100}%`,
-                        }}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-sm gap-md text-muted-foreground flex text-xs">
-                    <span>
-                      <span className="text-success font-semibold">{okCount}</span>{' '}
-                      {t('pages.budgets.health.withinLimit')}
-                    </span>
-                    <span>
-                      <span className="text-warning font-semibold">{warningCount}</span>{' '}
-                      {t('pages.budgets.health.warning')}
-                    </span>
-                    <span>
-                      <span className="text-destructive font-semibold">
-                        {exceededCount}
-                      </span>{' '}
-                      {t('pages.budgets.health.exceeded')}
-                    </span>
-                  </div>
-                </div>
-
-                <PaginatedSlide
-                  key={`${searchTerm}-${filterMonth}-${filterYear}`}
-                  items={enriched}
-                  pageSize={GRID_PAGE_SIZE}
-                  className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
-                >
-                  {(pageItems) =>
-                    pageItems.map(({ budget, status }) => (
-                      <BudgetCard
-                        key={budget.id}
-                        budget={budget}
-                        status={status}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onViewPurchases={setPurchasesBudget}
-                      />
-                    ))
-                  }
-                </PaginatedSlide>
-              </>
+              <PaginatedSlide
+                key={`${searchTerm}-${filterMonth}-${filterYear}`}
+                items={enriched}
+                pageSize={pageSize}
+                centerList
+                className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
+              >
+                {(pageItems) =>
+                  pageItems.map(({ budget, status }) => (
+                    <BudgetCard
+                      key={budget.id}
+                      budget={budget}
+                      status={status}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onViewPurchases={setPurchasesBudget}
+                    />
+                  ))
+                }
+              </PaginatedSlide>
             );
           })()}
         </>
@@ -731,16 +570,7 @@ function BudgetCard({
     EXPENSE_CATEGORY_ICONS[budget.category] ?? EXPENSE_CATEGORY_ICONS['others'];
 
   return (
-    <div
-      className={cn(
-        'bg-card overflow-hidden rounded-lg border-l-4 transition-colors',
-        pct > 100
-          ? 'border-l-destructive shadow-destructive/20 shadow-sm'
-          : pct >= 70
-            ? 'border-l-warning'
-            : 'border-l-success'
-      )}
-    >
+    <div className="bg-card overflow-hidden rounded-lg border">
       <div className="p-md">
         <div className="flex items-start justify-between">
           <div className="gap-sm flex items-center">
@@ -816,34 +646,37 @@ function BudgetCard({
           </p>
         )}
 
-        <div className="gap-sm mt-3 flex border-t pt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onViewPurchases(budget)}
-          >
-            <ShoppingCart className="mr-xs h-3 w-3" />
-            {t('pages.budgets.purchases.button')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => onEdit(budget)}
-          >
-            <Pencil className="mr-xs h-3 w-3" />
-            {t('common.actions.edit')}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1"
-            onClick={() => void onDelete(budget)}
-          >
-            <Trash2 className="mr-xs h-3 w-3" />
-            {t('common.actions.delete')}
-          </Button>
+        <div className="gap-sm mt-3 flex justify-end border-t pt-3">
+          <Tooltip content={t('pages.budgets.purchases.button')}>
+            <IconButton
+              variant="ghost"
+              className="h-8 w-8 rounded-md"
+              aria-label={t('pages.budgets.purchases.button')}
+              onClick={() => onViewPurchases(budget)}
+            >
+              <ShoppingCart className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t('common.actions.edit')}>
+            <IconButton
+              variant="ghost"
+              className="h-8 w-8 rounded-md"
+              aria-label={t('common.actions.edit')}
+              onClick={() => onEdit(budget)}
+            >
+              <Pencil className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t('common.actions.delete')}>
+            <IconButton
+              variant="ghost"
+              aria-label={t('common.actions.delete')}
+              className="text-destructive hover:text-destructive h-8 w-8 rounded-md"
+              onClick={() => void onDelete(budget)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </IconButton>
+          </Tooltip>
         </div>
       </div>
     </div>

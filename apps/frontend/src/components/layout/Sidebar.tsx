@@ -411,10 +411,6 @@ export const Sidebar = () => {
   // ── Desktop collapsed icon grid ─────────────────────────────────────────────
   const collapsedNav = (
     <div className="gap-xs py-xs flex flex-col items-center">
-      {filteredNavItems.map((item) => (
-        <NavLink key={item.href} item={item} isCollapsed={true} />
-      ))}
-      <div className="my-xs border-border/40 w-8 border-t" />
       {navModules.map((module) => renderModule(module))}
     </div>
   );
@@ -429,28 +425,44 @@ export const Sidebar = () => {
           isCollapsed && !isMobile ? 'justify-center' : 'justify-between'
         )}
       >
-        <div className="gap-sm flex items-center">
-          <div className="ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1">
-            <img
-              src={icon}
-              alt=""
-              className="h-9 w-9 object-contain"
-              aria-hidden="true"
-            />
-          </div>
-          <AnimatePresence>
-            {(!isCollapsed || isMobile) && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="text-foreground text-lg font-semibold tracking-tight"
-              >
-                Axiom
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={t('layout.mainMenu')}
+              className="gap-sm hover:bg-accent focus-visible:ring-ring -m-xs p-xs flex items-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <div className="ring-border/50 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1">
+                <img
+                  src={icon}
+                  alt=""
+                  className="h-9 w-9 object-contain"
+                  aria-hidden="true"
+                />
+              </div>
+              <AnimatePresence>
+                {(!isCollapsed || isMobile) && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    className="text-foreground text-lg font-semibold tracking-tight"
+                  >
+                    Axiom
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="bottom" align="start" className="w-52">
+            {filteredNavItems.map((item) => (
+              <DropdownMenuItem key={item.href} onSelect={() => navigate(item.href)}>
+                <item.icon className="h-4 w-4" aria-hidden="true" />
+                {t(item.titleKey)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Mobile close button */}
         {isMobile && (
@@ -474,12 +486,6 @@ export const Sidebar = () => {
           collapsedNav
         ) : (
           <div className="space-y-sm">
-            {filteredNavItems.map((item) => (
-              <NavLink key={item.href} item={item} isCollapsed={false} />
-            ))}
-
-            <div className="my-sm border-border/40 border-t" />
-
             {navModules.map((module) => renderModule(module))}
           </div>
         )}

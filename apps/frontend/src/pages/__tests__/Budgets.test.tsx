@@ -252,9 +252,9 @@ describe('Budgets page', () => {
     }
   });
 
-  it('shows "Sugerir com IA" button', async () => {
+  it('does not show "Sugerir com IA" button', async () => {
     renderBudgets();
     await waitFor(() => screen.getByRole('heading', { level: 1 }));
-    expect(screen.getByRole('button', { name: /sugerir/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /sugerir/i })).not.toBeInTheDocument();
   });
 });
