@@ -323,7 +323,7 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                 onClick={() => setIsRenewOpen(false)}
                 disabled={isSubmitting}
               >
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button
@@ -332,9 +332,9 @@ export function VaultExpiryBadge({ expiresAt, onRenew }: VaultExpiryBadgeProps) 
                 disabled={isSubmitting || !masterPassword}
               >
                 {isSubmitting ? (
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <RefreshCw className="mr-sm h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" />
                 )}
 
                 {t('pages.vaultGuard.expiry.renewConfirm')}

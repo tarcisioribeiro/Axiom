@@ -1416,14 +1416,14 @@ export function BookDetailModal({
                     onClick={() => setIsSummaryFormOpen(false)}
                     disabled={isSummarySubmitting}
                   >
-                    <X className="mr-sm h-4 w-4" />
+                    <X className="h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
                   <Button type="submit" disabled={isSummarySubmitting}>
                     {isSummarySubmitting ? (
-                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Save className="mr-sm h-4 w-4" />
+                      <Save className="h-4 w-4" />
                     )}
                     {isSummarySubmitting
                       ? t('common.actions.saving')
@@ -1450,7 +1450,7 @@ export function BookDetailModal({
                     onAskIntellect(book);
                   }}
                 >
-                  <Brain className="mr-sm text-primary h-4 w-4" />
+                  <Brain className="text-primary h-4 w-4" />
                   {t('pages.books.chatTabDesc')}
                 </Button>
               )}
@@ -1465,7 +1465,7 @@ export function BookDetailModal({
                 }}
                 className="text-destructive hover:text-destructive"
               >
-                <Trash2 className="mr-sm h-4 w-4" />
+                <Trash2 className="h-4 w-4" />
                 {t('common.actions.delete')}
               </Button>
               <Button
@@ -1475,7 +1475,7 @@ export function BookDetailModal({
                   onEdit(book);
                 }}
               >
-                <Edit className="mr-sm h-4 w-4" />
+                <Edit className="h-4 w-4" />
                 {t('common.actions.edit')}
               </Button>
             </div>

@@ -55,7 +55,7 @@ export function NotificationBell() {
           <h4 className="text-sm font-semibold">{t('layout.notifications.title')}</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="xs" onClick={markAllAsRead}>
-              <CheckCheck className="mr-xs h-3 w-3" />
+              <CheckCheck className="h-3 w-3" />
               {t('layout.notifications.markAllRead')}
             </Button>
           )}

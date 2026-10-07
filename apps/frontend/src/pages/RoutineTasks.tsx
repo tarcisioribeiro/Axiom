@@ -425,7 +425,7 @@ export default function RoutineTasks({
       </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-h-[98vh] max-w-5xl">
           <DialogHeader sticky>
             <DialogTitle mode={selectedTask ? 'edit' : 'create'}>
               {selectedTask

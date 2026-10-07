@@ -132,14 +132,14 @@ export function RoutineFocusBlockForm({
 
       <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !name.trim() || weekdays.length === 0}
         >
-          <Save className="mr-sm h-4 w-4" />
+          <Save className="h-4 w-4" />
           {t('common.actions.save')}
         </Button>
       </div>

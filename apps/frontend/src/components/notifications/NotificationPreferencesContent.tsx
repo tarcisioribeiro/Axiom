@@ -203,7 +203,7 @@ export function NotificationPreferencesContent({
       <DialogFooter>
         {onClose && (
           <Button variant="outline" onClick={onClose} className="sm:mr-auto">
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.close')}
           </Button>
         )}

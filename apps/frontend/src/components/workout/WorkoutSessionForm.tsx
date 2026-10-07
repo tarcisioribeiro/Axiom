@@ -473,7 +473,7 @@ export function WorkoutSessionForm({
             disabled={step === 0}
             onClick={() => goTo(-1)}
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
             {atEnd && exerciseFields.length > 0
               ? t('pages.workoutSessions.backToSequence')
               : t('common.actions.previous')}
@@ -481,12 +481,12 @@ export function WorkoutSessionForm({
           {!atEnd && (
             <div className="gap-sm flex">
               <Button type="button" variant="outline" size="sm" onClick={handleSkip}>
-                <SkipForward className="mr-1 h-4 w-4" />
+                <SkipForward className="h-4 w-4" />
                 {t('pages.workoutSessions.skip')}
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={() => goTo(1)}>
                 {t('common.actions.next')}
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -508,15 +508,15 @@ export function WorkoutSessionForm({
 
       <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         {/* Sessão sempre vinculada a uma divisão (sem sessão avulsa) */}
         <Button type="submit" disabled={isLoading || (!session && !selectedDayId)}>
           {isLoading ? (
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
           )}
 
           {t('common.actions.save')}
@@ -660,7 +660,7 @@ function ExerciseBlock({
             )
           }
         >
-          <Plus className="mr-1 h-3 w-3" />
+          <Plus className="h-3 w-3" />
           {t('pages.workoutSessions.addSet')}
         </Button>
       </div>

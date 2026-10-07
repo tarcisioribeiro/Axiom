@@ -332,14 +332,14 @@ export function InstallmentsPlanDialog({
                     }}
                     disabled={isSaving}
                   >
-                    <X className="mr-sm h-4 w-4" />
+                    <X className="h-4 w-4" />
                     {t('common.actions.cancel')}
                   </Button>
                   <Button onClick={() => void handleSave()} disabled={isSaving}>
                     {isSaving ? (
-                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Save className="mr-sm h-4 w-4" />
+                      <Save className="h-4 w-4" />
                     )}
                     {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                   </Button>
@@ -347,7 +347,7 @@ export function InstallmentsPlanDialog({
               ) : (
                 canEdit && (
                   <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    <Pencil className="mr-sm h-4 w-4" />
+                    <Pencil className="h-4 w-4" />
                     {tr('editPlan')}
                   </Button>
                 )

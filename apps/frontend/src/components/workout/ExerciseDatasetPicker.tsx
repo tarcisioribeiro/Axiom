@@ -151,9 +151,9 @@ export function ExerciseDatasetPicker({
             className="mx-auto"
           >
             {isLoadingMore ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <ChevronDown className="mr-sm h-4 w-4" />
+              <ChevronDown className="h-4 w-4" />
             )}
             {t('pages.exercises.picker.loadMore')}
           </Button>

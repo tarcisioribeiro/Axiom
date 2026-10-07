@@ -415,7 +415,7 @@ function NodeDetailPanel({
             className="w-full"
             onClick={() => onStartLink(node)}
           >
-            <Link2 className="mr-sm h-3.5 w-3.5" />
+            <Link2 className="h-3.5 w-3.5" />
             {linkingFrom?.id === node.id
               ? t('pages.knowledgeGraph.cancelLink')
               : t('pages.knowledgeGraph.createLink')}

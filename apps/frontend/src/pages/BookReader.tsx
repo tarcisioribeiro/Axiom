@@ -317,9 +317,9 @@ function AnnotationForm({
           onClick={() => void handleSave()}
         >
           {isSaving ? (
-            <Loader2 className="mr-xs h-3 w-3 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
-            <Save className="mr-xs h-3 w-3" />
+            <Save className="h-3 w-3" />
           )}
           {t('common.actions.save')}
         </Button>

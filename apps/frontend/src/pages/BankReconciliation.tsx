@@ -228,14 +228,14 @@ function UploadDialog({
               onClick={onClose}
               disabled={loading}
             >
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Upload className="mr-sm h-4 w-4" />
+                <Upload className="h-4 w-4" />
               )}
               {loading
                 ? t('pages.bankReconciliation.upload.importing')

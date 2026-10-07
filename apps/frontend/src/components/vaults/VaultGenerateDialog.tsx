@@ -136,14 +136,14 @@ export function VaultGenerateDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={() => void handleGenerate()} disabled={isGenerating}>
             {isGenerating ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Save className="mr-sm h-4 w-4" />
+              <Save className="h-4 w-4" />
             )}
             {isGenerating
               ? t('common.actions.saving')

@@ -622,7 +622,7 @@ export function BookForm({
               onClick={() => bookFileInputRef.current?.click()}
               disabled={isLoading}
             >
-              <Upload className="mr-xs h-3 w-3" />
+              <Upload className="h-3 w-3" />
               {bookFileName
                 ? t('pages.books.form.bookFileChangeBtn')
                 : t('pages.books.form.bookFileSelectBtn')}
@@ -775,14 +775,14 @@ export function BookForm({
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
           )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>

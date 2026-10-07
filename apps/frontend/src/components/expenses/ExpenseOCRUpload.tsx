@@ -175,7 +175,7 @@ export function ExpenseOCRUpload({ onResult }: Props) {
                 setOpen(false);
               }}
             >
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -184,9 +184,9 @@ export function ExpenseOCRUpload({ onResult }: Props) {
               disabled={!file || uploading}
             >
               {uploading ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Check className="mr-sm h-4 w-4" />
+                <Check className="h-4 w-4" />
               )}
               {uploading
                 ? t('pages.expenseOCR.uploading')

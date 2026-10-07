@@ -1370,8 +1370,7 @@ function LibraryTab() {
                       >
                         {done ? (
                           <>
-                            <CheckCircle2 className="mr-xs text-success h-3 w-3" />{' '}
-                            Feito
+                            <CheckCircle2 className="text-success h-3 w-3" /> Feito
                           </>
                         ) : completeMutation.isPending && completingId === item.id ? (
                           'Salvando...'

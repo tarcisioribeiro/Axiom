@@ -770,7 +770,7 @@ export const routineTaskSchema = z
       .max(24, 'Maximo 24 ocorrencias'),
     interval_hours: z
       .number()
-      .min(1, 'Intervalo minimo de 1 hora')
+      .min(0, 'Intervalo minimo de 0 horas')
       .max(23, 'Intervalo maximo de 23 horas')
       .optional()
       .nullable(),

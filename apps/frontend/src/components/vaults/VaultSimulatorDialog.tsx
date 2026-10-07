@@ -138,7 +138,7 @@ export function VaultSimulatorDialog({
           </div>
         </div>
         <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
-          <Calculator className="mr-sm h-4 w-4" />
+          <Calculator className="h-4 w-4" />
           {isSimulating
             ? t('pages.vaultSimulator.calculating')
             : t('pages.vaultSimulator.calculate')}

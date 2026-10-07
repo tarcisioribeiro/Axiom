@@ -293,7 +293,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
                 onClick={() => setIsLaunchDialogOpen(true)}
                 className="mt-md w-full"
               >
-                <TrendingDown className="mr-sm h-4 w-4" />
+                <TrendingDown className="h-4 w-4" />
                 {t('pages.fixedExpenses.launchBtn')}
               </Button>
             </div>

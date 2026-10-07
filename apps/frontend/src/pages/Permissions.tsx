@@ -255,12 +255,12 @@ export default function Permissions() {
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           {t('common.actions.saving')}
                         </>
                       ) : (
                         <>
-                          <Check className="mr-sm h-4 w-4" />
+                          <Check className="h-4 w-4" />
                           {t('pages.permissions.savePermissions')}
                         </>
                       )}

@@ -129,23 +129,23 @@ export function PageTour() {
         <div className="dialog-footer gap-sm flex justify-between">
           {step > 0 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="mr-sm h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
               {t('pageTour.back')}
             </Button>
           ) : (
             <Button variant="ghost" onClick={close}>
-              <SkipForward className="mr-sm h-4 w-4" />
+              <SkipForward className="h-4 w-4" />
               {t('pageTour.skip')}
             </Button>
           )}
           {step < steps.length - 1 ? (
             <Button onClick={() => setStep((s) => s + 1)}>
-              <ArrowRight className="mr-sm h-4 w-4" />
+              <ArrowRight className="h-4 w-4" />
               {t('pageTour.next')}
             </Button>
           ) : (
             <Button onClick={close}>
-              <Check className="mr-sm h-4 w-4" />
+              <Check className="h-4 w-4" />
               {t('pageTour.finish')}
             </Button>
           )}

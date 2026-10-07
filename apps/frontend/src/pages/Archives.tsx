@@ -577,7 +577,7 @@ export default function Archives() {
                   onClick={() => setIsContentDialogOpen(false)}
                   className="sm:mr-auto"
                 >
-                  <X className="mr-sm h-4 w-4" />
+                  <X className="h-4 w-4" />
                   {t('common.actions.close')}
                 </Button>
                 <Button
@@ -589,7 +589,7 @@ export default function Archives() {
                     });
                   }}
                 >
-                  <Copy className="mr-sm h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                   {t('common.actions.copy')}
                 </Button>
               </div>
@@ -642,7 +642,7 @@ export default function Archives() {
                   setPreviewType(null);
                 }}
               >
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 {t('common.actions.close')}
               </Button>
             </div>

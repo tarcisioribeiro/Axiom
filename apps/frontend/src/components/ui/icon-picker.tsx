@@ -441,7 +441,7 @@ export function IconPicker({
         >
           {SelectedIcon ? (
             <>
-              <SelectedIcon className="mr-sm h-4 w-4" />
+              <SelectedIcon className="h-4 w-4" />
               {value}
             </>
           ) : (
@@ -472,7 +472,7 @@ export function IconPicker({
                 setOpen(false);
               }}
             >
-              <MoreHorizontal className="mr-sm h-4 w-4 opacity-50" />
+              <MoreHorizontal className="h-4 w-4 opacity-50" />
               Sem ícone
             </Button>
 

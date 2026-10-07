@@ -285,7 +285,7 @@ export function LaunchRevenuesDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           {!noMonthsAvailable && (
@@ -294,9 +294,9 @@ export function LaunchRevenuesDialog({
               disabled={isSubmitting || !validMonth || selectedCount === 0}
             >
               {isSubmitting ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <CalendarPlus className="mr-sm h-4 w-4" />
+                <CalendarPlus className="h-4 w-4" />
               )}
               {isSubmitting
                 ? t('pages.fixedRevenues.launchDialog.generating')

@@ -682,7 +682,7 @@ export function AddSessionForm({
       </div>
       <div className={cn('gap-sm flex justify-end', stickyActions && 'dialog-footer')}>
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -692,9 +692,9 @@ export function AddSessionForm({
           className="bg-category-intellect hover:bg-category-intellect/90 text-white"
         >
           {create.isPending ? (
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
           )}
 
           {t('common.actions.save')}
@@ -1267,11 +1267,11 @@ export function CourseDetailModal({
               className="text-destructive hover:text-destructive"
               onClick={() => onDelete(displayCourse)}
             >
-              <Trash2 className="mr-sm h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
               {t('common.actions.delete')}
             </Button>
             <Button size="sm" onClick={() => onEdit(displayCourse)}>
-              <Edit className="mr-sm h-4 w-4" />
+              <Edit className="h-4 w-4" />
               {t('common.actions.edit')}
             </Button>
           </div>

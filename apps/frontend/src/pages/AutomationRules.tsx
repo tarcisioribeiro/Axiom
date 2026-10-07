@@ -398,7 +398,7 @@ function RuleFormDialog({
                 {t('pages.automationRules.conditions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addCondition}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.automationRules.addCondition')}
               </Button>
             </div>
@@ -422,7 +422,7 @@ function RuleFormDialog({
                 {t('pages.automationRules.actions')}
               </span>
               <Button type="button" variant="outline" size="sm" onClick={addAction}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.automationRules.addAction')}
               </Button>
             </div>
@@ -441,7 +441,7 @@ function RuleFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -454,9 +454,9 @@ function RuleFormDialog({
               }
             >
               {isLoading ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-sm h-4 w-4" />
+                <Save className="h-4 w-4" />
               )}
               {isLoading ? t('common.actions.saving') : t('common.actions.save')}
             </Button>

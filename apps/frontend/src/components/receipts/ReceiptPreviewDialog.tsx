@@ -99,7 +99,7 @@ export function ReceiptPreviewDialog({
             onClick={() => handleOpenChange(false)}
             className="w-full sm:mr-auto sm:w-auto"
           >
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.close')}
           </Button>
           <Button
@@ -109,9 +109,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Image className="mr-sm h-4 w-4" />
+              <Image className="h-4 w-4" />
             )}
             {t('receipt.button.exportPng')}
           </Button>
@@ -121,9 +121,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <FileText className="mr-sm h-4 w-4" />
+              <FileText className="h-4 w-4" />
             )}
             {t('receipt.button.exportPdf')}
           </Button>

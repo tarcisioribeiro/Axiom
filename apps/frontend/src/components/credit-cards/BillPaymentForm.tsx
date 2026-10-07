@@ -405,7 +405,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         {remaining > 0 && (

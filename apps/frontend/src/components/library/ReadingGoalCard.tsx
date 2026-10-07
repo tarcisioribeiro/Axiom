@@ -377,7 +377,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
                 })}
               </p>
               <Button size="sm" variant="outline" onClick={openNewGoal}>
-                <Plus className="mr-xs h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" />
                 {t('pages.libraryDashboard.readingGoals.setGoal')}
               </Button>
             </div>

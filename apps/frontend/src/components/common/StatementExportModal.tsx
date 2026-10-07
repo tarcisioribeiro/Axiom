@@ -140,7 +140,7 @@ export function StatementExportModal({
             onClick={() => onOpenChange(false)}
             disabled={isGenerating}
           >
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('pages.dashboard.statementModal.cancelBtn')}
           </Button>
           <Button onClick={handleExport} disabled={isGenerating} className="gap-sm">

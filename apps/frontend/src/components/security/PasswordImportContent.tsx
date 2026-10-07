@@ -291,7 +291,7 @@ export function PasswordImportContent() {
                 <LoadingState size="sm" />
               ) : (
                 <>
-                  <Download className="mr-sm h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   {t('pages.passwordImport.previewBtn')}
                 </>
               )}
@@ -314,11 +314,11 @@ export function PasswordImportContent() {
                 </div>
                 <div className="gap-sm flex items-center">
                   <Button variant="outline" size="sm" onClick={selectAll}>
-                    <CheckSquare className="mr-xs h-4 w-4" />
+                    <CheckSquare className="h-4 w-4" />
                     {t('pages.passwordImport.selectAll')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={deselectAll}>
-                    <Square className="mr-xs h-4 w-4" />
+                    <Square className="h-4 w-4" />
                     {t('pages.passwordImport.deselectAll')}
                   </Button>
                 </div>

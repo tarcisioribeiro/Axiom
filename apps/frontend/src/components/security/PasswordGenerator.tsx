@@ -193,12 +193,12 @@ export function PasswordGenerator({
       <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
         {isGenerating ? (
           <>
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
             {t('pages.passwords.generator.generating')}
           </>
         ) : (
           <>
-            <RefreshCw className="mr-sm h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             {t('pages.passwords.generatePassword')}
           </>
         )}

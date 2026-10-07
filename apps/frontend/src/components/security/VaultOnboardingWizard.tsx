@@ -202,23 +202,23 @@ export function VaultOnboardingWizard({ open, onClose }: Props) {
         <div className="dialog-footer gap-sm flex justify-between">
           {step > 1 ? (
             <Button variant="ghost" onClick={() => setStep((s) => s - 1)}>
-              <ArrowLeft className="mr-sm h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" />
               {t('vaultOnboarding.back')}
             </Button>
           ) : (
             <Button variant="ghost" onClick={handleComplete}>
-              <SkipForward className="mr-sm h-4 w-4" />
+              <SkipForward className="h-4 w-4" />
               {t('vaultOnboarding.skip')}
             </Button>
           )}
           {step < STEPS.length ? (
             <Button onClick={() => setStep((s) => s + 1)}>
-              <ArrowRight className="mr-sm h-4 w-4" />
+              <ArrowRight className="h-4 w-4" />
               {t('vaultOnboarding.next')}
             </Button>
           ) : (
             <Button onClick={handleComplete}>
-              <Check className="mr-sm h-4 w-4" />
+              <Check className="h-4 w-4" />
               {t('vaultOnboarding.finish')}
             </Button>
           )}

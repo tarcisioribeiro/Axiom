@@ -35,12 +35,11 @@ function cellColor(day: HeatmapDay): string {
 }
 
 /** Build a week-major 2-D grid (array of columns, each with 7 slots). */
-function buildGrid(data: HeatmapDay[], year: number) {
-  const jan1 = new Date(year, 0, 1);
+function buildGrid(data: HeatmapDay[], startDate: Date) {
   // In JS getDay(): 0=Sun..6=Sat. We want Mon=0..Sun=6.
-  const jan1Weekday = (jan1.getDay() + 6) % 7;
+  const jan1Weekday = (startDate.getDay() + 6) % 7;
 
-  // Total slots: pad start so Jan 1 lands on the correct weekday row.
+  // Total slots: pad start so the first day lands on the correct weekday row.
   const totalSlots = jan1Weekday + data.length;
   const numCols = Math.ceil(totalSlots / 7);
 
@@ -94,6 +93,8 @@ const TASK_CATEGORIES = [
 interface HabitHeatmapProps {
   taskId?: string | number;
   taskName?: string;
+  /** Mostra só os últimos N dias, sem navegação de ano nem filtro de categoria. */
+  recentDays?: number;
 }
 
 interface TooltipState {
@@ -103,7 +104,7 @@ interface TooltipState {
 
 const EMPTY_DAYS: HeatmapDay[] = [];
 
-export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
+export function HabitHeatmap({ taskId, taskName, recentDays }: HabitHeatmapProps) {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
@@ -121,6 +122,10 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       }),
   });
   const data = heatmapData?.data ?? EMPTY_DAYS;
+  // ponytail: o backend só retorna dados do ano corrente (Jan1..hoje), então nos
+  // primeiros `recentDays` dias do ano a janela fica menor que o pedido; expandir
+  // para cruzar o ano anterior se isso passar a importar.
+  const displayData = recentDays ? data.slice(-recentDays) : data;
 
   const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
     t(`pages.planningDashboard.weekdayShort.${i}`)
@@ -156,15 +161,18 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     [t]
   );
 
-  const { grid, jan1Weekday, numCols } = buildGrid(data, year);
-  const mLabels = monthLabels(data, jan1Weekday, monthNames);
+  const gridStartDate = displayData[0]
+    ? new Date(`${displayData[0].date}T00:00:00`)
+    : new Date(year, 0, 1);
+  const { grid, jan1Weekday, numCols } = buildGrid(displayData, gridStartDate);
+  const mLabels = monthLabels(displayData, jan1Weekday, monthNames);
 
   // Summary stats
-  const scheduledDays = data.filter((d) => d.is_scheduled).length;
-  const completedDays = data.filter(
+  const scheduledDays = displayData.filter((d) => d.is_scheduled).length;
+  const completedDays = displayData.filter(
     (d) => d.is_scheduled && d.completed >= d.expected && d.expected > 0
   ).length;
-  const totalCompleted = data.reduce((s, d) => s + d.completed, 0);
+  const totalCompleted = displayData.reduce((s, d) => s + d.completed, 0);
 
   const CELL = 13; // px per cell
   const GAP = 2; // px gap
@@ -173,30 +181,38 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     <div className="space-y-3">
       {/* Header: year selector + filters + expand */}
       <div className="gap-sm flex flex-wrap items-center justify-between">
-        <div className="gap-xs flex items-center">
-          <Button
-            aria-label={t('common.actions.previous')}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setYear((y) => y - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-[3rem] text-center text-sm font-semibold">{year}</span>
-          <Button
-            aria-label={t('common.actions.next')}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setYear((y) => y + 1)}
-            disabled={year >= currentYear}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {recentDays ? (
+          <span className="text-muted-foreground text-sm font-semibold">
+            {t('pages.planningDashboard.recentDaysLabel', { days: recentDays })}
+          </span>
+        ) : (
+          <div className="gap-xs flex items-center">
+            <Button
+              aria-label={t('common.actions.previous')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setYear((y) => y - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[3rem] text-center text-sm font-semibold">
+              {year}
+            </span>
+            <Button
+              aria-label={t('common.actions.next')}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setYear((y) => y + 1)}
+              disabled={year >= currentYear}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
-        {!taskId && (
+        {!taskId && !recentDays && (
           <Select
             value={selectedCategory}
             onValueChange={(val) => setSelectedCategory(val === 'all' ? '' : val)}

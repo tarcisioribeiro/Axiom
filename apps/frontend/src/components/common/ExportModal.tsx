@@ -135,7 +135,7 @@ export function ExportModal({
             onClick={() => onOpenChange(false)}
             disabled={isExporting}
           >
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={handleExport} disabled={isExporting} className="gap-sm">

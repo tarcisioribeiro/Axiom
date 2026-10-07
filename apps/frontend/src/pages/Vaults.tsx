@@ -156,7 +156,7 @@ export default function Vaults() {
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
         <div className="gap-sm flex items-center">
           <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
-            <Zap className="mr-sm h-4 w-4" />
+            <Zap className="h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
           </Button>
           <Button onClick={handleCreate}>

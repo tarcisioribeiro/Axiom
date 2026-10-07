@@ -101,11 +101,11 @@ export function CreditLimitAdjustDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
             {t('common.actions.save')}
           </Button>
         </DialogFooter>

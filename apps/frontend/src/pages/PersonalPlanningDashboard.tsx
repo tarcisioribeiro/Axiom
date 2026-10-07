@@ -785,7 +785,7 @@ export default function PersonalPlanningDashboard() {
                     {t('pages.planningDashboard.habitConsistency')}
                   </h3>
                   <div className="flex flex-1 flex-col justify-center">
-                    <HabitHeatmap />
+                    <HabitHeatmap recentDays={90} />
                   </div>
                 </div>
                 {stats.active_goals_progress &&

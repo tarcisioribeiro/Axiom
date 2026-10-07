@@ -710,7 +710,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
                 setFailureDate('');
               }}
             >
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -719,9 +719,9 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
               disabled={!failureDate || isRegisteringFailure}
             >
               {isRegisteringFailure ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-sm h-4 w-4" />
+                <Save className="h-4 w-4" />
               )}
               {isRegisteringFailure
                 ? t('common.actions.saving')
@@ -755,7 +755,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
           )}
           <DialogFooter className="sm:justify-start">
             <Button variant="outline" onClick={() => setDetailsGoal(undefined)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.close')}
             </Button>
           </DialogFooter>
@@ -793,7 +793,7 @@ export default function Goals({ embedded = false, headerTarget }: GoalsProps) {
           </ul>
           <DialogFooter className="sm:justify-start">
             <Button variant="outline" onClick={() => setViewingFailuresGoal(undefined)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.close')}
             </Button>
           </DialogFooter>

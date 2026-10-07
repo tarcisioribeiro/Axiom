@@ -997,7 +997,7 @@ export default function MonthlyPlanner({ embedded = false }: { embedded?: boolea
           size="sm"
           variant={isApplied ? 'outline' : 'default'}
         >
-          <CalendarCheck className="mr-xs h-4 w-4" />
+          <CalendarCheck className="h-4 w-4" />
           {applyMutation.isPending
             ? t('monthlyPlanner.applyingPlan')
             : isApplied

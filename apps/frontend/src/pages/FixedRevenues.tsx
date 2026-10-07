@@ -405,7 +405,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
             onClick={() => setIsLaunchDialogOpen(true)}
             className="mt-md bg-success hover:bg-success/90 w-full"
           >
-            <TrendingUp className="mr-sm h-4 w-4" />
+            <TrendingUp className="h-4 w-4" />
             {t('pages.fixedRevenues.launchBtn')}
           </Button>
         </div>
@@ -748,14 +748,14 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="mr-sm h-4 w-4" />
+                  <Save className="h-4 w-4" />
                 )}
                 {isSubmitting
                   ? t('common.actions.saving')

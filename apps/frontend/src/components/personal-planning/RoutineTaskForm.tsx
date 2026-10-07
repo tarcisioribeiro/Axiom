@@ -15,15 +15,19 @@ import {
   Save,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Collapse } from '@/components/ui/collapsible-section';
-import { DatePicker } from '@/components/ui/date-picker';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { FormSection } from '@/components/ui/form-section';
 import { IconPicker } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
@@ -76,8 +80,6 @@ export function RoutineTaskForm({
   isLoading = false,
 }: RoutineTaskFormProps) {
   const { t } = useTranslation();
-  const [linksOpen, setLinksOpen] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const {
     control,
@@ -108,7 +110,7 @@ export function RoutineTaskForm({
           default_time: task.default_time ? task.default_time.substring(0, 5) : null,
           closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
           daily_occurrences: task.daily_occurrences || 1,
-          interval_hours: task.interval_hours || null,
+          interval_hours: task.interval_hours || 0,
           scheduled_times: task.scheduled_times || null,
           linked_financial_goal: task.linked_financial_goal ?? null,
           linked_book: task.linked_book ?? null,
@@ -135,7 +137,7 @@ export function RoutineTaskForm({
           closing_time: null,
           interval_start_date: formatLocalDate(new Date()),
           daily_occurrences: 1,
-          interval_hours: null,
+          interval_hours: 0,
           scheduled_times: null,
           linked_financial_goal: null,
           linked_book: null,
@@ -170,7 +172,7 @@ export function RoutineTaskForm({
         default_time: task.default_time ? task.default_time.substring(0, 5) : null,
         closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
         daily_occurrences: task.daily_occurrences || 1,
-        interval_hours: task.interval_hours || null,
+        interval_hours: task.interval_hours || 0,
         scheduled_times: task.scheduled_times || null,
         linked_financial_goal: task.linked_financial_goal ?? null,
         linked_book: task.linked_book ?? null,
@@ -286,55 +288,14 @@ export function RoutineTaskForm({
     hasNutritionLinks ||
     isExercise;
 
-  const frequencyPreview = (): string => {
-    const weekdayNames = [
-      t('pages.routineTasks.form.weekdayOptions.0').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.1').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.2').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.3').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.4').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.5').substring(0, 3),
-      t('pages.routineTasks.form.weekdayOptions.6').substring(0, 3),
-    ];
-    switch (periodicity) {
-      case 'daily':
-        return t('pages.routineTasks.form.frequencyPreview.daily');
-      case 'weekdays':
-        return t('pages.routineTasks.form.frequencyPreview.weekdays');
-      case 'weekly': {
-        const wd = watch('weekday');
-        return wd != null
-          ? t('pages.routineTasks.form.frequencyPreview.weekly', {
-              day: weekdayNames[wd],
-            })
-          : '';
-      }
-      case 'monthly': {
-        const dom = watch('day_of_month');
-        return dom !== undefined
-          ? t('pages.routineTasks.form.frequencyPreview.monthly', { day: dom })
-          : '';
-      }
-      case 'custom': {
-        const cwd = watch('custom_weekdays');
-        if (cwd && cwd.length > 0) {
-          return cwd.map((d) => weekdayNames[d]).join(', ');
-        }
-        return t('pages.routineTasks.form.frequencyPreview.custom');
-      }
-      default:
-        return '';
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit(onSubmit, notifyFormErrors)} className="space-y-lg">
       <FormSection
         title={t('pages.routineTasks.form.sectionIdentification')}
         icon={CheckSquare}
       >
-        <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-          <div className="space-y-sm md:col-span-2">
+        <div className="gap-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          <div className="space-y-sm">
             <Label htmlFor="name" className="gap-xs flex items-center">
               <CheckSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.nameLabel')}
@@ -348,7 +309,7 @@ export function RoutineTaskForm({
             />
           </div>
 
-          <div className="space-y-sm md:col-span-2">
+          <div className="space-y-sm">
             <Label htmlFor="description" className="gap-xs flex items-center">
               <CheckSquare className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.descriptionLabel')}
@@ -358,7 +319,8 @@ export function RoutineTaskForm({
               id="description"
               {...register('description')}
               placeholder={t('pages.routineTasks.form.descriptionPlaceholder')}
-              rows={3}
+              rows={1}
+              className="min-h-0 resize-none"
               disabled={isLoading}
             />
           </div>
@@ -411,128 +373,147 @@ export function RoutineTaskForm({
         icon={Repeat}
       >
         <div className="space-y-md">
-          {/* Toggle visual de periodicidade */}
-          <div className="space-y-sm">
-            <Label className="gap-xs flex items-center">
-              <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-              {t('pages.routineTasks.form.periodicityLabel')}
-              <Tooltip
-                content={t('pages.routineTasks.form.periodicityTooltip')}
-                side="right"
-              >
-                <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-              </Tooltip>
-            </Label>
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
             <div
               className={cn(
-                'border-border/70 bg-muted/30 flex rounded-md border p-0.5',
-                errors.periodicity && 'border-destructive ring-destructive/50 ring-2'
+                'space-y-sm',
+                periodicity !== 'weekly' &&
+                  periodicity !== 'monthly' &&
+                  periodicity !== 'custom' &&
+                  'md:col-span-2'
               )}
             >
-              {PERIODICITY_CHOICES.map((period) => (
-                <button
-                  key={period.value}
-                  type="button"
-                  onClick={() => setValue('periodicity', period.value)}
-                  disabled={isLoading}
-                  className={`duration-fast flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition ${
-                    periodicity === period.value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {(() => {
-                    const PeriodIcon = PERIODICITY_ICONS[period.value];
-                    return PeriodIcon ? <PeriodIcon className="h-3.5 w-3.5" /> : null;
-                  })()}
-                  <span className="hidden sm:inline">
-                    {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {frequencyPreview() && (
-              <p className="text-primary text-xs font-medium">{frequencyPreview()}</p>
-            )}
-          </div>
-
-          {periodicity === 'weekly' && (
-            <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.routineTasks.form.weekdayLabel')}
+                {t('pages.routineTasks.form.periodicityLabel')}
+                <Tooltip
+                  content={t('pages.routineTasks.form.periodicityTooltip')}
+                  side="right"
+                >
+                  <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                </Tooltip>
               </Label>
-              <div className="gap-xs flex">
-                {WEEKDAY_CHOICES.map((day) => {
-                  const isSelected = watch('weekday') === day.value;
-                  return (
-                    <button
-                      key={day.value}
-                      type="button"
-                      disabled={isLoading}
-                      onClick={() => setValue('weekday', day.value)}
-                      className={cn(
-                        'flex-1 rounded-md border py-1.5 text-xs font-medium transition-colors',
-                        isSelected
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground',
-                        errors.weekday &&
-                          'border-destructive ring-destructive/50 ring-2'
-                      )}
-                    >
-                      {t(
-                        `pages.routineTasks.form.weekdayOptions.${day.value}`
-                      ).substring(0, 3)}
-                    </button>
-                  );
-                })}
+              <Select
+                value={periodicity}
+                onValueChange={(value) => setValue('periodicity', value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger aria-invalid={!!errors.periodicity}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PERIODICITY_CHOICES.map((period) => {
+                    const PeriodIcon = PERIODICITY_ICONS[period.value];
+                    return (
+                      <SelectItem
+                        key={period.value}
+                        value={period.value}
+                        icon={
+                          PeriodIcon ? <PeriodIcon className="h-4 w-4" /> : undefined
+                        }
+                      >
+                        {t(
+                          `pages.routineTasks.form.periodicityOptions.${period.value}`
+                        )}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {periodicity === 'weekly' && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.weekdayLabel')}
+                </Label>
+                <Select
+                  value={watch('weekday')?.toString() ?? ''}
+                  onValueChange={(value) => setValue('weekday', parseInt(value, 10))}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger aria-invalid={!!errors.weekday}>
+                    <SelectValue
+                      placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WEEKDAY_CHOICES.map((day) => (
+                      <SelectItem key={day.value} value={day.value.toString()}>
+                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          )}
+            )}
 
-          {periodicity === 'monthly' && (
-            <div className="space-y-sm">
-              <Label htmlFor="day_of_month" className="gap-xs flex items-center">
-                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.routineTasks.form.dayOfMonthLabel')}
-              </Label>
-              <Controller
-                control={control}
-                name="day_of_month"
-                render={({ field }) => (
-                  <NumberStepper
-                    aria-invalid={!!errors.day_of_month}
-                    id="day_of_month"
-                    disabled={isLoading}
-                    placeholder="1-31"
-                    min={1}
-                    max={31}
-                    optional
-                    value={field.value}
-                    onChange={(v) => field.onChange(v ?? undefined)}
-                  />
-                )}
-              />
-            </div>
-          )}
+            {periodicity === 'monthly' && (
+              <div className="space-y-sm">
+                <Label htmlFor="day_of_month" className="gap-xs flex items-center">
+                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.dayOfMonthLabel')}
+                </Label>
+                <Controller
+                  control={control}
+                  name="day_of_month"
+                  render={({ field }) => (
+                    <NumberStepper
+                      aria-invalid={!!errors.day_of_month}
+                      id="day_of_month"
+                      disabled={isLoading}
+                      placeholder="1-31"
+                      min={1}
+                      max={31}
+                      optional
+                      value={field.value}
+                      onChange={(v) => field.onChange(v ?? undefined)}
+                      className="mx-auto"
+                    />
+                  )}
+                />
+              </div>
+            )}
 
-          {periodicity === 'custom' && (
-            <div className="space-y-md bg-muted/50 p-md rounded-lg border">
-              <h4 className="gap-xs flex items-center text-sm font-medium">
-                <Repeat className="text-muted-foreground h-3.5 w-3.5" />
-                {t('pages.routineTasks.form.customSection')}
-              </h4>
-
-              <div>
-                <Label className="text-sm">
+            {periodicity === 'custom' && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Repeat className="text-muted-foreground h-3.5 w-3.5" />
                   {t('pages.routineTasks.form.customWeekdaysLabel')}
                 </Label>
-                <div className="mt-sm gap-sm grid grid-cols-7">
-                  {WEEKDAY_CHOICES.map((day) => (
-                    <div key={day.value} className="gap-xs flex flex-col items-center">
-                      <Checkbox
-                        id={`custom-weekday-${day.value}`}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      aria-invalid={!!errors.custom_weekdays}
+                      className="w-full justify-between font-normal"
+                      disabled={isLoading}
+                    >
+                      <span className="truncate">
+                        {(watch('custom_weekdays')?.length ?? 0) === 0
+                          ? t('pages.routineTasks.form.weekdayPlaceholder')
+                          : (watch('custom_weekdays') ?? [])
+                              .slice()
+                              .sort((a, b) => a - b)
+                              .map((d) =>
+                                t(`pages.routineTasks.form.weekdayOptions.${d}`)
+                              )
+                              .join(', ')}
+                      </span>
+                      <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
+                  >
+                    {WEEKDAY_CHOICES.map((day) => (
+                      <DropdownMenuCheckboxItem
+                        key={day.value}
                         checked={watch('custom_weekdays')?.includes(day.value) || false}
+                        onSelect={(e) => e.preventDefault()}
                         onCheckedChange={(checked) => {
                           const current = watch('custom_weekdays') || [];
                           setValue(
@@ -542,136 +523,25 @@ export function RoutineTaskForm({
                               : current.filter((d) => d !== day.value)
                           );
                         }}
-                        disabled={isLoading}
-                      />
-                      <Label
-                        htmlFor={`custom-weekday-${day.value}`}
-                        className="cursor-pointer text-xs"
                       >
-                        {t(
-                          `pages.routineTasks.form.weekdayOptions.${day.value}`
-                        ).substring(0, 3)}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-
-              <div>
-                <Label htmlFor="custom_month_days" className="text-sm">
-                  {t('pages.routineTasks.form.customMonthDaysLabel')}
-                </Label>
-                <Input
-                  id="custom_month_days"
-                  type="text"
-                  placeholder="Ex: 1,15,30"
-                  value={watch('custom_month_days')?.join(',') || ''}
-                  onChange={(e) => {
-                    const values = e.target.value
-                      .split(',')
-                      .map((v) => parseInt(v.trim()))
-                      .filter((v) => !isNaN(v) && v >= 1 && v <= 31);
-                    setValue('custom_month_days', values.length > 0 ? values : null);
-                  }}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="gap-md grid grid-cols-2">
-                <div>
-                  <Label htmlFor="times_per_week" className="text-sm">
-                    {t('pages.routineTasks.form.timesPerWeekLabel')}
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="times_per_week"
-                    render={({ field }) => (
-                      <NumberStepper
-                        id="times_per_week"
-                        disabled={isLoading}
-                        placeholder="1-7"
-                        min={1}
-                        max={7}
-                        optional
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="times_per_month" className="text-sm">
-                    {t('pages.routineTasks.form.timesPerMonthLabel')}
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="times_per_month"
-                    render={({ field }) => (
-                      <NumberStepper
-                        id="times_per_month"
-                        disabled={isLoading}
-                        placeholder="1-31"
-                        min={1}
-                        max={31}
-                        optional
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div className="gap-md grid grid-cols-2">
-                <div>
-                  <Label htmlFor="interval_days" className="text-sm">
-                    {t('pages.routineTasks.form.intervalDaysLabel')}
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="interval_days"
-                    render={({ field }) => (
-                      <NumberStepper
-                        id="interval_days"
-                        disabled={isLoading}
-                        placeholder="Ex: 3"
-                        min={1}
-                        optional
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="interval_start_date" className="text-sm">
-                    {t('pages.routineTasks.form.intervalStartDateLabel')}
-                  </Label>
-                  <DatePicker
-                    aria-invalid={!!errors.interval_start_date}
-                    value={watch('interval_start_date') ?? undefined}
-                    onChange={(date) =>
-                      setValue(
-                        'interval_start_date',
-                        date ? formatLocalDate(date) : undefined
-                      )
-                    }
-                    placeholder={t(
-                      'pages.routineTasks.form.intervalStartDatePlaceholder'
-                    )}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </FormSection>
 
       <FormSection title={t('pages.routineTasks.form.sectionGoalUnit')} icon={Target}>
         <div className="gap-md grid grid-cols-1 md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="target_quantity" className="gap-xs flex items-center">
+            <Label
+              htmlFor="target_quantity"
+              className="gap-xs flex items-center justify-center"
+            >
               <Target className="text-muted-foreground h-3.5 w-3.5" />
               {t('pages.routineTasks.form.targetQuantityLabel')}
               <Tooltip
@@ -692,6 +562,7 @@ export function RoutineTaskForm({
                   min={1}
                   value={field.value}
                   onChange={field.onChange}
+                  className="mx-auto"
                 />
               )}
             />
@@ -726,7 +597,7 @@ export function RoutineTaskForm({
 
       <FormSection title={t('pages.routineTasks.form.scheduleSection')} icon={Clock}>
         <div className="space-y-md">
-          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+          <div className="gap-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
             <div className="space-y-sm">
               <Label htmlFor="default_time" className="gap-xs flex items-center">
                 <Clock className="text-muted-foreground h-3.5 w-3.5" />
@@ -771,7 +642,7 @@ export function RoutineTaskForm({
               </Select>
             </div>
 
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.isActiveLabel')}
@@ -780,13 +651,13 @@ export function RoutineTaskForm({
                 value={isActive ? 'true' : 'false'}
                 options={[
                   {
-                    value: 'false',
-                    label: t('common.status.inactive'),
-                  },
-                  {
                     value: 'true',
                     label: t('common.status.active'),
                     accentColor: 'success',
+                  },
+                  {
+                    value: 'false',
+                    label: t('common.status.inactive'),
                   },
                 ]}
                 onChange={(v) => setValue('is_active', v === 'true')}
@@ -794,7 +665,7 @@ export function RoutineTaskForm({
               />
             </div>
 
-            <div className="space-y-sm md:col-span-2">
+            <div className="space-y-sm">
               <Label className="gap-xs flex items-center">
                 <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
                 {t('pages.routineTasks.form.isOptionalLabel')}
@@ -824,360 +695,316 @@ export function RoutineTaskForm({
             </div>
           </div>
 
-          {/* Advanced settings toggle */}
-          <button
-            type="button"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            className="gap-xs flex w-full items-center text-left"
-          >
+          {/* Advanced settings */}
+          <div className="gap-xs flex w-full items-center">
             <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('pages.routineTasks.form.advancedSettings')}
             </span>
             <div className="bg-border/50 h-px flex-1" />
-            <ChevronDown
-              className={cn(
-                'text-muted-foreground duration-normal h-3.5 w-3.5 transition-transform',
-                advancedOpen && 'rotate-180'
-              )}
-            />
-          </button>
+          </div>
 
-          <Collapse open={advancedOpen}>
-            <div className="gap-md bg-muted/20 p-md grid grid-cols-1 rounded-lg border md:grid-cols-2">
-              <div className="space-y-sm">
-                <Label htmlFor="daily_occurrences" className="gap-xs flex items-center">
-                  <Clock className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.dailyOccurrencesLabel')}
-                  <Tooltip
-                    content={t('pages.routineTasks.form.dailyOccurrencesHint')}
-                    side="right"
-                  >
-                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-                  </Tooltip>
-                </Label>
-                <Controller
-                  control={control}
-                  name="daily_occurrences"
-                  render={({ field }) => (
-                    <NumberStepper
-                      id="daily_occurrences"
-                      disabled={isLoading}
-                      min={1}
-                      max={24}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="space-y-sm">
-                <Label htmlFor="interval_hours" className="gap-xs flex items-center">
-                  <Clock className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.intervalHoursLabel')}
-                  <Tooltip
-                    content={t('pages.routineTasks.form.intervalHoursHint')}
-                    side="right"
-                  >
-                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-                  </Tooltip>
-                </Label>
-                <NumberStepper
-                  aria-invalid={!!errors.interval_hours}
-                  id="interval_hours"
-                  min={1}
-                  max={23}
-                  optional
-                  value={watch('interval_hours') || null}
-                  onChange={(v) => setValue('interval_hours', v)}
-                  placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
-                  disabled={isLoading}
-                />
-              </div>
-
-              {(dailyOccurrences ?? 1) === 1 && (
-                <div className="space-y-sm">
-                  <Label htmlFor="closing_time" className="gap-xs flex items-center">
-                    <Clock className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.routineTasks.form.closingTimeLabel')}
-                    <Tooltip
-                      content={t('pages.routineTasks.form.closingTimeHint')}
-                      side="right"
-                    >
-                      <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-                    </Tooltip>
-                  </Label>
-                  <TimePicker
-                    aria-invalid={!!errors.closing_time}
-                    value={watch('closing_time') ?? undefined}
-                    onChange={(t) => setValue('closing_time', t ?? null)}
-                    disabled={isLoading}
-                  />
-                </div>
-              )}
-
-              <div className="space-y-sm">
-                <Label
-                  htmlFor="allowed_skips_per_month"
-                  className="gap-xs flex items-center"
+          <div className="gap-md grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+            <div className="space-y-sm">
+              <Label
+                htmlFor="daily_occurrences"
+                className="gap-xs flex items-center justify-center"
+              >
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.dailyOccurrencesLabel')}
+                <Tooltip
+                  content={t('pages.routineTasks.form.dailyOccurrencesHint')}
+                  side="right"
                 >
-                  <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.allowedSkipsLabel')}
-                  <Tooltip
-                    content={t('pages.routineTasks.form.allowedSkipsHint')}
-                    side="right"
-                  >
-                    <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
-                  </Tooltip>
-                </Label>
-                <Controller
-                  control={control}
-                  name="allowed_skips_per_month"
-                  render={({ field }) => (
-                    <NumberStepper
-                      aria-invalid={!!errors.allowed_skips_per_month}
-                      id="allowed_skips_per_month"
-                      disabled={isLoading}
-                      min={0}
-                      max={31}
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
+                  <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                </Tooltip>
+              </Label>
+              <Controller
+                control={control}
+                name="daily_occurrences"
+                render={({ field }) => (
+                  <NumberStepper
+                    id="daily_occurrences"
+                    disabled={isLoading}
+                    min={1}
+                    max={24}
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="mx-auto"
+                  />
+                )}
+              />
+            </div>
 
-              <div className="space-y-sm md:col-span-2">
-                <Label htmlFor="scheduled_times" className="gap-xs flex items-center">
+            <div className="space-y-sm">
+              <Label
+                htmlFor="interval_hours"
+                className="gap-xs flex items-center justify-center"
+              >
+                <Clock className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.intervalHoursLabel')}
+                <Tooltip
+                  content={t('pages.routineTasks.form.intervalHoursHint')}
+                  side="right"
+                >
+                  <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                </Tooltip>
+              </Label>
+              <NumberStepper
+                aria-invalid={!!errors.interval_hours}
+                id="interval_hours"
+                min={0}
+                max={23}
+                optional
+                value={watch('interval_hours')}
+                onChange={(v) => setValue('interval_hours', v)}
+                disabled={isLoading}
+                className="mx-auto"
+              />
+            </div>
+
+            {(dailyOccurrences ?? 1) === 1 && (
+              <div className="space-y-sm">
+                <Label htmlFor="closing_time" className="gap-xs flex items-center">
                   <Clock className="text-muted-foreground h-3.5 w-3.5" />
-                  {t('pages.routineTasks.form.scheduledTimesLabel')}
+                  {t('pages.routineTasks.form.closingTimeLabel')}
                   <Tooltip
-                    content={t('pages.routineTasks.form.scheduledTimesHint')}
+                    content={t('pages.routineTasks.form.closingTimeHint')}
                     side="right"
                   >
                     <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
                   </Tooltip>
                 </Label>
-                <Input
-                  aria-invalid={!!errors.scheduled_times}
-                  id="scheduled_times"
-                  type="text"
-                  placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
-                  value={watch('scheduled_times')?.join(', ') || ''}
-                  onChange={(e) => {
-                    const times = e.target.value
-                      .split(',')
-                      .map((t) => t.trim())
-                      .filter((t) => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t));
-                    setValue('scheduled_times', times.length > 0 ? times : null);
-                  }}
+                <TimePicker
+                  aria-invalid={!!errors.closing_time}
+                  value={watch('closing_time') ?? undefined}
+                  onChange={(t) => setValue('closing_time', t ?? null)}
                   disabled={isLoading}
                 />
               </div>
+            )}
+
+            <div className="space-y-sm">
+              <Label
+                htmlFor="allowed_skips_per_month"
+                className="gap-xs flex items-center justify-center"
+              >
+                <Settings2 className="text-muted-foreground h-3.5 w-3.5" />
+                {t('pages.routineTasks.form.allowedSkipsLabel')}
+                <Tooltip
+                  content={t('pages.routineTasks.form.allowedSkipsHint')}
+                  side="right"
+                >
+                  <HelpCircle className="text-muted-foreground/60 h-3 w-3 cursor-help" />
+                </Tooltip>
+              </Label>
+              <Controller
+                control={control}
+                name="allowed_skips_per_month"
+                render={({ field }) => (
+                  <NumberStepper
+                    aria-invalid={!!errors.allowed_skips_per_month}
+                    id="allowed_skips_per_month"
+                    disabled={isLoading}
+                    min={0}
+                    max={31}
+                    value={field.value}
+                    onChange={field.onChange}
+                    className="mx-auto"
+                  />
+                )}
+              />
             </div>
-          </Collapse>
+          </div>
         </div>
       </FormSection>
 
       {hasLinks && (
         <div className="space-y-md">
-          <button
-            type="button"
-            onClick={() => setLinksOpen((o) => !o)}
-            className="gap-xs flex w-full items-center text-left"
-          >
+          <div className="gap-xs flex w-full items-center">
             <Link2 className="text-muted-foreground h-3.5 w-3.5" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {t('common.form.sections.links')}
             </span>
             <div className="bg-border/50 h-px flex-1" />
-            <ChevronDown
-              className={cn(
-                'text-muted-foreground duration-normal h-3.5 w-3.5 transition-transform',
-                linksOpen && 'rotate-180'
-              )}
-            />
-          </button>
+          </div>
 
-          <Collapse open={linksOpen}>
-            <div className="gap-md grid grid-cols-1 md:grid-cols-2">
-              {isFinance && financialGoals.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
-                  </Label>
-                  <Select
-                    value={watch('linked_financial_goal')?.toString() ?? ''}
-                    onValueChange={(value) =>
-                      setValue(
-                        'linked_financial_goal',
-                        value && value !== 'none' ? parseInt(value) : null
-                      )
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t(
-                          'pages.routineTasks.form.linkedFinancialGoalPlaceholder'
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        {t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+          <div className="gap-md grid grid-cols-1 md:grid-cols-2">
+            {isFinance && financialGoals.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
+                </Label>
+                <Select
+                  value={watch('linked_financial_goal')?.toString() ?? ''}
+                  onValueChange={(value) =>
+                    setValue(
+                      'linked_financial_goal',
+                      value && value !== 'none' ? parseInt(value) : null
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t(
+                        'pages.routineTasks.form.linkedFinancialGoalPlaceholder'
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+                    </SelectItem>
+                    {financialGoals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id.toString()}>
+                        {goal.description}
                       </SelectItem>
-                      {financialGoals.map((goal) => (
-                        <SelectItem key={goal.id} value={goal.id.toString()}>
-                          {goal.description}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-              {isIntellect && readingBooksList.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.routineTasks.form.linkedBookLabel')}
-                  </Label>
-                  <Select
-                    value={watch('linked_book')?.toString() ?? ''}
-                    onValueChange={(value) =>
-                      setValue(
-                        'linked_book',
-                        value && value !== 'none' ? parseInt(value) : null
-                      )
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t('pages.routineTasks.form.linkedBookPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        {t('pages.routineTasks.form.linkedBookPlaceholder')}
+            {isIntellect && readingBooksList.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.linkedBookLabel')}
+                </Label>
+                <Select
+                  value={watch('linked_book')?.toString() ?? ''}
+                  onValueChange={(value) =>
+                    setValue(
+                      'linked_book',
+                      value && value !== 'none' ? parseInt(value) : null
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('pages.routineTasks.form.linkedBookPlaceholder')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t('pages.routineTasks.form.linkedBookPlaceholder')}
+                    </SelectItem>
+                    {readingBooksList.map((book) => (
+                      <SelectItem key={book.id} value={book.id.toString()}>
+                        {book.title}
                       </SelectItem>
-                      {readingBooksList.map((book) => (
-                        <SelectItem key={book.id} value={book.id.toString()}>
-                          {book.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-              {isNutrition && mealTypes.length > 0 && (
-                <div className="space-y-sm">
-                  <Label className="gap-xs flex items-center">
-                    <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.routineTasks.form.linkedMealTypeLabel')}
-                  </Label>
-                  <Select
-                    value={watch('linked_meal_type')?.toString() ?? ''}
-                    onValueChange={(value) => {
-                      setValue(
-                        'linked_meal_type',
-                        value && value !== 'none' ? parseInt(value) : null
-                      );
-                      if (value && value !== 'none')
-                        setValue('linked_hydration_goal', null);
-                    }}
-                    disabled={isLoading || !!watch('linked_hydration_goal')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={t(
-                          'pages.routineTasks.form.linkedMealTypePlaceholder'
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        {t('pages.routineTasks.form.linkedMealTypePlaceholder')}
+            {isNutrition && mealTypes.length > 0 && (
+              <div className="space-y-sm">
+                <Label className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.linkedMealTypeLabel')}
+                </Label>
+                <Select
+                  value={watch('linked_meal_type')?.toString() ?? ''}
+                  onValueChange={(value) => {
+                    setValue(
+                      'linked_meal_type',
+                      value && value !== 'none' ? parseInt(value) : null
+                    );
+                    if (value && value !== 'none')
+                      setValue('linked_hydration_goal', null);
+                  }}
+                  disabled={isLoading || !!watch('linked_hydration_goal')}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t(
+                        'pages.routineTasks.form.linkedMealTypePlaceholder'
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t('pages.routineTasks.form.linkedMealTypePlaceholder')}
+                    </SelectItem>
+                    {mealTypes.map((mt) => (
+                      <SelectItem
+                        key={mt.id}
+                        value={mt.id.toString()}
+                        disabled={mealTypeTakenBy.has(mt.id)}
+                      >
+                        {mt.name}
+                        {mealTypeTakenBy.has(mt.id) &&
+                          ` · ${t('pages.routineTasks.form.linkedMealTypeTaken', {
+                            task: mealTypeTakenBy.get(mt.id),
+                          })}`}
                       </SelectItem>
-                      {mealTypes.map((mt) => (
-                        <SelectItem
-                          key={mt.id}
-                          value={mt.id.toString()}
-                          disabled={mealTypeTakenBy.has(mt.id)}
-                        >
-                          {mt.name}
-                          {mealTypeTakenBy.has(mt.id) &&
-                            ` · ${t('pages.routineTasks.form.linkedMealTypeTaken', {
-                              task: mealTypeTakenBy.get(mt.id),
-                            })}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-              {isExercise && (
+            {isExercise && (
+              <div className="gap-sm flex items-center">
+                <Checkbox
+                  id="linked-workout"
+                  checked={!!watch('linked_workout')}
+                  onCheckedChange={(checked) =>
+                    setValue('linked_workout', checked === true)
+                  }
+                  disabled={isLoading}
+                />
+                <Label htmlFor="linked-workout" className="gap-xs flex items-center">
+                  <Link2 className="text-muted-foreground h-3.5 w-3.5" />
+                  {t('pages.routineTasks.form.linkedWorkoutLabel')}
+                </Label>
+              </div>
+            )}
+
+            {isNutrition && hydrationGoalId && (
+              <div className="space-y-sm">
                 <div className="gap-sm flex items-center">
                   <Checkbox
-                    id="linked-workout"
-                    checked={!!watch('linked_workout')}
-                    onCheckedChange={(checked) =>
-                      setValue('linked_workout', checked === true)
-                    }
-                    disabled={isLoading}
+                    id="linked-hydration-goal"
+                    checked={!!watch('linked_hydration_goal')}
+                    onCheckedChange={(checked) => {
+                      setValue(
+                        'linked_hydration_goal',
+                        checked ? hydrationGoalId : null
+                      );
+                      if (checked) setValue('linked_meal_type', null);
+                    }}
+                    disabled={isLoading || !!watch('linked_meal_type')}
                   />
-                  <Label htmlFor="linked-workout" className="gap-xs flex items-center">
+                  <Label
+                    htmlFor="linked-hydration-goal"
+                    className="gap-xs flex items-center"
+                  >
                     <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('pages.routineTasks.form.linkedWorkoutLabel')}
+                    {t('pages.routineTasks.form.linkedHydrationLabel')}
                   </Label>
                 </div>
-              )}
-
-              {isNutrition && hydrationGoalId && (
-                <div className="space-y-sm">
-                  <div className="gap-sm flex items-center">
-                    <Checkbox
-                      id="linked-hydration-goal"
-                      checked={!!watch('linked_hydration_goal')}
-                      onCheckedChange={(checked) => {
-                        setValue(
-                          'linked_hydration_goal',
-                          checked ? hydrationGoalId : null
-                        );
-                        if (checked) setValue('linked_meal_type', null);
-                      }}
-                      disabled={isLoading || !!watch('linked_meal_type')}
-                    />
-                    <Label
-                      htmlFor="linked-hydration-goal"
-                      className="gap-xs flex items-center"
-                    >
-                      <Link2 className="text-muted-foreground h-3.5 w-3.5" />
-                      {t('pages.routineTasks.form.linkedHydrationLabel')}
-                    </Label>
-                  </div>
-                </div>
-              )}
-            </div>
-          </Collapse>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
           )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>

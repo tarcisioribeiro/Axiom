@@ -214,7 +214,7 @@ export const RenegotiateBillDialog: React.FC<RenegotiateBillDialogProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading} className="gap-sm">

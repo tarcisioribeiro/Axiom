@@ -1186,14 +1186,14 @@ export default function BodyMetrics() {
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
                 >
-                  <X className="mr-sm h-4 w-4" />
+                  <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSaving || !form.measured_at}>
                   {isSaving ? (
-                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Save className="mr-sm h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   )}
                   {isSaving ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>

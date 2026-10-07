@@ -199,14 +199,14 @@ function HighlightForm({
 
       <div className="dialog-footer gap-sm pt-sm flex justify-end">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading || !bookId || !text.trim()}>
           {isLoading ? (
-            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Save className="mr-sm h-4 w-4" />
+            <Save className="h-4 w-4" />
           )}
           {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
@@ -361,7 +361,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
             onClick={() => void handleExportAll()}
             disabled={isExporting}
           >
-            <Download className="mr-sm h-4 w-4" />
+            <Download className="h-4 w-4" />
             {isExporting
               ? t('pages.highlights.exportingBtn')
               : t('pages.highlights.exportBtn')}

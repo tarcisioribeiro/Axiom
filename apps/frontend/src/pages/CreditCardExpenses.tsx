@@ -1400,7 +1400,7 @@ export default function CreditCardExpenses({
                       onClick={() => setIsAssignBillDialogOpen(false)}
                       disabled={isSubmitting}
                     >
-                      <X className="mr-sm h-4 w-4" />
+                      <X className="h-4 w-4" />
                       {t('common.actions.cancel')}
                     </Button>
                     <Button
@@ -1411,7 +1411,7 @@ export default function CreditCardExpenses({
                         eligibleBills.length === 0
                       }
                     >
-                      <Link2 className="mr-sm h-4 w-4" />
+                      <Link2 className="h-4 w-4" />
                       {t('pages.creditCardExpenses.assignBillBtn')}
                     </Button>
                   </div>

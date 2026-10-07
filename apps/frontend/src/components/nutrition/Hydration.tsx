@@ -129,7 +129,7 @@ export function WaterLogPanel({ date }: { date: string }) {
             disabled={addMutation.isPending}
             onClick={() => addMutation.mutate(ml)}
           >
-            <Plus className="mr-xs h-3.5 w-3.5" />
+            <Plus className="h-3.5 w-3.5" />
             {ml} ml
           </Button>
         ))}
@@ -156,9 +156,9 @@ export function WaterLogPanel({ date }: { date: string }) {
             disabled={!(custom > 0) || addMutation.isPending}
           >
             {addMutation.isPending ? (
-              <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Plus className="mr-xs h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5" />
             )}
             {t('pages.nutritionHydration.add')}
           </Button>
@@ -278,9 +278,9 @@ export function HydrationGoalCard() {
           </div>
           <Button type="submit" disabled={!(ml > 0) || saveMutation.isPending}>
             {saveMutation.isPending ? (
-              <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Save className="mr-xs h-4 w-4" />
+              <Save className="h-4 w-4" />
             )}
             {t('pages.nutritionHydration.saveGoal')}
           </Button>

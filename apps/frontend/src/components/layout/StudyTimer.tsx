@@ -311,14 +311,14 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
                     onClick={() => void handleStart()}
                     className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
                   >
-                    <Play className="mr-xs h-3.5 w-3.5" />
+                    <Play className="h-3.5 w-3.5" />
                     {t('pages.libraryDashboard.studyTimerStart')}
                   </Button>
                 )}
                 {state.phase === 'running' && (
                   <>
                     <Button size="sm" variant="outline" onClick={handlePause}>
-                      <Pause className="mr-xs h-3.5 w-3.5" />
+                      <Pause className="h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerPause')}
                     </Button>
                     <Button
@@ -327,7 +327,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
                       disabled={isBusy}
                       onClick={() => void handleStop()}
                     >
-                      <Square className="mr-xs h-3.5 w-3.5" />
+                      <Square className="h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
                   </>
@@ -339,7 +339,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
                       onClick={() => void handleStart()}
                       className="bg-category-intellect hover:bg-category-intellect/90 text-white dark:text-black"
                     >
-                      <Play className="mr-xs h-3.5 w-3.5" />
+                      <Play className="h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerResume')}
                     </Button>
                     <Button
@@ -348,7 +348,7 @@ export function StudyTimer({ mode }: { mode: StudyTimerMode }) {
                       disabled={isBusy}
                       onClick={() => void handleStop()}
                     >
-                      <Square className="mr-xs h-3.5 w-3.5" />
+                      <Square className="h-3.5 w-3.5" />
                       {t('pages.libraryDashboard.studyTimerStop')}
                     </Button>
                   </>

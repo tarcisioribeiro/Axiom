@@ -122,7 +122,7 @@ export function RestartModal({
             onClick={handleClose}
             disabled={mutation.isPending || countdown !== null}
           >
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('pages.adminConfig.restartModal.cancel')}
           </Button>
           <Button
@@ -132,12 +132,12 @@ export function RestartModal({
           >
             {mutation.isPending ? (
               <>
-                <RefreshCw className="mr-sm h-4 w-4 animate-spin" />
+                <RefreshCw className="h-4 w-4 animate-spin" />
                 {t('pages.adminConfig.restartModal.sending')}
               </>
             ) : (
               <>
-                <RotateCcw className="mr-sm h-4 w-4" />
+                <RotateCcw className="h-4 w-4" />
                 {t('pages.adminConfig.restartModal.confirm')}
               </>
             )}

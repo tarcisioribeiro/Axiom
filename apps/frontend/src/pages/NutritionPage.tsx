@@ -977,7 +977,7 @@ export default function NutritionPage() {
                 onClick={() => setOptionsMealTypeId(null)}
                 className="sm:mr-auto"
               >
-                <X className="mr-xs h-3 w-3" />
+                <X className="h-3 w-3" />
                 {t('common.actions.close')}
               </Button>
               {optionsMealType && (
@@ -986,7 +986,7 @@ export default function NutritionPage() {
                     setDialog({ type: 'new-option', mealTypeId: optionsMealType.id })
                   }
                 >
-                  <Plus className="mr-xs h-3 w-3" />
+                  <Plus className="h-3 w-3" />
                   {t('pages.nutritionMealTypes.newOptionBtn')}
                 </Button>
               )}
@@ -1342,7 +1342,7 @@ function MealTimeline({
                       className="border-warning/50 hover:bg-warning/10 h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
-                      <Plus className="mr-xs h-3 w-3" />
+                      <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')}
                     </Button>
                   ) : (
@@ -1352,7 +1352,7 @@ function MealTimeline({
                       className="text-muted-foreground hover:text-foreground h-7 text-xs"
                       onClick={() => onRegister(mt.id)}
                     >
-                      <Plus className="mr-xs h-3 w-3" />
+                      <Plus className="h-3 w-3" />
                       {t('pages.nutritionLog.registerMeal')} →
                     </Button>
                   )}

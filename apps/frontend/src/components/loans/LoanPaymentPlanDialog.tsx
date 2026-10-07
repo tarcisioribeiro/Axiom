@@ -116,7 +116,7 @@ export function LoanPaymentPlanDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
@@ -124,9 +124,9 @@ export function LoanPaymentPlanDialog({
             disabled={isSubmitting || count < 2}
           >
             {isSubmitting ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Save className="mr-sm h-4 w-4" />
+              <Save className="h-4 w-4" />
             )}
             {isSubmitting ? t('common.actions.saving') : t('common.actions.create')}
           </Button>

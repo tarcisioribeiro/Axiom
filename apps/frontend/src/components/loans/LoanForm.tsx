@@ -718,12 +718,12 @@ export function LoanForm({
       <div className="dialog-footer gap-sm pt-md flex justify-end border-t">
         {step > 1 && !isEditing && (
           <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
-            <ArrowLeft className="mr-sm h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             {t('common.actions.back')}
           </Button>
         )}
         <Button type="button" variant="outline" onClick={onCancel}>
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.cancel')}
         </Button>
         <Button
@@ -732,17 +732,17 @@ export function LoanForm({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : !isEditing && step < totalSteps ? (
             <>
-              <ArrowRight className="mr-sm h-4 w-4" />
+              <ArrowRight className="h-4 w-4" />
               {t('pages.loans.wizard.next')}
             </>
           ) : (
             <>
-              <Save className="mr-sm h-4 w-4" />
+              <Save className="h-4 w-4" />
               {t('common.actions.save')}
             </>
           )}

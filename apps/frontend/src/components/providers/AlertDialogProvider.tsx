@@ -64,7 +64,7 @@ export const AlertDialogProvider = () => {
         <AlertDialogFooter>
           {onCancel && (
             <AlertDialogCancel onClick={handleCancel} className="min-w-24">
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {cancelText || 'Cancelar'}
             </AlertDialogCancel>
           )}
@@ -73,9 +73,9 @@ export const AlertDialogProvider = () => {
             className={cn('min-w-24', getActionButtonClass())}
           >
             {variant === 'destructive' ? (
-              <Trash2 className="mr-sm h-4 w-4" />
+              <Trash2 className="h-4 w-4" />
             ) : (
-              <Check className="mr-sm h-4 w-4" />
+              <Check className="h-4 w-4" />
             )}
             {confirmText || 'Confirmar'}
           </AlertDialogAction>

@@ -464,7 +464,7 @@ export function SharePasswordModal({
           <div className="dialog-footer gap-sm pt-md flex justify-between border-t">
             {step > 0 ? (
               <Button variant="outline" onClick={goBack} disabled={isCreating}>
-                <ArrowLeft className="mr-sm h-4 w-4" />
+                <ArrowLeft className="h-4 w-4" />
                 {t('pages.sharePassword.backBtn')}
               </Button>
             ) : (
@@ -472,7 +472,7 @@ export function SharePasswordModal({
             )}
             {step < 2 ? (
               <Button onClick={goNext}>
-                <ArrowRight className="mr-sm h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
                 {t('pages.sharePassword.nextBtn')}
               </Button>
             ) : (
@@ -482,12 +482,12 @@ export function SharePasswordModal({
               >
                 {isCreating ? (
                   <>
-                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     {t('common.actions.saving')}
                   </>
                 ) : (
                   <>
-                    <Share2 className="mr-sm h-4 w-4" />
+                    <Share2 className="h-4 w-4" />
                     {t('pages.sharePassword.confirmBtn')}
                   </>
                 )}

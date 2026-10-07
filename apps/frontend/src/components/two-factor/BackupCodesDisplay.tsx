@@ -57,28 +57,27 @@ export function BackupCodesDisplay({ codes }: { codes: string[] }) {
         <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
           {visible ? (
             <>
-              <EyeOff className="mr-sm h-4 w-4" /> {t('common.actions.hide')}
+              <EyeOff className="h-4 w-4" /> {t('common.actions.hide')}
             </>
           ) : (
             <>
-              <Eye className="mr-sm h-4 w-4" /> {t('common.actions.reveal')}
+              <Eye className="h-4 w-4" /> {t('common.actions.reveal')}
             </>
           )}
         </Button>
         <Button variant="outline" size="sm" onClick={handleCopy}>
           {copied ? (
             <>
-              <Check className="mr-sm text-success h-4 w-4" />{' '}
-              {t('common.messages.copied')}
+              <Check className="text-success h-4 w-4" /> {t('common.messages.copied')}
             </>
           ) : (
             <>
-              <Copy className="mr-sm h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
+              <Copy className="h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
             </>
           )}
         </Button>
         <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="mr-sm h-4 w-4" /> {t('pages.twoFactor.downloadBackup')}
+          <Download className="h-4 w-4" /> {t('pages.twoFactor.downloadBackup')}
         </Button>
       </div>
     </div>

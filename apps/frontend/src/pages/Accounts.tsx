@@ -502,7 +502,7 @@ export default function Accounts() {
 
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setIsUploadOpen(true)}>
-              <FileUp className="mr-sm h-4 w-4" />
+              <FileUp className="h-4 w-4" />
               {t('pages.accounts.importStatement')}
             </Button>
           </div>
@@ -580,7 +580,7 @@ export default function Accounts() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsReconciliationOpen(false)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
           </DialogFooter>
@@ -613,14 +613,14 @@ export default function Accounts() {
                 onClick={() => setIsUploadOpen(false)}
                 disabled={uploadLoading}
               >
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 Cancelar
               </Button>
               <Button type="submit" disabled={uploadLoading || !uploadFile}>
                 {uploadLoading ? (
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Upload className="mr-sm h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                 )}
                 {uploadLoading ? 'Importando...' : 'Importar'}
               </Button>

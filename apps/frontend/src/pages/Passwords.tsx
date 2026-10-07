@@ -508,12 +508,12 @@ function DetailPanel({
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : revealedPassword ? (
             <>
-              <EyeOff className="mr-xs h-3 w-3" />
+              <EyeOff className="h-3 w-3" />
               {t('common.actions.hide')}
             </>
           ) : (
             <>
-              <Eye className="mr-xs h-3 w-3" />
+              <Eye className="h-3 w-3" />
               {t('common.actions.reveal')}
             </>
           )}
@@ -537,11 +537,11 @@ function DetailPanel({
             )}
           >
             {hibpState.status === 'checking' ? (
-              <Loader2 className="mr-xs h-3 w-3 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : hibpState.status === 'safe' ? (
-              <ShieldCheck className="mr-xs h-3 w-3" />
+              <ShieldCheck className="h-3 w-3" />
             ) : (
-              <ShieldAlert className="mr-xs h-3 w-3" />
+              <ShieldAlert className="h-3 w-3" />
             )}
             {hibpState.status === 'safe'
               ? t('pages.passwords.hibp.safe')
@@ -1102,12 +1102,12 @@ export default function Passwords() {
                                   <Loader2 className="h-3 w-3 animate-spin" />
                                 ) : revealedPasswords.has(password.id) ? (
                                   <>
-                                    <EyeOff className="mr-xs h-3 w-3" />
+                                    <EyeOff className="h-3 w-3" />
                                     {t('common.actions.hide')}
                                   </>
                                 ) : (
                                   <>
-                                    <Eye className="mr-xs h-3 w-3" />
+                                    <Eye className="h-3 w-3" />
                                     {t('common.actions.reveal')}
                                   </>
                                 )}
@@ -1369,7 +1369,7 @@ export default function Passwords() {
                     onClick={() => setShowGenerator(!showGenerator)}
                     className="px-sm py-xs h-auto text-xs"
                   >
-                    <Wand2 className="mr-xs h-3 w-3" />
+                    <Wand2 className="h-3 w-3" />
                     {showGenerator
                       ? t('pages.passwords.hideGenerator')
                       : t('pages.passwords.generatePassword')}
@@ -1481,14 +1481,14 @@ export default function Passwords() {
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  <X className="mr-sm h-4 w-4" />
+                  <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
-                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Save className="mr-sm h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   )}
                   {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
                 </Button>

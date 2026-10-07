@@ -117,7 +117,7 @@ export function VaultDepositDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
@@ -125,9 +125,9 @@ export function VaultDepositDialog({
             disabled={isSubmitting || !amount}
           >
             {isSubmitting ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <ArrowDownToLine className="mr-sm h-4 w-4" />
+              <ArrowDownToLine className="h-4 w-4" />
             )}
             {isSubmitting
               ? t('pages.vaults.depositAction')
@@ -236,7 +236,7 @@ export function VaultWithdrawDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="mr-sm h-4 w-4" />
+            <X className="h-4 w-4" />
             {t('common.actions.cancel')}
           </Button>
           <Button
@@ -245,9 +245,9 @@ export function VaultWithdrawDialog({
             disabled={isSubmitting || !amount}
           >
             {isSubmitting ? (
-              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <ArrowUpFromLine className="mr-sm h-4 w-4" />
+              <ArrowUpFromLine className="h-4 w-4" />
             )}
             {isSubmitting
               ? t('pages.vaults.withdrawAction')

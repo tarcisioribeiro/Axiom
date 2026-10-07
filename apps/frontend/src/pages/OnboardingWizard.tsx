@@ -269,7 +269,7 @@ export default function OnboardingWizard() {
                 'Pular configuração'
               ) : (
                 <>
-                  <ChevronLeft className="mr-xs h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                   Anterior
                 </>
               )}
@@ -278,7 +278,7 @@ export default function OnboardingWizard() {
             {step < STEPS.length - 1 ? (
               <Button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}>
                 Próximo
-                <ChevronRight className="ml-xs h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={handleFinish} disabled={importMutation.isPending}>
@@ -286,7 +286,7 @@ export default function OnboardingWizard() {
                   'Criando sua rotina...'
                 ) : (
                   <>
-                    <Sparkles className="mr-xs h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                     {selectedTemplates.length > 0
                       ? 'Criar Minha Rotina'
                       : 'Começar sem rotina'}

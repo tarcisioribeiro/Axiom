@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   FileText,
   Link,
   Pencil,
@@ -14,22 +15,25 @@ import {
   Trash2,
   TrendingDown,
   TrendingUp,
+  Vault as VaultIcon,
   Wallet,
   Loader2,
   Save,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { PaginatedSlide, GRID_PAGE_SIZE } from '@/components/common/PaginatedSlide';
+import { PaginatedSlide } from '@/components/common/PaginatedSlide';
+import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -41,6 +45,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +61,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
@@ -314,6 +323,11 @@ export default function FinancialGoals() {
   >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedVaultIds, setSelectedVaultIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>(
+    'all'
+  );
 
   // Form state
   const [formData, setFormData] = useState<FinancialGoalFormData>({
@@ -533,17 +547,28 @@ export default function FinancialGoals() {
     );
   };
 
-  // Calculate totals
-  const activeGoals = goals.filter((g) => g.is_active && !g.is_completed);
-  const completedGoals = goals.filter((g) => g.is_completed);
-  const totalTargetValue = goals.reduce(
-    (sum, g) => sum + parseFloat(g.target_value),
-    0
-  );
-  const totalCurrentValue = goals.reduce(
-    (sum, g) => sum + parseFloat(g.current_value),
-    0
-  );
+  const filteredGoals = useMemo(() => {
+    return goals.filter((g) => {
+      if (
+        searchTerm &&
+        !g.description.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        return false;
+      }
+      if (categoryFilter !== 'all' && g.category !== categoryFilter) return false;
+      if (statusFilter === 'active' && g.is_completed) return false;
+      if (statusFilter === 'completed' && !g.is_completed) return false;
+      return true;
+    });
+  }, [goals, searchTerm, categoryFilter, statusFilter]);
+
+  const hasActiveFilters =
+    !!searchTerm || categoryFilter !== 'all' || statusFilter !== 'all';
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+  };
 
   return (
     <PageContainer>
@@ -557,70 +582,64 @@ export default function FinancialGoals() {
         }}
       />
 
-      {/* Summary Cards */}
-      <div className="mb-lg gap-md grid grid-cols-1 md:grid-cols-4">
-        <Card className="border-t-primary border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <Target className="text-primary h-4 w-4" />
-              {t('pages.financialGoals.activeGoals')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeGoals.length}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-success border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <CheckCircle2 className="text-success h-4 w-4" />
-              {t('pages.financialGoals.completedGoals')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {completedGoals.length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-success border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <PiggyBank className="text-success h-4 w-4" />
-              {t('pages.financialGoals.accumulatedAmount')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-success text-2xl font-bold">
-              {formatCurrency(totalCurrentValue)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-t-muted-foreground border-t-2">
-          <CardHeader className="pb-sm">
-            <CardTitle className="gap-sm flex items-center text-sm font-medium">
-              <TrendingUp className="text-muted-foreground h-4 w-4" />
-              {t('pages.financialGoals.totalAmount')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalTargetValue)}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <SearchInput
+          placeholder={t('pages.financialGoals.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-44"
+            aria-label={t('pages.financialGoals.allCategories')}
+            startIcon={<Tag className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.financialGoals.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              {t('pages.financialGoals.allCategories')}
+            </SelectItem>
+            {CATEGORIES.map((cat) => (
+              <SelectItem key={cat.value} value={cat.value}>
+                {t(`pages.financialGoals.categories.${cat.value}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as 'all' | 'active' | 'completed')}
+        >
+          <SelectTrigger
+            className="w-36"
+            aria-label={t('pages.financialGoals.allStatus')}
+            startIcon={<Target className="h-3.5 w-3.5" />}
+          >
+            <SelectValue placeholder={t('pages.financialGoals.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.financialGoals.allStatus')}</SelectItem>
+            <SelectItem value="active">{t('common.status.active')}</SelectItem>
+            <SelectItem value="completed">{t('common.status.completed')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
       {/* Goal Cards Grid */}
       {isLoading ? (
         <LoadingState />
-      ) : goals.length === 0 ? (
+      ) : filteredGoals.length === 0 ? (
         <EmptyState
           icon={<Target className="text-muted-foreground h-12 w-12" />}
           title={t('pages.financialGoals.emptyState')}
         />
       ) : (
         <PaginatedSlide
-          items={goals}
-          pageSize={GRID_PAGE_SIZE}
+          items={filteredGoals}
+          pageSize={6}
+          centerList
           className="gap-md grid md:grid-cols-2 lg:grid-cols-3"
         >
           {(pageItems) =>
@@ -676,40 +695,37 @@ export default function FinancialGoals() {
                   />
                 </div>
 
-                {/* Grid visual de categorias */}
                 <div className="space-y-sm">
                   <Label className="gap-xs flex items-center">
                     <Tag className="text-muted-foreground h-3.5 w-3.5" />
                     {t('common.fields.category')} *
                   </Label>
-                  <div className="gap-xs grid grid-cols-3">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.value}
-                        type="button"
-                        onClick={() =>
-                          setFormData({ ...formData, category: cat.value })
-                        }
-                        className={`gap-xs px-sm py-xs flex items-center rounded border text-xs font-medium transition ${
-                          formData.category === cat.value
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
-                        }`}
-                      >
-                        {(() => {
-                          const CatIcon =
-                            FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
-                            FINANCIAL_GOAL_CATEGORY_ICONS['other'];
-                          return CatIcon ? (
-                            <CatIcon className="h-3.5 w-3.5 shrink-0" />
-                          ) : null;
-                        })()}
-                        <span className="truncate">
-                          {t(`pages.financialGoals.categories.${cat.value}`)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => {
+                        const CatIcon =
+                          FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                          FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                        return (
+                          <SelectItem
+                            key={cat.value}
+                            value={cat.value}
+                            icon={CatIcon ? <CatIcon className="h-4 w-4" /> : undefined}
+                          >
+                            {t(`pages.financialGoals.categories.${cat.value}`)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {formData.category === 'reduce_expenses' && (
@@ -832,64 +848,58 @@ export default function FinancialGoals() {
                     <PiggyBank className="text-muted-foreground h-3.5 w-3.5" />
                     {t('pages.financialGoals.associatedVaults')}
                   </Label>
-                  <div className="space-y-xs border-border/60 p-sm max-h-[140px] overflow-y-auto rounded-md border">
-                    {vaults.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        {t('pages.financialGoals.noVaults')}
-                      </p>
-                    ) : (
-                      vaults.map((vault) => {
-                        const isSelected = formData.vaults.includes(vault.id);
-                        return (
-                          <button
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild disabled={vaults.length === 0}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {formData.vaults.length === 0
+                            ? t('pages.financialGoals.noVaultsSelected')
+                            : vaults
+                                .filter((v) => formData.vaults.includes(v.id))
+                                .map((v) => v.description)
+                                .join(', ')}
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
+                    >
+                      {vaults.length === 0 ? (
+                        <p className="text-muted-foreground px-sm py-sm text-sm">
+                          {t('pages.financialGoals.noVaults')}
+                        </p>
+                      ) : (
+                        vaults.map((vault) => (
+                          <DropdownMenuCheckboxItem
                             key={vault.id}
-                            type="button"
-                            onClick={() => {
-                              if (isSelected) {
-                                setFormData({
-                                  ...formData,
-                                  vaults: formData.vaults.filter(
-                                    (id) => id !== vault.id
-                                  ),
-                                });
-                              } else {
-                                setFormData({
-                                  ...formData,
-                                  vaults: [...formData.vaults, vault.id],
-                                });
-                              }
-                            }}
-                            className={`px-sm py-xs flex w-full items-center justify-between rounded text-left text-sm transition-colors ${
-                              isSelected
-                                ? 'bg-primary/10 text-primary'
-                                : 'hover:bg-muted/50'
-                            }`}
+                            checked={formData.vaults.includes(vault.id)}
+                            onSelect={(e) => e.preventDefault()}
+                            onCheckedChange={(checked) =>
+                              setFormData({
+                                ...formData,
+                                vaults: checked
+                                  ? [...formData.vaults, vault.id]
+                                  : formData.vaults.filter((id) => id !== vault.id),
+                              })
+                            }
                           >
-                            <span>{vault.description}</span>
-                            <span className="text-muted-foreground text-xs">
-                              {formatCurrency(parseFloat(vault.current_balance))}
+                            <span className="gap-sm flex w-full items-center justify-between">
+                              <span className="truncate">{vault.description}</span>
+                              <span className="text-muted-foreground shrink-0 text-xs">
+                                {formatCurrency(parseFloat(vault.current_balance))}
+                              </span>
                             </span>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-sm">
-                  <Label htmlFor="notes" className="gap-xs flex items-center">
-                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
-                    {t('common.fields.notes')}
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    placeholder={t('pages.financialGoals.form.notesPlaceholder')}
-                    rows={2}
-                  />
+                          </DropdownMenuCheckboxItem>
+                        ))
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 <button
@@ -923,7 +933,7 @@ export default function FinancialGoals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button
@@ -933,9 +943,9 @@ export default function FinancialGoals() {
               }
             >
               {isSubmitting ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-sm h-4 w-4" />
+                <Save className="h-4 w-4" />
               )}
               {isSubmitting
                 ? t('common.actions.saving')
@@ -951,13 +961,18 @@ export default function FinancialGoals() {
       <Dialog open={isVaultsDialogOpen} onOpenChange={setIsVaultsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('pages.financialGoals.manageVaults')}</DialogTitle>
-            <DialogDescription>
-              {selectedGoalForVaults &&
-                t('pages.financialGoals.manageVaultsDesc', {
-                  name: selectedGoalForVaults.description,
-                })}
-            </DialogDescription>
+            <DialogTitle className="gap-sm flex items-center">
+              <VaultIcon className="text-primary h-4 w-4 shrink-0" aria-hidden="true" />
+              {t('pages.financialGoals.manageVaults')}
+            </DialogTitle>
+            <VisuallyHidden>
+              <DialogDescription>
+                {selectedGoalForVaults &&
+                  t('pages.financialGoals.manageVaultsDesc', {
+                    name: selectedGoalForVaults.description,
+                  })}
+              </DialogDescription>
+            </VisuallyHidden>
           </DialogHeader>
           <div className="space-y-sm max-h-[300px] overflow-y-auto rounded-md border p-3">
             {vaults.length === 0 ? (
@@ -1003,14 +1018,14 @@ export default function FinancialGoals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsVaultsDialogOpen(false)}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSaveVaults} disabled={isSubmitting}>
               {isSubmitting ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-sm h-4 w-4" />
+                <Save className="h-4 w-4" />
               )}
               {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
             </Button>

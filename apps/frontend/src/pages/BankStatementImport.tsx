@@ -223,7 +223,7 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
               t('pages.bankStatementImport.upload.importing')
             ) : (
               <>
-                <Upload className="mr-sm h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 {t('pages.bankStatementImport.upload.importBtn')}
               </>
             )}

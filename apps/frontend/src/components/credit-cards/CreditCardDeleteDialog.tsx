@@ -124,7 +124,7 @@ export function CreditCardDeleteDialog({
             </ul>
             <div className="dialog-footer gap-sm flex justify-end">
               <Button variant="outline" onClick={close}>
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               {onShowBills && card && (
@@ -134,7 +134,7 @@ export function CreditCardDeleteDialog({
                     onShowBills(card.id);
                   }}
                 >
-                  <FileText className="mr-sm h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                   {t('pages.creditCards.deleteFlow.viewBills')}
                 </Button>
               )}
@@ -182,14 +182,14 @@ export function CreditCardDeleteDialog({
             </div>
             <div className="dialog-footer gap-sm flex justify-end">
               <Button type="button" variant="outline" onClick={close}>
-                <X className="mr-sm h-4 w-4" />
+                <X className="h-4 w-4" />
                 {t('common.actions.cancel')}
               </Button>
               <Button type="submit" variant="destructive" disabled={isDeleting}>
                 {isDeleting ? (
-                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Trash2 className="mr-sm h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                 )}
 
                 {t('pages.creditCards.deleteFlow.continue')}

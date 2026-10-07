@@ -475,7 +475,7 @@ export default function BankReconciliationDetail() {
           size="sm"
           onClick={() => navigate('/bank-reconciliation')}
         >
-          <ArrowLeft className="mr-xs h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           {t('common.actions.back')}
         </Button>
       </div>

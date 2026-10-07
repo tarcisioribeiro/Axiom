@@ -114,7 +114,7 @@ const DialogCloseFooter = () => {
     <DialogFooter className="sm:justify-start">
       <DialogClose asChild>
         <Button variant="outline">
-          <X className="mr-sm h-4 w-4" />
+          <X className="h-4 w-4" />
           {t('common.actions.close')}
         </Button>
       </DialogClose>

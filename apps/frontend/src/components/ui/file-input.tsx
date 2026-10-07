@@ -35,7 +35,7 @@ export function FileInput({ id, accept, onChange, className }: FileInputProps) {
         onChange={handleChange}
       />
       <Button type="button" variant="outline" size="sm" onClick={handleClick}>
-        <Paperclip className="mr-xs h-4 w-4" />
+        <Paperclip className="h-4 w-4" />
         {t('common.fileInput.selectFile')}
       </Button>
       <span className="text-muted-foreground truncate text-sm">

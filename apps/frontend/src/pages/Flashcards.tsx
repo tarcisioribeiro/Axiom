@@ -214,7 +214,7 @@ export default function Flashcards() {
                 </Button>
                 {dueCount > 0 && (
                   <Button onClick={handleStartReview}>
-                    <Star className="mr-sm h-4 w-4" />
+                    <Star className="h-4 w-4" />
                     {t('pages.flashcards.reviewNow')}
                   </Button>
                 )}
@@ -228,7 +228,7 @@ export default function Flashcards() {
                   setFlipped(false);
                 }}
               >
-                <ChevronLeft className="mr-sm h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
                 {t('common.actions.back')}
               </Button>
             )
@@ -454,14 +454,14 @@ export default function Flashcards() {
                   variant="outline"
                   onClick={() => setCreateOpen(false)}
                 >
-                  <X className="mr-sm h-4 w-4" />
+                  <X className="h-4 w-4" />
                   {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending}>
                   {createMutation.isPending ? (
-                    <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Save className="mr-sm h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   )}
                   {createMutation.isPending
                     ? t('common.actions.saving')

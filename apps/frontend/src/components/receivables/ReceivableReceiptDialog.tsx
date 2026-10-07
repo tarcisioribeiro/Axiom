@@ -228,14 +228,14 @@ export function ReceivableReceiptDialog({
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
-              <X className="mr-sm h-4 w-4" />
+              <X className="h-4 w-4" />
               {t('common.actions.cancel')}
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
               {isSubmitting ? (
-                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-sm h-4 w-4" />
+                <Save className="h-4 w-4" />
               )}
               {isSubmitting
                 ? t('common.actions.saving')
